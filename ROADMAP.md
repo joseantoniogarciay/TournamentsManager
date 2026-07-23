@@ -20,19 +20,31 @@ salida y se completa la retrospectiva.
 **Salida:** todos los enlaces internos son válidos; las decisiones aceptadas se
 distinguen de propuestas y el siguiente decision gate está identificado.
 
-### Gate 0A — Definición del primer vertical slice
+### Gate 0A — Confirmación de la base técnica
 
 Antes de Fase 1 se decide:
+
+- topología del repositorio;
+- topología del backend;
+- estrategia web/mobile;
+- contrato API e identidad;
+- persistencia y toolchains;
+- configuración, entorno local y pruebas;
+- observabilidad, CI y despliegue.
+
+El estado y orden están en
+[TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md).
+
+### Gate 0B — Definición del primer vertical slice
+
+Después de confirmar la base técnica se decide:
 
 - formato inicial o inscripción/publicación sin competición;
 - usuario, equipo o ambos como participante;
 - visibilidad del torneo;
-- mecanismo de incorporación;
-- estrategia de identidad;
-- topología del repositorio;
-- estrategia web/mobile.
+- mecanismo de incorporación.
 
-El análisis está en [SYSTEM_OPTIONS.md](SYSTEM_OPTIONS.md).
+Las preguntas quedan pausadas en [PRODUCT.md](PRODUCT.md).
 
 ## Fase 1 — Entorno local
 

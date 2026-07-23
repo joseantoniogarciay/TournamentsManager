@@ -27,6 +27,7 @@ versionable y navegable.
 - [PROJECT_MANIFESTO.md](PROJECT_MANIFESTO.md): principios innegociables y dirección.
 - [WHY.md](WHY.md): problema de aprendizaje, resultados y no objetivos.
 - [PRODUCT.md](PRODUCT.md): alcance funcional, actores y flujos aceptados.
+- [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md): gate técnico activo y estado.
 - [SYSTEM_OPTIONS.md](SYSTEM_OPTIONS.md): alternativas y orden de decisiones.
 - [DECISIONS.md](DECISIONS.md): índice y reglas de decisión.
 - [ROADMAP.md](ROADMAP.md): fases, puertas de entrada y criterios de salida.
@@ -65,12 +66,16 @@ versionable y navegable.
 | Proceso ADR | Aceptada | [ADR-0000](docs/adr/0000-record-architecture-decisions.md) |
 | Arquitectura pragmática clean/hexagonal | Aceptada | [ADR-0001](docs/adr/0001-pragmatic-clean-architecture.md) |
 | Git para control de versiones | Aceptada | [ADR-0003](docs/adr/0003-use-git-for-version-control.md) |
+| Base técnica antes del detalle de producto | Aceptada | [ADR-0004](docs/adr/0004-technical-baseline-before-product-design.md) |
 | Go, PostgreSQL, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](PRODUCT.md) |
 | React y React Native | Dirección preferida | [SYSTEM_OPTIONS.md](SYSTEM_OPTIONS.md) |
 | Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](DECISIONS_TO_REVISIT.md) |
 | Stack de observabilidad | Pendiente de evaluación | [OBSERVABILITY.md](OBSERVABILITY.md) |
 | Frontend | Pendiente de decisión | [DECISIONS_TO_REVISIT.md](DECISIONS_TO_REVISIT.md) |
+
+El gate activo es [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las decisiones
+funcionales permanecen pausadas hasta cerrarlo.
 
 ## Regla de precedencia
 

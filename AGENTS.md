@@ -16,6 +16,8 @@ ADR relevantes antes de proponer cambios importantes.
 - Mantén la lógica de negocio independiente de infraestructura.
 - Actualiza documentación y aprendizaje junto al cambio.
 - Cierra cada fase con retrospectiva técnica.
+- Mientras ADR-0004 esté vigente, no avances decisiones funcionales antes de
+  cerrar el gate de `TECHNICAL_BASELINE.md`.
 
 ## Secuencia de trabajo
 

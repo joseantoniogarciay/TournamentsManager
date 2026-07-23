@@ -4,6 +4,10 @@
 >
 > Ninguna recomendación de este documento es una decisión aceptada. Cada gate
 > importante terminará en ADR tras la elección explícita del usuario.
+>
+> El orden original de este documento ha sido reemplazado por
+> [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las secciones de producto quedan
+> como material aplazado.
 
 ## Silueta recomendada
 
@@ -14,7 +18,7 @@ primero; observabilidad, Kubernetes y AWS en las fases del manifiesto.
 
 Esta silueta minimiza piezas desplegables sin cerrar la evolución.
 
-## Orden de decisión
+## Orden de decisión original — superado
 
 | Orden | Decisión | Por qué bloquea |
 |---|---|---|
@@ -27,8 +31,9 @@ Esta silueta minimiza piezas desplegables sin cerrar la evolución.
 | 7 | Entorno local | Permite comenzar implementación reproducible |
 | 8 | Observabilidad y despliegue | Se diseña sobre un flujo real |
 
-No conviene decidir Kubernetes, cache o microservicios antes de los primeros seis
-puntos.
+Este orden queda superado por
+[ADR-0004](docs/adr/0004-technical-baseline-before-product-design.md). Primero se
+confirma la base técnica; después se retoman los puntos de producto.
 
 ## 1. Alcance del primer torneo
 
@@ -296,15 +301,6 @@ notificación que deba sobrevivir a fallos.
 
 ## Próximo decision gate
 
-Responder y aceptar:
-
-1. primer formato o solo inscripción/publicación;
-2. qué se une: usuario, equipo o ambos;
-3. visibilidad inicial;
-4. mecanismo de incorporación;
-5. identidad propia, gestionada o híbrida;
-6. monorepo;
-7. estrategia web/mobile.
-
-Con esas respuestas se crearán los ADR propuestos y el modelo de dominio
-conceptual antes del código.
+La decisión activa es la topología de repositorios, analizada en
+[TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las decisiones de formato,
+participantes, visibilidad e incorporación permanecen pausadas.

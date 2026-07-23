@@ -1,6 +1,7 @@
 # Producto
 
-> Estado: alcance inicial aceptado por el usuario; detalle funcional pendiente.
+> Estado: alcance inicial aceptado; diseño funcional pausado durante el gate
+> técnico.
 >
 > Última actualización: 2026-07-23
 
@@ -120,3 +121,6 @@ Salvo decisión posterior:
 10. ¿Qué estados cierran o cancelan un torneo?
 
 Estas preguntas preceden al esquema de datos y a los endpoints.
+Se retomarán cuando termine el
+[Technical Baseline](TECHNICAL_BASELINE.md), conforme a
+[ADR-0004](docs/adr/0004-technical-baseline-before-product-design.md).

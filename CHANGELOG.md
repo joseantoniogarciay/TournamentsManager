@@ -8,6 +8,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Gate ordenado para confirmar la base técnica antes del diseño funcional.
+- ADR-0004 sobre la secuencia técnica primero.
+- Comparación activa de monorepo, multirepo y topología híbrida.
 - Repositorio Git local con rama `main`.
 - Alcance inicial de producto: invitados, cuentas, torneos, web y mobile.
 - Mapa comparado de decisiones del sistema.

@@ -53,6 +53,7 @@ Playbook completo: [decision-process.md](docs/playbooks/decision-process.md).
 | [0001](docs/adr/0001-pragmatic-clean-architecture.md) | Clean Architecture pragmática con principios hexagonales | Aceptado | 2026-07-23 |
 | [0002](docs/adr/0002-handbook-before-code.md) | Construir el handbook antes que el código | Aceptado | 2026-07-23 |
 | [0003](docs/adr/0003-use-git-for-version-control.md) | Usar Git para control de versiones | Aceptado | 2026-07-23 |
+| [0004](docs/adr/0004-technical-baseline-before-product-design.md) | Confirmar la base técnica antes del diseño de producto | Aceptado | 2026-07-23 |
 
 ## Trazabilidad de un cambio
 

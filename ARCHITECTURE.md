@@ -59,7 +59,9 @@ Los objetivos medibles se decidirán cuando existan requisitos de producto y car
 
 ## Próximas decisiones
 
-Antes de escribir el backend deben resolverse, en este orden:
+Antes de diseñar el dominio se confirma el
+[Technical Baseline](TECHNICAL_BASELINE.md). Después deberán resolverse, en este
+orden:
 
 1. formato inicial del torneo y modelo de participante;
 2. visibilidad e incorporación;
