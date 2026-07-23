@@ -1,0 +1,45 @@
+# Registro de aprendizaje
+
+## Método
+
+Para cada capacidad se sigue el ciclo:
+
+1. explicar el fundamento con palabras propias;
+2. comparar alternativas;
+3. construir la versión mínima;
+4. observar su comportamiento;
+5. provocar y diagnosticar un fallo;
+6. documentar lo aprendido y los límites;
+7. revisarlo en la retrospectiva de fase.
+
+## Mapa de competencias
+
+| Área | Resultado demostrable | Estado |
+|---|---|---|
+| Arquitectura | Explicar límites, dependencias y trade-offs | En curso |
+| Go | Construir y mantener un servicio idiomático | No iniciado |
+| PostgreSQL | Diseñar, migrar y operar datos con criterio | No iniciado |
+| API | Diseñar contratos evolutivos y observables | No iniciado |
+| Testing | Elegir pruebas por riesgo y velocidad de feedback | No iniciado |
+| Seguridad | Modelar amenazas y aplicar controles verificables | No iniciado |
+| Contenedores | Crear un entorno local reproducible | No iniciado |
+| Observabilidad | Diagnosticar con logs, métricas y trazas | No iniciado |
+| Kubernetes | Desplegar, escalar y recuperar cargas | No iniciado |
+| Terraform/AWS | Aprovisionar y operar infraestructura | No iniciado |
+
+## Diario
+
+### 2026-07-23 — Fundación documental
+
+- **Aprendido:** una arquitectura profesional comienza por explicitar autoridad,
+  proceso, estados y criterios de salida.
+- **Evidencia:** manifiesto transcrito, ADR iniciales, mapa del handbook y
+  plantillas operativas.
+- **Incertidumbre:** requisitos del producto y decisiones de implementación.
+- **Siguiente experimento:** definir el alcance y primer caso de uso antes del
+  entorno o del backend.
+
+## Regla de evidencia
+
+“Entendido” exige una explicación propia y una demostración. Un comando que
+funciona o una respuesta del asistente no son evidencia suficiente por sí solos.
