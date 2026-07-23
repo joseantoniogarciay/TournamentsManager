@@ -37,6 +37,16 @@ topología completa.
 - ningún despliegue sin health checks y criterio de éxito;
 - ningún backup sin restauración probada.
 
+## Límite de despliegue desde GitHub
+
+El repositorio será público, pero el acceso operativo no. CI construirá y
+verificará en infraestructura aislada. Los jobs de producción necesitarán un
+environment protegido y una identidad temporal o dedicada de mínimo privilegio.
+
+No se conectará el repositorio público a un runner permanente dentro del VPS. El
+modelo concreto —push controlado desde runner alojado o pull de artefactos desde
+el servidor— se decidirá antes del primer despliegue.
+
 ## Decisiones por fase
 
 ### Fase 1

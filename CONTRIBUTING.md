@@ -53,3 +53,7 @@ Hasta decidirlos:
 - no se reescribe historial compartido;
 - no se versionan secretos ni artefactos generados;
 - una decisión importante enlaza su ADR.
+
+Al ser un repositorio público, ninguna contribución externa se ejecuta con
+secretos o acceso de despliegue. Los cambios en `.github/workflows`, permisos y
+rutas de producción requieren revisión específica.

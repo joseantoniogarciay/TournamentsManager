@@ -8,6 +8,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0005: monorepo de producto.
+- ADR-0006: GitHub público con límites para secretos y despliegues.
+- Comparación activa de monolito modular, microservicios y serverless.
 - Gate ordenado para confirmar la base técnica antes del diseño funcional.
 - ADR-0004 sobre la secuencia técnica primero.
 - Comparación activa de monorepo, multirepo y topología híbrida.

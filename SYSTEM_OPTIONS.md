@@ -168,7 +168,9 @@ adecuados para todos los proyectos y añaden complejidad.
 Permite ciclos y permisos independientes, pero exige versionar contratos,
 coordinar cambios y mantener pipelines separados desde el principio.
 
-**Recomendación:** monorepo mientras exista un equipo pequeño y un solo producto.
+**Decisión aceptada:** monorepo mientras exista un equipo pequeño y un solo
+producto. Véase [ADR-0005](docs/adr/0005-use-a-product-monorepo.md).
+
 No añadir Nx o Turborepo hasta que el tiempo de tareas o la coordinación lo
 justifique; los workspaces del package manager pueden ser suficientes.
 
@@ -301,6 +303,6 @@ notificación que deba sobrevivir a fallos.
 
 ## Próximo decision gate
 
-La decisión activa es la topología de repositorios, analizada en
+La decisión activa es la topología del backend, analizada en
 [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las decisiones de formato,
 participantes, visibilidad e incorporación permanecen pausadas.

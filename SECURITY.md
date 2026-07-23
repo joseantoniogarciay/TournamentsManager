@@ -46,6 +46,23 @@ la contraseña anterior.
 - cifrado y retención definidos según el tipo de dato;
 - recuperación y respuesta a incidentes ensayables.
 
+## Repositorio público y CI/CD
+
+- Código, handbook y definiciones declarativas pueden ser públicos.
+- `.env`, claves, tokens, estados Terraform e inventarios sensibles no se
+  versionan.
+- Variables incorporadas a bundles web/mobile se tratan como públicas.
+- Producción usa secrets por environment y aprobación antes del despliegue.
+- Los workflows reciben permisos mínimos y no ejecutan contribuciones no
+  confiables con secretos.
+- No se ejecutan runners self-hosted del repositorio público en el VPS ni en una
+  red con acceso privilegiado.
+- Cloud usa OIDC y credenciales temporales cuando esté disponible.
+- El VPS usa una identidad de despliegue dedicada y limitada.
+
+La decisión completa está en
+[ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md).
+
 ## Gates futuros
 
 | Gate | Evidencia |

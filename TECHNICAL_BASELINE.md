@@ -23,8 +23,9 @@
 |---|---|---|---|
 | 0 | Control de versiones: Git | Aceptada | [ADR-0003](docs/adr/0003-use-git-for-version-control.md) |
 | 0 | Arquitectura clean/hexagonal pragmática | Aceptada | [ADR-0001](docs/adr/0001-pragmatic-clean-architecture.md) |
-| 1 | Topología de repositorios | En decisión | Este documento |
-| 2 | Topología del backend | Pendiente | Monolito modular / servicios / funciones |
+| 1 | Topología de repositorios: monorepo | Aceptada | [ADR-0005](docs/adr/0005-use-a-product-monorepo.md) |
+| 1 | GitHub público y secretos fuera de Git | Aceptada | [ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md) |
+| 2 | Topología del backend | En decisión | Este documento |
 | 3 | Estrategia web y mobile | Pendiente | Separadas / universal / web-first |
 | 4 | Estilo y contrato de API | Pendiente | REST/OpenAPI / GraphQL / RPC |
 | 5 | Arquitectura de identidad | Pendiente | Propia / gestionada / híbrida |
@@ -46,7 +47,7 @@
 candidatos preferentes, no autorización para seleccionar librerías o crear
 configuración.
 
-## Decisión 1 — Topología de repositorios
+## Decisión 1 — Topología de repositorios — aceptada
 
 ### Problema
 
@@ -142,6 +143,115 @@ independientes.
 
 La estructura concreta se decidirá después; aceptar monorepo no implica aceptar
 Nx, Turborepo, pnpm ni una convención `apps/packages`.
+
+### Decisión del usuario
+
+**Aceptada:** alternativa A, monorepo de producto. Véase
+[ADR-0005](docs/adr/0005-use-a-product-monorepo.md).
+
+La publicación será un repositorio público en GitHub con los límites definidos en
+[ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md).
+
+## Decisión 2 — Topología del backend
+
+### Problema
+
+El backend debe ofrecer una base profesional para aprender dominio, persistencia,
+seguridad, observabilidad y despliegue. Hay que decidir cuántas unidades de
+ejecución y despliegue existirán inicialmente.
+
+### Criterios
+
+En orden:
+
+1. simplicidad y capacidad de comprender el sistema completo;
+2. límites internos claros y verificables;
+3. facilidad para probar transacciones y reglas de negocio;
+4. operabilidad local y en producción;
+5. coste de infraestructura y mantenimiento;
+6. capacidad de evolucionar con evidencia.
+
+### Alternativa A — Monolito modular
+
+Un servicio Go desplegable contiene módulos internos por capacidad. Los módulos
+mantienen límites y dependencias explícitas, pero pueden compartir proceso y
+PostgreSQL.
+
+**Ventajas**
+
+- una unidad de build, despliegue y observación;
+- transacciones locales y debugging directo;
+- entorno local sencillo;
+- permite aprender arquitectura sin introducir red distribuida;
+- los límites pueden extraerse más adelante.
+
+**Inconvenientes**
+
+- una regresión o despliegue afecta a toda la unidad;
+- escalado conjunto;
+- requiere disciplina para impedir acoplamiento entre módulos;
+- puede degradar en un monolito desestructurado si no se verifican dependencias.
+
+**Mantenimiento**
+
+Bajo inicialmente. La complejidad principal es conservar límites internos y
+pruebas de arquitectura.
+
+### Alternativa B — Microservicios
+
+Cada capacidad se ejecuta y despliega como servicio independiente.
+
+**Ventajas**
+
+- despliegue, escalado y propiedad independientes;
+- aislamiento de fallos potencial;
+- límites explícitos por red.
+
+**Inconvenientes**
+
+- consistencia distribuida, retries, idempotencia y compatibilidad de contratos;
+- observabilidad y debugging entre servicios;
+- varios pipelines, imágenes, configuraciones y runbooks;
+- mayor coste local y cloud antes de conocer el dominio.
+
+**Mantenimiento**
+
+Alto desde el primer caso de uso. La red convierte fallos locales en fallos
+parciales y obliga a operar una plataforma distribuida.
+
+### Alternativa C — Funciones serverless
+
+Casos de uso o eventos se despliegan como funciones administradas.
+
+**Ventajas**
+
+- infraestructura de ejecución gestionada;
+- escalado por demanda;
+- coste bajo en cargas esporádicas.
+
+**Inconvenientes**
+
+- fragmentación de código, configuración y observabilidad;
+- límites de runtime, cold starts y debugging;
+- mayor acoplamiento al proveedor;
+- menor semejanza con el camino Docker/Kubernetes del manifiesto.
+
+**Mantenimiento**
+
+Intermedio o alto según número de funciones e integraciones. Reduce gestión de
+servidores, no la complejidad del sistema.
+
+### Recomendación
+
+**Opinión:** alternativa A, monolito modular en Go.
+
+Ofrece la mejor relación entre aprendizaje y complejidad. “Monolito” describe la
+unidad de despliegue; “modular” exige límites internos. Empezar así no impide
+extraer un worker o servicio cuando métricas, seguridad, carga o autonomía lo
+justifiquen.
+
+La aceptación no decidiría todavía paquetes, módulos de negocio, framework HTTP,
+acceso a datos ni estructura de carpetas.
 
 ### Decisión del usuario
 

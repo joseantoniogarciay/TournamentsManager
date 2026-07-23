@@ -67,6 +67,8 @@ versionable y navegable.
 | Arquitectura pragmática clean/hexagonal | Aceptada | [ADR-0001](docs/adr/0001-pragmatic-clean-architecture.md) |
 | Git para control de versiones | Aceptada | [ADR-0003](docs/adr/0003-use-git-for-version-control.md) |
 | Base técnica antes del detalle de producto | Aceptada | [ADR-0004](docs/adr/0004-technical-baseline-before-product-design.md) |
+| Monorepo de producto | Aceptada | [ADR-0005](docs/adr/0005-use-a-product-monorepo.md) |
+| GitHub público con secretos protegidos | Aceptada | [ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md) |
 | Go, PostgreSQL, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](PRODUCT.md) |
 | React y React Native | Dirección preferida | [SYSTEM_OPTIONS.md](SYSTEM_OPTIONS.md) |
