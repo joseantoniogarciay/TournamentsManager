@@ -29,6 +29,16 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Navegación del handbook
+
+- **Aprendido:** mantener todos los documentos en la raíz aumenta visibilidad al
+  principio, pero deja de escalar cuando oculta las unidades del monorepo.
+- **Evidencia:** handbook agrupado por proyecto, gobierno, ingeniería y
+  operaciones, con índices y enlaces validados.
+- **Coste aceptado:** mantener rutas e índices como parte de cualquier movimiento
+  documental.
+- **Siguiente decisión:** arquitectura de identidad.
+
 ### 2026-07-24 — Contrato API y cliente generado
 
 - **Aprendido:** la API HTTP es un adaptador del backend, no todo el backend;

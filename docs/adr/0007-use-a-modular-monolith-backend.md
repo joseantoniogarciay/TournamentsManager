@@ -74,6 +74,6 @@ mediante pruebas o análisis que las dependencias respetan los límites aceptado
 
 ## Documentación afectada
 
-- [ARCHITECTURE.md](../../ARCHITECTURE.md)
-- [TECHNICAL_BASELINE.md](../../TECHNICAL_BASELINE.md)
-- [DEPLOYMENT.md](../../DEPLOYMENT.md)
+- [ARCHITECTURE.md](../engineering/ARCHITECTURE.md)
+- [TECHNICAL_BASELINE.md](../governance/TECHNICAL_BASELINE.md)
+- [DEPLOYMENT.md](../operations/DEPLOYMENT.md)

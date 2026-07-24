@@ -32,7 +32,7 @@ Esta silueta minimiza piezas desplegables sin cerrar la evolución.
 | 8 | Observabilidad y despliegue | Se diseña sobre un flujo real |
 
 Este orden queda superado por
-[ADR-0004](docs/adr/0004-technical-baseline-before-product-design.md). Primero se
+[ADR-0004](../adr/0004-technical-baseline-before-product-design.md). Primero se
 confirma la base técnica; después se retoman los puntos de producto.
 
 ## 1. Alcance del primer torneo
@@ -146,7 +146,7 @@ requisitos nativos.
 con paridad funcional y layouts adaptativos para móvil, tablet y escritorio. La
 reutilización será el comportamiento por defecto, pero no justificará degradar
 accesibilidad, rendimiento o usabilidad. Véase
-[ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md).
+[ADR-0008](../adr/0008-use-a-universal-react-native-client.md).
 
 React recomienda iniciar aplicaciones nuevas con un framework, y Expo para
 aplicaciones nativas. [Guía oficial de React](https://react.dev/learn/creating-a-react-app).
@@ -171,7 +171,7 @@ Permite ciclos y permisos independientes, pero exige versionar contratos,
 coordinar cambios y mantener pipelines separados desde el principio.
 
 **Decisión aceptada:** monorepo mientras exista un equipo pequeño y un solo
-producto. Véase [ADR-0005](docs/adr/0005-use-a-product-monorepo.md).
+producto. Véase [ADR-0005](../adr/0005-use-a-product-monorepo.md).
 
 No añadir Nx o Turborepo hasta que el tiempo de tareas o la coordinación lo
 justifique; los workspaces del package manager pueden ser suficientes.
@@ -209,7 +209,7 @@ acoplar ejecución, debugging y coste al proveedor.
 
 **Decisión aceptada:** monolito modular en Go. Separar un servicio solo con
 evidencia de autonomía, carga, seguridad o ciclo de despliegue. Véase
-[ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md).
+[ADR-0007](../adr/0007-use-a-modular-monolith-backend.md).
 
 Módulos candidatos:
 
@@ -241,7 +241,7 @@ públicas.
 **Decisión aceptada:** REST pragmático con OpenAPI contract-first. El backend y la
 API HTTP se implementan en Go; del contrato se generará el cliente TypeScript de
 la aplicación universal. OpenAPI no generará dominio ni reglas de negocio. Véase
-[ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md).
+[ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md).
 
 ## 8. Participación y autorización
 

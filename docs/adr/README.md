@@ -10,7 +10,7 @@ son actas extensas ni documentación de una tecnología.
 - Idioma: español.
 - Un ADR aceptado es inmutable en su decisión; las aclaraciones menores se añaden
   con fecha. Un cambio de decisión crea un ADR sucesor.
-- El índice canónico está en [DECISIONS.md](../../DECISIONS.md).
+- El índice canónico está en [DECISIONS.md](../governance/DECISIONS.md).
 
 ## Ciclo de vida
 

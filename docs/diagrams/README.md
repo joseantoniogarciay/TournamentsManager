@@ -16,8 +16,8 @@ versionables, sencillos y enlazar la decisión o documento que representan.
 
 | Diagrama | Estado | Fuente |
 |---|---|---|
-| Dirección conceptual de dependencias | Vigente | [ARCHITECTURE.md](../../ARCHITECTURE.md) |
-| [Contexto de producto](system-context.md) | Conceptual | [PRODUCT.md](../../PRODUCT.md) |
+| Dirección conceptual de dependencias | Vigente | [ARCHITECTURE.md](../engineering/ARCHITECTURE.md) |
+| [Contexto de producto](system-context.md) | Conceptual | [PRODUCT.md](../project/PRODUCT.md) |
 | Contenedores/componentes | Pendiente de diseño | Fase 2 |
 | Despliegue local | Pendiente | Fase 1 |
 | Despliegue Kubernetes | Pendiente | Fase 4 |

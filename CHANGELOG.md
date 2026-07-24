@@ -6,6 +6,11 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Changed
+
+- Handbook reorganizado por proyecto, gobierno, ingeniería y operaciones; la
+  raíz conserva únicamente documentos de entrada y autoridad.
+
 ### Added
 
 - ADR-0009: API REST con OpenAPI contract-first y cliente TypeScript generado.

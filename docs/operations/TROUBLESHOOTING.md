@@ -17,8 +17,8 @@
 
 | Síntoma | Comprobación |
 |---|---|
-| Una decisión parece final pero no tiene ADR | Revisar [DECISIONS.md](DECISIONS.md) |
-| Dos documentos se contradicen | Aplicar la precedencia de [README.md](README.md) |
+| Una decisión parece final pero no tiene ADR | Revisar [DECISIONS.md](../governance/DECISIONS.md) |
+| Dos documentos se contradicen | Aplicar la precedencia de [README.md](../../README.md) |
 | Un enlace está roto | Ejecutar la validación documental de Fase 0 |
 | Una tecnología aparece sin comparación | Abrir propuesta con el playbook de decisión |
 | Una fase avanza sin retrospectiva | Completar la plantilla de retrospectiva |

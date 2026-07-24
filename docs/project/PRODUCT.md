@@ -125,5 +125,5 @@ Salvo decisión posterior:
 
 Estas preguntas preceden al esquema de datos y a los endpoints.
 Se retomarán cuando termine el
-[Technical Baseline](TECHNICAL_BASELINE.md), conforme a
-[ADR-0004](docs/adr/0004-technical-baseline-before-product-design.md).
+[Technical Baseline](../governance/TECHNICAL_BASELINE.md), conforme a
+[ADR-0004](../adr/0004-technical-baseline-before-product-design.md).

@@ -3,7 +3,7 @@
 > Estado: conceptual; refleja la estrategia de cliente de ADR-0008, pero no
 > define framework ni despliegue.
 >
-> Fuente funcional: [PRODUCT.md](../../PRODUCT.md)
+> Fuente funcional: [PRODUCT.md](../project/PRODUCT.md)
 
 ```mermaid
 flowchart LR

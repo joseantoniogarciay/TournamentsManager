@@ -61,7 +61,7 @@ la contraseña anterior.
 - El VPS usa una identidad de despliegue dedicada y limitada.
 
 La decisión completa está en
-[ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md).
+[ADR-0006](../adr/0006-public-github-repository-security-boundary.md).
 
 ## Gates futuros
 

@@ -42,7 +42,7 @@ final y la documentación se actualiza junto a cada decisión.
 
 ## Consecuencias
 
-- `DECISIONS.md` mantiene el índice y el umbral.
+- `docs/governance/DECISIONS.md` mantiene el índice y el umbral.
 - Los ADR usan estados explícitos.
 - Una propuesta no autoriza implementación.
 - Las decisiones triviales no necesitan ADR hasta que sean transversales o

@@ -44,5 +44,7 @@ Cada acción tiene propietario, fecha o disparador y documento de destino.
 
 ## Cierre
 
-Actualizar `LEARNING.md`, `DECISIONS_TO_REVISIT.md`, `CHANGELOG.md`, roadmap y ADR
+Actualizar `docs/project/LEARNING.md`,
+`docs/governance/DECISIONS_TO_REVISIT.md`, `CHANGELOG.md`,
+`docs/project/ROADMAP.md` y ADR
 antes de declarar cerrada la fase.

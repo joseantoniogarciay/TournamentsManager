@@ -13,44 +13,63 @@ versionable y navegable.
 
 ## Cómo usar este handbook
 
-1. Lee [WHY.md](WHY.md) para entender el propósito y los límites.
-2. Consulta [DECISIONS.md](DECISIONS.md) antes de proponer una tecnología o patrón.
+1. Lee [WHY.md](docs/project/WHY.md) para entender el propósito y los límites.
+2. Consulta [DECISIONS.md](docs/governance/DECISIONS.md) antes de proponer una tecnología o patrón.
 3. Sigue el [playbook de decisiones](docs/playbooks/decision-process.md).
 4. Registra en un ADR toda decisión importante.
 5. Actualiza la documentación afectada en el mismo cambio.
 6. Cierra cada fase con una retrospectiva técnica.
 
+## Estructura del monorepo
+
+La raíz conserva solo los puntos de entrada y autoridad. El handbook se organiza
+desde [docs/README.md](docs/README.md). Las unidades de código se crearán cuando
+sus decisiones de implementación estén aceptadas:
+
+```text
+apps/
+  backend/       # Backend y adaptador REST en Go
+  client/        # Cliente universal React Native + TypeScript
+contracts/
+  openapi/       # Fuente de verdad del contrato HTTP
+infra/           # Entorno, despliegue e infraestructura
+docs/            # Handbook, ADR y material operativo
+```
+
+Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
+
 ## Mapa del handbook
 
 ### Propósito y gobierno
 
+- [Índice de documentación](docs/README.md)
 - [PROJECT_MANIFESTO.md](PROJECT_MANIFESTO.md): principios innegociables y dirección.
-- [WHY.md](WHY.md): problema de aprendizaje, resultados y no objetivos.
-- [PRODUCT.md](PRODUCT.md): alcance funcional, actores y flujos aceptados.
-- [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md): gate técnico activo y estado.
-- [SYSTEM_OPTIONS.md](SYSTEM_OPTIONS.md): alternativas y orden de decisiones.
-- [DECISIONS.md](DECISIONS.md): índice y reglas de decisión.
-- [ROADMAP.md](ROADMAP.md): fases, puertas de entrada y criterios de salida.
-- [LEARNING.md](LEARNING.md): competencias y diario de aprendizaje.
-- [DECISIONS_TO_REVISIT.md](DECISIONS_TO_REVISIT.md): decisiones y supuestos con fecha
+- [WHY.md](docs/project/WHY.md): problema de aprendizaje, resultados y no objetivos.
+- [PRODUCT.md](docs/project/PRODUCT.md): alcance funcional, actores y flujos aceptados.
+- [TECHNICAL_BASELINE.md](docs/governance/TECHNICAL_BASELINE.md): gate técnico activo y estado.
+- [SYSTEM_OPTIONS.md](docs/governance/SYSTEM_OPTIONS.md): alternativas y orden de decisiones.
+- [DECISIONS.md](docs/governance/DECISIONS.md): índice y reglas de decisión.
+- [ROADMAP.md](docs/project/ROADMAP.md): fases, puertas de entrada y criterios de salida.
+- [LEARNING.md](docs/project/LEARNING.md): competencias y diario de aprendizaje.
+- [DECISIONS_TO_REVISIT.md](docs/governance/DECISIONS_TO_REVISIT.md): decisiones y supuestos con fecha
   o disparadores de revisión.
 
 ### Ingeniería
 
-- [ARCHITECTURE.md](ARCHITECTURE.md)
-- [DEVELOPMENT.md](DEVELOPMENT.md)
-- [DATABASE.md](DATABASE.md)
-- [API.md](API.md)
-- [SECURITY.md](SECURITY.md)
-- [OBSERVABILITY.md](OBSERVABILITY.md)
-- [DEPLOYMENT.md](DEPLOYMENT.md)
-- [STYLEGUIDE.md](STYLEGUIDE.md)
-- [TESTING.md](TESTING.md)
+- [ARCHITECTURE.md](docs/engineering/ARCHITECTURE.md)
+- [DEVELOPMENT.md](docs/engineering/DEVELOPMENT.md)
+- [DATABASE.md](docs/engineering/DATABASE.md)
+- [API.md](docs/engineering/API.md)
+- [SECURITY.md](docs/engineering/SECURITY.md)
+- [OBSERVABILITY.md](docs/operations/OBSERVABILITY.md)
+- [DEPLOYMENT.md](docs/operations/DEPLOYMENT.md)
+- [STYLEGUIDE.md](docs/engineering/STYLEGUIDE.md)
+- [TESTING.md](docs/engineering/TESTING.md)
 
 ### Operación y colaboración
 
 - [CONTRIBUTING.md](CONTRIBUTING.md)
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- [TROUBLESHOOTING.md](docs/operations/TROUBLESHOOTING.md)
 - [CHANGELOG.md](CHANGELOG.md)
 - [ADR](docs/adr/README.md)
 - [Knowledge base](docs/knowledge/README.md)
@@ -73,14 +92,14 @@ versionable y navegable.
 | Cliente universal web, iOS y Android | Aceptada | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
 | REST con OpenAPI contract-first | Aceptada | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md) |
 | Go, PostgreSQL, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
-| Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](PRODUCT.md) |
+| Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](docs/project/PRODUCT.md) |
 | React Native universal | Estrategia aceptada; framework pendiente | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
 | TypeScript y cliente API generado | Aceptada; toolchain pendiente | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md) |
-| Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](DECISIONS_TO_REVISIT.md) |
-| Stack de observabilidad | Pendiente de evaluación | [OBSERVABILITY.md](OBSERVABILITY.md) |
-| Framework y rendering del cliente | Pendiente de decisión | [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md) |
+| Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](docs/governance/DECISIONS_TO_REVISIT.md) |
+| Stack de observabilidad | Pendiente de evaluación | [OBSERVABILITY.md](docs/operations/OBSERVABILITY.md) |
+| Framework y rendering del cliente | Pendiente de decisión | [TECHNICAL_BASELINE.md](docs/governance/TECHNICAL_BASELINE.md) |
 
-El gate activo es [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las decisiones
+El gate activo es [TECHNICAL_BASELINE.md](docs/governance/TECHNICAL_BASELINE.md). Las decisiones
 funcionales permanecen pausadas hasta cerrarlo.
 
 ## Regla de precedencia

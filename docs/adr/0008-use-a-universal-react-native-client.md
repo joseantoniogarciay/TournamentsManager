@@ -175,9 +175,9 @@ estrategia de testing.
 
 ## Documentación afectada
 
-- [TECHNICAL_BASELINE.md](../../TECHNICAL_BASELINE.md)
-- [ARCHITECTURE.md](../../ARCHITECTURE.md)
-- [PRODUCT.md](../../PRODUCT.md)
-- [SYSTEM_OPTIONS.md](../../SYSTEM_OPTIONS.md)
-- [TESTING.md](../../TESTING.md)
-- [DEPLOYMENT.md](../../DEPLOYMENT.md)
+- [TECHNICAL_BASELINE.md](../governance/TECHNICAL_BASELINE.md)
+- [ARCHITECTURE.md](../engineering/ARCHITECTURE.md)
+- [PRODUCT.md](../project/PRODUCT.md)
+- [SYSTEM_OPTIONS.md](../governance/SYSTEM_OPTIONS.md)
+- [TESTING.md](../engineering/TESTING.md)
+- [DEPLOYMENT.md](../operations/DEPLOYMENT.md)

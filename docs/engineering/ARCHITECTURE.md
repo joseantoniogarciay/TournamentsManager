@@ -7,22 +7,22 @@
 Se adopta una Clean Architecture pragmática con principios hexagonales. La regla
 central es que la lógica de negocio no depende de frameworks, bases de datos,
 transportes ni proveedores cloud. Véase
-[ADR-0001](docs/adr/0001-pragmatic-clean-architecture.md).
+[ADR-0001](../adr/0001-pragmatic-clean-architecture.md).
 
 El backend comenzará como un monolito modular en Go: una unidad desplegable con
 límites internos por capacidades que se definirán desde el dominio. Véase
-[ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md).
+[ADR-0007](../adr/0007-use-a-modular-monolith-backend.md).
 
 Web, iOS y Android se construirán como un cliente universal con React Native. La
 paridad es funcional y semántica; layouts, navegación y adaptadores podrán variar
 por plataforma cuando lo exijan el dispositivo, la accesibilidad o la calidad de
 la experiencia. Véase
-[ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md).
+[ADR-0008](../adr/0008-use-a-universal-react-native-client.md).
 
 El cliente se comunicará con el backend Go mediante una API REST descrita
 contract-first con OpenAPI. El cliente TypeScript se generará desde ese contrato;
 los DTOs y el código generado permanecerán fuera del dominio. Véase
-[ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md).
+[ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md).
 
 ## Reglas arquitectónicas
 
@@ -40,7 +40,7 @@ los DTOs y el código generado permanecerán fuera del dominio. Véase
 
 ## Contexto funcional actual
 
-[PRODUCT.md](PRODUCT.md) define tres perspectivas iniciales: invitado, usuario
+[PRODUCT.md](../project/PRODUCT.md) define tres perspectivas iniciales: invitado, usuario
 autenticado y organizador/participante dentro de un torneo. Existe autorización
 para explorar estos límites, pero no para fijar todavía agregados, paquetes,
 endpoints ni esquema de datos.
@@ -59,7 +59,7 @@ El diagrama muestra la dirección de dependencias, no una estructura obligatoria
 de carpetas ni una cantidad de capas.
 
 El contexto completo está en
-[docs/diagrams/system-context.md](docs/diagrams/system-context.md).
+[docs/diagrams/system-context.md](../diagrams/system-context.md).
 
 ## Atributos de calidad iniciales
 
@@ -77,7 +77,7 @@ Los objetivos medibles se decidirán cuando existan requisitos de producto y car
 ## Próximas decisiones
 
 Antes de diseñar el dominio se confirma el
-[Technical Baseline](TECHNICAL_BASELINE.md). Después deberán resolverse, en este
+[Technical Baseline](../governance/TECHNICAL_BASELINE.md). Después deberán resolverse, en este
 orden:
 
 1. formato inicial del torneo y modelo de participante;
@@ -89,9 +89,9 @@ orden:
 7. estructura mínima del módulo Go.
 
 Cada punto que alcance el umbral de importancia definido en
-[DECISIONS.md](DECISIONS.md) requiere ADR.
+[DECISIONS.md](../governance/DECISIONS.md) requiere ADR.
 
 ## Diagramas
 
-Los diagramas vigentes se indexan en [docs/diagrams](docs/diagrams/README.md). Un
+Los diagramas vigentes se indexan en [docs/diagrams](../diagrams/README.md). Un
 diagrama no sustituye a un ADR ni puede contradecir el texto normativo.

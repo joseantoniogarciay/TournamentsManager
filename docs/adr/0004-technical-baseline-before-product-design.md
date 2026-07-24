@@ -3,7 +3,8 @@
 - **Estado:** Aceptado
 - **Fecha:** 2026-07-23
 - **Decisor:** Usuario, mediante instrucción explícita
-- **Supera a:** Orden de decisión inicial de `SYSTEM_OPTIONS.md`
+- **Supera a:** Orden de decisión inicial de
+  `docs/governance/SYSTEM_OPTIONS.md`
 - **Superado por:** Ninguno
 
 ## Problema
@@ -43,7 +44,7 @@ Confirmar la base técnica antes de tomar nuevas decisiones de negocio o product
 
 ## Consecuencias
 
-- Las preguntas funcionales de `PRODUCT.md` quedan pausadas.
+- Las preguntas funcionales de `docs/project/PRODUCT.md` quedan pausadas.
 - Las recomendaciones técnicas se decidirán una a una y terminarán en ADR.
 - No se creará scaffolding ni código para una alternativa no aceptada.
 - Las decisiones técnicas declararán qué supuestos de producto necesitan.
@@ -52,7 +53,7 @@ Confirmar la base técnica antes de tomar nuevas decisiones de negocio o product
 
 ## Validación
 
-El gate termina cuando `TECHNICAL_BASELINE.md` no contiene decisiones bloqueantes
+El gate termina cuando `docs/governance/TECHNICAL_BASELINE.md` no contiene decisiones bloqueantes
 en estado pendiente y cada elección importante tiene ADR aceptado.
 
 ## Disparadores de revisión
@@ -63,7 +64,7 @@ en estado pendiente y cada elección importante tiene ADR aceptado.
 
 ## Documentación afectada
 
-- [TECHNICAL_BASELINE.md](../../TECHNICAL_BASELINE.md)
-- [ROADMAP.md](../../ROADMAP.md)
-- [SYSTEM_OPTIONS.md](../../SYSTEM_OPTIONS.md)
-- [PRODUCT.md](../../PRODUCT.md)
+- [TECHNICAL_BASELINE.md](../governance/TECHNICAL_BASELINE.md)
+- [ROADMAP.md](../project/ROADMAP.md)
+- [SYSTEM_OPTIONS.md](../governance/SYSTEM_OPTIONS.md)
+- [PRODUCT.md](../project/PRODUCT.md)

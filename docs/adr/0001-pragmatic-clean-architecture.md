@@ -68,6 +68,6 @@ comprobarán que el dominio y los casos de uso no importan adaptadores.
 
 ## Documentación afectada
 
-- [ARCHITECTURE.md](../../ARCHITECTURE.md)
-- [STYLEGUIDE.md](../../STYLEGUIDE.md)
-- [TESTING.md](../../TESTING.md)
+- [ARCHITECTURE.md](../engineering/ARCHITECTURE.md)
+- [STYLEGUIDE.md](../engineering/STYLEGUIDE.md)
+- [TESTING.md](../engineering/TESTING.md)

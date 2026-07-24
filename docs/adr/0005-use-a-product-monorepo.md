@@ -68,6 +68,6 @@ construye ni despliega innecesariamente las demás.
 
 ## Documentación afectada
 
-- [TECHNICAL_BASELINE.md](../../TECHNICAL_BASELINE.md)
+- [TECHNICAL_BASELINE.md](../governance/TECHNICAL_BASELINE.md)
 - [CONTRIBUTING.md](../../CONTRIBUTING.md)
-- [SYSTEM_OPTIONS.md](../../SYSTEM_OPTIONS.md)
+- [SYSTEM_OPTIONS.md](../governance/SYSTEM_OPTIONS.md)

@@ -2,8 +2,9 @@
 
 ## Fuente de autoridad
 
-Lee `docs/source/PROJECT_MANIFESTO.docx`, `PROJECT_MANIFESTO.md`, `README.md` y los
-ADR relevantes antes de proponer cambios importantes.
+Lee `docs/source/PROJECT_MANIFESTO.docx`, `PROJECT_MANIFESTO.md`, `README.md`,
+`docs/README.md`, `docs/governance/TECHNICAL_BASELINE.md` y los ADR relevantes
+antes de proponer cambios importantes.
 
 ## Comportamiento obligatorio
 
@@ -17,7 +18,7 @@ ADR relevantes antes de proponer cambios importantes.
 - Actualiza documentación y aprendizaje junto al cambio.
 - Cierra cada fase con retrospectiva técnica.
 - Mientras ADR-0004 esté vigente, no avances decisiones funcionales antes de
-  cerrar el gate de `TECHNICAL_BASELINE.md`.
+  cerrar el gate de `docs/governance/TECHNICAL_BASELINE.md`.
 
 ## Secuencia de trabajo
 

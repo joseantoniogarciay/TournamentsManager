@@ -187,9 +187,9 @@ La futura implementación deberá demostrar que:
 
 ## Documentación afectada
 
-- [API.md](../../API.md)
-- [ARCHITECTURE.md](../../ARCHITECTURE.md)
-- [TECHNICAL_BASELINE.md](../../TECHNICAL_BASELINE.md)
-- [SYSTEM_OPTIONS.md](../../SYSTEM_OPTIONS.md)
-- [TESTING.md](../../TESTING.md)
-- [DEVELOPMENT.md](../../DEVELOPMENT.md)
+- [API.md](../engineering/API.md)
+- [ARCHITECTURE.md](../engineering/ARCHITECTURE.md)
+- [TECHNICAL_BASELINE.md](../governance/TECHNICAL_BASELINE.md)
+- [SYSTEM_OPTIONS.md](../governance/SYSTEM_OPTIONS.md)
+- [TESTING.md](../engineering/TESTING.md)
+- [DEVELOPMENT.md](../engineering/DEVELOPMENT.md)

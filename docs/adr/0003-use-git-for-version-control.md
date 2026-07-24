@@ -63,5 +63,5 @@ artefactos locales preparados para commit.
 ## Documentación afectada
 
 - [CONTRIBUTING.md](../../CONTRIBUTING.md)
-- [DEVELOPMENT.md](../../DEVELOPMENT.md)
-- [DECISIONS.md](../../DECISIONS.md)
+- [DEVELOPMENT.md](../engineering/DEVELOPMENT.md)
+- [DECISIONS.md](../governance/DECISIONS.md)

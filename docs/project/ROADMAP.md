@@ -33,7 +33,7 @@ Antes de Fase 1 se decide:
 - observabilidad, CI y despliegue.
 
 El estado y orden están en
-[TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md).
+[TECHNICAL_BASELINE.md](../governance/TECHNICAL_BASELINE.md).
 
 ### Gate 0B — Definición del primer vertical slice
 
@@ -102,5 +102,5 @@ presupuesto y procedimiento de recuperación documentados.
 ## Retrospectiva obligatoria
 
 Cada fase termina usando
-[phase-retrospective.md](docs/playbooks/phase-retrospective.md). Sus conclusiones
+[phase-retrospective.md](../playbooks/phase-retrospective.md). Sus conclusiones
 actualizan `LEARNING.md`, el handbook y, si procede, los ADR.

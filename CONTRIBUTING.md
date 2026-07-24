@@ -3,7 +3,7 @@
 ## Antes de cambiar
 
 1. Lee el manifiesto y el documento especializado.
-2. Comprueba [DECISIONS.md](DECISIONS.md) y los ADR vigentes.
+2. Comprueba [DECISIONS.md](docs/governance/DECISIONS.md) y los ADR vigentes.
 3. Formula el problema y los criterios de aceptación.
 4. Si es una decisión importante, detén la implementación hasta que el usuario la
    acepte.

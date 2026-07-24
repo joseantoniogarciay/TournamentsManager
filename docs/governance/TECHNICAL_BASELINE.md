@@ -21,13 +21,13 @@
 
 | Orden | Decisión | Estado | Registro |
 |---|---|---|---|
-| 0 | Control de versiones: Git | Aceptada | [ADR-0003](docs/adr/0003-use-git-for-version-control.md) |
-| 0 | Arquitectura clean/hexagonal pragmática | Aceptada | [ADR-0001](docs/adr/0001-pragmatic-clean-architecture.md) |
-| 1 | Topología de repositorios: monorepo | Aceptada | [ADR-0005](docs/adr/0005-use-a-product-monorepo.md) |
-| 1 | GitHub público y secretos fuera de Git | Aceptada | [ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md) |
-| 2 | Topología del backend: monolito modular | Aceptada | [ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md) |
-| 3 | Estrategia web y mobile: cliente universal | Aceptada | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
-| 4 | Estilo y contrato de API: REST/OpenAPI contract-first | Aceptada | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md) |
+| 0 | Control de versiones: Git | Aceptada | [ADR-0003](../adr/0003-use-git-for-version-control.md) |
+| 0 | Arquitectura clean/hexagonal pragmática | Aceptada | [ADR-0001](../adr/0001-pragmatic-clean-architecture.md) |
+| 1 | Topología de repositorios: monorepo | Aceptada | [ADR-0005](../adr/0005-use-a-product-monorepo.md) |
+| 1 | GitHub público y secretos fuera de Git | Aceptada | [ADR-0006](../adr/0006-public-github-repository-security-boundary.md) |
+| 2 | Topología del backend: monolito modular | Aceptada | [ADR-0007](../adr/0007-use-a-modular-monolith-backend.md) |
+| 3 | Estrategia web y mobile: cliente universal | Aceptada | [ADR-0008](../adr/0008-use-a-universal-react-native-client.md) |
+| 4 | Estilo y contrato de API: REST/OpenAPI contract-first | Aceptada | [ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md) |
 | 5 | Arquitectura de identidad | Pendiente | Propia / gestionada / híbrida |
 | 6 | Persistencia y acceso a datos | Pendiente | PostgreSQL, SQL y migraciones |
 | 7 | Toolchain Go | Pendiente | Versión, módulo, formato, lint y análisis |
@@ -147,10 +147,10 @@ Nx, Turborepo, pnpm ni una convención `apps/packages`.
 ### Decisión del usuario
 
 **Aceptada:** alternativa A, monorepo de producto. Véase
-[ADR-0005](docs/adr/0005-use-a-product-monorepo.md).
+[ADR-0005](../adr/0005-use-a-product-monorepo.md).
 
 La publicación será un repositorio público en GitHub con los límites definidos en
-[ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md).
+[ADR-0006](../adr/0006-public-github-repository-security-boundary.md).
 
 ## Decisión 2 — Topología del backend — aceptada
 
@@ -256,7 +256,7 @@ acceso a datos ni estructura de carpetas.
 ### Decisión del usuario
 
 **Aceptada:** alternativa A, monolito modular en Go. Véase
-[ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md).
+[ADR-0007](../adr/0007-use-a-modular-monolith-backend.md).
 
 ## Decisión 3 — Estrategia web y mobile — aceptada
 
@@ -362,7 +362,7 @@ independiente. No fue la alternativa elegida.
 ### Decisión del usuario
 
 **Aceptada:** alternativa A, cliente universal con React Native. Véase
-[ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md).
+[ADR-0008](../adr/0008-use-a-universal-react-native-client.md).
 
 El requisito determinante es la paridad funcional: web, iOS y Android son el
 mismo producto, incluido su uso en móvil y tablet. La interfaz será responsive y
@@ -398,7 +398,7 @@ generación sin introducir GraphQL o RPC antes de necesitarlos.
 
 **Aceptada:** REST con OpenAPI contract-first y cliente TypeScript generado. El
 backend y la implementación HTTP permanecen en Go. Véase
-[ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md).
+[ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md).
 
 TypeScript se adopta para el cliente universal por su comprobación estática. La
 versión, configuración del compilador, runtime, package manager y workspaces

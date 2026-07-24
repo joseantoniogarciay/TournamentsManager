@@ -43,22 +43,22 @@ Solo un ADR aceptado puede presentarse como “decisión tomada”.
 8. Registrar el ADR y actualizar los documentos afectados.
 9. Definir cómo se validará y cuándo debe revisarse.
 
-Playbook completo: [decision-process.md](docs/playbooks/decision-process.md).
+Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 ## Índice de ADR
 
 | ADR | Título | Estado | Fecha |
 |---|---|---|---|
-| [0000](docs/adr/0000-record-architecture-decisions.md) | Registrar decisiones arquitectónicas | Aceptado | 2026-07-23 |
-| [0001](docs/adr/0001-pragmatic-clean-architecture.md) | Clean Architecture pragmática con principios hexagonales | Aceptado | 2026-07-23 |
-| [0002](docs/adr/0002-handbook-before-code.md) | Construir el handbook antes que el código | Aceptado | 2026-07-23 |
-| [0003](docs/adr/0003-use-git-for-version-control.md) | Usar Git para control de versiones | Aceptado | 2026-07-23 |
-| [0004](docs/adr/0004-technical-baseline-before-product-design.md) | Confirmar la base técnica antes del diseño de producto | Aceptado | 2026-07-23 |
-| [0005](docs/adr/0005-use-a-product-monorepo.md) | Usar un monorepo de producto | Aceptado | 2026-07-23 |
-| [0006](docs/adr/0006-public-github-repository-security-boundary.md) | Publicar el monorepo en GitHub sin publicar secretos | Aceptado | 2026-07-23 |
-| [0007](docs/adr/0007-use-a-modular-monolith-backend.md) | Usar un monolito modular para el backend | Aceptado | 2026-07-24 |
-| [0008](docs/adr/0008-use-a-universal-react-native-client.md) | Usar un cliente universal con React Native | Aceptado | 2026-07-24 |
-| [0009](docs/adr/0009-use-rest-and-openapi-contract-first.md) | Usar REST con OpenAPI contract-first | Aceptado | 2026-07-24 |
+| [0000](../adr/0000-record-architecture-decisions.md) | Registrar decisiones arquitectónicas | Aceptado | 2026-07-23 |
+| [0001](../adr/0001-pragmatic-clean-architecture.md) | Clean Architecture pragmática con principios hexagonales | Aceptado | 2026-07-23 |
+| [0002](../adr/0002-handbook-before-code.md) | Construir el handbook antes que el código | Aceptado | 2026-07-23 |
+| [0003](../adr/0003-use-git-for-version-control.md) | Usar Git para control de versiones | Aceptado | 2026-07-23 |
+| [0004](../adr/0004-technical-baseline-before-product-design.md) | Confirmar la base técnica antes del diseño de producto | Aceptado | 2026-07-23 |
+| [0005](../adr/0005-use-a-product-monorepo.md) | Usar un monorepo de producto | Aceptado | 2026-07-23 |
+| [0006](../adr/0006-public-github-repository-security-boundary.md) | Publicar el monorepo en GitHub sin publicar secretos | Aceptado | 2026-07-23 |
+| [0007](../adr/0007-use-a-modular-monolith-backend.md) | Usar un monolito modular para el backend | Aceptado | 2026-07-24 |
+| [0008](../adr/0008-use-a-universal-react-native-client.md) | Usar un cliente universal con React Native | Aceptado | 2026-07-24 |
+| [0009](../adr/0009-use-rest-and-openapi-contract-first.md) | Usar REST con OpenAPI contract-first | Aceptado | 2026-07-24 |
 
 ## Trazabilidad de un cambio
 

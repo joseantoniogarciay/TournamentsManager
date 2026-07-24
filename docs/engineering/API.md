@@ -35,7 +35,7 @@ objetivo, autorización, invariantes y respuesta de error.
 ## Decisión vigente
 
 Se adopta REST pragmático con OpenAPI contract-first conforme a
-[ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md).
+[ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md).
 
 - La descripción OpenAPI es la fuente de verdad del contrato HTTP.
 - El backend Go implementa y valida el comportamiento.
@@ -106,4 +106,4 @@ Sin fijar todavía rutas ni payloads, la API necesitará capacidades para:
 - consultar la relación del usuario con el torneo.
 
 El diseño debe esperar a las decisiones de visibilidad, incorporación,
-participantes e identidad descritas en [SYSTEM_OPTIONS.md](SYSTEM_OPTIONS.md).
+participantes e identidad descritas en [SYSTEM_OPTIONS.md](../governance/SYSTEM_OPTIONS.md).
