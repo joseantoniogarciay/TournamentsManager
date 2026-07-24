@@ -11,10 +11,10 @@
 
 ## Silueta recomendada
 
-**Recomendación inicial:** un monorepo, un backend modular en Go, PostgreSQL, una
-API HTTP documentada, identidad basada en estándares, una aplicación web y una
-aplicación mobile que compartan contratos y lógica portable. Docker Compose
-primero; observabilidad, Kubernetes y AWS en las fases del manifiesto.
+**Silueta actual:** un monorepo, un backend modular en Go, PostgreSQL, una API HTTP
+documentada, identidad basada en estándares y un cliente universal React Native
+para web, iOS y Android. Docker Compose primero; observabilidad, Kubernetes y AWS
+en las fases del manifiesto.
 
 Esta silueta minimiza piezas desplegables sin cerrar la evolución.
 
@@ -142,14 +142,16 @@ plataforma](https://reactnative.dev/docs/platform-specific-code.html).
 Reduce el coste inicial y valida el producto, pero retrasa el aprendizaje y los
 requisitos nativos.
 
-**Recomendación:** alternativa B dentro de un monorepo. Construir primero la web
-pública y el flujo vertical; arrancar mobile cuando el contrato sea estable. La
-reutilización objetivo es lógica y contratos, no un porcentaje artificial de UI.
+**Decisión aceptada:** alternativa A. Web, iOS y Android serán un único producto
+con paridad funcional y layouts adaptativos para móvil, tablet y escritorio. La
+reutilización será el comportamiento por defecto, pero no justificará degradar
+accesibilidad, rendimiento o usabilidad. Véase
+[ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md).
 
 React recomienda iniciar aplicaciones nuevas con un framework, y Expo para
 aplicaciones nativas. [Guía oficial de React](https://react.dev/learn/creating-a-react-app).
-El framework web concreto —por ejemplo React Router framework o Next.js— requiere
-comparar SEO, rendering, hosting y complejidad.
+El framework universal y su estrategia de routing y rendering requieren comparar
+calidad web, SEO, builds nativos, hosting y complejidad.
 
 ## 5. Topología del repositorio
 
@@ -174,13 +176,12 @@ producto. Véase [ADR-0005](docs/adr/0005-use-a-product-monorepo.md).
 No añadir Nx o Turborepo hasta que el tiempo de tareas o la coordinación lo
 justifique; los workspaces del package manager pueden ser suficientes.
 
-Estructura candidata, todavía no creada:
+Silueta candidata, todavía no creada ni aceptada como estructura:
 
 ```text
 apps/
   api/       # Go
-  web/       # React
-  mobile/    # Expo / React Native
+  client/    # Cliente universal web / iOS / Android
 packages/
   contracts/ # tipos generados o esquemas compartidos
   api-client/
@@ -304,6 +305,6 @@ notificación que deba sobrevivir a fallos.
 
 ## Próximo decision gate
 
-La decisión activa es la estrategia web/mobile, analizada en
+La siguiente decisión activa es el estilo y contrato de API, según
 [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las decisiones de formato,
 participantes, visibilidad e incorporación permanecen pausadas.

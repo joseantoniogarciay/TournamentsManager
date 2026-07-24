@@ -8,6 +8,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0008: cliente universal React Native para web, iOS y Android.
+- Paridad funcional y diseño adaptativo como límites de la experiencia
+  multiplataforma.
 - ADR-0007: backend como monolito modular en Go.
 - Comparación activa de estrategias web/mobile.
 - ADR-0005: monorepo de producto.

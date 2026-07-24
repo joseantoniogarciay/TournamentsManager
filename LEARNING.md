@@ -29,6 +29,17 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Estrategia universal de cliente
+
+- **Aprendido:** compartir producto y comportamiento no obliga a usar una
+  presentación idéntica; responsive y adaptativo resuelven tamaños y capacidades
+  de entrada diferentes.
+- **Evidencia:** ADR-0008 con paridad funcional, límites de plataforma y
+  disparadores de revisión.
+- **Coste aceptado:** aislar excepciones web/native y validar por separado SEO,
+  accesibilidad, rendimiento y releases.
+- **Siguiente decisión:** estilo y contrato de API.
+
 ### 2026-07-24 — Topología técnica inicial
 
 - **Aprendido:** monorepo no significa un único pipeline, y monolito no significa

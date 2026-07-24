@@ -26,14 +26,14 @@
 | 1 | Topología de repositorios: monorepo | Aceptada | [ADR-0005](docs/adr/0005-use-a-product-monorepo.md) |
 | 1 | GitHub público y secretos fuera de Git | Aceptada | [ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md) |
 | 2 | Topología del backend: monolito modular | Aceptada | [ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md) |
-| 3 | Estrategia web y mobile | En decisión | Este documento |
+| 3 | Estrategia web y mobile: cliente universal | Aceptada | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
 | 4 | Estilo y contrato de API | Pendiente | REST/OpenAPI / GraphQL / RPC |
 | 5 | Arquitectura de identidad | Pendiente | Propia / gestionada / híbrida |
 | 6 | Persistencia y acceso a datos | Pendiente | PostgreSQL, SQL y migraciones |
 | 7 | Toolchain Go | Pendiente | Versión, módulo, formato, lint y análisis |
 | 8 | Toolchain TypeScript | Pendiente | Runtime, package manager y workspaces |
-| 9 | Framework web | Pendiente | Comparación tras decisión 3 |
-| 10 | Framework mobile | Pendiente | Comparación tras decisión 3 |
+| 9 | Framework del cliente universal | Pendiente | Expo u otras opciones compatibles |
+| 10 | Rendering, routing y adaptación por plataforma | Pendiente | Web / iOS / Android |
 | 11 | Configuración y secretos | Pendiente | Contrato local, CI y cloud |
 | 12 | Entorno local | Pendiente | Procesos / Docker Compose |
 | 13 | Estrategia de pruebas | Pendiente | Capas, herramientas y gates |
@@ -258,7 +258,7 @@ acceso a datos ni estructura de carpetas.
 **Aceptada:** alternativa A, monolito modular en Go. Véase
 [ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md).
 
-## Decisión 3 — Estrategia web y mobile
+## Decisión 3 — Estrategia web y mobile — aceptada
 
 ### Problema
 
@@ -266,8 +266,8 @@ El producto tendrá web y mobile. Hay que decidir si se construyen como una
 aplicación universal, como aplicaciones especializadas que comparten piezas o de
 forma secuencial empezando solo por web.
 
-Esta decisión no selecciona todavía framework web, Expo, navegación, estado ni
-design system.
+Esta decisión no selecciona todavía el framework universal concreto —Expo es
+candidato—, navegación, rendering, estado ni design system.
 
 ### Criterios
 
@@ -352,16 +352,23 @@ Bajo al principio, con coste diferido cuando se incorpora mobile.
 
 **Opinión:** alternativa B, aplicaciones especializadas con packages compartidos.
 
-Web y mobile comparten aquello que es naturalmente portable: contrato, cliente,
-validaciones y lógica TypeScript sin APIs de plataforma. La UI se comparte solo
-si una misma interacción funciona bien en ambos medios.
+Web y mobile compartirían aquello que es naturalmente portable: contrato,
+cliente, validaciones y lógica TypeScript sin APIs de plataforma. La UI se
+compartiría solo si una misma interacción funcionara bien en ambos medios.
 
-Esta decisión permite escoger después el framework web y el framework mobile de
-forma independiente, manteniendo React y React Native como direcciones preferidas.
+Esta recomendación habría permitido escoger los frameworks web y mobile de forma
+independiente. No fue la alternativa elegida.
 
 ### Decisión del usuario
 
-**Pendiente.**
+**Aceptada:** alternativa A, cliente universal con React Native. Véase
+[ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md).
+
+El requisito determinante es la paridad funcional: web, iOS y Android son el
+mismo producto, incluido su uso en móvil y tablet. La interfaz será responsive y
+adaptativa, no necesariamente idéntica píxel a píxel. Se permiten componentes
+específicos cuando una plataforma los necesite, sin rebajar accesibilidad,
+rendimiento o usabilidad para maximizar reutilización.
 
 ## Resultado del gate
 

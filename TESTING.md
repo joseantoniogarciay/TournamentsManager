@@ -16,6 +16,9 @@ cobertura aislada ni una pirámide rígida.
 | Contrato externo | Prueba de contrato |
 | Cableado de componentes | Integración o smoke test |
 | Flujo crítico | Prueba end-to-end mínima |
+| Paridad del cliente | Mismo escenario funcional en web, iOS y Android |
+| Layout adaptativo | Pruebas visuales y de interacción en móvil, tablet y escritorio |
+| Calidad web pública | Accesibilidad, navegación por teclado, URLs, metadatos y rendimiento |
 | Seguridad/abuso | Pruebas negativas y de autorización |
 | Operabilidad | Inyección de fallo y verificación de señales/runbook |
 
@@ -28,6 +31,10 @@ cobertura aislada ni una pirámide rígida.
 - Toda corrección de bug incluye una reproducción automatizada cuando sea viable.
 - Las pruebas deben ser deterministas, aisladas y diagnosticables.
 - Los datos de prueba no contienen información real sensible.
+- La paridad funcional no exige snapshots idénticos: cada plataforma puede
+  adaptar composición y navegación conservando el mismo resultado observable.
+- La matriz de navegadores, sistemas operativos, dispositivos y anchos se
+  definirá por riesgo, no intentando cubrir todas las combinaciones.
 
 ## Decisiones pendientes
 
@@ -38,3 +45,6 @@ cobertura aislada ni una pirámide rígida.
 - presupuestos de tiempo;
 - cobertura como señal secundaria;
 - pruebas de carga, resiliencia y seguridad.
+- herramientas para pruebas del cliente universal y dispositivos objetivo;
+- matriz mínima de web, iOS, Android, móvil, tablet y escritorio;
+- reparto de pruebas compartidas y específicas de plataforma.

@@ -3,7 +3,7 @@
 > Estado: alcance inicial aceptado; diseño funcional pausado durante el gate
 > técnico.
 >
-> Última actualización: 2026-07-23
+> Última actualización: 2026-07-24
 
 ## Visión
 
@@ -14,14 +14,17 @@ incorporar otros deportes sin reescribir su núcleo.
 ## Hechos aceptados
 
 - Existirán aplicaciones web y mobile.
+- Web, iOS y Android ofrecerán el mismo producto con paridad funcional.
+- La experiencia será responsive en navegadores y aplicaciones de móvil, tablet y
+  escritorio, adaptando la presentación cuando corresponda.
 - Una persona invitada podrá consultar torneos públicos ya creados.
 - Crear un torneo o unirse a uno exigirá una cuenta.
 - La cuenta incluirá registro, inicio de sesión y recuperación de contraseña.
 - El fútbol es el deporte inicial.
 - Las acciones detalladas de creación y gestión de un torneo se definirán de forma
   incremental.
-- React para web y React Native para mobile son la dirección preferida, no una
-  decisión tecnológica aceptada todavía.
+- Se ha aceptado un cliente universal con React Native; Expo y las decisiones de
+  framework, routing y rendering siguen pendientes.
 
 ## Actores y capacidades iniciales
 

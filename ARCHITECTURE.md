@@ -13,6 +13,12 @@ El backend comenzará como un monolito modular en Go: una unidad desplegable con
 límites internos por capacidades que se definirán desde el dominio. Véase
 [ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md).
 
+Web, iOS y Android se construirán como un cliente universal con React Native. La
+paridad es funcional y semántica; layouts, navegación y adaptadores podrán variar
+por plataforma cuando lo exijan el dispositivo, la accesibilidad o la calidad de
+la experiencia. Véase
+[ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md).
+
 ## Reglas arquitectónicas
 
 1. Las dependencias apuntan hacia el dominio y los casos de uso.
@@ -36,7 +42,7 @@ endpoints ni esquema de datos.
 
 ```mermaid
 flowchart LR
-    Actor["Invitado / usuario"] --> Inbound["Web / mobile"]
+    Actor["Invitado / usuario"] --> Inbound["Cliente universal: web / iOS / Android"]
     Inbound --> App["Casos de uso"]
     App --> Domain["Dominio"]
     App --> Ports["Puertos necesarios"]

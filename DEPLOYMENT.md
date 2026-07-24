@@ -5,10 +5,11 @@
 ## Progresión
 
 1. un backend modular como unidad desplegable comprensible;
-2. dependencias en Docker Compose;
-3. servicio instrumentado y recuperable;
-4. Kubernetes con k3d;
-5. AWS mediante Terraform.
+2. builds independientes del cliente universal para web, iOS y Android;
+3. dependencias en Docker Compose;
+4. servicio instrumentado y recuperable;
+5. Kubernetes con k3d;
+6. AWS mediante Terraform.
 
 Cada salto debe justificar qué capacidad añade y qué coste introduce.
 
@@ -46,6 +47,22 @@ environment protegido y una identidad temporal o dedicada de mínimo privilegio.
 No se conectará el repositorio público a un runner permanente dentro del VPS. El
 modelo concreto —push controlado desde runner alojado o pull de artefactos desde
 el servidor— se decidirá antes del primer despliegue.
+
+## Límites de entrega del cliente universal
+
+Un árbol de código compartido no implica un único artefacto ni una entrega
+acoplada:
+
+- web produce un artefacto desplegable en hosting web;
+- iOS produce una aplicación firmada y distribuida por su canal;
+- Android produce una aplicación firmada y distribuida por su canal;
+- cada target puede ejecutar, publicar y revertir su pipeline de forma
+  independiente;
+- la compatibilidad con el contrato API debe verificarse antes de publicar,
+  teniendo en cuenta que una aplicación instalada no se actualiza de inmediato.
+
+La estrategia concreta de versionado, firma, publicación y promoción sigue
+pendiente.
 
 ## Decisiones por fase
 

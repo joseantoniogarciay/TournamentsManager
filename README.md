@@ -70,12 +70,13 @@ versionable y navegable.
 | Monorepo de producto | Aceptada | [ADR-0005](docs/adr/0005-use-a-product-monorepo.md) |
 | GitHub público con secretos protegidos | Aceptada | [ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md) |
 | Backend como monolito modular | Aceptada | [ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md) |
+| Cliente universal web, iOS y Android | Aceptada | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
 | Go, PostgreSQL, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](PRODUCT.md) |
-| React y React Native | Dirección preferida | [SYSTEM_OPTIONS.md](SYSTEM_OPTIONS.md) |
+| React Native universal | Estrategia aceptada; framework pendiente | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
 | Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](DECISIONS_TO_REVISIT.md) |
 | Stack de observabilidad | Pendiente de evaluación | [OBSERVABILITY.md](OBSERVABILITY.md) |
-| Frontend | Pendiente de decisión | [DECISIONS_TO_REVISIT.md](DECISIONS_TO_REVISIT.md) |
+| Framework y rendering del cliente | Pendiente de decisión | [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md) |
 
 El gate activo es [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las decisiones
 funcionales permanecen pausadas hasta cerrarlo.

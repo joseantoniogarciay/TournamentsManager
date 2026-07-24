@@ -10,7 +10,7 @@ ADR: enlaza la decisión y define qué evidencia obliga a reabrirla.
 | Kubernetes/k3d | Dirección de aprendizaje | Antes de Fase 4 y tras medir Compose | [DEPLOYMENT.md](DEPLOYMENT.md) |
 | AWS | Cloud inicial objetivo | Inicio de Fase 5 o restricción de coste | [DEPLOYMENT.md](DEPLOYMENT.md) |
 | MinIO/S3 | Dirección objetivo | Antes del primer caso de uso con objetos | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| Frontend | Sin decidir | Cuando exista un flujo que necesite interfaz | [ROADMAP.md](ROADMAP.md) |
+| Cliente universal React Native | Aceptado en ADR-0008; framework pendiente | Divergencia sustancial, o incumplimiento de SEO, accesibilidad o rendimiento web | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
 | Cloud agnostic | Principio | Cuando una abstracción añada más coste que portabilidad | [ARCHITECTURE.md](ARCHITECTURE.md) |
 
 ## Cómo revisar
