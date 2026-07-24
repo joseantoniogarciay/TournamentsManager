@@ -29,6 +29,14 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Topología técnica inicial
+
+- **Aprendido:** monorepo no significa un único pipeline, y monolito no significa
+  ausencia de límites.
+- **Evidencia:** ADR de monorepo, publicación segura y monolito modular.
+- **Coste aceptado:** disciplina para mantener módulos y pipelines independientes.
+- **Siguiente decisión:** estrategia web/mobile y frontera de reutilización.
+
 ### 2026-07-23 — Fundación documental
 
 - **Aprendido:** una arquitectura profesional comienza por explicitar autoridad,

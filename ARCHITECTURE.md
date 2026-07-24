@@ -9,6 +9,10 @@ central es que la lógica de negocio no depende de frameworks, bases de datos,
 transportes ni proveedores cloud. Véase
 [ADR-0001](docs/adr/0001-pragmatic-clean-architecture.md).
 
+El backend comenzará como un monolito modular en Go: una unidad desplegable con
+límites internos por capacidades que se definirán desde el dominio. Véase
+[ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md).
+
 ## Reglas arquitectónicas
 
 1. Las dependencias apuntan hacia el dominio y los casos de uso.
@@ -20,6 +24,8 @@ transportes ni proveedores cloud. Véase
    construyendo una abstracción universal anticipada.
 6. La arquitectura se valida mediante comportamiento y dependencias observables,
    no solo mediante un diagrama.
+7. Un nuevo proceso o servicio exige evidencia de necesidad operativa, de
+   seguridad, de escala o de autonomía.
 
 ## Contexto funcional actual
 

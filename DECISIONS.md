@@ -56,6 +56,7 @@ Playbook completo: [decision-process.md](docs/playbooks/decision-process.md).
 | [0004](docs/adr/0004-technical-baseline-before-product-design.md) | Confirmar la base técnica antes del diseño de producto | Aceptado | 2026-07-23 |
 | [0005](docs/adr/0005-use-a-product-monorepo.md) | Usar un monorepo de producto | Aceptado | 2026-07-23 |
 | [0006](docs/adr/0006-public-github-repository-security-boundary.md) | Publicar el monorepo en GitHub sin publicar secretos | Aceptado | 2026-07-23 |
+| [0007](docs/adr/0007-use-a-modular-monolith-backend.md) | Usar un monolito modular para el backend | Aceptado | 2026-07-24 |
 
 ## Trazabilidad de un cambio
 

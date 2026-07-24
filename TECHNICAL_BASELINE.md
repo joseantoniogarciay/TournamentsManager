@@ -25,8 +25,8 @@
 | 0 | Arquitectura clean/hexagonal pragmática | Aceptada | [ADR-0001](docs/adr/0001-pragmatic-clean-architecture.md) |
 | 1 | Topología de repositorios: monorepo | Aceptada | [ADR-0005](docs/adr/0005-use-a-product-monorepo.md) |
 | 1 | GitHub público y secretos fuera de Git | Aceptada | [ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md) |
-| 2 | Topología del backend | En decisión | Este documento |
-| 3 | Estrategia web y mobile | Pendiente | Separadas / universal / web-first |
+| 2 | Topología del backend: monolito modular | Aceptada | [ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md) |
+| 3 | Estrategia web y mobile | En decisión | Este documento |
 | 4 | Estilo y contrato de API | Pendiente | REST/OpenAPI / GraphQL / RPC |
 | 5 | Arquitectura de identidad | Pendiente | Propia / gestionada / híbrida |
 | 6 | Persistencia y acceso a datos | Pendiente | PostgreSQL, SQL y migraciones |
@@ -152,7 +152,7 @@ Nx, Turborepo, pnpm ni una convención `apps/packages`.
 La publicación será un repositorio público en GitHub con los límites definidos en
 [ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md).
 
-## Decisión 2 — Topología del backend
+## Decisión 2 — Topología del backend — aceptada
 
 ### Problema
 
@@ -252,6 +252,112 @@ justifiquen.
 
 La aceptación no decidiría todavía paquetes, módulos de negocio, framework HTTP,
 acceso a datos ni estructura de carpetas.
+
+### Decisión del usuario
+
+**Aceptada:** alternativa A, monolito modular en Go. Véase
+[ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md).
+
+## Decisión 3 — Estrategia web y mobile
+
+### Problema
+
+El producto tendrá web y mobile. Hay que decidir si se construyen como una
+aplicación universal, como aplicaciones especializadas que comparten piezas o de
+forma secuencial empezando solo por web.
+
+Esta decisión no selecciona todavía framework web, Expo, navegación, estado ni
+design system.
+
+### Criterios
+
+En orden:
+
+1. calidad de la experiencia pública web y de la experiencia nativa;
+2. reutilización sin forzar abstracciones;
+3. independencia de builds y despliegues;
+4. mantenibilidad para un equipo pequeño;
+5. compatibilidad con CI/CD del monorepo;
+6. capacidad de evolucionar por plataforma.
+
+### Alternativa A — Aplicación universal React Native
+
+Una aplicación y un sistema de rutas sirven Android, iOS y web mediante React
+Native for Web; Expo es el candidato natural.
+
+**Ventajas**
+
+- máxima reutilización inicial de pantallas y navegación;
+- un único proyecto TypeScript;
+- comportamiento y features coordinados entre plataformas.
+
+**Inconvenientes**
+
+- la web pública puede necesitar rendering, SEO y layouts diferentes;
+- tablas, administración y accesibilidad web pueden exigir excepciones;
+- cada diferencia de plataforma introduce condiciones o archivos específicos;
+- compartir UI puede convertirse en objetivo en vez de consecuencia.
+
+**Mantenimiento**
+
+Bajo si las experiencias son realmente similares; creciente si web y native
+divergen.
+
+### Alternativa B — Aplicaciones especializadas con packages compartidos
+
+Una aplicación React web y una aplicación React Native mobile tienen navegación,
+entrypoint y UI propios. Comparten contratos, cliente API, validación, lógica pura
+y tokens de diseño cuando aporten valor.
+
+**Ventajas**
+
+- web optimizable para contenido público, SEO y pantallas densas;
+- mobile conserva navegación y experiencia nativas;
+- builds, releases y despliegues independientes;
+- reutilización deliberada, no obligatoria;
+- encaja con el monorepo aceptado.
+
+**Inconvenientes**
+
+- dos aplicaciones y dos rutas de CI/CD;
+- parte de la UI y de las pruebas se duplica;
+- exige gobernar packages compartidos sin crear un “common” indiscriminado.
+
+**Mantenimiento**
+
+Moderado y explícito. Cada plataforma paga por sus diferencias reales.
+
+### Alternativa C — Web/PWA primero y mobile después
+
+Se construye la web responsive y se retrasa la aplicación nativa hasta estabilizar
+el producto y el contrato API.
+
+**Ventajas**
+
+- menor trabajo inicial;
+- validación temprana desde navegador;
+- menos decisiones simultáneas.
+
+**Inconvenientes**
+
+- aplaza el aprendizaje mobile;
+- el contrato y la UX pueden sesgarse hacia web;
+- puede terminar manteniendo PWA y aplicación nativa además de la web.
+
+**Mantenimiento**
+
+Bajo al principio, con coste diferido cuando se incorpora mobile.
+
+### Recomendación
+
+**Opinión:** alternativa B, aplicaciones especializadas con packages compartidos.
+
+Web y mobile comparten aquello que es naturalmente portable: contrato, cliente,
+validaciones y lógica TypeScript sin APIs de plataforma. La UI se comparte solo
+si una misma interacción funciona bien en ambos medios.
+
+Esta decisión permite escoger después el framework web y el framework mobile de
+forma independiente, manteniendo React y React Native como direcciones preferidas.
 
 ### Decisión del usuario
 

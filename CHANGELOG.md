@@ -8,6 +8,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0007: backend como monolito modular en Go.
+- Comparación activa de estrategias web/mobile.
 - ADR-0005: monorepo de producto.
 - ADR-0006: GitHub público con límites para secretos y despliegues.
 - Comparación activa de monolito modular, microservicios y serverless.

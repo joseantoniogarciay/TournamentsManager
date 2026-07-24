@@ -206,8 +206,9 @@ observabilidad y operación mucho más complejas.
 Operación gestionada y escalado por evento, pero aumenta la fragmentación y puede
 acoplar ejecución, debugging y coste al proveedor.
 
-**Recomendación:** monolito modular en Go. Separar un servicio solo con evidencia
-de autonomía, carga, seguridad o ciclo de despliegue.
+**Decisión aceptada:** monolito modular en Go. Separar un servicio solo con
+evidencia de autonomía, carga, seguridad o ciclo de despliegue. Véase
+[ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md).
 
 Módulos candidatos:
 
@@ -303,6 +304,6 @@ notificación que deba sobrevivir a fallos.
 
 ## Próximo decision gate
 
-La decisión activa es la topología del backend, analizada en
+La decisión activa es la estrategia web/mobile, analizada en
 [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las decisiones de formato,
 participantes, visibilidad e incorporación permanecen pausadas.

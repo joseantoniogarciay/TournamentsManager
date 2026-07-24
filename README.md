@@ -2,7 +2,7 @@
 
 > Estado: Fase 0 — documentación
 >
-> Última revisión: 2026-07-23
+> Última revisión: 2026-07-24
 
 Este repositorio empieza por el handbook porque el objetivo no es solo entregar una
 aplicación: es aprender a diseñar, construir, desplegar y operar un backend con
@@ -69,6 +69,7 @@ versionable y navegable.
 | Base técnica antes del detalle de producto | Aceptada | [ADR-0004](docs/adr/0004-technical-baseline-before-product-design.md) |
 | Monorepo de producto | Aceptada | [ADR-0005](docs/adr/0005-use-a-product-monorepo.md) |
 | GitHub público con secretos protegidos | Aceptada | [ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md) |
+| Backend como monolito modular | Aceptada | [ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md) |
 | Go, PostgreSQL, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](PRODUCT.md) |
 | React y React Native | Dirección preferida | [SYSTEM_OPTIONS.md](SYSTEM_OPTIONS.md) |

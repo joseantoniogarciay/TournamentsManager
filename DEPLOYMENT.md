@@ -4,7 +4,7 @@
 
 ## Progresión
 
-1. proceso local comprensible;
+1. un backend modular como unidad desplegable comprensible;
 2. dependencias en Docker Compose;
 3. servicio instrumentado y recuperable;
 4. Kubernetes con k3d;
