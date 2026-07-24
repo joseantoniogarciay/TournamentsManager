@@ -1,13 +1,13 @@
 # Contexto inicial del sistema
 
-> Estado: conceptual; refleja la estrategia de cliente de ADR-0008, pero no
-> define framework ni despliegue.
+> Estado: conceptual; refleja la estrategia de cliente de ADR-0008, ADR-0015 y
+> ADR-0016, pero no define despliegue.
 >
 > Fuente funcional: [PRODUCT.md](../project/PRODUCT.md)
 
 ```mermaid
 flowchart LR
-    Guest["Invitado"] -->|"Consulta torneos públicos"| Client["Cliente universal"]
+    Guest["Invitado"] -->|"Acceso limitado / invitación"| Client["Cliente universal"]
     User["Usuario autenticado"] -->|"Crea, se une y consulta"| Client
     Client --> Targets["Web / iOS / Android"]
     Targets -->|"Contrato API"| API["TournamentsManager API"]

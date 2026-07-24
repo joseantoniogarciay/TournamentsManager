@@ -124,8 +124,11 @@ El Makefile raíz incorpora estas comprobaciones en `make format`, `make check` 
 ## Cliente Expo
 
 El cliente usará Expo, Expo Router y CNG conforme a
-[ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md).
-`apps/client` no se crea hasta completar la decisión de rendering y adaptación.
+[ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md). La
+web usará rendering client-side inicialmente conforme a
+[ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md).
+`apps/client` no se crea hasta completar el resto de decisiones técnicas
+bloqueantes.
 
 - Las pantallas futuras vivirán en `apps/client/src/app`; sus rutas derivarán de
   los archivos.
@@ -135,6 +138,8 @@ El cliente usará Expo, Expo Router y CNG conforme a
   cambios exclusivos de TypeScript se recargan con `expo start`.
 - No se edita a mano un directorio generado. Las necesidades nativas se declaran
   en configuración o config plugins.
+- Las diferencias web/native se aíslan en componentes, adaptadores o archivos
+  específicos de plataforma cuando exista una razón concreta.
 
 ## Flujo de trabajo
 

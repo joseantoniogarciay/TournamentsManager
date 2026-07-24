@@ -29,6 +29,18 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Rendering simple para producto privado
+
+- **Aprendido:** si el producto inicial vive en torneos privados, SEO, static
+  rendering y SSR no son necesidades de base sino posibles evoluciones.
+- **Aprendido:** compartir cliente no significa mezclar diferencias de plataforma
+  dentro de la lógica; se aíslan en componentes o archivos específicos.
+- **Evidencia:** ADR-0016 y documentación ajustada a privacidad inicial y acceso
+  invitado limitado.
+- **Coste aceptado:** la web inicial no optimiza indexación ni previews sociales
+  por torneo.
+- **Siguiente decisión:** configuración y secretos.
+
 ### 2026-07-24 — Rutas universales y nativo generado
 
 - **Aprendido:** Expo Router asigna una URL a cada pantalla; esa misma ruta puede
@@ -38,7 +50,7 @@ Para cada capacidad se sigue el ciclo:
 - **Evidencia:** ADR-0015, rutas y directorios nativos futuros documentados e
   ignorados por Git.
 - **Coste aceptado:** usar convenciones Expo y no tocar directorios generados.
-- **Siguiente decisión:** rendering y adaptación por plataforma.
+- **Siguiente decisión:** completada en ADR-0016.
 
 ### 2026-07-24 — Toolchain TypeScript reproducible
 

@@ -35,7 +35,7 @@
 | 8 | Toolchain TypeScript | Aceptada | [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md) |
 | 9 | Framework del cliente universal: Expo | Aceptada | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
 | 10 | Routing y generación nativa: Expo Router + CNG | Aceptada | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
-| 11 | Rendering y adaptación por plataforma | Pendiente | Web / iOS / Android |
+| 11 | Rendering y adaptación por plataforma | Aceptada | [ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md) |
 | 12 | Configuración y secretos | Pendiente | Contrato local, CI y cloud |
 | 13 | Entorno local | Pendiente | Procesos / Docker Compose |
 | 14 | Estrategia de pruebas | Pendiente | Capas, herramientas y gates |

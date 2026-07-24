@@ -19,9 +19,13 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - El enlace de vinculación abre una ruta dedicada mediante `GET` seguro; una
   confirmación explícita mediante `POST` consume el intento y termina en la home
   sin conservar el token en la navegación.
+- El alcance inicial de torneos se ajusta a privacidad por defecto y acceso
+  invitado limitado, dejando la visibilidad pública como decisión futura.
 
 ### Added
 
+- ADR-0016: rendering web client-side inicial y adaptación por plataforma
+  explícita para el cliente universal.
 - ADR-0015: Expo, Expo Router y CNG; rutas universales y proyectos nativos
   generados que no se versionan.
 - ADR-0014 y baseline ejecutable para Node 24 LTS, pnpm, TypeScript estricto,

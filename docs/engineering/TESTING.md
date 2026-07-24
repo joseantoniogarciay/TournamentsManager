@@ -22,7 +22,8 @@ cobertura aislada ni una pirámide rígida.
 | Flujo crítico | Prueba end-to-end mínima |
 | Paridad del cliente | Mismo escenario funcional en web, iOS y Android |
 | Layout adaptativo | Pruebas visuales y de interacción en móvil, tablet y escritorio |
-| Calidad web pública | Accesibilidad, navegación por teclado, URLs, metadatos y rendimiento |
+| Calidad web privada inicial | Accesibilidad, navegación por teclado, URLs internas y rendimiento percibido |
+| Calidad web pública futura | Metadatos, previews sociales, SEO y estrategia de rendering si se acepta visibilidad pública |
 | Seguridad/abuso | Pruebas negativas y de autorización |
 | Operabilidad | Inyección de fallo y verificación de señales/runbook |
 

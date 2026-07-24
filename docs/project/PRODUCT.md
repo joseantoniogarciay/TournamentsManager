@@ -17,23 +17,26 @@ incorporar otros deportes sin reescribir su núcleo.
 - Web, iOS y Android ofrecerán el mismo producto con paridad funcional.
 - La experiencia será responsive en navegadores y aplicaciones de móvil, tablet y
   escritorio, adaptando la presentación cuando corresponda.
-- Una persona invitada podrá consultar torneos públicos ya creados.
+- El producto inicial se orienta a torneos privados entre amistades, clubes o
+  grupos cerrados.
+- Una persona invitada tendrá acceso limitado; la visibilidad pública de torneos
+  se decidirá más adelante.
 - Crear un torneo o unirse a uno exigirá una cuenta.
 - La cuenta incluirá registro, inicio de sesión y recuperación de contraseña.
 - Una misma cuenta admitirá credenciales locales y login con Apple o Google.
 - El fútbol es el deporte inicial.
 - Las acciones detalladas de creación y gestión de un torneo se definirán de forma
   incremental.
-- Se ha aceptado un cliente universal con React Native; Expo y las decisiones de
-  framework, routing y rendering siguen pendientes.
+- Se ha aceptado un cliente universal con React Native, Expo, Expo Router, CNG y
+  rendering web client-side inicial.
 
 ## Actores y capacidades iniciales
 
 ### Invitado
 
-- ver el listado de torneos públicos;
-- abrir el detalle público de un torneo;
-- iniciar registro o login cuando intente una acción protegida.
+- ver únicamente las superficies que se definan como visibles sin cuenta;
+- iniciar registro o login desde invitaciones o cuando intente una acción
+  protegida.
 
 Un invitado no es una cuenta con rol especial: es una persona sin sesión
 autenticada.
@@ -101,7 +104,7 @@ duración y renovación de sesiones.
 El primer corte debe ser pequeño y atravesar producto, seguridad, datos, API y
 operación:
 
-1. un invitado lista y consulta torneos públicos;
+1. un invitado accede a una superficie permitida sin cuenta o a una invitación;
 2. una persona se registra, verifica su cuenta e inicia sesión;
 3. un usuario autenticado crea un torneo de fútbol con los datos mínimos;
 4. otro usuario se une mediante el mecanismo elegido;
@@ -130,10 +133,10 @@ Salvo decisión posterior:
 1. ¿Quién crea el torneo y qué puede delegar?
 2. ¿Se unen usuarios, equipos o ambos?
 3. ¿Cuál es el primer formato: liga, eliminatoria o grupos más eliminatoria?
-4. ¿Un torneo nace borrador y después se publica?
-5. ¿Puede ser público, privado o no listado?
+4. ¿Un torneo nace borrador, privado o visible mediante invitación?
+5. ¿Existirá visibilidad pública, privada o no listada?
 6. ¿Cómo se entra: código, invitación, solicitud o enlace?
-7. ¿Qué datos públicos se muestran sin login?
+7. ¿Qué datos visibles sin login se muestran?
 8. ¿Quién registra y confirma resultados?
 9. ¿Qué ocurre si alguien abandona o es expulsado?
 10. ¿Qué estados cierran o cancelan un torneo?

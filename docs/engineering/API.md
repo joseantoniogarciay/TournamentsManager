@@ -71,7 +71,7 @@ fallback web y evita que una previsualización del enlace vincule una cuenta.
 
 ## Decisiones pendientes
 
-- consumidores: web, mobile y acceso público;
+- consumidores: web, mobile y acceso invitado limitado;
 - primer contrato para listar/ver, crear y unirse a torneos;
 - versión y estructura de OpenAPI;
 - herramientas de lint, generación y compatibilidad;
@@ -111,7 +111,7 @@ Todo contrato futuro debe:
 
 Sin fijar todavía rutas ni payloads, la API necesitará capacidades para:
 
-- listar torneos visibles para un invitado;
+- resolver el acceso visible para invitado o invitación;
 - consultar el detalle permitido;
 - obtener la identidad y sesión actuales;
 - crear un torneo como usuario autenticado;

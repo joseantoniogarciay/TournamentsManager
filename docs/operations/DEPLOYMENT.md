@@ -61,6 +61,11 @@ acoplada:
 - la compatibilidad con el contrato API debe verificarse antes de publicar,
   teniendo en cuenta que una aplicación instalada no se actualiza de inmediato.
 
+La web inicial se entregará como aplicación client-side conforme a
+[ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md). Static
+rendering, SSR o una superficie web pública especializada se decidirán solo si
+aparecen requisitos públicos de indexación, previews o rendimiento.
+
 La estrategia concreta de versionado, firma, publicación y promoción sigue
 pendiente.
 

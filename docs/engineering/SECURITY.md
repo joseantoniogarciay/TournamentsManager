@@ -26,10 +26,10 @@ Antes del primer vertical slice:
 - API pública;
 - proveedor o módulo de identidad;
 - canal de email para verificación y recuperación;
-- datos públicos del torneo frente a datos de cuenta y gestión.
+- datos visibles sin cuenta frente a datos de cuenta y gestión.
 
 La autenticación demuestra identidad. La autorización para crear, ver datos no
-públicos, unirse o administrar se evalúa dentro del contexto del torneo.
+visibles, unirse o administrar se evalúa dentro del contexto del torneo.
 
 La identidad será propia y federada: el backend Go gestionará credenciales
 locales y sesiones, y verificará identidades Apple/Google antes de resolver un

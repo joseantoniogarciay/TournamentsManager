@@ -98,13 +98,14 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 | `develop` como rama de integración | Aceptada | [ADR-0013](docs/adr/0013-use-develop-as-integration-branch.md) |
 | Node LTS, pnpm y TypeScript estricto | Aceptada | [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md) |
 | Expo, Expo Router y CNG | Aceptada | [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md) |
+| Rendering web client-side inicial | Aceptada | [ADR-0016](docs/adr/0016-use-client-side-web-rendering-initially.md) |
 | Go, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](docs/project/PRODUCT.md) |
 | React Native universal | Expo, Expo Router y CNG aceptados | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md), [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md) |
 | TypeScript y cliente API generado | Aceptada; toolchain fijado | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md), [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md) |
 | Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](docs/governance/DECISIONS_TO_REVISIT.md) |
 | Stack de observabilidad | Pendiente de evaluación | [OBSERVABILITY.md](docs/operations/OBSERVABILITY.md) |
-| Framework y rendering del cliente | Pendiente de decisión | [TECHNICAL_BASELINE.md](docs/governance/TECHNICAL_BASELINE.md) |
+| Framework y rendering del cliente | Aceptado | [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md), [ADR-0016](docs/adr/0016-use-client-side-web-rendering-initially.md) |
 
 El gate activo es [TECHNICAL_BASELINE.md](docs/governance/TECHNICAL_BASELINE.md). Las decisiones
 funcionales permanecen pausadas hasta cerrarlo.

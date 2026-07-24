@@ -24,6 +24,11 @@ demanda los proyectos nativos; `ios/` y `android/` no serán fuente versionada d
 verdad. Véase
 [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md).
 
+La web del cliente universal se renderizará inicialmente en el navegador, sin
+SSR ni generación estática. La adaptación por plataforma será explícita y
+aislada cuando mejore una capacidad concreta. Véase
+[ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md).
+
 El cliente se comunicará con el backend Go mediante una API REST descrita
 contract-first con OpenAPI. El cliente TypeScript se generará desde ese contrato;
 los DTOs y el código generado permanecerán fuera del dominio. Véase
