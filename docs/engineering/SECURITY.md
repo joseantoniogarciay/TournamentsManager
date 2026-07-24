@@ -53,6 +53,11 @@ la contraseña anterior.
 - prueba fresca antes de vincular identidades o cambiar canales;
 - ningún intento de vinculación pendiente concede sesión o permisos;
 - deep links de identidad mediante HTTPS asociado, sin tokens de sesión en URL;
+- abrir un deep link mediante `GET` no consume el intento ni cambia la cuenta;
+- la confirmación explícita mediante `POST` es de un solo uso y resistente a
+  repetición y concurrencia;
+- la URL base procede de configuración confiable y el token no se propaga por
+  historial, referencias, analytics o recursos de terceros;
 - una sesión no puede cambiar de propietario durante un switch de cuenta;
 - cifrado y retención definidos según el tipo de dato;
 - recuperación y respuesta a incidentes ensayables.

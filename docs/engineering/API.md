@@ -57,6 +57,18 @@ Se adopta REST pragmático con OpenAPI contract-first conforme a
 Contract-first significa que el contrato precede a la implementación del
 endpoint; no que OpenAPI preceda a las decisiones de producto.
 
+## Navegación frente a operación REST
+
+Una ruta del cliente no equivale necesariamente a una operación de la API. Por
+ejemplo, el enlace de vinculación aceptado en
+[ADR-0010](../adr/0010-own-identity-with-federated-login.md) abre
+`/auth/link/confirm?token=...` mediante `GET`, pero esa navegación no cambia
+estado. La confirmación explícita realizará una operación `POST` del backend,
+cuyo contrato se diseñará en OpenAPI antes de implementarse.
+
+Esta separación mantiene `GET` como método seguro, permite deep linking con
+fallback web y evita que una previsualización del enlace vincule una cuenta.
+
 ## Decisiones pendientes
 
 - consumidores: web, mobile y acceso público;
@@ -82,6 +94,7 @@ Todo contrato futuro debe:
 - exponer información suficiente para correlación y diagnóstico;
 - contar con ejemplos y pruebas de contrato.
 - poder regenerar el cliente TypeScript de forma determinista.
+- no producir cambios de estado mediante `GET`.
 
 ## Definition of Done de un endpoint
 

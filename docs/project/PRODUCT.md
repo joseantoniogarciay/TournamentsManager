@@ -81,8 +81,11 @@ acceso queda pendiente. Se envía un enlace de un solo uso al correo verificado 
 no se crea una sesión hasta completar la vinculación.
 
 El enlace abrirá la aplicación instalada mediante deep linking o, en su defecto,
-la web. Tras validarlo se establece la nueva sesión; si el dispositivo tenía otra
-sesión activa, el cliente cambia automáticamente a la cuenta recién validada.
+la web. Mostrará una confirmación explícita antes de vincular la cuenta. Tras
+validarlo se establece la nueva sesión; si el dispositivo tenía otra sesión
+activa, el cliente cambia automáticamente a la cuenta recién validada y termina
+en la home. Un enlace inválido o caducado muestra el error y la recuperación
+posible.
 
 ### Recuperación de contraseña
 

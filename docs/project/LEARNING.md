@@ -33,6 +33,9 @@ Para cada capacidad se sigue el ciclo:
 
 - **Aprendido:** el `subject` identifica una cuenta dentro del proveedor; el
   backend debe extraerlo de un token verificado y mapearlo a un usuario interno.
+- **Aprendido:** una URL navegable no debe convertir un `GET` en una operación
+  sensible; la apertura presenta el estado y una confirmación explícita mediante
+  `POST` consume el intento antes de volver a la home.
 - **Evidencia:** ADR-0010 y flujos documentados para cambio de email y vinculación
   con prueba fresca.
 - **Coste aceptado:** operar credenciales, sesiones, recuperación, OAuth/OIDC y

@@ -121,13 +121,14 @@ Mientras está `pending_email_confirmation`:
 - no se emite una sesión normal ni se autorizan acciones;
 - el intento queda ligado al usuario candidato, proveedor y `subject`
   previamente verificado;
-- el enlace contiene un token aleatorio, expirado y de un solo uso;
+- el enlace contiene un token aleatorio, con caducidad y de un solo uso;
 - se almacena una representación no reutilizable del token, no el secreto en
   claro.
 
-Al abrir el enlace, el backend comprueba token, estado y expiración. En una
-operación atómica crea el vínculo si no existe conflicto y consume el intento. Si
-el enlace caduca o ya fue usado, no se modifica ninguna cuenta.
+Abrir el enlace no modifica la cuenta. La confirmación explícita hace que el
+backend compruebe token, estado y expiración. En una operación atómica crea el
+vínculo si no existe conflicto y consume el intento. Si el enlace caduca o ya fue
+usado, no se modifica ninguna cuenta.
 
 ## Deep link y establecimiento de sesión
 
@@ -146,18 +147,43 @@ El enlace transporta únicamente el token opaco y de un solo uso del intento. No
 contiene access tokens, refresh tokens ni identificadores de sesión.
 
 ```text
-HTTPS confirmation link
+GET /auth/link/confirm?token=...
           │
           ├── iOS associated ────> Universal Link
           ├── Android associated ─> App Link
           └── fallback ──────────> Web
-                                      │
-                                      ▼
-                             consume link attempt
-                                      │
-                                      ▼
-                               create new session
+          │
+          ▼
+show explicit confirmation
+          │
+          ▼
+POST confirmation to backend
+          │
+          ▼
+consume attempt + link identity + create session
+          │
+          ▼
+replace navigation with home /
 ```
+
+La ruta del enlace es una pantalla transitoria del cliente, no el endpoint REST
+que modifica la cuenta. Su forma conceptual es:
+
+```text
+https://<base-url>/auth/link/confirm?token=<opaque-token>
+```
+
+`GET` es seguro: puede validar lo necesario para presentar la pantalla, pero no
+consume el intento, no vincula la identidad y no crea una sesión. Esto protege el
+flujo frente a aperturas repetidas, previsualizaciones e inspecciones automáticas
+del enlace.
+
+La persona confirma mediante una acción explícita. El cliente realiza entonces
+un `POST` al backend; la ruta y los DTO concretos se incorporarán a OpenAPI antes
+de implementarse y el token se enviará en el cuerpo de la petición. El backend
+valida y consume el intento una sola vez, vincula la identidad y emite la nueva
+sesión. Las peticiones concurrentes o repetidas no pueden producir más de un
+consumo válido.
 
 Tras confirmar y crear el vínculo:
 
@@ -171,10 +197,20 @@ No se modifica el `user_id` de una sesión existente. El backend crea una sesió
 nueva y la sustitución solo ocurre después de haberla emitido correctamente. Las
 sesiones de otros dispositivos no se cambian por este switch.
 
+Después del éxito, web y aplicaciones sustituyen la ruta de confirmación por la
+home `/`; no añaden otra entrada al historial y el token deja de estar visible.
+Si el token es inválido, ha caducado, fue cancelado o ya se consumió, el cliente
+muestra un estado de error y una recuperación posible en vez de redirigir
+silenciosamente.
+
 En web, la sesión se entregará mediante el mecanismo seguro que se decida para
 cookies. En aplicaciones, el cliente canjeará un resultado de confirmación por la
 sesión mediante la API. Los secretos de sesión no aparecerán en URLs, historial,
 analytics ni logs.
+
+La URL base se configura por entorno y nunca se deriva de un encabezado `Host`
+no confiable. La pantalla de confirmación evitará recursos de terceros, no
+registrará el token y usará `Referrer-Policy: no-referrer`.
 
 ## Invariantes de seguridad
 
@@ -188,6 +224,9 @@ analytics ni logs.
 - Tokens, códigos y secretos no se escriben en logs.
 - Un intento pendiente no es una sesión ni concede permisos.
 - Una sesión nunca cambia de propietario; un switch crea y selecciona otra.
+- `GET` no consume un intento ni cambia identidad o sesión.
+- Solo una confirmación explícita mediante `POST` puede consumir el intento.
+- El token se elimina de la navegación tras el éxito.
 
 ## Fuentes técnicas
 
@@ -195,3 +234,5 @@ analytics ni logs.
 - [Apple: identificadores con alcance de equipo](https://developer.apple.com/documentation/signinwithapple/bringing-new-apps-and-users-into-your-team)
 - [Google: referencia OpenID Connect](https://developers.google.com/identity/openid-connect/reference)
 - [OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0.html)
+- [RFC 9110: métodos seguros](https://www.rfc-editor.org/rfc/rfc9110.html#name-safe-methods)
+- [OWASP: Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)

@@ -164,6 +164,37 @@ una cuenta local candidata, el login social queda en
 - Una sesión existente nunca cambia de usuario; se sustituye por otra sesión.
 - Las sesiones de otros dispositivos no se ven afectadas por el switch.
 
+### Aclaración de confirmación y destino — 2026-07-24
+
+El enlace no apuntará a la home ni ejecutará la vinculación mediante un `GET`.
+Usará una ruta HTTPS dedicada y transitoria:
+
+```text
+https://<base-url>/auth/link/confirm?token=<opaque-token>
+```
+
+- La ruta `GET` abre el cliente asociado o la web y presenta el estado de
+  confirmación; no consume el intento, no vincula la identidad y no crea sesión.
+- Una acción explícita de confirmación inicia una petición `POST` al backend. La
+  ruta y el contrato concretos de esa operación se definirán contract-first en
+  OpenAPI; el token se enviará en el cuerpo, no en otra URL.
+- El backend valida y consume el intento, crea el vínculo y emite una sesión
+  nueva dentro de los límites atómicos que se definan para el caso de uso.
+- Solo después del éxito, el cliente reemplaza la navegación por la home `/` y
+  elimina el token del historial visible.
+- Un token inválido, caducado, cancelado o ya consumido muestra un estado de error
+  recuperable; no se redirige silenciosamente a la home.
+- `token` es el nombre conceptual del parámetro. Nunca contiene una sesión,
+  email, proveedor ni identificador de usuario.
+- La URL base se obtiene de configuración confiable del entorno; no se construye
+  desde un encabezado `Host` recibido.
+- La pantalla de confirmación usará `Referrer-Policy: no-referrer`, evitará
+  recursos de terceros y no registrará el token.
+
+Separar apertura y mutación conserva la semántica segura de `GET` y evita que la
+inspección, previsualización o repetición de un enlace produzca una vinculación o
+un cambio de sesión involuntarios.
+
 ## Consecuencias
 
 ### Positivas
@@ -194,6 +225,10 @@ Antes de producción deberá existir evidencia de:
 - vinculación imposible sin prueba fresca de la cuenta existente;
 - revocación de sesiones y proveedores;
 - auditoría de acciones sensibles sin registrar secretos ni tokens;
+- apertura repetida del enlace mediante `GET` sin consumir el intento ni cambiar
+  ninguna cuenta;
+- consumo mediante `POST` de un solo uso, resistente a concurrencia y repetición;
+- eliminación del token de la navegación y del historial tras el éxito;
 - pruebas de compatibilidad en web, iOS y Android.
 
 ## Decisiones pendientes
@@ -224,3 +259,8 @@ Antes de producción deberá existir evidencia de:
 - [PRODUCT.md](../project/PRODUCT.md)
 - [TECHNICAL_BASELINE.md](../governance/TECHNICAL_BASELINE.md)
 - [SYSTEM_OPTIONS.md](../governance/SYSTEM_OPTIONS.md)
+
+## Fuentes técnicas
+
+- [RFC 9110: métodos seguros](https://www.rfc-editor.org/rfc/rfc9110.html#name-safe-methods)
+- [OWASP: Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)

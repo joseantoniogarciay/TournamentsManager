@@ -14,6 +14,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   un enlace de vinculación de un solo uso.
 - La confirmación usa HTTPS deep linking con fallback web y sustituye la sesión
   local sin cambiar el propietario de una sesión existente.
+- El enlace de vinculación abre una ruta dedicada mediante `GET` seguro; una
+  confirmación explícita mediante `POST` consume el intento y termina en la home
+  sin conservar el token en la navegación.
 
 ### Added
 
