@@ -64,6 +64,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) | Fijar el toolchain Go y aislar las herramientas | Aceptado | 2026-07-24 |
 | [0013](../adr/0013-use-develop-as-integration-branch.md) | Usar `develop` como rama de integración | Aceptado | 2026-07-24 |
 | [0014](../adr/0014-use-node-pnpm-and-strict-typescript.md) | Usar Node LTS, pnpm y TypeScript estricto | Aceptado | 2026-07-24 |
+| [0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) | Usar Expo, Expo Router y CNG | Aceptado | 2026-07-24 |
 
 ## Trazabilidad de un cambio
 

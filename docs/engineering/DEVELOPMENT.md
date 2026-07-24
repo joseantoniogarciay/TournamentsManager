@@ -121,6 +121,21 @@ pnpm run verify
 El Makefile raíz incorpora estas comprobaciones en `make format`, `make check` y
 `make verify`, junto con las de Go.
 
+## Cliente Expo
+
+El cliente usará Expo, Expo Router y CNG conforme a
+[ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md).
+`apps/client` no se crea hasta completar la decisión de rendering y adaptación.
+
+- Las pantallas futuras vivirán en `apps/client/src/app`; sus rutas derivarán de
+  los archivos.
+- `apps/client/ios` y `apps/client/android` se generarán bajo demanda y están
+  ignorados por Git.
+- Una development build se compila con `expo run:ios` o `expo run:android`; los
+  cambios exclusivos de TypeScript se recargan con `expo start`.
+- No se edita a mano un directorio generado. Las necesidades nativas se declaran
+  en configuración o config plugins.
+
 ## Flujo de trabajo
 
 1. Formular el problema y comprobar si requiere decisión.

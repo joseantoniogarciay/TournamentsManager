@@ -29,6 +29,17 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Rutas universales y nativo generado
+
+- **Aprendido:** Expo Router asigna una URL a cada pantalla; esa misma ruta puede
+  abrirse en web o mediante deep link nativo.
+- **Aprendido:** CNG no elimina el código nativo de una app: desplaza su fuente
+  de verdad a configuración y plugins reproducibles.
+- **Evidencia:** ADR-0015, rutas y directorios nativos futuros documentados e
+  ignorados por Git.
+- **Coste aceptado:** usar convenciones Expo y no tocar directorios generados.
+- **Siguiente decisión:** rendering y adaptación por plataforma.
+
 ### 2026-07-24 — Toolchain TypeScript reproducible
 
 - **Aprendido:** `Current` recibe primero las novedades de Node; LTS prioriza una

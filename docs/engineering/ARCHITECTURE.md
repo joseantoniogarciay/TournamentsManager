@@ -19,6 +19,11 @@ por plataforma cuando lo exijan el dispositivo, la accesibilidad o la calidad de
 la experiencia. Véase
 [ADR-0008](../adr/0008-use-a-universal-react-native-client.md).
 
+El cliente usará Expo. Expo Router proveerá rutas universales y CNG generará bajo
+demanda los proyectos nativos; `ios/` y `android/` no serán fuente versionada de
+verdad. Véase
+[ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md).
+
 El cliente se comunicará con el backend Go mediante una API REST descrita
 contract-first con OpenAPI. El cliente TypeScript se generará desde ese contrato;
 los DTOs y el código generado permanecerán fuera del dominio. Véase

@@ -22,6 +22,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0015: Expo, Expo Router y CNG; rutas universales y proyectos nativos
+  generados que no se versionan.
 - ADR-0014 y baseline ejecutable para Node 24 LTS, pnpm, TypeScript estricto,
   ESLint, Prettier, workspaces y formato al guardar.
 - ADR-0013: `develop` como rama de integración diaria, con promociones por

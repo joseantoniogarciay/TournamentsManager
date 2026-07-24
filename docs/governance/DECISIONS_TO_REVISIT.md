@@ -10,7 +10,8 @@ ADR: enlaza la decisión y define qué evidencia obliga a reabrirla.
 | Kubernetes/k3d | Dirección de aprendizaje | Antes de Fase 4 y tras medir Compose | [DEPLOYMENT.md](../operations/DEPLOYMENT.md) |
 | AWS | Cloud inicial objetivo | Inicio de Fase 5 o restricción de coste | [DEPLOYMENT.md](../operations/DEPLOYMENT.md) |
 | MinIO/S3 | Dirección objetivo | Antes del primer caso de uso con objetos | [ARCHITECTURE.md](../engineering/ARCHITECTURE.md) |
-| Cliente universal React Native | Aceptado en ADR-0008; framework pendiente | Divergencia sustancial, o incumplimiento de SEO, accesibilidad o rendimiento web | [ADR-0008](../adr/0008-use-a-universal-react-native-client.md) |
+| Cliente universal React Native + Expo | Aceptado en ADR-0008 y ADR-0015 | Divergencia sustancial, o incumplimiento de SEO, accesibilidad o rendimiento web | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
+| Expo Router + CNG | Rutas universales y nativos generados fuera de Git | Necesidad sostenida de código nativo propio, router insuficiente o generación no reproducible | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
 | Identidad propia federada | Aceptada en ADR-0010 | Incidente, coste operativo excesivo o requisitos de assurance superiores | [ADR-0010](../adr/0010-own-identity-with-federated-login.md) |
 | PostgreSQL + pgx + sqlc + goose | Aceptada en ADR-0011 | Consultas dinámicas inmantenibles, requisito de otro motor o migraciones que necesiten tooling superior | [ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) |
 | Go 1.26.5 + `go.tool.mod` | Aceptada en ADR-0012 | Nueva major, tooling incompatible o coste sostenido del módulo alternativo | [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) |

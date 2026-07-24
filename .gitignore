@@ -32,6 +32,8 @@ pnpm-debug.log*
 *.tsbuildinfo
 
 # Mobile native build outputs
+/apps/client/android/
+/apps/client/ios/
 android/.gradle/
 android/app/build/
 ios/Pods/

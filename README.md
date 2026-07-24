@@ -97,9 +97,10 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 | Go 1.26.5 y herramientas aisladas | Aceptada | [ADR-0012](docs/adr/0012-pin-go-toolchain-and-isolate-tools.md) |
 | `develop` como rama de integración | Aceptada | [ADR-0013](docs/adr/0013-use-develop-as-integration-branch.md) |
 | Node LTS, pnpm y TypeScript estricto | Aceptada | [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md) |
+| Expo, Expo Router y CNG | Aceptada | [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md) |
 | Go, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](docs/project/PRODUCT.md) |
-| React Native universal | Estrategia aceptada; framework pendiente | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
+| React Native universal | Expo, Expo Router y CNG aceptados | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md), [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md) |
 | TypeScript y cliente API generado | Aceptada; toolchain fijado | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md), [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md) |
 | Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](docs/governance/DECISIONS_TO_REVISIT.md) |
 | Stack de observabilidad | Pendiente de evaluación | [OBSERVABILITY.md](docs/operations/OBSERVABILITY.md) |

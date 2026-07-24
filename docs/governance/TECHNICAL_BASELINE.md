@@ -33,16 +33,17 @@
 | 6 | Persistencia y acceso a datos | Aceptada | [ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) |
 | 7 | Toolchain Go | Aceptada | [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) |
 | 8 | Toolchain TypeScript | Aceptada | [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md) |
-| 9 | Framework del cliente universal | Pendiente | Expo u otras opciones compatibles |
-| 10 | Rendering, routing y adaptación por plataforma | Pendiente | Web / iOS / Android |
-| 11 | Configuración y secretos | Pendiente | Contrato local, CI y cloud |
-| 12 | Entorno local | Pendiente | Procesos / Docker Compose |
-| 13 | Estrategia de pruebas | Pendiente | Capas, herramientas y gates |
-| 14 | Observabilidad mínima | Pendiente | Señales, OpenTelemetry y backends |
-| 15 | CI y política de calidad | Pendiente | Checks, artefactos y seguridad |
-| 16 | Contenedores y despliegue | Pendiente | Imagen, runtime y promoción |
-| 17 | IaC y AWS | Pendiente | Terraform, cuentas, red y estado |
-| 18 | Kubernetes local/cloud | Aplazada | Fase 4 del manifiesto |
+| 9 | Framework del cliente universal: Expo | Aceptada | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
+| 10 | Routing y generación nativa: Expo Router + CNG | Aceptada | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
+| 11 | Rendering y adaptación por plataforma | Pendiente | Web / iOS / Android |
+| 12 | Configuración y secretos | Pendiente | Contrato local, CI y cloud |
+| 13 | Entorno local | Pendiente | Procesos / Docker Compose |
+| 14 | Estrategia de pruebas | Pendiente | Capas, herramientas y gates |
+| 15 | Observabilidad mínima | Pendiente | Señales, OpenTelemetry y backends |
+| 16 | CI y política de calidad | Pendiente | Checks, artefactos y seguridad |
+| 17 | Contenedores y despliegue | Pendiente | Imagen, runtime y promoción |
+| 18 | IaC y AWS | Pendiente | Terraform, cuentas, red y estado |
+| 19 | Kubernetes local/cloud | Aplazada | Fase 4 del manifiesto |
 
 “Pendiente” significa que no existe decisión. Las direcciones del manifiesto son
 candidatos preferentes, no autorización para seleccionar librerías o crear
