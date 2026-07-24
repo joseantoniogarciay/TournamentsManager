@@ -5,26 +5,39 @@ GO_PACKAGES := ./...
 GO_BACKEND := $(GO) -C $(BACKEND_DIR)
 GO_TOOL := $(GO_BACKEND) tool -modfile=$(TOOL_MODFILE)
 GO_SOURCE := $(shell find $(BACKEND_DIR) -type f -name '*.go' -print -quit)
+PNPM ?= pnpm
 
 .PHONY: \
-	format format-check \
+	format format-go format-ts \
+	format-check format-check-go format-check-ts \
 	tidy tidy-check \
 	tidy-tools tidy-tools-check tidy-all \
-	lint test test-race build vuln \
+	lint lint-go lint-ts typecheck \
+	test test-race build vuln \
 	check verify
 
-# Modifica los archivos Go mediante el goimports pineado.
-format:
+# Modifica todos los archivos soportados por los formateadores pineados.
+format: format-go format-ts
+
+format-go:
 	$(GO_TOOL) goimports -w .
 
-# Comprueba el formato sin modificar archivos.
-format-check:
+format-ts:
+	$(PNPM) run format
+
+# Comprueba todo el formato sin modificar archivos.
+format-check: format-check-go format-check-ts
+
+format-check-go:
 	@unformatted="$$($(GO_TOOL) goimports -l .)" || exit $$?; \
 	if [ -n "$$unformatted" ]; then \
 		echo "Los siguientes archivos necesitan formato:"; \
 		echo "$$unformatted"; \
 		exit 1; \
 	fi
+
+format-check-ts:
+	$(PNPM) run format:check
 
 # Modifica go.mod y go.sum.
 tidy:
@@ -45,12 +58,20 @@ tidy-tools-check:
 # Modifica y limpia ambos grafos de módulos.
 tidy-all: tidy tidy-tools
 
-lint:
+lint: lint-go lint-ts
+
+lint-go:
 ifeq ($(strip $(GO_SOURCE)),)
-	@echo "lint: omitido; todavía no existen paquetes Go"
+	@echo "lint-go: omitido; todavía no existen paquetes Go"
 else
 	$(GO_TOOL) golangci-lint run $(GO_PACKAGES)
 endif
+
+lint-ts:
+	$(PNPM) run lint
+
+typecheck:
+	$(PNPM) run typecheck
 
 test:
 ifeq ($(strip $(GO_SOURCE)),)
@@ -80,8 +101,8 @@ else
 	$(GO_TOOL) govulncheck $(GO_PACKAGES)
 endif
 
-# Feedback local rápido.
-check: format-check lint test
+# Feedback local rápido para todos los ecosistemas activos.
+check: format-check lint typecheck test
 
 # Verificación completa local y de CI.
 verify: check tidy-check tidy-tools-check build vuln

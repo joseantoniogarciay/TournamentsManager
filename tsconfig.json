@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "tsBuildInfoFile": "node_modules/.cache/typescript/root.tsbuildinfo"
+  },
+  "files": ["eslint.config.mjs"],
+  "references": []
+}

@@ -48,6 +48,23 @@ make verify
 archivos. Revisa su diff antes de incluirlo en un commit. Los targets `check` y
 `verify` solo comprueban y no corrigen silenciosamente.
 
+## Comprobaciones TypeScript
+
+El runtime y el package manager están fijados por el repositorio. Tras clonar:
+
+```bash
+pnpm install
+```
+
+Durante un cambio:
+
+```bash
+pnpm run check
+```
+
+`make check` y `make verify` ejecutan las comprobaciones aplicables de Go y
+TypeScript desde una única entrada.
+
 ## Revisión
 
 La revisión pregunta:

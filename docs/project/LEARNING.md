@@ -29,6 +29,20 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Toolchain TypeScript reproducible
+
+- **Aprendido:** `Current` recibe primero las novedades de Node; LTS prioriza una
+  ventana estable y prolongada, adecuada para desarrollo y CI.
+- **Aprendido:** una versión `latest` no es automáticamente la mejor elección;
+  TypeScript debe permanecer dentro del rango compatible del linter.
+- **Aprendido:** TypeScript 6 rechaza una lista `files` vacía; el check raíz
+  valida configuración real mientras todavía no existen workspaces TypeScript.
+- **Evidencia:** ADR-0014, runtime y package manager pineados, workspaces, lockfile
+  y checks compartidos.
+- **Coste aceptado:** pnpm, ESLint y Prettier añaden piezas separadas a cambio de
+  dependencias explícitas y responsabilidades claras.
+- **Siguiente decisión:** framework del cliente universal.
+
 ### 2026-07-24 — Flujo de integración proporcional al equipo
 
 - **Aprendido:** una rama `develop` conserva `main` como hito estable, pero puede

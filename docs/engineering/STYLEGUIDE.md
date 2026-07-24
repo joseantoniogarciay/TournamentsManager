@@ -40,6 +40,21 @@ Continúan pendientes de su contexto de implementación:
 - estructura interna del monolito modular;
 - reglas de código generado.
 
+## TypeScript
+
+El baseline está aceptado en
+[ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md):
+
+- TypeScript estricto desde el primer workspace;
+- propiedades opcionales y accesos por índice tratados con precisión;
+- overrides de clases marcados explícitamente;
+- ESLint detecta problemas y Prettier decide el formato;
+- las excepciones de lint deben ser locales y justificar el motivo;
+- el código generado no se modifica manualmente.
+
+El framework podrá ampliar esta configuración, pero no reducir silenciosamente
+las garantías transversales.
+
 ## Reglas contra la sobreingeniería
 
 Se exige justificación antes de introducir:

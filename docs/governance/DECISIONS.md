@@ -63,6 +63,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) | Usar PostgreSQL con pgx, sqlc y goose | Aceptado | 2026-07-24 |
 | [0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) | Fijar el toolchain Go y aislar las herramientas | Aceptado | 2026-07-24 |
 | [0013](../adr/0013-use-develop-as-integration-branch.md) | Usar `develop` como rama de integración | Aceptado | 2026-07-24 |
+| [0014](../adr/0014-use-node-pnpm-and-strict-typescript.md) | Usar Node LTS, pnpm y TypeScript estricto | Aceptado | 2026-07-24 |
 
 ## Trazabilidad de un cambio
 

@@ -96,10 +96,11 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 | PostgreSQL con pgx, sqlc y goose | Aceptada | [ADR-0011](docs/adr/0011-use-postgresql-pgx-sqlc-and-goose.md) |
 | Go 1.26.5 y herramientas aisladas | Aceptada | [ADR-0012](docs/adr/0012-pin-go-toolchain-and-isolate-tools.md) |
 | `develop` como rama de integración | Aceptada | [ADR-0013](docs/adr/0013-use-develop-as-integration-branch.md) |
+| Node LTS, pnpm y TypeScript estricto | Aceptada | [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md) |
 | Go, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](docs/project/PRODUCT.md) |
 | React Native universal | Estrategia aceptada; framework pendiente | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
-| TypeScript y cliente API generado | Aceptada; toolchain pendiente | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md) |
+| TypeScript y cliente API generado | Aceptada; toolchain fijado | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md), [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md) |
 | Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](docs/governance/DECISIONS_TO_REVISIT.md) |
 | Stack de observabilidad | Pendiente de evaluación | [OBSERVABILITY.md](docs/operations/OBSERVABILITY.md) |
 | Framework y rendering del cliente | Pendiente de decisión | [TECHNICAL_BASELINE.md](docs/governance/TECHNICAL_BASELINE.md) |

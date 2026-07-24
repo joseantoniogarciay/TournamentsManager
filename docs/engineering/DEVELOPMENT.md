@@ -1,7 +1,8 @@
 # Desarrollo
 
-> Estado: toolchain Go aceptado en
-> [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md); el resto del
+> Estado: toolchains Go y TypeScript aceptados en
+> [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) y
+> [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md); el resto del
 > entorno local continúa pendiente.
 
 ## Principios
@@ -90,6 +91,35 @@ La configuración versionada de VS Code recomienda la extensión oficial de Go y
 ejecuta al guardar `apps/backend/scripts/goimports`. El wrapper selecciona el
 `goimports` pineado en `go.tool.mod`; el editor no necesita otro `goimports`
 global.
+
+También recomienda ESLint y Prettier, selecciona el TypeScript instalado en el
+workspace y formatea JavaScript, TypeScript y sus variantes JSX al guardar.
+
+## Toolchain TypeScript
+
+- Node 24.18.0 LTS se selecciona mediante `devEngines.runtime`.
+- pnpm 11.17.0 gestiona un lockfile y los workspaces `apps/*` y `packages/*`.
+- El linker aislado exige que cada workspace declare sus dependencias directas.
+- TypeScript 6.0.3 usa `strict`, `noUncheckedIndexedAccess`,
+  `exactOptionalPropertyTypes`, `noImplicitOverride` y `noEmit`.
+- ESLint 10 usa flat config y `typescript-eslint`; Prettier se ocupa únicamente
+  del formato.
+- `tsconfig.json` comprueba la configuración JavaScript del tooling y añadirá
+  referencias al existir aplicaciones o paquetes TypeScript.
+
+Comandos directos:
+
+```bash
+pnpm run format
+pnpm run format:check
+pnpm run lint
+pnpm run typecheck
+pnpm run check
+pnpm run verify
+```
+
+El Makefile raíz incorpora estas comprobaciones en `make format`, `make check` y
+`make verify`, junto con las de Go.
 
 ## Flujo de trabajo
 
