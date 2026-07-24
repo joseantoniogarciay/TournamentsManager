@@ -22,6 +22,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0013: `develop` como rama de integración diaria, con promociones por
+  bloques a `main` y ramas temporales solo cuando aporten aislamiento real.
 - ADR-0012: Go 1.26.5, módulos separados para aplicación y herramientas,
   `goimports`, golangci-lint v2 y `govulncheck`.
 - Makefile con checks rápidos, verificación completa y mantenimiento simétrico de

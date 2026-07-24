@@ -22,6 +22,7 @@
 | Orden | Decisión | Estado | Registro |
 |---|---|---|---|
 | 0 | Control de versiones: Git | Aceptada | [ADR-0003](../adr/0003-use-git-for-version-control.md) |
+| 0 | Flujo de ramas: `develop` como integración | Aceptada | [ADR-0013](../adr/0013-use-develop-as-integration-branch.md) |
 | 0 | Arquitectura clean/hexagonal pragmática | Aceptada | [ADR-0001](../adr/0001-pragmatic-clean-architecture.md) |
 | 1 | Topología de repositorios: monorepo | Aceptada | [ADR-0005](../adr/0005-use-a-product-monorepo.md) |
 | 1 | GitHub público y secretos fuera de Git | Aceptada | [ADR-0006](../adr/0006-public-github-repository-security-boundary.md) |

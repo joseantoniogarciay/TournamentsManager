@@ -29,6 +29,16 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Flujo de integración proporcional al equipo
+
+- **Aprendido:** una rama `develop` conserva `main` como hito estable, pero puede
+  acumular cambios no publicables y bloquear promociones completas.
+- **Evidencia:** ADR-0013 y guía de contribución con reglas para sincronización,
+  promoción y excepciones.
+- **Coste aceptado:** mantener dos ramas de larga vida mientras el trabajo sea
+  principalmente individual.
+- **Siguiente decisión:** toolchain TypeScript.
+
 ### 2026-07-24 — Identidad canónica del repositorio
 
 - **Aprendido:** la ruta de un módulo Go público forma parte de su identidad y

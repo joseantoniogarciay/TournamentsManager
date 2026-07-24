@@ -61,16 +61,24 @@ La revisión pregunta:
 
 ## Commits y ramas
 
-Git está inicializado con `main` como rama principal. El proveedor remoto, la
-protección de ramas y el flujo de integración siguen pendientes.
+`main` es la rama estable y `develop` la rama de integración diaria. El flujo
+aceptado está registrado en
+[ADR-0013](docs/adr/0013-use-develop-as-integration-branch.md).
 
-Hasta decidirlos:
-
+- el trabajo ordinario se hace y se commitea en `develop`;
+- no se crean ramas por feature como norma;
+- un bloque coherente y verificado se integra de `develop` a `main`;
+- después de la integración, el trabajo continúa en `develop`;
+- hotfixes, experimentos arriesgados o trabajo paralelo pueden usar ramas
+  temporales cuando aporten aislamiento real;
 - cada commit debe representar un cambio coherente;
 - el mensaje explica la intención, no solo los archivos modificados;
-- no se reescribe historial compartido;
+- no se reescribe el historial compartido de `main` ni `develop`;
 - no se versionan secretos ni artefactos generados;
 - una decisión importante enlaza su ADR.
+
+El mecanismo exacto de merge, las protecciones de ramas y los checks obligatorios
+se decidirán junto con CI y la política de calidad.
 
 Al ser un repositorio público, ninguna contribución externa se ejecuta con
 secretos o acceso de despliegue. Los cambios en `.github/workflows`, permisos y
