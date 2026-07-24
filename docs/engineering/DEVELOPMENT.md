@@ -1,6 +1,8 @@
 # Desarrollo
 
-> Estado: política inicial; herramientas concretas pendientes de Fase 1.
+> Estado: toolchain Go aceptado en
+> [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md); el resto del
+> entorno local continúa pendiente.
 
 ## Principios
 
@@ -19,6 +21,75 @@
 - Las migraciones `goose` se ejecutan explícitamente y no al arrancar la API.
 - Toda generación debe ser reproducible mediante un comando versionado y producir
   un diff limpio cuando las entradas no cambian.
+
+## Toolchain Go
+
+- Versión mínima del módulo: Go 1.26.0.
+- Toolchain exacto inicial: Go 1.26.5.
+- El backend usa `apps/backend/go.mod`.
+- Las herramientas usan `apps/backend/go.tool.mod` y
+  `apps/backend/go.tool.sum`.
+- `goimports`, golangci-lint, `govulncheck`, `sqlc` y `goose` se ejecutan con
+  `go tool -modfile=go.tool.mod`.
+- El Makefile de la raíz encapsula las rutas del monorepo y el módulo alternativo.
+- No se usa `@latest` en automatizaciones versionadas.
+
+## Comandos Go
+
+Durante un cambio:
+
+```bash
+go -C apps/backend test ./ruta/del/paquete/...
+make check
+```
+
+Antes de subirlo:
+
+```bash
+make verify
+```
+
+Comandos que modifican archivos:
+
+```bash
+make format
+make tidy
+make tidy-tools
+make tidy-all
+```
+
+Comandos que solo verifican:
+
+```bash
+make format-check
+make tidy-check
+make tidy-tools-check
+make lint
+make test
+make build
+make vuln
+make check
+make verify
+```
+
+`make check` agrupa formato, lint y tests. `make verify` añade la limpieza de
+ambos módulos, build y vulnerabilidades. CI reutilizará `make verify` cuando se
+decida su política.
+
+`make vuln` consulta la base oficial `vuln.go.dev`. No envía el código fuente,
+pero requiere red y usa información de módulos para resolver vulnerabilidades.
+
+Durante la fase documental, si no existe ningún paquete Go, Make omite con un
+mensaje explícito lint, test, build y vulnerabilidades. Estos checks se activan
+automáticamente al añadir el primer archivo `.go`; no se mantienen tests vacíos
+para simular cobertura.
+
+## Editor
+
+La configuración versionada de VS Code recomienda la extensión oficial de Go y
+ejecuta al guardar `apps/backend/scripts/goimports`. El wrapper selecciona el
+`goimports` pineado en `go.tool.mod`; el editor no necesita otro `goimports`
+global.
 
 ## Flujo de trabajo
 
@@ -47,12 +118,11 @@ Un cambio está terminado cuando:
 
 Fase 1 decidirá y documentará:
 
-- versiones de Go, PostgreSQL y herramientas;
 - Docker Compose y ciclo de vida de servicios;
 - variables de entorno y secretos locales;
-- comandos de `sqlc`, migraciones `goose` y datos semilla;
+- configuración y rutas de `sqlc`, migraciones `goose` y datos semilla;
 - health checks;
-- comandos de lint, test, build y cleanup;
+- comandos de servicios y cleanup;
 - soporte de plataforma.
 
-Hasta entonces no deben inventarse comandos ni prerequisitos.
+Hasta entonces no deben inventarse comandos ni prerequisitos adicionales.

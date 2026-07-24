@@ -94,6 +94,7 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 | REST con OpenAPI contract-first | Aceptada | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md) |
 | Identidad propia federada con Apple y Google | Aceptada | [ADR-0010](docs/adr/0010-own-identity-with-federated-login.md) |
 | PostgreSQL con pgx, sqlc y goose | Aceptada | [ADR-0011](docs/adr/0011-use-postgresql-pgx-sqlc-and-goose.md) |
+| Go 1.26.5 y herramientas aisladas | Aceptada | [ADR-0012](docs/adr/0012-pin-go-toolchain-and-isolate-tools.md) |
 | Go, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](docs/project/PRODUCT.md) |
 | React Native universal | Estrategia aceptada; framework pendiente | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |

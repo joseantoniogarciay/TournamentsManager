@@ -20,6 +20,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0012: Go 1.26.5, módulos separados para aplicación y herramientas,
+  `goimports`, golangci-lint v2 y `govulncheck`.
+- Makefile con checks rápidos, verificación completa y mantenimiento simétrico de
+  `go.mod` y `go.tool.mod`.
+- Configuración compartida de VS Code para formatear al guardar con el
+  `goimports` pineado.
 - ADR-0011: PostgreSQL con `pgx` nativo, código de acceso generado por `sqlc` y
   migraciones SQL versionadas mediante `goose`.
 - Reglas de separación entre dominio, adaptador, filas generadas y esquema, junto

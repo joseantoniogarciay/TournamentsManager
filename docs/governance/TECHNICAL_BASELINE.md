@@ -30,7 +30,7 @@
 | 4 | Estilo y contrato de API: REST/OpenAPI contract-first | Aceptada | [ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md) |
 | 5 | Identidad propia con Apple/Google federados | Aceptada | [ADR-0010](../adr/0010-own-identity-with-federated-login.md) |
 | 6 | Persistencia y acceso a datos | Aceptada | [ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) |
-| 7 | Toolchain Go | Pendiente | Versión, módulo, formato, lint y análisis |
+| 7 | Toolchain Go | Aceptada | [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) |
 | 8 | Toolchain TypeScript | Pendiente | Runtime, package manager y workspaces |
 | 9 | Framework del cliente universal | Pendiente | Expo u otras opciones compatibles |
 | 10 | Rendering, routing y adaptación por plataforma | Pendiente | Web / iOS / Android |

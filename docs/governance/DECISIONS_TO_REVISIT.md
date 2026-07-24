@@ -13,6 +13,8 @@ ADR: enlaza la decisión y define qué evidencia obliga a reabrirla.
 | Cliente universal React Native | Aceptado en ADR-0008; framework pendiente | Divergencia sustancial, o incumplimiento de SEO, accesibilidad o rendimiento web | [ADR-0008](../adr/0008-use-a-universal-react-native-client.md) |
 | Identidad propia federada | Aceptada en ADR-0010 | Incidente, coste operativo excesivo o requisitos de assurance superiores | [ADR-0010](../adr/0010-own-identity-with-federated-login.md) |
 | PostgreSQL + pgx + sqlc + goose | Aceptada en ADR-0011 | Consultas dinámicas inmantenibles, requisito de otro motor o migraciones que necesiten tooling superior | [ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) |
+| Go 1.26.5 + `go.tool.mod` | Aceptada en ADR-0012 | Nueva major, tooling incompatible o coste sostenido del módulo alternativo | [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) |
+| Path del módulo Go | Supuesto: `github.com/joseantoniogarciayanez/TournamentsManager/apps/backend` | Al crear el remoto GitHub y antes del primer código publicado | [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) |
 | Cloud agnostic | Principio | Cuando una abstracción añada más coste que portabilidad | [ARCHITECTURE.md](../engineering/ARCHITECTURE.md) |
 
 ## Cómo revisar

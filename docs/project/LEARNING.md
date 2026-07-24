@@ -29,6 +29,18 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Toolchain Go reproducible
+
+- **Aprendido:** `go tool` ejecuta herramientas declaradas; `tool` las registra y
+  `-modfile` selecciona un grafo alternativo.
+- **Aprendido:** `go.tool.mod` no es un nombre mágico; Make y el wrapper de VS
+  Code encapsulan su selección explícita.
+- **Evidencia:** ADR-0012, módulos separados, Makefile y formato al guardar con
+  `goimports` pineado.
+- **Coste aceptado:** mantener dos pares `go.mod`/`go.sum` y ejecutar
+  `tidy-check` para ambos.
+- **Siguiente decisión:** toolchain TypeScript.
+
 ### 2026-07-24 — Persistencia SQL-first tipada
 
 - **Aprendido:** `pgx` es el driver PostgreSQL, `sqlc` genera código Go desde SQL

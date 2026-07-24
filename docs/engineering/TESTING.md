@@ -47,6 +47,25 @@ cobertura aislada ni una pirámide rígida.
 - La matriz de navegadores, sistemas operativos, dispositivos y anchos se
   definirá por riesgo, no intentando cubrir todas las combinaciones.
 
+## Baseline ejecutable de Go
+
+ADR-0012 establece los comandos generales, sin decidir todavía librerías,
+fixtures, integración con PostgreSQL ni cobertura:
+
+- `make test`: todos los paquetes del módulo;
+- `make test-race`: detector de carreras para una comprobación más lenta;
+- `make check`: formato, lint y tests como feedback local;
+- `make verify`: añade módulos limpios, build y vulnerabilidades.
+
+Durante el desarrollo se prefiere el test más cercano al cambio:
+
+```bash
+go -C apps/backend test ./ruta/del/paquete/...
+```
+
+No se crean tests vacíos para demostrar que el runner funciona. El primer test se
+añadirá con el primer comportamiento observable o riesgo real.
+
 ## Decisiones pendientes
 
 - librerías de assertions y mocks, si hacen falta;

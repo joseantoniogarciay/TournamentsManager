@@ -30,6 +30,24 @@ Mantén el cambio pequeño y coherente. Incluye:
 - ADR cuando corresponda;
 - entrada en `CHANGELOG.md` si es relevante para usuarios u operación.
 
+## Comprobaciones del backend
+
+Para cambios Go:
+
+```bash
+make check
+```
+
+Antes de subir una rama:
+
+```bash
+make verify
+```
+
+`make format`, `make tidy`, `make tidy-tools` y `make tidy-all` modifican
+archivos. Revisa su diff antes de incluirlo en un commit. Los targets `check` y
+`verify` solo comprueban y no corrigen silenciosamente.
+
 ## Revisión
 
 La revisión pregunta:

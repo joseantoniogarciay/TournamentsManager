@@ -18,17 +18,27 @@ si no resuelve una necesidad actual.
 - Ejemplos ejecutables cuando exista código.
 - No duplicar una regla normativa: enlazar su fuente.
 
-## Go — baseline para decidir en Fase 2
+## Go
 
-La convención inicial será seguir el toolchain y la biblioteca estándar de Go
-antes de añadir herramientas o frameworks. Antes de codificar se documentarán:
+El baseline de toolchain está aceptado en
+[ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md):
 
-- versión y política de actualización;
-- formato, lint y análisis estático;
-- nombres y límites de paquetes;
-- errores y logging;
-- dependencias y generación;
-- estructura mínima del módulo.
+- Go 1.26.5 como toolchain exacto inicial;
+- `goimports` como formateador y organizador de imports;
+- golangci-lint v2 con lista explícita de reglas;
+- `govulncheck` para vulnerabilidades conocidas;
+- herramientas pineadas en un `go.tool.mod` separado;
+- biblioteca estándar antes que frameworks o helpers adicionales.
+
+Las excepciones `//nolint` nombran el linter y explican el motivo. No se desactiva
+una categoría completa para resolver un caso local.
+
+Continúan pendientes de su contexto de implementación:
+
+- nombres y límites concretos de paquetes;
+- política de errores y logging;
+- estructura interna del monolito modular;
+- reglas de código generado.
 
 ## Reglas contra la sobreingeniería
 
