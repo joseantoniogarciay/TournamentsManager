@@ -142,6 +142,22 @@ Nunca por email.
 - Si un nuevo correo ya pertenece a otra cuenta, se inicia un flujo explícito de
   vinculación o recuperación; no se fusionan datos silenciosamente.
 
+## Aclaración de vinculación — 2026-07-24
+
+Cuando un proveedor autentica al usuario pero todavía no existe el vínculo y hay
+una cuenta local candidata, el login social queda en
+`pending_email_confirmation`.
+
+- Se crea un intento temporal ligado al usuario candidato, proveedor y `subject`
+  verificado.
+- Se envía un enlace de un solo uso al correo ya verificado de la cuenta local.
+- El estado pendiente no constituye una sesión ni concede autorización.
+- El vínculo externo se crea únicamente al consumir correctamente el enlace.
+- Confirmación, consumo del intento y creación del vínculo serán atómicos.
+- Un intento caducado, cancelado o consumido no puede modificar la cuenta.
+- La continuación en el dispositivo original se decidirá con el modelo de
+  sesión; no se emitirá sesión antes de la confirmación.
+
 ## Consecuencias
 
 ### Positivas

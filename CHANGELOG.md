@@ -10,6 +10,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 - Handbook reorganizado por proyecto, gobierno, ingeniería y operaciones; la
   raíz conserva únicamente documentos de entrada y autoridad.
+- El primer login social sobre una cuenta local queda pendiente hasta consumir
+  un enlace de vinculación de un solo uso.
 
 ### Added
 

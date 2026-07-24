@@ -51,6 +51,7 @@ la contraseña anterior.
 - errores externos sin detalles sensibles;
 - acciones sensibles auditables;
 - prueba fresca antes de vincular identidades o cambiar canales;
+- ningún intento de vinculación pendiente concede sesión o permisos;
 - cifrado y retención definidos según el tipo de dato;
 - recuperación y respuesta a incidentes ensayables.
 

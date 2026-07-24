@@ -76,6 +76,10 @@ puede usar varios modelos según el deporte.
 Apple y Google son métodos de acceso vinculados al mismo usuario interno. Añadir
 o cambiar un email de contacto no reemplaza el vínculo con el proveedor.
 
+Si el primer login social coincide con una cuenta local todavía no vinculada, el
+acceso queda pendiente. Se envía un enlace de un solo uso al correo verificado y
+no se crea una sesión hasta completar la vinculación.
+
 ### Recuperación de contraseña
 
 “Recordar contraseña” se interpreta como recuperación segura: nunca se recupera

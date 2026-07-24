@@ -92,6 +92,47 @@ partir de entonces puede autenticarse con ambos métodos.
 La validación enviada al registrar la cuenta demostró control del email en aquel
 momento. La vinculación es una acción sensible posterior y exige control actual.
 
+## Estado pendiente de vinculación
+
+Autenticar correctamente con Google o Apple no concede acceso si el proveedor
+todavía no está vinculado y existe una cuenta local candidata. Se crea un intento
+de vinculación, no una sesión de usuario.
+
+```text
+provider_authenticated
+          │
+          ▼
+pending_email_confirmation
+       │             │
+       │             ├── caduca / se cancela ──> expired
+       │
+       └── enlace válido
+                 │
+                 ▼
+               linked
+                 │
+                 ▼
+           session_eligible
+```
+
+Mientras está `pending_email_confirmation`:
+
+- no existe todavía la identidad externa definitiva;
+- no se emite una sesión normal ni se autorizan acciones;
+- el intento queda ligado al usuario candidato, proveedor y `subject`
+  previamente verificado;
+- el enlace contiene un token aleatorio, expirado y de un solo uso;
+- se almacena una representación no reutilizable del token, no el secreto en
+  claro.
+
+Al abrir el enlace, el backend comprueba token, estado y expiración. En una
+operación atómica crea el vínculo si no existe conflicto y consume el intento. Si
+el enlace caduca o ya fue usado, no se modifica ninguna cuenta.
+
+La forma de devolver la sesión al dispositivo original —continuación segura,
+deep link o repetir el login social— se decidirá junto al modelo de sesión. La
+regla ya aceptada es que nunca habrá sesión antes de confirmar el vínculo.
+
 ## Invariantes de seguridad
 
 - Los sujetos externos no son identificadores del dominio.
@@ -102,6 +143,7 @@ momento. La vinculación es una acción sensible posterior y exige control actua
 - La recuperación local no crea ni vincula proveedores.
 - Los mensajes públicos no enumeran cuentas.
 - Tokens, códigos y secretos no se escriben en logs.
+- Un intento pendiente no es una sesión ni concede permisos.
 
 ## Fuentes técnicas
 
