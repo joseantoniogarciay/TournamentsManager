@@ -129,9 +129,52 @@ Al abrir el enlace, el backend comprueba token, estado y expiración. En una
 operación atómica crea el vínculo si no existe conflicto y consume el intento. Si
 el enlace caduca o ya fue usado, no se modifica ninguna cuenta.
 
-La forma de devolver la sesión al dispositivo original —continuación segura,
-deep link o repetir el login social— se decidirá junto al modelo de sesión. La
-regla ya aceptada es que nunca habrá sesión antes de confirmar el vínculo.
+## Deep link y establecimiento de sesión
+
+El enlace de confirmación será una URL HTTPS del producto:
+
+- iOS podrá abrirla como Universal Link si la aplicación está instalada y la
+  asociación o preferencia del usuario lo permite;
+- Android podrá abrirla como App Link verificado si la aplicación está instalada
+  y asociada al dominio;
+- en cualquier otro caso se resolverá en la aplicación web.
+
+No se usarán custom schemes como mecanismo primario. El dominio y las
+aplicaciones demostrarán su asociación mediante los mecanismos de plataforma.
+
+El enlace transporta únicamente el token opaco y de un solo uso del intento. No
+contiene access tokens, refresh tokens ni identificadores de sesión.
+
+```text
+HTTPS confirmation link
+          │
+          ├── iOS associated ────> Universal Link
+          ├── Android associated ─> App Link
+          └── fallback ──────────> Web
+                                      │
+                                      ▼
+                             consume link attempt
+                                      │
+                                      ▼
+                               create new session
+```
+
+Tras confirmar y crear el vínculo:
+
+- sin sesión previa, se crea la sesión del usuario vinculado;
+- si la sesión previa pertenece al mismo usuario, se mantiene la identidad y se
+  rota la sesión cuando corresponda;
+- si pertenece a otro usuario, el cliente sustituye automáticamente su sesión
+  local por una sesión nueva del usuario vinculado.
+
+No se modifica el `user_id` de una sesión existente. El backend crea una sesión
+nueva y la sustitución solo ocurre después de haberla emitido correctamente. Las
+sesiones de otros dispositivos no se cambian por este switch.
+
+En web, la sesión se entregará mediante el mecanismo seguro que se decida para
+cookies. En aplicaciones, el cliente canjeará un resultado de confirmación por la
+sesión mediante la API. Los secretos de sesión no aparecerán en URLs, historial,
+analytics ni logs.
 
 ## Invariantes de seguridad
 
@@ -144,6 +187,7 @@ regla ya aceptada es que nunca habrá sesión antes de confirmar el vínculo.
 - Los mensajes públicos no enumeran cuentas.
 - Tokens, códigos y secretos no se escriben en logs.
 - Un intento pendiente no es una sesión ni concede permisos.
+- Una sesión nunca cambia de propietario; un switch crea y selecciona otra.
 
 ## Fuentes técnicas
 

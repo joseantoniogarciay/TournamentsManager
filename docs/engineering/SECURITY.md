@@ -52,6 +52,8 @@ la contraseña anterior.
 - acciones sensibles auditables;
 - prueba fresca antes de vincular identidades o cambiar canales;
 - ningún intento de vinculación pendiente concede sesión o permisos;
+- deep links de identidad mediante HTTPS asociado, sin tokens de sesión en URL;
+- una sesión no puede cambiar de propietario durante un switch de cuenta;
 - cifrado y retención definidos según el tipo de dato;
 - recuperación y respuesta a incidentes ensayables.
 

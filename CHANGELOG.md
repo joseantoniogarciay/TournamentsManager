@@ -12,6 +12,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   raíz conserva únicamente documentos de entrada y autoridad.
 - El primer login social sobre una cuenta local queda pendiente hasta consumir
   un enlace de vinculación de un solo uso.
+- La confirmación usa HTTPS deep linking con fallback web y sustituye la sesión
+  local sin cambiar el propietario de una sesión existente.
 
 ### Added
 

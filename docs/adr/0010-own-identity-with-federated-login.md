@@ -155,8 +155,14 @@ una cuenta local candidata, el login social queda en
 - El vínculo externo se crea únicamente al consumir correctamente el enlace.
 - Confirmación, consumo del intento y creación del vínculo serán atómicos.
 - Un intento caducado, cancelado o consumido no puede modificar la cuenta.
-- La continuación en el dispositivo original se decidirá con el modelo de
-  sesión; no se emitirá sesión antes de la confirmación.
+- La confirmación usará una URL HTTPS asociada a web, iOS y Android.
+- Si la aplicación está instalada y asociada, el sistema operativo podrá abrir el
+  target mediante Universal Link o App Link; la web será el fallback.
+- El token de sesión nunca viajará en la URL.
+- Tras confirmar se creará una sesión nueva. Si ya había otra sesión local, el
+  cliente realizará un switch automático solo después de recibir la nueva.
+- Una sesión existente nunca cambia de usuario; se sustituye por otra sesión.
+- Las sesiones de otros dispositivos no se ven afectadas por el switch.
 
 ## Consecuencias
 
