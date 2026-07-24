@@ -8,6 +8,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- Ruta del módulo Go alineada con el propietario canónico de GitHub antes de la
+  primera publicación.
 - Handbook reorganizado por proyecto, gobierno, ingeniería y operaciones; la
   raíz conserva únicamente documentos de entrada y autoridad.
 - El primer login social sobre una cuenta local queda pendiente hasta consumir

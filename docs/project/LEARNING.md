@@ -29,6 +29,16 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Identidad canónica del repositorio
+
+- **Aprendido:** la ruta de un módulo Go público forma parte de su identidad y
+  debe coincidir con el propietario y nombre reales del remoto.
+- **Evidencia:** cuenta de GitHub autenticada y nombre
+  `joseantoniogarciay/TournamentsManager` comprobado antes del primer push.
+- **Coste evitado:** no publicar una ruta provisional que después obligue a
+  cambiar imports y consumidores.
+- **Siguiente decisión:** toolchain TypeScript.
+
 ### 2026-07-24 — Toolchain Go reproducible
 
 - **Aprendido:** `go tool` ejecuta herramientas declaradas; `tool` las registra y

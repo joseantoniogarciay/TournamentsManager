@@ -130,13 +130,12 @@ Versiones iniciales:
 - Las actualizaciones de patch o minor requieren cambio revisado y verificación;
   una major o un cambio de política reabre este ADR.
 
-## Supuesto reversible de implementación
+## Ruta canónica del módulo
 
-Mientras el repositorio no tenga remoto, el módulo usa
-`github.com/joseantoniogarciayanez/TournamentsManager/apps/backend`, derivado del
-propietario y nombre local actuales. Antes del primer código publicado se
-comprobará que coincide con la URL canónica de GitHub; si no coincide, se
-corregirá cuando todavía no existen consumidores.
+La autenticación del propietario y la disponibilidad del repositorio se
+verificaron antes de la primera publicación. El módulo usa
+`github.com/joseantoniogarciay/TournamentsManager/apps/backend`, que coincide con
+la URL canónica del remoto.
 
 ## Configuración inicial de lint
 

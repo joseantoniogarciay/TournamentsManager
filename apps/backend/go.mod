@@ -1,4 +1,4 @@
-module github.com/joseantoniogarciayanez/TournamentsManager/apps/backend
+module github.com/joseantoniogarciay/TournamentsManager/apps/backend
 
 go 1.26.0
 
