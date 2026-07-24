@@ -99,6 +99,7 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 | Node LTS, pnpm y TypeScript estricto | Aceptada | [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md) |
 | Expo, Expo Router y CNG | Aceptada | [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md) |
 | Rendering web client-side inicial | Aceptada | [ADR-0016](docs/adr/0016-use-client-side-web-rendering-initially.md) |
+| Configuración y secretos | Aceptada | [ADR-0017](docs/adr/0017-use-env-contracts-github-environments-and-oidc.md) |
 | Go, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](docs/project/PRODUCT.md) |
 | React Native universal | Expo, Expo Router y CNG aceptados | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md), [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md) |

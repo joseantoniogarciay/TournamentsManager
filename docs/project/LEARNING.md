@@ -29,6 +29,20 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Configuración pública, secretos y entornos
+
+- **Aprendido:** no toda configuración es secreta, pero toda configuración debe
+  tener propietario, contrato y destino.
+- **Aprendido:** cualquier valor `EXPO_PUBLIC_*` acaba accesible para quien use
+  el cliente, así que nunca es secreto.
+- **Aprendido:** OIDC permite que CI obtenga credenciales cloud temporales sin
+  guardar access keys largas en GitHub.
+- **Evidencia:** ADR-0017 y reglas actualizadas en seguridad, desarrollo y
+  despliegue.
+- **Coste aceptado:** los `.env` locales se crean fuera de Git y la validación de
+  configuración debe implementarse en cada runtime.
+- **Siguiente decisión:** entorno local.
+
 ### 2026-07-24 — Rendering simple para producto privado
 
 - **Aprendido:** si el producto inicial vive en torneos privados, SEO, static
@@ -39,7 +53,7 @@ Para cada capacidad se sigue el ciclo:
   invitado limitado.
 - **Coste aceptado:** la web inicial no optimiza indexación ni previews sociales
   por torneo.
-- **Siguiente decisión:** configuración y secretos.
+- **Siguiente decisión:** completada en ADR-0017.
 
 ### 2026-07-24 — Rutas universales y nativo generado
 

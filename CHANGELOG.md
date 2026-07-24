@@ -24,6 +24,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0017: `.env` locales ignorados, `.env.example` como contrato, GitHub
+  Environments y OIDC para configuración y secretos.
 - ADR-0016: rendering web client-side inicial y adaptación por plataforma
   explícita para el cliente universal.
 - ADR-0015: Expo, Expo Router y CNG; rutas universales y proyectos nativos

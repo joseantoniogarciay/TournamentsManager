@@ -48,6 +48,12 @@ No se conectará el repositorio público a un runner permanente dentro del VPS. 
 modelo concreto —push controlado desde runner alojado o pull de artefactos desde
 el servidor— se decidirá antes del primer despliegue.
 
+La configuración y los secretos de despliegue siguen
+[ADR-0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md):
+GitHub Environment protegido, secretos mínimos por entorno y OIDC para cloud
+cuando esté disponible. Las credenciales persistentes se consideran una excepción
+que debe documentarse.
+
 ## Límites de entrega del cliente universal
 
 Un árbol de código compartido no implica un único artefacto ni una entrega

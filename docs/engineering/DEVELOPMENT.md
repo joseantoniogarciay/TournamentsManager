@@ -141,6 +141,20 @@ bloqueantes.
 - Las diferencias web/native se aíslan en componentes, adaptadores o archivos
   específicos de plataforma cuando exista una razón concreta.
 
+## Configuración local
+
+La configuración y los secretos siguen
+[ADR-0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md).
+
+- Los `.env` reales son locales y están ignorados por Git.
+- Los `.env.example` futuros serán contratos versionados por app o servicio.
+- El backend fallará al arrancar si falta configuración obligatoria o tiene
+  formato inválido.
+- El cliente Expo solo podrá leer desde JavaScript variables `EXPO_PUBLIC_*`, que
+  se tratarán como públicas.
+- Docker Compose podrá usar `env_file` cuando se decida el entorno local.
+- No se introduce gestor de secretos hasta que exista evidencia operativa.
+
 ## Flujo de trabajo
 
 1. Formular el problema y comprobar si requiere decisión.

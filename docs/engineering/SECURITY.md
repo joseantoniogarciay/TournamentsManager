@@ -79,6 +79,23 @@ la contraseña anterior.
 La decisión completa está en
 [ADR-0006](../adr/0006-public-github-repository-security-boundary.md).
 
+## Configuración y secretos
+
+La gestión de configuración sigue
+[ADR-0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md).
+
+- `.env`, `.env.*`, claves privadas, tokens, inventarios sensibles y estado
+  Terraform no se versionan.
+- `.env.example` documenta nombres y valores ficticios, no credenciales reales.
+- Cada variable incorporada al cliente Expo con `EXPO_PUBLIC_` se considera
+  pública.
+- Los secretos de CI viven en GitHub Secrets o Environment Secrets y solo se
+  exponen a jobs que los necesitan.
+- Producción requiere GitHub Environment protegido antes de acceder a secretos.
+- Cloud usará OIDC y credenciales temporales siempre que esté disponible.
+- Los secretos no se imprimen en logs, métricas, trazas, errores ni resultados
+  de comandos.
+
 ## Gates futuros
 
 | Gate | Evidencia |
