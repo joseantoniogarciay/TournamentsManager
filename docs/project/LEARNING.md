@@ -29,6 +29,18 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Persistencia SQL-first tipada
+
+- **Aprendido:** `pgx` es el driver PostgreSQL, `sqlc` genera código Go desde SQL
+  y `goose` versiona la evolución del esquema; resuelven problemas diferentes.
+- **Aprendido:** el código generado evita trabajo mecánico y detecta deriva, pero
+  no diseña consultas, transacciones, índices ni modelos de dominio.
+- **Evidencia:** ADR-0011 y reglas documentadas para separar filas, adaptadores y
+  dominio.
+- **Coste aceptado:** mantener SQL, generación determinista, mapeos explícitos y
+  una política operativa de migraciones.
+- **Siguiente decisión:** toolchain Go.
+
 ### 2026-07-24 — Identidad propia federada
 
 - **Aprendido:** el `subject` identifica una cuenta dentro del proveedor; el
@@ -40,7 +52,7 @@ Para cada capacidad se sigue el ciclo:
   con prueba fresca.
 - **Coste aceptado:** operar credenciales, sesiones, recuperación, OAuth/OIDC y
   controles de abuso.
-- **Siguiente decisión:** persistencia y acceso a datos.
+- **Siguiente decisión:** completada en ADR-0011.
 
 ### 2026-07-24 — Navegación del handbook
 

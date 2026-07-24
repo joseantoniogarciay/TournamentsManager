@@ -20,6 +20,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0011: PostgreSQL con `pgx` nativo, código de acceso generado por `sqlc` y
+  migraciones SQL versionadas mediante `goose`.
+- Reglas de separación entre dominio, adaptador, filas generadas y esquema, junto
+  con evidencia mínima de generación y migración.
 - ADR-0010: identidad propia con credenciales locales y login federado mediante
   Apple y Google.
 - Guía de identidad, subject verificado, cambio de email y vinculación segura.

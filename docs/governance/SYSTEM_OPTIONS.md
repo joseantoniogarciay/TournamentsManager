@@ -263,9 +263,14 @@ condiciona consultas, URLs, cache y privacidad.
 
 ## 9. Datos y consistencia
 
-**Recomendación:** PostgreSQL como sistema de registro. No introducir Redis hasta
-medir un problema. Las operaciones de crear y unirse deben ser transaccionales e
-idempotentes donde pueda existir repetición desde mobile.
+**Decisión aceptada:** PostgreSQL como sistema de registro, acceso nativo mediante
+`pgx`, generación de código Go tipado mediante `sqlc` y migraciones SQL
+versionadas con `goose`. Véase
+[ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md).
+
+No se introducirá Redis hasta medir un problema. Las operaciones de crear y
+unirse deberán ser transaccionales e idempotentes donde pueda existir repetición
+desde mobile.
 
 Decisiones pendientes:
 
@@ -275,7 +280,7 @@ Decisiones pendientes:
 - concurrencia de últimas plazas;
 - borrado de cuenta y conservación histórica;
 - zona horaria;
-- migraciones;
+- organización y despliegue de migraciones;
 - auditoría.
 
 ## 10. Mensajería y notificaciones

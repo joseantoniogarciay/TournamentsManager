@@ -60,6 +60,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0008](../adr/0008-use-a-universal-react-native-client.md) | Usar un cliente universal con React Native | Aceptado | 2026-07-24 |
 | [0009](../adr/0009-use-rest-and-openapi-contract-first.md) | Usar REST con OpenAPI contract-first | Aceptado | 2026-07-24 |
 | [0010](../adr/0010-own-identity-with-federated-login.md) | Gestionar identidad propia con login federado | Aceptado | 2026-07-24 |
+| [0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) | Usar PostgreSQL con pgx, sqlc y goose | Aceptado | 2026-07-24 |
 
 ## Trazabilidad de un cambio
 

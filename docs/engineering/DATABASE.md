@@ -1,6 +1,37 @@
 # Datos y persistencia
 
-> Dirección objetivo: PostgreSQL. Diseño y herramientas pendientes de decisión.
+> Estado: PostgreSQL, pgx, sqlc y goose aceptados; esquema y políticas operativas
+> pendientes.
+
+## Decisión vigente
+
+[ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) establece:
+
+- PostgreSQL como sistema de registro relacional principal;
+- `pgx` nativo para conexiones, pool y transacciones;
+- SQL escrito por el equipo y código Go tipado generado mediante `sqlc`;
+- migraciones SQL incrementales y versionadas mediante `goose`.
+
+```text
+Casos de uso y dominio
+          │
+          ▼
+Puerto necesario de persistencia
+          │
+          ▼
+Adaptador y mapeos
+          │
+          ├── código generado por sqlc
+          ├── pgx / pgxpool
+          └── PostgreSQL
+
+Esquema versionado ── goose ──> PostgreSQL
+```
+
+`sqlc` es un generador, no un ORM ni un driver. Analiza el esquema y las
+consultas y produce funciones, parámetros, resultados y escaneo tipados. `pgx`
+es el driver que comunica Go con PostgreSQL. `goose` evoluciona el esquema fuera
+del arranque normal de la API.
 
 ## Principios
 
@@ -12,14 +43,43 @@
 - Toda evolución de esquema será reproducible, revisable y reversible o tendrá un
   plan explícito de recuperación.
 - Backups solo cuentan cuando se prueba una restauración.
+- El SQL generado por una herramienta no sustituye la revisión del equipo; en
+  esta decisión el equipo escribe el SQL y `sqlc` genera Go.
+- Una única base compartida no elimina la propiedad de tablas por módulo.
+- El código generado no entra en el dominio ni se modifica manualmente.
+- No se crean repositorios genéricos ni una interfaz por tabla.
+
+## Política de migraciones
+
+- Las migraciones iniciales se escriben en SQL.
+- Una migración aplicada en un entorno compartido es inmutable.
+- `goose` se ejecuta como paso explícito de desarrollo o despliegue, no como
+  efecto secundario de iniciar la API.
+- Toda migración se prueba desde una base vacía y sobre la versión anterior
+  relevante.
+- La presencia de una sección `Down` no garantiza un rollback seguro cuando hay
+  pérdida o transformación de datos.
+- Los cambios incompatibles requerirán una estrategia documentada de rollback,
+  forward-fix o expand/contract.
+
+## Límite con el dominio
+
+Los tipos de filas generados por `sqlc` representan persistencia, no entidades de
+negocio. El adaptador realiza mapeos explícitos cuando el dominio necesite tipos
+o invariantes propios.
+
+Las transacciones se definen desde el caso de uso. No se añade una abstracción
+genérica de unit of work o repository antes de que proteja un límite real.
 
 ## Decisiones necesarias antes del primer esquema
 
 - límites de consistencia y transacciones;
 - identificadores y estrategia temporal;
-- herramienta y política de migraciones;
-- consultas: SQL directo, generador u otra alternativa;
+- organización de migraciones, consultas y código generado;
+- política para versionar o verificar el código generado;
+- versiones exactas de PostgreSQL, `pgx`, `sqlc` y `goose`;
 - concurrencia, idempotencia y bloqueos;
+- configuración del pool, timeouts y errores;
 - datos de desarrollo y pruebas;
 - backup, restore, retención y datos sensibles.
 
@@ -41,5 +101,6 @@ Antes de añadir cache se documentará:
 
 ## Evidencia operativa futura
 
-El handbook deberá incluir migración, rollback/forward-fix, backup, restauración,
-análisis de consultas y respuesta ante saturación de conexiones.
+El handbook deberá incluir generación determinista, migración, rollback o
+forward-fix, backup, restauración, análisis de consultas y respuesta ante
+saturación de conexiones.

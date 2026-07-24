@@ -14,6 +14,9 @@
 - La documentación cambia en el mismo conjunto de cambios que el comportamiento.
 - OpenAPI es la fuente editable del contrato HTTP; el cliente TypeScript generado
   no se modifica manualmente.
+- El equipo escribe las consultas SQL; el código de acceso generado por `sqlc`
+  no se modifica manualmente.
+- Las migraciones `goose` se ejecutan explícitamente y no al arrancar la API.
 - Toda generación debe ser reproducible mediante un comando versionado y producir
   un diff limpio cuando las entradas no cambian.
 
@@ -47,7 +50,7 @@ Fase 1 decidirá y documentará:
 - versiones de Go, PostgreSQL y herramientas;
 - Docker Compose y ciclo de vida de servicios;
 - variables de entorno y secretos locales;
-- migraciones y datos semilla;
+- comandos de `sqlc`, migraciones `goose` y datos semilla;
 - health checks;
 - comandos de lint, test, build y cleanup;
 - soporte de plataforma.

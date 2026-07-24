@@ -29,7 +29,7 @@
 | 3 | Estrategia web y mobile: cliente universal | Aceptada | [ADR-0008](../adr/0008-use-a-universal-react-native-client.md) |
 | 4 | Estilo y contrato de API: REST/OpenAPI contract-first | Aceptada | [ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md) |
 | 5 | Identidad propia con Apple/Google federados | Aceptada | [ADR-0010](../adr/0010-own-identity-with-federated-login.md) |
-| 6 | Persistencia y acceso a datos | Pendiente | PostgreSQL, SQL y migraciones |
+| 6 | Persistencia y acceso a datos | Aceptada | [ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) |
 | 7 | Toolchain Go | Pendiente | Versión, módulo, formato, lint y análisis |
 | 8 | Toolchain TypeScript | Pendiente | Runtime, package manager y workspaces |
 | 9 | Framework del cliente universal | Pendiente | Expo u otras opciones compatibles |
@@ -435,6 +435,41 @@ un mismo usuario interno. Véase
 
 El backend extraerá el `subject` de credenciales verificadas y nunca vinculará
 cuentas automáticamente solo por coincidencia de email.
+
+## Decisión 6 — Persistencia y acceso a datos — aceptada
+
+### Problema
+
+Hay que elegir el sistema de registro, el acceso desde Go y la evolución del
+esquema sin ocultar SQL ni acoplar el dominio a infraestructura.
+
+### Alternativas
+
+- `pgx` con SQL, escaneo y mapeo manual;
+- `pgx` con SQL validado y código tipado generado por `sqlc`;
+- ORM convencional como GORM;
+- framework code-first como Ent.
+
+Las migraciones incrementales se compararon mediante herramientas SQL sencillas,
+migración automática de ORM y tooling declarativo más avanzado.
+
+### Recomendación
+
+**Opinión:** PostgreSQL con `pgx` nativo, `sqlc` y migraciones SQL mediante
+`goose`. Conserva SQL visible, reduce código mecánico y evita introducir un ORM
+completo.
+
+### Decisión del usuario
+
+**Aceptada:** alternativa B. PostgreSQL será el sistema de registro; `pgx`
+proporcionará conexión, pool y transacciones; `sqlc` generará acceso Go tipado
+desde SQL escrito por el equipo; `goose` aplicará migraciones SQL versionadas.
+Véase [ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md).
+
+El código generado y las librerías quedan en el adaptador de persistencia. Las
+migraciones no se ejecutarán como efecto secundario del arranque normal de la
+API. Esquema, versiones, identificadores, organización y política de despliegue
+siguen pendientes.
 
 ## Resultado del gate
 

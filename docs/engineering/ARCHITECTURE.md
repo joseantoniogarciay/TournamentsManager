@@ -29,6 +29,12 @@ autorización. Apple y Google serán adaptadores de autenticación federada; sus
 identificadores no entrarán en el dominio como identificador de usuario. Véase
 [ADR-0010](../adr/0010-own-identity-with-federated-login.md).
 
+PostgreSQL será el sistema de registro principal. El adaptador de persistencia
+usará `pgx` nativo y código tipado generado por `sqlc` desde SQL escrito por el
+equipo. `goose` gestionará migraciones SQL versionadas fuera del arranque normal
+de la API. Ninguna de estas herramientas entra en el dominio. Véase
+[ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md).
+
 ## Reglas arquitectónicas
 
 1. Las dependencias apuntan hacia el dominio y los casos de uso.
