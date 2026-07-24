@@ -1,6 +1,30 @@
 # API
 
-> Estado: principios iniciales; estilo y contrato pendientes del dominio.
+> Estado: REST y OpenAPI contract-first aceptados; operaciones y tooling
+> pendientes.
+
+## Relación entre API y backend
+
+El backend es el sistema ejecutado en el servidor: dominio, casos de uso,
+autorización, persistencia, procesos y adaptadores. La API REST es uno de sus
+adaptadores de entrada. Ambos se implementarán en Go.
+
+OpenAPI describe el contrato HTTP entre ese backend y sus consumidores. No
+implementa el servidor ni contiene reglas de negocio.
+
+```text
+Cliente universal TypeScript
+          │
+          │ cliente generado / HTTP
+          ▼
+API REST y handlers Go
+          │
+          ▼
+Casos de uso y dominio Go
+          │
+          ▼
+Persistencia y servicios externos
+```
 
 ## Objetivo
 
@@ -8,12 +32,38 @@ La API debe expresar casos de uso y contratos estables, no reflejar directamente
 tablas ni detalles internos. Ningún endpoint se define antes de conocer actor,
 objetivo, autorización, invariantes y respuesta de error.
 
-## Decisiones previas
+## Decisión vigente
+
+Se adopta REST pragmático con OpenAPI contract-first conforme a
+[ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md).
+
+- La descripción OpenAPI es la fuente de verdad del contrato HTTP.
+- El backend Go implementa y valida el comportamiento.
+- Del contrato se genera un cliente TypeScript para la aplicación universal.
+- Los DTOs OpenAPI se traducen en el borde y no se convierten en modelos de
+  dominio.
+- La generación no alcanza casos de uso ni lógica de negocio.
+
+## Flujo contract-first
+
+1. Definir la operación y sus DTOs en OpenAPI.
+2. Revisar semántica HTTP, autorización, errores y compatibilidad.
+3. Validar el documento.
+4. Generar o actualizar el cliente TypeScript.
+5. Implementar el adaptador HTTP en Go.
+6. Probar que implementación y cliente satisfacen el contrato.
+7. Publicar el cambio junto con documentación y aprendizaje.
+
+Contract-first significa que el contrato precede a la implementación del
+endpoint; no que OpenAPI preceda a las decisiones de producto.
+
+## Decisiones pendientes
 
 - consumidores: web, mobile y acceso público;
 - primer contrato para listar/ver, crear y unirse a torneos;
-- HTTP/REST, RPC u otra alternativa;
-- formato y versionado del contrato;
+- versión y estructura de OpenAPI;
+- herramientas de lint, generación y compatibilidad;
+- generación o escritura manual de tipos de transporte Go;
 - identidad, autenticación y autorización;
 - validación y modelo de errores;
 - idempotencia y concurrencia;
@@ -31,6 +81,7 @@ Todo contrato futuro debe:
 - definir idempotencia donde una repetición pueda causar daño;
 - exponer información suficiente para correlación y diagnóstico;
 - contar con ejemplos y pruebas de contrato.
+- poder regenerar el cliente TypeScript de forma determinista.
 
 ## Definition of Done de un endpoint
 
@@ -41,6 +92,7 @@ Todo contrato futuro debe:
 - métricas, logs y trazas definidos;
 - límites y timeouts explícitos;
 - documentación actualizada.
+- cliente TypeScript regenerado y sin modificaciones manuales.
 
 ## Superficie candidata del primer vertical slice
 

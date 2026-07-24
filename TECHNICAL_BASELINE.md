@@ -27,7 +27,7 @@
 | 1 | GitHub público y secretos fuera de Git | Aceptada | [ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md) |
 | 2 | Topología del backend: monolito modular | Aceptada | [ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md) |
 | 3 | Estrategia web y mobile: cliente universal | Aceptada | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
-| 4 | Estilo y contrato de API | Pendiente | REST/OpenAPI / GraphQL / RPC |
+| 4 | Estilo y contrato de API: REST/OpenAPI contract-first | Aceptada | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md) |
 | 5 | Arquitectura de identidad | Pendiente | Propia / gestionada / híbrida |
 | 6 | Persistencia y acceso a datos | Pendiente | PostgreSQL, SQL y migraciones |
 | 7 | Toolchain Go | Pendiente | Versión, módulo, formato, lint y análisis |
@@ -369,6 +369,40 @@ mismo producto, incluido su uso en móvil y tablet. La interfaz será responsive
 adaptativa, no necesariamente idéntica píxel a píxel. Se permiten componentes
 específicos cuando una plataforma los necesite, sin rebajar accesibilidad,
 rendimiento o usabilidad para maximizar reutilización.
+
+## Decisión 4 — Estilo y contrato de API — aceptada
+
+### Problema
+
+El backend Go debe ofrecer un límite estable al cliente universal. Hay que decidir
+el estilo de comunicación, la fuente de verdad del contrato y cómo evitar deriva
+entre servidor y cliente.
+
+### Alternativas
+
+- **REST + OpenAPI contract-first:** HTTP orientado a recursos, contrato formal y
+  generación de cliente.
+- **GraphQL schema-first:** consultas flexibles con un modelo operativo
+  específico.
+- **RPC con IDL:** contratos fuertes y generación, con mayor fricción para
+  navegador y recursos públicos.
+- **REST sin descripción formal:** menor tooling inicial y mayor riesgo de deriva.
+
+### Recomendación
+
+**Opinión:** REST pragmático con OpenAPI contract-first. Es la solución mínima que
+formaliza el límite, funciona naturalmente con los tres targets y permite
+generación sin introducir GraphQL o RPC antes de necesitarlos.
+
+### Decisión del usuario
+
+**Aceptada:** REST con OpenAPI contract-first y cliente TypeScript generado. El
+backend y la implementación HTTP permanecen en Go. Véase
+[ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md).
+
+TypeScript se adopta para el cliente universal por su comprobación estática. La
+versión, configuración del compilador, runtime, package manager y workspaces
+siguen pendientes en la decisión de toolchain.
 
 ## Resultado del gate
 

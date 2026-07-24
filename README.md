@@ -71,9 +71,11 @@ versionable y navegable.
 | GitHub público con secretos protegidos | Aceptada | [ADR-0006](docs/adr/0006-public-github-repository-security-boundary.md) |
 | Backend como monolito modular | Aceptada | [ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md) |
 | Cliente universal web, iOS y Android | Aceptada | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
+| REST con OpenAPI contract-first | Aceptada | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md) |
 | Go, PostgreSQL, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](PRODUCT.md) |
 | React Native universal | Estrategia aceptada; framework pendiente | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
+| TypeScript y cliente API generado | Aceptada; toolchain pendiente | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md) |
 | Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](DECISIONS_TO_REVISIT.md) |
 | Stack de observabilidad | Pendiente de evaluación | [OBSERVABILITY.md](OBSERVABILITY.md) |
 | Framework y rendering del cliente | Pendiente de decisión | [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md) |

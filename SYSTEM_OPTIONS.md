@@ -238,8 +238,10 @@ cache y observabilidad específicas.
 Contratos fuertes y eficiencia, con mayor fricción directa para navegador y APIs
 públicas.
 
-**Recomendación:** REST + OpenAPI para el primer vertical slice. Evaluar GraphQL
-solo si las necesidades reales de consulta de los clientes lo justifican.
+**Decisión aceptada:** REST pragmático con OpenAPI contract-first. El backend y la
+API HTTP se implementan en Go; del contrato se generará el cliente TypeScript de
+la aplicación universal. OpenAPI no generará dominio ni reglas de negocio. Véase
+[ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md).
 
 ## 8. Participación y autorización
 
@@ -305,6 +307,6 @@ notificación que deba sobrevivir a fallos.
 
 ## Próximo decision gate
 
-La siguiente decisión activa es el estilo y contrato de API, según
+La siguiente decisión activa es la arquitectura de identidad, según
 [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las decisiones de formato,
 participantes, visibilidad e incorporación permanecen pausadas.

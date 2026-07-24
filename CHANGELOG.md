@@ -8,6 +8,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0009: API REST con OpenAPI contract-first y cliente TypeScript generado.
+- Distinción documental entre backend Go, adaptador HTTP y cliente TypeScript.
 - ADR-0008: cliente universal React Native para web, iOS y Android.
 - Paridad funcional y diseño adaptativo como límites de la experiencia
   multiplataforma.

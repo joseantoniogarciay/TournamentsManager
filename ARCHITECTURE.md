@@ -19,6 +19,11 @@ por plataforma cuando lo exijan el dispositivo, la accesibilidad o la calidad de
 la experiencia. Véase
 [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md).
 
+El cliente se comunicará con el backend Go mediante una API REST descrita
+contract-first con OpenAPI. El cliente TypeScript se generará desde ese contrato;
+los DTOs y el código generado permanecerán fuera del dominio. Véase
+[ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md).
+
 ## Reglas arquitectónicas
 
 1. Las dependencias apuntan hacia el dominio y los casos de uso.

@@ -29,6 +29,16 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Contrato API y cliente generado
+
+- **Aprendido:** la API HTTP es un adaptador del backend, no todo el backend;
+  OpenAPI coordina el servidor Go y el consumidor TypeScript.
+- **Evidencia:** ADR-0009 con REST contract-first, generación del cliente y
+  límites respecto al dominio.
+- **Coste aceptado:** mantener lint, generación y compatibilidad, especialmente
+  con aplicaciones instaladas que se actualizan más tarde.
+- **Siguiente decisión:** arquitectura de identidad.
+
 ### 2026-07-24 — Estrategia universal de cliente
 
 - **Aprendido:** compartir producto y comportamiento no obliga a usar una

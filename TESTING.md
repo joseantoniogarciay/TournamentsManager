@@ -14,6 +14,8 @@ cobertura aislada ni una pirámide rígida.
 | Invariante de dominio | Prueba rápida del dominio/caso de uso |
 | Consulta o transacción | Integración con PostgreSQL real |
 | Contrato externo | Prueba de contrato |
+| Deriva OpenAPI/Go | Validación del backend contra la descripción |
+| Deriva OpenAPI/TypeScript | Regeneración determinista y diff limpio |
 | Cableado de componentes | Integración o smoke test |
 | Flujo crítico | Prueba end-to-end mínima |
 | Paridad del cliente | Mismo escenario funcional en web, iOS y Android |
@@ -31,6 +33,8 @@ cobertura aislada ni una pirámide rígida.
 - Toda corrección de bug incluye una reproducción automatizada cuando sea viable.
 - Las pruebas deben ser deterministas, aisladas y diagnosticables.
 - Los datos de prueba no contienen información real sensible.
+- El tipado TypeScript mejora el feedback de desarrollo, pero no reemplaza la
+  validación en runtime ni las pruebas del backend.
 - La paridad funcional no exige snapshots idénticos: cada plataforma puede
   adaptar composición y navegación conservando el mismo resultado observable.
 - La matriz de navegadores, sistemas operativos, dispositivos y anchos se

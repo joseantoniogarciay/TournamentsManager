@@ -12,6 +12,10 @@
   código.
 - Configuración, secretos y datos de ejemplo se tratarán de forma explícita.
 - La documentación cambia en el mismo conjunto de cambios que el comportamiento.
+- OpenAPI es la fuente editable del contrato HTTP; el cliente TypeScript generado
+  no se modifica manualmente.
+- Toda generación debe ser reproducible mediante un comando versionado y producir
+  un diff limpio cuando las entradas no cambian.
 
 ## Flujo de trabajo
 
@@ -34,6 +38,7 @@ Un cambio está terminado cuando:
 - permite observar y diagnosticar su comportamiento;
 - actualiza la documentación afectada;
 - no contiene secretos ni dependencias no justificadas.
+- conserva alineados contrato OpenAPI, implementación Go y cliente TypeScript.
 
 ## Entorno local pendiente
 
