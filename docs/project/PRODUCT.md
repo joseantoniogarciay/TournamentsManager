@@ -20,6 +20,7 @@ incorporar otros deportes sin reescribir su núcleo.
 - Una persona invitada podrá consultar torneos públicos ya creados.
 - Crear un torneo o unirse a uno exigirá una cuenta.
 - La cuenta incluirá registro, inicio de sesión y recuperación de contraseña.
+- Una misma cuenta admitirá credenciales locales y login con Apple o Google.
 - El fútbol es el deporte inicial.
 - Las acciones detalladas de creación y gestión de un torneo se definirán de forma
   incremental.
@@ -68,9 +69,12 @@ puede usar varios modelos según el deporte.
 
 ### Login
 
-1. La persona demuestra su identidad mediante el mecanismo elegido.
+1. La persona demuestra su identidad mediante contraseña, Apple o Google.
 2. El cliente obtiene una sesión apropiada para web o mobile.
 3. El backend autoriza cada acción sobre recursos concretos.
+
+Apple y Google son métodos de acceso vinculados al mismo usuario interno. Añadir
+o cambiar un email de contacto no reemplaza el vínculo con el proveedor.
 
 ### Recuperación de contraseña
 

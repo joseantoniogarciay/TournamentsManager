@@ -28,7 +28,7 @@
 | 2 | Topología del backend: monolito modular | Aceptada | [ADR-0007](../adr/0007-use-a-modular-monolith-backend.md) |
 | 3 | Estrategia web y mobile: cliente universal | Aceptada | [ADR-0008](../adr/0008-use-a-universal-react-native-client.md) |
 | 4 | Estilo y contrato de API: REST/OpenAPI contract-first | Aceptada | [ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md) |
-| 5 | Arquitectura de identidad | Pendiente | Propia / gestionada / híbrida |
+| 5 | Identidad propia con Apple/Google federados | Aceptada | [ADR-0010](../adr/0010-own-identity-with-federated-login.md) |
 | 6 | Persistencia y acceso a datos | Pendiente | PostgreSQL, SQL y migraciones |
 | 7 | Toolchain Go | Pendiente | Versión, módulo, formato, lint y análisis |
 | 8 | Toolchain TypeScript | Pendiente | Runtime, package manager y workspaces |
@@ -403,6 +403,38 @@ backend y la implementación HTTP permanecen en Go. Véase
 TypeScript se adopta para el cliente universal por su comprobación estática. La
 versión, configuración del compilador, runtime, package manager y workspaces
 siguen pendientes en la decisión de toolchain.
+
+## Decisión 5 — Arquitectura de identidad — aceptada
+
+### Problema
+
+Hay que proporcionar email/password, verificación, recuperación y sesiones,
+además de login con Apple y Google, manteniendo un usuario y una autorización de
+negocio independientes de los proveedores.
+
+### Alternativas
+
+- identidad exclusivamente local;
+- proveedor de identidad gestionado;
+- identidad propia federada;
+- solo identidades externas.
+
+### Recomendación
+
+**Opinión profesional:** un proveedor gestionado reduciría el riesgo operativo.
+
+**Recomendación condicionada al aprendizaje:** identidad propia federada solo con
+threat model, librerías establecidas, pruebas de abuso y revisión de seguridad.
+
+### Decisión del usuario
+
+**Aceptada:** el backend Go gestionará identidad, credenciales locales,
+recuperación y sesiones. Apple y Google serán proveedores federados vinculables a
+un mismo usuario interno. Véase
+[ADR-0010](../adr/0010-own-identity-with-federated-login.md).
+
+El backend extraerá el `subject` de credenciales verificadas y nunca vinculará
+cuentas automáticamente solo por coincidencia de email.
 
 ## Resultado del gate
 

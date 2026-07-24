@@ -60,6 +60,7 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 - [DEVELOPMENT.md](docs/engineering/DEVELOPMENT.md)
 - [DATABASE.md](docs/engineering/DATABASE.md)
 - [API.md](docs/engineering/API.md)
+- [IDENTITY.md](docs/engineering/IDENTITY.md)
 - [SECURITY.md](docs/engineering/SECURITY.md)
 - [OBSERVABILITY.md](docs/operations/OBSERVABILITY.md)
 - [DEPLOYMENT.md](docs/operations/DEPLOYMENT.md)
@@ -91,6 +92,7 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 | Backend como monolito modular | Aceptada | [ADR-0007](docs/adr/0007-use-a-modular-monolith-backend.md) |
 | Cliente universal web, iOS y Android | Aceptada | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |
 | REST con OpenAPI contract-first | Aceptada | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md) |
+| Identidad propia federada con Apple y Google | Aceptada | [ADR-0010](docs/adr/0010-own-identity-with-federated-login.md) |
 | Go, PostgreSQL, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](docs/project/PRODUCT.md) |
 | React Native universal | Estrategia aceptada; framework pendiente | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md) |

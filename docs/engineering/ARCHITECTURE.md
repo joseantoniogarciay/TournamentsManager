@@ -24,6 +24,11 @@ contract-first con OpenAPI. El cliente TypeScript se generará desde ese contrat
 los DTOs y el código generado permanecerán fuera del dominio. Véase
 [ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md).
 
+El backend será autoridad de usuarios, credenciales locales, sesiones y
+autorización. Apple y Google serán adaptadores de autenticación federada; sus
+identificadores no entrarán en el dominio como identificador de usuario. Véase
+[ADR-0010](../adr/0010-own-identity-with-federated-login.md).
+
 ## Reglas arquitectónicas
 
 1. Las dependencias apuntan hacia el dominio y los casos de uso.

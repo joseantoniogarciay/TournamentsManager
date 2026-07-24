@@ -29,6 +29,16 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-24 — Identidad propia federada
+
+- **Aprendido:** el `subject` identifica una cuenta dentro del proveedor; el
+  backend debe extraerlo de un token verificado y mapearlo a un usuario interno.
+- **Evidencia:** ADR-0010 y flujos documentados para cambio de email y vinculación
+  con prueba fresca.
+- **Coste aceptado:** operar credenciales, sesiones, recuperación, OAuth/OIDC y
+  controles de abuso.
+- **Siguiente decisión:** persistencia y acceso a datos.
+
 ### 2026-07-24 — Navegación del handbook
 
 - **Aprendido:** mantener todos los documentos en la raíz aumenta visibilidad al

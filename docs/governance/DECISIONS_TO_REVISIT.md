@@ -11,6 +11,7 @@ ADR: enlaza la decisión y define qué evidencia obliga a reabrirla.
 | AWS | Cloud inicial objetivo | Inicio de Fase 5 o restricción de coste | [DEPLOYMENT.md](../operations/DEPLOYMENT.md) |
 | MinIO/S3 | Dirección objetivo | Antes del primer caso de uso con objetos | [ARCHITECTURE.md](../engineering/ARCHITECTURE.md) |
 | Cliente universal React Native | Aceptado en ADR-0008; framework pendiente | Divergencia sustancial, o incumplimiento de SEO, accesibilidad o rendimiento web | [ADR-0008](../adr/0008-use-a-universal-react-native-client.md) |
+| Identidad propia federada | Aceptada en ADR-0010 | Incidente, coste operativo excesivo o requisitos de assurance superiores | [ADR-0010](../adr/0010-own-identity-with-federated-login.md) |
 | Cloud agnostic | Principio | Cuando una abstracción añada más coste que portabilidad | [ARCHITECTURE.md](../engineering/ARCHITECTURE.md) |
 
 ## Cómo revisar

@@ -31,6 +31,13 @@ Antes del primer vertical slice:
 La autenticación demuestra identidad. La autorización para crear, ver datos no
 públicos, unirse o administrar se evalúa dentro del contexto del torneo.
 
+La identidad será propia y federada: el backend Go gestionará credenciales
+locales y sesiones, y verificará identidades Apple/Google antes de resolver un
+usuario interno. Email no será la clave de una identidad externa y una
+coincidencia no autoriza vinculación automática. Véanse
+[ADR-0010](../adr/0010-own-identity-with-federated-login.md) e
+[IDENTITY.md](IDENTITY.md).
+
 La recuperación de contraseña no revelará si existe una cuenta y nunca devolverá
 la contraseña anterior.
 
@@ -43,6 +50,7 @@ la contraseña anterior.
 - entradas no confiables validadas en el límite;
 - errores externos sin detalles sensibles;
 - acciones sensibles auditables;
+- prueba fresca antes de vincular identidades o cambiar canales;
 - cifrado y retención definidos según el tipo de dato;
 - recuperación y respuesta a incidentes ensayables.
 

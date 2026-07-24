@@ -13,6 +13,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0010: identidad propia con credenciales locales y login federado mediante
+  Apple y Google.
+- Guía de identidad, subject verificado, cambio de email y vinculación segura.
 - ADR-0009: API REST con OpenAPI contract-first y cliente TypeScript generado.
 - Distinción documental entre backend Go, adaptador HTTP y cliente TypeScript.
 - ADR-0008: cliente universal React Native para web, iOS y Android.

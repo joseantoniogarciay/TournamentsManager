@@ -103,14 +103,15 @@ Un proveedor estándar gestiona credenciales y sesiones; TournamentsManager
 mantiene un `User` interno y toda autorización de negocio. El backend depende del
 contrato OIDC/JWT, no de objetos de dominio del proveedor.
 
-**Recomendación:** alternativa C para producción. Permite aprender autenticación y
-autorización sin almacenar contraseñas. Si se elige construir identidad propia
-como ejercicio, debe ser una decisión consciente con threat model y revisión
-específica.
+**Decisión aceptada:** identidad propia federada. El backend Go gestionará
+credenciales locales, recuperación y sesiones; Apple y Google serán proveedores
+de autenticación vinculables al usuario interno. La decisión asume un threat
+model y revisión de seguridad específicos. Véase
+[ADR-0010](../adr/0010-own-identity-with-federated-login.md).
 
-Para web SPA y aplicaciones nativas, Authorization Code con PKCE es el flujo
-recomendado por proveedores OIDC actuales. [Referencia de Auth0 sobre
-PKCE](https://auth0.com/docs/api/authentication/authorization-code-flow-with-pkce/authorize-with-pkce).
+El flujo OAuth/OIDC exacto y sus librerías siguen pendientes. El backend deberá
+verificar las credenciales del proveedor y extraer de ellas el `subject`; el
+frontend no será autoridad de ese dato.
 
 La recuperación debe evitar enumeración de usuarios, usar tokens aleatorios,
 expirables y de un solo uso, y no iniciar sesión automáticamente tras el cambio.
@@ -307,6 +308,6 @@ notificación que deba sobrevivir a fallos.
 
 ## Próximo decision gate
 
-La siguiente decisión activa es la arquitectura de identidad, según
+La siguiente decisión activa es persistencia y acceso a datos, según
 [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las decisiones de formato,
 participantes, visibilidad e incorporación permanecen pausadas.
