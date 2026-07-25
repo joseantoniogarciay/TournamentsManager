@@ -1,7 +1,7 @@
 # Datos y persistencia
 
-> Estado: PostgreSQL, pgx, sqlc y goose aceptados; esquema y políticas operativas
-> pendientes.
+> Estado: PostgreSQL, pgx, sqlc y goose aceptados; PostgreSQL 18.4 en Compose
+> local. El esquema y las políticas operativas de producción continúan pendientes.
 
 ## Decisión vigente
 
@@ -32,6 +32,14 @@ Esquema versionado ── goose ──> PostgreSQL
 consultas y produce funciones, parámetros, resultados y escaneo tipados. `pgx`
 es el driver que comunica Go con PostgreSQL. `goose` evoluciona el esquema fuera
 del arranque normal de la API.
+
+## PostgreSQL local
+
+[ADR-0018](../adr/0018-use-compose-for-local-service-dependencies.md) implementa
+PostgreSQL 18.4 mediante Docker Compose con volumen nombrado, salud basada en
+`pg_isready` y puerto expuesto exclusivamente en loopback. API Go, Expo y las
+migraciones se ejecutan desde el host. El procedimiento operativo está en el
+[runbook local](../runbooks/local-postgresql.md).
 
 ## Principios
 

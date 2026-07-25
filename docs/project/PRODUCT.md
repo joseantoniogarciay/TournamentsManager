@@ -142,6 +142,6 @@ Salvo decisión posterior:
 10. ¿Qué estados cierran o cancelan un torneo?
 
 Estas preguntas preceden al esquema de datos y a los endpoints.
-Se retomarán cuando termine el
+Se retoman en el Gate 0B, tras el cierre de la
 [Technical Baseline](../governance/TECHNICAL_BASELINE.md), conforme a
 [ADR-0004](../adr/0004-technical-baseline-before-product-design.md).

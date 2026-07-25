@@ -24,6 +24,42 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0030: región AWS España (`eu-south-2`), VPC independientes en dos AZ y
+  autorización explícita de coste antes de crear recursos.
+- ADR-0029: ALB público como entrada, API Fargate restringida al ALB y
+  PostgreSQL privado; sin NAT Gateway inicial y sin recursos AWS creados.
+- ADR-0028: HCP Terraform Free como backend remoto inicial, con ejecución local
+  y sin auto-apply; región, red y recursos AWS permanecen pendientes.
+- ADR-0027: estado Terraform local mientras no exista infraestructura AWS real;
+  backend remoto HCP Terraform Free o S3 pendiente antes del primer apply cloud.
+- ADR-0026: AWS Organizations con cuentas `management`, `nonprod` y `prod`,
+  IAM Identity Center, MFA y credenciales temporales; sin cuentas ni recursos
+  AWS creados aún.
+- ADR-0025: Terraform como herramienta IaC para la Fase 5; cuenta AWS,
+  estado remoto, red y recursos siguen pendientes y no se crea gasto cloud.
+- ADR-0024: ECR privado, tags inmutables y promoción por digest; futuros
+  entornos dev, staging y prod con releases selectivas solo cuando exista un
+  disparador real, sin crear recursos AWS aún.
+- ADR-0023: ECS con Fargate como runtime cloud futuro; no se crearán recursos
+  AWS ni gasto hasta abrir la Fase 5.
+- ADR-0022: la API se empaquetará como imagen OCI/Docker de runtime mínimo;
+  runtime, registry y promoción permanecen como decisiones separadas.
+- ADR-0021: CI informativa que ejecuta `make verify` y puerta de calidad local;
+  sin PR ni checks obligatorios mientras el trabajo sea individual.
+- ADR-0020: observabilidad mínima correlacionada con OpenTelemetry,
+  Prometheus, Grafana, Loki y Tempo; logs JSON, métricas y trazas consultables
+  en una interfaz común, sin OpenTelemetry Collector inicialmente.
+- ADR-0019: pruebas por riesgo y capas; `testing` y `httptest` como base,
+  PostgreSQL real en una base efímera para integración y E2E mínimos para flujos
+  críticos.
+- ADR-0018: Docker Compose para PostgreSQL local; API Go y cliente Expo en host
+  durante desarrollo, sin contenedores de frontend locales.
+- Entorno PostgreSQL 18.4 reproducible mediante Compose, contratos locales
+  separados, volumen persistente, health check y comandos `make db-*`.
+- Runbook de arranque, migración, inspección, parada y reset explícito de
+  PostgreSQL local.
+- Automatización separada por tecnología en `mk/go.mk`, `mk/typescript.mk` y
+  `mk/postgres.mk`; el `Makefile` raíz conserva los comandos transversales.
 - ADR-0017: `.env` locales ignorados, `.env.example` como contrato, GitHub
   Environments y OIDC para configuración y secretos.
 - ADR-0016: rendering web client-side inicial y adaptación por plataforma

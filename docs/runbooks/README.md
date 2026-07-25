@@ -1,8 +1,12 @@
 # Runbooks
 
 Los runbooks son procedimientos verificables para operar o recuperar el sistema.
-En Fase 0 solo existe la plantilla; crear comandos sin un sistema real sería
-documentación especulativa.
+El primer procedimiento ejecutable se incorpora al decidir e implementar el
+entorno local; su estado de prueba se declara dentro del propio runbook.
+
+## Runbooks disponibles
+
+- [PostgreSQL local con Docker Compose](local-postgresql.md)
 
 ## Requisitos
 

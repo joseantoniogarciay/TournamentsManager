@@ -20,7 +20,7 @@ salida y se completa la retrospectiva.
 **Salida:** todos los enlaces internos son válidos; las decisiones aceptadas se
 distinguen de propuestas y el siguiente decision gate está identificado.
 
-### Gate 0A — Confirmación de la base técnica
+### Gate 0A — Confirmación de la base técnica — completado
 
 Antes de Fase 1 se decide:
 
@@ -35,7 +35,7 @@ Antes de Fase 1 se decide:
 El estado y orden están en
 [TECHNICAL_BASELINE.md](../governance/TECHNICAL_BASELINE.md).
 
-### Gate 0B — Definición del primer vertical slice
+### Gate 0B — Definición del primer vertical slice — activo
 
 Después de confirmar la base técnica se decide:
 
