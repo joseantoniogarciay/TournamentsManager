@@ -29,6 +29,151 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-26 — Un estado visible puede preceder a una notificación
+
+- **Aprendido:** conservar una liga cancelada y mostrar su estado por enlace o
+  en «ligas seguidas» comunica la verdad del recurso sin introducir aún entrega,
+  preferencias y fallos de email o push.
+- **Evidencia:** ADR-0042.
+- **Coste aceptado:** las personas no reciben aviso proactivo ni explicación de
+  la cancelación.
+- **Siguiente decisión:** Gate 0B completado; preparar el entorno local antes de
+  implementar el vertical slice.
+
+### 2026-07-26 — La igualdad puede requerir reescribir un marcador
+
+- **Aprendido:** conservar algunos resultados y otorgar otros tras una baja crea
+  una desigualdad por el orden de calendario. Uniformar todos a `3-0` mantiene la
+  liga, pero exige historial porque puede reemplazar datos reales.
+- **Evidencia:** ADR-0041.
+- **Coste aceptado:** todavía no hay motivos tipados de baja ni reincorporación.
+- **Siguiente decisión:** completada en ADR-0042; Gate 0B cerrado.
+
+### 2026-07-26 — Compartir no equivale a congelar
+
+- **Aprendido:** publicar permite compartir y terminar de preparar una liga; el
+  límite seguro para generar partidos y congelar equipos es el inicio. Así se
+  evita replanificar una competición con resultados.
+- **Evidencia:** ADR-0040, sucesor parcial de ADR-0032.
+- **Coste aceptado:** una liga publicada aún no tiene partidos y puede quedarse
+  sin iniciar hasta que exista una política de recordatorios o limpieza.
+- **Siguiente decisión:** completada en ADR-0041; continúa motivo y comunicación
+  de una cancelación.
+
+### 2026-07-26 — Finalizar es una revisión, no un efecto colateral
+
+- **Aprendido:** exigir todos los marcadores y una acción explícita del creador
+  evita clasificaciones incompletas y deja una oportunidad final para detectar un
+  error. Un `3-0` administrativo se representa como marcador ordinario para no
+  crear incidencias que el dominio todavía no sabe interpretar.
+- **Evidencia:** ADR-0039.
+- **Coste aceptado:** se pierde el motivo de un resultado excepcional y no se
+  puede corregir una liga finalizada en el primer corte.
+- **Siguiente decisión:** cancelación completada en ADR-0040; continúa la baja
+  de equipos.
+
+### 2026-07-26 — Publicar prepara; iniciar habilita la competición
+
+- **Aprendido:** separar publicación e inicio evita que un resultado transforme
+  accidentalmente una liga que solo estaba lista para compartir. La transición
+  explícita conserva al creador el control de cuándo empieza el juego.
+- **Evidencia:** ADR-0038.
+- **Coste aceptado:** no hay inicio automático, calendario ni cambios de reglas
+  o equipos después de publicar.
+- **Siguiente decisión:** completada en ADR-0039; continúan cancelación y bajas
+  de equipos.
+
+### 2026-07-26 — Un marcador útil no necesita modelar todas las incidencias
+
+- **Aprendido:** dos goles enteros no negativos bastan para expresar victoria,
+  derrota y empate en una liga con puntuación 3-1-0. Añadir excepciones sin sus
+  reglas de clasificación produciría campos que el sistema no sabe interpretar.
+- **Evidencia:** ADR-0037.
+- **Coste aceptado:** no pueden registrarse aún penaltis, prórrogas,
+  incomparecencias ni sanciones.
+- **Siguiente decisión:** completada en ADR-0038; continúan finalización y bajas
+  de equipos.
+
+### 2026-07-26 — Corregir rápido no implica borrar el pasado
+
+- **Aprendido:** permitir la corrección directa conserva el flujo operativo, pero
+  el valor actual no explica por sí solo cómo llegó a existir. El historial de
+  actor, instante y valores anterior/nuevo aporta trazabilidad sin una cola de
+  aprobaciones.
+- **Evidencia:** ADR-0036.
+- **Coste aceptado:** todavía no existen restauración, disputa ni revisión por
+  terceros.
+- **Siguiente decisión:** completada en ADR-0037; continúa el momento válido de
+  registro de resultados.
+
+### 2026-07-26 — Delegar no exige una segunda cola de aprobación
+
+- **Aprendido:** si el creador selecciona y puede revocar a quien administra
+  resultados, una confirmación adicional suele añadir espera y estados pendientes
+  sin aportar valor proporcional en una liga cerrada.
+- **Evidencia:** ADR-0035.
+- **Coste aceptado:** un marcador equivocado será visible hasta corregirse; la
+  corrección y la auditoría se deciden después.
+- **Siguiente decisión:** completada en ADR-0036; continúan datos y reglas de
+  resultados.
+
+### 2026-07-26 — Competir, seguir y administrar son relaciones distintas
+
+- **Aprendido:** en una liga por equipos, el participante deportivo no tiene por
+  qué ser una persona con cuenta. Separar equipos, seguidores y administradores
+  evita convertir permisos de aplicación en reglas de competición.
+- **Aprendido:** un `username` público permite buscar personas sin exponer su
+  correo; mantenerlo inmutable al inicio reduce el modelo mientras se valida su
+  uso.
+- **Evidencia:** ADR-0034.
+- **Coste aceptado:** la administración se concede sin aceptación y todavía no
+  dispone de bloqueo, avisos ni límites frente a abuso.
+- **Siguiente decisión:** completada en ADR-0035; continúa la corrección de
+  resultados.
+
+### 2026-07-26 — Un enlace compartido localiza, no autoriza
+
+- **Aprendido:** visibilidad y autorización responden a preguntas diferentes.
+  Un enlace no listado permite llegar a una liga, pero no convierte a quien lo
+  usa en participante, administrador ni responsable de resultados.
+- **Aprendido:** “crear y publicar” puede ser una única acción de interfaz sin
+  saltarse el ciclo de vida: sigue aplicando las validaciones de publicación.
+- **Evidencia:** ADR-0033.
+- **Coste aceptado:** los enlaces pueden reenviarse y aún no se ha decidido su
+  rotación, revocación o caducidad.
+- **Siguiente decisión:** completada en ADR-0034; continúan permisos operativos
+  y resultados.
+
+### 2026-07-26 — Publicar fija la estructura, no la visibilidad
+
+- **Aprendido:** una liga no es solo un torneo con equipos: necesita reglas y
+  emparejamientos para representar una competición. Generarlos al publicar fija
+  una estructura reproducible sin tener que adelantar fechas, resultados o
+  clasificación.
+- **Aprendido:** el ciclo de vida controla qué cambios son válidos; la
+  visibilidad controla quién puede descubrir o acceder al torneo. Son conceptos
+  independientes y no deben mezclarse en un único estado.
+- **Evidencia:** ADR-0032.
+- **Coste aceptado:** una liga publicada no permite modificar equipos; las bajas,
+  resultados y variantes de reglas exigirán decisiones posteriores.
+- **Siguiente decisión:** completada en ADR-0033; continúa incorporación de
+  participantes e invitaciones.
+
+### 2026-07-26 — Un borrador no es todavía un torneo
+
+- **Aprendido:** permitir preparar datos sin registro reduce fricción, pero un
+  borrador solo local puede perderse cuando la verificación de email continúa en
+  otro navegador o dispositivo.
+- **Aprendido:** una cuenta pendiente es un estado temporal de alta, no una
+  sesión ni una autorización. Asociar el borrador a esa cuenta evita tratarlo
+  como dato anónimo en el servidor; verificar el correo es la frontera que
+  habilita publicar el torneo.
+- **Evidencia:** ADR-0031 y la aclaración de ADR-0010.
+- **Coste aceptado:** definir expiración, purga y límites frente a abuso para
+  cuentas y borradores pendientes antes de implementarlos.
+- **Siguiente decisión:** completada en ADR-0032; continúa visibilidad y
+  mecanismo de incorporación.
+
 ### 2026-07-25 — El mapa de red no es una factura
 
 - **Aprendido:** una región es la zona geográfica de AWS; una AZ es una ubicación

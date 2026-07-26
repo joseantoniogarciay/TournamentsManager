@@ -80,6 +80,18 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0028](../adr/0028-use-hcp-terraform-free-for-remote-state.md)              | Usar HCP Terraform Free para el estado remoto inicial       | Aceptado | 2026-07-25 |
 | [0029](../adr/0029-use-public-alb-restricted-fargate-and-no-nat-initially.md) | Usar ALB público, Fargate restringido y sin NAT inicialmente | Aceptado | 2026-07-25 |
 | [0030](../adr/0030-use-spain-region-and-two-az-cost-gated-network.md)         | Usar la región España y una red en dos AZ con gasto autorizado | Aceptado | 2026-07-25 |
+| [0031](../adr/0031-preserve-pre-auth-tournament-drafts-until-verified.md)     | Conservar borradores previos al acceso hasta verificar la cuenta | Aceptado | 2026-07-26 |
+| [0032](../adr/0032-define-minimum-football-league-data-and-lifecycle.md)      | Definir los datos mínimos y ciclo de vida de una liga de fútbol | Superado parcialmente | 2026-07-26 |
+| [0033](../adr/0033-use-unlisted-read-only-links-for-published-leagues.md)     | Usar enlaces no listados de solo lectura para ligas publicadas | Aceptado | 2026-07-26 |
+| [0034](../adr/0034-use-teams-as-competitors-and-direct-delegated-administration.md) | Usar equipos como participantes y administración delegada directa | Aceptado | 2026-07-26 |
+| [0035](../adr/0035-apply-results-entered-by-delegated-administrators-immediately.md) | Aplicar inmediatamente los resultados de administradores delegados | Aceptado | 2026-07-26 |
+| [0036](../adr/0036-allow-delegated-administrators-to-correct-results-with-history.md) | Permitir a administradores corregir resultados con historial | Aceptado | 2026-07-26 |
+| [0037](../adr/0037-use-simple-home-and-away-scores-for-initial-football-results.md) | Usar marcadores simples local-visitante en resultados iniciales | Aceptado | 2026-07-26 |
+| [0038](../adr/0038-require-creator-to-start-a-league-before-results.md) | Requerir que el creador inicie la liga antes de registrar resultados | Aceptado | 2026-07-26 |
+| [0039](../adr/0039-require-complete-results-and-explicit-closure.md) | Requerir resultados completos y cierre explícito de la liga | Aceptado | 2026-07-26 |
+| [0040](../adr/0040-make-published-leagues-editable-until-start.md) | Mantener la liga publicada editable hasta iniciarla | Aceptado | 2026-07-26 |
+| [0041](../adr/0041-continue-league-after-team-withdrawal-with-3-0-results.md) | Continuar la liga tras una baja con resultados 3-0 | Aceptado | 2026-07-26 |
+| [0042](../adr/0042-cancel-leagues-without-mandatory-reason-or-notifications.md) | Cancelar ligas sin motivo obligatorio ni avisos automáticos | Aceptado | 2026-07-26 |
 
 ## Trazabilidad de un cambio
 

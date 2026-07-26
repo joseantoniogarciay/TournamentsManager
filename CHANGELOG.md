@@ -8,6 +8,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- Gate 0B completado: el primer vertical slice queda definido como una liga de
+  fútbol no listada, con ciclo de vida, seguimiento autenticado, administración
+  delegada limitada a resultados y reglas explícitas de bajas y cancelación.
 - Ruta del módulo Go alineada con el propietario canónico de GitHub antes de la
   primera publicación.
 - Handbook reorganizado por proyecto, gobierno, ingeniería y operaciones; la
@@ -24,6 +27,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0031 a ADR-0042: borradores previos al acceso y decisiones de producto del
+  primer vertical slice; retrospectiva de cierre de la Fase 0.
 - ADR-0030: región AWS España (`eu-south-2`), VPC independientes en dos AZ y
   autorización explícita de coste antes de crear recursos.
 - ADR-0029: ALB público como entrada, API Fargate restringida al ALB y

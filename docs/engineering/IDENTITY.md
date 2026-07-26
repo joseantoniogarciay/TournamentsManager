@@ -6,6 +6,8 @@
 ## Vocabulario
 
 - **Usuario interno:** identidad estable de TournamentsManager.
+- **Cuenta pendiente:** registro temporal de alta local que aún no puede iniciar
+  una sesión de producto ni ejecutar acciones de negocio.
 - **Credencial local:** email y secreto de autenticación gestionados por el
   backend.
 - **Identidad externa:** vínculo con un proveedor mediante `issuer` y `subject`.
@@ -14,6 +16,8 @@
 - **Autorización:** decidir qué puede hacer el usuario sobre un torneo.
 - **Email de contacto:** canal verificado que puede cambiar sin alterar el
   identificador interno ni los vínculos externos.
+- **Username:** identificador público, único e inmutable inicialmente de una
+  cuenta verificada. Sirve para seleccionar usuarios sin exponer su email.
 
 ## Decisión
 
@@ -33,6 +37,30 @@ Email / password ────────────────> Backend Go
 
 El cliente transporta credenciales y usa la sesión resultante. No decide la
 identidad ni la autorización.
+
+## Username público
+
+La [ADR-0034](../adr/0034-use-teams-as-competitors-and-direct-delegated-administration.md)
+establece que toda cuenta completa un `username` público y único al activar su
+perfil verificado. En un primer acceso con Apple o Google se elige después de
+acreditar la identidad con el proveedor. No forma parte de una credencial, no
+sustituye al identificador interno y no se puede cambiar en el primer corte.
+
+Se usa para buscar y seleccionar administradores de una liga. Las reglas exactas
+de formato, normalización, nombres reservados y un futuro cambio de `username`
+se decidirán antes de implementarlas.
+
+## Alta local y borradores antes del acceso
+
+Un invitado puede preparar un borrador de torneo en el cliente sin autenticarse.
+Al enviar un alta con email y contraseña, el backend crea una cuenta pendiente y
+asocia el borrador a ella. La verificación del correo activa la cuenta; solo
+entonces se emite una sesión de producto y se permite publicar el torneo.
+
+La cuenta pendiente no es una sesión, ni concede autorización. Cuenta y borrador
+caducan y se eliminan conforme a una política pendiente de concretar. Esta
+decisión no crea persistencia de borradores anónimos en el servidor. Véase
+[ADR-0031](../adr/0031-preserve-pre-auth-tournament-drafts-until-verified.md).
 
 ## Subject de Apple y Google
 

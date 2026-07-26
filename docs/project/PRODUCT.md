@@ -1,9 +1,8 @@
 # Producto
 
-> Estado: alcance inicial aceptado; diseño funcional pausado durante el gate
-> técnico.
+> Estado: Gate 0B cerrado; primer vertical slice definido.
 >
-> Última actualización: 2026-07-24
+> Última actualización: 2026-07-26
 
 ## Visión
 
@@ -21,10 +20,15 @@ incorporar otros deportes sin reescribir su núcleo.
   grupos cerrados.
 - Una persona invitada tendrá acceso limitado; la visibilidad pública de torneos
   se decidirá más adelante.
-- Crear un torneo o unirse a uno exigirá una cuenta.
+- Preparar un borrador de torneo no exigirá una cuenta; persistirlo y publicar el
+  torneo exigirá una cuenta verificada.
 - La cuenta incluirá registro, inicio de sesión y recuperación de contraseña.
 - Una misma cuenta admitirá credenciales locales y login con Apple o Google.
 - El fútbol es el deporte inicial.
+- El formato inicial será una liga de fútbol. Eliminatorias, formatos mixtos y
+  otros deportes quedan fuera del primer corte, sin impedir evaluarlos después.
+- El creador del torneo será inicialmente su único organizador y creará los
+  equipos. Delegar administración se decidirá para una iteración posterior.
 - Las acciones detalladas de creación y gestión de un torneo se definirán de forma
   incremental.
 - Se ha aceptado un cliente universal con React Native, Expo, Expo Router, CNG y
@@ -34,41 +38,71 @@ incorporar otros deportes sin reescribir su núcleo.
 
 ### Invitado
 
+- preparar un borrador local de torneo y sus equipos;
 - ver únicamente las superficies que se definan como visibles sin cuenta;
-- iniciar registro o login desde invitaciones o cuando intente una acción
-  protegida.
+- iniciar registro o login antes de persistir o publicar el torneo, o cuando
+  intente una acción protegida.
 
 Un invitado no es una cuenta con rol especial: es una persona sin sesión
 autenticada.
 
-### Usuario autenticado
+### Cuenta pendiente de verificación
+
+Es un registro temporal tras un alta local con email y contraseña. Puede retomar
+el borrador asociado al verificar el correo, pero no recibe una sesión de
+producto ni permisos de negocio. Las cuentas y borradores pendientes caducan
+según la política que se defina antes de implementarla.
+
+### Usuario autenticado y verificado
 
 - gestionar su sesión y perfil básico;
+- elegir un `username` público y único, que no podrá cambiar inicialmente;
 - crear un torneo;
-- solicitar, aceptar o ejecutar la incorporación a un torneo según el mecanismo
-  que se decida;
 - consultar los torneos con los que tiene relación.
 
 ### Organizador
 
-Es un usuario autenticado con permisos sobre un torneo concreto. La matriz exacta
-de permisos se decidirá junto al ciclo de vida del torneo.
+Es inicialmente el usuario autenticado que creó el torneo, con permisos sobre él
+y capacidad de crear sus equipos. Conserva la propiedad y es el único que puede
+asignar o retirar administradores delegados.
+
+### Administrador delegado
+
+El creador lo asigna directamente mediante su `username`, sin aceptación previa.
+El administrador puede abandonar la liga; el creador puede retirarlo con efecto
+inmediato. Su único permiso operativo será gestionar resultados; la mecánica de
+registro queda limitada a goles locales y visitantes, ambos enteros no negativos.
+Un resultado que registre se aplica de inmediato, sin confirmación del creador;
+también puede corregirlo y el sistema conserva quién cambió qué y cuándo.
+
+### Seguidor
+
+Un usuario autenticado y verificado puede guardar una liga consultada mediante
+enlace para recuperarla en «ligas seguidas». Seguir no concede permisos ni crea
+participación deportiva.
 
 ### Participante
 
-Es un usuario o entidad vinculada a un torneo. Todavía debe decidirse si una
-persona se une directamente, se une mediante un equipo, representa a un equipo o
-puede usar varios modelos según el deporte.
+Es exclusivamente un equipo creado por el organizador. Las personas no se unen a
+equipos ni a la competición en el primer corte.
 
 ## Flujos de identidad
 
 ### Registro
 
 1. La persona proporciona el identificador acordado, inicialmente candidato:
-   correo electrónico.
+   correo electrónico, y una contraseña.
 2. Acepta las condiciones necesarias.
-3. Verifica la propiedad del canal si se exige.
-4. Se crea o vincula el perfil interno.
+3. Se crea una cuenta pendiente de verificación y se asocia a ella el borrador
+   que la persona hubiera preparado.
+4. Verifica la propiedad del correo mediante el canal enviado.
+5. La cuenta se activa, puede iniciar sesión y puede publicar el torneo.
+
+Un borrador local permite empezar sin sesión. Tras iniciar el alta se conserva en
+el servidor únicamente asociado a la cuenta pendiente, para poder continuar si
+la verificación se completa desde otro dispositivo. Una cuenta pendiente no puede
+publicar ni realizar acciones protegidas. Véase
+[ADR-0031](../adr/0031-preserve-pre-auth-tournament-drafts-until-verified.md).
 
 ### Login
 
@@ -104,14 +138,58 @@ duración y renovación de sesiones.
 El primer corte debe ser pequeño y atravesar producto, seguridad, datos, API y
 operación:
 
-1. un invitado accede a una superficie permitida sin cuenta o a una invitación;
-2. una persona se registra, verifica su cuenta e inicia sesión;
-3. un usuario autenticado crea un torneo de fútbol con los datos mínimos;
-4. otro usuario se une mediante el mecanismo elegido;
-5. ambos observan el estado actualizado.
+1. un invitado prepara localmente un torneo de fútbol de liga y sus equipos;
+2. una persona se registra, verifica su cuenta e inicia sesión sin perder el
+   borrador;
+3. el organizador autenticado persiste y publica el torneo con los datos mínimos;
+4. el organizador consulta el estado actualizado del torneo y sus equipos.
 
-Antes de implementarlo deben decidirse formato, modelo de participante,
-visibilidad, incorporación e identidad.
+El Gate 0B está cerrado: el formato, los datos mínimos, el ciclo de vida, la
+visibilidad, los participantes, la administración, los resultados, las bajas, la
+cancelación y la frontera de identidad están definidos. Las capacidades aplazadas
+no bloquean el primer vertical slice.
+
+## Liga de fútbol inicial
+
+Las [ADR-0032](../adr/0032-define-minimum-football-league-data-and-lifecycle.md)
+y [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md) definen
+la estructura mínima de una liga: nombre, fútbol, formato liga, organizador,
+estado, equipos y partidos generados al iniciar. La configuración inicial es una
+vuelta con puntuación 3-1-0; no incluye fechas, horas, marcadores especiales ni
+clasificación.
+
+El ciclo persistido es `publicado → en_curso → finalizado`, con `cancelado` como
+estado terminal desde `publicado` o `en_curso`. El borrador se prepara localmente
+o queda asociado temporalmente a una cuenta pendiente; se descarta y no forma
+parte de este ciclo.
+
+Una liga publicada es compartible y el creador puede modificar sus equipos y
+datos estructurales. Al iniciarla, se validan los datos, se generan una sola vez
+los emparejamientos y se congelan equipos y reglas. Solo entonces los
+administradores pueden registrar o corregir resultados. El creador solo puede
+finalizarla cuando todos sus partidos tienen resultado. Si un equipo abandona en
+`en_curso`, solo el creador puede declararlo: todos sus partidos, pendientes o
+ya jugados, pasan a `3-0` a favor del rival y la liga continúa.
+
+## Cancelación
+
+Solo el creador puede cancelar una liga desde `publicado` o `en_curso`. No se
+exige motivo; la liga conserva sus datos y su enlace muestra estado `cancelado`.
+Las personas que la siguen verán ese estado al volver a «ligas seguidas». Este
+corte no envía email ni notificaciones push.
+
+## Visibilidad inicial
+
+La [ADR-0033](../adr/0033-use-unlisted-read-only-links-for-published-leagues.md)
+establece que una liga no listada se puede consultar sin sesión mediante un enlace
+con identificador aleatorio no predecible. Esto incluye estados `publicado`,
+`en_curso`, `finalizado` y `cancelado`. El enlace concede solo lectura; no crea
+una relación de participante ni permisos de administración o resultados.
+
+Los borradores no son accesibles por enlace. “Crear y publicar” es una comodidad
+de interfaz que ejecuta la misma validación y transición que publicar un borrador.
+La visibilidad pública, la rotación de enlaces y las invitaciones siguen fuera de
+este corte.
 
 ## Fuera del primer alcance
 
@@ -126,22 +204,15 @@ Salvo decisión posterior:
 - rankings globales;
 - administración avanzada;
 - calendario completo y arbitraje;
-- notificaciones push.
+- notificaciones push;
+- eliminatorias y formatos mixtos;
+- email y push para avisar de asignaciones administrativas;
+- invitaciones con aceptación, bloqueo y controles antiabuso para asignaciones;
+- jugadores y membresías de personas en equipos.
 
-## Preguntas de producto prioritarias
+## Gate 0B
 
-1. ¿Quién crea el torneo y qué puede delegar?
-2. ¿Se unen usuarios, equipos o ambos?
-3. ¿Cuál es el primer formato: liga, eliminatoria o grupos más eliminatoria?
-4. ¿Un torneo nace borrador, privado o visible mediante invitación?
-5. ¿Existirá visibilidad pública, privada o no listada?
-6. ¿Cómo se entra: código, invitación, solicitud o enlace?
-7. ¿Qué datos visibles sin login se muestran?
-8. ¿Quién registra y confirma resultados?
-9. ¿Qué ocurre si alguien abandona o es expulsado?
-10. ¿Qué estados cierran o cancelan un torneo?
-
-Estas preguntas preceden al esquema de datos y a los endpoints.
-Se retoman en el Gate 0B, tras el cierre de la
-[Technical Baseline](../governance/TECHNICAL_BASELINE.md), conforme a
-[ADR-0004](../adr/0004-technical-baseline-before-product-design.md).
+El primer vertical slice tiene definidos formato, ciclo de vida, visibilidad,
+participantes, seguimiento, administración y resultados. Las mejoras aplazadas
+se mantienen en «Fuera del primer alcance»; no bloquean el esquema ni los
+contratos del primer corte.

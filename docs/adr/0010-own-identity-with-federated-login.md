@@ -195,6 +195,16 @@ Separar apertura y mutación conserva la semántica segura de `GET` y evita que 
 inspección, previsualización o repetición de un enlace produzca una vinculación o
 un cambio de sesión involuntarios.
 
+## Aclaración de alta pendiente y borrador — 2026-07-26
+
+[ADR-0031](0031-preserve-pre-auth-tournament-drafts-until-verified.md) precisa
+el orden del alta local para conservar un borrador preparado antes del acceso.
+Tras enviar email y contraseña puede existir una cuenta interna temporal en
+`pending_verification`; no recibe sesión de producto ni autorización. La
+verificación del correo la activa y habilita la publicación. Esta aclaración no
+cambia la regla de que cualquier sesión requiere autenticación válida ni la de
+que una cuenta no verificada carece de permisos de negocio.
+
 ## Consecuencias
 
 ### Positivas

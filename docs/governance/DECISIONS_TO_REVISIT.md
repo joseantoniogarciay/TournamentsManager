@@ -30,6 +30,7 @@ ADR: enlaza la decisión y define qué evidencia obliga a reabrirla.
 | Go 1.26.5 + `go.tool.mod`             | Aceptada en ADR-0012                                                        | Nueva major, tooling incompatible o coste sostenido del módulo alternativo                                                          | [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md)               |
 | Path del módulo Go                    | Confirmado: `github.com/joseantoniogarciay/TournamentsManager/apps/backend` | Cambio de propietario o nombre canónico del repositorio                                                                             | [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md)               |
 | Cloud agnostic                        | Principio                                                                   | Cuando una abstracción añada más coste que portabilidad                                                                             | [ARCHITECTURE.md](../engineering/ARCHITECTURE.md)                           |
+| Modelo inicial de liga                | Liga de fútbol a una vuelta; publicación editable hasta inicio; resultados 3-1-0, bajas a 3-0 uniforme y visibilidad no listada | Doble vuelta, incidencias tipadas, cambios tras inicio, abuso de enlaces/asignaciones, avisos o jugadores | [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md), [ADR-0041](../adr/0041-continue-league-after-team-withdrawal-with-3-0-results.md) |
 
 ## Cómo revisar
 
