@@ -1,11 +1,14 @@
 # Estrategia de pruebas
 
-> Estado: principios iniciales; herramientas y umbrales pendientes.
+> Estado: estrategia por riesgo y capas aceptada. CI ejecuta `make verify` como
+> señal informativa; las herramientas específicas, presupuestos y gates por
+> riesgo continúan pendientes.
 
 ## Objetivo
 
-Las pruebas reducen riesgo y aportan feedback. No se persigue una cifra de
-cobertura aislada ni una pirámide rígida.
+Las pruebas reducen riesgo y aportan feedback. [ADR-0019](../adr/0019-use-risk-based-layered-testing.md)
+acepta seleccionar la evidencia por riesgo, no perseguir una cifra de cobertura
+aislada ni una pirámide rígida.
 
 ## Selección por riesgo
 
@@ -48,10 +51,28 @@ cobertura aislada ni una pirámide rígida.
 - La matriz de navegadores, sistemas operativos, dispositivos y anchos se
   definirá por riesgo, no intentando cubrir todas las combinaciones.
 
+## Capas aceptadas
+
+- **Dominio y casos de uso:** pruebas unitarias rápidas con la biblioteca estándar
+  `testing`. Los dobles se usan solo en puertos externos reales, no para imitar
+  `pgx` o tablas.
+- **Persistencia:** integración con PostgreSQL real para SQL, restricciones,
+  transacciones, migraciones y generación `sqlc`. Cada ejecución usa una base
+  de pruebas efímera creada y migrada desde vacío, nunca la base local de
+  desarrollo.
+- **HTTP y contratos:** handlers con `httptest`; validación y generación
+  determinista para impedir deriva de OpenAPI respecto al backend y cliente.
+- **Flujos completos:** end-to-end mínimos, reservados a recorridos críticos una
+  vez existan API y cliente funcionales.
+
+Cobertura es una señal secundaria. Toda corrección de bug incluirá una prueba de
+regresión cuando sea viable.
+
 ## Baseline ejecutable de Go
 
-ADR-0012 establece los comandos generales, sin decidir todavía librerías,
-fixtures, integración con PostgreSQL ni cobertura:
+ADR-0012 establece los comandos generales. ADR-0019 adopta `testing` y
+`httptest` como base inicial, sin añadir librerías de assertions, mocks o
+contenedores hasta que una necesidad repetida lo justifique:
 
 - `make test`: todos los paquetes del módulo;
 - `make test-race`: detector de carreras para una comprobación más lenta;
@@ -69,12 +90,10 @@ añadirá con el primer comportamiento observable o riesgo real.
 
 ## Decisiones pendientes
 
-- librerías de assertions y mocks, si hacen falta;
-- estrategia de base de datos por test;
-- organización y tags;
+- librerías de assertions y mocks, si se demuestran necesarias;
+- mecanismo concreto para crear, migrar y limpiar la base efímera de pruebas;
+- organización, tags y presupuesto temporal;
 - ejecución local y CI;
-- presupuestos de tiempo;
-- cobertura como señal secundaria;
 - pruebas de carga, resiliencia y seguridad.
 - herramientas para pruebas del cliente universal y dispositivos objetivo;
 - matriz mínima de web, iOS, Android, móvil, tablet y escritorio;

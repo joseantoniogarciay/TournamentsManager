@@ -6,8 +6,8 @@
 > importante terminará en ADR tras la elección explícita del usuario.
 >
 > El orden original de este documento ha sido reemplazado por
-> [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md). Las secciones de producto quedan
-> como material aplazado.
+> [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md), cerrado el 2026-07-25. Las
+> secciones de producto vuelven a ser material de decisión para el Gate 0B.
 
 ## Silueta recomendada
 
@@ -33,7 +33,7 @@ Esta silueta minimiza piezas desplegables sin cerrar la evolución.
 
 Este orden queda superado por
 [ADR-0004](../adr/0004-technical-baseline-before-product-design.md). Primero se
-confirma la base técnica; después se retoman los puntos de producto.
+confirmó la base técnica; los puntos de producto se retoman en el Gate 0B.
 
 ## 1. Alcance del primer torneo
 

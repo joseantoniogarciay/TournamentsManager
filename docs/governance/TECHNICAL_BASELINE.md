@@ -1,6 +1,6 @@
 # Technical Baseline
 
-> Estado: decision gate activo.
+> Estado: cerrado el 2026-07-25.
 >
 > Objetivo: confirmar la base técnica antes de diseñar el comportamiento detallado
 > del producto. No autoriza scaffolding ni código por sí mismo.
@@ -19,35 +19,43 @@
 
 ## Estado
 
-| Orden | Decisión | Estado | Registro |
-|---|---|---|---|
-| 0 | Control de versiones: Git | Aceptada | [ADR-0003](../adr/0003-use-git-for-version-control.md) |
-| 0 | Flujo de ramas: `develop` como integración | Aceptada | [ADR-0013](../adr/0013-use-develop-as-integration-branch.md) |
-| 0 | Arquitectura clean/hexagonal pragmática | Aceptada | [ADR-0001](../adr/0001-pragmatic-clean-architecture.md) |
-| 1 | Topología de repositorios: monorepo | Aceptada | [ADR-0005](../adr/0005-use-a-product-monorepo.md) |
-| 1 | GitHub público y secretos fuera de Git | Aceptada | [ADR-0006](../adr/0006-public-github-repository-security-boundary.md) |
-| 2 | Topología del backend: monolito modular | Aceptada | [ADR-0007](../adr/0007-use-a-modular-monolith-backend.md) |
-| 3 | Estrategia web y mobile: cliente universal | Aceptada | [ADR-0008](../adr/0008-use-a-universal-react-native-client.md) |
-| 4 | Estilo y contrato de API: REST/OpenAPI contract-first | Aceptada | [ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md) |
-| 5 | Identidad propia con Apple/Google federados | Aceptada | [ADR-0010](../adr/0010-own-identity-with-federated-login.md) |
-| 6 | Persistencia y acceso a datos | Aceptada | [ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) |
-| 7 | Toolchain Go | Aceptada | [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) |
-| 8 | Toolchain TypeScript | Aceptada | [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md) |
-| 9 | Framework del cliente universal: Expo | Aceptada | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
-| 10 | Routing y generación nativa: Expo Router + CNG | Aceptada | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
-| 11 | Rendering y adaptación por plataforma | Aceptada | [ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md) |
-| 12 | Configuración y secretos | Aceptada | [ADR-0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md) |
-| 13 | Entorno local | Pendiente | Procesos / Docker Compose |
-| 14 | Estrategia de pruebas | Pendiente | Capas, herramientas y gates |
-| 15 | Observabilidad mínima | Pendiente | Señales, OpenTelemetry y backends |
-| 16 | CI y política de calidad | Pendiente | Checks, artefactos y seguridad |
-| 17 | Contenedores y despliegue | Pendiente | Imagen, runtime y promoción |
-| 18 | IaC y AWS | Pendiente | Terraform, cuentas, red y estado |
-| 19 | Kubernetes local/cloud | Aplazada | Fase 4 del manifiesto |
+| Orden | Decisión                                              | Estado    | Registro                                                                    |
+| ----- | ----------------------------------------------------- | --------- | --------------------------------------------------------------------------- |
+| 0     | Control de versiones: Git                             | Aceptada  | [ADR-0003](../adr/0003-use-git-for-version-control.md)                      |
+| 0     | Flujo de ramas: `develop` como integración            | Aceptada  | [ADR-0013](../adr/0013-use-develop-as-integration-branch.md)                |
+| 0     | Arquitectura clean/hexagonal pragmática               | Aceptada  | [ADR-0001](../adr/0001-pragmatic-clean-architecture.md)                     |
+| 1     | Topología de repositorios: monorepo                   | Aceptada  | [ADR-0005](../adr/0005-use-a-product-monorepo.md)                           |
+| 1     | GitHub público y secretos fuera de Git                | Aceptada  | [ADR-0006](../adr/0006-public-github-repository-security-boundary.md)       |
+| 2     | Topología del backend: monolito modular               | Aceptada  | [ADR-0007](../adr/0007-use-a-modular-monolith-backend.md)                   |
+| 3     | Estrategia web y mobile: cliente universal            | Aceptada  | [ADR-0008](../adr/0008-use-a-universal-react-native-client.md)              |
+| 4     | Estilo y contrato de API: REST/OpenAPI contract-first | Aceptada  | [ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md)              |
+| 5     | Identidad propia con Apple/Google federados           | Aceptada  | [ADR-0010](../adr/0010-own-identity-with-federated-login.md)                |
+| 6     | Persistencia y acceso a datos                         | Aceptada  | [ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md)                |
+| 7     | Toolchain Go                                          | Aceptada  | [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md)               |
+| 8     | Toolchain TypeScript                                  | Aceptada  | [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md)              |
+| 9     | Framework del cliente universal: Expo                 | Aceptada  | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
+| 10    | Routing y generación nativa: Expo Router + CNG        | Aceptada  | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
+| 11    | Rendering y adaptación por plataforma                 | Aceptada  | [ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md)          |
+| 12    | Configuración y secretos                              | Aceptada  | [ADR-0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md)   |
+| 13    | Entorno local                                         | Aceptada  | [ADR-0018](../adr/0018-use-compose-for-local-service-dependencies.md)       |
+| 14    | Estrategia de pruebas                                 | Aceptada  | [ADR-0019](../adr/0019-use-risk-based-layered-testing.md)                   |
+| 15    | Observabilidad mínima                                 | Aceptada  | [ADR-0020](../adr/0020-use-minimal-correlated-observability.md)             |
+| 16    | CI y política de calidad                              | Aceptada  | [ADR-0021](../adr/0021-use-advisory-ci-with-local-quality-gate.md)          |
+| 17a   | Empaquetado de la API                                 | Aceptada  | [ADR-0022](../adr/0022-package-backend-as-oci-image.md)                    |
+| 17b   | Runtime cloud de la API                               | Aceptada  | [ADR-0023](../adr/0023-use-ecs-fargate-as-future-cloud-runtime.md)          |
+| 17c   | Registry y promoción de la API                        | Aceptada  | [ADR-0024](../adr/0024-use-ecr-and-digest-based-image-promotion.md)         |
+| 18a   | Herramienta de IaC: Terraform                         | Aceptada  | [ADR-0025](../adr/0025-use-terraform-for-infrastructure-as-code.md)         |
+| 18b   | Fundación AWS: cuentas e identidad                    | Aceptada  | [ADR-0026](../adr/0026-use-aws-organizations-and-temporary-identities.md)   |
+| 18c   | Estado local antes de infraestructura cloud            | Aceptada  | [ADR-0027](../adr/0027-keep-local-state-until-first-cloud-apply.md)         |
+| 18d   | Backend remoto y bootstrap de Terraform                | Aceptada | [ADR-0028](../adr/0028-use-hcp-terraform-free-for-remote-state.md)           |
+| 18e1  | Entrada y egress inicial de la red AWS                | Aceptada | [ADR-0029](../adr/0029-use-public-alb-restricted-fargate-and-no-nat-initially.md) |
+| 18e2  | Región, VPC, subredes y límites de coste              | Aceptada | [ADR-0030](../adr/0030-use-spain-region-and-two-az-cost-gated-network.md)   |
+| 19    | Kubernetes local/cloud                                | Aplazada  | Fase 4 del manifiesto                                                       |
 
-“Pendiente” significa que no existe decisión. Las direcciones del manifiesto son
-candidatos preferentes, no autorización para seleccionar librerías o crear
-configuración.
+El gate técnico está cerrado: no quedan decisiones bloqueantes pendientes. Las
+direcciones del manifiesto continúan sin autorizar recursos ni despliegues por sí
+solas; los gates de producto y de cada fase siguen requiriendo sus decisiones,
+validación y autorización de coste.
 
 ## Decisión 1 — Topología de repositorios — aceptada
 

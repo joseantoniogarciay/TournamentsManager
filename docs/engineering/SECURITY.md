@@ -71,10 +71,30 @@ la contraseña anterior.
 - Producción usa secrets por environment y aprobación antes del despliegue.
 - Los workflows reciben permisos mínimos y no ejecutan contribuciones no
   confiables con secretos.
+- CI usa `pull_request`, no `pull_request_target`, y solo permisos de lectura
+  hasta que un job de despliegue aprobado necesite otra capacidad.
 - No se ejecutan runners self-hosted del repositorio público en el VPS ni en una
   red con acceso privilegiado.
 - Cloud usa OIDC y credenciales temporales cuando esté disponible.
 - El VPS usa una identidad de despliegue dedicada y limitada.
+
+Para AWS, ADR-0026 separa `management`, `nonprod` y `prod` mediante AWS
+Organizations. El acceso humano usa IAM Identity Center con MFA y roles
+temporales; los usuarios IAM y access keys persistentes no son el mecanismo
+ordinario de acceso. El usuario root se reserva para acciones excepcionales.
+
+ADR-0027 mantiene estado Terraform local únicamente sin infraestructura AWS
+real. ADR-0028 fija HCP Terraform Free como backend remoto inicial, con
+ejecución local y sin auto-apply. Antes de un `apply` cloud se verificará su
+locking, historial recuperable y el secreto de acceso; GitHub no almacenará
+estados, porque pueden contener valores sensibles y no aporta locking de
+Terraform.
+
+Para la publicación futura, ADR-0029 fija un ALB como único punto de entrada
+público. El security group de la API solo aceptará el puerto de aplicación desde
+el security group del ALB; PostgreSQL no tendrá IP pública y solo aceptará la
+conexión necesaria desde la API. No se usará NAT inicialmente, decisión que se
+revisará si aparece una necesidad de egress privado o cumplimiento.
 
 La decisión completa está en
 [ADR-0006](../adr/0006-public-github-repository-security-boundary.md).

@@ -128,10 +128,17 @@ experimento arriesgado, colaboración paralela o una necesidad real de aislamien
 - Se adopta entrega continua desde `main`.
 - Un incidente exige una política más estricta de revisión o protección.
 
+## Aclaración posterior — 2026-07-25
+
+[ADR-0024](0024-use-ecr-and-digest-based-image-promotion.md) conserva esta
+decisión para el trabajo individual actual. Cuando exista equipo, trabajo
+paralelo o necesidad de seleccionar funcionalidades por entrega, permite ramas
+de feature y `release/*` temporales para componer un candidato de `staging` sin
+detener `develop`. No crea una rama permanente `staging`.
+
 ## Documentación afectada
 
 - [CONTRIBUTING.md](../../CONTRIBUTING.md)
 - [TECHNICAL_BASELINE.md](../governance/TECHNICAL_BASELINE.md)
 - [DECISIONS.md](../governance/DECISIONS.md)
 - [LEARNING.md](../project/LEARNING.md)
-

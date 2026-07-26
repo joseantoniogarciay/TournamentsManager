@@ -14,20 +14,350 @@ Para cada capacidad se sigue el ciclo:
 
 ## Mapa de competencias
 
-| Área | Resultado demostrable | Estado |
-|---|---|---|
-| Arquitectura | Explicar límites, dependencias y trade-offs | En curso |
-| Go | Construir y mantener un servicio idiomático | No iniciado |
-| PostgreSQL | Diseñar, migrar y operar datos con criterio | No iniciado |
-| API | Diseñar contratos evolutivos y observables | No iniciado |
-| Testing | Elegir pruebas por riesgo y velocidad de feedback | No iniciado |
-| Seguridad | Modelar amenazas y aplicar controles verificables | No iniciado |
-| Contenedores | Crear un entorno local reproducible | No iniciado |
-| Observabilidad | Diagnosticar con logs, métricas y trazas | No iniciado |
-| Kubernetes | Desplegar, escalar y recuperar cargas | No iniciado |
-| Terraform/AWS | Aprovisionar y operar infraestructura | No iniciado |
+| Área           | Resultado demostrable                             | Estado      |
+| -------------- | ------------------------------------------------- | ----------- |
+| Arquitectura   | Explicar límites, dependencias y trade-offs       | En curso    |
+| Go             | Construir y mantener un servicio idiomático       | No iniciado |
+| PostgreSQL     | Diseñar, migrar y operar datos con criterio       | No iniciado |
+| API            | Diseñar contratos evolutivos y observables        | No iniciado |
+| Testing        | Elegir pruebas por riesgo y velocidad de feedback | Fundamentos aceptados |
+| Seguridad      | Modelar amenazas y aplicar controles verificables | No iniciado |
+| Contenedores   | Crear un entorno local reproducible               | No iniciado |
+| Observabilidad | Diagnosticar con logs, métricas y trazas          | No iniciado |
+| Kubernetes     | Desplegar, escalar y recuperar cargas             | No iniciado |
+| Terraform/AWS  | Aprovisionar y operar infraestructura             | Fundamentos IaC, cuentas y estado aceptados |
 
 ## Diario
+
+### 2026-07-26 — Un estado visible puede preceder a una notificación
+
+- **Aprendido:** conservar una liga cancelada y mostrar su estado por enlace o
+  en «ligas seguidas» comunica la verdad del recurso sin introducir aún entrega,
+  preferencias y fallos de email o push.
+- **Evidencia:** ADR-0042.
+- **Coste aceptado:** las personas no reciben aviso proactivo ni explicación de
+  la cancelación.
+- **Siguiente decisión:** Gate 0B completado; preparar el entorno local antes de
+  implementar el vertical slice.
+
+### 2026-07-26 — La igualdad puede requerir reescribir un marcador
+
+- **Aprendido:** conservar algunos resultados y otorgar otros tras una baja crea
+  una desigualdad por el orden de calendario. Uniformar todos a `3-0` mantiene la
+  liga, pero exige historial porque puede reemplazar datos reales.
+- **Evidencia:** ADR-0041.
+- **Coste aceptado:** todavía no hay motivos tipados de baja ni reincorporación.
+- **Siguiente decisión:** completada en ADR-0042; Gate 0B cerrado.
+
+### 2026-07-26 — Compartir no equivale a congelar
+
+- **Aprendido:** publicar permite compartir y terminar de preparar una liga; el
+  límite seguro para generar partidos y congelar equipos es el inicio. Así se
+  evita replanificar una competición con resultados.
+- **Evidencia:** ADR-0040, sucesor parcial de ADR-0032.
+- **Coste aceptado:** una liga publicada aún no tiene partidos y puede quedarse
+  sin iniciar hasta que exista una política de recordatorios o limpieza.
+- **Siguiente decisión:** completada en ADR-0041; continúa motivo y comunicación
+  de una cancelación.
+
+### 2026-07-26 — Finalizar es una revisión, no un efecto colateral
+
+- **Aprendido:** exigir todos los marcadores y una acción explícita del creador
+  evita clasificaciones incompletas y deja una oportunidad final para detectar un
+  error. Un `3-0` administrativo se representa como marcador ordinario para no
+  crear incidencias que el dominio todavía no sabe interpretar.
+- **Evidencia:** ADR-0039.
+- **Coste aceptado:** se pierde el motivo de un resultado excepcional y no se
+  puede corregir una liga finalizada en el primer corte.
+- **Siguiente decisión:** cancelación completada en ADR-0040; continúa la baja
+  de equipos.
+
+### 2026-07-26 — Publicar prepara; iniciar habilita la competición
+
+- **Aprendido:** separar publicación e inicio evita que un resultado transforme
+  accidentalmente una liga que solo estaba lista para compartir. La transición
+  explícita conserva al creador el control de cuándo empieza el juego.
+- **Evidencia:** ADR-0038.
+- **Coste aceptado:** no hay inicio automático, calendario ni cambios de reglas
+  o equipos después de publicar.
+- **Siguiente decisión:** completada en ADR-0039; continúan cancelación y bajas
+  de equipos.
+
+### 2026-07-26 — Un marcador útil no necesita modelar todas las incidencias
+
+- **Aprendido:** dos goles enteros no negativos bastan para expresar victoria,
+  derrota y empate en una liga con puntuación 3-1-0. Añadir excepciones sin sus
+  reglas de clasificación produciría campos que el sistema no sabe interpretar.
+- **Evidencia:** ADR-0037.
+- **Coste aceptado:** no pueden registrarse aún penaltis, prórrogas,
+  incomparecencias ni sanciones.
+- **Siguiente decisión:** completada en ADR-0038; continúan finalización y bajas
+  de equipos.
+
+### 2026-07-26 — Corregir rápido no implica borrar el pasado
+
+- **Aprendido:** permitir la corrección directa conserva el flujo operativo, pero
+  el valor actual no explica por sí solo cómo llegó a existir. El historial de
+  actor, instante y valores anterior/nuevo aporta trazabilidad sin una cola de
+  aprobaciones.
+- **Evidencia:** ADR-0036.
+- **Coste aceptado:** todavía no existen restauración, disputa ni revisión por
+  terceros.
+- **Siguiente decisión:** completada en ADR-0037; continúa el momento válido de
+  registro de resultados.
+
+### 2026-07-26 — Delegar no exige una segunda cola de aprobación
+
+- **Aprendido:** si el creador selecciona y puede revocar a quien administra
+  resultados, una confirmación adicional suele añadir espera y estados pendientes
+  sin aportar valor proporcional en una liga cerrada.
+- **Evidencia:** ADR-0035.
+- **Coste aceptado:** un marcador equivocado será visible hasta corregirse; la
+  corrección y la auditoría se deciden después.
+- **Siguiente decisión:** completada en ADR-0036; continúan datos y reglas de
+  resultados.
+
+### 2026-07-26 — Competir, seguir y administrar son relaciones distintas
+
+- **Aprendido:** en una liga por equipos, el participante deportivo no tiene por
+  qué ser una persona con cuenta. Separar equipos, seguidores y administradores
+  evita convertir permisos de aplicación en reglas de competición.
+- **Aprendido:** un `username` público permite buscar personas sin exponer su
+  correo; mantenerlo inmutable al inicio reduce el modelo mientras se valida su
+  uso.
+- **Evidencia:** ADR-0034.
+- **Coste aceptado:** la administración se concede sin aceptación y todavía no
+  dispone de bloqueo, avisos ni límites frente a abuso.
+- **Siguiente decisión:** completada en ADR-0035; continúa la corrección de
+  resultados.
+
+### 2026-07-26 — Un enlace compartido localiza, no autoriza
+
+- **Aprendido:** visibilidad y autorización responden a preguntas diferentes.
+  Un enlace no listado permite llegar a una liga, pero no convierte a quien lo
+  usa en participante, administrador ni responsable de resultados.
+- **Aprendido:** “crear y publicar” puede ser una única acción de interfaz sin
+  saltarse el ciclo de vida: sigue aplicando las validaciones de publicación.
+- **Evidencia:** ADR-0033.
+- **Coste aceptado:** los enlaces pueden reenviarse y aún no se ha decidido su
+  rotación, revocación o caducidad.
+- **Siguiente decisión:** completada en ADR-0034; continúan permisos operativos
+  y resultados.
+
+### 2026-07-26 — Publicar fija la estructura, no la visibilidad
+
+- **Aprendido:** una liga no es solo un torneo con equipos: necesita reglas y
+  emparejamientos para representar una competición. Generarlos al publicar fija
+  una estructura reproducible sin tener que adelantar fechas, resultados o
+  clasificación.
+- **Aprendido:** el ciclo de vida controla qué cambios son válidos; la
+  visibilidad controla quién puede descubrir o acceder al torneo. Son conceptos
+  independientes y no deben mezclarse en un único estado.
+- **Evidencia:** ADR-0032.
+- **Coste aceptado:** una liga publicada no permite modificar equipos; las bajas,
+  resultados y variantes de reglas exigirán decisiones posteriores.
+- **Siguiente decisión:** completada en ADR-0033; continúa incorporación de
+  participantes e invitaciones.
+
+### 2026-07-26 — Un borrador no es todavía un torneo
+
+- **Aprendido:** permitir preparar datos sin registro reduce fricción, pero un
+  borrador solo local puede perderse cuando la verificación de email continúa en
+  otro navegador o dispositivo.
+- **Aprendido:** una cuenta pendiente es un estado temporal de alta, no una
+  sesión ni una autorización. Asociar el borrador a esa cuenta evita tratarlo
+  como dato anónimo en el servidor; verificar el correo es la frontera que
+  habilita publicar el torneo.
+- **Evidencia:** ADR-0031 y la aclaración de ADR-0010.
+- **Coste aceptado:** definir expiración, purga y límites frente a abuso para
+  cuentas y borradores pendientes antes de implementarlos.
+- **Siguiente decisión:** completada en ADR-0032; continúa visibilidad y
+  mecanismo de incorporación.
+
+### 2026-07-25 — El mapa de red no es una factura
+
+- **Aprendido:** una región es la zona geográfica de AWS; una AZ es una ubicación
+  aislada dentro de esa región; una VPC es la red privada que las abarca. Las
+  subredes son sus porciones de direcciones internas, no máquinas ni IP públicas.
+- **Aprendido:** reservar dos AZ permite que ALB y RDS usen una topología válida,
+  pero no cobra por sí mismo. El coste empieza al ejecutar ALB, tareas, base de
+  datos, IPv4, logs o transferencia.
+- **Evidencia:** ADR-0030; España tiene tres AZ y los servicios base elegidos.
+- **Coste aceptado:** no se autoriza gasto recurrente sin estimación completa y
+  aprobación explícita de importe y duración.
+- **Siguiente decisión:** Gate 0B, formato y participantes del primer vertical
+  slice de producto.
+
+### 2026-07-25 — Público no significa abierto directamente
+
+- **Aprendido:** publicar una API no exige que cualquiera pueda conectar con
+  ella directamente. El ALB es la puerta pública; la API solo acepta las
+  conexiones que proceden de esa puerta mediante una regla de security group.
+- **Aprendido:** NAT protege la salida de recursos privados, pero no es gratis.
+  Para el alcance inicial se prescinde de ella y se mantiene la base de datos
+  privada; si el egress privado aporta valor real, la decisión se reabrirá.
+- **Evidencia:** ADR-0029; AWS recomienda restringir los targets a aceptar
+  tráfico exclusivamente desde el security group del ALB.
+- **Coste aceptado:** ALB, Fargate, IPv4 pública, logs y datos costarán cuando
+  exista despliegue; el presupuesto se revisará antes de crear recursos.
+- **Siguiente decisión:** región, CIDR, subredes, AZ y presupuesto AWS.
+
+### 2026-07-25 — El backend de estado no debe adelantar la red cloud
+
+- **Aprendido:** un backend remoto no solo guarda un archivo: coordina quién
+  puede modificar el estado y conserva evidencia para recuperarlo. El estado
+  puede ser remoto aunque `plan` y `apply` se ejecuten inicialmente desde la
+  CLI local.
+- **Aprendido:** HCP Terraform Free resuelve bloqueo e historial sin decidir
+  aún región ni crear un bucket AWS; por eso evita que el backend de estado
+  fuerce prematuramente la decisión de red. S3 sigue siendo la alternativa de
+  salida si cambian los límites, el coste o el control requerido.
+- **Evidencia:** ADR-0028; HCP Terraform Free limita el plan a 500 recursos
+  gestionados y el backend S3 requiere versionado y locking explícito.
+- **Coste aceptado:** depender inicialmente de HCP y proteger un token de
+  acceso, aplazando la operación nativa del backend S3.
+- **Siguiente decisión:** región y red AWS.
+
+### 2026-07-25 — El estado no es código ni debe vivir en Git
+
+- **Aprendido:** Git registra la intención de infraestructura; el estado de
+  Terraform registra la asociación entre esa intención y recursos reales. Un
+  valor marcado como sensible puede seguir existiendo en el estado, por lo que
+  no se publica ni se versiona.
+- **Aprendido:** estado local no cuesta nada, pero no aporta locking remoto ni
+  recuperación compartida. Es suficiente sin AWS real; un backend remoto será
+  obligatorio antes del primer apply cloud.
+- **Evidencia:** ADR-0027; la comparación posterior se cerró en ADR-0028 con
+  HCP Terraform Free como backend remoto inicial.
+- **Coste aceptado:** retrasar el primer despliegue cloud hasta decidir y
+  verificar el backend remoto.
+- **Siguiente decisión:** completada en ADR-0028; continúa región y red AWS.
+
+### 2026-07-25 — Una cuenta AWS es una frontera, no un usuario
+
+- **Aprendido:** una cuenta AWS aísla recursos, permisos y facturación. Separar
+  `nonprod` de `prod` limita el radio de un error sin requerir una landing zone
+  completa desde el inicio.
+- **Aprendido:** el acceso humano usa federación, MFA y roles temporales; una
+  cuenta root no es una identidad diaria, y GitHub Actions obtiene credenciales
+  temporales mediante OIDC en lugar de conservar access keys.
+- **Evidencia:** ADR-0026; AWS Organizations organiza las tres cuentas e IAM
+  Identity Center centraliza el acceso humano.
+- **Coste aceptado:** gestionar correos raíz, permisos, roles y facturación de
+  tres cuentas antes de desplegar la primera carga.
+- **Siguiente decisión:** estado y bootstrap de Terraform.
+
+### 2026-07-25 — IaC describe el resultado, no una receta manual
+
+- **Aprendido:** Terraform expresa el estado deseado de infraestructura y su
+  flujo separa `plan` —previsualizar cambios— de `apply` —ejecutarlos tras
+  aprobación—. El estado es necesario para comparar la declaración con los
+  recursos reales y requiere un diseño de seguridad independiente.
+- **Aprendido:** seleccionar Terraform no crea una cuenta AWS, una VPC ni un
+  recurso facturable; cuenta, identidad, backend de estado y red siguen siendo
+  decisiones separadas y ordenadas.
+- **Evidencia:** ADR-0025; Terraform queda como IaC declarativa para la Fase 5,
+  sin SDKs AWS ni tipos de proveedor en la lógica de negocio.
+- **Coste aceptado:** aprender HCL y operar correctamente providers, módulos y
+  estado remoto cuando la Fase 5 lo requiera.
+- **Siguiente decisión:** fundación AWS: cuenta e identidad.
+
+### 2026-07-25 — Promover un artifact no es promover una rama
+
+- **Aprendido:** GitHub conserva código fuente, ECR conserva imágenes OCI y un
+  digest identifica exactamente el artifact que ECS puede ejecutar. El digest
+  validado en staging debe ser el mismo que llega a producción; no se reconstruye
+  durante la promoción.
+- **Aprendido:** `dev`, `staging` y `prod` son entornos, no ramas. `develop`
+  puede seguir integrando cambios en dev mientras una `release/*` temporal
+  conserva en staging el subconjunto que QA y negocio quieren publicar.
+- **Evidencia:** ADR-0024; ECR admite tags inmutables y ECS/Fargate puede
+  descargar imágenes privadas mediante el rol de ejecución.
+- **Coste aceptado:** operar entornos aislados y componer releases selectivas
+  añade recursos, conflictos potenciales y sincronización; se activa solo cuando
+  haya equipo o una necesidad real, no durante la práctica individual actual.
+- **Siguiente decisión:** IaC y AWS.
+
+### 2026-07-25 — Runtime gestionado antes que Kubernetes
+
+- **Aprendido:** ECS organiza servicios de contenedores y Fargate aporta la
+  capacidad gestionada para ejecutarlos; no hay que mantener las máquinas que
+  hay por debajo.
+- **Aprendido:** escoger un destino cloud futuro no obliga a desplegar hoy. La
+  práctica actual continúa por completo en local y no debe crear gasto AWS.
+- **Evidencia:** ADR-0023; un servicio ECS puede reemplazar tareas que fallan y
+  Fargate factura por los recursos consumidos mientras se ejecutan.
+- **Coste aceptado:** la red, IAM, Terraform, registro, costes y recuperación
+  real se aprenderán en la Fase 5, antes de mantener recursos activos.
+- **Siguiente decisión:** registry y promoción de la imagen.
+
+### 2026-07-25 — Empaquetar no es elegir dónde desplegar
+
+- **Aprendido:** una imagen OCI es una caja reproducible para ejecutar la API;
+  no es AWS, Kubernetes, un VPS ni un contenedor que deba incluir toda la
+  aplicación y sus dependencias.
+- **Aprendido:** separar build y runtime evita transportar al entorno final el
+  compilador y herramientas de desarrollo; el mismo artefacto podrá identificarse
+  de forma inmutable antes de promoverse.
+- **Evidencia:** ADR-0022; Docker recomienda las imágenes multi-stage para
+  separar compilación y ejecución.
+- **Coste aceptado:** habrá que mantener y comprobar la imagen cuando exista una
+  API, sin adelantar registry, runtime, firma ni pipeline de despliegue.
+- **Siguiente decisión:** runtime y promoción de la API.
+
+### 2026-07-25 — CI como contraste, no como burocracia
+
+- **Aprendido:** la utilidad de CI en un proyecto individual es repetir el
+  contrato de calidad en un entorno limpio, no obligar a una persona a revisar
+  su propio cambio mediante una PR.
+- **Aprendido:** un check obligatorio puede bloquear una promoción cuando el
+  recurso externo no está disponible; por eso la puerta vigente es `make verify`
+  local y CI aporta una segunda evidencia visible.
+- **Evidencia:** ADR-0021; GitHub Actions en runners estándar para repositorio
+  público, sin secretos, permisos de escritura ni triggers privilegiados.
+- **Coste aceptado:** un resultado rojo no bloquea técnicamente `main` mientras
+  no haya colaboración; la disciplina de promoción sigue siendo manual.
+- **Siguiente decisión:** contenedores y despliegue.
+
+### 2026-07-25 — Señales correlacionadas, no prints aislados
+
+- **Aprendido:** un log describe un evento discreto; una traza reúne los spans
+  de una operación; una métrica agrega medidas en el tiempo. Son señales
+  complementarias, no alternativas.
+- **Aprendido:** la instrumentación automática debe cubrir límites técnicos;
+  los spans manuales se reservan para operaciones significativas que no se vean
+  automáticamente, nunca uno por función.
+- **Evidencia:** ADR-0020; OpenTelemetry, Prometheus, Grafana, Loki y Tempo,
+  con correlación por contexto y sin OpenTelemetry Collector inicialmente.
+- **Coste aceptado:** operar cuatro servicios locales y retrasar Collector,
+  alertas y SLO hasta que exista una necesidad demostrable.
+- **Siguiente decisión:** CI y política de calidad.
+
+### 2026-07-25 — Evidencia proporcional al riesgo
+
+- **Aprendido:** un test rápido no equivale a evidencia suficiente cuando el
+  riesgo vive en SQL, restricciones o transacciones; esos comportamientos se
+  validan con PostgreSQL real.
+- **Aprendido:** una suite end-to-end completa no sustituye las pruebas pequeñas:
+  cuesta más diagnosticarla y debe reservarse a recorridos críticos.
+- **Evidencia:** ADR-0019, con pruebas unitarias estándar, integración en una
+  base efímera, contratos HTTP y E2E mínimos.
+- **Coste aceptado:** preparar una base de pruebas aislada y posponer librerías
+  adicionales hasta que exista una necesidad repetida.
+- **Siguiente decisión:** observabilidad mínima.
+
+### 2026-07-25 — Dependencias contenidas, aplicaciones nativas
+
+- **Aprendido:** la paridad local con producción consiste en conservar contratos
+  importantes —configuración externa, PostgreSQL real, salud, volumen y
+  migraciones—, no en contenerizar todo desde el primer día.
+- **Aprendido:** Expo para web, iOS y Android conserva mejor su bucle local al
+  ejecutarse en el host, donde dispone de sus herramientas y simuladores nativos.
+- **Evidencia:** ADR-0018; PostgreSQL queda delimitado como primera dependencia
+  de Docker Compose.
+- **Coste aceptado:** la API futura debe diagnosticar PostgreSQL no disponible y
+  la imagen final de API se validará en una decisión posterior de despliegue.
+- **Siguiente decisión:** estrategia de pruebas.
 
 ### 2026-07-24 — Configuración pública, secretos y entornos
 
@@ -41,7 +371,7 @@ Para cada capacidad se sigue el ciclo:
   despliegue.
 - **Coste aceptado:** los `.env` locales se crean fuera de Git y la validación de
   configuración debe implementarse en cada runtime.
-- **Siguiente decisión:** entorno local.
+- **Siguiente decisión:** completada en ADR-0018.
 
 ### 2026-07-24 — Rendering simple para producto privado
 

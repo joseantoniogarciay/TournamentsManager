@@ -6,7 +6,7 @@
 
 1. un backend modular como unidad desplegable comprensible;
 2. builds independientes del cliente universal para web, iOS y Android;
-3. dependencias en Docker Compose;
+3. dependencias locales en Docker Compose;
 4. servicio instrumentado y recuperable;
 5. Kubernetes con k3d;
 6. AWS mediante Terraform.
@@ -72,14 +72,59 @@ La web inicial se entregará como aplicación client-side conforme a
 rendering, SSR o una superficie web pública especializada se decidirán solo si
 aparecen requisitos públicos de indexación, previews o rendimiento.
 
-La estrategia concreta de versionado, firma, publicación y promoción sigue
-pendiente.
+La API se empaquetará como imagen OCI conforme a
+[ADR-0022](../adr/0022-package-backend-as-oci-image.md). Esta imagen solo
+contendrá el backend y mantendrá build y runtime separados. No decide todavía
+la firma, el SBOM ni el escaneo reforzado.
+
+El registry y la promoción siguen [ADR-0024](../adr/0024-use-ecr-and-digest-based-image-promotion.md):
+la API usará ECR privado al abrir la Fase 5; los tags serán inmutables y ECS
+desplegará por digest. `dev`, `staging` y `prod` compartirán el mismo artefacto
+cuando se promueva, pero no necesariamente configuración, datos ni topología.
+`staging` es un entorno de QA, no una rama permanente.
+
+El runtime cloud futuro será Amazon ECS con Fargate conforme a
+[ADR-0023](../adr/0023-use-ecs-fargate-as-future-cloud-runtime.md). Esta es una
+dirección para la Fase 5, no autorización para crear recursos AWS: hasta entonces
+el trabajo y las verificaciones permanecen locales y sin coste cloud.
+
+La infraestructura de esa fase se describirá con Terraform conforme a
+[ADR-0025](../adr/0025-use-terraform-for-infrastructure-as-code.md). Esta
+elección no fija todavía una cuenta, backend de estado, bloqueo, región, red ni
+proveedor configurado; esas decisiones se tomarán antes de cualquier `apply`.
+
+La fundación AWS seguirá [ADR-0026](../adr/0026-use-aws-organizations-and-temporary-identities.md):
+`management` centraliza gobierno y facturación sin cargas; `nonprod` alojará
+los futuros `dev` y `staging`, y `prod` producción. El acceso humano y de
+automatización será temporal; el backend de estado sigue pendiente.
+
+Conforme a [ADR-0027](../adr/0027-keep-local-state-until-first-cloud-apply.md)
+y [ADR-0028](../adr/0028-use-hcp-terraform-free-for-remote-state.md), el estado
+es local solo mientras no haya infraestructura AWS real y HCP Terraform Free
+será su backend remoto inicial. Los runs permanecerán inicialmente en la CLI
+local; no hay auto-apply ni recursos AWS autorizados hasta abrir la Fase 5 y
+verificar bloqueo, recuperación y acceso. Git no se usará para almacenar estado.
+
+La topología de entrada y egress inicial sigue ADR-0029: el ALB será público y
+terminará HTTPS; las tareas Fargate solo aceptarán tráfico desde él y PostgreSQL
+permanecerá privado. No se creará NAT Gateway inicialmente. Antes del primer
+`apply` se revisará y autorizará el coste completo del ALB, Fargate, base de
+datos, IPv4, logs y transferencia.
+
+ADR-0030 fija la región futura en España (`eu-south-2`), una VPC `/16` no
+solapada por cuenta y dos AZ con dos subredes públicas y dos privadas. Este mapa
+no genera coste: el gasto seguirá bloqueado hasta presentar una estimación
+completa y recibir autorización explícita del usuario.
 
 ## Decisiones por fase
 
 ### Fase 1
 
-Docker Compose, configuración, datos, ciclo de vida y comandos.
+Docker Compose para dependencias locales, configuración, datos, ciclo de vida y
+comandos. Conforme a [ADR-0018](../adr/0018-use-compose-for-local-service-dependencies.md),
+Compose operará inicialmente PostgreSQL; API Go y cliente Expo se ejecutan en el
+host durante desarrollo. La futura imagen OCI de la API no convierte Compose en
+entorno de desarrollo de la aplicación ni decide la forma de entrega web.
 
 ### Fase 4
 
@@ -88,5 +133,5 @@ configuración, secretos y rollout.
 
 ### Fase 5
 
-Cuenta AWS, identidad, red, cómputo, datos, storage, observabilidad, estado de
-Terraform, CI/CD, coste y recuperación.
+Terraform, cuenta AWS, identidad, bootstrap y estado remoto, red, cómputo,
+datos, storage, observabilidad, CI/CD, coste y recuperación.

@@ -83,7 +83,7 @@ aceptado está registrado en
 [ADR-0013](docs/adr/0013-use-develop-as-integration-branch.md).
 
 - el trabajo ordinario se hace y se commitea en `develop`;
-- no se crean ramas por feature como norma;
+- mientras el trabajo sea individual, no se crean ramas por feature como norma;
 - un bloque coherente y verificado se integra de `develop` a `main`;
 - después de la integración, el trabajo continúa en `develop`;
 - hotfixes, experimentos arriesgados o trabajo paralelo pueden usar ramas
@@ -94,8 +94,19 @@ aceptado está registrado en
 - no se versionan secretos ni artefactos generados;
 - una decisión importante enlaza su ADR.
 
-El mecanismo exacto de merge, las protecciones de ramas y los checks obligatorios
-se decidirán junto con CI y la política de calidad.
+Cuando haya equipo, trabajo paralelo o necesidad real de seleccionar
+funcionalidades por entrega, [ADR-0024](docs/adr/0024-use-ecr-and-digest-based-image-promotion.md)
+habilita ramas de feature y `release/<versión>` temporales. Una release nace de
+`main` con las features seleccionadas, se valida en `staging` y, si se acepta,
+se integra en `main`; después `main` se sincroniza hacia `develop`. No existe
+una rama permanente `staging`.
+
+CI ejecuta `make verify` en cada push a `develop` y `main`, y en pull requests
+cuando existan. Es una señal adicional, no un check obligatorio: mientras haya
+un solo desarrollador, una auto-revisión no añade independencia. Antes de
+promover un bloque a `main`, ejecuta `make verify` localmente y revisa el
+resultado remoto disponible. No se permiten force-pushes ni borrado de `main` o
+`develop`. Véase [ADR-0021](docs/adr/0021-use-advisory-ci-with-local-quality-gate.md).
 
 Al ser un repositorio público, ninguna contribución externa se ejecuta con
 secretos o acceso de despliegue. Los cambios en `.github/workflows`, permisos y

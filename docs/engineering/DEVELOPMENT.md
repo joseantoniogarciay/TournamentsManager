@@ -2,8 +2,9 @@
 
 > Estado: toolchains Go y TypeScript aceptados en
 > [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) y
-> [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md); el resto del
-> entorno local continúa pendiente.
+> [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md); el modelo de
+> entorno local está aceptado en [ADR-0018](../adr/0018-use-compose-for-local-service-dependencies.md)
+> y su implementación continúa pendiente.
 
 ## Principios
 
@@ -74,8 +75,10 @@ make verify
 ```
 
 `make check` agrupa formato, lint y tests. `make verify` añade la limpieza de
-ambos módulos, build y vulnerabilidades. CI reutilizará `make verify` cuando se
-decida su política.
+ambos módulos, build y vulnerabilidades. Conforme a
+[ADR-0021](../adr/0021-use-advisory-ci-with-local-quality-gate.md), CI ejecuta
+`make verify` como comprobación informativa; el mismo comando se ejecuta
+localmente antes de promover un bloque a `main`.
 
 `make vuln` consulta la base oficial `vuln.go.dev`. No envía el código fuente,
 pero requiere red y usa información de módulos para resolver vulnerabilidades.
@@ -178,15 +181,18 @@ Un cambio está terminado cuando:
 - no contiene secretos ni dependencias no justificadas.
 - conserva alineados contrato OpenAPI, implementación Go y cliente TypeScript.
 
-## Entorno local pendiente
+## Entorno local aceptado; implementación pendiente
 
-Fase 1 decidirá y documentará:
+ADR-0018 delimita Docker Compose a dependencias de infraestructura: inicialmente
+solo PostgreSQL. La API Go y el cliente Expo —web, iOS y Android— se ejecutarán
+en el host durante el desarrollo. No habrá contenedores de frontend localmente.
 
-- Docker Compose y ciclo de vida de servicios;
-- variables de entorno y secretos locales;
-- configuración y rutas de `sqlc`, migraciones `goose` y datos semilla;
-- health checks;
-- comandos de servicios y cleanup;
-- soporte de plataforma.
-
-Hasta entonces no deben inventarse comandos ni prerequisitos adicionales.
+La implementación fija PostgreSQL 18.4, `infra/local/compose.yaml`, contratos
+`.env.example` separados para Compose y backend, health check, volumen y los
+comandos `make db-*`. El [Makefile](../../Makefile) raíz es el índice de
+automatización compartida; los comandos se separan por tecnología en
+[`mk/go.mk`](../../mk/go.mk), [`mk/typescript.mk`](../../mk/typescript.mk) y
+[`mk/postgres.mk`](../../mk/postgres.mk). Consulta el [runbook de PostgreSQL local](../runbooks/local-postgresql.md).
+Las migraciones `goose` se ejecutan separadamente con `make db-migrate`. Los
+datos semilla funcionales permanecen aplazados hasta cerrar el primer vertical
+slice de producto.

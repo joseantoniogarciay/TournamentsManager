@@ -46,7 +46,7 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 - [PROJECT_MANIFESTO.md](PROJECT_MANIFESTO.md): principios innegociables y dirección.
 - [WHY.md](docs/project/WHY.md): problema de aprendizaje, resultados y no objetivos.
 - [PRODUCT.md](docs/project/PRODUCT.md): alcance funcional, actores y flujos aceptados.
-- [TECHNICAL_BASELINE.md](docs/governance/TECHNICAL_BASELINE.md): gate técnico activo y estado.
+- [TECHNICAL_BASELINE.md](docs/governance/TECHNICAL_BASELINE.md): base técnica cerrada y trazabilidad de decisiones.
 - [SYSTEM_OPTIONS.md](docs/governance/SYSTEM_OPTIONS.md): alternativas y orden de decisiones.
 - [DECISIONS.md](docs/governance/DECISIONS.md): índice y reglas de decisión.
 - [ROADMAP.md](docs/project/ROADMAP.md): fases, puertas de entrada y criterios de salida.
@@ -100,16 +100,28 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 | Expo, Expo Router y CNG | Aceptada | [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md) |
 | Rendering web client-side inicial | Aceptada | [ADR-0016](docs/adr/0016-use-client-side-web-rendering-initially.md) |
 | Configuración y secretos | Aceptada | [ADR-0017](docs/adr/0017-use-env-contracts-github-environments-and-oidc.md) |
+| Estrategia de pruebas por riesgo y capas | Aceptada | [ADR-0019](docs/adr/0019-use-risk-based-layered-testing.md) |
 | Go, Docker y AWS | Dirección objetivo | Manifiesto; requieren decisiones de implementación |
 | Producto web y mobile de torneos | Alcance aceptado | [PRODUCT.md](docs/project/PRODUCT.md) |
 | React Native universal | Expo, Expo Router y CNG aceptados | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md), [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md) |
 | TypeScript y cliente API generado | Aceptada; toolchain fijado | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md), [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md) |
 | Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](docs/governance/DECISIONS_TO_REVISIT.md) |
-| Stack de observabilidad | Pendiente de evaluación | [OBSERVABILITY.md](docs/operations/OBSERVABILITY.md) |
+| Observabilidad mínima | OpenTelemetry, Prometheus, Grafana, Loki y Tempo aceptados; Collector aplazado | [ADR-0020](docs/adr/0020-use-minimal-correlated-observability.md) |
+| Empaquetado de la API | Imagen OCI/Docker aceptada | [ADR-0022](docs/adr/0022-package-backend-as-oci-image.md) |
+| Runtime cloud de la API | ECS con Fargate en Fase 5; todo el trabajo actual continúa local y sin coste AWS | [ADR-0023](docs/adr/0023-use-ecs-fargate-as-future-cloud-runtime.md) |
+| Registry y promoción de la API | ECR privado, digest inmutable y releases selectivas futuras; sin recursos AWS aún | [ADR-0024](docs/adr/0024-use-ecr-and-digest-based-image-promotion.md) |
+| Infraestructura como código | Terraform aceptado; cuenta, estado remoto y red AWS pendientes, sin recursos creados | [ADR-0025](docs/adr/0025-use-terraform-for-infrastructure-as-code.md) |
+| Fundación AWS | Organizations con cuentas `management`, `nonprod` y `prod`; acceso temporal con Identity Center y MFA | [ADR-0026](docs/adr/0026-use-aws-organizations-and-temporary-identities.md) |
+| Estado Terraform | Local solo antes de AWS real; backend remoto obligatorio desde el primer apply cloud | [ADR-0027](docs/adr/0027-keep-local-state-until-first-cloud-apply.md) |
+| Backend remoto de Terraform | HCP Terraform Free con ejecución local inicial; sin recursos AWS ni auto-apply | [ADR-0028](docs/adr/0028-use-hcp-terraform-free-for-remote-state.md) |
+| Entrada pública y egress inicial | ALB público; API Fargate solo accesible desde el ALB; base de datos privada y sin NAT | [ADR-0029](docs/adr/0029-use-public-alb-restricted-fargate-and-no-nat-initially.md) |
+| Región y red AWS | España (`eu-south-2`); VPC separada por cuenta en dos AZ; gasto solo tras autorización explícita | [ADR-0030](docs/adr/0030-use-spain-region-and-two-az-cost-gated-network.md) |
 | Framework y rendering del cliente | Aceptado | [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md), [ADR-0016](docs/adr/0016-use-client-side-web-rendering-initially.md) |
 
-El gate activo es [TECHNICAL_BASELINE.md](docs/governance/TECHNICAL_BASELINE.md). Las decisiones
-funcionales permanecen pausadas hasta cerrarlo.
+La [base técnica](docs/governance/TECHNICAL_BASELINE.md) está cerrada. El
+siguiente gate es [0B: definición del primer vertical slice](docs/project/ROADMAP.md);
+las decisiones funcionales vuelven a estar disponibles y siguen requiriendo ADR
+cuando alcancen el umbral definido.
 
 ## Regla de precedencia
 
