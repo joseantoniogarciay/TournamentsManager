@@ -41,6 +41,10 @@ coincidencia no autoriza vinculación automática. Véanse
 La recuperación de contraseña no revelará si existe una cuenta y nunca devolverá
 la contraseña anterior.
 
+ADR-0044 fija Argon2id para contraseñas locales, sesiones opacas revocables y
+rotadas, y Mailpit solo para capturar email en desarrollo. JWT y refresh tokens
+no se introducen sin un disparador de arquitectura distribuida.
+
 ## Reglas iniciales
 
 - mínimo privilegio para personas y workloads;

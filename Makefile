@@ -12,7 +12,8 @@ include $(MAKEFILE_DIR)/mk/postgres.mk
 	format-check format-check-go format-check-ts \
 	tidy tidy-check \
 	tidy-tools tidy-tools-check tidy-all \
-	lint lint-go lint-ts typecheck \
+	lint lint-go lint-ts typecheck openapi-lint openapi-generate openapi-generate-check openapi-ui \
+	sqlc-generate sqlc-generate-check \
 	test test-race build vuln \
 	check verify
 
@@ -25,7 +26,7 @@ format-check: format-check-go format-check-ts
 lint: lint-go lint-ts
 
 # Feedback local rápido para todos los ecosistemas activos.
-check: format-check lint typecheck test
+check: format-check lint typecheck openapi-lint test
 
 # Verificación completa local y de CI.
-verify: check tidy-check tidy-tools-check build vuln
+verify: check openapi-generate-check sqlc-generate-check tidy-check tidy-tools-check build vuln

@@ -20,13 +20,20 @@
     "format:check": "prettier --check \"**/*.{js,jsx,mjs,cjs,ts,tsx,json,jsonc,yaml,yml}\"",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --build --pretty false",
-    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck",
+    "openapi:lint": "redocly lint",
+    "openapi:generate": "orval --config orval.config.ts",
+    "openapi:generate:check": "pnpm run openapi:generate && git diff --exit-code -- apps/client/src/api/generated",
+    "openapi:ui": "scalar document serve contracts/openapi/v1/openapi.yaml --watch --port 8082",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run openapi:lint",
     "verify": "pnpm run check"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@redocly/cli": "2.41.0",
+    "@scalar/cli": "2.0.1",
     "eslint": "10.7.0",
     "eslint-config-prettier": "10.1.8",
+    "orval": "8.23.0",
     "prettier": "3.9.6",
     "typescript": "6.0.3",
     "typescript-eslint": "8.65.0"

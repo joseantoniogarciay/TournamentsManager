@@ -1,10 +1,9 @@
 # Runbook: PostgreSQL local con Docker Compose
 
-> **Estado:** procedimiento implementado, pendiente de prueba en una máquina con
-> Docker Compose disponible.
+> **Estado:** procedimiento implementado y validado con Docker Compose local.
 >
-> **Última prueba:** no ejecutada; el entorno de mantenimiento no tiene el
-> comando `docker` instalado.
+> **Última prueba:** 2026-07-26 — arranque, `healthcheck`, reinicio con volumen
+> persistente, reset confirmado y migraciones vacías.
 
 ## Alcance
 
@@ -53,7 +52,8 @@ make db-migrate
 
 El comando usa `DATABASE_URL` de `apps/backend/.env` y ejecuta `goose`; no inicia
 la API ni crea datos funcionales. Aún no hay migraciones porque esquema y primer
-vertical slice no están decididos.
+vertical slice no están implementados. En ese estado informa que se omite y
+termina correctamente; al añadir la primera migración SQL, ejecutará `goose`.
 
 ## Parada, inspección y recuperación
 
@@ -70,7 +70,9 @@ make db-reset
 ```
 
 El comando exige escribir `RESET` y elimina únicamente el volumen nombrado del
-proyecto Compose. Después repite `make db-up` y `make db-migrate`.
+proyecto Compose. Durante la construcción inicial, ADR-0053 permite reescribir
+el único esquema `00001_initial_schema.sql` antes de este reset. Después repite
+`make db-up` y `make db-migrate`; no se conservan datos locales.
 
 ## Diagnóstico seguro
 

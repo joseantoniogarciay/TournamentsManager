@@ -6,10 +6,28 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Added
+
+- Bootstrap ejecutable de la API Go: configuración explícita, comprobación de
+  PostgreSQL al iniciar y endpoint local `GET /healthz`.
+- `make api-up` para levantar PostgreSQL local y ejecutar la API Go en el host,
+  sin ejecutar migraciones implícitamente.
+- ADR-0053: un único esquema PostgreSQL inicial reescribible y reseteable
+  mientras los datos sean exclusivamente locales y descartables.
+
 ### Changed
 
+- Autenticación local definida con sesiones opacas revocables, Argon2id y
+  renovación silenciosa; JWT y refresh tokens quedan aplazados.
+- El primer incremento de backend queda acotado a identidad local, publicación
+  y consulta de una liga; el ciclo deportivo avanzado se aplaza.
+- Fase 1 cerrada: PostgreSQL local queda validado para arranque, salud,
+  persistencia y recuperación mediante reset confirmado.
+- `make db-migrate` omite de forma explícita y correcta el estado previo a la
+  primera migración; el runbook de PostgreSQL queda validado para arranque,
+  salud y persistencia local.
 - Gate 0B completado: el primer vertical slice queda definido como una liga de
-  fútbol no listada, con ciclo de vida, seguimiento autenticado, administración
+  fútbol con lectura pública por ID, ciclo de vida, seguimiento autenticado, administración
   delegada limitada a resultados y reglas explícitas de bajas y cancelación.
 - Ruta del módulo Go alineada con el propietario canónico de GitHub antes de la
   primera publicación.
@@ -27,6 +45,14 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Swagger UI local para explorar `contracts/openapi/v1/openapi.yaml` mediante
+  `pnpm run openapi:ui` o `make openapi-ui`, sin incluirlo en la API desplegable.
+- ADR-0050: login federado con Google incluido en el primer incremento; Apple
+  queda aplazado.
+- ADR-0049: lectura pública de ligas visibles por ID, sin token ni tabla de
+  enlaces compartidos.
+- ADR-0044: sesiones opacas, SMTP local y hashing de contraseñas.
+- ADR-0043: alcance del primer incremento de backend.
 - ADR-0031 a ADR-0042: borradores previos al acceso y decisiones de producto del
   primer vertical slice; retrospectiva de cierre de la Fase 0.
 - ADR-0030: región AWS España (`eu-south-2`), VPC independientes en dos AZ y

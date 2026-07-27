@@ -59,6 +59,11 @@ migraciones se ejecutan desde el host. El procedimiento operativo está en el
 
 ## Política de migraciones
 
+- Mientras solo exista PostgreSQL local y los datos sean descartables,
+  [ADR-0053](../adr/0053-keep-a-single-resettable-local-initial-schema.md)
+  establece una excepción temporal: `00001_initial_schema.sql` es el único
+  esquema inicial y se reescribe tras un reset explícito. No se añaden pasos
+  incrementales durante esta etapa.
 - Las migraciones iniciales se escriben en SQL.
 - Una migración aplicada en un entorno compartido es inmutable.
 - `goose` se ejecuta como paso explícito de desarrollo o despliegue, no como
@@ -79,17 +84,23 @@ o invariantes propios.
 Las transacciones se definen desde el caso de uso. No se añade una abstracción
 genérica de unit of work o repository antes de que proteja un límite real.
 
-## Decisiones necesarias antes del primer esquema
+## Decisiones pendientes tras el esquema inicial
 
-- límites de consistencia y transacciones;
-- identificadores y estrategia temporal;
-- organización de migraciones, consultas y código generado;
-- política para versionar o verificar el código generado;
-- versiones exactas de PostgreSQL, `pgx`, `sqlc` y `goose`;
+- límites de consistencia y transacciones de cada caso de uso;
 - concurrencia, idempotencia y bloqueos;
 - configuración del pool, timeouts y errores;
 - datos de desarrollo y pruebas;
 - backup, restore, retención y datos sensibles.
+
+## Diseño del primer esquema
+
+El [modelo inicial de datos](INITIAL_DATA_MODEL.md), aceptado en ADR-0045,
+define las entidades, restricciones y transacciones del primer incremento.
+[ADR-0047](../adr/0047-organize-initial-postgresql-schema-and-sqlc.md), ajustado
+por ADR-0053, lo materializa en el único esquema inicial, sin crear aún consultas de negocio ni
+adaptadores. `db/migrations` es la fuente de esquema para Goose y sqlc; las
+consultas futuras viven en `db/queries` y la salida generada bajo el adaptador
+PostgreSQL se versiona y no se edita manualmente.
 
 ## Cache
 

@@ -4,7 +4,7 @@
 > [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) y
 > [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md); el modelo de
 > entorno local está aceptado en [ADR-0018](../adr/0018-use-compose-for-local-service-dependencies.md)
-> y su implementación continúa pendiente.
+> y su implementación está validada localmente.
 
 ## Principios
 
@@ -18,6 +18,8 @@
 - La documentación cambia en el mismo conjunto de cambios que el comportamiento.
 - OpenAPI es la fuente editable del contrato HTTP; el cliente TypeScript generado
   no se modifica manualmente.
+- Redocly valida el contrato y Orval regenera `apps/client/src/api/generated/`;
+  la comprobación de deriva forma parte de `make verify`.
 - El equipo escribe las consultas SQL; el código de acceso generado por `sqlc`
   no se modifica manualmente.
 - Las migraciones `goose` se ejecutan explícitamente y no al arrancar la API.
@@ -58,6 +60,7 @@ make format
 make tidy
 make tidy-tools
 make tidy-all
+make sqlc-generate
 ```
 
 Comandos que solo verifican:
@@ -66,6 +69,7 @@ Comandos que solo verifican:
 make format-check
 make tidy-check
 make tidy-tools-check
+make sqlc-generate-check
 make lint
 make test
 make build
@@ -117,9 +121,15 @@ pnpm run format
 pnpm run format:check
 pnpm run lint
 pnpm run typecheck
+pnpm run openapi:ui
 pnpm run check
 pnpm run verify
 ```
+
+`pnpm run openapi:ui` (o `make openapi-ui`) abre Scalar localmente en
+`http://127.0.0.1:8082` para explorar el contrato OpenAPI 3.1. No arranca el
+backend ni publica documentación. El contrato configura `http://127.0.0.1:8080/v1`
+como destino de la API local cuando el servidor Go esté disponible.
 
 El Makefile raíz incorpora estas comprobaciones en `make format`, `make check` y
 `make verify`, junto con las de Go.
@@ -157,6 +167,22 @@ La configuración y los secretos siguen
   se tratarán como públicas.
 - Docker Compose podrá usar `env_file` cuando se decida el entorno local.
 - No se introduce gestor de secretos hasta que exista evidencia operativa.
+
+### Arranque de la API Go
+
+Para levantar PostgreSQL local y la API desde el host:
+
+```bash
+make api-up
+```
+
+`make api-up` espera a que PostgreSQL esté saludable, carga
+`apps/backend/.env` y mantiene la API en primer plano. El contrato local exige
+`DATABASE_URL` y `HTTP_ADDR` en ese archivo. El proceso comprueba PostgreSQL
+antes de abrir el puerto y expone `GET /healthz` en
+`HTTP_ADDR` (por defecto, `http://127.0.0.1:8080/healthz`). Las migraciones
+siguen siendo un paso explícito mediante `make db-migrate`; la API se detiene
+con `Ctrl+C` y PostgreSQL, si se desea, con `make db-down`.
 
 ## Flujo de trabajo
 

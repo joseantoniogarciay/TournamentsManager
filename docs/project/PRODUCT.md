@@ -23,7 +23,8 @@ incorporar otros deportes sin reescribir su núcleo.
 - Preparar un borrador de torneo no exigirá una cuenta; persistirlo y publicar el
   torneo exigirá una cuenta verificada.
 - La cuenta incluirá registro, inicio de sesión y recuperación de contraseña.
-- Una misma cuenta admitirá credenciales locales y login con Apple o Google.
+- Una misma cuenta admitirá credenciales locales y login con Google; Apple se
+  incorporará en un incremento posterior.
 - El fútbol es el deporte inicial.
 - El formato inicial será una liga de fútbol. Eliminatorias, formatos mixtos y
   otros deportes quedan fuera del primer corte, sin impedir evaluarlos después.
@@ -48,15 +49,15 @@ autenticada.
 
 ### Cuenta pendiente de verificación
 
-Es un registro temporal tras un alta local con email y contraseña. Puede retomar
-el borrador asociado al verificar el correo, pero no recibe una sesión de
-producto ni permisos de negocio. Las cuentas y borradores pendientes caducan
-según la política que se defina antes de implementarla.
+Es un registro temporal tras un alta local con email, contraseña y `username`.
+Puede retomar el borrador asociado al verificar el correo, pero no recibe una
+sesión de producto ni permisos de negocio. Las cuentas y borradores pendientes
+caducan según la política que se defina antes de implementarla.
 
 ### Usuario autenticado y verificado
 
 - gestionar su sesión y perfil básico;
-- elegir un `username` público y único, que no podrá cambiar inicialmente;
+- usar su `username` público y único, que no podrá cambiar inicialmente;
 - crear un torneo;
 - consultar los torneos con los que tiene relación.
 
@@ -90,30 +91,34 @@ equipos ni a la competición en el primer corte.
 
 ### Registro
 
-1. La persona proporciona el identificador acordado, inicialmente candidato:
-   correo electrónico, y una contraseña.
+1. La persona proporciona correo electrónico, contraseña y `username` público.
 2. Acepta las condiciones necesarias.
-3. Se crea una cuenta pendiente de verificación y se asocia a ella el borrador
-   que la persona hubiera preparado.
+3. Se crea una cuenta pendiente de verificación y, si la persona preparó un
+   borrador, se asocia a ella.
 4. Verifica la propiedad del correo mediante el canal enviado.
 5. La cuenta se activa, puede iniciar sesión y puede publicar el torneo.
 
-Un borrador local permite empezar sin sesión. Tras iniciar el alta se conserva en
-el servidor únicamente asociado a la cuenta pendiente, para poder continuar si
-la verificación se completa desde otro dispositivo. Una cuenta pendiente no puede
-publicar ni realizar acciones protegidas. Véase
+Si una cuenta pendiente inicia sesión con contraseña correcta, el sistema
+invalida su enlace anterior y envía otro correo de verificación; no crea sesión
+hasta que se complete esa verificación.
+
+Un borrador local permite empezar sin sesión, pero no es requisito para crear la
+cuenta. Si se envía al iniciar el alta, se conserva en el servidor únicamente
+asociado a la cuenta pendiente, para poder continuar si la verificación se
+completa desde otro dispositivo. Una cuenta pendiente no puede publicar ni
+realizar acciones protegidas. Véase
 [ADR-0031](../adr/0031-preserve-pre-auth-tournament-drafts-until-verified.md).
 
 ### Login
 
-1. La persona demuestra su identidad mediante contraseña, Apple o Google.
+1. La persona demuestra su identidad mediante contraseña o Google.
 2. El cliente obtiene una sesión apropiada para web o mobile.
 3. El backend autoriza cada acción sobre recursos concretos.
 
-Apple y Google son métodos de acceso vinculados al mismo usuario interno. Añadir
-o cambiar un email de contacto no reemplaza el vínculo con el proveedor.
+Google es un método de acceso vinculado al mismo usuario interno. Añadir o cambiar
+un email de contacto no reemplaza el vínculo con el proveedor.
 
-Si el primer login social coincide con una cuenta local todavía no vinculada, el
+Si el primer login con Google coincide con una cuenta local todavía no vinculada, el
 acceso queda pendiente. Se envía un enlace de un solo uso al correo verificado y
 no se crea una sesión hasta completar la vinculación.
 
@@ -133,17 +138,20 @@ verificado y se permitirá establecer una nueva.
 Mantener una sesión abierta (“recuérdame”) es una decisión diferente sobre
 duración y renovación de sesiones.
 
-## Primer vertical slice candidato
+## Primer incremento backend aceptado
 
-El primer corte debe ser pequeño y atravesar producto, seguridad, datos, API y
-operación:
+El primer incremento debe ser pequeño y atravesar producto, seguridad, datos, API
+y operación:
 
 1. un invitado prepara localmente un torneo de fútbol de liga y sus equipos;
 2. una persona se registra, verifica su cuenta e inicia sesión sin perder el
    borrador;
 3. el organizador autenticado persiste y publica el torneo con los datos mínimos;
-4. el organizador consulta el estado actualizado del torneo y sus equipos.
+4. el organizador consulta el estado actualizado del torneo y sus equipos;
+5. una persona inicia sesión con Google y recibe la misma clase de sesión propia
+   que con contraseña.
 
+El alcance está aceptado en [ADR-0043](../adr/0043-deliver-publish-and-read-league-first-backend-increment.md).
 El Gate 0B está cerrado: el formato, los datos mínimos, el ciclo de vida, la
 visibilidad, los participantes, la administración, los resultados, las bajas, la
 cancelación y la frontera de identidad están definidos. Las capacidades aplazadas
@@ -163,7 +171,7 @@ estado terminal desde `publicado` o `en_curso`. El borrador se prepara localment
 o queda asociado temporalmente a una cuenta pendiente; se descarta y no forma
 parte de este ciclo.
 
-Una liga publicada es compartible y el creador puede modificar sus equipos y
+Una liga visible es consultable sin sesión por su ID público y el creador puede modificar sus equipos y
 datos estructurales. Al iniciarla, se validan los datos, se generan una sola vez
 los emparejamientos y se congelan equipos y reglas. Solo entonces los
 administradores pueden registrar o corregir resultados. El creador solo puede
@@ -174,22 +182,21 @@ ya jugados, pasan a `3-0` a favor del rival y la liga continúa.
 ## Cancelación
 
 Solo el creador puede cancelar una liga desde `publicado` o `en_curso`. No se
-exige motivo; la liga conserva sus datos y su enlace muestra estado `cancelado`.
+exige motivo; la liga conserva sus datos y su URL pública muestra estado `cancelado`.
 Las personas que la siguen verán ese estado al volver a «ligas seguidas». Este
 corte no envía email ni notificaciones push.
 
 ## Visibilidad inicial
 
-La [ADR-0033](../adr/0033-use-unlisted-read-only-links-for-published-leagues.md)
-establece que una liga no listada se puede consultar sin sesión mediante un enlace
-con identificador aleatorio no predecible. Esto incluye estados `publicado`,
-`en_curso`, `finalizado` y `cancelado`. El enlace concede solo lectura; no crea
-una relación de participante ni permisos de administración o resultados.
+La [ADR-0049](../adr/0049-use-public-league-ids-for-read-only-access.md)
+establece que una liga visible se puede consultar sin sesión mediante su ID
+público. Esto incluye estados `publicado`, `en_curso`, `finalizado` y
+`cancelado`. Conocer el ID concede solo lectura; no crea una relación de
+participante ni permisos de administración o resultados.
 
-Los borradores no son accesibles por enlace. “Crear y publicar” es una comodidad
-de interfaz que ejecuta la misma validación y transición que publicar un borrador.
-La visibilidad pública, la rotación de enlaces y las invitaciones siguen fuera de
-este corte.
+Los borradores no son accesibles por ID. “Crear y publicar” es una comodidad de
+interfaz que ejecuta la misma validación y transición que publicar un borrador.
+Las invitaciones y una audiencia restringida siguen fuera de este corte.
 
 ## Fuera del primer alcance
 
