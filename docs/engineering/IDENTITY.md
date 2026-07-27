@@ -1,7 +1,7 @@
 # Identidad y acceso
 
-> Estado: arquitectura propia federada aceptada; protocolos, almacenamiento y
-> controles concretos pendientes.
+> Estado: identidad propia federada aceptada; sesiones locales opacas,
+> verificación SMTP local y contraseñas Argon2id aceptadas en ADR-0044.
 
 ## Vocabulario
 
@@ -25,14 +25,20 @@
 propia en Go con credenciales locales y login federado inicial mediante Apple y
 Google.
 
+Para el primer incremento, [ADR-0044](../adr/0044-use-opaque-sessions-local-smtp-and-argon2id.md)
+fija sesiones opacas persistidas y revocables. La web usa cookie segura; móvil
+usa Bearer en almacenamiento seguro. [ADR-0050](../adr/0050-include-google-federated-login-in-first-increment.md)
+incorpora Google como único proveedor federado inicial. JWT, refresh tokens y
+Apple quedan fuera de este incremento.
+
 ```text
-Apple / Google ── credencial firmada ──┐
-                                       ▼
-Email / password ────────────────> Backend Go
-                                       │
-                                       ├── autentica
-                                       ├── resuelve User interno
-                                       └── emite sesión propia
+Email / password ──> local_credentials ─┐
+                                         ├──> accounts ──> sessions
+Google ──> external_identities ──────────┘
+
+Antes de entregar una credencial Google, el cliente solicita un challenge de
+cinco minutos y usa el nonce devuelto al iniciar Google. El backend consume ese
+challenge una sola vez tras validar el ID token; no es una sesión ni una cuenta.
 ```
 
 El cliente transporta credenciales y usa la sesión resultante. No decide la
@@ -40,11 +46,12 @@ identidad ni la autorización.
 
 ## Username público
 
-La [ADR-0034](../adr/0034-use-teams-as-competitors-and-direct-delegated-administration.md)
-establece que toda cuenta completa un `username` público y único al activar su
-perfil verificado. En un primer acceso con Apple o Google se elige después de
-acreditar la identidad con el proveedor. No forma parte de una credencial, no
-sustituye al identificador interno y no se puede cambiar en el primer corte.
+La [ADR-0048](../adr/0048-require-username-at-registration-and-rotate-verification.md)
+establece que toda cuenta aporta un `username` público, único y en minúsculas al
+crear su identidad. En un primer acceso con Apple o Google se elige después de
+acreditar la identidad con el proveedor y antes de crear la cuenta. No forma
+parte de una credencial, no sustituye al identificador interno y no se puede
+cambiar en el primer corte.
 
 Se usa para buscar y seleccionar administradores de una liga. Las reglas exactas
 de formato, normalización, nombres reservados y un futuro cambio de `username`
@@ -53,14 +60,22 @@ se decidirán antes de implementarlas.
 ## Alta local y borradores antes del acceso
 
 Un invitado puede preparar un borrador de torneo en el cliente sin autenticarse.
-Al enviar un alta con email y contraseña, el backend crea una cuenta pendiente y
-asocia el borrador a ella. La verificación del correo activa la cuenta; solo
-entonces se emite una sesión de producto y se permite publicar el torneo.
+Al enviar un alta con email, contraseña y `username`, el backend crea una cuenta
+pendiente y asocia el borrador a ella. La verificación del correo activa la
+cuenta; solo entonces se emite una sesión de producto y se permite publicar el
+torneo.
 
 La cuenta pendiente no es una sesión, ni concede autorización. Cuenta y borrador
-caducan y se eliminan conforme a una política pendiente de concretar. Esta
+caducan a los siete días y se eliminan mediante una purga explícita. Esta
 decisión no crea persistencia de borradores anónimos en el servidor. Véase
 [ADR-0031](../adr/0031-preserve-pre-auth-tournament-drafts-until-verified.md).
+
+El contrato de registro, verificación y sesión se concreta en
+[OpenAPI v1](../../contracts/openapi/v1/openapi.yaml); el modelo persistente está
+en [INITIAL_DATA_MODEL.md](INITIAL_DATA_MODEL.md). La verificación consume el
+token de un solo uso, activa la cuenta completa y crea la sesión en una única
+transacción. Un login correcto de cuenta pendiente invalida el token activo y
+solicita otro correo, sin crear sesión.
 
 ## Subject de Apple y Google
 
@@ -75,6 +90,11 @@ el backend no confía en campos sueltos.
    expiración y nonce.
 5. El backend extrae el `subject` verificado.
 6. Se busca el vínculo `(provider, subject)` y se emite una sesión propia.
+
+En el primer incremento se implementa exclusivamente Google. El backend trata
+`sub` como el identificador externo estable, no el email, y valida la credencial
+antes de crear o consultar el vínculo. Apple reutilizará la misma frontera en un
+incremento posterior.
 
 Apple utiliza identificadores con alcance del equipo de desarrollo; las
 aplicaciones correctamente agrupadas pueden correlacionar al mismo usuario. La

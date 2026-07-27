@@ -1,7 +1,7 @@
 # API
 
-> Estado: REST y OpenAPI contract-first aceptados; operaciones y tooling
-> pendientes.
+> Estado: REST y OpenAPI contract-first aceptados; contrato del primer
+> incremento diseñado en ADR-0045, sin implementación todavía.
 
 ## Relación entre API y backend
 
@@ -71,13 +71,9 @@ fallback web y evita que una previsualización del enlace vincule una cuenta.
 
 ## Decisiones pendientes
 
-- consumidores: web, mobile y acceso invitado limitado;
-- primer contrato para listar/ver, crear y unirse a torneos;
-- versión y estructura de OpenAPI;
-- herramientas de lint, generación y compatibilidad;
 - generación o escritura manual de tipos de transporte Go;
-- identidad, autenticación y autorización;
-- validación y modelo de errores;
+- mecanismos de protección CSRF para el transporte cookie;
+- operaciones posteriores: edición, inicio, resultados, seguimiento y administración;
 - idempotencia y concurrencia;
 - paginación, filtros y ordenación;
 - compatibilidad y retirada de versiones;
@@ -106,6 +102,46 @@ Todo contrato futuro debe:
 - límites y timeouts explícitos;
 - documentación actualizada.
 - cliente TypeScript regenerado y sin modificaciones manuales.
+
+## Contrato del primer incremento
+
+La fuente de verdad de diseño es
+[`contracts/openapi/v1/openapi.yaml`](../../contracts/openapi/v1/openapi.yaml).
+Usa OpenAPI 3.1, prefijo `/v1` y `application/problem+json` conforme a RFC 9457.
+Incluye alta, reenvío y confirmación de verificación, login, sesión actual y
+logout, consulta del borrador verificado, publicación y lectura pública por ID.
+El alta exige identidad local; el borrador es opcional y, si se envía, debe
+cumplir íntegramente las restricciones de `DraftInput`.
+
+La entrega de sesión se declara explícitamente: `cookie` para web (cookie
+`__Host-`) y `bearer` para móvil. El secreto solo aparece una vez en la respuesta
+de transporte `bearer`; no se almacena ni se devuelve en consultas posteriores.
+
+## Validación y generación
+
+[ADR-0046](../adr/0046-lint-and-generate-openapi-with-redocly-and-orval.md)
+fija Redocly CLI para validar el contrato y Orval para generar el cliente
+TypeScript basado en Fetch. La salida versionada está en
+`apps/client/src/api/generated/` y no se edita a mano. `pnpm run openapi:lint`,
+`pnpm run openapi:generate` y `pnpm run openapi:generate:check` son las entradas
+respectivas; Make las integra en `check` y `verify`.
+
+## Exploración local con Scalar
+
+Para explorar y probar manualmente el contrato sin publicar otra aplicación ni
+añadir rutas al backend, ejecuta:
+
+```bash
+pnpm run openapi:ui
+# o
+make openapi-ui
+```
+
+Scalar se sirve solo en `http://127.0.0.1:8082` y lee directamente
+`contracts/openapi/v1/openapi.yaml`. Admite OpenAPI 3.1 y no es una fuente
+adicional del contrato ni forma parte del artefacto desplegable de la API.
+Para probar operaciones cuando exista el servidor Go local, el contrato apunta
+a `http://127.0.0.1:8080/v1`; el puerto `8082` queda reservado para Scalar.
 
 ## Superficie candidata del primer vertical slice
 

@@ -6,11 +6,14 @@ GO_PACKAGES := ./...
 GO_BACKEND := $(GO) -C $(BACKEND_DIR)
 GO_TOOL := $(GO_BACKEND) tool -modfile=$(TOOL_MODFILE)
 GO_SOURCE := $(shell find $(BACKEND_DIR) -type f -name '*.go' -print -quit)
+GO_LINTERS := bodyclose errcheck errorlint gosec govet ineffassign misspell nilerr nilnesserr noctx nolintlint revive rowserrcheck sqlclosecheck staticcheck unused
+GOLANGCI_LINT_CACHE ?= $(TMPDIR)/tournamentsmanager-golangci-lint
 
 .PHONY: \
+	api-up \
 	format-go format-check-go \
 	tidy tidy-check tidy-tools tidy-tools-check tidy-all \
-	lint-go test test-race build vuln
+	lint-go test test-race build vuln sqlc-generate sqlc-generate-check
 
 # Modifica todos los archivos Go con el formateador pineado.
 format-go:
@@ -48,7 +51,9 @@ lint-go:
 ifeq ($(strip $(GO_SOURCE)),)
 	@echo "lint-go: omitido; todavía no existen paquetes Go"
 else
-	$(GO_TOOL) golangci-lint run $(GO_PACKAGES)
+	@for linter in $(GO_LINTERS); do \
+		GOLANGCI_LINT_CACHE=$(GOLANGCI_LINT_CACHE) $(GO_TOOL) golangci-lint run --enable-only $$linter $(GO_PACKAGES) || exit $$?; \
+	done
 endif
 
 test:
@@ -78,3 +83,21 @@ ifeq ($(strip $(GO_SOURCE)),)
 else
 	$(GO_TOOL) govulncheck $(GO_PACKAGES)
 endif
+
+# Arranca la dependencia local y la API Go en el host. Las migraciones se
+# mantienen como un paso explícito mediante `make db-migrate`.
+api-up: db-up db-backend-env-check
+	@set -a; . $(BACKEND_ENV); set +a; \
+	$(GO_BACKEND) run ./cmd/api
+
+# sqlc solo se ejecuta al existir al menos una consulta del producto. Así se evita
+# generar código de relleno antes de que un caso de uso lo necesite.
+sqlc-generate:
+	@if ! find $(BACKEND_DIR)/db/queries -type f -name '*.sql' -print -quit | grep -q .; then \
+		echo "sqlc-generate: omitido; todavía no existen consultas"; \
+	else \
+		$(GO_TOOL) sqlc generate; \
+	fi
+
+sqlc-generate-check: sqlc-generate
+	@git diff --exit-code -- $(BACKEND_DIR)/internal/adapters/postgres/sqlc

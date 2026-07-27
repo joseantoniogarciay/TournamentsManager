@@ -1,0 +1,421 @@
+openapi: 3.1.0
+info:
+  title: TournamentsManager API
+  version: 1.0.0-design
+  description: >-
+    Contrato de diseño del primer incremento. No implica que los endpoints estén
+    implementados. Los secretos de sesión y verificación son opacos.
+servers:
+  - url: http://127.0.0.1:8080/v1
+    description: API local de desarrollo.
+tags:
+  - name: Registration
+    description: Alta local y verificación de correo.
+  - name: Session
+    description: Creación, consulta y revocación de sesiones propias.
+  - name: Federated identity
+    description: Autenticación con Google y vinculación explícita de identidades.
+  - name: Drafts
+    description: Borrador transferido después de verificar la cuenta.
+  - name: Leagues
+    description: Publicación y lectura pública de ligas visibles.
+paths:
+  /registrations:
+    post:
+      tags: [Registration]
+      operationId: registerLocalAccount
+      summary: Crea una cuenta pendiente y, opcionalmente, transfiere un borrador local
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "202":
+          description: La solicitud se aceptó; la respuesta es deliberadamente genérica.
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+  /registration-verifications/resend:
+    post:
+      tags: [Registration]
+      operationId: resendRegistrationVerification
+      summary: Solicita otro correo de verificación sin enumerar cuentas
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { $ref: "#/components/schemas/Email" }
+      responses:
+        "202": { description: "Solicitud aceptada, exista o no una cuenta elegible." }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+  /registration-verifications:
+    post:
+      tags: [Registration]
+      operationId: verifyRegistration
+      summary: Consume una verificación y establece una sesión
+      security: []
+      description: >-
+        Operación atómica: valida y consume el token, activa una cuenta que ya
+        tiene username y crea una sesión. Repetirla nunca crea otra sesión.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VerifyRegistrationRequest" }
+      responses:
+        "200":
+          description: Cuenta activada y sesión establecida.
+          headers:
+            Set-Cookie:
+              description: >-
+                Presente solo cuando sessionTransport es cookie; __Host-, Secure,
+                HttpOnly, SameSite=Lax, Path=/ y sin Domain.
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionEstablishment" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "409": { $ref: "#/components/responses/VerificationConflictProblem" }
+        "410": { $ref: "#/components/responses/VerificationExpiredProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+  /sessions:
+    post:
+      tags: [Session]
+      operationId: createSession
+      summary: Autentica una cuenta local verificada y crea una sesión
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Sesión creada para una cuenta verificada.
+          headers:
+            Set-Cookie:
+              description: Presente solo para transporte cookie.
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionEstablishment" }
+        "202":
+          description: >-
+            Las credenciales corresponden a una cuenta pendiente; se invalidó
+            cualquier verificación activa y se solicitó un correo nuevo. No hay sesión.
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+    get:
+      tags: [Session]
+      operationId: getCurrentSession
+      summary: Devuelve la identidad de la sesión actual
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "200":
+          description: Sesión válida.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentSession" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+    delete:
+      tags: [Session]
+      operationId: revokeCurrentSession
+      summary: Revoca la sesión actual
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "204": { description: "Sesión revocada; para cookie, también se expira la cookie." }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+  /google-login-challenges:
+    post:
+      tags: [Federated identity]
+      operationId: createGoogleLoginChallenge
+      summary: Crea un nonce de un solo uso para iniciar Google
+      security: []
+      responses:
+        "201":
+          description: Challenge creado; vence en cinco minutos.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GoogleLoginChallenge" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+  /google-sessions:
+    post:
+      tags: [Federated identity]
+      operationId: createGoogleSession
+      summary: Valida Google y crea una sesión para una identidad ya vinculada
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GoogleAuthenticationRequest" }
+      responses:
+        "200":
+          description: Sesión propia creada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionEstablishment" }
+        "202":
+          description: La identidad requiere alta o confirmación de vinculación; no hay sesión.
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "409": { $ref: "#/components/responses/VerificationConflictProblem" }
+  /me/league-draft:
+    get:
+      tags: [Drafts]
+      operationId: getCurrentLeagueDraft
+      summary: Recupera el borrador transferido tras verificar la cuenta
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "200":
+          description: Borrador actual de la cuenta.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LeagueDraft" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "404": { $ref: "#/components/responses/DraftNotFoundProblem" }
+  /me/league-draft/publication:
+    post:
+      tags: [Leagues]
+      operationId: publishCurrentLeagueDraft
+      summary: Publica el borrador actual como liga visible
+      description: >-
+        Exige sesión válida de la propietaria. Crea liga, equipos y partidos, y
+        elimina el borrador en una única transacción.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "201":
+          description: Liga publicada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublishedLeague" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "404": { $ref: "#/components/responses/DraftNotFoundProblem" }
+        "409": { $ref: "#/components/responses/PublicationConflictProblem" }
+  /leagues/{leagueId}:
+    get:
+      tags: [Leagues]
+      operationId: getPublicLeague
+      summary: Lee una liga visible por su identificador público
+      security: []
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          description: Identificador público de la liga; no concede permisos de escritura.
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Proyección pública de solo lectura.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicLeague" }
+        "404":
+          description: La liga no existe o no es visible.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: __Host-tm_session
+    bearerSession:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+  responses:
+    ValidationProblem:
+      description: Entrada inválida.
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    AuthenticationProblem:
+      description: Sesión ausente, vencida o revocada.
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    VerificationConflictProblem:
+      description: Token ya consumido o estado de cuenta incompatible.
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    VerificationExpiredProblem:
+      description: Token vencido.
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    DraftNotFoundProblem:
+      description: No existe un borrador publicable para la cuenta.
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    PublicationConflictProblem:
+      description: El borrador no cumple las invariantes de publicación.
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    RateLimitProblem:
+      description: Límite de solicitudes alcanzado.
+      headers:
+        Retry-After: { schema: { type: integer, minimum: 1 } }
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+  schemas:
+    UUID:
+      type: string
+      format: uuid
+      description: UUIDv7.
+    Email:
+      type: string
+      format: email
+      maxLength: 254
+    Username:
+      type: string
+      minLength: 3
+      maxLength: 30
+      pattern: "^[a-z0-9_]+$"
+      description: Minúsculas; los nombres reservados se validan en el servidor.
+    Password:
+      type: string
+      format: password
+      minLength: 12
+      maxLength: 1024
+      writeOnly: true
+    OpaqueToken:
+      type: string
+      minLength: 22
+      maxLength: 512
+      pattern: "^[A-Za-z0-9_-]+$"
+    Transport:
+      type: string
+      enum: [cookie, bearer]
+    TeamInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+    DraftInput:
+      type: object
+      required: [name, teams]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 140 }
+        teams:
+          type: array
+          minItems: 2
+          maxItems: 64
+          items: { $ref: "#/components/schemas/TeamInput" }
+    RegisterRequest:
+      type: object
+      required: [email, password, username]
+      properties:
+        email: { $ref: "#/components/schemas/Email" }
+        password: { $ref: "#/components/schemas/Password" }
+        username: { $ref: "#/components/schemas/Username" }
+        draft: { $ref: "#/components/schemas/DraftInput" }
+    VerifyRegistrationRequest:
+      type: object
+      required: [token, sessionTransport]
+      properties:
+        token: { $ref: "#/components/schemas/OpaqueToken" }
+        sessionTransport: { $ref: "#/components/schemas/Transport" }
+    LoginRequest:
+      type: object
+      required: [email, password, sessionTransport]
+      properties:
+        email: { $ref: "#/components/schemas/Email" }
+        password: { $ref: "#/components/schemas/Password" }
+        sessionTransport: { $ref: "#/components/schemas/Transport" }
+    User:
+      type: object
+      required: [id, username]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        username: { $ref: "#/components/schemas/Username" }
+    SessionEstablishment:
+      type: object
+      required: [user, delivery, expiresAt]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+        delivery: { $ref: "#/components/schemas/Transport" }
+        sessionToken:
+          allOf: [{ $ref: "#/components/schemas/OpaqueToken" }]
+          description: Presente solo cuando delivery es bearer; guardar únicamente en Keychain/Keystore.
+        expiresAt: { type: string, format: date-time }
+    CurrentSession:
+      type: object
+      required: [user, idleExpiresAt, absoluteExpiresAt]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+        idleExpiresAt: { type: string, format: date-time }
+        absoluteExpiresAt: { type: string, format: date-time }
+    GoogleLoginChallenge:
+      type: object
+      required: [id, nonce, expiresAt]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        nonce: { $ref: "#/components/schemas/OpaqueToken" }
+        expiresAt: { type: string, format: date-time }
+    GoogleAuthenticationRequest:
+      type: object
+      required: [challengeId, idToken]
+      properties:
+        challengeId: { $ref: "#/components/schemas/UUID" }
+        idToken: { $ref: "#/components/schemas/OpaqueToken" }
+    LeagueDraft:
+      type: object
+      required: [id, name, teams, expiresAt]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        name: { type: string }
+        teams:
+          type: array
+          items:
+            type: object
+            required: [id, name, position]
+            properties:
+              id: { $ref: "#/components/schemas/UUID" }
+              name: { type: string }
+              position: { type: integer, minimum: 1 }
+        expiresAt: { type: string, format: date-time }
+    PublishedLeague:
+      type: object
+      required: [id, name, state, teams, matches]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        name: { type: string }
+        state: { type: string, enum: [published] }
+        teams: { type: array, items: { $ref: "#/components/schemas/LeagueTeam" } }
+        matches: { type: array, items: { $ref: "#/components/schemas/Match" } }
+    PublicLeague:
+      type: object
+      required: [id, name, sport, format, state, teams, matches]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        name: { type: string }
+        sport: { type: string, enum: [football] }
+        format: { type: string, enum: [league] }
+        state: { type: string, enum: [published, in_progress, completed] }
+        teams: { type: array, items: { $ref: "#/components/schemas/LeagueTeam" } }
+        matches: { type: array, items: { $ref: "#/components/schemas/Match" } }
+    LeagueTeam:
+      type: object
+      required: [id, name]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        name: { type: string }
+    Match:
+      type: object
+      required: [id, round, sequence, homeTeamId, awayTeamId, state]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        round: { type: integer, minimum: 1 }
+        sequence: { type: integer, minimum: 1 }
+        homeTeamId: { $ref: "#/components/schemas/UUID" }
+        awayTeamId: { $ref: "#/components/schemas/UUID" }
+        state: { type: string, enum: [pending] }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri-reference }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string, format: uri-reference }
+        requestId: { type: string }

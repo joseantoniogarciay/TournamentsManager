@@ -50,15 +50,15 @@ El formato y el ciclo de vida inicial están aceptados en
 [ADR-0032](../adr/0032-define-minimum-football-league-data-and-lifecycle.md) y
 revisados en
 [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md).
-La visibilidad no listada de solo lectura está aceptada en
-[ADR-0033](../adr/0033-use-unlisted-read-only-links-for-published-leagues.md).
+La lectura pública por ID está aceptada en
+[ADR-0049](../adr/0049-use-public-league-ids-for-read-only-access.md).
 Los equipos como participantes, el seguimiento autenticado y la administración
 delegada directa están aceptados en
 [ADR-0034](../adr/0034-use-teams-as-competitors-and-direct-delegated-administration.md).
 La gestión de resultados, bajas y cancelación se completa en ADR-0035 a
 ADR-0042. El detalle vigente está en [PRODUCT.md](PRODUCT.md).
 
-## Fase 1 — Entorno local
+## Fase 1 — Entorno local — completada
 
 **Objetivo:** crear un entorno reproducible que se parezca a producción sin
 introducir Kubernetes antes de necesitarlo.
@@ -67,8 +67,10 @@ introducir Kubernetes antes de necesitarlo.
 configuración y secretos, estrategia de migraciones, datos de desarrollo y
 comandos de trabajo.
 
-**Salida:** una persona puede preparar, arrancar, comprobar y limpiar el entorno
-siguiendo documentación; los fallos comunes tienen guía de diagnóstico.
+**Salida:** completada. Una persona puede preparar, arrancar, comprobar, detener
+y limpiar PostgreSQL local siguiendo el runbook; arranque saludable, persistencia
+y recuperación tras reset quedaron demostrados. Véase la
+[retrospectiva de Fase 1](PHASE_1_RETROSPECTIVE.md).
 
 ## Fase 2 — Backend
 
@@ -76,6 +78,12 @@ siguiendo documentación; los fallos comunes tienen guía de diagnóstico.
 
 **Decisiones previas:** alcance, API, modelo de dominio, persistencia, errores,
 validación y estrategia de pruebas.
+
+**Primer incremento aceptado:** borrador local, identidad local verificada,
+login federado con Google, publicación de liga con equipos y consulta por
+organizador o ID público; resultados, Apple y ciclo avanzado quedan para un
+incremento posterior. Véanse [ADR-0043](../adr/0043-deliver-publish-and-read-league-first-backend-increment.md)
+y [ADR-0050](../adr/0050-include-google-federated-login-in-first-increment.md).
 
 **Salida:** caso de uso funcional de extremo a extremo, reglas de dependencia
 verificadas, pruebas proporcionales al riesgo y documentación actualizada.

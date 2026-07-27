@@ -14,20 +14,66 @@ Para cada capacidad se sigue el ciclo:
 
 ## Mapa de competencias
 
-| Área           | Resultado demostrable                             | Estado      |
-| -------------- | ------------------------------------------------- | ----------- |
-| Arquitectura   | Explicar límites, dependencias y trade-offs       | En curso    |
-| Go             | Construir y mantener un servicio idiomático       | No iniciado |
-| PostgreSQL     | Diseñar, migrar y operar datos con criterio       | No iniciado |
-| API            | Diseñar contratos evolutivos y observables        | No iniciado |
-| Testing        | Elegir pruebas por riesgo y velocidad de feedback | Fundamentos aceptados |
-| Seguridad      | Modelar amenazas y aplicar controles verificables | No iniciado |
-| Contenedores   | Crear un entorno local reproducible               | No iniciado |
-| Observabilidad | Diagnosticar con logs, métricas y trazas          | No iniciado |
-| Kubernetes     | Desplegar, escalar y recuperar cargas             | No iniciado |
+| Área           | Resultado demostrable                             | Estado                                      |
+| -------------- | ------------------------------------------------- | ------------------------------------------- |
+| Arquitectura   | Explicar límites, dependencias y trade-offs       | En curso                                    |
+| Go             | Construir y mantener un servicio idiomático       | No iniciado                                 |
+| PostgreSQL     | Diseñar, migrar y operar datos con criterio       | No iniciado                                 |
+| API            | Diseñar contratos evolutivos y observables        | No iniciado                                 |
+| Testing        | Elegir pruebas por riesgo y velocidad de feedback | Fundamentos aceptados                       |
+| Seguridad      | Modelar amenazas y aplicar controles verificables | No iniciado                                 |
+| Contenedores   | Crear un entorno local reproducible               | No iniciado                                 |
+| Observabilidad | Diagnosticar con logs, métricas y trazas          | No iniciado                                 |
+| Kubernetes     | Desplegar, escalar y recuperar cargas             | No iniciado                                 |
 | Terraform/AWS  | Aprovisionar y operar infraestructura             | Fundamentos IaC, cuentas y estado aceptados |
 
 ## Diario
+
+### 2026-07-27 — Una identidad externa no es una sesión
+
+- **Aprendido:** Google acredita una identidad externa mediante un `subject`
+  estable; TournamentsManager la vincula a una cuenta interna y emite después su
+  propia sesión opaca. La contraseña no interviene en ese recorrido.
+- **Evidencia:** ADR-0050 y la referencia de OpenID Connect de Google.
+- **Coste aceptado:** el primer incremento debe configurar y validar Google,
+  incluida la vinculación explícita de una cuenta local coincidente.
+- **Siguiente decisión:** concretar el artefacto OIDC, nonce, CSRF y contrato
+  HTTP antes de implementar el adaptador Google.
+
+### 2026-07-26 — Renovar una sesión no exige JWT
+
+- **Aprendido:** una credencial opaca puede rotarse silenciosamente y conservar
+  revocación inmediata porque el servidor mantiene su estado; JWT aporta
+  validación distribuida, no más comodidad intrínseca para la persona usuaria.
+- **Evidencia:** ADR-0044 y comparación con sesiones de PostgreSQL.
+- **Coste aceptado:** cada petición autenticada valida una sesión en PostgreSQL;
+  no se adelantan servicios ni tokens de acceso distribuidos.
+- **Siguiente decisión:** modelo de datos y contrato HTTP del registro,
+  verificación, sesión y publicación.
+
+### 2026-07-26 — Un vertical slice no necesita contener todo el dominio
+
+- **Aprendido:** el primer recorrido útil debe cruzar identidad, autorización,
+  datos y API, pero puede detenerse antes de las reglas deportivas avanzadas si
+  estas no cambian la evidencia buscada.
+- **Evidencia:** ADR-0043.
+- **Coste aceptado:** inicio, resultados, bajas, cierre, cancelación y
+  administración delegada esperan a un incremento posterior.
+- **Siguiente decisión:** analizar sesiones, verificación local y modelo de
+  datos antes de implementar el backend.
+
+### 2026-07-26 — La persistencia es una propiedad del volumen, no del contenedor
+
+- **Aprendido:** detener y recrear el contenedor no borra una base PostgreSQL si
+  el volumen nombrado se conserva; borrar esos datos debe seguir siendo una
+  operación explícita y confirmada.
+- **Evidencia:** arranque saludable, reinicio y lectura posterior de una marca
+  temporal mediante el runbook de PostgreSQL local.
+- **Coste aceptado:** el reset solo es seguro cuando los datos locales son
+  prescindibles; la confirmación explícita evita convertirlo en un efecto
+  accidental de otro comando.
+- **Siguiente decisión:** crear el esquema y las primeras migraciones al abrir
+  el trabajo de backend de la Fase 2.
 
 ### 2026-07-26 — Un estado visible puede preceder a una notificación
 
@@ -131,18 +177,18 @@ Para cada capacidad se sigue el ciclo:
 - **Siguiente decisión:** completada en ADR-0035; continúa la corrección de
   resultados.
 
-### 2026-07-26 — Un enlace compartido localiza, no autoriza
+### 2026-07-27 — Un ID público identifica; la autorización protege mutaciones
 
-- **Aprendido:** visibilidad y autorización responden a preguntas diferentes.
-  Un enlace no listado permite llegar a una liga, pero no convierte a quien lo
-  usa en participante, administrador ni responsable de resultados.
-- **Aprendido:** “crear y publicar” puede ser una única acción de interfaz sin
-  saltarse el ciclo de vida: sigue aplicando las validaciones de publicación.
-- **Evidencia:** ADR-0033.
-- **Coste aceptado:** los enlaces pueden reenviarse y aún no se ha decidido su
-  rotación, revocación o caducidad.
-- **Siguiente decisión:** completada en ADR-0034; continúan permisos operativos
-  y resultados.
+- **Aprendido:** una URL puede construirse directamente con el ID de una liga
+  visible cuando la lectura se permite a quien lo conozca. Ese ID no es un
+  secreto ni concede permisos de edición, resultados o administración.
+- **Aprendido:** separar identificador público y autorización evita introducir
+  tokens de compartición cuando el producto no necesita restringir la lectura.
+- **Evidencia:** ADR-0049, sucesor de ADR-0033.
+- **Coste aceptado:** la proyección pública puede ser leída por quien conozca o
+  adivine un ID visible; si eso deja de ser aceptable habrá que decidir una
+  audiencia restringida o enlaces con capacidad.
+- **Siguiente decisión:** implementación del primer vertical slice.
 
 ### 2026-07-26 — Publicar fija la estructura, no la visibilidad
 
@@ -515,6 +561,74 @@ Para cada capacidad se sigue el ciclo:
 - **Incertidumbre:** requisitos del producto y decisiones de implementación.
 - **Siguiente experimento:** definir el alcance y primer caso de uso antes del
   entorno o del backend.
+
+### 2026-07-26 — Diseñar datos y contrato juntos
+
+- **Aprendido:** el estado temporal de una cuenta, el secreto de sesión y el
+  recurso de negocio tienen ciclos de vida distintos; modelarlos como una sola
+  tabla o token hace más fácil conceder permisos antes de verificarlos.
+- **Aprendido:** OpenAPI describe el borde HTTP, mientras que restricciones y
+  transacciones pertenecen al dominio y a la persistencia; ambos se revisan
+  juntos para evitar contratos que no se pueden garantizar.
+- **Evidencia:** ADR-0045, modelo lógico y contrato OpenAPI 3.1 del primer
+  incremento, antes de migraciones o handlers.
+- **Coste aceptado:** mantener alineados la especificación, las migraciones y
+  las pruebas de contrato al evolucionar cada flujo.
+- **Siguiente decisión:** tooling de lint, generación y verificación semántica
+  de OpenAPI antes de implementar el adaptador HTTP.
+
+### 2026-07-26 — Deriva de contrato como fallo verificable
+
+- **Aprendido:** validar YAML no comprueba por sí solo reglas como declarar
+  operaciones públicas o respuestas de error; un linter de OpenAPI convierte
+  esas convenciones en una comprobación reproducible.
+- **Aprendido:** el cliente generado debe vivir aislado del código manual, pues
+  la regeneración puede limpiar su directorio completo.
+- **Evidencia:** ADR-0046, Redocly CLI y Orval integrados en Make y pnpm.
+- **Coste aceptado:** revisar los diffs de generación y mantener las versiones
+  pineadas de las dos herramientas.
+- **Siguiente decisión:** migraciones iniciales y consultas SQL del modelo
+  aceptado.
+
+### 2026-07-27 — Una migración también es un contrato
+
+- **Aprendido:** el modelo lógico explica relaciones e invariantes; la migración
+  demuestra cuáles puede proteger PostgreSQL mediante tipos, FKs, `CHECK` e
+  índices únicos.
+- **Aprendido:** sqlc no necesita una copia del esquema: analizar las migraciones
+  conserva una sola fuente de verdad y evita generar consultas inexistentes.
+- **Evidencia:** ADR-0047, primera migración Goose y configuración sqlc con
+  `pgx/v5`.
+- **Coste aceptado:** revisar cuidadosamente cada evolución de esquema y
+  regenerar código SQL solo cuando exista una consulta de producto.
+- **Siguiente decisión:** primera operación de persistencia y límites de su
+  transacción antes de implementar registro.
+
+### 2026-07-27 — Consolidar antes de compartir
+
+- **Aprendido:** una migración local y no compartida puede consolidarse para que
+  la primera instalación parta de un esquema inicial claro; una migración
+  compartida se trata como inmutable y se evoluciona con otra migración.
+- **Aprendido:** una cuenta pendiente puede tener todos sus datos de identidad;
+  verificar correo acredita el canal, no completa un perfil incompleto.
+- **Evidencia:** ADR-0048, migración inicial consolidada y reinicio comprobado
+  de PostgreSQL local.
+- **Coste aceptado:** límites de tasa y purga protegen la reserva temporal de
+  usernames y el reenvío de verificación.
+- **Siguiente decisión:** primera operación de persistencia y límites de su
+  transacción antes de implementar registro.
+
+### 2026-07-27 — Opcional no significa parcialmente válido
+
+- **Aprendido:** una propiedad opcional en el objeto padre puede seguir remitiendo
+  a un objeto con campos e invariantes obligatorios; omitir el objeto y enviar un
+  objeto incompleto son entradas distintas.
+- **Evidencia:** ADR-0052, `RegisterRequest` con `draft` opcional y
+  `DraftInput` con `name` y un mínimo de dos equipos.
+- **Coste aceptado:** el adaptador HTTP futuro debe comprobar estas reglas en
+  runtime además del tipado generado para TypeScript.
+- **Siguiente decisión:** primera operación de persistencia y límites de su
+  transacción antes de implementar registro.
 
 ## Regla de evidencia
 

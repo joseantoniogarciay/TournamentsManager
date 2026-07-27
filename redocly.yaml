@@ -1,0 +1,12 @@
+extends:
+  - recommended
+
+apis:
+  tournaments-manager@v1:
+    root: contracts/openapi/v1/openapi.yaml
+
+rules:
+  security-defined: error
+  operation-operationId: error
+  operation-4xx-response: error
+  info-license: off

@@ -1,11 +1,11 @@
 # ADR-0034: Usar equipos como participantes y administración delegada directa
 
-- **Estado:** Aceptado
+- **Estado:** Superado parcialmente
 - **Fecha:** 2026-07-26
 - **Decisor:** Usuario
 - **Propietario del análisis:** Codex
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0048, exclusivamente en el momento de elegir el `username`
 
 ## Problema
 

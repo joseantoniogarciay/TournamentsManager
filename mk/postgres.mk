@@ -49,6 +49,11 @@ db-reset: db-env-check
 
 # Aplica migraciones explícitamente; no forma parte del arranque de la API.
 db-migrate: db-env-check db-backend-env-check
-	@set -a; . $(BACKEND_ENV); set +a; \
-	[ -n "$$DATABASE_URL" ] || { echo "DATABASE_URL no está definido en $(BACKEND_ENV)"; exit 1; }; \
-	$(GO_TOOL) goose -dir db/migrations postgres "$$DATABASE_URL" up
+	@if [ ! -d $(BACKEND_DIR)/db/migrations ] || \
+		! find $(BACKEND_DIR)/db/migrations -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then \
+		echo "db-migrate: omitido; todavía no existen migraciones"; \
+	else \
+		set -a; . $(BACKEND_ENV); set +a; \
+		[ -n "$$DATABASE_URL" ] || { echo "DATABASE_URL no está definido en $(BACKEND_ENV)"; exit 1; }; \
+		$(GO_TOOL) goose -dir db/migrations postgres "$$DATABASE_URL" up; \
+	fi
