@@ -6,8 +6,6 @@ GO_PACKAGES := ./...
 GO_BACKEND := $(GO) -C $(BACKEND_DIR)
 GO_TOOL := $(GO_BACKEND) tool -modfile=$(TOOL_MODFILE)
 GO_SOURCE := $(shell find $(BACKEND_DIR) -type f -name '*.go' -print -quit)
-GO_LINTERS := bodyclose errcheck errorlint gosec govet ineffassign misspell nilerr nilnesserr noctx nolintlint revive rowserrcheck sqlclosecheck staticcheck unused
-GOLANGCI_LINT_CACHE ?= $(TMPDIR)/tournamentsmanager-golangci-lint
 
 .PHONY: \
 	api-up \
@@ -51,9 +49,7 @@ lint-go:
 ifeq ($(strip $(GO_SOURCE)),)
 	@echo "lint-go: omitido; todavía no existen paquetes Go"
 else
-	@for linter in $(GO_LINTERS); do \
-		GOLANGCI_LINT_CACHE=$(GOLANGCI_LINT_CACHE) $(GO_TOOL) golangci-lint run --enable-only $$linter $(GO_PACKAGES) || exit $$?; \
-	done
+	$(GO_TOOL) golangci-lint run $(GO_PACKAGES)
 endif
 
 test:

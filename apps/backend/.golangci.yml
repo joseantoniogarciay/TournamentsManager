@@ -2,7 +2,9 @@ version: "2"
 
 run:
   timeout: 5m
-  tests: true
+  # Go 1.26 y golangci-lint 2.12.2 no cargan de forma fiable paquetes de prueba.
+  # La suite de pruebas se ejecuta por separado con `go test ./...`.
+  tests: false
 
 linters:
   default: none
