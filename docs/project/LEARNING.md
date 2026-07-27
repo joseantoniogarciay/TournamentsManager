@@ -29,6 +29,20 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-27 — Una mitigación de tooling necesita fecha de caducidad
+
+- **Aprendido:** con Go 1.26.5 y `golangci-lint` 2.12.2, incluir paquetes de
+  prueba en el análisis puede terminar con `no go files to analyze`, aunque
+  `go test ./...` los cargue y ejecute correctamente. No se ha confirmado un
+  issue upstream que documente exactamente esta combinación.
+- **Evidencia:** reproducción local y primera CI de la promoción de Fase 1;
+  `make verify` pasa con `run.tests: false` y conserva `go test ./...` como
+  comprobación de los tests.
+- **Coste aceptado:** los linters no inspeccionan temporalmente `*_test.go`;
+  las pruebas siguen compilándose y ejecutándose en local y CI.
+- **Siguiente decisión:** al actualizar Go o `golangci-lint`, reactivar
+  `run.tests: true`, ejecutar `make verify` y retirar la mitigación si pasa.
+
 ### 2026-07-27 — Una identidad externa no es una sesión
 
 - **Aprendido:** Google acredita una identidad externa mediante un `subject`
