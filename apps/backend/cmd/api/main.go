@@ -14,7 +14,10 @@ import (
 
 	httpadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/http"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
+	smtpadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/smtp"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/config"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
 const shutdownTimeout = 10 * time.Second
@@ -40,10 +43,16 @@ func run() error {
 		return err
 	}
 	defer pool.Close()
+	mailer, err := smtpadapter.NewMailer(appConfig.SMTPAddr, appConfig.SMTPFrom, appConfig.PublicBaseURL)
+	if err != nil {
+		return fmt.Errorf("configurar correo: %w", err)
+	}
+	registrationService := registration.NewService(postgres.NewRegistrationRepository(pool), mailer)
+	accountLeagues := postgres.NewAccountLeagueRepository(pool)
 
 	server := &http.Server{
 		Addr:              appConfig.HTTPAddr,
-		Handler:           httpadapter.NewHandler(),
+		Handler:           httpadapter.NewHandler(registrationService, accountLeagues, leagues.NewService(accountLeagues)),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

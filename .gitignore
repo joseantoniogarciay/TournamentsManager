@@ -52,3 +52,6 @@ crash.*.log
 .tmp/
 tmp/
 *.log
+apps/client/.expo/
+apps/client/ios/
+apps/client/android/

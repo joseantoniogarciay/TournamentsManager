@@ -1,8 +1,8 @@
 # Backend Engineering Handbook
 
-> Estado: Fase 0 — documentación
+> Estado: Fase 2 — primer vertical slice de backend en curso
 >
-> Última revisión: 2026-07-24
+> Última revisión: 2026-07-28
 
 Este repositorio empieza por el handbook porque el objetivo no es solo entregar una
 aplicación: es aprender a diseñar, construir, desplegar y operar un backend con
@@ -118,10 +118,13 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 | Región y red AWS | España (`eu-south-2`); VPC separada por cuenta en dos AZ; gasto solo tras autorización explícita | [ADR-0030](docs/adr/0030-use-spain-region-and-two-az-cost-gated-network.md) |
 | Framework y rendering del cliente | Aceptado | [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md), [ADR-0016](docs/adr/0016-use-client-side-web-rendering-initially.md) |
 
-La [base técnica](docs/governance/TECHNICAL_BASELINE.md) está cerrada. El
-siguiente gate es [0B: definición del primer vertical slice](docs/project/ROADMAP.md);
-las decisiones funcionales vuelven a estar disponibles y siguen requiriendo ADR
-cuando alcancen el umbral definido.
+La [base técnica](docs/governance/TECHNICAL_BASELINE.md), el gate 0B y la Fase 1
+están cerrados. El proyecto se encuentra en la [Fase 2: Backend](docs/project/ROADMAP.md):
+el primer vertical slice implementa identidad local, publicación y consulta de
+ligas de forma incremental. El corte activo es el registro local de una cuenta
+pendiente; la verificación, sesión y publicación se incorporarán en los cortes
+siguientes. Las decisiones nuevas que alcancen el umbral definido siguen
+requiriendo ADR aceptado.
 
 ## Regla de precedencia
 

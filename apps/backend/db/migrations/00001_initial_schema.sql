@@ -126,6 +126,26 @@ CREATE TABLE leagues (
 
 CREATE INDEX leagues_organizer_idx ON leagues (organizer_account_id, created_at DESC);
 
+CREATE TABLE league_administrators (
+    league_id uuid NOT NULL REFERENCES leagues (id) ON DELETE CASCADE,
+    account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+    assigned_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (league_id, account_id)
+);
+
+CREATE INDEX league_administrators_account_idx
+    ON league_administrators (account_id, league_id DESC);
+
+CREATE TABLE league_followers (
+    league_id uuid NOT NULL REFERENCES leagues (id) ON DELETE CASCADE,
+    account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+    followed_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (league_id, account_id)
+);
+
+CREATE INDEX league_followers_account_idx
+    ON league_followers (account_id, league_id DESC);
+
 CREATE TABLE league_teams (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     league_id uuid NOT NULL REFERENCES leagues (id) ON DELETE CASCADE,
@@ -219,6 +239,10 @@ DROP TABLE external_identities;
 DROP INDEX matches_one_pair_per_league_idx;
 DROP TABLE matches;
 DROP TABLE league_teams;
+DROP INDEX league_followers_account_idx;
+DROP TABLE league_followers;
+DROP INDEX league_administrators_account_idx;
+DROP TABLE league_administrators;
 DROP TABLE leagues;
 DROP TABLE draft_teams;
 DROP TABLE league_drafts;

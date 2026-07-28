@@ -109,13 +109,23 @@ La fuente de verdad de diseño es
 [`contracts/openapi/v1/openapi.yaml`](../../contracts/openapi/v1/openapi.yaml).
 Usa OpenAPI 3.1, prefijo `/v1` y `application/problem+json` conforme a RFC 9457.
 Incluye alta, reenvío y confirmación de verificación, login, sesión actual y
-logout, consulta del borrador verificado, publicación y lectura pública por ID.
+logout, consulta del borrador verificado, colección autenticada de ligas
+relacionadas, publicación y lectura pública por ID. `GET /me/leagues` pagina por
+UUIDv7 y filtra en el servidor las relaciones `administered` y `followed`; la
+segunda excluye una liga ya administrada para que la UI no la duplique. Véase
+[ADR-0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md).
 El alta exige identidad local; el borrador es opcional y, si se envía, debe
 cumplir íntegramente las restricciones de `DraftInput`.
 
 La entrega de sesión se declara explícitamente: `cookie` para web (cookie
 `__Host-`) y `bearer` para móvil. El secreto solo aparece una vez en la respuesta
 de transporte `bearer`; no se almacena ni se devuelve en consultas posteriores.
+
+Las operaciones protegidas pasan por middleware de sesión: acepta cookie o
+Bearer, nunca ambas credenciales a la vez, y deja el ID de cuenta en el contexto
+interno. La autorización por liga permanece en el caso de uso. Una protección
+CSRF independiente será requisito antes de una operación mutante por cookie.
+Véase [ADR-0059](../adr/0059-centralize-session-authentication-at-the-http-boundary.md).
 
 ## Validación y generación
 

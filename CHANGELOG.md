@@ -8,6 +8,25 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0057: home contextual con creación de torneo, acceso a cuenta, accesos
+  rápidos por relación y navegación adaptada entre web y apps.
+- ADR-0058 y `GET /v1/me/leagues`: colección autenticada, paginada y filtrada
+  por relaciones de administración o seguimiento; esquema con administradores y
+  seguidores explícitos.
+- ADR-0059: middleware de sesión para rutas HTTP protegidas, separado de la
+  autorización por liga y de la futura protección CSRF.
+- Guía de buenas prácticas para el cliente universal: arquitectura, rendimiento,
+  virtualización de listas, accesibilidad, localización y condiciones de entrega.
+- Cliente Expo SDK 57 con Expo Router, rutas universales, presentación adaptativa
+  de deep links y primitives Pulse iniciales (`Screen`, `Text`, `Button`,
+  `TextField` y feedback global). La comprobación TypeScript del cliente forma
+  parte de `make verify`.
+- ADR-0054 y `@tournaments-manager/design-tokens`: dirección Pulse, fundaciones
+  compartidas y reglas de feedback de formularios para web e interfaces nativas.
+- Primer corte del registro local: `POST /v1/registrations` valida la entrada,
+  crea cuenta pendiente, credencial Argon2id y token de verificación hasheado en
+  PostgreSQL mediante `sqlc`; Mailpit recibe el correo SMTP local. El consumo del
+  token y la sesión se implementarán en el siguiente corte.
 - Bootstrap ejecutable de la API Go: configuración explícita, comprobación de
   PostgreSQL al iniciar y endpoint local `GET /healthz`.
 - `make api-up` para levantar PostgreSQL local y ejecutar la API Go en el host,

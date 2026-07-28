@@ -29,6 +29,43 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-28 — Autenticar no es autorizar
+
+- **Aprendido:** validar una cookie o Bearer identifica la cuenta y puede ser
+  transversal; decidir qué puede hacer esa cuenta dentro de una liga requiere
+  las reglas del caso de uso. Mezclar ambas cosas en middleware ocultaría la
+  política de negocio.
+- **Evidencia:** ADR-0059 y la ruta protegida `GET /me/leagues`.
+- **Coste aceptado:** CSRF sigue como protección independiente para la primera
+  mutación web autenticada; no se añade un token sin una operación que proteger.
+- **Siguiente decisión:** diseñar esa protección CSRF junto con la primera
+  mutación autenticada por cookie.
+
+### 2026-07-28 — La home reutiliza una colección; no necesita una API propia
+
+- **Aprendido:** la home puede pedir las primeras páginas de la misma colección
+  autenticada que usa la biblioteca. Separar `administered` y `followed` en el
+  servidor conserva la autorización y evita que el cliente cargue o clasifique
+  relaciones ajenas.
+- **Evidencia:** ADR-0058; tablas de administradores y seguidores con claves
+  compuestas y `GET /me/leagues` paginado por UUIDv7.
+- **Coste aceptado:** la home puede realizar dos lecturas pequeñas; no se añade
+  agregación, caché global ni búsqueda antes de medir la necesidad.
+- **Siguiente decisión:** implementar las mutaciones para seguir una liga y
+  asignar o abandonar administración delegada antes de esperar datos de usuario.
+
+### 2026-07-28 — Una colección personal no es una regla de autorización
+
+- **Aprendido:** «Administro» y «Sigo» son vistas útiles de relaciones distintas
+  con una liga. La primera reúne propiedad y administración delegada; la segunda
+  expresa seguimiento. Ninguna clasificación en el cliente concede permisos.
+- **Evidencia:** ADR-0034 y ADR-0057.
+- **Coste aceptado:** hace falta una proyección autenticada adicional antes de
+  mostrar colecciones reales; no se añade una caché global ni persistencia de
+  navegación entre reinicios.
+- **Siguiente decisión:** definir el recurso OpenAPI autenticado para las ligas
+  relacionadas con la cuenta, con orden y paginación.
+
 ### 2026-07-27 — Una mitigación de tooling necesita fecha de caducidad
 
 - **Aprendido:** con Go 1.26.5 y `golangci-lint` 2.12.2, incluir paquetes de

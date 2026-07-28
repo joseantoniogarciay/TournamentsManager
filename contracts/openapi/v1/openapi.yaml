@@ -181,6 +181,70 @@ paths:
               schema: { $ref: "#/components/schemas/LeagueDraft" }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
         "404": { $ref: "#/components/responses/DraftNotFoundProblem" }
+  /me/leagues:
+    get:
+      tags: [Leagues]
+      operationId: listCurrentAccountLeagues
+      summary: Lista las ligas administradas o seguidas por la cuenta actual
+      description: >-
+        La relación administered incluye propiedad y administración delegada.
+        La relación followed excluye ligas que la cuenta administra para que las
+        colecciones sean disjuntas.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: relationship
+          in: query
+          required: true
+          schema: { $ref: "#/components/schemas/LeagueRelationshipFilter" }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+        - name: cursor
+          in: query
+          required: false
+          description: ID UUIDv7 del último elemento de la página anterior.
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Página de ligas relacionadas con la sesión.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountLeaguePage" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+  /me/leagues/{leagueId}/follow:
+    put:
+      tags: [Leagues]
+      operationId: followLeague
+      summary: Guarda una liga visible para la cuenta actual
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "204": { description: La liga ya está guardada o se ha guardado ahora. }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: Origen no permitido para una mutación con cookie. }
+        "404": { description: La liga no existe o no es visible. }
+    delete:
+      tags: [Leagues]
+      operationId: unfollowLeague
+      summary: Elimina una liga guardada de la cuenta actual
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "204": { description: La liga ya no está guardada. }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: Origen no permitido para una mutación con cookie. }
   /me/league-draft/publication:
     post:
       tags: [Leagues]
@@ -344,6 +408,31 @@ components:
         user: { $ref: "#/components/schemas/User" }
         idleExpiresAt: { type: string, format: date-time }
         absoluteExpiresAt: { type: string, format: date-time }
+    LeagueRelationshipFilter:
+      type: string
+      enum: [administered, followed]
+    AccountLeagueRelationship:
+      type: string
+      enum: [organizer, delegated, follower]
+    AccountLeague:
+      type: object
+      required: [id, name, state, createdAt, relationship]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        name: { type: string }
+        state: { type: string, enum: [draft, published, in_progress, completed, cancelled] }
+        createdAt: { type: string, format: date-time }
+        relationship: { $ref: "#/components/schemas/AccountLeagueRelationship" }
+    AccountLeaguePage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/AccountLeague" }
+        nextCursor:
+          description: Ausente cuando no hay más elementos.
+          allOf: [{ $ref: "#/components/schemas/UUID" }]
     GoogleLoginChallenge:
       type: object
       required: [id, nonce, expiresAt]

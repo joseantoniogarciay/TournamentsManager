@@ -115,3 +115,42 @@ Cada punto que alcance el umbral de importancia definido en
 
 Los diagramas vigentes se indexan en [docs/diagrams](../diagrams/README.md). Un
 diagrama no sustituye a un ADR ni puede contradecir el texto normativo.
+
+# Arquitectura
+
+> Cliente universal: arquitectura feature-first y navegación adaptativa aceptadas
+> en ADR-0055.
+
+## Cliente universal
+
+El cliente organiza el código por capacidad de producto. Cada feature conserva
+pantallas, componentes exclusivos, hooks de coordinación, validación de entrada y
+adaptación al cliente OpenAPI. `shared` contiene únicamente UI, feedback y estado
+que se haya demostrado común. Las reglas de negocio y autorización residen en el
+backend.
+
+```text
+apps/client/src/
+  app/                  # rutas Expo Router y composición de navegación
+  features/<feature>/   # screens, components, hooks, validation y api
+  shared/ui/            # primitivas que consumen design-tokens
+  shared/feedback/      # banner global cuando se implemente
+  shared/session/       # sesión cuando se implemente
+  api/generated/        # salida exclusiva de Orval
+```
+
+Las rutas profundas tienen URL canónica compartida. Web las presenta directamente;
+iOS y Android las presentan como modal. El cierre móvil restaura la vista previa
+cuando existe y usa `/` como fallback de inicio en frío; en web siempre navega a
+`/`.
+
+La home y la biblioteca de torneos conservan además una adaptación de navegación
+acotada: la app mantiene la pila de cada sección mientras permanece activa; la
+web usa URLs directas e historial del navegador. Las categorías «Administro» y
+«Sigo» son proyecciones de relaciones autorizadas por el backend, no estado de
+permisos en el cliente. Véase [ADR-0057](../adr/0057-define-contextual-home-and-tournament-library.md).
+
+El adaptador HTTP centraliza la autenticación de rutas protegidas en middleware:
+valida la sesión y deja el ID de cuenta en el contexto de petición. La
+autorización sobre una liga continúa en el caso de uso, no en un middleware de
+roles. Véase [ADR-0059](../adr/0059-centralize-session-authentication-at-the-http-boundary.md).

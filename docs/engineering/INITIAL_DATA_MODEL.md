@@ -5,10 +5,10 @@
 
 ## Alcance
 
-Este modelo cubre alta local y con Google, verificación, sesión, borrador asociado
-y publicación/lectura de una liga. No incorpora Apple, recuperación de
-contraseña, seguimiento, administradores delegados, resultados ni cambios de
-estado posteriores a `published`.
+Este modelo cubre alta local y con Google, verificación, sesión, borrador asociado,
+publicación/lectura de una liga y sus relaciones de seguimiento o administración
+delegada. No incorpora Apple, recuperación de contraseña, resultados ni cambios
+de estado posteriores a `published`.
 
 ## Entidades y relaciones
 
@@ -22,6 +22,9 @@ accounts 1 ── 0..1 local_credentials
     ├──── * sessions
     └──── * leagues (organizer)
 
+leagues 1 ── * league_administrators ── 1 accounts
+leagues 1 ── * league_followers ── 1 accounts
+
 leagues 1 ── * league_teams
 leagues 1 ── * matches
 ```
@@ -30,20 +33,22 @@ Todos los IDs son UUIDv7. Los secretos son aleatorios opacos de al menos 128
 bits; solo se almacena `token_hash = SHA-256(contexto || secreto)`. Nunca se
 incluyen secretos ni hashes en DTOs, logs o métricas.
 
-| Tabla | Campos esenciales | Restricciones de dominio |
-| --- | --- | --- |
-| `accounts` | `id`, `email`, `state`, `username`, `created_at`, `verified_at`, `expires_at` | índice único sobre `lower(email)` para acceso; username único y en minúsculas; estado `pending_verification` o `verified`; pendiente expira a los 7 días. |
-| `local_credentials` | `account_id`, `password_hash`, `created_at`, `updated_at` | PK/FK uno a uno; hash Argon2id; ninguna contraseña recuperable. |
-| `external_identities` | `id`, `account_id`, `provider`, `issuer`, `subject`, `created_at` | `(issuer, subject)` único; una identidad Google pertenece a una cuenta y una cuenta tiene como máximo una identidad Google. |
-| `federated_login_challenges` | `id`, `provider`, `nonce_hash`, `expires_at`, `consumed_at`, `created_at` | Google únicamente; nonce de 5 min, de un solo uso y sin sesión asociada. |
-| `identity_link_attempts` | `id`, `candidate_account_id`, `provider`, `issuer`, `subject`, `token_hash`, `expires_at`, `consumed_at`, `created_at` | confirma un vínculo Google con una cuenta local mediante desafío fresco; no crea sesión hasta consumirlo. |
-| `email_verification_tokens` | `id`, `account_id`, `token_hash`, `expires_at`, `consumed_at`, `invalidated_at`, `created_at` | hash único por contexto; expira a 24 h; activo, consumido e invalidado son excluyentes; solo hay un token activo por cuenta. |
-| `sessions` | `id`, `account_id`, `token_hash`, `created_at`, `last_seen_at`, `idle_expires_at`, `absolute_expires_at`, `revoked_at` | hash único; válida solo si la cuenta está verificada, no revocada y ambos vencimientos son futuros. |
-| `league_drafts` | `id`, `account_id`, `name`, `created_at`, `updated_at`, `expires_at` | FK a cuenta pendiente, una fila por cuenta en este incremento; se borra con la purga de la cuenta. |
-| `draft_teams` | `id`, `draft_id`, `name`, `position` | nombre normalizado único por borrador; `position` conserva el orden del cliente. |
-| `leagues` | `id`, `organizer_account_id`, `name`, `sport`, `format`, `state`, `created_at`, `published_at` | `sport=football`, `format=league`, reglas 1 vuelta y 3-1-0; este incremento crea `draft` y publica a `published`. |
-| `league_teams` | `id`, `league_id`, `name`, `position` | nombre normalizado único por liga; se crean desde el borrador en la publicación. |
-| `matches` | `id`, `league_id`, `round_number`, `sequence`, `home_team_id`, `away_team_id`, `state` | un partido por pareja no ordenada de equipos; sin marcador o fecha; estado inicial `pending`. |
+| Tabla                        | Campos esenciales                                                                                                      | Restricciones de dominio                                                                                                                                                           |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accounts`                   | `id`, `email`, `state`, `username`, `created_at`, `verified_at`, `expires_at`                                          | índice único sobre `lower(email)` para acceso; username único y en minúsculas; estado `pending_verification` o `verified`; pendiente expira a los 7 días.                          |
+| `local_credentials`          | `account_id`, `password_hash`, `created_at`, `updated_at`                                                              | PK/FK uno a uno; hash Argon2id; ninguna contraseña recuperable.                                                                                                                    |
+| `external_identities`        | `id`, `account_id`, `provider`, `issuer`, `subject`, `created_at`                                                      | `(issuer, subject)` único; una identidad Google pertenece a una cuenta y una cuenta tiene como máximo una identidad Google.                                                        |
+| `federated_login_challenges` | `id`, `provider`, `nonce_hash`, `expires_at`, `consumed_at`, `created_at`                                              | Google únicamente; nonce de 5 min, de un solo uso y sin sesión asociada.                                                                                                           |
+| `identity_link_attempts`     | `id`, `candidate_account_id`, `provider`, `issuer`, `subject`, `token_hash`, `expires_at`, `consumed_at`, `created_at` | confirma un vínculo Google con una cuenta local mediante desafío fresco; no crea sesión hasta consumirlo.                                                                          |
+| `email_verification_tokens`  | `id`, `account_id`, `token_hash`, `expires_at`, `consumed_at`, `invalidated_at`, `created_at`                          | hash único por contexto; expira a 24 h; activo, consumido e invalidado son excluyentes; solo hay un token activo por cuenta.                                                       |
+| `sessions`                   | `id`, `account_id`, `token_hash`, `created_at`, `last_seen_at`, `idle_expires_at`, `absolute_expires_at`, `revoked_at` | hash único; válida solo si la cuenta está verificada, no revocada y ambos vencimientos son futuros.                                                                                |
+| `league_drafts`              | `id`, `account_id`, `name`, `created_at`, `updated_at`, `expires_at`                                                   | FK a cuenta pendiente, una fila por cuenta en este incremento; se borra con la purga de la cuenta.                                                                                 |
+| `draft_teams`                | `id`, `draft_id`, `name`, `position`                                                                                   | nombre normalizado único por borrador; `position` conserva el orden del cliente.                                                                                                   |
+| `leagues`                    | `id`, `organizer_account_id`, `name`, `sport`, `format`, `state`, `created_at`, `published_at`                         | `sport=football`, `format=league`, reglas 1 vuelta y 3-1-0; este incremento crea `draft` y publica a `published`.                                                                  |
+| `league_administrators`      | `league_id`, `account_id`, `assigned_at`                                                                               | PK compuesta; concede exclusivamente la administración delegada que el dominio autorice. El creador se conserva en `leagues.organizer_account_id`, no se duplica.                  |
+| `league_followers`           | `league_id`, `account_id`, `followed_at`                                                                               | PK compuesta; guardar una liga no concede permisos. Una cuenta puede seguir una liga que también administra, aunque la colección de seguimiento la oculta para evitar duplicación. |
+| `league_teams`               | `id`, `league_id`, `name`, `position`                                                                                  | nombre normalizado único por liga; se crean desde el borrador en la publicación.                                                                                                   |
+| `matches`                    | `id`, `league_id`, `round_number`, `sequence`, `home_team_id`, `away_team_id`, `state`                                 | un partido por pareja no ordenada de equipos; sin marcador o fecha; estado inicial `pending`.                                                                                      |
 
 El email conserva el valor aportado para entrega; `lower(email)` es solo la clave
 de comparación del producto. Equipos mantienen una columna normalizada para

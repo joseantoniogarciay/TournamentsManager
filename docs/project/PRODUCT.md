@@ -61,6 +61,26 @@ caducan según la política que se defina antes de implementarla.
 - crear un torneo;
 - consultar los torneos con los que tiene relación.
 
+## Home y biblioteca de torneos
+
+La ruta `/` es la home. Todas las personas ven «Crear torneo» y un acceso a
+cuenta en la botonera. Sin sesión, crear inicia o retoma el borrador local; con
+sesión verificada, la home también ofrece accesos rápidos a «Administro» y
+«Guardados». Las ligas creadas por la cuenta y aquellas donde es administrador
+delegado se consideran administradas. Las ligas seguidas se consideran
+guardadas; cuando una liga cumple ambas relaciones, se muestra solo como
+administrada.
+
+La sección «Torneos» separa las colecciones completas en «Administro» y «Sigo».
+Es una clasificación de navegación: las autorizaciones continúan verificándose
+en el backend para cada liga y acción. La colección autenticada se define en
+[ADR-0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md)
+antes de mostrar estas listas con datos reales.
+
+En iOS y Android, cada sección de la botonera conserva su pila mientras la app
+está activa. En web, son accesos directos a páginas con URL canónica e historial
+del navegador. Véase [ADR-0057](../adr/0057-define-contextual-home-and-tournament-library.md).
+
 ### Organizador
 
 Es inicialmente el usuario autenticado que creó el torneo, con permisos sobre él
