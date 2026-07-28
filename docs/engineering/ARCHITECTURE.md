@@ -150,6 +150,13 @@ web usa URLs directas e historial del navegador. Las categorías «Administro» 
 «Sigo» son proyecciones de relaciones autorizadas por el backend, no estado de
 permisos en el cliente. Véase [ADR-0057](../adr/0057-define-contextual-home-and-tournament-library.md).
 
+La implementación inicial usa tres tabs de raíz: Inicio (`/`), Torneos y
+Cuenta, en ese orden. Cuenta dispone de un stack propio. En iOS 26 se usa
+`NativeTabs` de Expo Router para delegar Liquid Glass al sistema; la barra se
+superpone al contenido y cada ruta deja espacio de scroll al final para que la
+interacción no quede oculta. La API de Expo está marcada como alpha, por lo que
+se revisará en cada actualización de SDK.
+
 El adaptador HTTP centraliza la autenticación de rutas protegidas en middleware:
 valida la sesión y deja el ID de cuenta en el contexto de petición. La
 autorización sobre una liga continúa en el caso de uso, no en un middleware de

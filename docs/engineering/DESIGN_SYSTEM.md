@@ -14,8 +14,9 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
   verde, ámbar y rojo reservados para estado y feedback.
 - **Tipografía:** familia de sistema por plataforma; escala de 12 a 32 px y pesos
   de 400 a 700. Así se preserva legibilidad nativa sin dependencia externa.
-- **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base y
-  24 px como padding de pantalla amplio.
+- **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base.
+  Cada card reserva siempre 20 px de margen exterior horizontal y los layouts
+  dejan 20 px entre cards, sin alterar su padding interno.
 - **Forma:** controles con radio 12 px, tarjetas con 16 px y pills con 999 px.
 - **Movimiento:** 160 ms para feedback y 240 ms para entradas/salidas; se respeta
   la preferencia de movimiento reducido de la plataforma.
@@ -31,6 +32,21 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 | Card | default, actionable, selected | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado. |
 | Banner | network-error, generic-error, success | Se coloca arriba, tiene autocierre, botón de cierre y gesto de descartar. |
 | InlineMessage | error, help, success | Bajo el control asociado; texto claro y disponible para lector de pantalla. |
+
+`Card` está implementada en `shared/ui`: aplica superficie, borde, radio,
+padding y margen exterior horizontal semánticos. La home la usa para separar
+bloques de acción, explicación, pasos y contexto; no sustituye a los
+contenedores de layout.
+
+La primera home usa las mismas primitivas de texto, botón y superficie: presenta
+una única acción principal, un acceso secundario a cuenta y contenido orientativo
+para una persona sin sesión. No simula colecciones personalizadas hasta que haya
+sesión y datos autorizados que mostrar.
+Su copy vive en los catálogos JSON planos de `shared/i18n/locales/`, con español,
+inglés, italiano y francés; el idioma no soportado usa inglés como fallback. Las
+claves semánticas (`common_cancel`, `home_create_tournament`) son estables para
+permitir importar y exportar cada locale con una plataforma de traducción. La
+detección y la selección de catálogo se centralizan en `shared/i18n/locale.ts`.
 
 ## Errores de formulario
 

@@ -8,6 +8,15 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- `make verify` exporta el cliente Expo para web a un directorio temporal como
+  comprobación de router y bundling.
+- Botonera raíz nativa con Inicio, Torneos y Cuenta; en iOS 26 usa Liquid Glass
+  del sistema y Cuenta dispone de su propio flujo de navegación.
+- Catálogos planos JSON por locale (`es`, `en`, `it`, `fr`) con claves
+  semánticas estables y fallback inglés para el cliente universal.
+- Primera implementación de la home de invitado en `/`, con acción principal de
+  crear torneo, acceso de cuenta y orientación sin datos personalizados
+  simulados.
 - ADR-0057: home contextual con creación de torneo, acceso a cuenta, accesos
   rápidos por relación y navegación adaptada entre web y apps.
 - ADR-0058 y `GET /v1/me/leagues`: colección autenticada, paginada y filtrada

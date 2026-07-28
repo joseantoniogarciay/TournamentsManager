@@ -8,5 +8,11 @@ export function Screen({ children }: PropsWithChildren) {
 }
 
 const styles = StyleSheet.create({
-  screen: { backgroundColor: color.surface.canvas, flex: 1, padding: space[4] },
+  screen: {
+    backgroundColor: color.surface.canvas,
+    flex: 1,
+    paddingBottom: space[4],
+    paddingHorizontal: space[5],
+    paddingTop: space[6],
+  },
 });

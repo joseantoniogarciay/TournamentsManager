@@ -78,8 +78,10 @@ make check
 make verify
 ```
 
-`make check` agrupa formato, lint y tests. `make verify` añade la limpieza de
-ambos módulos, build y vulnerabilidades. Conforme a
+`make check` agrupa formato, lint y tests. `make verify` añade la exportación
+web del cliente Expo a `/tmp/tournaments-manager-web-export`, la limpieza de
+ambos módulos, build y vulnerabilidades. La exportación comprueba Expo Router y
+el bundling sin crear un artefacto versionado. Conforme a
 [ADR-0021](../adr/0021-use-advisory-ci-with-local-quality-gate.md), CI ejecuta
 `make verify` como comprobación informativa; el mismo comando se ejecuta
 localmente antes de promover un bloque a `main`.
@@ -162,9 +164,9 @@ pnpm --filter @tournaments-manager/client start
 pnpm --filter @tournaments-manager/client web
 ```
 
-La exportación web se valida con `pnpm --filter @tournaments-manager/client exec
-expo export --platform web`. Los directorios `.expo`, `ios` y `android` siguen
-sin versionarse; se generan solo mediante operaciones explícitas de Expo.
+La exportación web forma parte de `make verify` y se puede ejecutar de forma
+aislada con `make client-web-export`. Los directorios `.expo`, `ios` y `android`
+siguen sin versionarse; se generan solo mediante operaciones explícitas de Expo.
 
 ## Configuración local
 

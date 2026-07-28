@@ -63,8 +63,11 @@ caducan según la política que se defina antes de implementarla.
 
 ## Home y biblioteca de torneos
 
-La ruta `/` es la home. Todas las personas ven «Crear torneo» y un acceso a
-cuenta en la botonera. Sin sesión, crear inicia o retoma el borrador local; con
+La ruta `/` es la home. La botonera tiene «Inicio» como primera posición,
+«Torneos» como segunda y «Cuenta» como tercera; Cuenta conserva su propio flujo.
+En iOS 26 la barra usa el componente nativo con efecto Liquid Glass y se
+superpone al contenido, que conserva margen inferior para permanecer accesible.
+Sin sesión, crear inicia o retoma el borrador local; con
 sesión verificada, la home también ofrece accesos rápidos a «Administro» y
 «Guardados». Las ligas creadas por la cuenta y aquellas donde es administrador
 delegado se consideran administradas. Las ligas seguidas se consideran

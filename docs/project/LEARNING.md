@@ -29,6 +29,72 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-28 — El tipado no sustituye un bundle de Expo
+
+- **Aprendido:** TypeScript no carga Metro ni resuelve el árbol de rutas en la
+  misma forma que Expo. La exportación web detecta errores de bundling y router
+  sin exigir un navegador ni un artefacto persistente.
+- **Evidencia:** `make client-web-export` escribe temporalmente en `/tmp` y
+  `make verify` lo ejecuta junto al resto de la puerta de calidad.
+- **Coste aceptado:** no se añade todavía una prueba visual automatizada ni un
+  artefacto de CI; se abrirán cuando exista un flujo crítico que los justifique.
+
+### 2026-07-28 — Una tab es un límite de navegación, no un botón de pantalla
+
+- **Aprendido:** Inicio, Torneos y Cuenta representan flujos de primer nivel;
+  ubicarlos en la botonera evita duplicar accesos dentro de cada pantalla. Cuenta
+  conserva un stack para que su evolución no altere el historial de Inicio.
+- **Evidencia:** grupo `(tabs)` de Expo Router, con Inicio en la primera
+  posición, y `NativeTabs` delegando el acabado Liquid Glass a iOS 26.
+- **Coste aceptado:** Torneos y Cuenta solo muestran su contexto hasta que sus
+  flujos autenticados y colecciones tengan datos reales.
+
+### 2026-07-28 — La jerarquía también necesita límites espaciales
+
+- **Aprendido:** el padding de pantalla protege el contenido de bordes y zonas
+  del sistema; las cards delimitan bloques con significado. Usar ambos evita
+  una pantalla plana sin convertir cada elemento en una tarjeta.
+- **Evidencia:** `Screen` reserva 24 px de cabecera y `shared/ui/Card` añade
+  20 px de margen exterior horizontal al agrupar los cuatro bloques de la home.
+- **Coste aceptado:** no se añaden sombras ni variantes antes de que una lista
+  o interacción demuestre necesitar un estado visual adicional.
+
+### 2026-07-28 — Un token visual no localiza el producto
+
+- **Aprendido:** los tokens hacen consistente la presentación, pero no eliminan
+  la necesidad de catalogar el copy. Dejar textos en una ruta impide aplicar el
+  locale detectado y hace que cada nueva traducción sea una búsqueda manual.
+- **Evidencia:** extracción del copy de la home a un catálogo `es`, `en`, `it`
+  y `fr`, con fallback explícito a inglés conforme a ADR-0056.
+- **Coste aceptado:** el selector web persistente se implementará con el
+  provider de preferencias compartido, antes de añadir una segunda pantalla.
+- **Siguiente decisión:** incorporar ese provider de idioma y tema a la raíz
+  del cliente sin duplicar estado por feature.
+
+### 2026-07-28 — Un locale es una unidad de intercambio
+
+- **Aprendido:** un archivo plano por locale permite que una plataforma de
+  traducción importe y exporte el producto completo sin reconstruir textos
+  dispersos. Los prefijos semánticos reúnen las claves comunes y de cada
+  capacidad sin imponer objetos anidados al formato de intercambio.
+- **Evidencia:** `shared/i18n/locales/{es,en,it,fr}.json` y la validación
+  TypeScript de que cada catálogo tiene las claves del inglés.
+- **Coste aceptado:** la preferencia persistente de web sigue pendiente del
+  provider compartido; los JSON no implementan estado por sí mismos.
+
+### 2026-07-28 — Una home inicial orienta sin inventar estado
+
+- **Aprendido:** una home de invitado no necesita simular una sesión ni una
+  biblioteca vacía: la siguiente acción principal y una explicación breve
+  orientan sin presentar datos personalizados inexistentes.
+- **Evidencia:** implementación de `/` sobre las primitivas Pulse y la regla de
+  ADR-0057 que reserva «Administro» y «Guardados» para una sesión verificada.
+- **Coste aceptado:** los destinos de crear torneo y cuenta continúan en cortes
+  propios; sus acciones muestran una respuesta explícita en vez de aparentar
+  que el flujo ya está disponible.
+- **Siguiente decisión:** construir el flujo de borrador local y la pantalla de
+  cuenta sobre las rutas canónicas acordadas.
+
 ### 2026-07-28 — Autenticar no es autorizar
 
 - **Aprendido:** validar una cookie o Bearer identifica la cuenta y puede ser
