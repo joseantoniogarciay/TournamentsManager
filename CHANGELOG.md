@@ -8,6 +8,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- README operativo de `apps/client`, con arranque web/iOS/Android, estructura,
+  localización, reglas de cards y verificación; el README raíz enlaza al cliente
+  y `CONTRIBUTING.md` concreta el alcance de `make verify`.
 - `make verify` exporta el cliente Expo para web a un directorio temporal como
   comprobación de router y bundling.
 - Botonera raíz nativa con Inicio, Torneos y Cuenta; en iOS 26 usa Liquid Glass

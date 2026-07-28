@@ -30,7 +30,7 @@ Mantén el cambio pequeño y coherente. Incluye:
 - ADR cuando corresponda;
 - entrada en `CHANGELOG.md` si es relevante para usuarios u operación.
 
-## Comprobaciones del backend
+## Comprobaciones de Go
 
 Para cambios Go:
 
@@ -48,7 +48,7 @@ make verify
 archivos. Revisa su diff antes de incluirlo en un commit. Los targets `check` y
 `verify` solo comprueban y no corrigen silenciosamente.
 
-## Comprobaciones TypeScript
+## Comprobaciones TypeScript y cliente Expo
 
 El runtime y el package manager están fijados por el repositorio. Tras clonar:
 
@@ -62,8 +62,10 @@ Durante un cambio:
 pnpm run check
 ```
 
-`make check` y `make verify` ejecutan las comprobaciones aplicables de Go y
-TypeScript desde una única entrada.
+`make check` ejecuta las comprobaciones aplicables de Go y TypeScript desde una
+única entrada. `make verify` añade la exportación web del cliente Expo a un
+directorio temporal, además de las comprobaciones de generación, build y
+vulnerabilidades; no deja un artefacto versionado en el repositorio.
 
 ## Revisión
 
