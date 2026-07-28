@@ -10,8 +10,11 @@ func TestLoad(t *testing.T) {
 
 	config, err := load(func(key string) string {
 		return map[string]string{
-			databaseURLEnv: "postgres://localhost:5432/tournaments",
-			httpAddrEnv:    "127.0.0.1:8080",
+			databaseURLEnv:   "postgres://localhost:5432/tournaments",
+			httpAddrEnv:      "127.0.0.1:8080",
+			smtpAddrEnv:      "127.0.0.1:1025",
+			smtpFromEnv:      "no-reply@example.test",
+			publicBaseURLEnv: "http://127.0.0.1:8080",
 		}[key]
 	})
 	if err != nil {

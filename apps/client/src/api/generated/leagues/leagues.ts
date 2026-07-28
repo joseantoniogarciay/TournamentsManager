@@ -6,14 +6,191 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type {
+  AccountLeaguePage,
   AuthenticationProblemResponse,
   DraftNotFoundProblemResponse,
+  ListCurrentAccountLeaguesParams,
   Problem,
   PublicLeague,
   PublicationConflictProblemResponse,
   PublishedLeague,
   Uuid,
+  ValidationProblemResponse,
 } from "../models";
+
+export type listCurrentAccountLeaguesResponse200 = {
+  data: AccountLeaguePage;
+  status: 200;
+};
+
+export type listCurrentAccountLeaguesResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type listCurrentAccountLeaguesResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type listCurrentAccountLeaguesResponseSuccess = listCurrentAccountLeaguesResponse200 & {
+  headers: Headers;
+};
+export type listCurrentAccountLeaguesResponseError = (
+  listCurrentAccountLeaguesResponse400 | listCurrentAccountLeaguesResponse401
+) & {
+  headers: Headers;
+};
+
+export type listCurrentAccountLeaguesResponse =
+  listCurrentAccountLeaguesResponseSuccess | listCurrentAccountLeaguesResponseError;
+
+export const getListCurrentAccountLeaguesUrl = (params: ListCurrentAccountLeaguesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/me/leagues?${stringifiedParams}` : `/me/leagues`;
+};
+
+/**
+ * La relación administered incluye propiedad y administración delegada. La relación followed excluye ligas que la cuenta administra para que las colecciones sean disjuntas.
+ * @summary Lista las ligas administradas o seguidas por la cuenta actual
+ */
+export const listCurrentAccountLeagues = async (
+  params: ListCurrentAccountLeaguesParams,
+  options?: RequestInit,
+): Promise<listCurrentAccountLeaguesResponse> => {
+  const res = await fetch(getListCurrentAccountLeaguesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listCurrentAccountLeaguesResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as listCurrentAccountLeaguesResponse;
+};
+
+export type followLeagueResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type followLeagueResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type followLeagueResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type followLeagueResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type followLeagueResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type followLeagueResponseSuccess = followLeagueResponse204 & {
+  headers: Headers;
+};
+export type followLeagueResponseError = (
+  | followLeagueResponse400
+  | followLeagueResponse401
+  | followLeagueResponse403
+  | followLeagueResponse404
+) & {
+  headers: Headers;
+};
+
+export type followLeagueResponse = followLeagueResponseSuccess | followLeagueResponseError;
+
+export const getFollowLeagueUrl = (leagueId: Uuid) => {
+  return `/me/leagues/${leagueId}/follow`;
+};
+
+/**
+ * @summary Guarda una liga visible para la cuenta actual
+ */
+export const followLeague = async (
+  leagueId: Uuid,
+  options?: RequestInit,
+): Promise<followLeagueResponse> => {
+  const res = await fetch(getFollowLeagueUrl(leagueId), {
+    ...options,
+    method: "PUT",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: followLeagueResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as followLeagueResponse;
+};
+
+export type unfollowLeagueResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type unfollowLeagueResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type unfollowLeagueResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type unfollowLeagueResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type unfollowLeagueResponseSuccess = unfollowLeagueResponse204 & {
+  headers: Headers;
+};
+export type unfollowLeagueResponseError = (
+  unfollowLeagueResponse400 | unfollowLeagueResponse401 | unfollowLeagueResponse403
+) & {
+  headers: Headers;
+};
+
+export type unfollowLeagueResponse = unfollowLeagueResponseSuccess | unfollowLeagueResponseError;
+
+export const getUnfollowLeagueUrl = (leagueId: Uuid) => {
+  return `/me/leagues/${leagueId}/follow`;
+};
+
+/**
+ * @summary Elimina una liga guardada de la cuenta actual
+ */
+export const unfollowLeague = async (
+  leagueId: Uuid,
+  options?: RequestInit,
+): Promise<unfollowLeagueResponse> => {
+  const res = await fetch(getUnfollowLeagueUrl(leagueId), {
+    ...options,
+    method: "DELETE",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: unfollowLeagueResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as unfollowLeagueResponse;
+};
 
 export type publishCurrentLeagueDraftResponse201 = {
   data: PublishedLeague;

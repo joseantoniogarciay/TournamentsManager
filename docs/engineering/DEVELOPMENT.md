@@ -78,8 +78,10 @@ make check
 make verify
 ```
 
-`make check` agrupa formato, lint y tests. `make verify` añade la limpieza de
-ambos módulos, build y vulnerabilidades. Conforme a
+`make check` agrupa formato, lint y tests. `make verify` añade la exportación
+web del cliente Expo a `/tmp/tournaments-manager-web-export`, la limpieza de
+ambos módulos, build y vulnerabilidades. La exportación comprueba Expo Router y
+el bundling sin crear un artefacto versionado. Conforme a
 [ADR-0021](../adr/0021-use-advisory-ci-with-local-quality-gate.md), CI ejecuta
 `make verify` como comprobación informativa; el mismo comando se ejecuta
 localmente antes de promover un bloque a `main`.
@@ -140,8 +142,9 @@ El cliente usará Expo, Expo Router y CNG conforme a
 [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md). La
 web usará rendering client-side inicialmente conforme a
 [ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md).
-`apps/client` no se crea hasta completar el resto de decisiones técnicas
-bloqueantes.
+`apps/client` existe como proyecto Expo SDK 57. Expo Router usa `src/app` como
+raíz de rutas; las primitivas compartidas viven en `src/shared` y los tokens en
+`packages/design-tokens`.
 
 - Las pantallas futuras vivirán en `apps/client/src/app`; sus rutas derivarán de
   los archivos.
@@ -153,6 +156,17 @@ bloqueantes.
   en configuración o config plugins.
 - Las diferencias web/native se aíslan en componentes, adaptadores o archivos
   específicos de plataforma cuando exista una razón concreta.
+
+Para iniciar el cliente:
+
+```bash
+pnpm --filter @tournaments-manager/client start
+pnpm --filter @tournaments-manager/client web
+```
+
+La exportación web forma parte de `make verify` y se puede ejecutar de forma
+aislada con `make client-web-export`. Los directorios `.expo`, `ios` y `android`
+siguen sin versionarse; se generan solo mediante operaciones explícitas de Expo.
 
 ## Configuración local
 

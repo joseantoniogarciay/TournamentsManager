@@ -34,3 +34,9 @@ antes de proponer cambios importantes.
 
 No presentes una dirección del stack objetivo como una decisión de implementación
 si todavía no tiene ADR aceptado.
+
+## Cliente
+
+Los cambios bajo `apps/client/` siguen además las reglas obligatorias de
+[`apps/client/AGENTS.md`](apps/client/AGENTS.md). Ese archivo es la checklist de
+preflight y cierre para decisiones de interfaz ya aceptadas.

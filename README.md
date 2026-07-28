@@ -1,11 +1,11 @@
-# Backend Engineering Handbook
+# TournamentsManager — Engineering Handbook
 
-> Estado: Fase 0 — documentación
+> Estado: Fase 2 — primer vertical slice de backend en curso
 >
-> Última revisión: 2026-07-24
+> Última revisión: 2026-07-28
 
 Este repositorio empieza por el handbook porque el objetivo no es solo entregar una
-aplicación: es aprender a diseñar, construir, desplegar y operar un backend con
+aplicación: es aprender a diseñar, construir, desplegar y operar un producto con
 criterio profesional. El archivo
 [PROJECT_MANIFESTO.docx](docs/source/PROJECT_MANIFESTO.docx) es la fuente de
 verdad. [PROJECT_MANIFESTO.md](PROJECT_MANIFESTO.md) es su transcripción
@@ -36,7 +36,10 @@ infra/           # Entorno, despliegue e infraestructura
 docs/            # Handbook, ADR y material operativo
 ```
 
-Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
+Esta estructura no autoriza por sí misma nuevos frameworks, herramientas ni
+decisiones de implementación.
+
+La guía de uso del cliente está en [apps/client/README.md](apps/client/README.md).
 
 ## Mapa del handbook
 
@@ -118,10 +121,22 @@ Esta silueta no autoriza todavía carpetas internas, frameworks ni herramientas.
 | Región y red AWS | España (`eu-south-2`); VPC separada por cuenta en dos AZ; gasto solo tras autorización explícita | [ADR-0030](docs/adr/0030-use-spain-region-and-two-az-cost-gated-network.md) |
 | Framework y rendering del cliente | Aceptado | [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md), [ADR-0016](docs/adr/0016-use-client-side-web-rendering-initially.md) |
 
-La [base técnica](docs/governance/TECHNICAL_BASELINE.md) está cerrada. El
-siguiente gate es [0B: definición del primer vertical slice](docs/project/ROADMAP.md);
-las decisiones funcionales vuelven a estar disponibles y siguen requiriendo ADR
-cuando alcancen el umbral definido.
+La [base técnica](docs/governance/TECHNICAL_BASELINE.md), el gate 0B y la Fase 1
+están cerrados. El proyecto se encuentra en la [Fase 2: Backend](docs/project/ROADMAP.md):
+el primer vertical slice implementa identidad local, publicación y consulta de
+ligas de forma incremental. El corte activo es el registro local de una cuenta
+pendiente; la verificación, sesión y publicación se incorporarán en los cortes
+siguientes. Las decisiones nuevas que alcancen el umbral definido siguen
+requiriendo ADR aceptado.
+
+## Cliente universal
+
+El cliente Expo está disponible para web, iOS y Android. Su punto de entrada es
+la [guía de `apps/client`](apps/client/README.md): explica cómo iniciarlo, su
+navegación actual y las reglas de localización y diseño que aplican a cada
+pantalla. La referencia operativa completa permanece en
+[DEVELOPMENT.md](docs/engineering/DEVELOPMENT.md) para evitar duplicar comandos
+y decisiones técnicas.
 
 ## Regla de precedencia
 

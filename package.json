@@ -1,6 +1,6 @@
 {
   "name": "tournaments-manager",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@11.17.0",
   "devEngines": {
@@ -19,7 +19,7 @@
     "format": "prettier --write \"**/*.{js,jsx,mjs,cjs,ts,tsx,json,jsonc,yaml,yml}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,mjs,cjs,ts,tsx,json,jsonc,yaml,yml}\"",
     "lint": "eslint . --max-warnings=0",
-    "typecheck": "tsc --build --pretty false",
+    "typecheck": "tsc --build --pretty false && pnpm --filter @tournaments-manager/client exec tsc --noEmit",
     "openapi:lint": "redocly lint",
     "openapi:generate": "orval --config orval.config.ts",
     "openapi:generate:check": "pnpm run openapi:generate && git diff --exit-code -- apps/client/src/api/generated",

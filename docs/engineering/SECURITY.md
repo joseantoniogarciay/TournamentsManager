@@ -45,6 +45,11 @@ ADR-0044 fija Argon2id para contraseñas locales, sesiones opacas revocables y
 rotadas, y Mailpit solo para capturar email en desarrollo. JWT y refresh tokens
 no se introducen sin un disparador de arquitectura distribuida.
 
+ADR-0059 centraliza la validación de cookie o Bearer en middleware para rutas
+protegidas. La autenticación no sustituye autorización por recurso. Antes de la
+primera mutación autenticada desde web se añadirá una defensa CSRF separada; una
+lectura `GET` y el transporte Bearer móvil no la requieren.
+
 ## Reglas iniciales
 
 - mínimo privilegio para personas y workloads;
@@ -122,12 +127,12 @@ La gestión de configuración sigue
 
 ## Gates futuros
 
-| Gate | Evidencia |
-|---|---|
-| Diseño | Modelo de amenazas y clasificación de datos |
-| Cambio | Pruebas de autorización, validación y abuso relevante |
+| Gate       | Evidencia                                                    |
+| ---------- | ------------------------------------------------------------ |
+| Diseño     | Modelo de amenazas y clasificación de datos                  |
+| Cambio     | Pruebas de autorización, validación y abuso relevante        |
 | Despliegue | Secretos, permisos, superficie expuesta y rollback revisados |
-| Operación | Alertas, runbook e historial auditable |
+| Operación  | Alertas, runbook e historial auditable                       |
 
 No se declarará “seguro” un componente; se documentarán amenazas consideradas,
 controles, evidencia y riesgo residual.

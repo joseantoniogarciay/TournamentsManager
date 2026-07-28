@@ -4,6 +4,8 @@
 - [API.md](API.md): contrato REST/OpenAPI y reglas del adaptador HTTP.
 - [DATABASE.md](DATABASE.md): persistencia y datos.
 - [INITIAL_DATA_MODEL.md](INITIAL_DATA_MODEL.md): entidades y transacciones del primer incremento.
+- [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md): fundaciones visuales y contratos de componentes compartidos.
+- [CLIENT_PRACTICES.md](CLIENT_PRACTICES.md): reglas de rendimiento, listas, accesibilidad y reutilización del cliente universal.
 - [DEVELOPMENT.md](DEVELOPMENT.md): flujo y Definition of Done.
 - [IDENTITY.md](IDENTITY.md): credenciales locales, proveedores y vinculación.
 - [SECURITY.md](SECURITY.md): principios y amenazas.
