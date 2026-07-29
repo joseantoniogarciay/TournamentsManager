@@ -1,16 +1,20 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
-import { space } from "@tournaments-manager/design-tokens";
+import { control, radius, space } from "@tournaments-manager/design-tokens";
+
+import googleLogo from "../../../../assets/google-g.png";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
+import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
 
 export default function AccountScreen() {
   const t = getTranslator();
   const { show } = useFeedback();
+  const { colors } = usePreferences();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showEmailError, setShowEmailError] = useState(false);
@@ -31,7 +35,6 @@ export default function AccountScreen() {
         <Card>
           <View style={styles.form}>
             <Text variant="title">{t("account_sign_in_title")}</Text>
-            <Text color="secondary">{t("account_sign_in_description")}</Text>
             <TextField
               autoCapitalize="none"
               autoComplete="email"
@@ -58,13 +61,16 @@ export default function AccountScreen() {
         <Card>
           <View style={styles.form}>
             <Text variant="title">{t("account_social_title")}</Text>
-            <Text color="secondary">{t("account_social_description")}</Text>
-            <Button
+            <Pressable
+              accessibilityLabel={t("account_google_unavailable")}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: true }}
               disabled
-              label={t("account_google_unavailable")}
               onPress={() => undefined}
-              variant="secondary"
-            />
+              style={[styles.googleButton, { borderColor: colors.border.default }]}
+            >
+              <Image source={googleLogo} style={styles.googleLogo} />
+            </Pressable>
           </View>
         </Card>
 
@@ -84,6 +90,17 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   content: { gap: space[5], paddingBottom: space[12] },
   form: { gap: space[4] },
+  googleButton: {
+    alignItems: "center",
+    alignSelf: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    height: control.minHeight + space[1],
+    justifyContent: "center",
+    opacity: 0.55,
+    width: control.minHeight + space[1],
+  },
+  googleLogo: { height: 22, width: 22 },
   register: { gap: space[3], marginHorizontal: space[5] },
 });
 

@@ -55,11 +55,7 @@ export function Button({
     >
       {variant === "primary" ? <BrandGradient style={styles.base}>{content}</BrandGradient> : null}
       {variant === "secondary" ? (
-        <BrandGradient style={styles.outline}>
-          <View style={[styles.outlineContent, { backgroundColor: colors.surface.default }]}>
-            {content}
-          </View>
-        </BrandGradient>
+        <View style={[styles.base, styles.outline]}>{content}</View>
       ) : null}
       {variant === "ghost" || variant === "destructive" ? (
         <View
@@ -94,21 +90,15 @@ const styles = StyleSheet.create({
   brandGradient: { backgroundColor: color.brand.primary, overflow: "hidden" },
   base: {
     minHeight: control.minHeight,
-    borderRadius: radius.control,
+    borderRadius: radius.pill,
     justifyContent: "center",
     paddingHorizontal: control.horizontalPadding,
   },
   content: { alignItems: "center", flexDirection: "row", gap: space[2], justifyContent: "center" },
   outline: {
-    borderRadius: radius.control,
-    minHeight: control.minHeight,
-    padding: 1,
-  },
-  outlineContent: {
-    borderRadius: radius.control - 1,
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: control.horizontalPadding - 1,
+    borderColor: color.brand.primary,
+    borderWidth: 1,
+    borderRadius: radius.pill,
   },
   disabled: { opacity: 0.55 },
 });

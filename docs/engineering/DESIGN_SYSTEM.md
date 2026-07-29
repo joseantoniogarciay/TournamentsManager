@@ -31,7 +31,11 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 - **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base.
   Cada card reserva siempre 20 px de margen exterior horizontal y los layouts
   dejan 20 px entre cards, sin alterar su padding interno.
-- **Forma:** controles con radio 12 px, tarjetas con 16 px y pills con 999 px.
+- **Forma:** los campos y demás controles compactos usan radio 12 px; las
+  tarjetas usan 16 px. Los botones usan `radius.pill` (999 px), de modo que sus
+  extremos son siempre semicirculares respecto de su altura. La variante
+  secundaria conserva solo un borde azul de 1 px: su interior es transparente y
+  deja ver la superficie de la pantalla que la contiene.
 - **Movimiento:** 160 ms para feedback y 240 ms para entradas/salidas; se respeta
   la preferencia de movimiento reducido de la plataforma.
 
@@ -52,6 +56,10 @@ padding y margen exterior horizontal semánticos. La home la usa para separar
 bloques de acción, explicación y pasos; no sustituye a los contenedores de
 layout. El acceso persistente a la biblioteca de torneos vive en su tab y no se
 duplica como una card informativa en la home.
+
+Una acción externa que se represente solo con un icono de marca, como Google,
+conserva un objetivo táctil de al menos 44 px, forma circular y `accessibilityLabel`
+localizado. El asset se guarda localmente: no se descarga durante el uso de la app.
 
 La primera home usa las mismas primitivas de texto, botón y superficie: presenta
 una única acción principal, un acceso secundario a cuenta y contenido orientativo

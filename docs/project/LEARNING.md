@@ -61,6 +61,27 @@ Para cada capacidad se sigue el ciclo:
   tanto para el número como para el borde circular, y se adaptan al tema claro u
   oscuro sin usar blanco o negro puros.
 
+### 2026-07-29 — Un botón es una acción, no una caja
+
+- **Aprendido:** un radio de 12 px encaja en campos, pero un botón de 44 px de
+  alto necesita extremos semicirculares para expresar mejor que es una acción.
+- **Evidencia:** la primitiva `Button` usa el token `radius.pill` en todas sus
+  variantes; el botón secondary mantiene un borde azul de marca y deja
+  transparente su interior para revelar la superficie que hay detrás.
+- **Coste aceptado:** el contraste del borde y del texto se evalúa contra la
+  superficie contenedora; por ello las pantallas siguen usando tokens de fondo
+  semánticos y no colores arbitrarios.
+
+### 2026-07-29 — Las acciones de proveedor caben en su identidad visual
+
+- **Aprendido:** cuando una acción de proveedor se entiende por su marca, un
+  botón solo con el icono reduce ruido visual sin perder accesibilidad.
+- **Evidencia:** la acción de Google en Cuenta es circular, está centrada en su
+  card, conserva un objetivo de 48 px y expone su estado y etiqueta localizada
+  al lector de pantalla.
+- **Coste aceptado:** el PNG oficial se versiona como asset local para no añadir
+  una dependencia de iconos ni depender de red durante el renderizado.
+
 ### 2026-07-29 — La navegación persistente no se duplica como contenido
 
 - **Aprendido:** una card que solo recuerda que existe una sección permanente no
