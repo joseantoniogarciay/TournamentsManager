@@ -1,10 +1,16 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
-import { type PropsWithChildren } from "react";
+import * as SplashScreen from "expo-splash-screen";
+import { type PropsWithChildren, useEffect } from "react";
 import { Platform } from "react-native";
 
 import { FeedbackProvider } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
+
+if (Platform.OS !== "web") {
+  SplashScreen.setOptions({ duration: 240, fade: true });
+  void SplashScreen.preventAutoHideAsync();
+}
 
 export default function RootLayout() {
   const t = getTranslator();
@@ -32,6 +38,10 @@ export default function RootLayout() {
 
 function NavigationTheme({ children }: PropsWithChildren) {
   const { resolvedTheme } = usePreferences();
+
+  useEffect(() => {
+    if (Platform.OS !== "web") SplashScreen.hide();
+  }, []);
 
   return (
     <ThemeProvider value={resolvedTheme === "dark" ? DarkTheme : DefaultTheme}>

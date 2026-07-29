@@ -175,6 +175,14 @@ Las variantes iOS declaran `com.fasttourney.app.dev` y `com.fasttourney.app`.
 Antes de distribuir una build nativa se verificará que ambos identificadores
 estén registrados y controlados en la cuenta de Apple.
 
+La splash nativa se configura mediante el plugin `expo-splash-screen`: usa el
+icono local de Fast Tourney sobre las superficies `canvas` clara y oscura. En
+arranque nativo se conserva únicamente hasta que se hidrata la preferencia local
+de tema y se puede pintar la primera ruta; después se oculta con un fundido de
+240 ms. No espera red ni se sustituye por una pantalla React de carga. Sus
+propiedades nativas se validan en una build release, ya que Expo Go y las
+development builds no reproducen fielmente la splash distribuida.
+
 La exportación web forma parte de `make verify` y se puede ejecutar de forma
 aislada con `make client-web-export`. Los directorios `.expo`, `ios` y `android`
 siguen sin versionarse; se generan solo mediante operaciones explícitas de Expo.

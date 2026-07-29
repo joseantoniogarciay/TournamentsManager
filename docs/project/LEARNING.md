@@ -914,6 +914,18 @@ Para cada capacidad se sigue el ciclo:
 - **Siguiente decisión:** primera operación de persistencia y límites de su
   transacción antes de implementar registro.
 
+### 2026-07-29 — La splash nativa no es una pantalla de React
+
+- **Aprendido:** la splash se muestra antes de ejecutar JavaScript; solo puede
+  configurarse en la build nativa. El código de la app puede decidir cuándo
+  ocultarla, pero no convertirla en un flujo de carga.
+- **Evidencia:** `expo-splash-screen` configurado mediante el config plugin y
+  retenido hasta hidratar la preferencia local de tema.
+- **Coste aceptado:** la apariencia final se prueba en una build release, porque
+  Expo Go y development builds no la reproducen fielmente.
+- **Regla reutilizable:** no esperar red bajo la splash ni crear una falsa splash
+  React salvo que un requisito de producto justifique explícitamente esa espera.
+
 ## Regla de evidencia
 
 “Entendido” exige una explicación propia y una demostración. Un comando que
