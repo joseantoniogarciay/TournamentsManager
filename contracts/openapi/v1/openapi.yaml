@@ -11,6 +11,8 @@ servers:
 tags:
   - name: Registration
     description: Alta local y verificación de correo.
+  - name: Usernames
+    description: Consulta pública y no vinculante de nombres de usuario.
   - name: Session
     description: Creación, consulta y revocación de sesiones propias.
   - name: Federated identity
@@ -20,6 +22,32 @@ tags:
   - name: Leagues
     description: Publicación y lectura pública de ligas visibles.
 paths:
+  /usernames/{username}/availability:
+    get:
+      tags: [Usernames]
+      operationId: getUsernameAvailability
+      summary: Indica si un username puede usarse en este momento
+      description: >-
+        Esta consulta no reserva el username. El alta vuelve a comprobar la
+        unicidad para resolver carreras entre clientes.
+      security: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Username" }
+      responses:
+        "200":
+          description: Disponibilidad actual del username.
+          headers:
+            Cache-Control:
+              description: La respuesta no se almacena porque puede cambiar inmediatamente.
+              schema: { type: string, example: no-store }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UsernameAvailability" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
   /registrations:
     post:
       tags: [Registration]
@@ -335,6 +363,15 @@ components:
       maxLength: 30
       pattern: "^[a-z0-9_]+$"
       description: Minúsculas; los nombres reservados se validan en el servidor.
+    UsernameAvailability:
+      type: object
+      required: [available]
+      properties:
+        available:
+          type: boolean
+          description: >-
+            Estado actual informativo; no constituye una reserva y puede cambiar
+            antes de enviar el alta.
     Password:
       type: string
       format: password

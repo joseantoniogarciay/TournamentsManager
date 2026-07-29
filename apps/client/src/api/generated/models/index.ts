@@ -43,6 +43,7 @@ export * from "./teamInput.js";
 export * from "./transport.js";
 export * from "./user.js";
 export * from "./username.js";
+export * from "./usernameAvailability.js";
 export * from "./uuid.js";
 export * from "./validationProblemResponse.js";
 export * from "./verificationConflictProblemResponse.js";

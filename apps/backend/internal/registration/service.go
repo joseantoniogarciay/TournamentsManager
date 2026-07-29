@@ -33,6 +33,7 @@ type Input struct {
 // Repository persiste la cuenta pendiente, su credencial y su verificación.
 type Repository interface {
 	CreatePending(context.Context, Input, string, []byte) (bool, error)
+	IsUsernameAvailable(context.Context, string) (bool, error)
 	VerifyAndCreateSession(context.Context, []byte, []byte) (Session, error)
 }
 
@@ -72,6 +73,12 @@ type Service struct {
 // NewService construye el caso de uso con sus puertos explícitos.
 func NewService(repository Repository, mailer Mailer) Service {
 	return Service{repository: repository, mailer: mailer}
+}
+
+// UsernameAvailable consulta la disponibilidad actual sin reservar el nombre.
+// El alta sigue siendo la autoridad para garantizar la unicidad bajo concurrencia.
+func (s Service) UsernameAvailable(ctx context.Context, username string) (bool, error) {
+	return s.repository.IsUsernameAvailable(ctx, username)
 }
 
 // Register crea una cuenta pendiente. La respuesta no diferencia un email ya

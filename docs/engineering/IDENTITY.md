@@ -57,6 +57,15 @@ Se usa para buscar y seleccionar administradores de una liga. Las reglas exactas
 de formato, normalización, nombres reservados y un futuro cambio de `username`
 se decidirán antes de implementarlas.
 
+El cliente puede consultar `GET /v1/usernames/{username}/availability` cuando
+el valor ya cumple el mínimo de tres caracteres y permanece sin cambios durante
+400 ms. La respuesta informa del estado actual, no reserva el nombre: el alta
+vuelve a aplicar la restricción única de PostgreSQL. Para contener sondeo o
+enumeración, el endpoint admite 30 consultas por IP y minuto en cada proceso y
+responde `429` con `Retry-After` al superar ese límite. La política se revisará
+antes de escalar la API horizontalmente, pues el límite local no se comparte
+entre réplicas.
+
 ## Alta local y borradores antes del acceso
 
 Un invitado puede preparar un borrador de torneo en el cliente sin autenticarse.

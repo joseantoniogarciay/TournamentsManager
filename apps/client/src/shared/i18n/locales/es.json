@@ -43,6 +43,11 @@
   "account_social_title": "Continuar con una red social",
   "account_title": "Cuenta",
   "account_username_label": "Nombre de usuario",
+  "account_username_available": "Este nombre de usuario está disponible.",
+  "account_username_check_error": "No hemos podido comprobar este nombre ahora. Puedes intentarlo de nuevo.",
+  "account_username_checking": "Comprobando disponibilidad…",
+  "account_username_rate_limited": "Has hecho muchas comprobaciones. Espera un momento e inténtalo de nuevo.",
+  "account_username_unavailable": "Este nombre de usuario no está disponible.",
   "settings_appearance_title": "Apariencia",
   "settings_notifications_title": "Notificaciones",
   "settings_notifications_unavailable": "Este permiso se activará cuando las notificaciones estén dentro del alcance del producto.",
@@ -53,6 +58,7 @@
   "validation_email": "Introduce un correo electrónico válido.",
   "validation_password_required": "Introduce tu contraseña.",
   "validation_username_required": "Introduce un nombre de usuario.",
+  "validation_username_format": "Usa entre 3 y 30 caracteres: letras minúsculas, números o guion bajo.",
   "tournaments_description": "Tus torneos administrados y seguidos aparecerán aquí cuando hayas iniciado sesión.",
   "tournaments_title": "Torneos"
 }

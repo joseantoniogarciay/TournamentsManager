@@ -13,6 +13,13 @@ SELECT id, $4, now() + interval '24 hours'
 FROM created_account
 RETURNING (SELECT email FROM created_account) AS email;
 
+-- name: IsUsernameAvailable :one
+SELECT NOT EXISTS (
+    SELECT 1
+    FROM accounts
+    WHERE username = $1
+) AS available;
+
 -- name: VerifyRegistrationAndCreateSession :one
 WITH consumed_token AS (
     UPDATE email_verification_tokens

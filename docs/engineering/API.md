@@ -121,6 +121,21 @@ La entrega de sesión se declara explícitamente: `cookie` para web (cookie
 `__Host-`) y `bearer` para móvil. El secreto solo aparece una vez en la respuesta
 de transporte `bearer`; no se almacena ni se devuelve en consultas posteriores.
 
+La consulta pública `GET /usernames/{username}/availability` devuelve únicamente
+`available`, no reserva el valor y usa `Cache-Control: no-store`; la creación de
+cuenta mantiene la comprobación única definitiva. El adaptador limita esta
+consulta a 30 solicitudes por IP y minuto por proceso y entrega `429` con
+`Retry-After` al rebasarlo. El cliente la inicia solo para formatos válidos,
+después de 400 ms sin escritura, y cancela la solicitud anterior cuando el valor
+cambia.
+
+La API aplica CORS en su frontera HTTP completa, no en cada endpoint. Solo
+acepta los orígenes exactos de `CORS_ALLOWED_ORIGINS`, rechaza los demás y
+resuelve los preflight `OPTIONS` para `DELETE`, `GET`, `POST` y `PUT` con las
+cabeceras `Authorization` y `Content-Type`. Devuelve el origen concreto, `Vary:
+Origin` y permite credenciales para que el transporte web por cookie pueda
+funcionar en el futuro; por ello no se admite el comodín `*`.
+
 Las operaciones protegidas pasan por middleware de sesión: acepta cookie o
 Bearer, nunca ambas credenciales a la vez, y deja el ID de cuenta en el contexto
 interno. La autorización por liga permanece en el caso de uso. Una protección

@@ -7,7 +7,7 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 type Props = PropsWithChildren<{
   variant?: "body" | "bodyLarge" | "caption" | "title" | "display";
-  color?: "primary" | "secondary" | "inverse" | "onBrand" | "error";
+  color?: "primary" | "secondary" | "inverse" | "onBrand" | "error" | "success";
 }>;
 
 export function Text({ children, variant = "body", color: textColor = "primary" }: Props) {
@@ -18,6 +18,7 @@ export function Text({ children, variant = "body", color: textColor = "primary" 
     inverse: { color: colors.text.inverse },
     onBrand: { color: color.text.inverse },
     error: { color: colors.feedback.error },
+    success: { color: colors.feedback.success },
   };
   return (
     <NativeText style={[styles.base, variants[variant], textColors[textColor]]}>

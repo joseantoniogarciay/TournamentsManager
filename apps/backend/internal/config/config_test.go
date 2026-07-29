@@ -10,11 +10,12 @@ func TestLoad(t *testing.T) {
 
 	config, err := load(func(key string) string {
 		return map[string]string{
-			databaseURLEnv:   "postgres://localhost:5432/tournaments",
-			httpAddrEnv:      "127.0.0.1:8080",
-			smtpAddrEnv:      "127.0.0.1:1025",
-			smtpFromEnv:      "no-reply@example.test",
-			publicBaseURLEnv: "http://127.0.0.1:8080",
+			databaseURLEnv:        "postgres://localhost:5432/tournaments",
+			httpAddrEnv:           "127.0.0.1:8080",
+			smtpAddrEnv:           "127.0.0.1:1025",
+			smtpFromEnv:           "no-reply@example.test",
+			publicBaseURLEnv:      "http://127.0.0.1:8080",
+			corsAllowedOriginsEnv: "http://localhost:8081, http://127.0.0.1:8081",
 		}[key]
 	})
 	if err != nil {
@@ -23,6 +24,27 @@ func TestLoad(t *testing.T) {
 
 	if config.HTTPAddr != "127.0.0.1:8080" {
 		t.Errorf("HTTPAddr = %q, want %q", config.HTTPAddr, "127.0.0.1:8080")
+	}
+	if len(config.CORSAllowedOrigins) != 2 {
+		t.Errorf("CORSAllowedOrigins = %v, want two origins", config.CORSAllowedOrigins)
+	}
+}
+
+func TestLoadRejectsInvalidCORSOrigin(t *testing.T) {
+	t.Parallel()
+
+	_, err := load(func(key string) string {
+		return map[string]string{
+			databaseURLEnv:        "postgres://localhost:5432/tournaments",
+			httpAddrEnv:           "127.0.0.1:8080",
+			smtpAddrEnv:           "127.0.0.1:1025",
+			smtpFromEnv:           "no-reply@example.test",
+			publicBaseURLEnv:      "http://127.0.0.1:8080",
+			corsAllowedOriginsEnv: "https://example.test/path",
+		}[key]
+	})
+	if err == nil || !strings.Contains(err.Error(), corsAllowedOriginsEnv) {
+		t.Fatalf("load() error = %v, want error mentioning %s", err, corsAllowedOriginsEnv)
 	}
 }
 

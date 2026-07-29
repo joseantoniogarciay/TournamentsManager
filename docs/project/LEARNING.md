@@ -29,6 +29,34 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-29 — Una comprobación de disponibilidad mejora la UX, no la unicidad
+
+- **Aprendido:** una respuesta de disponibilidad solo describe un instante: dos
+  clientes pueden recibir «disponible» y competir después por el mismo nombre.
+  Por ello PostgreSQL mantiene la restricción única y el alta es la única
+  autoridad que decide definitivamente.
+- **Evidencia:** `GET /v1/usernames/{username}/availability` solo acepta el
+  formato del contrato, responde `Cache-Control: no-store` y el cliente espera
+  400 ms desde la última escritura antes de llamarlo; una nueva entrada cancela
+  la petición previa.
+- **Coste aceptado:** el límite de 30 consultas por IP y minuto vive en memoria
+  del proceso para mantener este corte simple. No protege de forma global entre
+  réplicas; si se escala horizontalmente, se decidirá un control compartido en
+  el borde o almacenamiento adecuado.
+
+### 2026-07-29 — CORS es una política de frontera, no una cabecera por ruta
+
+- **Aprendido:** CORS autoriza al JavaScript de un origen a leer una respuesta;
+  no sustituye autenticación, autorización ni CSRF. Un `POST` JSON inicia además
+  un preflight `OPTIONS` antes de la petición real.
+- **Evidencia:** la API valida `CORS_ALLOWED_ORIGINS` al arrancar y aplica una
+  allowlist exacta en el handler raíz. Devuelve el origen permitido, `Vary: Origin`
+  y credenciales; responde el preflight solo para métodos y cabeceras
+  que el cliente necesita.
+- **Coste aceptado:** cada entorno debe declarar sus orígenes web. Se evita el
+  arranque cómodo con `*` porque sería incompatible con las cookies de sesión y
+  ocultaría qué frontends tienen permiso para consumir la API.
+
 ### 2026-07-29 — La experiencia de usuario y el diagnóstico técnico requieren señales distintas
 
 - **Aprendido:** un replay explica la secuencia de interacción que precede a un

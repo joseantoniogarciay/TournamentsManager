@@ -43,6 +43,11 @@
   "account_social_title": "Continue with social sign-in",
   "account_title": "Account",
   "account_username_label": "Username",
+  "account_username_available": "This username is available.",
+  "account_username_check_error": "We could not check this username right now. Try again.",
+  "account_username_checking": "Checking availability…",
+  "account_username_rate_limited": "You have made too many checks. Wait a moment and try again.",
+  "account_username_unavailable": "This username is not available.",
   "settings_appearance_title": "Appearance",
   "settings_notifications_title": "Notifications",
   "settings_notifications_unavailable": "This permission will be enabled when notifications are in product scope.",
@@ -53,6 +58,7 @@
   "validation_email": "Enter a valid email address.",
   "validation_password_required": "Enter your password.",
   "validation_username_required": "Enter a username.",
+  "validation_username_format": "Use 3 to 30 lowercase letters, numbers, or underscores.",
   "tournaments_description": "Your managed and followed tournaments will appear here once you have signed in.",
   "tournaments_title": "Tournaments"
 }

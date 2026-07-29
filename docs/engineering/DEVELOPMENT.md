@@ -190,6 +190,14 @@ La configuración y los secretos siguen
   formato inválido.
 - El cliente Expo solo podrá leer desde JavaScript variables `EXPO_PUBLIC_*`, que
   se tratarán como públicas.
+- `EXPO_PUBLIC_API_BASE_URL` indica la base pública de la API para el cliente;
+  en desarrollo, si no se declara, usa `http://127.0.0.1:8080/v1`. En Android
+  físico o emulador debe apuntar a una dirección alcanzable desde el dispositivo,
+  no a su propio `127.0.0.1`.
+- `CORS_ALLOWED_ORIGINS` es una lista separada por comas de orígenes web
+  completos sin path. El backend falla si falta o incluye un valor inválido. En
+  local se permiten `http://localhost:8081` y `http://127.0.0.1:8081`; cada
+  entorno desplegado declara solo sus dominios web reales.
 - Docker Compose podrá usar `env_file` cuando se decida el entorno local.
 - No se introduce gestor de secretos hasta que exista evidencia operativa.
 

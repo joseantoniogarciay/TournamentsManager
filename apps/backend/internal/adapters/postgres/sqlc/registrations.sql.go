@@ -46,6 +46,21 @@ func (q *Queries) CreatePendingRegistration(ctx context.Context, arg CreatePendi
 	return email, err
 }
 
+const isUsernameAvailable = `-- name: IsUsernameAvailable :one
+SELECT NOT EXISTS (
+    SELECT 1
+    FROM accounts
+    WHERE username = $1
+) AS available
+`
+
+func (q *Queries) IsUsernameAvailable(ctx context.Context, username string) (bool, error) {
+	row := q.db.QueryRow(ctx, isUsernameAvailable, username)
+	var available bool
+	err := row.Scan(&available)
+	return available, err
+}
+
 const verifyRegistrationAndCreateSession = `-- name: VerifyRegistrationAndCreateSession :one
 WITH consumed_token AS (
     UPDATE email_verification_tokens

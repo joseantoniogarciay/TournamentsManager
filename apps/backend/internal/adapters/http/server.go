@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"net/mail"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
@@ -18,18 +21,57 @@ import (
 var usernamePattern = regexp.MustCompile(`^[a-z0-9_]{3,30}$`)
 var uuidPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
+const (
+	usernameAvailabilityLimit  = 30
+	usernameAvailabilityWindow = time.Minute
+)
+
 // NewHandler construye las rutas de infraestructura disponibles antes de los
 // endpoints de negocio.
-func NewHandler(registrationService registration.Service, authenticator sessionAuthenticator, leagueService leagues.Service) http.Handler {
+func NewHandler(registrationService registration.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string) http.Handler {
 	mux := http.NewServeMux()
+	availabilityLimiter := newRequestLimiter(usernameAvailabilityLimit, usernameAvailabilityWindow)
 	mux.HandleFunc("GET /healthz", healthz)
+	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService))
 	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
 	followHandler := requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(followLeague(leagueService))))
 	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)
-	return mux
+	return requireAllowedOrigin(corsAllowedOrigins, mux)
+}
+
+func usernameAvailability(service registration.Service, limiter *requestLimiter) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		username := request.PathValue("username")
+		if !usernamePattern.MatchString(username) {
+			writeValidationProblem(writer)
+			return
+		}
+		if allowed, retryAfter := limiter.allow(clientIP(request)); !allowed {
+			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+			writeProblem(writer, http.StatusTooManyRequests, "Demasiadas consultas de username")
+			return
+		}
+
+		available, err := service.UsernameAvailable(request.Context(), username)
+		if err != nil {
+			writeProblem(writer, http.StatusInternalServerError, "No se pudo consultar el username")
+			return
+		}
+		writer.Header().Set("Cache-Control", "no-store")
+		writer.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(writer).Encode(map[string]bool{"available": available})
+	}
+}
+
+func clientIP(request *http.Request) string {
+	host, _, err := net.SplitHostPort(request.RemoteAddr)
+	if err != nil {
+		return request.RemoteAddr
+	}
+	return host
 }
 
 type verificationRequest struct {
@@ -190,4 +232,47 @@ func writeProblem(writer http.ResponseWriter, status int, title string) {
 		"title":  title,
 		"status": status,
 	})
+}
+
+type requestLimiter struct {
+	entries map[string]requestLimit
+	limit   int
+	mu      sync.Mutex
+	window  time.Duration
+}
+
+type requestLimit struct {
+	count   int
+	resetAt time.Time
+}
+
+func newRequestLimiter(limit int, window time.Duration) *requestLimiter {
+	return &requestLimiter{entries: make(map[string]requestLimit), limit: limit, window: window}
+}
+
+func (l *requestLimiter) allow(key string) (bool, int) {
+	now := time.Now()
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	for entryKey, entry := range l.entries {
+		if !entry.resetAt.After(now) {
+			delete(l.entries, entryKey)
+		}
+	}
+
+	entry := l.entries[key]
+	if entry.resetAt.IsZero() {
+		entry.resetAt = now.Add(l.window)
+	}
+	if entry.count >= l.limit {
+		retryAfter := int(time.Until(entry.resetAt).Seconds())
+		if retryAfter < 1 {
+			retryAfter = 1
+		}
+		return false, retryAfter
+	}
+	entry.count++
+	l.entries[key] = entry
+	return true, 0
 }

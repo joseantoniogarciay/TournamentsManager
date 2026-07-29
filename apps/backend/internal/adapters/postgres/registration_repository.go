@@ -33,6 +33,11 @@ func NewRegistrationRepository(pool *pgxpool.Pool) RegistrationRepository {
 	return RegistrationRepository{queries: sqlc.New(pool)}
 }
 
+// IsUsernameAvailable consulta la restricción de unicidad sin crear una reserva.
+func (r RegistrationRepository) IsUsernameAvailable(ctx context.Context, username string) (bool, error) {
+	return r.queries.IsUsernameAvailable(ctx, username)
+}
+
 // CreatePending crea los tres registros de identidad en una sola sentencia.
 func (r RegistrationRepository) CreatePending(ctx context.Context, input registration.Input, passwordHash string, tokenHash []byte) (bool, error) {
 	_, err := r.queries.CreatePendingRegistration(ctx, sqlc.CreatePendingRegistrationParams{

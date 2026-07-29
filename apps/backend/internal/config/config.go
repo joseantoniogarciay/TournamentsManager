@@ -5,23 +5,26 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 )
 
 const (
-	databaseURLEnv   = "DATABASE_URL"
-	httpAddrEnv      = "HTTP_ADDR"
-	smtpAddrEnv      = "SMTP_ADDR"
-	smtpFromEnv      = "SMTP_FROM"
-	publicBaseURLEnv = "PUBLIC_BASE_URL"
+	databaseURLEnv        = "DATABASE_URL"
+	httpAddrEnv           = "HTTP_ADDR"
+	smtpAddrEnv           = "SMTP_ADDR"
+	smtpFromEnv           = "SMTP_FROM"
+	publicBaseURLEnv      = "PUBLIC_BASE_URL"
+	corsAllowedOriginsEnv = "CORS_ALLOWED_ORIGINS"
 )
 
 // Config contiene únicamente la configuración necesaria para arrancar la API.
 type Config struct {
-	DatabaseURL   string
-	HTTPAddr      string
-	SMTPAddr      string
-	SMTPFrom      string
-	PublicBaseURL string
+	DatabaseURL        string
+	HTTPAddr           string
+	SMTPAddr           string
+	SMTPFrom           string
+	PublicBaseURL      string
+	CORSAllowedOrigins []string
 }
 
 // Load obtiene la configuración desde el entorno y falla antes de abrir puertos
@@ -61,12 +64,43 @@ func load(getenv func(string) string) (Config, error) {
 	if err != nil || parsedPublicURL.Scheme == "" || parsedPublicURL.Host == "" {
 		return Config{}, fmt.Errorf("%s debe ser una URL absoluta válida", publicBaseURLEnv)
 	}
+	corsAllowedOrigins, err := parseAllowedOrigins(getenv(corsAllowedOriginsEnv))
+	if err != nil {
+		return Config{}, err
+	}
 
 	return Config{
-		DatabaseURL:   databaseURL,
-		HTTPAddr:      httpAddr,
-		SMTPAddr:      smtpAddr,
-		SMTPFrom:      smtpFrom,
-		PublicBaseURL: publicBaseURL,
+		DatabaseURL:        databaseURL,
+		HTTPAddr:           httpAddr,
+		SMTPAddr:           smtpAddr,
+		SMTPFrom:           smtpFrom,
+		PublicBaseURL:      publicBaseURL,
+		CORSAllowedOrigins: corsAllowedOrigins,
 	}, nil
+}
+
+func parseAllowedOrigins(raw string) ([]string, error) {
+	if raw == "" {
+		return nil, fmt.Errorf("%s debe estar definido", corsAllowedOriginsEnv)
+	}
+
+	origins := make([]string, 0, len(strings.Split(raw, ",")))
+	seen := make(map[string]struct{})
+	for _, value := range strings.Split(raw, ",") {
+		origin := strings.TrimSpace(value)
+		parsed, err := url.Parse(origin)
+		if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" || parsed.User != nil || parsed.Path != "" || parsed.RawQuery != "" || parsed.Fragment != "" {
+			return nil, fmt.Errorf("%s contiene un origen inválido: %q", corsAllowedOriginsEnv, origin)
+		}
+		normalized := strings.ToLower(parsed.Scheme) + "://" + strings.ToLower(parsed.Host)
+		if _, duplicate := seen[normalized]; duplicate {
+			continue
+		}
+		seen[normalized] = struct{}{}
+		origins = append(origins, normalized)
+	}
+	if len(origins) == 0 {
+		return nil, fmt.Errorf("%s debe contener al menos un origen", corsAllowedOriginsEnv)
+	}
+	return origins, nil
 }
