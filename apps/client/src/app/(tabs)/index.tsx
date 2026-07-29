@@ -1,19 +1,21 @@
 import { ScrollView, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
-import { color, radius, space } from "@tournaments-manager/design-tokens";
+import { radius, space } from "@tournaments-manager/design-tokens";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
+import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { Button, Card, Screen, Text } from "@/shared/ui";
 
 export default function HomeScreen() {
   const { show } = useFeedback();
+  const { resolvedTheme } = usePreferences();
   const t = getTranslator();
 
   return (
     <Screen>
-      <StatusBar style="dark" />
+      <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -21,11 +23,6 @@ export default function HomeScreen() {
       >
         <Card>
           <View style={styles.hero}>
-            <View style={styles.badge}>
-              <Text variant="caption" color="inverse">
-                {t("home_badge")}
-              </Text>
-            </View>
             <Text variant="display">{t("home_hero")}</Text>
             <Text color="secondary" variant="bodyLarge">
               {t("home_introduction")}
@@ -65,12 +62,6 @@ export default function HomeScreen() {
             />
           </View>
         </Card>
-
-        <Card>
-          <Text variant="caption" color="secondary">
-            {t("home_footer")}
-          </Text>
-        </Card>
       </ScrollView>
     </Screen>
   );
@@ -85,10 +76,12 @@ function Step({
   title: string;
   description: string;
 }) {
+  const { colors } = usePreferences();
+
   return (
     <View style={styles.step}>
-      <View style={styles.stepNumber}>
-        <Text color="inverse">{number}</Text>
+      <View style={[styles.stepNumber, { borderColor: colors.text.primary }]}>
+        <Text>{number}</Text>
       </View>
       <View style={styles.stepContent}>
         <Text variant="bodyLarge">{title}</Text>
@@ -102,19 +95,12 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { gap: space[5], paddingBottom: space[12] },
   hero: { gap: space[4] },
-  badge: {
-    alignSelf: "flex-start",
-    backgroundColor: color.brand.accent,
-    borderRadius: radius.pill,
-    paddingHorizontal: space[3],
-    paddingVertical: space[1],
-  },
   section: { gap: space[2] },
   steps: { gap: space[5] },
   step: { flexDirection: "row", gap: space[3] },
   stepNumber: {
     alignItems: "center",
-    backgroundColor: color.brand.primary,
+    borderWidth: 1,
     borderRadius: radius.pill,
     height: 28,
     justifyContent: "center",

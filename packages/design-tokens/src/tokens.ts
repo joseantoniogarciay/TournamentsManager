@@ -7,6 +7,21 @@ export const color = {
   feedback: { success: "#027A48", warning: "#B54708", error: "#D92D20", info: "#155EEF" },
 } as const;
 
+export const gradient = {
+  brand: {
+    colors: ["#7F56D900", "#7F56D900", "#7F56D9"],
+    end: { x: 1, y: 1 },
+    locations: [0, 0.35, 1],
+    start: { x: 0, y: 0 },
+  },
+  brandButton: {
+    colors: ["#7F56D900", "#7F56D900", "#7F56D9"],
+    end: { x: 1, y: 1 },
+    locations: [0, 0.35, 1],
+    start: { x: 0.85, y: 0 },
+  },
+} as const;
+
 export const space = {
   0: 0,
   1: 4,

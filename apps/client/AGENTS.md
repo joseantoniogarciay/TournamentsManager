@@ -30,14 +30,29 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   iniciales son `es`, `en`, `it` y `fr`; cualquier locale no soportado usa
   inglés.
 - El selector web persistente y las preferencias de tema e idioma pertenecen a
-  un provider compartido, nunca a una pantalla. iOS y Android no muestran
-  selector de idioma.
+  un provider compartido, nunca a una pantalla. La raíz propaga el tema resuelto
+  también a React Navigation mediante el `ThemeProvider` de Expo Router; es
+  obligatorio para que las transiciones nativas no muestren un destello del tema
+  contrario. `NativeTabs` recibe además el tema resuelto en su host mediante
+  `unstable_nativeProps={{ colorScheme: resolvedTheme }}`: de otro modo iOS
+  hereda su propio esquema al crear o reutilizar una tab y muestra la apariencia
+  equivocada. No se fuerza `Appearance.setColorScheme` para corregir este efecto.
+  iOS y Android no muestran selector de idioma.
 - Las pantallas usan tokens semánticos y primitivas de `shared/ui`; no introducen
   hexadecimales, medidas repetidas, fuentes remotas ni una librería de UI sin ADR
   aceptado.
 - Una card mantiene su padding interno definido por la primitiva y añade siempre
   20 px de margen exterior horizontal. El layout reserva además 20 px entre
   cards hermanas; no se corrige esa separación alterando el padding de la card.
+- `Screen` no añade padding horizontal: ese margen exterior pertenece a `Card`.
+  Añadirlo en ambos sitios duplica la separación lateral.
+- Toda pantalla deja al menos 10 px entre el área segura o el borde inferior de
+  una navigation bar y su primer contenido; la implementación vigente usa 12 px
+  mediante `Screen`.
+- No se usa `SafeAreaView` de React Native cuando haya que sumar padding propio:
+  en iOS puede ignorarlo. `Screen` combina `useSafeAreaInsets` con una `View`.
+  Las rutas bajo una cabecera nativa declaran `topInset="navigation-bar"` para
+  no sumar por segunda vez el inset superior que ya aporta la navegación.
 - Toda ruta respeta la URL canónica y la presentación acordada: página directa e
   historial normal en web; modal y cierre seguro en móvil cuando corresponda.
 - Una pantalla no llama directamente al cliente OpenAPI generado. La feature
@@ -47,6 +62,28 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   expresar el estado real disponible y sus estados de carga, vacío y error.
 - Botones y controles mantienen semántica accesible, un objetivo táctil mínimo
   de 44 px y no permiten envíos duplicados.
+- Los formularios no muestran una acción de cancelar. La salida de la ruta se
+  hace mediante el botón de atrás de la barra de navegación, que no muestra
+  texto.
+
+## Desarrollo en simulador con Expo Go
+
+- Si se solicita Expo Go en el simulador iOS, inicia Metro con
+  `pnpm --filter @tournaments-manager/client exec expo start --lan`, mantenlo
+  activo y abre en Expo Go la URL `exp://` LAN que muestra Metro. No uses
+  `--localhost` ni construyas manualmente una URL `exp://127.0.0.1:8081`:
+  Metro puede quedar escuchando solo en IPv6 (`::1`) y Expo Go no alcanzará esa
+  dirección IPv4.
+- Antes de abrir el proyecto, ejecuta
+  `pnpm --filter @tournaments-manager/client exec expo install --check`. Expo Go
+  solo carga módulos nativos incluidos en su SDK; usa las versiones compatibles
+  que indique Expo en lugar de versiones más recientes no incluidas.
+- Al añadir o actualizar una dependencia con módulo nativo, no fijes la última
+  versión publicada por npm ni ejecutes `pnpm add` directamente. Ejecuta
+  `pnpm --filter @tournaments-manager/client exec expo install <paquete>` y
+  conserva la versión que Expo resuelva para el SDK fijado. Después, vuelve a
+  ejecutar `expo install --check`. Solo se aparta de esa versión con una decisión
+  explícita del usuario y un development build que compile el módulo nativo.
 
 ## Cierre obligatorio
 

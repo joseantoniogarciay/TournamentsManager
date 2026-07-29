@@ -164,6 +164,17 @@ pnpm --filter @tournaments-manager/client start
 pnpm --filter @tournaments-manager/client web
 ```
 
+El cliente declara dos variantes de aplicación en `apps/client/app.config.ts`:
+`development` muestra **Fast Tourney Dev** y `production` muestra **Fast
+Tourney**. Se seleccionan con `APP_ENV` y comparten un icono de 1024 × 1024.
+Los comandos `start:dev`, `ios:dev` e `ios:prod` del workspace cliente evitan
+configurar la variante a mano. La configuración de Expo y sus config plugins
+siguen siendo la fuente de verdad: no se crean targets Xcode persistentes para
+separar entornos mientras CNG pueda generar sus diferencias de forma declarativa.
+Las variantes iOS declaran `com.fasttourney.app.dev` y `com.fasttourney.app`.
+Antes de distribuir una build nativa se verificará que ambos identificadores
+estén registrados y controlados en la cuenta de Apple.
+
 La exportación web forma parte de `make verify` y se puede ejecutar de forma
 aislada con `make client-web-export`. Los directorios `.expo`, `ios` y `android`
 siguen sin versionarse; se generan solo mediante operaciones explícitas de Expo.

@@ -1,6 +1,12 @@
+import type { ReactNode } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 
-import { color, control, radius, space } from "@tournaments-manager/design-tokens";
+import { LinearGradient } from "expo-linear-gradient";
+
+import { color, control, gradient, radius, space } from "@tournaments-manager/design-tokens";
+
+import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 import { Text } from "./text";
 
@@ -19,44 +25,80 @@ export function Button({
   loading = false,
   disabled = false,
 }: Props) {
+  const { colors } = usePreferences();
   const isDisabled = disabled || loading;
+
+  const content = (
+    <View style={styles.content}>
+      {loading ? (
+        <ActivityIndicator
+          color={variant === "primary" ? color.text.inverse : color.brand.primary}
+        />
+      ) : null}
+      <Text
+        color={
+          variant === "primary" ? "onBrand" : variant === "destructive" ? "inverse" : "primary"
+        }
+      >
+        {label}
+      </Text>
+    </View>
+  );
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ busy: loading, disabled: isDisabled }}
       disabled={isDisabled}
       onPress={onPress}
-      style={[styles.base, styles[variant], isDisabled && styles.disabled]}
+      style={isDisabled ? styles.disabled : undefined}
     >
-      <View style={styles.content}>
-        {loading ? (
-          <ActivityIndicator
-            color={variant === "primary" ? color.text.inverse : color.brand.primary}
-          />
-        ) : null}
-        <Text color={variant === "primary" || variant === "destructive" ? "inverse" : "primary"}>
-          {label}
-        </Text>
-      </View>
+      {variant === "primary" ? <BrandGradient style={styles.base}>{content}</BrandGradient> : null}
+      {variant === "secondary" ? (
+        <View style={[styles.base, styles.outline]}>{content}</View>
+      ) : null}
+      {variant === "ghost" || variant === "destructive" ? (
+        <View
+          style={[
+            styles.base,
+            variant === "destructive"
+              ? { backgroundColor: colors.feedback.error }
+              : { backgroundColor: "transparent" },
+          ]}
+        >
+          {content}
+        </View>
+      ) : null}
     </Pressable>
   );
 }
 
+function BrandGradient({ children, style }: { children: ReactNode; style: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[styles.brandGradient, style]}>
+      <LinearGradient
+        {...gradient.brandButton}
+        pointerEvents="none"
+        style={StyleSheet.absoluteFill}
+      />
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  brandGradient: { backgroundColor: color.brand.primary, overflow: "hidden" },
   base: {
     minHeight: control.minHeight,
-    borderRadius: radius.control,
+    borderRadius: radius.pill,
     justifyContent: "center",
     paddingHorizontal: control.horizontalPadding,
   },
   content: { alignItems: "center", flexDirection: "row", gap: space[2], justifyContent: "center" },
-  primary: { backgroundColor: color.brand.primary },
-  secondary: {
-    backgroundColor: color.surface.default,
-    borderColor: color.border.default,
+  outline: {
+    borderColor: color.brand.primary,
     borderWidth: 1,
+    borderRadius: radius.pill,
   },
-  ghost: { backgroundColor: "transparent" },
-  destructive: { backgroundColor: color.feedback.error },
   disabled: { opacity: 0.55 },
 });

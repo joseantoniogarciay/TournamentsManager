@@ -29,6 +29,105 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-28 — El degradado conserva jerarquía cuando no colorea todo
+
+- **Aprendido:** aplicar el degradado de marca a la acción primary filled crea
+  una relación directa con el icono; limitarlo al borde de 1 px en la acción
+  secondary conserva contraste y evita competir con la acción principal.
+- **Evidencia:** `Button` parte de azul sólido y superpone el token
+  `gradient.brandButton`, variante horizontal de `gradient.brand`: mantiene la
+  dirección visual del icono cuadrado al concentrar el recorrido en el extremo
+  derecho. El texto sobre esa marca usa un token blanco independiente del tema, no
+  el color inverso de la superficie de la app.
+- **Coste aceptado:** las acciones destructivas siguen usando rojo sólido, pues
+  el degradado de marca no debe diluir su semántica de riesgo.
+
+### 2026-07-29 — El degradado se ajusta desde el token, no desde cada botón
+
+- **Aprendido:** adelantar la entrada del violeta al 35 % del recorrido aumenta
+  su presencia sin cambiar el ángulo ni convertir toda la acción en una superficie
+  violeta.
+- **Evidencia:** `gradient.brand` y `gradient.brandButton` comparten las mismas
+  paradas; los botones conservan una geometría horizontal específica.
+- **Coste aceptado:** la barra de tabs nativa mantiene un tint azul sólido, porque
+  su API no admite un degradado uniforme para icono y etiqueta.
+
+### 2026-07-29 — Semántica de indicadores
+
+- **Aprendido:** el color principal comunica una acción disponible. Un número de
+  paso estático debe usar el color de texto y un borde, no un fondo de marca, para
+  no adquirir una apariencia pulsable.
+- **Evidencia:** los pasos orientativos de la home consumen `colors.text.primary`
+  tanto para el número como para el borde circular, y se adaptan al tema claro u
+  oscuro sin usar blanco o negro puros.
+
+### 2026-07-29 — Un botón es una acción, no una caja
+
+- **Aprendido:** un radio de 12 px encaja en campos, pero un botón de 44 px de
+  alto necesita extremos semicirculares para expresar mejor que es una acción.
+- **Evidencia:** la primitiva `Button` usa el token `radius.pill` en todas sus
+  variantes; el botón secondary mantiene un borde azul de marca y deja
+  transparente su interior para revelar la superficie que hay detrás.
+- **Coste aceptado:** el contraste del borde y del texto se evalúa contra la
+  superficie contenedora; por ello las pantallas siguen usando tokens de fondo
+  semánticos y no colores arbitrarios.
+
+### 2026-07-29 — Las acciones de proveedor caben en su identidad visual
+
+- **Aprendido:** cuando una acción de proveedor se entiende por su marca, un
+  botón solo con el icono reduce ruido visual sin perder accesibilidad.
+- **Evidencia:** la acción de Google en Cuenta es circular, está centrada en su
+  card, conserva un objetivo de 48 px y expone su estado y etiqueta localizada
+  al lector de pantalla.
+- **Coste aceptado:** el PNG oficial se versiona como asset local para no añadir
+  una dependencia de iconos ni depender de red durante el renderizado.
+
+### 2026-07-29 — La navegación persistente no se duplica como contenido
+
+- **Aprendido:** una card que solo recuerda que existe una sección permanente no
+  mejora la orientación. La home conserva contenido de bienvenida y la tab
+  Torneos mantiene la responsabilidad de acceso a la biblioteca.
+- **Evidencia:** se retiró el bloque informativo final de la home; Inicio mantiene
+  la acción principal, el contexto y los pasos orientativos.
+
+### 2026-07-28 — Dos apps no obligan a mantener dos proyectos Xcode
+
+- **Aprendido:** Expo CNG permite resolver nombre, esquema, icono y futuras
+  diferencias nativas desde una configuración por entorno. Así desarrollo y
+  producción se pueden instalar como apps distintas sin convertir directorios
+  generados en fuente versionada.
+- **Evidencia:** `apps/client/app.config.ts` selecciona `Fast Tourney Dev` o
+  `Fast Tourney` con `APP_ENV` y usa el icono común de 1024 × 1024.
+- **Coste aceptado:** los bundle identifiers y perfiles de distribución esperan
+  a disponer de un dominio controlado. Se evaluarán targets iOS separados solo
+  si un config plugin no puede aislar una dependencia nativa necesaria.
+
+### 2026-07-28 — Una preferencia local no es un permiso del sistema
+
+- **Aprendido:** el tema es una preferencia de presentación y puede persistirse
+  localmente para cualquier visitante; el permiso de notificaciones depende del
+  sistema operativo, requiere una integración nativa y no se puede representar
+  como un switch local que aparente concederlo.
+- **Evidencia:** `PreferencesProvider` resuelve y persiste `system`, `light` y
+  `dark` para todas las rutas, y la raíz entrega el tema correspondiente a React
+  Navigation para que las transiciones nativas no usen temporalmente el tema
+  contrario. El ajuste de notificaciones permanece deshabilitado y explica su
+  límite, coherente con el alcance de `PRODUCT.md`.
+- **Coste aceptado:** no se incorpora aún `expo-notifications`, configuración
+  nativa ni almacenamiento de preferencias de entrega. Requerirán una decisión
+  de producto y el diseño del ciclo de permiso antes de activarlos.
+
+### 2026-07-28 — Un formulario visible no equivale a una sesión inventada
+
+- **Aprendido:** una interfaz de acceso puede preparar el recorrido local y la
+  ruta de alta sin afirmar que el cliente ya establece una sesión cuando el
+  handler y el adaptador HTTP todavía no existen.
+- **Evidencia:** Cuenta ofrece correo, contraseña y registro en una ruta
+  profunda; las acciones comunican su indisponibilidad actual y Google se marca
+  como próximo, conforme al contrato y ADR-0050.
+- **Coste aceptado:** conectar el formulario exige implementar el adaptador de
+  sesión y el flujo OIDC real; los controles actuales no envían credenciales.
+
 ### 2026-07-28 — El tipado no sustituye un bundle de Expo
 
 - **Aprendido:** TypeScript no carga Metro ni resuelve el árbol de rutas en la
