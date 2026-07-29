@@ -8,7 +8,18 @@ export const color = {
 } as const;
 
 export const gradient = {
-  brand: ["#155EEF", "#7F56D9"],
+  brand: {
+    colors: ["#7F56D900", "#7F56D900", "#7F56D9"],
+    end: { x: 1, y: 1 },
+    locations: [0, 0.35, 1],
+    start: { x: 0, y: 0 },
+  },
+  brandButton: {
+    colors: ["#7F56D900", "#7F56D900", "#7F56D9"],
+    end: { x: 1, y: 1 },
+    locations: [0, 0.35, 1],
+    start: { x: 0.85, y: 0 },
+  },
 } as const;
 
 export const space = {

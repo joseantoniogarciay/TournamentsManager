@@ -1,13 +1,13 @@
 import { type PropsWithChildren } from "react";
 import { StyleSheet, Text as NativeText, type TextStyle } from "react-native";
 
-import { typography } from "@tournaments-manager/design-tokens";
+import { color, typography } from "@tournaments-manager/design-tokens";
 
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 type Props = PropsWithChildren<{
   variant?: "body" | "bodyLarge" | "caption" | "title" | "display";
-  color?: "primary" | "secondary" | "inverse" | "error";
+  color?: "primary" | "secondary" | "inverse" | "onBrand" | "error";
 }>;
 
 export function Text({ children, variant = "body", color: textColor = "primary" }: Props) {
@@ -16,6 +16,7 @@ export function Text({ children, variant = "body", color: textColor = "primary" 
     primary: { color: colors.text.primary },
     secondary: { color: colors.text.secondary },
     inverse: { color: colors.text.inverse },
+    onBrand: { color: color.text.inverse },
     error: { color: colors.feedback.error },
   };
   return (

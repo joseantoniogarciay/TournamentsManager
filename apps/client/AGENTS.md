@@ -33,7 +33,10 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   un provider compartido, nunca a una pantalla. La raíz propaga el tema resuelto
   también a React Navigation mediante el `ThemeProvider` de Expo Router; es
   obligatorio para que las transiciones nativas no muestren un destello del tema
-  contrario. No se fuerza `Appearance.setColorScheme` para corregir este efecto.
+  contrario. `NativeTabs` recibe además el tema resuelto en su host mediante
+  `unstable_nativeProps={{ colorScheme: resolvedTheme }}`: de otro modo iOS
+  hereda su propio esquema al crear o reutilizar una tab y muestra la apariencia
+  equivocada. No se fuerza `Appearance.setColorScheme` para corregir este efecto.
   iOS y Android no muestran selector de idioma.
 - Las pantallas usan tokens semánticos y primitivas de `shared/ui`; no introducen
   hexadecimales, medidas repetidas, fuentes remotas ni una librería de UI sin ADR
@@ -62,6 +65,25 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Los formularios no muestran una acción de cancelar. La salida de la ruta se
   hace mediante el botón de atrás de la barra de navegación, que no muestra
   texto.
+
+## Desarrollo en simulador con Expo Go
+
+- Si se solicita Expo Go en el simulador iOS, inicia Metro con
+  `pnpm --filter @tournaments-manager/client exec expo start --lan`, mantenlo
+  activo y abre en Expo Go la URL `exp://` LAN que muestra Metro. No uses
+  `--localhost` ni construyas manualmente una URL `exp://127.0.0.1:8081`:
+  Metro puede quedar escuchando solo en IPv6 (`::1`) y Expo Go no alcanzará esa
+  dirección IPv4.
+- Antes de abrir el proyecto, ejecuta
+  `pnpm --filter @tournaments-manager/client exec expo install --check`. Expo Go
+  solo carga módulos nativos incluidos en su SDK; usa las versiones compatibles
+  que indique Expo en lugar de versiones más recientes no incluidas.
+- Al añadir o actualizar una dependencia con módulo nativo, no fijes la última
+  versión publicada por npm ni ejecutes `pnpm add` directamente. Ejecuta
+  `pnpm --filter @tournaments-manager/client exec expo install <paquete>` y
+  conserva la versión que Expo resuelva para el SDK fijado. Después, vuelve a
+  ejecutar `expo install --check`. Solo se aparta de esa versión con una decisión
+  explícita del usuario y un development build que compile el módulo nativo.
 
 ## Cierre obligatorio
 

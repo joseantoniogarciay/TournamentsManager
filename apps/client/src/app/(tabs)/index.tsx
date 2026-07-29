@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
-import { color, radius, space } from "@tournaments-manager/design-tokens";
+import { radius, space } from "@tournaments-manager/design-tokens";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
@@ -62,12 +62,6 @@ export default function HomeScreen() {
             />
           </View>
         </Card>
-
-        <Card>
-          <Text variant="caption" color="secondary">
-            {t("home_footer")}
-          </Text>
-        </Card>
       </ScrollView>
     </Screen>
   );
@@ -82,10 +76,12 @@ function Step({
   title: string;
   description: string;
 }) {
+  const { colors } = usePreferences();
+
   return (
     <View style={styles.step}>
-      <View style={styles.stepNumber}>
-        <Text color="inverse">{number}</Text>
+      <View style={[styles.stepNumber, { borderColor: colors.text.primary }]}>
+        <Text>{number}</Text>
       </View>
       <View style={styles.stepContent}>
         <Text variant="bodyLarge">{title}</Text>
@@ -104,7 +100,7 @@ const styles = StyleSheet.create({
   step: { flexDirection: "row", gap: space[3] },
   stepNumber: {
     alignItems: "center",
-    backgroundColor: color.brand.primary,
+    borderWidth: 1,
     borderRadius: radius.pill,
     height: 28,
     justifyContent: "center",

@@ -1,12 +1,20 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
+import { color } from "@tournaments-manager/design-tokens";
+
 import { getTranslator } from "@/shared/i18n/locale";
+import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 export default function TabLayout() {
   const t = getTranslator();
+  const { resolvedTheme } = usePreferences();
 
   return (
-    <NativeTabs minimizeBehavior="onScrollDown">
+    <NativeTabs
+      minimizeBehavior="onScrollDown"
+      tintColor={color.brand.primary}
+      unstable_nativeProps={{ colorScheme: resolvedTheme }}
+    >
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>{t("nav_home")}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon

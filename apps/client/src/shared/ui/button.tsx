@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+import type { StyleProp, ViewStyle } from "react-native";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 
 import { LinearGradient } from "expo-linear-gradient";
@@ -30,10 +32,14 @@ export function Button({
     <View style={styles.content}>
       {loading ? (
         <ActivityIndicator
-          color={variant === "primary" ? colors.text.inverse : color.brand.primary}
+          color={variant === "primary" ? color.text.inverse : color.brand.primary}
         />
       ) : null}
-      <Text color={variant === "primary" || variant === "destructive" ? "inverse" : "primary"}>
+      <Text
+        color={
+          variant === "primary" ? "onBrand" : variant === "destructive" ? "inverse" : "primary"
+        }
+      >
         {label}
       </Text>
     </View>
@@ -47,17 +53,13 @@ export function Button({
       onPress={onPress}
       style={isDisabled ? styles.disabled : undefined}
     >
-      {variant === "primary" ? (
-        <LinearGradient colors={[...gradient.brand]} style={styles.base}>
-          {content}
-        </LinearGradient>
-      ) : null}
+      {variant === "primary" ? <BrandGradient style={styles.base}>{content}</BrandGradient> : null}
       {variant === "secondary" ? (
-        <LinearGradient colors={[...gradient.brand]} style={styles.outline}>
+        <BrandGradient style={styles.outline}>
           <View style={[styles.outlineContent, { backgroundColor: colors.surface.default }]}>
             {content}
           </View>
-        </LinearGradient>
+        </BrandGradient>
       ) : null}
       {variant === "ghost" || variant === "destructive" ? (
         <View
@@ -75,7 +77,21 @@ export function Button({
   );
 }
 
+function BrandGradient({ children, style }: { children: ReactNode; style: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[styles.brandGradient, style]}>
+      <LinearGradient
+        {...gradient.brandButton}
+        pointerEvents="none"
+        style={StyleSheet.absoluteFill}
+      />
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  brandGradient: { backgroundColor: color.brand.primary, overflow: "hidden" },
   base: {
     minHeight: control.minHeight,
     borderRadius: radius.control,

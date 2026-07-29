@@ -34,10 +34,40 @@ Para cada capacidad se sigue el ciclo:
 - **Aprendido:** aplicar el degradado de marca a la acción primary filled crea
   una relación directa con el icono; limitarlo al borde de 1 px en la acción
   secondary conserva contraste y evita competir con la acción principal.
-- **Evidencia:** el token `gradient.brand` se reutiliza en `Button` y el icono
-  Fast Tourney desplaza el violeta hacia el centro del fondo.
+- **Evidencia:** `Button` parte de azul sólido y superpone el token
+  `gradient.brandButton`, variante horizontal de `gradient.brand`: mantiene la
+  dirección visual del icono cuadrado al concentrar el recorrido en el extremo
+  derecho. El texto sobre esa marca usa un token blanco independiente del tema, no
+  el color inverso de la superficie de la app.
 - **Coste aceptado:** las acciones destructivas siguen usando rojo sólido, pues
   el degradado de marca no debe diluir su semántica de riesgo.
+
+### 2026-07-29 — El degradado se ajusta desde el token, no desde cada botón
+
+- **Aprendido:** adelantar la entrada del violeta al 35 % del recorrido aumenta
+  su presencia sin cambiar el ángulo ni convertir toda la acción en una superficie
+  violeta.
+- **Evidencia:** `gradient.brand` y `gradient.brandButton` comparten las mismas
+  paradas; los botones conservan una geometría horizontal específica.
+- **Coste aceptado:** la barra de tabs nativa mantiene un tint azul sólido, porque
+  su API no admite un degradado uniforme para icono y etiqueta.
+
+### 2026-07-29 — Semántica de indicadores
+
+- **Aprendido:** el color principal comunica una acción disponible. Un número de
+  paso estático debe usar el color de texto y un borde, no un fondo de marca, para
+  no adquirir una apariencia pulsable.
+- **Evidencia:** los pasos orientativos de la home consumen `colors.text.primary`
+  tanto para el número como para el borde circular, y se adaptan al tema claro u
+  oscuro sin usar blanco o negro puros.
+
+### 2026-07-29 — La navegación persistente no se duplica como contenido
+
+- **Aprendido:** una card que solo recuerda que existe una sección permanente no
+  mejora la orientación. La home conserva contenido de bienvenida y la tab
+  Torneos mantiene la responsabilidad de acceso a la biblioteca.
+- **Evidencia:** se retiró el bloque informativo final de la home; Inicio mantiene
+  la acción principal, el contexto y los pasos orientativos.
 
 ### 2026-07-28 — Dos apps no obligan a mantener dos proyectos Xcode
 

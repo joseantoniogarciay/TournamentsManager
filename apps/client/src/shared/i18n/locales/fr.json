@@ -19,8 +19,8 @@
   "home_step_1_title": "Définissez le championnat",
   "home_step_2_description": "Vérifiez le tournoi avant de le partager.",
   "home_step_2_title": "Organisez votre groupe",
-  "home_step_3_description": "Consultez le score pendant le match.",
-  "home_step_3_title": "Suivez chaque journée",
+  "home_step_3_description": "Suivez le classement et découvrez qui devient champion.",
+  "home_step_3_title": "Jouez les matchs et notez les résultats",
   "link_confirmation_description": "Cette page établira la session lorsque le flux d'identité sera implémenté.",
   "link_confirmation_title": "Confirmation du lien",
   "nav_account": "Compte",
@@ -55,6 +55,6 @@
   "validation_email": "Saisissez une adresse e-mail valide.",
   "validation_password_required": "Saisissez votre mot de passe.",
   "validation_username_required": "Saisissez un nom d'utilisateur.",
-  "tournaments_description": "Vos tournois gérés et suivis apparaîtront ici lorsque la session sera disponible.",
+  "tournaments_description": "Vos tournois gérés et suivis apparaîtront ici après vous être connecté.",
   "tournaments_title": "Tournois"
 }

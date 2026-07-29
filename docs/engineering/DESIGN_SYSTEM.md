@@ -12,9 +12,20 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 
 - **Color:** azul como acción primaria; violeta como acento; superficies claras;
   verde, ámbar y rojo reservados para estado y feedback.
-- **Degradado de marca:** azul `#155EEF` a violeta `#7F56D9`; las acciones
-  primarias filled lo usan como superficie y las secundarias lo reservan para un
-  borde de 1 px, manteniendo la superficie interior neutra.
+- **Indicadores informativos:** un número de paso o un marcador no interactivo
+  usa borde y texto primarios del tema; no emplea el color de acción para evitar
+  que parezca un botón.
+- **Degradado de marca:** una base azul `#155EEF` recibe una superposición violeta
+  `#7F56D9` limitada a la esquina inferior derecha. Su eje es diagonal hacia esa
+  esquina, como en el icono de la aplicación, pero el violeta se inicia después de
+  la esquina superior derecha y entra desde el 35 % del recorrido: no tiñe todo el
+  lateral. El icono cuadrado usa el
+  token `gradient.brand`; los botones horizontales usan `gradient.brandButton`,
+  cuya geometría mantiene el ángulo visual al recorrer poca anchura y toda la
+  altura. Las acciones primarias filled lo usan como superficie y llevan texto y
+  loader blancos en ambos temas; las secundarias lo reservan para un borde de 1 px.
+- **Navegación por tabs:** la tab activa usa el azul primario sólido. La barra
+  nativa no admite un degradado como tint para icono y etiqueta.
 - **Tipografía:** familia de sistema por plataforma; escala de 12 a 32 px y pesos
   de 400 a 700. Así se preserva legibilidad nativa sin dependencia externa.
 - **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base.
@@ -38,8 +49,9 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 
 `Card` está implementada en `shared/ui`: aplica superficie, borde, radio,
 padding y margen exterior horizontal semánticos. La home la usa para separar
-bloques de acción, explicación, pasos y contexto; no sustituye a los
-contenedores de layout.
+bloques de acción, explicación y pasos; no sustituye a los contenedores de
+layout. El acceso persistente a la biblioteca de torneos vive en su tab y no se
+duplica como una card informativa en la home.
 
 La primera home usa las mismas primitivas de texto, botón y superficie: presenta
 una única acción principal, un acceso secundario a cuenta y contenido orientativo

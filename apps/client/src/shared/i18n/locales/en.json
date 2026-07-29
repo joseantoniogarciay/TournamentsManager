@@ -19,8 +19,8 @@
   "home_step_1_title": "Define the league",
   "home_step_2_description": "Review the tournament before you share it.",
   "home_step_2_title": "Bring people together",
-  "home_step_3_description": "Check the score while it is in play.",
-  "home_step_3_title": "Follow every matchday",
+  "home_step_3_description": "Follow the standings and see who becomes champion.",
+  "home_step_3_title": "Play the matches and record the results",
   "link_confirmation_description": "This route will establish the session when the identity flow is implemented.",
   "link_confirmation_title": "Link confirmation",
   "nav_account": "Account",
@@ -55,6 +55,6 @@
   "validation_email": "Enter a valid email address.",
   "validation_password_required": "Enter your password.",
   "validation_username_required": "Enter a username.",
-  "tournaments_description": "Your managed and followed tournaments will appear here when your session is available.",
+  "tournaments_description": "Your managed and followed tournaments will appear here once you have signed in.",
   "tournaments_title": "Tournaments"
 }

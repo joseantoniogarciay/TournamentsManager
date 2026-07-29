@@ -19,8 +19,8 @@
   "home_step_1_title": "Define la liga",
   "home_step_2_description": "Revisa el torneo antes de compartirlo.",
   "home_step_2_title": "Organiza a tu gente",
-  "home_step_3_description": "Consulta el resultado cuando esté en juego.",
-  "home_step_3_title": "Sigue cada jornada",
+  "home_step_3_description": "Sigue la clasificación y descubre quién se corona campeón.",
+  "home_step_3_title": "Juega los partidos y apunta los resultados",
   "link_confirmation_description": "Esta ruta establecerá la sesión cuando el flujo de identidad esté implementado.",
   "link_confirmation_title": "Confirmación de enlace",
   "nav_account": "Cuenta",
@@ -55,6 +55,6 @@
   "validation_email": "Introduce un correo electrónico válido.",
   "validation_password_required": "Introduce tu contraseña.",
   "validation_username_required": "Introduce un nombre de usuario.",
-  "tournaments_description": "Tus torneos administrados y seguidos aparecerán aquí cuando la sesión esté disponible.",
+  "tournaments_description": "Tus torneos administrados y seguidos aparecerán aquí cuando hayas iniciado sesión.",
   "tournaments_title": "Torneos"
 }
