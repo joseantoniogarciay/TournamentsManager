@@ -1,39 +1,181 @@
-import { createContext, type PropsWithChildren, useCallback, useContext, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import {
+  createContext,
+  type PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  AccessibilityInfo,
+  Animated,
+  PanResponder,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { banner, space } from "@tournaments-manager/design-tokens";
+import { banner, motion, radius, space } from "@tournaments-manager/design-tokens";
 
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { Text } from "@/shared/ui";
 
 type Feedback = { message: string; kind: "network-error" | "generic-error" | "success" };
+type ActiveFeedback = Feedback & { id: number };
 type FeedbackContextValue = { show: (feedback: Feedback) => void };
 const FeedbackContext = createContext<FeedbackContextValue | null>(null);
 
 export function FeedbackProvider({ children }: PropsWithChildren) {
   const { colors } = usePreferences();
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const show = useCallback((next: Feedback) => {
-    setFeedback(next);
-    setTimeout(() => setFeedback(null), banner.autoDismissMs);
+  const [feedback, setFeedback] = useState<ActiveFeedback | null>(null);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const insets = useSafeAreaInsets();
+  const visibility = useRef(new Animated.Value(0)).current;
+  const dragY = useRef(new Animated.Value(0)).current;
+  const activeFeedbackId = useRef<number | null>(null);
+  const nextFeedbackId = useRef(0);
+  const autoDismissTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    void AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
+    const subscription = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReducedMotion,
+    );
+    return () => subscription.remove();
   }, []);
+
+  const clearAutoDismiss = useCallback(() => {
+    if (autoDismissTimeout.current) clearTimeout(autoDismissTimeout.current);
+    autoDismissTimeout.current = null;
+  }, []);
+
+  const dismiss = useCallback(
+    (id = activeFeedbackId.current) => {
+      if (id === null || id !== activeFeedbackId.current) return;
+
+      clearAutoDismiss();
+      if (reducedMotion) {
+        activeFeedbackId.current = null;
+        setFeedback(null);
+        return;
+      }
+
+      visibility.stopAnimation();
+      Animated.timing(visibility, {
+        duration: motion.enterExit,
+        toValue: 0,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished && activeFeedbackId.current === id) {
+          activeFeedbackId.current = null;
+          setFeedback(null);
+        }
+      });
+    },
+    [clearAutoDismiss, reducedMotion, visibility],
+  );
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gesture) =>
+          gesture.dy < -space[2] && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+        onPanResponderMove: (_, gesture) => dragY.setValue(Math.min(gesture.dy, 0)),
+        onPanResponderRelease: (_, gesture) => {
+          if (gesture.dy <= -space[10] || gesture.vy <= -0.5) {
+            dismiss();
+            return;
+          }
+
+          Animated.timing(dragY, {
+            duration: motion.feedback,
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        },
+        onPanResponderTerminate: () => {
+          Animated.timing(dragY, {
+            duration: motion.feedback,
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        },
+      }),
+    [dismiss, dragY],
+  );
+
+  useEffect(() => {
+    if (!feedback) return;
+
+    visibility.stopAnimation();
+    if (reducedMotion) {
+      visibility.setValue(1);
+      return;
+    }
+
+    visibility.setValue(0);
+    Animated.timing(visibility, {
+      duration: motion.enterExit,
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  }, [feedback, reducedMotion, visibility]);
+
+  useEffect(() => {
+    return clearAutoDismiss;
+  }, [clearAutoDismiss]);
+
+  const show = useCallback(
+    (next: Feedback) => {
+      clearAutoDismiss();
+      visibility.stopAnimation();
+      dragY.stopAnimation();
+      dragY.setValue(0);
+
+      const id = ++nextFeedbackId.current;
+      activeFeedbackId.current = id;
+      setFeedback({ ...next, id });
+      autoDismissTimeout.current = setTimeout(() => dismiss(id), banner.autoDismissMs);
+    },
+    [clearAutoDismiss, dismiss, dragY, visibility],
+  );
+
   return (
     <FeedbackContext.Provider value={{ show }}>
       <View style={styles.root}>
         {feedback ? (
-          <Pressable
-            accessibilityRole="alert"
-            onPress={() => setFeedback(null)}
+          <Animated.View
+            {...panResponder.panHandlers}
             style={[
               styles.banner,
               {
-                backgroundColor:
+                backgroundColor: colors.surface.default,
+                borderColor:
                   feedback.kind === "success" ? colors.feedback.success : colors.feedback.error,
+                opacity: visibility,
+                top: insets.top + space[1],
+                transform: [
+                  {
+                    translateY: Animated.add(
+                      visibility.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-space[3], 0],
+                      }),
+                      dragY,
+                    ),
+                  },
+                ],
               },
             ]}
           >
-            <Text color="inverse">{feedback.message}</Text>
-          </Pressable>
+            <Pressable accessibilityRole="alert" onPress={() => dismiss(feedback.id)}>
+              <Text>{feedback.message}</Text>
+            </Pressable>
+          </Animated.View>
         ) : null}
         {children}
       </View>
@@ -50,11 +192,12 @@ export function useFeedback() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   banner: {
-    left: space[4],
+    borderRadius: radius.card,
+    borderWidth: 1,
+    left: space[5],
     padding: space[3],
     position: "absolute",
-    right: space[4],
-    top: space[4],
+    right: space[5],
     zIndex: 1,
   },
 });

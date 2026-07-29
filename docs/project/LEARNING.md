@@ -29,6 +29,33 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-29 — El espacio de una tab superpuesta es parte del scroll
+
+- **Aprendido:** reservar el área de la barra de tabs como padding de la pantalla
+  acorta visualmente toda la vista. La superficie debe alcanzar el borde inferior
+  y el margen de seguridad debe pertenecer al contenedor desplazable.
+- **Evidencia:** `Screen` admite omitir su inset inferior en rutas bajo
+  `NativeTabs`; Inicio, Torneos y las rutas de Cuenta lo hacen. Los `ScrollView`
+  de esos flujos mantienen su `paddingBottom` de `space[12]`, de modo que el
+  último control se puede llevar por encima de la barra nativa.
+- **Coste aceptado:** no se introduce una segunda abstracción de layout ni se
+  fija una altura de tab bar, que variaría según plataforma y versión del sistema.
+
+### 2026-07-29 — El feedback global también pertenece al área segura
+
+- **Aprendido:** un aviso superpuesto debe calcular su posición desde el inset
+  seguro, no desde un margen fijo; de otro modo, en un iPhone con notch puede
+  quedar oculto detrás del sistema.
+- **Evidencia:** `FeedbackProvider` posiciona el banner tras el inset superior,
+  adopta el radio y margen lateral de una card y anima entrada y salida con el
+  token compartido `motion.enterExit`. También identifica cada aviso activo,
+  cancela su temporizador y sustituye de forma segura el anterior cuando llega
+  un mensaje nuevo. El toque y un arrastre vertical hacia arriba descartan el
+  aviso; los arrastres cortos se recuperan con `motion.feedback`.
+- **Coste aceptado:** la transición se omite cuando el sistema solicita
+  movimiento reducido; no se añade una librería ni una jerarquía nueva para un
+  único aviso global.
+
 ### 2026-07-28 — El degradado conserva jerarquía cuando no colorea todo
 
 - **Aprendido:** aplicar el degradado de marca a la acción primary filled crea

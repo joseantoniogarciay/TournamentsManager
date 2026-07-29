@@ -13,7 +13,7 @@ export default function AccountSettingsScreen() {
   const { colors, setThemePreference, themePreference } = usePreferences();
 
   return (
-    <Screen topInset="navigation-bar">
+    <Screen bottomInset="none" topInset="navigation-bar">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Card>
           <View style={styles.section}>

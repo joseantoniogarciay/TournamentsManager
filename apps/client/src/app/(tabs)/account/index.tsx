@@ -30,7 +30,7 @@ export default function AccountScreen() {
   };
 
   return (
-    <Screen topInset="navigation-bar">
+    <Screen bottomInset="none" topInset="navigation-bar">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Card>
           <View style={styles.form}>

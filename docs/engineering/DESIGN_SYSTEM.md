@@ -26,6 +26,11 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
   loader blancos en ambos temas; las secundarias lo reservan para un borde de 1 px.
 - **Navegación por tabs:** la tab activa usa el azul primario sólido. La barra
   nativa no admite un degradado como tint para icono y etiqueta.
+- **Área inferior bajo tabs:** las rutas de una tab extienden su superficie hasta
+  la barra nativa superpuesta. El margen para que el último control no quede
+  oculto pertenece al `contentContainerStyle` del `ScrollView`, no al contenedor
+  `Screen`; así el contenido puede desplazarse completamente por encima de la
+  barra.
 - **Tipografía:** familia de sistema por plataforma; escala de 12 a 32 px y pesos
   de 400 a 700. Así se preserva legibilidad nativa sin dependencia externa.
 - **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base.
@@ -41,21 +46,31 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 
 ## Componentes a implementar
 
-| Componente        | Estados mínimos                                           | Regla de interacción                                                                         |
-| ----------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Button            | primary, secondary, ghost, destructive, disabled, loading | `loading` deshabilita el control y reserva el ancho del texto para el loader.                |
-| TextField         | default, focus, filled, error, disabled                   | El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. |
-| Picker            | default, focus, selected, error, disabled                 | Abre un selector adaptado a plataforma y conserva etiqueta visible.                          |
-| Checkbox / Switch | default, selected, disabled, error                        | Objetivo táctil mínimo de 44 px.                                                             |
-| Card              | default, actionable, selected                             | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado.  |
-| Banner            | network-error, generic-error, success                     | Se coloca arriba, tiene autocierre, botón de cierre y gesto de descartar.                    |
-| InlineMessage     | error, help, success                                      | Bajo el control asociado; texto claro y disponible para lector de pantalla.                  |
+| Componente        | Estados mínimos                                           | Regla de interacción                                                                                                                                                           |
+| ----------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Button            | primary, secondary, ghost, destructive, disabled, loading | `loading` deshabilita el control y reserva el ancho del texto para el loader.                                                                                                  |
+| TextField         | default, focus, filled, error, disabled                   | El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco.                                                                                   |
+| Picker            | default, focus, selected, error, disabled                 | Abre un selector adaptado a plataforma y conserva etiqueta visible.                                                                                                            |
+| Checkbox / Switch | default, selected, disabled, error                        | Objetivo táctil mínimo de 44 px.                                                                                                                                               |
+| Card              | default, actionable, selected                             | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado.                                                                                    |
+| Banner            | network-error, generic-error, success                     | Gestor global de aviso único: sustituye el actual, se coloca arriba del área segura como una card y tiene autocierre, toque o arrastre vertical hacia arriba para descartarlo. |
+| InlineMessage     | error, help, success                                      | Bajo el control asociado; texto claro y disponible para lector de pantalla.                                                                                                    |
 
 `Card` está implementada en `shared/ui`: aplica superficie, borde, radio,
 padding y margen exterior horizontal semánticos. La home la usa para separar
 bloques de acción, explicación y pasos; no sustituye a los contenedores de
 layout. El acceso persistente a la biblioteca de torneos vive en su tab y no se
 duplica como una card informativa en la home.
+
+El banner global conserva la separación lateral y el radio de una card, pero usa
+un padding compacto de `space[3]` para no ocupar más altura de la necesaria. Se
+coloca tras el inset seguro superior, con una separación adicional de 4 px
+para no bajar innecesariamente desde el notch. Entra y sale con
+`motion.enterExit`; si el sistema solicita movimiento reducido, aparece y se
+descarta sin transición. El gestor mantiene un único aviso: al llegar uno nuevo,
+cancela el temporizador y la salida del anterior y muestra únicamente el último.
+Tocar la card o arrastrarla hacia arriba la descarta; un arrastre corto vuelve a
+su posición para no cerrar el aviso por accidente.
 
 Una acción externa que se represente solo con un icono de marca, como Google,
 conserva un objetivo táctil de al menos 44 px, forma circular y `accessibilityLabel`

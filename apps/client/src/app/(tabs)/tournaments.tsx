@@ -9,7 +9,7 @@ export default function TournamentsScreen() {
   const t = getTranslator();
 
   return (
-    <Screen>
+    <Screen bottomInset="none">
       <View style={styles.content}>
         <Card>
           <View style={styles.copy}>

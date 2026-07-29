@@ -7,10 +7,15 @@ import { space } from "@tournaments-manager/design-tokens";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 type ScreenProps = PropsWithChildren<{
+  bottomInset?: "safe-area" | "none";
   topInset?: "safe-area" | "navigation-bar";
 }>;
 
-export function Screen({ children, topInset = "safe-area" }: ScreenProps) {
+export function Screen({
+  children,
+  bottomInset = "safe-area",
+  topInset = "safe-area",
+}: ScreenProps) {
   const { colors } = usePreferences();
   const insets = useSafeAreaInsets();
   return (
@@ -19,7 +24,7 @@ export function Screen({ children, topInset = "safe-area" }: ScreenProps) {
         styles.screen,
         {
           backgroundColor: colors.surface.canvas,
-          paddingBottom: insets.bottom + space[4],
+          paddingBottom: bottomInset === "safe-area" ? insets.bottom + space[4] : 0,
           paddingTop: (topInset === "safe-area" ? insets.top : 0) + space[3],
         },
       ]}

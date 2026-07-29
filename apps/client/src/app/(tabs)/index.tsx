@@ -14,7 +14,7 @@ export default function HomeScreen() {
   const t = getTranslator();
 
   return (
-    <Screen>
+    <Screen bottomInset="none">
       <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
       <ScrollView
         contentContainerStyle={styles.content}
