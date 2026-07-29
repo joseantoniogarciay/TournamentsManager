@@ -109,6 +109,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0057](../adr/0057-define-contextual-home-and-tournament-library.md)                          | Definir home contextual y biblioteca por relación                    | Aceptado              | 2026-07-28 |
 | [0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md)               | Listar ligas relacionadas con colección paginada                     | Aceptado              | 2026-07-28 |
 | [0059](../adr/0059-centralize-session-authentication-at-the-http-boundary.md)                 | Centralizar autenticación de sesión en el borde HTTP                 | Aceptado              | 2026-07-28 |
+| [0060](../adr/0060-use-posthog-for-deferred-client-product-observability.md)                  | Usar PostHog diferido para observabilidad de producto del cliente    | Aceptado              | 2026-07-29 |
 
 ## Trazabilidad de un cambio
 

@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0060: PostHog Cloud diferido para observabilidad de producto del cliente,
+  con región UE, límite de gasto 0 €, replay restringido y correlación opaca con
+  OpenTelemetry del backend; no se instala ni envía telemetría hasta una beta
+  distribuida y la revisión de privacidad.
 - README operativo de `apps/client`, con arranque web/iOS/Android, estructura,
   localización, reglas de cards y verificación; el README raíz enlaza al cliente
   y `CONTRIBUTING.md` concreta el alcance de `make verify`.

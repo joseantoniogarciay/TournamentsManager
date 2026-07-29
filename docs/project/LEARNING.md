@@ -29,6 +29,19 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-29 — La experiencia de usuario y el diagnóstico técnico requieren señales distintas
+
+- **Aprendido:** un replay explica la secuencia de interacción que precede a un
+  error; una traza OpenTelemetry explica qué ocurrió en HTTP, lógica técnica y
+  PostgreSQL. Ninguna de las dos señales sustituye a la otra, y se cruzan con un
+  `request_id` opaco en vez de exponer identidad, payloads o PII.
+- **Evidencia:** ADR-0060 aplaza PostHog Cloud hasta la primera beta distribuida,
+  limita su alcance a experiencia de cliente y conserva el stack OpenTelemetry
+  de ADR-0020 para backend. El proveedor no recibe autoridad de negocio.
+- **Coste aceptado:** replay, analytics y error tracking quedan en un SaaS
+  externo con región UE, gasto máximo de 0 € y revisión de privacidad previa;
+  no se autoaloja una plataforma de producto sin volumen que lo justifique.
+
 ### 2026-07-29 — El espacio de una tab superpuesta es parte del scroll
 
 - **Aprendido:** reservar el área de la barra de tabs como padding de la pantalla
