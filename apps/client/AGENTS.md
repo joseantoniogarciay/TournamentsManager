@@ -30,8 +30,11 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   iniciales son `es`, `en`, `it` y `fr`; cualquier locale no soportado usa
   inglés.
 - El selector web persistente y las preferencias de tema e idioma pertenecen a
-  un provider compartido, nunca a una pantalla. iOS y Android no muestran
-  selector de idioma.
+  un provider compartido, nunca a una pantalla. La raíz propaga el tema resuelto
+  también a React Navigation mediante el `ThemeProvider` de Expo Router; es
+  obligatorio para que las transiciones nativas no muestren un destello del tema
+  contrario. No se fuerza `Appearance.setColorScheme` para corregir este efecto.
+  iOS y Android no muestran selector de idioma.
 - Las pantallas usan tokens semánticos y primitivas de `shared/ui`; no introducen
   hexadecimales, medidas repetidas, fuentes remotas ni una librería de UI sin ADR
   aceptado.

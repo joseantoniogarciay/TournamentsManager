@@ -58,8 +58,10 @@ Para cada capacidad se sigue el ciclo:
   sistema operativo, requiere una integración nativa y no se puede representar
   como un switch local que aparente concederlo.
 - **Evidencia:** `PreferencesProvider` resuelve y persiste `system`, `light` y
-  `dark` para todas las rutas. El ajuste de notificaciones permanece deshabilitado
-  y explica su límite, coherente con el alcance de `PRODUCT.md`.
+  `dark` para todas las rutas, y la raíz entrega el tema correspondiente a React
+  Navigation para que las transiciones nativas no usen temporalmente el tema
+  contrario. El ajuste de notificaciones permanece deshabilitado y explica su
+  límite, coherente con el alcance de `PRODUCT.md`.
 - **Coste aceptado:** no se incorpora aún `expo-notifications`, configuración
   nativa ni almacenamiento de preferencias de entrega. Requerirán una decisión
   de producto y el diseño del ciclo de permiso antes de activarlos.
