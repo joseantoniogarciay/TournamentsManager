@@ -1,8 +1,9 @@
 import { createContext, type PropsWithChildren, useCallback, useContext, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { banner, color, space } from "@tournaments-manager/design-tokens";
+import { banner, space } from "@tournaments-manager/design-tokens";
 
+import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { Text } from "@/shared/ui";
 
 type Feedback = { message: string; kind: "network-error" | "generic-error" | "success" };
@@ -10,6 +11,7 @@ type FeedbackContextValue = { show: (feedback: Feedback) => void };
 const FeedbackContext = createContext<FeedbackContextValue | null>(null);
 
 export function FeedbackProvider({ children }: PropsWithChildren) {
+  const { colors } = usePreferences();
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const show = useCallback((next: Feedback) => {
     setFeedback(next);
@@ -22,7 +24,13 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
           <Pressable
             accessibilityRole="alert"
             onPress={() => setFeedback(null)}
-            style={[styles.banner, feedback.kind === "success" ? styles.success : styles.error]}
+            style={[
+              styles.banner,
+              {
+                backgroundColor:
+                  feedback.kind === "success" ? colors.feedback.success : colors.feedback.error,
+              },
+            ]}
           >
             <Text color="inverse">{feedback.message}</Text>
           </Pressable>
@@ -49,6 +57,4 @@ const styles = StyleSheet.create({
     top: space[4],
     zIndex: 1,
   },
-  error: { backgroundColor: color.feedback.error },
-  success: { backgroundColor: color.feedback.success },
 });

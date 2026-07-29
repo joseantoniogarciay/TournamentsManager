@@ -29,6 +29,52 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-28 — El degradado conserva jerarquía cuando no colorea todo
+
+- **Aprendido:** aplicar el degradado de marca a la acción primary filled crea
+  una relación directa con el icono; limitarlo al borde de 1 px en la acción
+  secondary conserva contraste y evita competir con la acción principal.
+- **Evidencia:** el token `gradient.brand` se reutiliza en `Button` y el icono
+  Fast Tourney desplaza el violeta hacia el centro del fondo.
+- **Coste aceptado:** las acciones destructivas siguen usando rojo sólido, pues
+  el degradado de marca no debe diluir su semántica de riesgo.
+
+### 2026-07-28 — Dos apps no obligan a mantener dos proyectos Xcode
+
+- **Aprendido:** Expo CNG permite resolver nombre, esquema, icono y futuras
+  diferencias nativas desde una configuración por entorno. Así desarrollo y
+  producción se pueden instalar como apps distintas sin convertir directorios
+  generados en fuente versionada.
+- **Evidencia:** `apps/client/app.config.ts` selecciona `Fast Tourney Dev` o
+  `Fast Tourney` con `APP_ENV` y usa el icono común de 1024 × 1024.
+- **Coste aceptado:** los bundle identifiers y perfiles de distribución esperan
+  a disponer de un dominio controlado. Se evaluarán targets iOS separados solo
+  si un config plugin no puede aislar una dependencia nativa necesaria.
+
+### 2026-07-28 — Una preferencia local no es un permiso del sistema
+
+- **Aprendido:** el tema es una preferencia de presentación y puede persistirse
+  localmente para cualquier visitante; el permiso de notificaciones depende del
+  sistema operativo, requiere una integración nativa y no se puede representar
+  como un switch local que aparente concederlo.
+- **Evidencia:** `PreferencesProvider` resuelve y persiste `system`, `light` y
+  `dark` para todas las rutas. El ajuste de notificaciones permanece deshabilitado
+  y explica su límite, coherente con el alcance de `PRODUCT.md`.
+- **Coste aceptado:** no se incorpora aún `expo-notifications`, configuración
+  nativa ni almacenamiento de preferencias de entrega. Requerirán una decisión
+  de producto y el diseño del ciclo de permiso antes de activarlos.
+
+### 2026-07-28 — Un formulario visible no equivale a una sesión inventada
+
+- **Aprendido:** una interfaz de acceso puede preparar el recorrido local y la
+  ruta de alta sin afirmar que el cliente ya establece una sesión cuando el
+  handler y el adaptador HTTP todavía no existen.
+- **Evidencia:** Cuenta ofrece correo, contraseña y registro en una ruta
+  profunda; las acciones comunican su indisponibilidad actual y Google se marca
+  como próximo, conforme al contrato y ADR-0050.
+- **Coste aceptado:** conectar el formulario exige implementar el adaptador de
+  sesión y el flujo OIDC real; los controles actuales no envían credenciales.
+
 ### 2026-07-28 — El tipado no sustituye un bundle de Expo
 
 - **Aprendido:** TypeScript no carga Metro ni resuelve el árbol de rutas en la

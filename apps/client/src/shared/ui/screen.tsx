@@ -1,18 +1,36 @@
 import { type PropsWithChildren } from "react";
-import { SafeAreaView, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { color, space } from "@tournaments-manager/design-tokens";
+import { space } from "@tournaments-manager/design-tokens";
 
-export function Screen({ children }: PropsWithChildren) {
-  return <SafeAreaView style={styles.screen}>{children}</SafeAreaView>;
+import { usePreferences } from "@/shared/preferences/preferences-provider";
+
+type ScreenProps = PropsWithChildren<{
+  topInset?: "safe-area" | "navigation-bar";
+}>;
+
+export function Screen({ children, topInset = "safe-area" }: ScreenProps) {
+  const { colors } = usePreferences();
+  const insets = useSafeAreaInsets();
+  return (
+    <View
+      style={[
+        styles.screen,
+        {
+          backgroundColor: colors.surface.canvas,
+          paddingBottom: insets.bottom + space[4],
+          paddingTop: (topInset === "safe-area" ? insets.top : 0) + space[3],
+        },
+      ]}
+    >
+      {children}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: color.surface.canvas,
     flex: 1,
-    paddingBottom: space[4],
-    paddingHorizontal: space[5],
-    paddingTop: space[6],
   },
 });

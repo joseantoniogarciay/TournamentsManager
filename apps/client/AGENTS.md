@@ -38,6 +38,15 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Una card mantiene su padding interno definido por la primitiva y añade siempre
   20 px de margen exterior horizontal. El layout reserva además 20 px entre
   cards hermanas; no se corrige esa separación alterando el padding de la card.
+- `Screen` no añade padding horizontal: ese margen exterior pertenece a `Card`.
+  Añadirlo en ambos sitios duplica la separación lateral.
+- Toda pantalla deja al menos 10 px entre el área segura o el borde inferior de
+  una navigation bar y su primer contenido; la implementación vigente usa 12 px
+  mediante `Screen`.
+- No se usa `SafeAreaView` de React Native cuando haya que sumar padding propio:
+  en iOS puede ignorarlo. `Screen` combina `useSafeAreaInsets` con una `View`.
+  Las rutas bajo una cabecera nativa declaran `topInset="navigation-bar"` para
+  no sumar por segunda vez el inset superior que ya aporta la navegación.
 - Toda ruta respeta la URL canónica y la presentación acordada: página directa e
   historial normal en web; modal y cierre seguro en móvil cuando corresponda.
 - Una pantalla no llama directamente al cliente OpenAPI generado. La feature
@@ -47,6 +56,9 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   expresar el estado real disponible y sus estados de carga, vacío y error.
 - Botones y controles mantienen semántica accesible, un objetivo táctil mínimo
   de 44 px y no permiten envíos duplicados.
+- Los formularios no muestran una acción de cancelar. La salida de la ruta se
+  hace mediante el botón de atrás de la barra de navegación, que no muestra
+  texto.
 
 ## Cierre obligatorio
 

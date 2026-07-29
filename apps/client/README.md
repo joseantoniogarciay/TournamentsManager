@@ -20,6 +20,27 @@ pnpm --filter @tournaments-manager/client android
 pnpm --filter @tournaments-manager/client web
 ```
 
+## Entornos de aplicación
+
+La configuración de Expo se resuelve en `app.config.ts`, con dos variantes:
+desarrollo (`Fast Tourney Dev`) y producción (`Fast Tourney`). Ambas usan el
+mismo código y se distinguen mediante `APP_ENV`; el icono compartido es
+`assets/fast-tourney-icon.png` (1024 × 1024).
+
+```bash
+pnpm --filter @tournaments-manager/client start:dev
+pnpm --filter @tournaments-manager/client ios:dev
+pnpm --filter @tournaments-manager/client ios:prod
+```
+
+Mientras CNG esté vigente no se crean ni editan targets Xcode versionados. Si
+una dependencia nativa necesita existir únicamente en desarrollo o producción,
+se declarará de forma condicional en `app.config.ts` o en un config plugin; solo
+se reabre la alternativa de targets manuales si esa configuración no basta. Los
+Las variantes iOS usan `com.fasttourney.app.dev` y `com.fasttourney.app`, por
+lo que pueden instalarse a la vez. Antes de distribuirlas se verificará que el
+dominio y ambos identificadores estén registrados en la cuenta de Apple.
+
 Cuando un cambio requiera código nativo, crea una development build bajo demanda
 con `pnpm --filter @tournaments-manager/client exec expo run:ios` o
 `pnpm --filter @tournaments-manager/client exec expo run:android`. Los
@@ -38,6 +59,13 @@ Inicio muestra la orientación y las acciones disponibles sin inventar sesión n
 colecciones. Torneos y Cuenta expresan su estado actual mientras llegan los
 flujos autenticados y los datos reales. El alcance funcional aceptado se
 documenta en [Producto](../../docs/project/PRODUCT.md).
+
+Cuenta ofrece el recorrido local de acceso y una ruta de registro. El acceso
+federado con Google permanece identificado como no disponible hasta que exista
+su adaptador OIDC en el cliente. Desde la rueda de ajustes se puede elegir tema
+claro, oscuro o sistema; la preferencia se guarda localmente y no requiere
+sesión. Las notificaciones no se solicitan todavía: siguen fuera del alcance
+aceptado y el control lo comunica sin simular un permiso del sistema.
 
 ## Estructura
 

@@ -12,6 +12,9 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 
 - **Color:** azul como acción primaria; violeta como acento; superficies claras;
   verde, ámbar y rojo reservados para estado y feedback.
+- **Degradado de marca:** azul `#155EEF` a violeta `#7F56D9`; las acciones
+  primarias filled lo usan como superficie y las secundarias lo reservan para un
+  borde de 1 px, manteniendo la superficie interior neutra.
 - **Tipografía:** familia de sistema por plataforma; escala de 12 a 32 px y pesos
   de 400 a 700. Así se preserva legibilidad nativa sin dependencia externa.
 - **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base.
@@ -23,15 +26,15 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 
 ## Componentes a implementar
 
-| Componente | Estados mínimos | Regla de interacción |
-| --- | --- | --- |
-| Button | primary, secondary, ghost, destructive, disabled, loading | `loading` deshabilita el control y reserva el ancho del texto para el loader. |
-| TextField | default, focus, filled, error, disabled | El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. |
-| Picker | default, focus, selected, error, disabled | Abre un selector adaptado a plataforma y conserva etiqueta visible. |
-| Checkbox / Switch | default, selected, disabled, error | Objetivo táctil mínimo de 44 px. |
-| Card | default, actionable, selected | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado. |
-| Banner | network-error, generic-error, success | Se coloca arriba, tiene autocierre, botón de cierre y gesto de descartar. |
-| InlineMessage | error, help, success | Bajo el control asociado; texto claro y disponible para lector de pantalla. |
+| Componente        | Estados mínimos                                           | Regla de interacción                                                                         |
+| ----------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Button            | primary, secondary, ghost, destructive, disabled, loading | `loading` deshabilita el control y reserva el ancho del texto para el loader.                |
+| TextField         | default, focus, filled, error, disabled                   | El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. |
+| Picker            | default, focus, selected, error, disabled                 | Abre un selector adaptado a plataforma y conserva etiqueta visible.                          |
+| Checkbox / Switch | default, selected, disabled, error                        | Objetivo táctil mínimo de 44 px.                                                             |
+| Card              | default, actionable, selected                             | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado.  |
+| Banner            | network-error, generic-error, success                     | Se coloca arriba, tiene autocierre, botón de cierre y gesto de descartar.                    |
+| InlineMessage     | error, help, success                                      | Bajo el control asociado; texto claro y disponible para lector de pantalla.                  |
 
 `Card` está implementada en `shared/ui`: aplica superficie, borde, radio,
 padding y margen exterior horizontal semánticos. La home la usa para separar

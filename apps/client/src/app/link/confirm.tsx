@@ -18,7 +18,6 @@ export default function LinkConfirmationScreen() {
   return (
     <Screen>
       <View style={styles.content}>
-        <Text variant="title">{t("link_confirmation_title")}</Text>
         <Text color="secondary">{t("link_confirmation_description")}</Text>
         <Button label={t("common_close")} variant="secondary" onPress={close} />
       </View>

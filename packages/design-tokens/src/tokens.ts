@@ -7,6 +7,10 @@ export const color = {
   feedback: { success: "#027A48", warning: "#B54708", error: "#D92D20", info: "#155EEF" },
 } as const;
 
+export const gradient = {
+  brand: ["#155EEF", "#7F56D9"],
+} as const;
+
 export const space = {
   0: 0,
   1: 4,

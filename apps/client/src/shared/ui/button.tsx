@@ -1,6 +1,10 @@
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 
-import { color, control, radius, space } from "@tournaments-manager/design-tokens";
+import { LinearGradient } from "expo-linear-gradient";
+
+import { color, control, gradient, radius, space } from "@tournaments-manager/design-tokens";
+
+import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 import { Text } from "./text";
 
@@ -19,25 +23,54 @@ export function Button({
   loading = false,
   disabled = false,
 }: Props) {
+  const { colors } = usePreferences();
   const isDisabled = disabled || loading;
+
+  const content = (
+    <View style={styles.content}>
+      {loading ? (
+        <ActivityIndicator
+          color={variant === "primary" ? colors.text.inverse : color.brand.primary}
+        />
+      ) : null}
+      <Text color={variant === "primary" || variant === "destructive" ? "inverse" : "primary"}>
+        {label}
+      </Text>
+    </View>
+  );
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ busy: loading, disabled: isDisabled }}
       disabled={isDisabled}
       onPress={onPress}
-      style={[styles.base, styles[variant], isDisabled && styles.disabled]}
+      style={isDisabled ? styles.disabled : undefined}
     >
-      <View style={styles.content}>
-        {loading ? (
-          <ActivityIndicator
-            color={variant === "primary" ? color.text.inverse : color.brand.primary}
-          />
-        ) : null}
-        <Text color={variant === "primary" || variant === "destructive" ? "inverse" : "primary"}>
-          {label}
-        </Text>
-      </View>
+      {variant === "primary" ? (
+        <LinearGradient colors={[...gradient.brand]} style={styles.base}>
+          {content}
+        </LinearGradient>
+      ) : null}
+      {variant === "secondary" ? (
+        <LinearGradient colors={[...gradient.brand]} style={styles.outline}>
+          <View style={[styles.outlineContent, { backgroundColor: colors.surface.default }]}>
+            {content}
+          </View>
+        </LinearGradient>
+      ) : null}
+      {variant === "ghost" || variant === "destructive" ? (
+        <View
+          style={[
+            styles.base,
+            variant === "destructive"
+              ? { backgroundColor: colors.feedback.error }
+              : { backgroundColor: "transparent" },
+          ]}
+        >
+          {content}
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -50,13 +83,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: control.horizontalPadding,
   },
   content: { alignItems: "center", flexDirection: "row", gap: space[2], justifyContent: "center" },
-  primary: { backgroundColor: color.brand.primary },
-  secondary: {
-    backgroundColor: color.surface.default,
-    borderColor: color.border.default,
-    borderWidth: 1,
+  outline: {
+    borderRadius: radius.control,
+    minHeight: control.minHeight,
+    padding: 1,
   },
-  ghost: { backgroundColor: "transparent" },
-  destructive: { backgroundColor: color.feedback.error },
+  outlineContent: {
+    borderRadius: radius.control - 1,
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: control.horizontalPadding - 1,
+  },
   disabled: { opacity: 0.55 },
 });

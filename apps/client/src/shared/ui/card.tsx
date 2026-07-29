@@ -1,16 +1,26 @@
 import { type PropsWithChildren } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { color, radius, space } from "@tournaments-manager/design-tokens";
+import { radius, space } from "@tournaments-manager/design-tokens";
+
+import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 export function Card({ children }: PropsWithChildren) {
-  return <View style={styles.card}>{children}</View>;
+  const { colors } = usePreferences();
+  return (
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+      ]}
+    >
+      {children}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: color.surface.default,
-    borderColor: color.border.default,
     borderRadius: radius.card,
     borderWidth: 1,
     marginHorizontal: space[5],
