@@ -8,6 +8,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- `make local-api-up` valida los contratos locales, espera a PostgreSQL y
+  Mailpit, y ejecuta la API Go en el host sin migraciones implícitas.
+- ADR-0060: PostHog Cloud diferido para observabilidad de producto del cliente,
+  con región UE, límite de gasto 0 €, replay restringido y correlación opaca con
+  OpenTelemetry del backend; no se instala ni envía telemetría hasta una beta
+  distribuida y la revisión de privacidad.
 - README operativo de `apps/client`, con arranque web/iOS/Android, estructura,
   localización, reglas de cards y verificación; el README raíz enlaza al cliente
   y `CONTRIBUTING.md` concreta el alcance de `make verify`.
@@ -48,6 +54,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- Mailpit local queda fijado a `v1.30.5` con health check de disponibilidad;
+  se corrige la etiqueta inexistente `v1.28.5`.
 - Autenticación local definida con sesiones opacas revocables, Argon2id y
   renovación silenciosa; JWT y refresh tokens quedan aplazados.
 - El primer incremento de backend queda acotado a identidad local, publicación

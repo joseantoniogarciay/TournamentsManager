@@ -8,7 +8,7 @@ GO_TOOL := $(GO_BACKEND) tool -modfile=$(TOOL_MODFILE)
 GO_SOURCE := $(shell find $(BACKEND_DIR) -type f -name '*.go' -print -quit)
 
 .PHONY: \
-	api-up \
+	api-up local-api-up \
 	format-go format-check-go \
 	tidy tidy-check tidy-tools tidy-tools-check tidy-all \
 	lint-go test test-race build vuln sqlc-generate sqlc-generate-check
@@ -80,9 +80,11 @@ else
 	$(GO_TOOL) govulncheck $(GO_PACKAGES)
 endif
 
-# Arranca la dependencia local y la API Go en el host. Las migraciones se
+# Arranca las dependencias locales y la API Go en el host. Las migraciones se
 # mantienen como un paso explícito mediante `make db-migrate`.
-api-up: db-up db-backend-env-check
+api-up: local-api-up
+
+local-api-up: local-config-check db-up
 	@set -a; . $(BACKEND_ENV); set +a; \
 	$(GO_BACKEND) run ./cmd/api
 

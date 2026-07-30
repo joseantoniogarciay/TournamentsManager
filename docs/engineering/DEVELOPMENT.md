@@ -175,6 +175,14 @@ Las variantes iOS declaran `com.fasttourney.app.dev` y `com.fasttourney.app`.
 Antes de distribuir una build nativa se verificará que ambos identificadores
 estén registrados y controlados en la cuenta de Apple.
 
+La splash nativa se configura mediante el plugin `expo-splash-screen`: usa el
+icono local de Fast Tourney sobre las superficies `canvas` clara y oscura. En
+arranque nativo se conserva únicamente hasta que se hidrata la preferencia local
+de tema y se puede pintar la primera ruta; después se oculta con un fundido de
+240 ms. No espera red ni se sustituye por una pantalla React de carga. Sus
+propiedades nativas se validan en una build release, ya que Expo Go y las
+development builds no reproducen fielmente la splash distribuida.
+
 La exportación web forma parte de `make verify` y se puede ejecutar de forma
 aislada con `make client-web-export`. Los directorios `.expo`, `ios` y `android`
 siguen sin versionarse; se generan solo mediante operaciones explícitas de Expo.
@@ -190,6 +198,14 @@ La configuración y los secretos siguen
   formato inválido.
 - El cliente Expo solo podrá leer desde JavaScript variables `EXPO_PUBLIC_*`, que
   se tratarán como públicas.
+- `EXPO_PUBLIC_API_BASE_URL` indica la base pública de la API para el cliente;
+  en desarrollo, si no se declara, usa `http://127.0.0.1:8080/v1`. En Android
+  físico o emulador debe apuntar a una dirección alcanzable desde el dispositivo,
+  no a su propio `127.0.0.1`.
+- `CORS_ALLOWED_ORIGINS` es una lista separada por comas de orígenes web
+  completos sin path. El backend falla si falta o incluye un valor inválido. En
+  local se permiten `http://localhost:8081` y `http://127.0.0.1:8081`; cada
+  entorno desplegado declara solo sus dominios web reales.
 - Docker Compose podrá usar `env_file` cuando se decida el entorno local.
 - No se introduce gestor de secretos hasta que exista evidencia operativa.
 
@@ -198,14 +214,17 @@ La configuración y los secretos siguen
 Para levantar PostgreSQL local y la API desde el host:
 
 ```bash
-make api-up
+make local-api-up
 ```
 
-`make api-up` espera a que PostgreSQL esté saludable, carga
-`apps/backend/.env` y mantiene la API en primer plano. El contrato local exige
-`DATABASE_URL` y `HTTP_ADDR` en ese archivo. El proceso comprueba PostgreSQL
-antes de abrir el puerto y expone `GET /healthz` en
-`HTTP_ADDR` (por defecto, `http://127.0.0.1:8080/healthz`). Las migraciones
+`make local-api-up` valida los contratos locales sin sobrescribirlos, espera a
+que PostgreSQL y Mailpit estén saludables, carga `apps/backend/.env` y mantiene
+la API en primer plano. El contrato del backend exige `DATABASE_URL`,
+`HTTP_ADDR`, `SMTP_ADDR`, `SMTP_FROM`, `PUBLIC_BASE_URL` y
+`CORS_ALLOWED_ORIGINS`; `apps/backend/.env.example` documenta únicamente
+valores locales de ejemplo. `make api-up` permanece como alias de compatibilidad.
+El proceso comprueba PostgreSQL antes de abrir el puerto y expone `GET /healthz`
+en `HTTP_ADDR` (por defecto, `http://127.0.0.1:8080/healthz`). Las migraciones
 siguen siendo un paso explícito mediante `make db-migrate`; la API se detiene
 con `Ctrl+C` y PostgreSQL, si se desea, con `make db-down`.
 

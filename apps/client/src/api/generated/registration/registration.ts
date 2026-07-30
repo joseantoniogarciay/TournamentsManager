@@ -53,8 +53,9 @@ export const getRegisterLocalAccountUrl = () => {
 export const registerLocalAccount = async (
   registerRequest: RegisterRequest,
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<registerLocalAccountResponse> => {
-  const res = await fetch(getRegisterLocalAccountUrl(), {
+  const res = await (fetchFn ?? fetch)(getRegisterLocalAccountUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -105,8 +106,9 @@ export const getResendRegistrationVerificationUrl = () => {
 export const resendRegistrationVerification = async (
   resendRegistrationVerificationBody: ResendRegistrationVerificationBody,
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<resendRegistrationVerificationResponse> => {
-  const res = await fetch(getResendRegistrationVerificationUrl(), {
+  const res = await (fetchFn ?? fetch)(getResendRegistrationVerificationUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -174,8 +176,9 @@ export const getVerifyRegistrationUrl = () => {
 export const verifyRegistration = async (
   verifyRegistrationRequest: VerifyRegistrationRequest,
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<verifyRegistrationResponse> => {
-  const res = await fetch(getVerifyRegistrationUrl(), {
+  const res = await (fetchFn ?? fetch)(getVerifyRegistrationUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },

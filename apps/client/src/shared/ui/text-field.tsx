@@ -6,16 +6,22 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 import { Text } from "./text";
 
-type Props = TextInputProps & { label: string; error?: string };
+type Props = TextInputProps & {
+  label: string;
+  error?: string;
+  feedback?: { message: string; tone: "help" | "success" };
+};
 
-export function TextField({ label, error, accessibilityHint, ...inputProps }: Props) {
+export function TextField({ label, error, feedback, accessibilityHint, ...inputProps }: Props) {
   const { colors } = usePreferences();
+  const message = error ?? feedback?.message;
+  const messageColor = error ? "error" : feedback?.tone === "success" ? "success" : "secondary";
   return (
     <View style={styles.wrapper}>
       <Text variant="bodyLarge">{label}</Text>
       <TextInput
         accessibilityHint={accessibilityHint}
-        accessibilityLabel={error ? `${label}. ${error}` : label}
+        accessibilityLabel={message ? `${label}. ${message}` : label}
         placeholderTextColor={colors.text.placeholder}
         style={[
           styles.input,
@@ -26,9 +32,9 @@ export function TextField({ label, error, accessibilityHint, ...inputProps }: Pr
         ]}
         {...inputProps}
       />
-      {error ? (
-        <Text variant="caption" color="error">
-          {error}
+      {message ? (
+        <Text variant="caption" color={messageColor}>
+          {message}
         </Text>
       ) : null}
     </View>

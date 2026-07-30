@@ -43,8 +43,9 @@ export const getCreateGoogleLoginChallengeUrl = () => {
  */
 export const createGoogleLoginChallenge = async (
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<createGoogleLoginChallengeResponse> => {
-  const res = await fetch(getCreateGoogleLoginChallengeUrl(), {
+  const res = await (fetchFn ?? fetch)(getCreateGoogleLoginChallengeUrl(), {
     ...options,
     method: "POST",
   });
@@ -99,8 +100,9 @@ export const getCreateGoogleSessionUrl = () => {
 export const createGoogleSession = async (
   googleAuthenticationRequest: GoogleAuthenticationRequest,
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<createGoogleSessionResponse> => {
-  const res = await fetch(getCreateGoogleSessionUrl(), {
+  const res = await (fetchFn ?? fetch)(getCreateGoogleSessionUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },

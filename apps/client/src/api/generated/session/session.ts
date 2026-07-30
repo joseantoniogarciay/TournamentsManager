@@ -60,8 +60,9 @@ export const getCreateSessionUrl = () => {
 export const createSession = async (
   loginRequest: LoginRequest,
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<createSessionResponse> => {
-  const res = await fetch(getCreateSessionUrl(), {
+  const res = await (fetchFn ?? fetch)(getCreateSessionUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -103,8 +104,9 @@ export const getGetCurrentSessionUrl = () => {
  */
 export const getCurrentSession = async (
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<getCurrentSessionResponse> => {
-  const res = await fetch(getGetCurrentSessionUrl(), {
+  const res = await (fetchFn ?? fetch)(getGetCurrentSessionUrl(), {
     ...options,
     method: "GET",
   });
@@ -144,8 +146,9 @@ export const getRevokeCurrentSessionUrl = () => {
  */
 export const revokeCurrentSession = async (
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<revokeCurrentSessionResponse> => {
-  const res = await fetch(getRevokeCurrentSessionUrl(), {
+  const res = await (fetchFn ?? fetch)(getRevokeCurrentSessionUrl(), {
     ...options,
     method: "DELETE",
   });

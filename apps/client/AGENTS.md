@@ -58,6 +58,10 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Una pantalla no llama directamente al cliente OpenAPI generado. La feature
   contiene su adaptación, hook y estado local; las reglas de negocio y
   autorización permanecen en el backend.
+- Una feature no hace `fetch` directo para una operación definida en OpenAPI:
+  su adaptador invoca la operación generada y le entrega `apiFetch`, el
+  transporte común que resuelve URL base y futuras credenciales. Una excepción
+  exige justificar por escrito que el destino no pertenece al contrato.
 - La interfaz no inventa sesión, permisos, colecciones ni resultados. Debe
   expresar el estado real disponible y sus estados de carga, vacío y error.
 - Botones y controles mantienen semántica accesible, un objetivo táctil mínimo
@@ -100,3 +104,6 @@ Antes de entregar un cambio de cliente:
    concrete una regla o aprendizaje reutilizable.
 4. Declara cualquier parte de un ADR aceptado que siga pendiente; nunca la
    presentes como terminada por una implementación parcial.
+5. Para cada operación OpenAPI tocada, confirma que la feature usa la función
+   generada mediante su adaptador y `apiFetch`, sin reconstruir URL, `fetch` ni
+   DTOs a mano.

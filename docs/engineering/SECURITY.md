@@ -124,6 +124,9 @@ La gestión de configuración sigue
 - Cloud usará OIDC y credenciales temporales siempre que esté disponible.
 - Los secretos no se imprimen en logs, métricas, trazas, errores ni resultados
   de comandos.
+- CORS se configura mediante una allowlist exacta de orígenes públicos; no se
+  usa `*` porque la web podrá enviar cookies de sesión. La allowlist no sustituye
+  la protección CSRF de mutaciones autenticadas por cookie.
 
 ## Gates futuros
 

@@ -17,10 +17,16 @@ services:
       start_period: 10s
 
   mailpit:
-    image: axllent/mailpit:v1.28.5
+    image: axllent/mailpit:v1.30.5
     ports:
       - "127.0.0.1:1025:1025"
       - "127.0.0.1:8025:8025"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8025/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
 
 volumes:
   postgres-data:

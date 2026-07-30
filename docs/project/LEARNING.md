@@ -29,6 +29,61 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-30 — Un recorrido vertical hace visibles los límites
+
+- **Aprendido:** una ruta HTTP no es toda la API ni toda la lógica del backend.
+  El handler traduce transporte; el servicio coordina el caso de uso; el
+  repositorio adapta el puerto a PostgreSQL; `sqlc` genera la llamada Go a partir
+  del SQL escrito por el equipo.
+- **Evidencia:** el recorrido de `GET /v1/usernames/{username}/availability` en
+  `apps/backend/README.md` enlaza `server.go`, `registration.Service`,
+  `RegistrationRepository`, `db/queries/registrations.sql` y la salida generada
+  por `sqlc`.
+- **Coste aceptado:** se mantiene una guía local al backend, enlazada desde el
+  README raíz y Arquitectura, en vez de repetir el detalle en todos los
+  documentos normativos.
+
+### 2026-07-29 — Una comprobación de disponibilidad mejora la UX, no la unicidad
+
+- **Aprendido:** una respuesta de disponibilidad solo describe un instante: dos
+  clientes pueden recibir «disponible» y competir después por el mismo nombre.
+  Por ello PostgreSQL mantiene la restricción única y el alta es la única
+  autoridad que decide definitivamente.
+- **Evidencia:** `GET /v1/usernames/{username}/availability` solo acepta el
+  formato del contrato, responde `Cache-Control: no-store` y el cliente espera
+  400 ms desde la última escritura antes de llamarlo; una nueva entrada cancela
+  la petición previa.
+- **Coste aceptado:** el límite de 30 consultas por IP y minuto vive en memoria
+  del proceso para mantener este corte simple. No protege de forma global entre
+  réplicas; si se escala horizontalmente, se decidirá un control compartido en
+  el borde o almacenamiento adecuado.
+
+### 2026-07-29 — CORS es una política de frontera, no una cabecera por ruta
+
+- **Aprendido:** CORS autoriza al JavaScript de un origen a leer una respuesta;
+  no sustituye autenticación, autorización ni CSRF. Un `POST` JSON inicia además
+  un preflight `OPTIONS` antes de la petición real.
+- **Evidencia:** la API valida `CORS_ALLOWED_ORIGINS` al arrancar y aplica una
+  allowlist exacta en el handler raíz. Devuelve el origen permitido, `Vary: Origin`
+  y credenciales; responde el preflight solo para métodos y cabeceras
+  que el cliente necesita.
+- **Coste aceptado:** cada entorno debe declarar sus orígenes web. Se evita el
+  arranque cómodo con `*` porque sería incompatible con las cookies de sesión y
+  ocultaría qué frontends tienen permiso para consumir la API.
+
+### 2026-07-29 — La experiencia de usuario y el diagnóstico técnico requieren señales distintas
+
+- **Aprendido:** un replay explica la secuencia de interacción que precede a un
+  error; una traza OpenTelemetry explica qué ocurrió en HTTP, lógica técnica y
+  PostgreSQL. Ninguna de las dos señales sustituye a la otra, y se cruzan con un
+  `request_id` opaco en vez de exponer identidad, payloads o PII.
+- **Evidencia:** ADR-0060 aplaza PostHog Cloud hasta la primera beta distribuida,
+  limita su alcance a experiencia de cliente y conserva el stack OpenTelemetry
+  de ADR-0020 para backend. El proveedor no recibe autoridad de negocio.
+- **Coste aceptado:** replay, analytics y error tracking quedan en un SaaS
+  externo con región UE, gasto máximo de 0 € y revisión de privacidad previa;
+  no se autoaloja una plataforma de producto sin volumen que lo justifique.
+
 ### 2026-07-29 — El espacio de una tab superpuesta es parte del scroll
 
 - **Aprendido:** reservar el área de la barra de tabs como padding de la pantalla
@@ -872,6 +927,30 @@ Para cada capacidad se sigue el ciclo:
   runtime además del tipado generado para TypeScript.
 - **Siguiente decisión:** primera operación de persistencia y límites de su
   transacción antes de implementar registro.
+
+### 2026-07-29 — La splash nativa no es una pantalla de React
+
+- **Aprendido:** la splash se muestra antes de ejecutar JavaScript; solo puede
+  configurarse en la build nativa. El código de la app puede decidir cuándo
+  ocultarla, pero no convertirla en un flujo de carga.
+- **Evidencia:** `expo-splash-screen` configurado mediante el config plugin y
+  retenido hasta hidratar la preferencia local de tema.
+- **Coste aceptado:** la apariencia final se prueba en una build release, porque
+  Expo Go y development builds no la reproducen fielmente.
+- **Regla reutilizable:** no esperar red bajo la splash ni crear una falsa splash
+  React salvo que un requisito de producto justifique explícitamente esa espera.
+
+### 2026-07-30 — El cliente generado necesita un transporte de ejecución
+
+- **Aprendido:** generar tipos y operaciones desde OpenAPI no elimina la
+  configuración propia del cliente instalado; URL base, cancelación y futuras
+  credenciales pertenecen a un transporte común, no a cada feature.
+- **Evidencia:** Orval genera un parámetro `fetchFn`; `apiFetch` resuelve la URL
+  base y el adaptador de registro invoca la operación generada.
+- **Coste aceptado:** las features mantienen un adaptador pequeño que traduce el
+  contrato a sus estados de interfaz, sin reconstruir URL, `fetch` ni DTOs.
+- **Regla reutilizable:** para una operación del contrato, usar siempre la
+  función OpenAPI generada a través del adaptador de la feature y `apiFetch`.
 
 ## Regla de evidencia
 

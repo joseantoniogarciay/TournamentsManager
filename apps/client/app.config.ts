@@ -28,7 +28,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: "./assets/fast-tourney-icon.png",
   ios: { bundleIdentifier: environmentConfig[appEnvironment].bundleIdentifier },
   userInterfaceStyle: "automatic",
-  plugins: ["expo-router"],
+  plugins: [
+    "expo-router",
+    [
+      "expo-splash-screen",
+      {
+        backgroundColor: "#F8FAFC",
+        image: "./assets/fast-tourney-icon.png",
+        imageWidth: 160,
+        dark: {
+          backgroundColor: "#101828",
+          image: "./assets/fast-tourney-icon.png",
+        },
+      },
+    ],
+  ],
   experiments: { typedRoutes: true },
   extra: { appEnvironment },
 });

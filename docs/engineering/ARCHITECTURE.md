@@ -79,6 +79,11 @@ flowchart LR
 El diagrama muestra la dirección de dependencias, no una estructura obligatoria
 de carpetas ni una cantidad de capas.
 
+La implementación actual se recorre con un ejemplo de extremo a extremo en la
+[guía del backend](../../apps/backend/README.md). Es una ayuda de navegación y
+aprendizaje; las reglas y decisiones normativas de arquitectura siguen estando
+en este documento y sus ADR enlazados.
+
 El contexto completo está en
 [docs/diagrams/system-context.md](../diagrams/system-context.md).
 
