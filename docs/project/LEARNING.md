@@ -952,6 +952,19 @@ Para cada capacidad se sigue el ciclo:
 - **Regla reutilizable:** para una operación del contrato, usar siempre la
   función OpenAPI generada a través del adaptador de la feature y `apiFetch`.
 
+### 2026-07-30 — El fallback de errores debe separar transporte y negocio
+
+- **Aprendido:** el tipo generado por Orval enumera las respuestas documentadas,
+  pero no clasifica un rechazo de red ni una respuesta HTTP nueva. Solo el
+  transporte común puede identificar con seguridad que no se recibió respuesta.
+- **Evidencia:** `apiFetch` convierte esos rechazos en `APIConnectionError` y
+  `shared/feedback/request-failure.ts` los traduce a las claves comunes de red o
+  error seguro; el chequeo de username conserva su tratamiento específico de
+  `200` y `429`.
+- **Coste aceptado:** cada feature debe elegir explícitamente sus estados de
+  negocio valiosos; los no previstos, cuerpos inválidos y `5xx` usan el fallback
+  genérico sin exponer detalles del backend.
+
 ## Regla de evidencia
 
 “Entendido” exige una explicación propia y una demostración. Un comando que

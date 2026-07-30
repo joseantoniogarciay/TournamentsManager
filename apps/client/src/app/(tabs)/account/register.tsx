@@ -95,8 +95,10 @@ function usernameFeedback(
       return { message: t("account_username_unavailable"), tone: "help" as const };
     case "rate-limited":
       return { message: t("account_username_rate_limited"), tone: "help" as const };
+    case "network-error":
+      return { message: t("common_network_error"), tone: "help" as const };
     case "error":
-      return { message: t("account_username_check_error"), tone: "help" as const };
+      return { message: t("common_request_error"), tone: "help" as const };
     default:
       return undefined;
   }

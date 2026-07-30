@@ -101,3 +101,9 @@ Mensajes globales iniciales:
   tarde.»
 
 No se muestran cuerpos, trazas ni mensajes internos del backend.
+
+La clasificación compartida solo distingue un rechazo de transporte marcado por
+`apiFetch` de cualquier respuesta o fallo no tratado. Cada feature reconoce
+antes los estados del contrato que cambian la recuperación de la persona (por
+ejemplo, un límite de solicitudes); no se centralizan `status`, `type` ni copy
+de negocio que todavía no se repitan.
