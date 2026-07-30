@@ -7,7 +7,7 @@ BACKEND_ENV := $(BACKEND_DIR)/.env
 POSTGRES_COMPOSE := docker compose --env-file $(POSTGRES_LOCAL_ENV) -f $(POSTGRES_LOCAL_DIR)/compose.yaml
 
 .PHONY: \
-	db-init db-env-check db-backend-env-check \
+	db-init db-env-check db-backend-env-check local-config-check \
 	db-up db-wait db-down db-status db-logs db-reset db-migrate
 
 # Crea los contratos locales sin sobrescribir una configuración ya existente.
@@ -20,9 +20,22 @@ db-init:
 
 db-env-check:
 	@test -f $(POSTGRES_LOCAL_ENV) || { echo "Falta $(POSTGRES_LOCAL_ENV). Ejecuta: make db-init"; exit 1; }
+	@set -a; . $(POSTGRES_LOCAL_ENV); set +a; \
+	for name in POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD; do \
+		eval "value=\$${$$name}"; \
+		[ -n "$$value" ] || { echo "Falta $$name en $(POSTGRES_LOCAL_ENV). Revisa infra/local/.env.example"; exit 1; }; \
+	done
 
 db-backend-env-check:
 	@test -f $(BACKEND_ENV) || { echo "Falta $(BACKEND_ENV). Ejecuta: make db-init"; exit 1; }
+
+# Valida los contratos locales sin mostrar valores ni sobrescribir archivos.
+local-config-check: db-env-check db-backend-env-check
+	@set -a; . $(BACKEND_ENV); set +a; \
+	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
+		eval "value=\$${$$name}"; \
+		[ -n "$$value" ] || { echo "Falta $$name en $(BACKEND_ENV). Revisa apps/backend/.env.example"; exit 1; }; \
+	done
 
 # Arranca PostgreSQL y espera a que el health check confirme que acepta conexiones.
 db-up: db-env-check

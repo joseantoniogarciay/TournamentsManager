@@ -214,14 +214,17 @@ La configuración y los secretos siguen
 Para levantar PostgreSQL local y la API desde el host:
 
 ```bash
-make api-up
+make local-api-up
 ```
 
-`make api-up` espera a que PostgreSQL esté saludable, carga
-`apps/backend/.env` y mantiene la API en primer plano. El contrato local exige
-`DATABASE_URL` y `HTTP_ADDR` en ese archivo. El proceso comprueba PostgreSQL
-antes de abrir el puerto y expone `GET /healthz` en
-`HTTP_ADDR` (por defecto, `http://127.0.0.1:8080/healthz`). Las migraciones
+`make local-api-up` valida los contratos locales sin sobrescribirlos, espera a
+que PostgreSQL y Mailpit estén saludables, carga `apps/backend/.env` y mantiene
+la API en primer plano. El contrato del backend exige `DATABASE_URL`,
+`HTTP_ADDR`, `SMTP_ADDR`, `SMTP_FROM`, `PUBLIC_BASE_URL` y
+`CORS_ALLOWED_ORIGINS`; `apps/backend/.env.example` documenta únicamente
+valores locales de ejemplo. `make api-up` permanece como alias de compatibilidad.
+El proceso comprueba PostgreSQL antes de abrir el puerto y expone `GET /healthz`
+en `HTTP_ADDR` (por defecto, `http://127.0.0.1:8080/healthz`). Las migraciones
 siguen siendo un paso explícito mediante `make db-migrate`; la API se detiene
 con `Ctrl+C` y PostgreSQL, si se desea, con `make db-down`.
 
