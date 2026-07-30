@@ -47,8 +47,9 @@ export const getGetCurrentLeagueDraftUrl = () => {
  */
 export const getCurrentLeagueDraft = async (
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<getCurrentLeagueDraftResponse> => {
-  const res = await fetch(getGetCurrentLeagueDraftUrl(), {
+  const res = await (fetchFn ?? fetch)(getGetCurrentLeagueDraftUrl(), {
     ...options,
     method: "GET",
   });

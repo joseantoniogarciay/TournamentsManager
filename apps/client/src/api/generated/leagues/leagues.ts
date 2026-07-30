@@ -66,8 +66,9 @@ export const getListCurrentAccountLeaguesUrl = (params: ListCurrentAccountLeague
 export const listCurrentAccountLeagues = async (
   params: ListCurrentAccountLeaguesParams,
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<listCurrentAccountLeaguesResponse> => {
-  const res = await fetch(getListCurrentAccountLeaguesUrl(params), {
+  const res = await (fetchFn ?? fetch)(getListCurrentAccountLeaguesUrl(params), {
     ...options,
     method: "GET",
   });
@@ -127,8 +128,9 @@ export const getFollowLeagueUrl = (leagueId: Uuid) => {
 export const followLeague = async (
   leagueId: Uuid,
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<followLeagueResponse> => {
-  const res = await fetch(getFollowLeagueUrl(leagueId), {
+  const res = await (fetchFn ?? fetch)(getFollowLeagueUrl(leagueId), {
     ...options,
     method: "PUT",
   });
@@ -180,8 +182,9 @@ export const getUnfollowLeagueUrl = (leagueId: Uuid) => {
 export const unfollowLeague = async (
   leagueId: Uuid,
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<unfollowLeagueResponse> => {
-  const res = await fetch(getUnfollowLeagueUrl(leagueId), {
+  const res = await (fetchFn ?? fetch)(getUnfollowLeagueUrl(leagueId), {
     ...options,
     method: "DELETE",
   });
@@ -236,8 +239,9 @@ export const getPublishCurrentLeagueDraftUrl = () => {
  */
 export const publishCurrentLeagueDraft = async (
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<publishCurrentLeagueDraftResponse> => {
-  const res = await fetch(getPublishCurrentLeagueDraftUrl(), {
+  const res = await (fetchFn ?? fetch)(getPublishCurrentLeagueDraftUrl(), {
     ...options,
     method: "POST",
   });
@@ -277,8 +281,9 @@ export const getGetPublicLeagueUrl = (leagueId: Uuid) => {
 export const getPublicLeague = async (
   leagueId: Uuid,
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<getPublicLeagueResponse> => {
-  const res = await fetch(getGetPublicLeagueUrl(leagueId), {
+  const res = await (fetchFn ?? fetch)(getGetPublicLeagueUrl(leagueId), {
     ...options,
     method: "GET",
   });

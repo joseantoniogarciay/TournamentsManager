@@ -29,6 +29,20 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-07-30 — Un recorrido vertical hace visibles los límites
+
+- **Aprendido:** una ruta HTTP no es toda la API ni toda la lógica del backend.
+  El handler traduce transporte; el servicio coordina el caso de uso; el
+  repositorio adapta el puerto a PostgreSQL; `sqlc` genera la llamada Go a partir
+  del SQL escrito por el equipo.
+- **Evidencia:** el recorrido de `GET /v1/usernames/{username}/availability` en
+  `apps/backend/README.md` enlaza `server.go`, `registration.Service`,
+  `RegistrationRepository`, `db/queries/registrations.sql` y la salida generada
+  por `sqlc`.
+- **Coste aceptado:** se mantiene una guía local al backend, enlazada desde el
+  README raíz y Arquitectura, en vez de repetir el detalle en todos los
+  documentos normativos.
+
 ### 2026-07-29 — Una comprobación de disponibilidad mejora la UX, no la unicidad
 
 - **Aprendido:** una respuesta de disponibilidad solo describe un instante: dos
@@ -925,6 +939,18 @@ Para cada capacidad se sigue el ciclo:
   Expo Go y development builds no la reproducen fielmente.
 - **Regla reutilizable:** no esperar red bajo la splash ni crear una falsa splash
   React salvo que un requisito de producto justifique explícitamente esa espera.
+
+### 2026-07-30 — El cliente generado necesita un transporte de ejecución
+
+- **Aprendido:** generar tipos y operaciones desde OpenAPI no elimina la
+  configuración propia del cliente instalado; URL base, cancelación y futuras
+  credenciales pertenecen a un transporte común, no a cada feature.
+- **Evidencia:** Orval genera un parámetro `fetchFn`; `apiFetch` resuelve la URL
+  base y el adaptador de registro invoca la operación generada.
+- **Coste aceptado:** las features mantienen un adaptador pequeño que traduce el
+  contrato a sus estados de interfaz, sin reconstruir URL, `fetch` ni DTOs.
+- **Regla reutilizable:** para una operación del contrato, usar siempre la
+  función OpenAPI generada a través del adaptador de la feature y `apiFetch`.
 
 ## Regla de evidencia
 

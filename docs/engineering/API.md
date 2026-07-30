@@ -151,6 +151,12 @@ TypeScript basado en Fetch. La salida versionada está en
 `pnpm run openapi:generate` y `pnpm run openapi:generate:check` son las entradas
 respectivas; Make las integra en `check` y `verify`.
 
+Las operaciones generadas aceptan un `fetch` de ejecución. El cliente entrega
+`apiFetch` desde `apps/client/src/api/fetch.ts`: añade la URL base configurada y
+será el único borde para credenciales de sesión. Cada feature conserva un
+adaptador que invoca la operación generada; no reconstruye rutas, peticiones ni
+DTOs del contrato a mano.
+
 ## Exploración local con Scalar
 
 Para explorar y probar manualmente el contrato sin publicar otra aplicación ni

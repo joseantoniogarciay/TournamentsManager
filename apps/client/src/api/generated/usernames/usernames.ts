@@ -50,8 +50,9 @@ export const getGetUsernameAvailabilityUrl = (username: Username) => {
 export const getUsernameAvailability = async (
   username: Username,
   options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<getUsernameAvailabilityResponse> => {
-  const res = await fetch(getGetUsernameAvailabilityUrl(username), {
+  const res = await (fetchFn ?? fetch)(getGetUsernameAvailabilityUrl(username), {
     ...options,
     method: "GET",
   });

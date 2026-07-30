@@ -40,6 +40,8 @@ Esta estructura no autoriza por sí misma nuevos frameworks, herramientas ni
 decisiones de implementación.
 
 La guía de uso del cliente está en [apps/client/README.md](apps/client/README.md).
+La guía de recorrido y organización del backend está en
+[apps/backend/README.md](apps/backend/README.md).
 
 ## Mapa del handbook
 

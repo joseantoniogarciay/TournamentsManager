@@ -14,6 +14,11 @@ export default defineConfig({
       formatter: "prettier",
       indexFiles: true,
       tagsSplitDeduplication: true,
+      override: {
+        fetch: {
+          useRuntimeFetcher: true,
+        },
+      },
     },
   },
 });
