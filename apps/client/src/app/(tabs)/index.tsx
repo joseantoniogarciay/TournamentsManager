@@ -6,17 +6,20 @@ import { radius, space } from "@tournaments-manager/design-tokens";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
+import { useSession } from "@/shared/session/session-provider";
 import { Button, Card, Screen, Text } from "@/shared/ui";
 
 export default function HomeScreen() {
   const { show } = useFeedback();
   const { resolvedTheme } = usePreferences();
+  const { revision } = useSession();
   const t = getTranslator();
 
   return (
     <Screen bottomInset="none">
       <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
       <ScrollView
+        key={revision}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         style={styles.scroll}

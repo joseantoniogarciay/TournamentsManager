@@ -9,12 +9,14 @@ import googleLogo from "../../../../assets/google-g.png";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
+import { useSession } from "@/shared/session/session-provider";
 import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
 
 export default function AccountScreen() {
   const t = getTranslator();
   const { show } = useFeedback();
   const { colors } = usePreferences();
+  const { user } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showEmailError, setShowEmailError] = useState(false);
@@ -28,6 +30,21 @@ export default function AccountScreen() {
     if (emailError || passwordError) return;
     show({ kind: "generic-error", message: t("account_local_login_unavailable") });
   };
+
+  if (user) {
+    return (
+      <Screen bottomInset="none" topInset="navigation-bar">
+        <Card>
+          <View style={styles.form}>
+            <Text variant="title">{t("account_authenticated_title")}</Text>
+            <Text color="secondary">
+              {t("account_authenticated_mock").replace("{username}", user.username)}
+            </Text>
+          </View>
+        </Card>
+      </Screen>
+    );
+  }
 
   return (
     <Screen bottomInset="none" topInset="navigation-bar">

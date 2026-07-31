@@ -48,6 +48,24 @@ func TestLoadRejectsInvalidCORSOrigin(t *testing.T) {
 	}
 }
 
+func TestLoadRejectsNonHTTPSPublicBaseURLOutsideLoopback(t *testing.T) {
+	t.Parallel()
+
+	_, err := load(func(key string) string {
+		return map[string]string{
+			databaseURLEnv:        "postgres://localhost:5432/tournaments",
+			httpAddrEnv:           "127.0.0.1:8080",
+			smtpAddrEnv:           "127.0.0.1:1025",
+			smtpFromEnv:           "no-reply@example.test",
+			publicBaseURLEnv:      "http://links.example.test",
+			corsAllowedOriginsEnv: "http://localhost:8081",
+		}[key]
+	})
+	if err == nil || !strings.Contains(err.Error(), publicBaseURLEnv) {
+		t.Fatalf("load() error = %v, want error mentioning %s", err, publicBaseURLEnv)
+	}
+}
+
 func TestLoadRejectsMissingDatabaseURL(t *testing.T) {
 	t.Parallel()
 

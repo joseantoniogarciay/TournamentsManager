@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
@@ -7,6 +8,8 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
 import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
+import { registerLocalAccountRequest } from "@/features/registration/api";
+import { getRequestFailure } from "@/shared/feedback/request-failure";
 
 export default function RegisterScreen() {
   const t = getTranslator();
@@ -15,6 +18,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { isValid: usernameIsValid, status: usernameAvailability } =
     useUsernameAvailability(username);
   const usernameError = !username.trim()
@@ -23,11 +27,34 @@ export default function RegisterScreen() {
       ? t("validation_username_format")
       : undefined;
   const emailError = !isEmail(email) ? t("validation_email") : undefined;
-  const passwordError = password ? undefined : t("validation_password_required");
-  const register = () => {
+  const passwordError = !password
+    ? t("validation_password_required")
+    : password.length < 12
+      ? t("validation_password_length")
+      : undefined;
+  const register = async () => {
     setSubmitted(true);
-    if (usernameError || emailError || passwordError) return;
-    show({ kind: "generic-error", message: t("account_registration_unavailable") });
+    if (
+      usernameError ||
+      emailError ||
+      passwordError ||
+      usernameAvailability === "checking" ||
+      usernameAvailability === "unavailable"
+    ) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await registerLocalAccountRequest({ email: email.trim(), password, username });
+      show({ kind: "success", message: t("account_registration_email_sent") });
+      router.replace("/account");
+    } catch (error) {
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -65,7 +92,14 @@ export default function RegisterScreen() {
               secureTextEntry
               value={password}
             />
-            <Button label={t("account_register")} onPress={register} />
+            <Button
+              disabled={
+                usernameAvailability === "checking" || usernameAvailability === "unavailable"
+              }
+              label={t("account_register")}
+              loading={isSubmitting}
+              onPress={() => void register()}
+            />
           </View>
         </Card>
       </ScrollView>

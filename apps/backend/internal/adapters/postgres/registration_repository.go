@@ -17,8 +17,8 @@ type RegistrationRepository struct {
 }
 
 // VerifyAndCreateSession consume una verificación y emite su sesión atómica.
-func (r RegistrationRepository) VerifyAndCreateSession(ctx context.Context, verificationHash, sessionHash []byte) (registration.Session, error) {
-	row, err := r.queries.VerifyRegistrationAndCreateSession(ctx, sqlc.VerifyRegistrationAndCreateSessionParams{TokenHash: verificationHash, TokenHash_2: sessionHash})
+func (r RegistrationRepository) VerifyAndCreateSession(ctx context.Context, verificationHash, sessionHash, previousSessionHash []byte) (registration.Session, error) {
+	row, err := r.queries.VerifyRegistrationAndCreateSession(ctx, sqlc.VerifyRegistrationAndCreateSessionParams{TokenHash: verificationHash, TokenHash_2: sessionHash, PreviousSessionHash: previousSessionHash})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return registration.Session{}, registration.ErrVerificationInvalid
 	}

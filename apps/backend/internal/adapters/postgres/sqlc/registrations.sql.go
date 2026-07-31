@@ -76,6 +76,12 @@ WITH consumed_token AS (
     WHERE id = (SELECT account_id FROM consumed_token)
       AND state = 'pending_verification'
     RETURNING id, username
+), revoked_presented_session AS (
+    UPDATE sessions
+    SET revoked_at = now()
+    WHERE sessions.token_hash = $3::bytea
+      AND sessions.revoked_at IS NULL
+    RETURNING id
 ), created_session AS (
     INSERT INTO sessions (account_id, token_hash, idle_expires_at, absolute_expires_at)
     SELECT id, $2, now() + interval '7 days', now() + interval '30 days'
@@ -88,8 +94,9 @@ CROSS JOIN created_session
 `
 
 type VerifyRegistrationAndCreateSessionParams struct {
-	TokenHash   []byte
-	TokenHash_2 []byte
+	TokenHash           []byte
+	TokenHash_2         []byte
+	PreviousSessionHash []byte
 }
 
 type VerifyRegistrationAndCreateSessionRow struct {
@@ -99,7 +106,7 @@ type VerifyRegistrationAndCreateSessionRow struct {
 }
 
 func (q *Queries) VerifyRegistrationAndCreateSession(ctx context.Context, arg VerifyRegistrationAndCreateSessionParams) (VerifyRegistrationAndCreateSessionRow, error) {
-	row := q.db.QueryRow(ctx, verifyRegistrationAndCreateSession, arg.TokenHash, arg.TokenHash_2)
+	row := q.db.QueryRow(ctx, verifyRegistrationAndCreateSession, arg.TokenHash, arg.TokenHash_2, arg.PreviousSessionHash)
 	var i VerifyRegistrationAndCreateSessionRow
 	err := row.Scan(&i.ID, &i.Username, &i.IdleExpiresAt)
 	return i, err

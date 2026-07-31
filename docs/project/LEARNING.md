@@ -965,6 +965,22 @@ Para cada capacidad se sigue el ciclo:
   negocio valiosos; los no previstos, cuerpos inválidos y `5xx` usan el fallback
   genérico sin exponer detalles del backend.
 
+### 2026-07-30 — Un enlace universal acredita contexto, no hace un GET mutante
+
+- **Aprendido:** un correo puede llevar a una ruta HTTPS compartida por web,
+  iOS y Android, pero abrirlo mediante `GET` no debe activar una cuenta ni crear
+  una sesión. El cliente conserva el token de un solo uso fuera de la URL y
+  emite automáticamente el `POST` de confirmación.
+- **Evidencia:** correo multipart con alternativa accesible, ruta
+  `/link/confirm`, configuración declarativa CNG y plantillas de asociación
+  bajo `infra/app-links/`.
+- **Coste aceptado:** la asociación real exige un dominio, Team ID de Apple y
+  huellas Android de la firma de distribución; se documentan como datos de
+  despliegue, no se inventan en el repositorio.
+- **Regla reutilizable:** un secreto en un enlace no se envía a analítica ni a
+  recursos de terceros y se elimina del historial tan pronto como la aplicación
+  lo recibe.
+
 ## Regla de evidencia
 
 “Entendido” exige una explicación propia y una demostración. Un comando que

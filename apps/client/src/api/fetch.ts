@@ -1,4 +1,8 @@
+import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
+
 const defaultAPIBaseURL = "http://127.0.0.1:8080/v1";
+const mobileSessionTokenKey = "tm-session-token";
 
 /** La petición no llegó a recibir una respuesta HTTP de la API. */
 export class APIConnectionError extends Error {
@@ -37,10 +41,20 @@ export const apiFetch: typeof globalThis.fetch = async (input, init) => {
       ? input
       : `${getAPIBaseURL()}${input.startsWith("/") ? input : `/${input}`}`;
 
+  const headers = new Headers(init?.headers);
+  if (Platform.OS !== "web") {
+    const sessionToken = await SecureStore.getItemAsync(mobileSessionTokenKey);
+    if (sessionToken) headers.set("Authorization", `Bearer ${sessionToken}`);
+  }
+
   try {
-    return await globalThis.fetch(request, init);
+    return await globalThis.fetch(request, { ...init, credentials: "include", headers });
   } catch (error: unknown) {
     if (error instanceof Error && error.name === "AbortError") throw error;
     throw new APIConnectionError(error);
   }
 };
+
+export async function saveMobileSessionToken(sessionToken: string) {
+  if (Platform.OS !== "web") await SecureStore.setItemAsync(mobileSessionTokenKey, sessionToken);
+}

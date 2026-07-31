@@ -88,7 +88,8 @@ func verifyRegistration(service registration.Service) http.HandlerFunc {
 			writeValidationProblem(writer)
 			return
 		}
-		session, sessionToken, err := service.Verify(request.Context(), body.Token)
+		previousSession, _ := sessionToken(request)
+		session, sessionToken, err := service.Verify(request.Context(), body.Token, previousSession.token)
 		if errors.Is(err, registration.ErrVerificationInvalid) {
 			writeProblem(writer, http.StatusConflict, "Verificación no válida")
 			return

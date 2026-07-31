@@ -83,7 +83,9 @@ El contrato de registro, verificación y sesión se concreta en
 [OpenAPI v1](../../contracts/openapi/v1/openapi.yaml); el modelo persistente está
 en [INITIAL_DATA_MODEL.md](INITIAL_DATA_MODEL.md). La verificación consume el
 token de un solo uso, activa la cuenta completa y crea la sesión en una única
-transacción. Un login correcto de cuenta pendiente invalida el token activo y
+transacción. ADR-0061 establece que el cliente la inicia automáticamente al
+abrir el deep link, después de retirar el token de la URL, y reemplaza la sesión
+preexistente si la hubiera. Un login correcto de cuenta pendiente invalida el token activo y
 solicita otro correo, sin crear sesión.
 
 ## Subject de Apple y Google

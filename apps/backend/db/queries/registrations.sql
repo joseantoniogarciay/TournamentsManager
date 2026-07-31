@@ -35,6 +35,12 @@ WITH consumed_token AS (
     WHERE id = (SELECT account_id FROM consumed_token)
       AND state = 'pending_verification'
     RETURNING id, username
+), revoked_presented_session AS (
+    UPDATE sessions
+    SET revoked_at = now()
+    WHERE sessions.token_hash = sqlc.narg(previous_session_hash)::bytea
+      AND sessions.revoked_at IS NULL
+    RETURNING id
 ), created_session AS (
     INSERT INTO sessions (account_id, token_hash, idle_expires_at, absolute_expires_at)
     SELECT id, $2, now() + interval '7 days', now() + interval '30 days'

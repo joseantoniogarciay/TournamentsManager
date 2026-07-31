@@ -34,7 +34,7 @@ type Input struct {
 type Repository interface {
 	CreatePending(context.Context, Input, string, []byte) (bool, error)
 	IsUsernameAvailable(context.Context, string) (bool, error)
-	VerifyAndCreateSession(context.Context, []byte, []byte) (Session, error)
+	VerifyAndCreateSession(context.Context, []byte, []byte, []byte) (Session, error)
 }
 
 // Session describe una sesión creada durante la verificación.
@@ -49,7 +49,7 @@ type Mailer interface {
 }
 
 // Verify consume una verificación y crea una sesión opaca.
-func (s Service) Verify(ctx context.Context, token string) (Session, string, error) {
+func (s Service) Verify(ctx context.Context, token, previousSessionToken string) (Session, string, error) {
 	verificationHash := sha256.Sum256([]byte("registration-verification:" + token))
 	secret := make([]byte, 32)
 	if _, err := rand.Read(secret); err != nil {
@@ -57,7 +57,12 @@ func (s Service) Verify(ctx context.Context, token string) (Session, string, err
 	}
 	sessionToken := base64.RawURLEncoding.EncodeToString(secret)
 	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
-	session, err := s.repository.VerifyAndCreateSession(ctx, verificationHash[:], sessionHash[:])
+	var previousSessionHash []byte
+	if previousSessionToken != "" {
+		hash := sha256.Sum256([]byte("session:" + previousSessionToken))
+		previousSessionHash = hash[:]
+	}
+	session, err := s.repository.VerifyAndCreateSession(ctx, verificationHash[:], sessionHash[:], previousSessionHash)
 	if err != nil {
 		return Session{}, "", err
 	}

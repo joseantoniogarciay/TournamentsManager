@@ -4,6 +4,8 @@ import { type PropsWithChildren, useEffect } from "react";
 import { Platform } from "react-native";
 
 import { FeedbackProvider } from "@/shared/feedback/feedback-provider";
+import { PendingVerificationProvider } from "@/features/registration/pending-verification";
+import { SessionProvider } from "@/shared/session/session-provider";
 import { getTranslator } from "@/shared/i18n/locale";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
 
@@ -17,20 +19,24 @@ export default function RootLayout() {
   return (
     <PreferencesProvider>
       <NavigationTheme>
-        <FeedbackProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="link/confirm"
-              options={{
-                headerShown: true,
-                headerTitleAlign: "center",
-                presentation: Platform.OS === "web" ? "card" : "modal",
-                title: t("link_confirmation_title"),
-              }}
-            />
-          </Stack>
-        </FeedbackProvider>
+        <SessionProvider>
+          <PendingVerificationProvider>
+            <FeedbackProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen
+                  name="link/confirm"
+                  options={{
+                    headerShown: true,
+                    headerTitleAlign: "center",
+                    presentation: Platform.OS === "web" ? "card" : "modal",
+                    title: t("link_confirmation_title"),
+                  }}
+                />
+              </Stack>
+            </FeedbackProvider>
+          </PendingVerificationProvider>
+        </SessionProvider>
       </NavigationTheme>
     </PreferencesProvider>
   );

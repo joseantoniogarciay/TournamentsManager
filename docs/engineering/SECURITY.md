@@ -63,11 +63,12 @@ lectura `GET` y el transporte Bearer móvil no la requieren.
 - ningún intento de vinculación pendiente concede sesión o permisos;
 - deep links de identidad mediante HTTPS asociado, sin tokens de sesión en URL;
 - abrir un deep link mediante `GET` no consume el intento ni cambia la cuenta;
-- la confirmación explícita mediante `POST` es de un solo uso y resistente a
-  repetición y concurrencia;
+- para el registro local, el cliente inicia automáticamente el `POST` de un solo
+  uso después de retirar el token de la URL; véase ADR-0061;
 - la URL base procede de configuración confiable y el token no se propaga por
   historial, referencias, analytics o recursos de terceros;
-- una sesión no puede cambiar de propietario durante un switch de cuenta;
+- al completar un registro desde un cliente con sesión, la credencial presentada
+  se revoca antes de entregar la nueva, conforme a ADR-0061;
 - cifrado y retención definidos según el tipo de dato;
 - recuperación y respuesta a incidentes ensayables.
 
