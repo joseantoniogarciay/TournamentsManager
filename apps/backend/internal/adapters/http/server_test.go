@@ -55,6 +55,15 @@ func (r testRegistrationRepository) VerifyAndCreateSession(context.Context, []by
 func (r testRegistrationRepository) RotateSessionTokens(context.Context, []byte, []byte, []byte) (registration.Session, error) {
 	return registration.Session{}, registration.ErrRefreshInvalid
 }
+func (r testRegistrationRepository) CreatePasswordReset(context.Context, string, []byte) (string, registration.Locale, bool, error) {
+	return "", "", false, nil
+}
+func (r testRegistrationRepository) InspectPasswordReset(context.Context, []byte) (string, error) {
+	return "", registration.ErrPasswordResetInvalid
+}
+func (r testRegistrationRepository) ConsumePasswordReset(context.Context, []byte, string, []byte, []byte) (registration.Session, error) {
+	return registration.Session{}, registration.ErrPasswordResetInvalid
+}
 
 func testHandler() http.Handler {
 	return NewHandler(registration.Service{}, testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)

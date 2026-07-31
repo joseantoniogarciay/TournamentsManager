@@ -1074,6 +1074,18 @@ Para cada capacidad se sigue el ciclo:
 - **Regla reutilizable:** las preferencias de presentación que trascienden una
   entrega concreta pertenecen a la cuenta y se validan en el límite del backend.
 
+### 2026-07-31 — El gestor de contraseñas decide el guardado de credenciales
+
+- **Aprendido:** `new-password` permite que iOS, Android y la web propongan una
+  contraseña fuerte y creen o actualicen la entrada del gestor sin que el
+  producto manipule el llavero.
+- **Evidencia:** ADR-0064 separa la semántica del campo de la política del
+  backend: sugerencia de 15 o más, mínimo manual de 8 y validación final en API.
+- **Coste aceptado:** el medidor es orientativo; no reemplaza controles de
+  servidor ni afirma que una contraseña sea invulnerable.
+- **Regla reutilizable:** declarar la intención semántica correcta del campo y
+  dejar que el proveedor de credenciales conserve el secreto.
+
 ## Regla de evidencia
 
 “Entendido” exige una explicación propia y una demostración. Un comando que

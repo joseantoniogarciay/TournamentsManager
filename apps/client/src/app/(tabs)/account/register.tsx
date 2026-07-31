@@ -19,6 +19,7 @@ export default function RegisterScreen() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isValid: usernameIsValid, status: usernameAvailability } =
@@ -31,7 +32,7 @@ export default function RegisterScreen() {
   const emailError = !isEmail(email) ? t("validation_email") : undefined;
   const passwordError = !password
     ? t("validation_password_required")
-    : password.length < 12
+    : password.length < 8
       ? t("validation_password_length")
       : undefined;
   const register = async () => {
@@ -99,9 +100,20 @@ export default function RegisterScreen() {
               label={t("account_password_label")}
               onBlur={() => setSubmitted(true)}
               onChangeText={setPassword}
-              secureTextEntry
+              passwordVisibility={{
+                label: t(passwordVisible ? "password_hide" : "password_show"),
+                onPress: () => setPasswordVisible(!passwordVisible),
+              }}
+              secureTextEntry={!passwordVisible}
               value={password}
             />
+            <Text color="secondary">
+              {password.length < 8
+                ? t("password_strength_weak")
+                : password.length < 15
+                  ? t("password_strength_ok")
+                  : t("password_strength_strong")}
+            </Text>
             <Button
               disabled={
                 usernameAvailability === "checking" || usernameAvailability === "unavailable"

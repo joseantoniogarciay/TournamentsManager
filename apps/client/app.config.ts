@@ -39,7 +39,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: "./assets/fast-tourney-icon.png",
   ios: {
     bundleIdentifier: environmentConfig[appEnvironment].bundleIdentifier,
-    associatedDomains: appLinkDomain ? [`applinks:${appLinkDomain}`] : undefined,
+    associatedDomains: appLinkDomain
+      ? [`applinks:${appLinkDomain}`, `webcredentials:${appLinkDomain}`]
+      : undefined,
   },
   android: {
     package: environmentConfig[appEnvironment].bundleIdentifier,

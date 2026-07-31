@@ -27,6 +27,7 @@ export default function AccountLayout() {
         </Stack.Toolbar>
       </Stack.Screen>
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
+      <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
       <Stack.Screen
         name="settings"
         options={{ presentation: "modal", title: t("account_settings_title") }}

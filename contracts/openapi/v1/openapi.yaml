@@ -11,6 +11,8 @@ servers:
 tags:
   - name: Registration
     description: Alta local y verificación de correo.
+  - name: Password recovery
+    description: Recuperación no enumeradora de contraseñas locales.
   - name: Usernames
     description: Consulta pública y no vinculante de nombres de usuario.
   - name: Session
@@ -22,6 +24,64 @@ tags:
   - name: Leagues
     description: Publicación y lectura pública de ligas visibles.
 paths:
+  /password-resets:
+    post:
+      tags: [Password recovery]
+      operationId: requestPasswordReset
+      summary: Solicita un enlace de restablecimiento sin enumerar cuentas
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PasswordResetRequest" }
+      responses:
+        "202": { description: "Solicitud aceptada, exista o no una credencial local elegible." }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+  /password-reset-links:
+    post:
+      tags: [Password recovery]
+      operationId: inspectPasswordResetLink
+      summary: Recupera el email asociado a un enlace de restablecimiento válido
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { $ref: "#/components/schemas/OpaqueToken" }
+      responses:
+        "200":
+          description: Enlace válido; la inspección no lo consume.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PasswordResetLink" }
+        "409": { $ref: "#/components/responses/VerificationConflictProblem" }
+        "410": { $ref: "#/components/responses/VerificationExpiredProblem" }
+  /password-reset-confirmations:
+    post:
+      tags: [Password recovery]
+      operationId: confirmPasswordReset
+      summary: Consume un enlace y establece una contraseña nueva
+      security: [{ sessionCookie: [] }, { bearerSession: [] }, {}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PasswordResetConfirmationRequest" }
+      responses:
+        "200":
+          description: Contraseña cambiada y sesión nueva establecida.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionEstablishment" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "409": { $ref: "#/components/responses/VerificationConflictProblem" }
+        "410": { $ref: "#/components/responses/VerificationExpiredProblem" }
   /usernames/{username}/availability:
     get:
       tags: [Usernames]
@@ -391,7 +451,7 @@ components:
     Password:
       type: string
       format: password
-      minLength: 12
+      minLength: 8
       maxLength: 1024
       writeOnly: true
     OpaqueToken:
@@ -399,6 +459,23 @@ components:
       minLength: 22
       maxLength: 512
       pattern: "^[A-Za-z0-9_-]+$"
+    PasswordResetRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { $ref: "#/components/schemas/Email" }
+    PasswordResetLink:
+      type: object
+      required: [email]
+      properties:
+        email: { $ref: "#/components/schemas/Email" }
+    PasswordResetConfirmationRequest:
+      type: object
+      required: [token, password, sessionTransport]
+      properties:
+        token: { $ref: "#/components/schemas/OpaqueToken" }
+        password: { $ref: "#/components/schemas/Password" }
+        sessionTransport: { $ref: "#/components/schemas/Transport" }
     Transport:
       type: string
       enum: [cookie, bearer]

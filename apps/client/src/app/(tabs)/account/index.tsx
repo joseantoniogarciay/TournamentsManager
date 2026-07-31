@@ -21,6 +21,7 @@ export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [showEmailError, setShowEmailError] = useState(false);
   const [showPasswordError, setShowPasswordError] = useState(false);
   const emailError = !isEmail(email) ? t("validation_email") : undefined;
@@ -75,9 +76,20 @@ export default function AccountScreen() {
               label={t("account_password_label")}
               onBlur={() => setShowPasswordError(true)}
               onChangeText={setPassword}
-              secureTextEntry
+              passwordVisibility={{
+                label: t(passwordVisible ? "password_hide" : "password_show"),
+                onPress: () => setPasswordVisible(!passwordVisible),
+              }}
+              secureTextEntry={!passwordVisible}
               value={password}
             />
+            <Pressable
+              accessibilityLabel={t("password_recovery_title")}
+              accessibilityRole="button"
+              onPress={() => router.push("/account/forgot-password" as never)}
+            >
+              <Text color="secondary">{t("password_recovery_title")}</Text>
+            </Pressable>
             <Button label={t("account_sign_in")} onPress={signIn} />
           </View>
         </Card>

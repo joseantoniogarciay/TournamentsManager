@@ -34,6 +34,10 @@ func NewHandler(registrationService registration.Service, authenticator sessionA
 	mux.HandleFunc("GET /healthz", healthz)
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService))
+	passwordResetLimiter := newRequestLimiter(10, time.Minute)
+	mux.HandleFunc("POST /v1/password-resets", requestPasswordReset(registrationService, passwordResetLimiter))
+	mux.HandleFunc("POST /v1/password-reset-links", inspectPasswordReset(registrationService))
+	mux.HandleFunc("POST /v1/password-reset-confirmations", confirmPasswordReset(registrationService))
 	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService))
 	mux.HandleFunc("POST /v1/sessions/refresh", refreshSession(registrationService))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
@@ -41,6 +45,97 @@ func NewHandler(registrationService registration.Service, authenticator sessionA
 	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)
 	return requireAllowedOrigin(corsAllowedOrigins, mux)
+}
+
+type passwordResetRequest struct {
+	Email string `json:"email"`
+}
+type passwordResetTokenRequest struct {
+	Token string `json:"token"`
+}
+type passwordResetConfirmationRequest struct {
+	Token            string `json:"token"`
+	Password         string `json:"password"`
+	SessionTransport string `json:"sessionTransport"`
+}
+
+func requestPasswordReset(service registration.Service, limiter *requestLimiter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body passwordResetRequest
+		if err := decodeBody(r, &body); err != nil || !validEmail(strings.TrimSpace(body.Email)) {
+			writeValidationProblem(w)
+			return
+		}
+		if allowed, retry := limiter.allow(clientIP(r)); !allowed {
+			w.Header().Set("Retry-After", strconv.Itoa(retry))
+			writeProblem(w, http.StatusTooManyRequests, "Demasiadas solicitudes")
+			return
+		}
+		if err := service.RequestPasswordReset(r.Context(), body.Email); err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo solicitar el restablecimiento")
+			return
+		}
+		w.WriteHeader(http.StatusAccepted)
+	}
+}
+func inspectPasswordReset(service registration.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body passwordResetTokenRequest
+		if err := decodeBody(r, &body); err != nil || body.Token == "" {
+			writeValidationProblem(w)
+			return
+		}
+		email, err := service.InspectPasswordReset(r.Context(), body.Token)
+		if errors.Is(err, registration.ErrPasswordResetInvalid) {
+			writeProblem(w, http.StatusConflict, "Enlace no válido")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo comprobar el enlace")
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"email": email})
+	}
+}
+func confirmPasswordReset(service registration.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body passwordResetConfirmationRequest
+		if err := decodeBody(r, &body); err != nil || body.Token == "" || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
+			writeValidationProblem(w)
+			return
+		}
+		session, access, refresh, err := service.ResetPassword(r.Context(), body.Token, body.Password)
+		if errors.Is(err, registration.ErrPasswordResetInvalid) {
+			writeProblem(w, http.StatusConflict, "Enlace no válido")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo cambiar la contraseña")
+			return
+		}
+		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
+		if body.SessionTransport == "cookie" {
+			http.SetCookie(w, &http.Cookie{Name: "__Host-tm_session", Value: access, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+		} else {
+			response["sessionToken"], response["refreshToken"] = access, refresh
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(response)
+	}
+}
+
+func decodeBody(r *http.Request, target any) error {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(target); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		return err
+	}
+	return nil
 }
 
 func refreshSession(service registration.Service) http.HandlerFunc {
@@ -213,9 +308,7 @@ type registerRequest struct {
 func register(service registration.Service) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var body registerRequest
-		decoder := json.NewDecoder(request.Body)
-		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&body); err != nil || decoder.Decode(&struct{}{}) != io.EOF {
+		if err := decodeBody(request, &body); err != nil {
 			writeValidationProblem(writer)
 			return
 		}
@@ -239,11 +332,15 @@ func register(service registration.Service) http.HandlerFunc {
 }
 
 func validRegistration(input registration.Input) bool {
-	if len(input.Email) == 0 || len(input.Email) > 254 || len(input.Password) < 12 || len(input.Password) > 1024 || !registration.IsSupportedLocale(input.Locale) || !usernamePattern.MatchString(input.Username) {
+	if len(input.Email) == 0 || len(input.Email) > 254 || len(input.Password) < 8 || len(input.Password) > 1024 || !registration.IsSupportedLocale(input.Locale) || !usernamePattern.MatchString(input.Username) {
 		return false
 	}
-	address, err := mail.ParseAddress(input.Email)
-	return err == nil && address.Address == input.Email && strings.Contains(input.Email, "@")
+	return validEmail(input.Email)
+}
+
+func validEmail(value string) bool {
+	address, err := mail.ParseAddress(value)
+	return err == nil && address.Address == value && strings.Contains(value, "@")
 }
 
 func writeValidationProblem(writer http.ResponseWriter) {

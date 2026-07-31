@@ -5,9 +5,12 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
+import type { OpaqueToken } from "./opaqueToken.js";
+import type { Password } from "./password.js";
+import type { Transport } from "./transport.js";
 
-/**
- * @minLength 8
- * @maxLength 1024
- */
-export type Password = string;
+export interface PasswordResetConfirmationRequest {
+  token: OpaqueToken;
+  password: Password;
+  sessionTransport: Transport;
+}

@@ -295,6 +295,17 @@ registrará el token y usará `Referrer-Policy: no-referrer`.
 - Solo una confirmación explícita mediante `POST` puede consumir el intento.
 - El token se elimina de la navegación tras el éxito.
 
+## Recuperación de contraseña local
+
+ADR-0064 incorpora una solicitud no enumeradora que entrega por email un enlace
+HTTPS con token opaco, de un solo uso y de 30 minutos. El cliente elimina el
+token de URL e historial antes de mostrar el email de solo lectura y pedir la
+nueva contraseña. El consumo por `POST` sustituye el hash Argon2id y revoca las
+otras sesiones y crea una sesión nueva para el dispositivo que completó el
+cambio. Las contraseñas manuales admiten de 8 a 1024 caracteres y el
+cliente declara `new-password` al gestor de credenciales para que sugiera y
+guarde contraseñas largas.
+
 ## Fuentes técnicas
 
 - [Apple: verificar un usuario](https://developer.apple.com/documentation/signinwithapple/verifying-a-user)

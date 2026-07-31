@@ -41,12 +41,15 @@ Las variantes iOS usan `com.fasttourney.app.dev` y `com.fasttourney.app`, por
 lo que pueden instalarse a la vez. Antes de distribuirlas se verificará que el
 dominio y ambos identificadores estén registrados en la cuenta de Apple.
 
-El enlace de verificación usa la ruta HTTPS `/link/confirm`. Antes de crear una
+El enlace de verificación usa la ruta HTTPS `/link/confirm` y el de recuperación
+`/link/password-reset`. Antes de crear una
 build asociada se define `EXPO_PUBLIC_APP_LINK_URL` con el mismo origen que
 `PUBLIC_BASE_URL` del backend. Las plantillas de los ficheros que se publicarán
 en `/.well-known/` están en [infra/app-links](../../infra/app-links/README.md):
 requieren el Team ID de Apple y las huellas de firma Android reales, que no se
-deben adivinar ni sustituir por valores de ejemplo en producción.
+deben adivinar ni sustituir por valores de ejemplo en producción. La plantilla
+iOS incluye también `webcredentials`, necesario para asociar las credenciales
+guardadas del dominio con la aplicación.
 
 Cuando un cambio requiera código nativo, crea una development build bajo demanda
 con `pnpm --filter @tournaments-manager/client exec expo run:ios` o

@@ -61,6 +61,24 @@ CREATE INDEX email_verification_tokens_purge_idx
     ON email_verification_tokens (expires_at)
     WHERE consumed_at IS NULL AND invalidated_at IS NULL;
 
+CREATE TABLE password_reset_tokens (
+    id uuid PRIMARY KEY DEFAULT uuidv7(),
+    account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+    token_hash bytea NOT NULL UNIQUE CHECK (octet_length(token_hash) = 32),
+    created_at timestamptz NOT NULL DEFAULT now(),
+    expires_at timestamptz NOT NULL,
+    consumed_at timestamptz,
+    invalidated_at timestamptz,
+    CONSTRAINT password_reset_tokens_expiration CHECK (expires_at > created_at),
+    CONSTRAINT password_reset_tokens_terminal_state CHECK (
+        consumed_at IS NULL OR invalidated_at IS NULL
+    )
+);
+
+CREATE UNIQUE INDEX password_reset_tokens_one_active_per_account_idx
+    ON password_reset_tokens (account_id)
+    WHERE consumed_at IS NULL AND invalidated_at IS NULL;
+
 CREATE TABLE sessions (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
@@ -265,6 +283,8 @@ DROP TABLE league_drafts;
 DROP INDEX session_refresh_tokens_session_idx;
 DROP TABLE session_refresh_tokens;
 DROP TABLE sessions;
+DROP INDEX password_reset_tokens_one_active_per_account_idx;
+DROP TABLE password_reset_tokens;
 DROP TABLE email_verification_tokens;
 DROP TABLE local_credentials;
 DROP INDEX accounts_email_lookup_unique_idx;

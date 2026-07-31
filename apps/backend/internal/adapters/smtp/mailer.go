@@ -53,6 +53,44 @@ func (m Mailer) SendVerification(ctx context.Context, recipient string, locale r
 	return nil
 }
 
+// SendPasswordReset entrega un enlace de un solo uso para elegir una contraseña nueva.
+func (m Mailer) SendPasswordReset(ctx context.Context, recipient string, locale registration.Locale, token string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	resetURL := *m.baseURL
+	resetURL.Path = "/link/password-reset"
+	query := resetURL.Query()
+	query.Set("token", token)
+	resetURL.RawQuery = query.Encode()
+	messageCopy, ok := localizedPasswordResetCopy(locale)
+	if !ok {
+		return fmt.Errorf("locale de email no admitido: %q", locale)
+	}
+	message := []byte("To: " + recipient + "\r\nFrom: " + m.from + "\r\nSubject: " + mime.QEncoding.Encode("UTF-8", messageCopy.subject) + "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n" + messageCopy.body + "\r\n\r\n" + resetURL.String() + "\r\n\r\n" + messageCopy.ignore + "\r\n")
+	if err := smtp.SendMail(m.address, nil, m.from, []string{recipient}, message); err != nil {
+		return fmt.Errorf("SMTP: %w", err)
+	}
+	return nil
+}
+
+type passwordResetCopy struct{ subject, body, ignore string }
+
+func localizedPasswordResetCopy(locale registration.Locale) (passwordResetCopy, bool) {
+	switch locale {
+	case registration.LocaleSpanish:
+		return passwordResetCopy{"Restablece tu contraseña de Fast Tourney", "Abre este enlace para elegir una contraseña nueva. Caduca en 30 minutos.", "Si no lo solicitaste, ignora este correo."}, true
+	case registration.LocaleEnglish:
+		return passwordResetCopy{"Reset your Fast Tourney password", "Open this link to choose a new password. It expires in 30 minutes.", "If you did not request this, ignore this email."}, true
+	case registration.LocaleItalian:
+		return passwordResetCopy{"Reimposta la password di Fast Tourney", "Apri questo link per scegliere una nuova password. Scade tra 30 minuti.", "Se non l'hai richiesto, ignora questa email."}, true
+	case registration.LocaleFrench:
+		return passwordResetCopy{"Réinitialisez votre mot de passe Fast Tourney", "Ouvrez ce lien pour choisir un nouveau mot de passe. Il expire dans 30 minutes.", "Si vous ne l'avez pas demandé, ignorez cet e-mail."}, true
+	default:
+		return passwordResetCopy{}, false
+	}
+}
+
 func validPublicURL(parsedURL *url.URL) bool {
 	if parsedURL.Scheme == "https" {
 		return true

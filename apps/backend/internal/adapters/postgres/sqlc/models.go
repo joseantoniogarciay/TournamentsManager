@@ -129,6 +129,16 @@ type Match struct {
 	State       string
 }
 
+type PasswordResetToken struct {
+	ID            pgtype.UUID
+	AccountID     pgtype.UUID
+	TokenHash     []byte
+	CreatedAt     pgtype.Timestamptz
+	ExpiresAt     pgtype.Timestamptz
+	ConsumedAt    pgtype.Timestamptz
+	InvalidatedAt pgtype.Timestamptz
+}
+
 type Session struct {
 	ID                pgtype.UUID
 	AccountID         pgtype.UUID

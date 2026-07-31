@@ -19,6 +19,9 @@ var ErrVerificationInvalid = errors.New("verificación inválida")
 // ErrRefreshInvalid indica un refresh vencido, revocado, usado o inválido.
 var ErrRefreshInvalid = errors.New("refresh inválido")
 
+// ErrPasswordResetInvalid indica un token de restablecimiento inválido, vencido o consumido.
+var ErrPasswordResetInvalid = errors.New("restablecimiento inválido")
+
 const (
 	passwordMemory      = 19 * 1024
 	passwordIterations  = 2
@@ -54,6 +57,9 @@ type Repository interface {
 	IsUsernameAvailable(context.Context, string) (bool, error)
 	VerifyAndCreateSession(context.Context, []byte, []byte, []byte, []byte) (Session, error)
 	RotateSessionTokens(context.Context, []byte, []byte, []byte) (Session, error)
+	CreatePasswordReset(context.Context, string, []byte) (string, Locale, bool, error)
+	InspectPasswordReset(context.Context, []byte) (string, error)
+	ConsumePasswordReset(context.Context, []byte, string, []byte, []byte) (Session, error)
 }
 
 // Refresh rota un refresh opaco y emite los siguientes tokens de la sesión.
@@ -85,6 +91,7 @@ type Session struct {
 // Mailer entrega el enlace de verificación mediante el adaptador configurado.
 type Mailer interface {
 	SendVerification(context.Context, string, Locale, string) error
+	SendPasswordReset(context.Context, string, Locale, string) error
 }
 
 // Verify consume una verificación y crea una sesión opaca.
@@ -157,6 +164,55 @@ func (s Service) Register(ctx context.Context, input Input) error {
 	return nil
 }
 
+// RequestPasswordReset crea y entrega un enlace sin revelar si el email existe.
+func (s Service) RequestPasswordReset(ctx context.Context, email string) error {
+	token, hash, err := newPasswordResetToken()
+	if err != nil {
+		return err
+	}
+	recipient, locale, created, err := s.repository.CreatePasswordReset(ctx, strings.TrimSpace(email), hash)
+	if err != nil {
+		return err
+	}
+	if !created {
+		return nil
+	}
+	return s.mailer.SendPasswordReset(ctx, recipient, locale, token)
+}
+
+// InspectPasswordReset obtiene el email de un enlace válido sin consumirlo.
+func (s Service) InspectPasswordReset(ctx context.Context, token string) (string, error) {
+	hash := sha256.Sum256([]byte("password-reset:" + token))
+	email, err := s.repository.InspectPasswordReset(ctx, hash[:])
+	if err != nil {
+		return "", ErrPasswordResetInvalid
+	}
+	return email, nil
+}
+
+// ResetPassword consume el enlace, cambia la credencial y emite una sesión nueva.
+func (s Service) ResetPassword(ctx context.Context, token, password string) (Session, string, string, error) {
+	passwordHash, err := hashPassword(password)
+	if err != nil {
+		return Session{}, "", "", err
+	}
+	resetHash := sha256.Sum256([]byte("password-reset:" + token))
+	access, refresh := make([]byte, 32), make([]byte, 32)
+	if _, err := rand.Read(access); err != nil {
+		return Session{}, "", "", err
+	}
+	if _, err := rand.Read(refresh); err != nil {
+		return Session{}, "", "", err
+	}
+	accessToken, refreshToken := base64.RawURLEncoding.EncodeToString(access), base64.RawURLEncoding.EncodeToString(refresh)
+	accessHash, refreshHash := sha256.Sum256([]byte("session:"+accessToken)), sha256.Sum256([]byte("refresh:"+refreshToken))
+	session, err := s.repository.ConsumePasswordReset(ctx, resetHash[:], passwordHash, accessHash[:], refreshHash[:])
+	if err != nil {
+		return Session{}, "", "", ErrPasswordResetInvalid
+	}
+	return session, accessToken, refreshToken, nil
+}
+
 func hashPassword(password string) (string, error) {
 	salt := make([]byte, 16)
 	if _, err := rand.Read(salt); err != nil {
@@ -173,6 +229,16 @@ func newVerificationToken() (string, []byte, error) {
 	}
 	token := base64.RawURLEncoding.EncodeToString(secret)
 	hash := sha256.Sum256([]byte("registration-verification:" + token))
+	return token, hash[:], nil
+}
+
+func newPasswordResetToken() (string, []byte, error) {
+	secret := make([]byte, 32)
+	if _, err := rand.Read(secret); err != nil {
+		return "", nil, err
+	}
+	token := base64.RawURLEncoding.EncodeToString(secret)
+	hash := sha256.Sum256([]byte("password-reset:" + token))
 	return token, hash[:], nil
 }
 
