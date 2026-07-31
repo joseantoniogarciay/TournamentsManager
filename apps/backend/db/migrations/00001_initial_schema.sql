@@ -80,6 +80,21 @@ CREATE TABLE sessions (
 
 CREATE INDEX sessions_account_idx ON sessions (account_id);
 
+CREATE TABLE session_refresh_tokens (
+    id uuid PRIMARY KEY DEFAULT uuidv7(),
+    session_id uuid NOT NULL REFERENCES sessions (id) ON DELETE CASCADE,
+    token_hash bytea NOT NULL UNIQUE CHECK (octet_length(token_hash) = 32),
+    created_at timestamptz NOT NULL DEFAULT now(),
+    expires_at timestamptz NOT NULL,
+    consumed_at timestamptz,
+    revoked_at timestamptz,
+    CONSTRAINT session_refresh_tokens_expiration CHECK (expires_at > created_at),
+    CONSTRAINT session_refresh_tokens_consumption CHECK (consumed_at IS NULL OR consumed_at >= created_at),
+    CONSTRAINT session_refresh_tokens_revocation CHECK (revoked_at IS NULL OR revoked_at >= created_at)
+);
+
+CREATE INDEX session_refresh_tokens_session_idx ON session_refresh_tokens (session_id);
+
 CREATE TABLE league_drafts (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     account_id uuid NOT NULL UNIQUE REFERENCES accounts (id) ON DELETE CASCADE,
@@ -246,6 +261,8 @@ DROP TABLE league_administrators;
 DROP TABLE leagues;
 DROP TABLE draft_teams;
 DROP TABLE league_drafts;
+DROP INDEX session_refresh_tokens_session_idx;
+DROP TABLE session_refresh_tokens;
 DROP TABLE sessions;
 DROP TABLE email_verification_tokens;
 DROP TABLE local_credentials;

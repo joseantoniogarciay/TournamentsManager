@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -17,6 +18,7 @@ export default function AccountScreen() {
   const { show } = useFeedback();
   const { colors } = usePreferences();
   const { user } = useSession();
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showEmailError, setShowEmailError] = useState(false);
@@ -34,21 +36,26 @@ export default function AccountScreen() {
   if (user) {
     return (
       <Screen bottomInset="none" topInset="navigation-bar">
-        <Card>
-          <View style={styles.form}>
-            <Text variant="title">{t("account_authenticated_title")}</Text>
-            <Text color="secondary">
-              {t("account_authenticated_mock").replace("{username}", user.username)}
-            </Text>
-          </View>
-        </Card>
+        <View style={{ paddingBottom: insets.bottom + space[12] }}>
+          <Card>
+            <View style={styles.form}>
+              <Text variant="title">{t("account_authenticated_title")}</Text>
+              <Text color="secondary">
+                {t("account_authenticated_mock").replace("{username}", user.username)}
+              </Text>
+            </View>
+          </Card>
+        </View>
       </Screen>
     );
   }
 
   return (
     <Screen bottomInset="none" topInset="navigation-bar">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[12] }]}
+        showsVerticalScrollIndicator={false}
+      >
         <Card>
           <View style={styles.form}>
             <Text variant="title">{t("account_sign_in_title")}</Text>
@@ -105,7 +112,7 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { gap: space[5], paddingBottom: space[12] },
+  content: { gap: space[5] },
   form: { gap: space[4] },
   googleButton: {
     alignItems: "center",

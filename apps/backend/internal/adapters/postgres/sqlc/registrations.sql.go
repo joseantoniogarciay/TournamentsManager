@@ -61,6 +61,61 @@ func (q *Queries) IsUsernameAvailable(ctx context.Context, username string) (boo
 	return available, err
 }
 
+const rotateSessionTokens = `-- name: RotateSessionTokens :one
+WITH consumed_refresh AS (
+    UPDATE session_refresh_tokens
+    SET consumed_at = now()
+    WHERE session_refresh_tokens.token_hash = $1
+      AND session_refresh_tokens.consumed_at IS NULL
+      AND session_refresh_tokens.revoked_at IS NULL
+      AND session_refresh_tokens.expires_at > now()
+    RETURNING session_id
+), rotated_session AS (
+    UPDATE sessions
+    SET token_hash = $2,
+        last_seen_at = now(),
+        idle_expires_at = now() + interval '7 days',
+        absolute_expires_at = now() + interval '7 days'
+    WHERE id = (SELECT session_id FROM consumed_refresh)
+      AND revoked_at IS NULL
+    RETURNING id, account_id, idle_expires_at
+), created_refresh AS (
+    INSERT INTO session_refresh_tokens (session_id, token_hash, expires_at)
+    SELECT id, $3, now() + interval '30 days'
+    FROM rotated_session
+    RETURNING expires_at
+)
+SELECT accounts.id, accounts.username, rotated_session.idle_expires_at, created_refresh.expires_at
+FROM rotated_session
+JOIN accounts ON accounts.id = rotated_session.account_id
+CROSS JOIN created_refresh
+`
+
+type RotateSessionTokensParams struct {
+	TokenHash   []byte
+	TokenHash_2 []byte
+	TokenHash_3 []byte
+}
+
+type RotateSessionTokensRow struct {
+	ID            pgtype.UUID
+	Username      string
+	IdleExpiresAt pgtype.Timestamptz
+	ExpiresAt     pgtype.Timestamptz
+}
+
+func (q *Queries) RotateSessionTokens(ctx context.Context, arg RotateSessionTokensParams) (RotateSessionTokensRow, error) {
+	row := q.db.QueryRow(ctx, rotateSessionTokens, arg.TokenHash, arg.TokenHash_2, arg.TokenHash_3)
+	var i RotateSessionTokensRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.IdleExpiresAt,
+		&i.ExpiresAt,
+	)
+	return i, err
+}
+
 const verifyRegistrationAndCreateSession = `-- name: VerifyRegistrationAndCreateSession :one
 WITH consumed_token AS (
     UPDATE email_verification_tokens
@@ -79,23 +134,30 @@ WITH consumed_token AS (
 ), revoked_presented_session AS (
     UPDATE sessions
     SET revoked_at = now()
-    WHERE sessions.token_hash = $3::bytea
+    WHERE sessions.token_hash = $4::bytea
       AND sessions.revoked_at IS NULL
     RETURNING id
 ), created_session AS (
     INSERT INTO sessions (account_id, token_hash, idle_expires_at, absolute_expires_at)
-    SELECT id, $2, now() + interval '7 days', now() + interval '30 days'
+    SELECT id, $2, now() + interval '7 days', now() + interval '7 days'
     FROM verified_account
-    RETURNING idle_expires_at
+    RETURNING id, idle_expires_at
+), created_refresh AS (
+    INSERT INTO session_refresh_tokens (session_id, token_hash, expires_at)
+    SELECT id, $3, now() + interval '30 days'
+    FROM created_session
+    RETURNING expires_at
 )
-SELECT verified_account.id, verified_account.username, created_session.idle_expires_at
+SELECT verified_account.id, verified_account.username, created_session.idle_expires_at, created_refresh.expires_at
 FROM verified_account
 CROSS JOIN created_session
+CROSS JOIN created_refresh
 `
 
 type VerifyRegistrationAndCreateSessionParams struct {
 	TokenHash           []byte
 	TokenHash_2         []byte
+	TokenHash_3         []byte
 	PreviousSessionHash []byte
 }
 
@@ -103,11 +165,22 @@ type VerifyRegistrationAndCreateSessionRow struct {
 	ID            pgtype.UUID
 	Username      string
 	IdleExpiresAt pgtype.Timestamptz
+	ExpiresAt     pgtype.Timestamptz
 }
 
 func (q *Queries) VerifyRegistrationAndCreateSession(ctx context.Context, arg VerifyRegistrationAndCreateSessionParams) (VerifyRegistrationAndCreateSessionRow, error) {
-	row := q.db.QueryRow(ctx, verifyRegistrationAndCreateSession, arg.TokenHash, arg.TokenHash_2, arg.PreviousSessionHash)
+	row := q.db.QueryRow(ctx, verifyRegistrationAndCreateSession,
+		arg.TokenHash,
+		arg.TokenHash_2,
+		arg.TokenHash_3,
+		arg.PreviousSessionHash,
+	)
 	var i VerifyRegistrationAndCreateSessionRow
-	err := row.Scan(&i.ID, &i.Username, &i.IdleExpiresAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.IdleExpiresAt,
+		&i.ExpiresAt,
+	)
 	return i, err
 }

@@ -48,8 +48,12 @@ func (r testRegistrationRepository) IsUsernameAvailable(context.Context, string)
 	return r.available, nil
 }
 
-func (r testRegistrationRepository) VerifyAndCreateSession(context.Context, []byte, []byte, []byte) (registration.Session, error) {
+func (r testRegistrationRepository) VerifyAndCreateSession(context.Context, []byte, []byte, []byte, []byte) (registration.Session, error) {
 	return registration.Session{}, registration.ErrVerificationInvalid
+}
+
+func (r testRegistrationRepository) RotateSessionTokens(context.Context, []byte, []byte, []byte) (registration.Session, error) {
+	return registration.Session{}, registration.ErrRefreshInvalid
 }
 
 func testHandler() http.Handler {

@@ -138,3 +138,13 @@ type Session struct {
 	AbsoluteExpiresAt pgtype.Timestamptz
 	RevokedAt         pgtype.Timestamptz
 }
+
+type SessionRefreshToken struct {
+	ID         pgtype.UUID
+	SessionID  pgtype.UUID
+	TokenHash  []byte
+	CreatedAt  pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+	ConsumedAt pgtype.Timestamptz
+	RevokedAt  pgtype.Timestamptz
+}

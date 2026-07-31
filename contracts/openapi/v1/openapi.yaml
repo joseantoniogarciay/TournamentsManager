@@ -161,6 +161,19 @@ paths:
       responses:
         "204": { description: "Sesión revocada; para cookie, también se expira la cookie." }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
+  /sessions/refresh:
+    post:
+      tags: [Session]
+      operationId: refreshSession
+      summary: Rota una sesión mediante su refresh token
+      security: [{ bearerRefresh: [] }]
+      responses:
+        "200":
+          description: Access y refresh token rotados.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionEstablishment" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /google-login-challenges:
     post:
       tags: [Federated identity]
@@ -323,6 +336,9 @@ components:
     bearerSession:
       type: http
       scheme: bearer
+    bearerRefresh:
+      type: http
+      scheme: bearer
       bearerFormat: opaque
   responses:
     ValidationProblem:
@@ -430,7 +446,7 @@ components:
         username: { $ref: "#/components/schemas/Username" }
     SessionEstablishment:
       type: object
-      required: [user, delivery, expiresAt]
+      required: [user, delivery, expiresAt, refreshExpiresAt]
       properties:
         user: { $ref: "#/components/schemas/User" }
         delivery: { $ref: "#/components/schemas/Transport" }
@@ -438,6 +454,10 @@ components:
           allOf: [{ $ref: "#/components/schemas/OpaqueToken" }]
           description: Presente solo cuando delivery es bearer; guardar únicamente en Keychain/Keystore.
         expiresAt: { type: string, format: date-time }
+        refreshToken:
+          allOf: [{ $ref: "#/components/schemas/OpaqueToken" }]
+          description: Presente solo cuando delivery es bearer; guardar únicamente en Keychain/Keystore.
+        refreshExpiresAt: { type: string, format: date-time }
     CurrentSession:
       type: object
       required: [user, idleExpiresAt, absoluteExpiresAt]

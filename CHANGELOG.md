@@ -59,6 +59,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- Los deep links que arrancan iOS o Android se encolan en memoria hasta que
+  Inicio se haya montado; las entregas sobre una aplicación ya viva continúan
+  navegando de inmediato.
 - Mailpit local queda fijado a `v1.30.5` con health check de disponibilidad;
   se corrige la etiqueta inexistente `v1.28.5`.
 - Autenticación local definida con sesiones opacas revocables, Argon2id y

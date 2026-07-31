@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { space } from "@tournaments-manager/design-tokens";
 
@@ -14,6 +15,7 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 export default function RegisterScreen() {
   const t = getTranslator();
   const { show } = useFeedback();
+  const insets = useSafeAreaInsets();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,7 +61,10 @@ export default function RegisterScreen() {
 
   return (
     <Screen bottomInset="none" topInset="navigation-bar">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[12] }]}
+        showsVerticalScrollIndicator={false}
+      >
         <Card>
           <View style={styles.form}>
             <Text color="secondary">{t("account_register_description")}</Text>
@@ -108,7 +113,7 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: space[12] },
+  content: {},
   form: { gap: space[4] },
 });
 

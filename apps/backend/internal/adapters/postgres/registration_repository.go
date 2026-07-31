@@ -17,15 +17,27 @@ type RegistrationRepository struct {
 }
 
 // VerifyAndCreateSession consume una verificación y emite su sesión atómica.
-func (r RegistrationRepository) VerifyAndCreateSession(ctx context.Context, verificationHash, sessionHash, previousSessionHash []byte) (registration.Session, error) {
-	row, err := r.queries.VerifyRegistrationAndCreateSession(ctx, sqlc.VerifyRegistrationAndCreateSessionParams{TokenHash: verificationHash, TokenHash_2: sessionHash, PreviousSessionHash: previousSessionHash})
+func (r RegistrationRepository) VerifyAndCreateSession(ctx context.Context, verificationHash, sessionHash, refreshHash, previousSessionHash []byte) (registration.Session, error) {
+	row, err := r.queries.VerifyRegistrationAndCreateSession(ctx, sqlc.VerifyRegistrationAndCreateSessionParams{TokenHash: verificationHash, TokenHash_2: sessionHash, TokenHash_3: refreshHash, PreviousSessionHash: previousSessionHash})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return registration.Session{}, registration.ErrVerificationInvalid
 	}
 	if err != nil {
 		return registration.Session{}, err
 	}
-	return registration.Session{AccountID: row.ID.String(), Username: row.Username, IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
+	return registration.Session{AccountID: row.ID.String(), Username: row.Username, IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
+}
+
+// RotateSessionTokens consume un refresh y crea de forma atómica sus sucesores.
+func (r RegistrationRepository) RotateSessionTokens(ctx context.Context, refreshHash, sessionHash, nextRefreshHash []byte) (registration.Session, error) {
+	row, err := r.queries.RotateSessionTokens(ctx, sqlc.RotateSessionTokensParams{TokenHash: refreshHash, TokenHash_2: sessionHash, TokenHash_3: nextRefreshHash})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return registration.Session{}, registration.ErrRefreshInvalid
+	}
+	if err != nil {
+		return registration.Session{}, err
+	}
+	return registration.Session{AccountID: row.ID.String(), Username: row.Username, IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
 }
 
 // NewRegistrationRepository conecta el puerto del caso de uso al pool PostgreSQL.

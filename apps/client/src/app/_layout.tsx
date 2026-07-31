@@ -6,7 +6,6 @@ import { Platform } from "react-native";
 import { FeedbackProvider } from "@/shared/feedback/feedback-provider";
 import { PendingVerificationProvider } from "@/features/registration/pending-verification";
 import { SessionProvider, useSession } from "@/shared/session/session-provider";
-import { getTranslator } from "@/shared/i18n/locale";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
 
 if (Platform.OS !== "web") {
@@ -15,14 +14,13 @@ if (Platform.OS !== "web") {
 }
 
 export default function RootLayout() {
-  const t = getTranslator();
   return (
     <PreferencesProvider>
       <NavigationTheme>
         <SessionProvider>
           <PendingVerificationProvider>
             <FeedbackProvider>
-              <RootNavigator title={t("link_confirmation_title")} />
+              <RootNavigator />
             </FeedbackProvider>
           </PendingVerificationProvider>
         </SessionProvider>
@@ -31,7 +29,7 @@ export default function RootLayout() {
   );
 }
 
-function RootNavigator({ title }: { title: string }) {
+function RootNavigator() {
   const { finishSessionReplacement, revision, transition } = useSession();
 
   useEffect(() => {
@@ -54,10 +52,9 @@ function RootNavigator({ title }: { title: string }) {
       <Stack.Screen
         name="link/confirm"
         options={{
-          headerShown: true,
-          headerTitleAlign: "center",
+          animation: "fade",
+          headerShown: false,
           presentation: Platform.OS === "web" ? "card" : "modal",
-          title,
         }}
       />
     </Stack>

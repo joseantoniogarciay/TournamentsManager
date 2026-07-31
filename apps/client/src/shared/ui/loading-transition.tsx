@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, ActivityIndicator, Animated, StyleSheet } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Animated, StyleSheet, View } from "react-native";
 
-import { motion } from "@tournaments-manager/design-tokens";
+import { motion, space } from "@tournaments-manager/design-tokens";
 
-import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
-type SessionTransitionProps = { active: boolean };
+import { Text } from "./text";
 
-export function SessionTransition({ active }: SessionTransitionProps) {
-  const t = getTranslator();
+type LoadingTransitionProps = { active: boolean; message: string };
+
+/** Capa modal reutilizable para transiciones que bloquean la interacción. */
+export function LoadingTransition({ active, message }: LoadingTransitionProps) {
   const { colors } = usePreferences();
   const [rendered, setRendered] = useState(active);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -60,19 +61,16 @@ export function SessionTransition({ active }: SessionTransitionProps) {
 
   return (
     <Animated.View
-      accessibilityLabel={t("common_loading")}
+      accessibilityLabel={message}
       accessibilityRole="progressbar"
       accessibilityViewIsModal
       pointerEvents="auto"
-      style={[
-        styles.overlay,
-        {
-          backgroundColor: colors.surface.canvas,
-          opacity: visibility.interpolate({ inputRange: [0, 1], outputRange: [0, 0.82] }),
-        },
-      ]}
+      style={[styles.overlay, { backgroundColor: colors.surface.canvas, opacity: visibility }]}
     >
-      <ActivityIndicator color={colors.text.primary} size="large" />
+      <View style={styles.content}>
+        <Text variant="bodyLarge">{message}</Text>
+        <ActivityIndicator color={colors.text.primary} size="large" />
+      </View>
     </Animated.View>
   );
 }
@@ -89,4 +87,5 @@ const styles = StyleSheet.create({
     top: 0,
     zIndex: 2,
   },
+  content: { alignItems: "center", gap: space[4] },
 });

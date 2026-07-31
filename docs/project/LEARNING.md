@@ -994,6 +994,72 @@ Para cada capacidad se sigue el ciclo:
 - **Regla reutilizable:** navegar a una raíz no debe disparar datos de todas las
   secciones; cada raíz carga solo al ser visible y con la identidad vigente.
 
+### 2026-07-31 — Un deep link de arranque necesita una raíz estable antes de ejecutarse
+
+- **Aprendido:** el router puede recibir el enlace que despierta una app nativa
+  antes de que Inicio haya llegado a pantalla. Ejecutar su ruta de inmediato
+  compite con el montaje y puede dejar transiciones o estado de navegación
+  incoherentes.
+- **Evidencia:** `+native-intent` conserva únicamente en memoria el enlace de
+  arranque, fuerza la raíz `/` y Inicio lo entrega al router en el siguiente
+  frame; un enlace recibido por una app viva no se desvía.
+- **Coste aceptado:** hay un frame adicional antes de ejecutar un enlace de
+  arranque, a cambio de una raíz de navegación estable y sin persistir tokens.
+- **Regla reutilizable:** el tratamiento de enlaces de arranque pertenece al
+  borde de navegación, no a cada flujo de negocio que pueda abrirse desde uno.
+
+### 2026-07-31 — Restaurar una sesión móvil no autoriza al cliente
+
+- **Aprendido:** Keychain/Keystore puede conservar los dos secretos opacos, la
+  identidad y sus expiraciones como una sola unidad de arranque; ni el perfil ni
+  las fechas sustituyen la validación de cada operación en el backend.
+- **Evidencia:** ADR-0062; `apiFetch` comparte una única renovación cuando queda
+  menos de una hora de access y el `SessionProvider` hidrata la identidad local.
+- **Coste aceptado:** un refresh inválido resetea la sesión mediante el
+  coordinador; un rechazo de red la conserva para permitir reintento posterior.
+- **Regla reutilizable:** almacenar tokens relacionados por separado permite
+  restauraciones parciales; persistirlos juntos reduce ese estado imposible.
+
+### 2026-07-31 — Una transición de identidad puede tener una duración visual mínima
+
+- **Aprendido:** una confirmación de deep link puede completarse más rápido que
+  la animación que comunica el cambio de identidad. Mantener una capa opaca con
+  texto y loader durante al menos dos segundos permite revisar su feedback sin
+  retrasar la petición ni modificar el resultado de verificación.
+- **Evidencia:** la ruta `link/confirm` inicia la transición antes del `POST`
+  generado y, tras una respuesta correcta, espera solo el tiempo restante hasta
+  dos segundos antes de sustituir la sesión y resetear la navegación.
+- **Coste aceptado:** el usuario tarda hasta dos segundos adicionales en llegar
+  a Inicio después de una verificación satisfactoria; los fallos no se retrasan.
+- **Regla reutilizable:** cuando una espera exista solo para observar feedback,
+  se mide desde el inicio de la transición y nunca se antepone a la operación;
+  esa capa solo usa fade in y fade out, sin desplazar el contenido.
+
+### 2026-07-31 — La capa de carga es una primitiva, no una regla de sesión
+
+- **Aprendido:** el patrón de bloqueo con mensaje, loader y fade puede aparecer
+  fuera de identidad; acoplarlo a `SessionProvider` dificultaría reutilizarlo.
+- **Evidencia:** `LoadingTransition` vive en `shared/ui`, recibe estado y copy
+  localizado y SessionProvider solo le aporta el estado de transición actual.
+- **Coste aceptado:** cada flujo conserva su duración mínima y su resultado; la
+  primitiva se limita a presentación, accesibilidad y movimiento reducido.
+- **Regla reutilizable:** extraer una primitiva compartida cuando el aspecto y
+  la interacción se repiten, sin trasladarle decisiones de negocio.
+
+### 2026-07-31 — El contrato puede distinguir fallos que el backend aún agrupa
+
+- **Aprendido:** `409` para un enlace ya consumido y `410` para uno caducado
+  ofrecen recuperaciones diferentes y el cliente debe poder expresarlas sin
+  mostrar el detalle RFC 9457.
+- **Evidencia:** el adaptador de registro traduce ambos estados declarados a un
+  error de feature; la ruta muestra copy localizado y la previsualización de
+  desarrollo reproduce el caso `409` sin HTTP.
+- **Coste aceptado:** el backend actual devuelve `409` para todos los tokens
+  inválidos; el copy de caducidad queda preparado hasta que la persistencia
+  clasifique y entregue `410` de forma verificable.
+- **Regla reutilizable:** una feature mapea solo los estados declarados que
+  cambian la recuperación; los demás continúan por el fallback seguro.
+
 ## Regla de evidencia
 
 “Entendido” exige una explicación propia y una demostración. Un comando que
