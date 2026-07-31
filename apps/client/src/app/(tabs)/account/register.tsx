@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { space } from "@tournaments-manager/design-tokens";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
-import { getTranslator } from "@/shared/i18n/locale";
+import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
 import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { registerLocalAccountRequest } from "@/features/registration/api";
@@ -48,7 +48,12 @@ export default function RegisterScreen() {
 
     setIsSubmitting(true);
     try {
-      await registerLocalAccountRequest({ email: email.trim(), password, username });
+      await registerLocalAccountRequest({
+        email: email.trim(),
+        locale: getCurrentLanguage(),
+        password,
+        username,
+      });
       show({ kind: "success", message: t("account_registration_email_sent") });
       router.replace("/account");
     } catch (error) {

@@ -419,12 +419,16 @@ components:
           items: { $ref: "#/components/schemas/TeamInput" }
     RegisterRequest:
       type: object
-      required: [email, password, username]
+      required: [email, password, username, locale]
       properties:
         email: { $ref: "#/components/schemas/Email" }
         password: { $ref: "#/components/schemas/Password" }
         username: { $ref: "#/components/schemas/Username" }
+        locale: { $ref: "#/components/schemas/Locale" }
         draft: { $ref: "#/components/schemas/DraftInput" }
+    Locale:
+      type: string
+      enum: [es, en, it, fr]
     VerifyRegistrationRequest:
       type: object
       required: [token, sessionTransport]

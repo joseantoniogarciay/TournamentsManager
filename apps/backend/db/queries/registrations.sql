@@ -1,15 +1,15 @@
 -- name: CreatePendingRegistration :one
 WITH created_account AS (
-    INSERT INTO accounts (email, state, username, expires_at)
-    VALUES ($1, 'pending_verification', $2, now() + interval '7 days')
+    INSERT INTO accounts (email, locale, state, username, expires_at)
+    VALUES ($1, $2, 'pending_verification', $3, now() + interval '7 days')
     ON CONFLICT DO NOTHING
     RETURNING id, email
 ), created_credentials AS (
     INSERT INTO local_credentials (account_id, password_hash)
-    SELECT id, $3 FROM created_account
+    SELECT id, $4 FROM created_account
 )
 INSERT INTO email_verification_tokens (account_id, token_hash, expires_at)
-SELECT id, $4, now() + interval '24 hours'
+SELECT id, $5, now() + interval '24 hours'
 FROM created_account
 RETURNING (SELECT email FROM created_account) AS email;
 

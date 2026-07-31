@@ -11,6 +11,7 @@ import (
 type Account struct {
 	ID         pgtype.UUID
 	Email      string
+	Locale     string
 	State      string
 	Username   string
 	CreatedAt  pgtype.Timestamptz

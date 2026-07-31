@@ -1060,6 +1060,20 @@ Para cada capacidad se sigue el ciclo:
 - **Regla reutilizable:** una feature mapea solo los estados declarados que
   cambian la recuperación; los demás continúan por el fallback seguro.
 
+### 2026-07-31 — El idioma de un email es una preferencia de cuenta, no un ajuste aislado
+
+- **Aprendido:** persistir el locale efectivo al crear la cuenta permite
+  localizar el email de verificación y reutilizar la misma preferencia en
+  entregas futuras sin introducir una configuración exclusiva de correo.
+- **Evidencia:** ADR-0063 limita los valores a `es`, `en`, `it` y `fr`, que son
+  los locales ya aceptados para el cliente; el backend valida el dato antes de
+  guardarlo y seleccionar una plantilla.
+- **Coste aceptado:** un cambio posterior de idioma en el sistema o navegador
+  no actualiza todavía esa preferencia; una futura sincronización autenticada
+  se evaluará solo si existe necesidad demostrada.
+- **Regla reutilizable:** las preferencias de presentación que trascienden una
+  entrega concreta pertenecen a la cuenta y se validan en el límite del backend.
+
 ## Regla de evidencia
 
 “Entendido” exige una explicación propia y una demostración. Un comando que

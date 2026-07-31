@@ -26,9 +26,24 @@ const (
 	passwordKeyLength   = 32
 )
 
+// Locale identifica una preferencia de idioma admitida para la cuenta.
+type Locale string
+
+const (
+	// LocaleSpanish representa español.
+	LocaleSpanish Locale = "es"
+	// LocaleEnglish representa inglés.
+	LocaleEnglish Locale = "en"
+	// LocaleItalian representa italiano.
+	LocaleItalian Locale = "it"
+	// LocaleFrench representa francés.
+	LocaleFrench Locale = "fr"
+)
+
 // Input es la información validada que recibe el caso de uso.
 type Input struct {
 	Email    string
+	Locale   Locale
 	Username string
 	Password string
 }
@@ -69,7 +84,7 @@ type Session struct {
 
 // Mailer entrega el enlace de verificación mediante el adaptador configurado.
 type Mailer interface {
-	SendVerification(context.Context, string, string) error
+	SendVerification(context.Context, string, Locale, string) error
 }
 
 // Verify consume una verificación y crea una sesión opaca.
@@ -136,7 +151,7 @@ func (s Service) Register(ctx context.Context, input Input) error {
 	if !created {
 		return nil
 	}
-	if err := s.mailer.SendVerification(ctx, input.Email, token); err != nil {
+	if err := s.mailer.SendVerification(ctx, input.Email, input.Locale, token); err != nil {
 		return fmt.Errorf("enviar verificación: %w", err)
 	}
 	return nil
@@ -166,4 +181,14 @@ func NormalizeInput(input Input) Input {
 	input.Email = strings.TrimSpace(input.Email)
 	input.Username = strings.TrimSpace(input.Username)
 	return input
+}
+
+// IsSupportedLocale indica si el locale puede persistirse y seleccionar contenido localizado.
+func IsSupportedLocale(locale Locale) bool {
+	switch locale {
+	case LocaleSpanish, LocaleEnglish, LocaleItalian, LocaleFrench:
+		return true
+	default:
+		return false
+	}
 }

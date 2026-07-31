@@ -54,6 +54,7 @@ func (r RegistrationRepository) IsUsernameAvailable(ctx context.Context, usernam
 func (r RegistrationRepository) CreatePending(ctx context.Context, input registration.Input, passwordHash string, tokenHash []byte) (bool, error) {
 	_, err := r.queries.CreatePendingRegistration(ctx, sqlc.CreatePendingRegistrationParams{
 		Email:        input.Email,
+		Locale:       string(input.Locale),
 		Username:     input.Username,
 		PasswordHash: passwordHash,
 		TokenHash:    tokenHash,

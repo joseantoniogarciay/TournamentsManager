@@ -112,6 +112,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0060](../adr/0060-use-posthog-for-deferred-client-product-observability.md)                  | Usar PostHog diferido para observabilidad de producto del cliente    | Aceptado              | 2026-07-29 |
 | [0061](../adr/0061-confirm-registration-on-deep-link-and-replace-current-session.md)          | Confirmar registro al abrir el enlace y sustituir la sesión actual   | Aceptado              | 2026-07-30 |
 | [0062](../adr/0062-use-rotating-opaque-access-and-refresh-tokens.md)                           | Usar access y refresh tokens opacos rotatorios                       | Aceptado              | 2026-07-31 |
+| [0063](../adr/0063-persist-account-locale-from-registration-for-email-localization.md)          | Persistir locale de cuenta desde el registro para localizar emails   | Aceptado              | 2026-07-31 |
 
 ## Trazabilidad de un cambio
 

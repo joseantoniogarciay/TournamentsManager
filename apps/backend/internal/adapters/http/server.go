@@ -205,6 +205,7 @@ func healthz(writer http.ResponseWriter, _ *http.Request) {
 
 type registerRequest struct {
 	Email    string `json:"email"`
+	Locale   string `json:"locale"`
 	Password string `json:"password"`
 	Username string `json:"username"`
 }
@@ -221,6 +222,7 @@ func register(service registration.Service) http.HandlerFunc {
 
 		input := registration.NormalizeInput(registration.Input{
 			Email:    body.Email,
+			Locale:   registration.Locale(body.Locale),
 			Password: body.Password,
 			Username: body.Username,
 		})
@@ -237,7 +239,7 @@ func register(service registration.Service) http.HandlerFunc {
 }
 
 func validRegistration(input registration.Input) bool {
-	if len(input.Email) == 0 || len(input.Email) > 254 || len(input.Password) < 12 || len(input.Password) > 1024 || !usernamePattern.MatchString(input.Username) {
+	if len(input.Email) == 0 || len(input.Email) > 254 || len(input.Password) < 12 || len(input.Password) > 1024 || !registration.IsSupportedLocale(input.Locale) || !usernamePattern.MatchString(input.Username) {
 		return false
 	}
 	address, err := mail.ParseAddress(input.Email)

@@ -3,6 +3,7 @@
 CREATE TABLE accounts (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     email text NOT NULL,
+    locale text NOT NULL CHECK (locale IN ('es', 'en', 'it', 'fr')),
     state text NOT NULL CHECK (state IN ('pending_verification', 'verified')),
     username text NOT NULL UNIQUE CHECK (username = lower(username)),
     created_at timestamptz NOT NULL DEFAULT now(),

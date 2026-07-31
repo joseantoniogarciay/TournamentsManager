@@ -22,6 +22,7 @@ export * from "./leagueDraftTeamsItem.js";
 export * from "./leagueRelationshipFilter.js";
 export * from "./leagueTeam.js";
 export * from "./listCurrentAccountLeaguesParams.js";
+export * from "./locale.js";
 export * from "./loginRequest.js";
 export * from "./match.js";
 export * from "./matchState.js";

@@ -114,8 +114,10 @@ relacionadas, publicación y lectura pública por ID. `GET /me/leagues` pagina p
 UUIDv7 y filtra en el servidor las relaciones `administered` y `followed`; la
 segunda excluye una liga ya administrada para que la UI no la duplique. Véase
 [ADR-0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md).
-El alta exige identidad local; el borrador es opcional y, si se envía, debe
-cumplir íntegramente las restricciones de `DraftInput`.
+El alta exige identidad local y un locale efectivo de `es`, `en`, `it` o `fr`;
+el backend lo valida y lo persiste como preferencia de cuenta para localizar
+emails. El borrador es opcional y, si se envía, debe cumplir íntegramente las
+restricciones de `DraftInput`.
 
 La entrega de sesión se declara explícitamente: `cookie` para web (cookie
 `__Host-`) y `bearer` para móvil. El secreto solo aparece una vez en la respuesta

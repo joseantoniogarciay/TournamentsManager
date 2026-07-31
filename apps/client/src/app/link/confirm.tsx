@@ -57,7 +57,10 @@ export default function LinkConfirmationScreen() {
         cancelSessionReplacement();
         if (error instanceof RegistrationVerificationError) {
           setConfirmationFailure(error.failure);
-          show({ kind: "generic-error", message: t(getVerificationFailureMessageKey(error.failure)) });
+          show({
+            kind: "generic-error",
+            message: t(getVerificationFailureMessageKey(error.failure)),
+          });
           return;
         }
         setConfirmationFailure("unexpected");

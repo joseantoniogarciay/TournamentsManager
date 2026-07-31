@@ -1,8 +1,11 @@
 package smtp
 
 import (
+	"mime"
 	"strings"
 	"testing"
+
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
 func TestNewMailerRequiresHTTPSOutsideLoopback(t *testing.T) {
@@ -19,7 +22,7 @@ func TestNewMailerRequiresHTTPSOutsideLoopback(t *testing.T) {
 func TestVerificationMessageUsesConfirmationRouteAndMultipartDesign(t *testing.T) {
 	t.Parallel()
 
-	message, err := verificationMessage("person@example.test", "no-reply@example.test", "https://links.example.test/link/confirm?token=test-token")
+	message, err := verificationMessage(registration.LocaleSpanish, "person@example.test", "no-reply@example.test", "https://links.example.test/link/confirm?token=test-token")
 	if err != nil {
 		t.Fatalf("verificationMessage() error = %v", err)
 	}
@@ -37,5 +40,45 @@ func TestVerificationMessageUsesConfirmationRouteAndMultipartDesign(t *testing.T
 	}
 	if strings.Contains(contents, "/verify-registration") {
 		t.Error("message still uses the old verification route")
+	}
+}
+
+func TestVerificationMessageLocalizesAllSupportedLocales(t *testing.T) {
+	t.Parallel()
+
+	for _, test := range []struct {
+		locale   registration.Locale
+		subject  string
+		language string
+	}{
+		{registration.LocaleSpanish, "Verifica tu cuenta de Fast Tourney", `lang="es"`},
+		{registration.LocaleEnglish, "Verify your Fast Tourney account", `lang="en"`},
+		{registration.LocaleItalian, "Verifica il tuo account Fast Tourney", `lang="it"`},
+		{registration.LocaleFrench, "Vérifiez votre compte Fast Tourney", `lang="fr"`},
+	} {
+		t.Run(string(test.locale), func(t *testing.T) {
+			t.Parallel()
+
+			message, err := verificationMessage(test.locale, "person@example.test", "no-reply@example.test", "https://links.example.test/link/confirm?token=test-token")
+			if err != nil {
+				t.Fatalf("verificationMessage() error = %v", err)
+			}
+			contents := string(message)
+			expectedSubject := mime.QEncoding.Encode("UTF-8", test.subject)
+			if !strings.Contains(contents, expectedSubject) {
+				t.Errorf("message does not contain localized subject %q", expectedSubject)
+			}
+			if !strings.Contains(contents, test.language) {
+				t.Errorf("message does not contain localized HTML language %q", test.language)
+			}
+		})
+	}
+}
+
+func TestVerificationMessageRejectsUnsupportedLocale(t *testing.T) {
+	t.Parallel()
+
+	if _, err := verificationMessage("de", "person@example.test", "no-reply@example.test", "https://links.example.test/link/confirm?token=test-token"); err == nil {
+		t.Fatal("verificationMessage() error = nil, want unsupported locale error")
 	}
 }

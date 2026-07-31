@@ -176,6 +176,34 @@ func TestUsernameAvailabilityRateLimitsByClientIP(t *testing.T) {
 	}
 }
 
+func TestRegistrationRequiresSupportedLocale(t *testing.T) {
+	t.Parallel()
+
+	handler := NewHandler(registration.NewService(testRegistrationRepository{}, nil), testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
+	for _, test := range []struct {
+		name   string
+		body   string
+		status int
+	}{
+		{"supported", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"fr"}`, http.StatusAccepted},
+		{"missing", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name"}`, http.StatusBadRequest},
+		{"unsupported", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"de"}`, http.StatusBadRequest},
+		{"non-canonical", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"FR"}`, http.StatusBadRequest},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			request := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/v1/registrations", strings.NewReader(test.body))
+			request.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+
+			handler.ServeHTTP(recorder, request)
+
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
+	}
+}
+
 func TestListAccountLeaguesRequiresSession(t *testing.T) {
 	t.Parallel()
 

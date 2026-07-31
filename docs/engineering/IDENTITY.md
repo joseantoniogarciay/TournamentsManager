@@ -69,8 +69,10 @@ entre réplicas.
 ## Alta local y borradores antes del acceso
 
 Un invitado puede preparar un borrador de torneo en el cliente sin autenticarse.
-Al enviar un alta con email, contraseña y `username`, el backend crea una cuenta
-pendiente y asocia el borrador a ella. La verificación del correo activa la
+Al enviar un alta con email, contraseña, `username` y locale efectivo, el backend
+crea una cuenta pendiente y asocia el borrador a ella. El locale se valida contra
+los idiomas soportados y se guarda como preferencia de la cuenta para localizar
+el email de verificación y futuros emails. La verificación del correo activa la
 cuenta; solo entonces se emite una sesión de producto y se permite publicar el
 torneo.
 
