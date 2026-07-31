@@ -14,7 +14,8 @@ export default function LinkConfirmationScreen() {
   const t = getTranslator();
   const { show } = useFeedback();
   const { token, setToken } = usePendingVerification();
-  const { replaceSession } = useSession();
+  const { beginSessionReplacement, cancelSessionReplacement, completeSessionReplacement } =
+    useSession();
   const params = useLocalSearchParams<{ sent?: string | string[]; token?: string | string[] }>();
   const [isConfirming, setIsConfirming] = useState(false);
 
@@ -28,19 +29,28 @@ export default function LinkConfirmationScreen() {
   useEffect(() => {
     if (!token || isConfirming) return;
     setIsConfirming(true);
+    beginSessionReplacement();
     void confirmRegistration(token, Platform.OS === "web" ? "cookie" : "bearer")
       .then((session) => {
         setToken(null);
-        replaceSession(session.user);
-        router.dismissAll();
-        router.replace("/");
+        completeSessionReplacement(session.user);
       })
       .catch((error: unknown) => {
+        cancelSessionReplacement();
         const failure = getRequestFailure(error);
         show({ kind: failure.kind, message: t(failure.messageKey) });
       })
       .finally(() => setIsConfirming(false));
-  }, [isConfirming, replaceSession, setToken, show, t, token]);
+  }, [
+    beginSessionReplacement,
+    cancelSessionReplacement,
+    completeSessionReplacement,
+    isConfirming,
+    setToken,
+    show,
+    t,
+    token,
+  ]);
 
   const close = () => {
     if (router.canGoBack()) {

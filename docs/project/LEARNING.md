@@ -981,6 +981,19 @@ Para cada capacidad se sigue el ciclo:
   recursos de terceros y se elimina del historial tan pronto como la aplicación
   lo recibe.
 
+### 2026-07-31 — Reemplazar una sesión exige resetear navegación, no cerrar una modal
+
+- **Aprendido:** `dismissAll()` equivale a un `popToTop` del stack más cercano;
+  no representa un reset de aplicación y falla si el deep link llegó en frío sin
+  una pila que pueda responder a esa acción.
+- **Evidencia:** ADR-0061; la transición de sesión mantiene una capa global
+  durante la confirmación y el árbol raíz de navegación se reconstruye una vez
+  obtenida la nueva sesión.
+- **Coste aceptado:** la transición necesita comprobar tanto enlaces abiertos en
+  frío como enlaces recibidos sobre modales y tabs ya activas.
+- **Regla reutilizable:** navegar a una raíz no debe disparar datos de todas las
+  secciones; cada raíz carga solo al ser visible y con la identidad vigente.
+
 ## Regla de evidencia
 
 “Entendido” exige una explicación propia y una demostración. Un comando que

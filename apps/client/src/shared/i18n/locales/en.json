@@ -3,6 +3,7 @@
   "common_back": "Back",
   "common_close": "Close",
   "common_confirm": "Confirm",
+  "common_loading": "Loading",
   "common_network_error": "We could not connect. Check your connection and try again.",
   "common_request_error": "We are having problems. Sorry, please try again later.",
   "home_account": "Account",

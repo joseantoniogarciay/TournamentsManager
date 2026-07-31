@@ -213,7 +213,7 @@ GET /auth/link/confirm?token=...
           └── fallback ──────────> Web
           │
           ▼
-show explicit confirmation
+show blocking transition
           │
           ▼
 POST confirmation to backend
@@ -222,7 +222,7 @@ POST confirmation to backend
 consume attempt + link identity + create session
           │
           ▼
-replace navigation with home /
+replace web URL with home / or reset native navigation
 ```
 
 La ruta del enlace es una pantalla transitoria del cliente, no el endpoint REST
@@ -236,6 +236,12 @@ https://<base-url>/auth/link/confirm?token=<opaque-token>
 consume el intento, no vincula la identidad y no crea una sesión. Esto protege el
 flujo frente a aperturas repetidas, previsualizaciones e inspecciones automáticas
 del enlace.
+
+Mientras el cliente confirma el enlace y reemplaza la sesión, una capa global
+bloquea la interacción para que no quede visible ni operable el estado de la
+identidad anterior. Tras éxito, la web reemplaza la URL por `/`; las aplicaciones
+reconstruyen las raíces de Inicio, Torneos y Cuenta, descartando modales y pilas
+previas. Cada raíz carga sus datos al recibir foco, no como efecto del reset.
 
 La persona confirma mediante una acción explícita. El cliente realiza entonces
 un `POST` al backend; la ruta y los DTO concretos se incorporarán a OpenAPI antes

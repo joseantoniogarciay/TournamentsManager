@@ -57,6 +57,20 @@ La alternativa A mantiene la mutación protegida por `POST` y la atomicidad del 
 
 **Aceptada el 2026-07-30:** alternativa A. Tras alta local, el cliente vuelve a Login con un aviso breve de correo enviado. Al abrir el deep link, confirma de forma automática, descarta la sesión previa, restaura las tres áreas desde su raíz y, en web, termina en Inicio (`/`). Cuenta muestra temporalmente un mock de sesión autenticada hasta definir su contenido final.
 
+### Aclaración de implementación — 2026-07-31
+
+Durante el `POST` y hasta que la nueva raíz esté montada, el cliente muestra una
+capa global semitransparente que bloquea interacción y centra un indicador de
+progreso. Entra y sale con la duración de movimiento semántica, salvo que la
+plataforma solicite movimiento reducido.
+
+El restablecimiento nativo no se implementa cerrando una modal concreta:
+reconstruye el árbol raíz de navegación para descartar todas las modales y las
+pilas de Inicio, Torneos y Cuenta, incluso si el enlace llegó con la aplicación
+ya abierta. En web, se reemplaza la URL por `/`. El reinicio de navegación no
+autoriza prefetchar colecciones: cada raíz solicita sus datos solo al entrar o
+recibir foco.
+
 ## Consecuencias
 
 ### Positivas
@@ -75,6 +89,10 @@ La alternativa A mantiene la mutación protegida por `POST` y la atomicidad del 
 - Un deep link válido activa la cuenta sin botón y llega a `/` en web.
 - La sesión entregada en la petición de verificación queda revocada; la nueva credencial autentica a la persona registrada.
 - Inicio, Torneos y Cuenta observan el reinicio de sesión; Cuenta muestra el mock de la nueva identidad.
+- En iOS y Android, un enlace abierto sobre una o más modales deja las tres tabs
+  en sus raíces y no emite acciones de navegación sin manejador.
+- La transición impide acciones duplicadas, cubre toda la interfaz y respeta la
+  preferencia de movimiento reducido.
 
 ## Disparadores de revisión
 

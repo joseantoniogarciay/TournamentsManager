@@ -3,6 +3,7 @@
   "common_back": "Retour",
   "common_close": "Fermer",
   "common_confirm": "Confirmer",
+  "common_loading": "Chargement",
   "common_network_error": "Nous n’avons pas pu nous connecter. Vérifiez votre connexion et réessayez.",
   "common_request_error": "Nous rencontrons des problèmes. Désolés, réessayez plus tard.",
   "home_account": "Compte",
