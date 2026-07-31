@@ -35,6 +35,25 @@ antes de proponer cambios importantes.
 No presentes una dirección del stack objetivo como una decisión de implementación
 si todavía no tiene ADR aceptado.
 
+## Operaciones HTTP y feedback de errores
+
+Al implementar o conectar una operación OpenAPI, comprueba de extremo a extremo
+sus respuestas: el contrato declara los estados esperados, el backend no expone
+detalles internos y la feature cliente decide cuáles cambian de forma útil la
+recuperación de la persona. Solo esos estados de negocio reciben un mensaje
+específico y localizado.
+
+- Un rechazo de transporte identificado por `apiFetch` usa el mensaje común de
+  conexión (`common_network_error`).
+- Estados HTTP no tratados por la feature, respuestas `5xx`, cuerpos inválidos o
+  problemas RFC 9457 no reconocidos usan el mensaje común seguro
+  (`common_request_error`).
+- No se muestran directamente `title`, `detail`, trazas ni cuerpos de error del
+  backend. Las cancelaciones intencionadas de una petición no muestran feedback.
+- No se centralizan reglas de negocio por código de estado: cada feature mapea
+  únicamente los casos del contrato que aporten una acción o recuperación
+  diferente; el resto conserva el fallback común.
+
 ## Cliente
 
 Los cambios bajo `apps/client/` siguen además las reglas obligatorias de

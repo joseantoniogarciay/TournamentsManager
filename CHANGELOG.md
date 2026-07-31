@@ -8,6 +8,11 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Registro completo en el cliente: alta local, correo de verificación HTML y
+  texto alternativo, confirmación automática al abrir el deep link y sesión en cookie web o
+  Keychain/Keystore móvil. Se añaden configuración CNG y plantillas documentadas
+  de `apple-app-site-association` y `assetlinks.json` para asociar el dominio
+  HTTPS cuando existan sus identificadores y certificados reales.
 - `make local-api-up` valida los contratos locales, espera a PostgreSQL y
   Mailpit, y ejecuta la API Go en el host sin migraciones implícitas.
 - ADR-0060: PostHog Cloud diferido para observabilidad de producto del cliente,
@@ -54,6 +59,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- Los deep links que arrancan iOS o Android se encolan en memoria hasta que
+  Inicio se haya montado; las entregas sobre una aplicación ya viva continúan
+  navegando de inmediato.
 - Mailpit local queda fijado a `v1.30.5` con health check de disponibilidad;
   se corrige la etiqueta inexistente `v1.28.5`.
 - Autenticación local definida con sesiones opacas revocables, Argon2id y
@@ -76,9 +84,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   un enlace de vinculación de un solo uso.
 - La confirmación usa HTTPS deep linking con fallback web y sustituye la sesión
   local sin cambiar el propietario de una sesión existente.
-- El enlace de vinculación abre una ruta dedicada mediante `GET` seguro; una
-  confirmación explícita mediante `POST` consume el intento y termina en la home
-  sin conservar el token en la navegación.
+- ADR-0061: el deep link de registro abre una ruta mediante `GET` seguro y el
+  cliente ejecuta el `POST` de verificación automáticamente, revoca la sesión
+  anterior presentada y termina en Home sin conservar el token en navegación.
 - El alcance inicial de torneos se ajusta a privacidad por defecto y acceso
   invitado limitado, dejando la visibilidad pública como decisión futura.
 

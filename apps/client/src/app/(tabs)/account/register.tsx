@@ -1,20 +1,26 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { space } from "@tournaments-manager/design-tokens";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
-import { getTranslator } from "@/shared/i18n/locale";
+import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
 import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
+import { registerLocalAccountRequest } from "@/features/registration/api";
+import { getRequestFailure } from "@/shared/feedback/request-failure";
 
 export default function RegisterScreen() {
   const t = getTranslator();
   const { show } = useFeedback();
+  const insets = useSafeAreaInsets();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { isValid: usernameIsValid, status: usernameAvailability } =
     useUsernameAvailability(username);
   const usernameError = !username.trim()
@@ -23,16 +29,47 @@ export default function RegisterScreen() {
       ? t("validation_username_format")
       : undefined;
   const emailError = !isEmail(email) ? t("validation_email") : undefined;
-  const passwordError = password ? undefined : t("validation_password_required");
-  const register = () => {
+  const passwordError = !password
+    ? t("validation_password_required")
+    : password.length < 12
+      ? t("validation_password_length")
+      : undefined;
+  const register = async () => {
     setSubmitted(true);
-    if (usernameError || emailError || passwordError) return;
-    show({ kind: "generic-error", message: t("account_registration_unavailable") });
+    if (
+      usernameError ||
+      emailError ||
+      passwordError ||
+      usernameAvailability === "checking" ||
+      usernameAvailability === "unavailable"
+    ) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await registerLocalAccountRequest({
+        email: email.trim(),
+        locale: getCurrentLanguage(),
+        password,
+        username,
+      });
+      show({ kind: "success", message: t("account_registration_email_sent") });
+      router.replace("/account");
+    } catch (error) {
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Screen bottomInset="none" topInset="navigation-bar">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[12] }]}
+        showsVerticalScrollIndicator={false}
+      >
         <Card>
           <View style={styles.form}>
             <Text color="secondary">{t("account_register_description")}</Text>
@@ -65,7 +102,14 @@ export default function RegisterScreen() {
               secureTextEntry
               value={password}
             />
-            <Button label={t("account_register")} onPress={register} />
+            <Button
+              disabled={
+                usernameAvailability === "checking" || usernameAvailability === "unavailable"
+              }
+              label={t("account_register")}
+              loading={isSubmitting}
+              onPress={() => void register()}
+            />
           </View>
         </Card>
       </ScrollView>
@@ -74,7 +118,7 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: space[12] },
+  content: {},
   form: { gap: space[4] },
 });
 
@@ -95,8 +139,10 @@ function usernameFeedback(
       return { message: t("account_username_unavailable"), tone: "help" as const };
     case "rate-limited":
       return { message: t("account_username_rate_limited"), tone: "help" as const };
+    case "network-error":
+      return { message: t("common_network_error"), tone: "help" as const };
     case "error":
-      return { message: t("account_username_check_error"), tone: "help" as const };
+      return { message: t("common_request_error"), tone: "help" as const };
     default:
       return undefined;
   }

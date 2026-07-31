@@ -69,8 +69,10 @@ entre réplicas.
 ## Alta local y borradores antes del acceso
 
 Un invitado puede preparar un borrador de torneo en el cliente sin autenticarse.
-Al enviar un alta con email, contraseña y `username`, el backend crea una cuenta
-pendiente y asocia el borrador a ella. La verificación del correo activa la
+Al enviar un alta con email, contraseña, `username` y locale efectivo, el backend
+crea una cuenta pendiente y asocia el borrador a ella. El locale se valida contra
+los idiomas soportados y se guarda como preferencia de la cuenta para localizar
+el email de verificación y futuros emails. La verificación del correo activa la
 cuenta; solo entonces se emite una sesión de producto y se permite publicar el
 torneo.
 
@@ -83,7 +85,9 @@ El contrato de registro, verificación y sesión se concreta en
 [OpenAPI v1](../../contracts/openapi/v1/openapi.yaml); el modelo persistente está
 en [INITIAL_DATA_MODEL.md](INITIAL_DATA_MODEL.md). La verificación consume el
 token de un solo uso, activa la cuenta completa y crea la sesión en una única
-transacción. Un login correcto de cuenta pendiente invalida el token activo y
+transacción. ADR-0061 establece que el cliente la inicia automáticamente al
+abrir el deep link, después de retirar el token de la URL, y reemplaza la sesión
+preexistente si la hubiera. Un login correcto de cuenta pendiente invalida el token activo y
 solicita otro correo, sin crear sesión.
 
 ## Subject de Apple y Google
@@ -211,7 +215,7 @@ GET /auth/link/confirm?token=...
           └── fallback ──────────> Web
           │
           ▼
-show explicit confirmation
+show blocking transition
           │
           ▼
 POST confirmation to backend
@@ -220,7 +224,7 @@ POST confirmation to backend
 consume attempt + link identity + create session
           │
           ▼
-replace navigation with home /
+replace web URL with home / or reset native navigation
 ```
 
 La ruta del enlace es una pantalla transitoria del cliente, no el endpoint REST
@@ -234,6 +238,12 @@ https://<base-url>/auth/link/confirm?token=<opaque-token>
 consume el intento, no vincula la identidad y no crea una sesión. Esto protege el
 flujo frente a aperturas repetidas, previsualizaciones e inspecciones automáticas
 del enlace.
+
+Mientras el cliente confirma el enlace y reemplaza la sesión, una capa global
+bloquea la interacción para que no quede visible ni operable el estado de la
+identidad anterior. Tras éxito, la web reemplaza la URL por `/`; las aplicaciones
+reconstruyen las raíces de Inicio, Torneos y Cuenta, descartando modales y pilas
+previas. Cada raíz carga sus datos al recibir foco, no como efecto del reset.
 
 La persona confirma mediante una acción explícita. El cliente realiza entonces
 un `POST` al backend; la ruta y los DTO concretos se incorporarán a OpenAPI antes

@@ -158,3 +158,44 @@ export const revokeCurrentSession = async (
   const data: revokeCurrentSessionResponse["data"] = body ? JSON.parse(body) : undefined;
   return { data, status: res.status, headers: res.headers } as revokeCurrentSessionResponse;
 };
+
+export type refreshSessionResponse200 = {
+  data: SessionEstablishment;
+  status: 200;
+};
+
+export type refreshSessionResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type refreshSessionResponseSuccess = refreshSessionResponse200 & {
+  headers: Headers;
+};
+export type refreshSessionResponseError = refreshSessionResponse401 & {
+  headers: Headers;
+};
+
+export type refreshSessionResponse = refreshSessionResponseSuccess | refreshSessionResponseError;
+
+export const getRefreshSessionUrl = () => {
+  return `/sessions/refresh`;
+};
+
+/**
+ * @summary Rota una sesión mediante su refresh token
+ */
+export const refreshSession = async (
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<refreshSessionResponse> => {
+  const res = await (fetchFn ?? fetch)(getRefreshSessionUrl(), {
+    ...options,
+    method: "POST",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: refreshSessionResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as refreshSessionResponse;
+};

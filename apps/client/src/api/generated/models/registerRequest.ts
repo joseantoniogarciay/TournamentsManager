@@ -7,6 +7,7 @@
  */
 import type { DraftInput } from "./draftInput.js";
 import type { Email } from "./email.js";
+import type { Locale } from "./locale.js";
 import type { Password } from "./password.js";
 import type { Username } from "./username.js";
 
@@ -14,5 +15,6 @@ export interface RegisterRequest {
   email: Email;
   password: Password;
   username: Username;
+  locale: Locale;
   draft?: DraftInput;
 }

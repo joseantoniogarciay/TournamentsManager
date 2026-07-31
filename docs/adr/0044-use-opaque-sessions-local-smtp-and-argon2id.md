@@ -5,7 +5,8 @@
 - **Decisor:** Usuario, mediante aceptación explícita de la propuesta original
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0018, exclusivamente al añadir Mailpit como dependencia local
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0062, exclusivamente para la duración y renovación de
+  sesiones.
 
 ## Problema
 

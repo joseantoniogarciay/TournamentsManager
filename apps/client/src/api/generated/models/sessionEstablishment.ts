@@ -15,4 +15,7 @@ export interface SessionEstablishment {
   /** Presente solo cuando delivery es bearer; guardar únicamente en Keychain/Keystore. */
   sessionToken?: OpaqueToken;
   expiresAt: string;
+  /** Presente solo cuando delivery es bearer; guardar únicamente en Keychain/Keystore. */
+  refreshToken?: OpaqueToken;
+  refreshExpiresAt: string;
 }

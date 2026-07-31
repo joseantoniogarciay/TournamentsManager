@@ -1,23 +1,39 @@
+import { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
+import { useSession } from "@/shared/session/session-provider";
+import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
 import { Button, Card, Screen, Text } from "@/shared/ui";
+import { router, type Href } from "expo-router";
 
 export default function HomeScreen() {
   const { show } = useFeedback();
   const { resolvedTheme } = usePreferences();
+  const { revision } = useSession();
+  const insets = useSafeAreaInsets();
   const t = getTranslator();
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const deferredDeepLink = consumeDeferredInitialDeepLink();
+      if (deferredDeepLink) router.replace(deferredDeepLink as Href);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   return (
     <Screen bottomInset="none">
       <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
       <ScrollView
-        contentContainerStyle={styles.content}
+        key={revision}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[12] }]}
         showsVerticalScrollIndicator={false}
         style={styles.scroll}
       >
@@ -93,7 +109,7 @@ function Step({
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { gap: space[5], paddingBottom: space[12] },
+  content: { gap: space[5] },
   hero: { gap: space[4] },
   section: { gap: space[2] },
   steps: { gap: space[5] },

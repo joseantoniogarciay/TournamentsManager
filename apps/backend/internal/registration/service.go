@@ -16,6 +16,9 @@ import (
 // ErrVerificationInvalid indica un token vencido, usado o inválido.
 var ErrVerificationInvalid = errors.New("verificación inválida")
 
+// ErrRefreshInvalid indica un refresh vencido, revocado, usado o inválido.
+var ErrRefreshInvalid = errors.New("refresh inválido")
+
 const (
 	passwordMemory      = 19 * 1024
 	passwordIterations  = 2
@@ -23,9 +26,24 @@ const (
 	passwordKeyLength   = 32
 )
 
+// Locale identifica una preferencia de idioma admitida para la cuenta.
+type Locale string
+
+const (
+	// LocaleSpanish representa español.
+	LocaleSpanish Locale = "es"
+	// LocaleEnglish representa inglés.
+	LocaleEnglish Locale = "en"
+	// LocaleItalian representa italiano.
+	LocaleItalian Locale = "it"
+	// LocaleFrench representa francés.
+	LocaleFrench Locale = "fr"
+)
+
 // Input es la información validada que recibe el caso de uso.
 type Input struct {
 	Email    string
+	Locale   Locale
 	Username string
 	Password string
 }
@@ -34,34 +52,66 @@ type Input struct {
 type Repository interface {
 	CreatePending(context.Context, Input, string, []byte) (bool, error)
 	IsUsernameAvailable(context.Context, string) (bool, error)
-	VerifyAndCreateSession(context.Context, []byte, []byte) (Session, error)
+	VerifyAndCreateSession(context.Context, []byte, []byte, []byte, []byte) (Session, error)
+	RotateSessionTokens(context.Context, []byte, []byte, []byte) (Session, error)
+}
+
+// Refresh rota un refresh opaco y emite los siguientes tokens de la sesión.
+func (s Service) Refresh(ctx context.Context, token string) (Session, string, string, error) {
+	access, refresh := make([]byte, 32), make([]byte, 32)
+	if _, err := rand.Read(access); err != nil {
+		return Session{}, "", "", err
+	}
+	if _, err := rand.Read(refresh); err != nil {
+		return Session{}, "", "", err
+	}
+	accessToken, refreshToken := base64.RawURLEncoding.EncodeToString(access), base64.RawURLEncoding.EncodeToString(refresh)
+	oldHash := sha256.Sum256([]byte("refresh:" + token))
+	accessHash := sha256.Sum256([]byte("session:" + accessToken))
+	refreshHash := sha256.Sum256([]byte("refresh:" + refreshToken))
+	session, err := s.repository.RotateSessionTokens(ctx, oldHash[:], accessHash[:], refreshHash[:])
+	if err != nil {
+		return Session{}, "", "", ErrRefreshInvalid
+	}
+	return session, accessToken, refreshToken, nil
 }
 
 // Session describe una sesión creada durante la verificación.
 type Session struct {
-	AccountID, Username string
-	IdleExpiresAt       string
+	AccountID, Username             string
+	IdleExpiresAt, RefreshExpiresAt string
 }
 
 // Mailer entrega el enlace de verificación mediante el adaptador configurado.
 type Mailer interface {
-	SendVerification(context.Context, string, string) error
+	SendVerification(context.Context, string, Locale, string) error
 }
 
 // Verify consume una verificación y crea una sesión opaca.
-func (s Service) Verify(ctx context.Context, token string) (Session, string, error) {
+func (s Service) Verify(ctx context.Context, token, previousSessionToken string) (Session, string, string, error) {
 	verificationHash := sha256.Sum256([]byte("registration-verification:" + token))
 	secret := make([]byte, 32)
 	if _, err := rand.Read(secret); err != nil {
-		return Session{}, "", err
+		return Session{}, "", "", err
 	}
 	sessionToken := base64.RawURLEncoding.EncodeToString(secret)
 	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
-	session, err := s.repository.VerifyAndCreateSession(ctx, verificationHash[:], sessionHash[:])
-	if err != nil {
-		return Session{}, "", err
+	refreshSecret := make([]byte, 32)
+	if _, err := rand.Read(refreshSecret); err != nil {
+		return Session{}, "", "", err
 	}
-	return session, sessionToken, nil
+	refreshToken := base64.RawURLEncoding.EncodeToString(refreshSecret)
+	refreshHash := sha256.Sum256([]byte("refresh:" + refreshToken))
+	var previousSessionHash []byte
+	if previousSessionToken != "" {
+		hash := sha256.Sum256([]byte("session:" + previousSessionToken))
+		previousSessionHash = hash[:]
+	}
+	session, err := s.repository.VerifyAndCreateSession(ctx, verificationHash[:], sessionHash[:], refreshHash[:], previousSessionHash)
+	if err != nil {
+		return Session{}, "", "", err
+	}
+	return session, sessionToken, refreshToken, nil
 }
 
 // Service coordina el alta sin revelar si un email ya está registrado.
@@ -101,7 +151,7 @@ func (s Service) Register(ctx context.Context, input Input) error {
 	if !created {
 		return nil
 	}
-	if err := s.mailer.SendVerification(ctx, input.Email, token); err != nil {
+	if err := s.mailer.SendVerification(ctx, input.Email, input.Locale, token); err != nil {
 		return fmt.Errorf("enviar verificación: %w", err)
 	}
 	return nil
@@ -131,4 +181,14 @@ func NormalizeInput(input Input) Input {
 	input.Email = strings.TrimSpace(input.Email)
 	input.Username = strings.TrimSpace(input.Username)
 	return input
+}
+
+// IsSupportedLocale indica si el locale puede persistirse y seleccionar contenido localizado.
+func IsSupportedLocale(locale Locale) bool {
+	switch locale {
+	case LocaleSpanish, LocaleEnglish, LocaleItalian, LocaleFrench:
+		return true
+	default:
+		return false
+	}
 }

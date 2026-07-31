@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { color, control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -11,10 +12,14 @@ const themeOptions: ThemePreference[] = ["system", "light", "dark"];
 export default function AccountSettingsScreen() {
   const t = getTranslator();
   const { colors, setThemePreference, themePreference } = usePreferences();
+  const insets = useSafeAreaInsets();
 
   return (
     <Screen bottomInset="none" topInset="navigation-bar">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[12] }]}
+        showsVerticalScrollIndicator={false}
+      >
         <Card>
           <View style={styles.section}>
             <Text variant="title">{t("settings_appearance_title")}</Text>
@@ -58,7 +63,7 @@ export default function AccountSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { gap: space[5], paddingBottom: space[12] },
+  content: { gap: space[5] },
   section: { gap: space[3] },
   options: { gap: space[2] },
   option: {

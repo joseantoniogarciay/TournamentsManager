@@ -35,11 +35,33 @@ func NewHandler(registrationService registration.Service, authenticator sessionA
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService))
 	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService))
+	mux.HandleFunc("POST /v1/sessions/refresh", refreshSession(registrationService))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
 	followHandler := requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(followLeague(leagueService))))
 	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)
 	return requireAllowedOrigin(corsAllowedOrigins, mux)
+}
+
+func refreshSession(service registration.Service) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		authorization := request.Header.Get("Authorization")
+		if !strings.HasPrefix(authorization, "Bearer ") || len(authorization) == len("Bearer ") {
+			writeProblem(writer, http.StatusUnauthorized, "Sesión no válida")
+			return
+		}
+		session, accessToken, refreshToken, err := service.Refresh(request.Context(), strings.TrimPrefix(authorization, "Bearer "))
+		if errors.Is(err, registration.ErrRefreshInvalid) {
+			writeProblem(writer, http.StatusUnauthorized, "Sesión no válida")
+			return
+		}
+		if err != nil {
+			writeProblem(writer, http.StatusInternalServerError, "No se pudo renovar la sesión")
+			return
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(writer).Encode(map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": "bearer", "sessionToken": accessToken, "refreshToken": refreshToken, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt})
+	}
 }
 
 func usernameAvailability(service registration.Service, limiter *requestLimiter) http.HandlerFunc {
@@ -88,7 +110,8 @@ func verifyRegistration(service registration.Service) http.HandlerFunc {
 			writeValidationProblem(writer)
 			return
 		}
-		session, sessionToken, err := service.Verify(request.Context(), body.Token)
+		previousSession, _ := sessionToken(request)
+		session, sessionToken, refreshToken, err := service.Verify(request.Context(), body.Token, previousSession.token)
 		if errors.Is(err, registration.ErrVerificationInvalid) {
 			writeProblem(writer, http.StatusConflict, "Verificación no válida")
 			return
@@ -97,11 +120,12 @@ func verifyRegistration(service registration.Service) http.HandlerFunc {
 			writeProblem(writer, http.StatusInternalServerError, "No se pudo verificar la cuenta")
 			return
 		}
-		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt}
+		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
 			http.SetCookie(writer, &http.Cookie{Name: "__Host-tm_session", Value: sessionToken, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
 		} else {
 			response["sessionToken"] = sessionToken
+			response["refreshToken"] = refreshToken
 		}
 		writer.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(writer).Encode(response)
@@ -181,6 +205,7 @@ func healthz(writer http.ResponseWriter, _ *http.Request) {
 
 type registerRequest struct {
 	Email    string `json:"email"`
+	Locale   string `json:"locale"`
 	Password string `json:"password"`
 	Username string `json:"username"`
 }
@@ -197,6 +222,7 @@ func register(service registration.Service) http.HandlerFunc {
 
 		input := registration.NormalizeInput(registration.Input{
 			Email:    body.Email,
+			Locale:   registration.Locale(body.Locale),
 			Password: body.Password,
 			Username: body.Username,
 		})
@@ -213,7 +239,7 @@ func register(service registration.Service) http.HandlerFunc {
 }
 
 func validRegistration(input registration.Input) bool {
-	if len(input.Email) == 0 || len(input.Email) > 254 || len(input.Password) < 12 || len(input.Password) > 1024 || !usernamePattern.MatchString(input.Username) {
+	if len(input.Email) == 0 || len(input.Email) > 254 || len(input.Password) < 12 || len(input.Password) > 1024 || !registration.IsSupportedLocale(input.Locale) || !usernamePattern.MatchString(input.Username) {
 		return false
 	}
 	address, err := mail.ParseAddress(input.Email)

@@ -48,8 +48,12 @@ func (r testRegistrationRepository) IsUsernameAvailable(context.Context, string)
 	return r.available, nil
 }
 
-func (r testRegistrationRepository) VerifyAndCreateSession(context.Context, []byte, []byte) (registration.Session, error) {
+func (r testRegistrationRepository) VerifyAndCreateSession(context.Context, []byte, []byte, []byte, []byte) (registration.Session, error) {
 	return registration.Session{}, registration.ErrVerificationInvalid
+}
+
+func (r testRegistrationRepository) RotateSessionTokens(context.Context, []byte, []byte, []byte) (registration.Session, error) {
+	return registration.Session{}, registration.ErrRefreshInvalid
 }
 
 func testHandler() http.Handler {
@@ -169,6 +173,34 @@ func TestUsernameAvailabilityRateLimitsByClientIP(t *testing.T) {
 	}
 	if recorder.Header().Get("Retry-After") == "" {
 		t.Error("Retry-After header is missing")
+	}
+}
+
+func TestRegistrationRequiresSupportedLocale(t *testing.T) {
+	t.Parallel()
+
+	handler := NewHandler(registration.NewService(testRegistrationRepository{}, nil), testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
+	for _, test := range []struct {
+		name   string
+		body   string
+		status int
+	}{
+		{"supported", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"fr"}`, http.StatusAccepted},
+		{"missing", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name"}`, http.StatusBadRequest},
+		{"unsupported", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"de"}`, http.StatusBadRequest},
+		{"non-canonical", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"FR"}`, http.StatusBadRequest},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			request := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/v1/registrations", strings.NewReader(test.body))
+			request.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+
+			handler.ServeHTTP(recorder, request)
+
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
 	}
 }
 

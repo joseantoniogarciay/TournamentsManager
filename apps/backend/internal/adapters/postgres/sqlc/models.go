@@ -11,6 +11,7 @@ import (
 type Account struct {
 	ID         pgtype.UUID
 	Email      string
+	Locale     string
 	State      string
 	Username   string
 	CreatedAt  pgtype.Timestamptz
@@ -137,4 +138,14 @@ type Session struct {
 	IdleExpiresAt     pgtype.Timestamptz
 	AbsoluteExpiresAt pgtype.Timestamptz
 	RevokedAt         pgtype.Timestamptz
+}
+
+type SessionRefreshToken struct {
+	ID         pgtype.UUID
+	SessionID  pgtype.UUID
+	TokenHash  []byte
+	CreatedAt  pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+	ConsumedAt pgtype.Timestamptz
+	RevokedAt  pgtype.Timestamptz
 }

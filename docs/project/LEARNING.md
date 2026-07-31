@@ -952,6 +952,128 @@ Para cada capacidad se sigue el ciclo:
 - **Regla reutilizable:** para una operación del contrato, usar siempre la
   función OpenAPI generada a través del adaptador de la feature y `apiFetch`.
 
+### 2026-07-30 — El fallback de errores debe separar transporte y negocio
+
+- **Aprendido:** el tipo generado por Orval enumera las respuestas documentadas,
+  pero no clasifica un rechazo de red ni una respuesta HTTP nueva. Solo el
+  transporte común puede identificar con seguridad que no se recibió respuesta.
+- **Evidencia:** `apiFetch` convierte esos rechazos en `APIConnectionError` y
+  `shared/feedback/request-failure.ts` los traduce a las claves comunes de red o
+  error seguro; el chequeo de username conserva su tratamiento específico de
+  `200` y `429`.
+- **Coste aceptado:** cada feature debe elegir explícitamente sus estados de
+  negocio valiosos; los no previstos, cuerpos inválidos y `5xx` usan el fallback
+  genérico sin exponer detalles del backend.
+
+### 2026-07-30 — Un enlace universal acredita contexto, no hace un GET mutante
+
+- **Aprendido:** un correo puede llevar a una ruta HTTPS compartida por web,
+  iOS y Android, pero abrirlo mediante `GET` no debe activar una cuenta ni crear
+  una sesión. El cliente conserva el token de un solo uso fuera de la URL y
+  emite automáticamente el `POST` de confirmación.
+- **Evidencia:** correo multipart con alternativa accesible, ruta
+  `/link/confirm`, configuración declarativa CNG y plantillas de asociación
+  bajo `infra/app-links/`.
+- **Coste aceptado:** la asociación real exige un dominio, Team ID de Apple y
+  huellas Android de la firma de distribución; se documentan como datos de
+  despliegue, no se inventan en el repositorio.
+- **Regla reutilizable:** un secreto en un enlace no se envía a analítica ni a
+  recursos de terceros y se elimina del historial tan pronto como la aplicación
+  lo recibe.
+
+### 2026-07-31 — Reemplazar una sesión exige resetear navegación, no cerrar una modal
+
+- **Aprendido:** `dismissAll()` equivale a un `popToTop` del stack más cercano;
+  no representa un reset de aplicación y falla si el deep link llegó en frío sin
+  una pila que pueda responder a esa acción.
+- **Evidencia:** ADR-0061; la transición de sesión mantiene una capa global
+  durante la confirmación y el árbol raíz de navegación se reconstruye una vez
+  obtenida la nueva sesión.
+- **Coste aceptado:** la transición necesita comprobar tanto enlaces abiertos en
+  frío como enlaces recibidos sobre modales y tabs ya activas.
+- **Regla reutilizable:** navegar a una raíz no debe disparar datos de todas las
+  secciones; cada raíz carga solo al ser visible y con la identidad vigente.
+
+### 2026-07-31 — Un deep link de arranque necesita una raíz estable antes de ejecutarse
+
+- **Aprendido:** el router puede recibir el enlace que despierta una app nativa
+  antes de que Inicio haya llegado a pantalla. Ejecutar su ruta de inmediato
+  compite con el montaje y puede dejar transiciones o estado de navegación
+  incoherentes.
+- **Evidencia:** `+native-intent` conserva únicamente en memoria el enlace de
+  arranque, fuerza la raíz `/` y Inicio lo entrega al router en el siguiente
+  frame; un enlace recibido por una app viva no se desvía.
+- **Coste aceptado:** hay un frame adicional antes de ejecutar un enlace de
+  arranque, a cambio de una raíz de navegación estable y sin persistir tokens.
+- **Regla reutilizable:** el tratamiento de enlaces de arranque pertenece al
+  borde de navegación, no a cada flujo de negocio que pueda abrirse desde uno.
+
+### 2026-07-31 — Restaurar una sesión móvil no autoriza al cliente
+
+- **Aprendido:** Keychain/Keystore puede conservar los dos secretos opacos, la
+  identidad y sus expiraciones como una sola unidad de arranque; ni el perfil ni
+  las fechas sustituyen la validación de cada operación en el backend.
+- **Evidencia:** ADR-0062; `apiFetch` comparte una única renovación cuando queda
+  menos de una hora de access y el `SessionProvider` hidrata la identidad local.
+- **Coste aceptado:** un refresh inválido resetea la sesión mediante el
+  coordinador; un rechazo de red la conserva para permitir reintento posterior.
+- **Regla reutilizable:** almacenar tokens relacionados por separado permite
+  restauraciones parciales; persistirlos juntos reduce ese estado imposible.
+
+### 2026-07-31 — Una transición de identidad puede tener una duración visual mínima
+
+- **Aprendido:** una confirmación de deep link puede completarse más rápido que
+  la animación que comunica el cambio de identidad. Mantener una capa opaca con
+  texto y loader durante al menos dos segundos permite revisar su feedback sin
+  retrasar la petición ni modificar el resultado de verificación.
+- **Evidencia:** la ruta `link/confirm` inicia la transición antes del `POST`
+  generado y, tras una respuesta correcta, espera solo el tiempo restante hasta
+  dos segundos antes de sustituir la sesión y resetear la navegación.
+- **Coste aceptado:** el usuario tarda hasta dos segundos adicionales en llegar
+  a Inicio después de una verificación satisfactoria; los fallos no se retrasan.
+- **Regla reutilizable:** cuando una espera exista solo para observar feedback,
+  se mide desde el inicio de la transición y nunca se antepone a la operación;
+  esa capa solo usa fade in y fade out, sin desplazar el contenido.
+
+### 2026-07-31 — La capa de carga es una primitiva, no una regla de sesión
+
+- **Aprendido:** el patrón de bloqueo con mensaje, loader y fade puede aparecer
+  fuera de identidad; acoplarlo a `SessionProvider` dificultaría reutilizarlo.
+- **Evidencia:** `LoadingTransition` vive en `shared/ui`, recibe estado y copy
+  localizado y SessionProvider solo le aporta el estado de transición actual.
+- **Coste aceptado:** cada flujo conserva su duración mínima y su resultado; la
+  primitiva se limita a presentación, accesibilidad y movimiento reducido.
+- **Regla reutilizable:** extraer una primitiva compartida cuando el aspecto y
+  la interacción se repiten, sin trasladarle decisiones de negocio.
+
+### 2026-07-31 — El contrato puede distinguir fallos que el backend aún agrupa
+
+- **Aprendido:** `409` para un enlace ya consumido y `410` para uno caducado
+  ofrecen recuperaciones diferentes y el cliente debe poder expresarlas sin
+  mostrar el detalle RFC 9457.
+- **Evidencia:** el adaptador de registro traduce ambos estados declarados a un
+  error de feature; la ruta muestra copy localizado y la previsualización de
+  desarrollo reproduce el caso `409` sin HTTP.
+- **Coste aceptado:** el backend actual devuelve `409` para todos los tokens
+  inválidos; el copy de caducidad queda preparado hasta que la persistencia
+  clasifique y entregue `410` de forma verificable.
+- **Regla reutilizable:** una feature mapea solo los estados declarados que
+  cambian la recuperación; los demás continúan por el fallback seguro.
+
+### 2026-07-31 — El idioma de un email es una preferencia de cuenta, no un ajuste aislado
+
+- **Aprendido:** persistir el locale efectivo al crear la cuenta permite
+  localizar el email de verificación y reutilizar la misma preferencia en
+  entregas futuras sin introducir una configuración exclusiva de correo.
+- **Evidencia:** ADR-0063 limita los valores a `es`, `en`, `it` y `fr`, que son
+  los locales ya aceptados para el cliente; el backend valida el dato antes de
+  guardarlo y seleccionar una plantilla.
+- **Coste aceptado:** un cambio posterior de idioma en el sistema o navegador
+  no actualiza todavía esa preferencia; una futura sincronización autenticada
+  se evaluará solo si existe necesidad demostrada.
+- **Regla reutilizable:** las preferencias de presentación que trascienden una
+  entrega concreta pertenecen a la cuenta y se validan en el límite del backend.
+
 ## Regla de evidencia
 
 “Entendido” exige una explicación propia y una demostración. Un comando que

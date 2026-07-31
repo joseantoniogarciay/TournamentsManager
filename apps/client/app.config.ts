@@ -18,6 +18,17 @@ const environmentConfig = {
   },
 } as const;
 
+const appLinkDomain = getAppLinkDomain(process.env.EXPO_PUBLIC_APP_LINK_URL);
+
+function getAppLinkDomain(appLinkURL: string | undefined) {
+  if (!appLinkURL) return undefined;
+  const parsedURL = new URL(appLinkURL);
+  if (parsedURL.protocol !== "https:" || parsedURL.pathname !== "/" || parsedURL.search) {
+    throw new Error("EXPO_PUBLIC_APP_LINK_URL debe ser un origen HTTPS sin path ni query");
+  }
+  return parsedURL.hostname;
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: environmentConfig[appEnvironment].name,
@@ -26,10 +37,27 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/fast-tourney-icon.png",
-  ios: { bundleIdentifier: environmentConfig[appEnvironment].bundleIdentifier },
+  ios: {
+    bundleIdentifier: environmentConfig[appEnvironment].bundleIdentifier,
+    associatedDomains: appLinkDomain ? [`applinks:${appLinkDomain}`] : undefined,
+  },
+  android: {
+    package: environmentConfig[appEnvironment].bundleIdentifier,
+    intentFilters: appLinkDomain
+      ? [
+          {
+            action: "VIEW",
+            autoVerify: true,
+            category: ["BROWSABLE", "DEFAULT"],
+            data: [{ scheme: "https", host: appLinkDomain, pathPrefix: "/link/" }],
+          },
+        ]
+      : undefined,
+  },
   userInterfaceStyle: "automatic",
   plugins: [
     "expo-router",
+    "expo-secure-store",
     [
       "expo-splash-screen",
       {

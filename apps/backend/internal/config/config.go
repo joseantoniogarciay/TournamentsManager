@@ -61,7 +61,7 @@ func load(getenv func(string) string) (Config, error) {
 	}
 	publicBaseURL := getenv(publicBaseURLEnv)
 	parsedPublicURL, err := url.Parse(publicBaseURL)
-	if err != nil || parsedPublicURL.Scheme == "" || parsedPublicURL.Host == "" {
+	if err != nil || !validPublicBaseURL(parsedPublicURL) {
 		return Config{}, fmt.Errorf("%s debe ser una URL absoluta válida", publicBaseURLEnv)
 	}
 	corsAllowedOrigins, err := parseAllowedOrigins(getenv(corsAllowedOriginsEnv))
@@ -77,6 +77,20 @@ func load(getenv func(string) string) (Config, error) {
 		PublicBaseURL:      publicBaseURL,
 		CORSAllowedOrigins: corsAllowedOrigins,
 	}, nil
+}
+
+func validPublicBaseURL(parsedURL *url.URL) bool {
+	if parsedURL.Host == "" {
+		return false
+	}
+	if parsedURL.Scheme == "https" {
+		return true
+	}
+	if parsedURL.Scheme != "http" {
+		return false
+	}
+	hostname := strings.ToLower(parsedURL.Hostname())
+	return hostname == "localhost" || hostname == "127.0.0.1" || hostname == "::1"
 }
 
 func parseAllowedOrigins(raw string) ([]string, error) {

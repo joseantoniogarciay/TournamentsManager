@@ -54,6 +54,7 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 | Checkbox / Switch | default, selected, disabled, error                        | Objetivo táctil mínimo de 44 px.                                                                                                                                               |
 | Card              | default, actionable, selected                             | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado.                                                                                    |
 | Banner            | network-error, generic-error, success                     | Gestor global de aviso único: sustituye el actual, se coloca arriba del área segura como una card y tiene autocierre, toque o arrastre vertical hacia arriba para descartarlo. |
+| LoadingTransition | active, mensaje localizado, movimiento reducido           | Capa opaca modal con mensaje y loader; bloquea interacción y solo entra o sale con `fade`. La duración mínima pertenece al flujo que la usa. |
 | InlineMessage     | error, help, success                                      | Bajo el control asociado; texto claro y disponible para lector de pantalla.                                                                                                    |
 
 `Card` está implementada en `shared/ui`: aplica superficie, borde, radio,
@@ -101,3 +102,9 @@ Mensajes globales iniciales:
   tarde.»
 
 No se muestran cuerpos, trazas ni mensajes internos del backend.
+
+La clasificación compartida solo distingue un rechazo de transporte marcado por
+`apiFetch` de cualquier respuesta o fallo no tratado. Cada feature reconoce
+antes los estados del contrato que cambian la recuperación de la persona (por
+ejemplo, un límite de solicitudes); no se centralizan `status`, `type` ni copy
+de negocio que todavía no se repitan.

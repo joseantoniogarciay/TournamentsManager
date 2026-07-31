@@ -35,7 +35,7 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 
 | Tabla                        | Campos esenciales                                                                                                      | Restricciones de dominio                                                                                                                                                           |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accounts`                   | `id`, `email`, `state`, `username`, `created_at`, `verified_at`, `expires_at`                                          | índice único sobre `lower(email)` para acceso; username único y en minúsculas; estado `pending_verification` o `verified`; pendiente expira a los 7 días.                          |
+| `accounts`                   | `id`, `email`, `locale`, `state`, `username`, `created_at`, `verified_at`, `expires_at`                                | `locale` es uno de `es`, `en`, `it` o `fr`; índice único sobre `lower(email)` para acceso; username único y en minúsculas; estado `pending_verification` o `verified`; pendiente expira a los 7 días. |
 | `local_credentials`          | `account_id`, `password_hash`, `created_at`, `updated_at`                                                              | PK/FK uno a uno; hash Argon2id; ninguna contraseña recuperable.                                                                                                                    |
 | `external_identities`        | `id`, `account_id`, `provider`, `issuer`, `subject`, `created_at`                                                      | `(issuer, subject)` único; una identidad Google pertenece a una cuenta y una cuenta tiene como máximo una identidad Google.                                                        |
 | `federated_login_challenges` | `id`, `provider`, `nonce_hash`, `expires_at`, `consumed_at`, `created_at`                                              | Google únicamente; nonce de 5 min, de un solo uso y sin sesión asociada.                                                                                                           |
@@ -51,14 +51,16 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | `matches`                    | `id`, `league_id`, `round_number`, `sequence`, `home_team_id`, `away_team_id`, `state`                                 | un partido por pareja no ordenada de equipos; sin marcador o fecha; estado inicial `pending`.                                                                                      |
 
 El email conserva el valor aportado para entrega; `lower(email)` es solo la clave
-de comparación del producto. Equipos mantienen una columna normalizada para
-unicidad. El username se valida como minúsculo antes de guardar.
+de comparación del producto. El locale de cuenta es una preferencia validada
+para localizar emails, no un atributo de identidad o autorización. Equipos
+mantienen una columna normalizada para unicidad. El username se valida como
+minúsculo antes de guardar.
 
 ## Transacciones e invariantes
 
-1. **Alta:** crea `accounts(pending_verification)`, credencial, borrador y token
-   de verificación en una transacción. Si ya existe el email, responde igual sin
-   revelar ni modificar la cuenta existente.
+1. **Alta:** crea `accounts(pending_verification, locale)`, credencial, borrador
+   y token de verificación en una transacción. Si ya existe el email, responde
+   igual sin revelar ni modificar la cuenta existente.
 2. **Verificación:** bloquea el token y cuenta, comprueba estado y vencimiento,
    consume token, fija `verified`, crea sesión y conserva el borrador; todo o
    nada.

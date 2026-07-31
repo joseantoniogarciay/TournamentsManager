@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "APPLE_TEAM_ID.com.fasttourney.app",
+          "APPLE_TEAM_ID.com.fasttourney.app.dev"
+        ],
+        "components": [
+          {
+            "/": "/link/*"
+          }
+        ]
+      }
+    ]
+  }
+}
