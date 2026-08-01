@@ -1,7 +1,6 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, Platform, Pressable, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -24,6 +23,7 @@ import {
   Screen,
   Text,
   TextField,
+  useTabContentBottomPadding,
 } from "@/shared/ui";
 
 export default function AccountScreen() {
@@ -31,7 +31,7 @@ export default function AccountScreen() {
   const { show } = useFeedback();
   const { colors } = usePreferences();
   const { completeSessionReplacement, signOut, user } = useSession();
-  const insets = useSafeAreaInsets();
+  const tabContentBottomPadding = useTabContentBottomPadding();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -126,7 +126,10 @@ export default function AccountScreen() {
   if (user) {
     return (
       <Screen bottomInset="none" topInset="navigation-bar">
-        <View style={{ paddingBottom: insets.bottom + space[12] }}>
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
+          showsVerticalScrollIndicator={false}
+        >
           <Card>
             <View style={styles.form}>
               <Text variant="title">{t("account_access_data_title")}</Text>
@@ -174,7 +177,7 @@ export default function AccountScreen() {
             title={t("account_logout_title")}
             visible={logoutConfirmationVisible}
           />
-        </View>
+        </ScrollView>
       </Screen>
     );
   }
@@ -182,10 +185,7 @@ export default function AccountScreen() {
   return (
     <Screen bottomInset="none" topInset="navigation-bar">
       <KeyboardAwareScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: (Platform.OS === "web" ? 0 : insets.bottom) + space[12] },
-        ]}
+        contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
         <Card>

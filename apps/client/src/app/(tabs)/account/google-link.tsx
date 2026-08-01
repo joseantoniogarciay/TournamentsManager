@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 import { space } from "@tournaments-manager/design-tokens";
 
@@ -15,7 +15,7 @@ import { useGoogleIdentityProof } from "@/features/federated-google/use-google-i
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
-import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
+import { Button, Card, Screen, Text, TextField, useTabContentBottomPadding } from "@/shared/ui";
 
 type Stage = "reauthenticate" | "prepare-google" | "connecting";
 
@@ -85,55 +85,58 @@ export default function GoogleLinkScreen() {
 
   const startGoogle = () => void proof.start();
   const googleOnly = hasPassword === false;
+  const tabContentBottomPadding = useTabContentBottomPadding();
   return (
-    <Screen topInset="navigation-bar">
-      <Card>
-        <View style={styles.form}>
-          <Text variant="title">{t("account_google_link_title")}</Text>
-          {stage === "connecting" ? (
-            <Text color="secondary">{t("account_google_link_connecting")}</Text>
-          ) : null}
-          {stage === "reauthenticate" && googleOnly ? (
-            <>
-              <Text color="secondary">{t("account_google_link_google_reauth_description")}</Text>
-              <Button
-                disabled={!proof.isConfigured || proof.isLoading}
-                label={t("account_google_link_reauthenticate")}
-                loading={proof.isLoading}
-                onPress={startGoogle}
-              />
-            </>
-          ) : null}
-          {stage === "reauthenticate" && hasPassword ? (
-            <>
-              <Text color="secondary">{t("account_google_link_password_description")}</Text>
-              <TextField
-                autoComplete="current-password"
-                label={t("account_password_current_label")}
-                onChangeText={setPassword}
-                secureTextEntry
-                value={password}
-              />
-              <Button
-                disabled={password.length < 8}
-                label={t("account_google_link_reauthenticate")}
-                onPress={() => void confirmPassword()}
-              />
-            </>
-          ) : null}
-          {stage === "prepare-google" ? (
-            <>
-              <Text color="secondary">{t("account_google_link_ready_description")}</Text>
-              <Button
-                disabled={!proof.isConfigured || proof.isLoading}
-                label={t("account_google_link_continue")}
-                loading={proof.isLoading}
-                onPress={startGoogle}
-              />
-            </>
-          ) : null}
-        </View>
-      </Card>
+    <Screen bottomInset="none" topInset="navigation-bar">
+      <ScrollView contentContainerStyle={{ paddingBottom: tabContentBottomPadding }}>
+        <Card>
+          <View style={styles.form}>
+            <Text variant="title">{t("account_google_link_title")}</Text>
+            {stage === "connecting" ? (
+              <Text color="secondary">{t("account_google_link_connecting")}</Text>
+            ) : null}
+            {stage === "reauthenticate" && googleOnly ? (
+              <>
+                <Text color="secondary">{t("account_google_link_google_reauth_description")}</Text>
+                <Button
+                  disabled={!proof.isConfigured || proof.isLoading}
+                  label={t("account_google_link_reauthenticate")}
+                  loading={proof.isLoading}
+                  onPress={startGoogle}
+                />
+              </>
+            ) : null}
+            {stage === "reauthenticate" && hasPassword ? (
+              <>
+                <Text color="secondary">{t("account_google_link_password_description")}</Text>
+                <TextField
+                  autoComplete="current-password"
+                  label={t("account_password_current_label")}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  value={password}
+                />
+                <Button
+                  disabled={password.length < 8}
+                  label={t("account_google_link_reauthenticate")}
+                  onPress={() => void confirmPassword()}
+                />
+              </>
+            ) : null}
+            {stage === "prepare-google" ? (
+              <>
+                <Text color="secondary">{t("account_google_link_ready_description")}</Text>
+                <Button
+                  disabled={!proof.isConfigured || proof.isLoading}
+                  label={t("account_google_link_continue")}
+                  loading={proof.isLoading}
+                  onPress={startGoogle}
+                />
+              </>
+            ) : null}
+          </View>
+        </Card>
+      </ScrollView>
     </Screen>
   );
 }

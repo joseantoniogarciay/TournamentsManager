@@ -8,7 +8,15 @@ import { setAccountPassword } from "@/features/account-access/api";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
-import { Button, Card, KeyboardAwareScrollView, Screen, Text, TextField } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  KeyboardAwareScrollView,
+  Screen,
+  Text,
+  TextField,
+  useTabContentBottomPadding,
+} from "@/shared/ui";
 
 export default function AccountPasswordScreen() {
   const t = getTranslator();
@@ -16,6 +24,7 @@ export default function AccountPasswordScreen() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const tabContentBottomPadding = useTabContentBottomPadding();
   const valid = currentPassword.length >= 8 && password.length >= 8;
 
   const submit = async () => {
@@ -33,8 +42,10 @@ export default function AccountPasswordScreen() {
   };
 
   return (
-    <Screen topInset="navigation-bar">
-      <KeyboardAwareScrollView contentContainerStyle={styles.content}>
+    <Screen bottomInset="none" topInset="navigation-bar">
+      <KeyboardAwareScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
+      >
         <Card>
           <View style={styles.form}>
             <Text color="secondary">{t("account_password_change_description")}</Text>

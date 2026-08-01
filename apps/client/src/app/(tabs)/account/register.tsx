@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 
 import { space } from "@tournaments-manager/design-tokens";
 
@@ -15,6 +14,7 @@ import {
   Screen,
   Text,
   TextField,
+  useTabContentBottomPadding,
 } from "@/shared/ui";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { registerLocalAccountRequest } from "@/features/registration/api";
@@ -23,7 +23,7 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 export default function RegisterScreen() {
   const t = getTranslator();
   const { show } = useFeedback();
-  const insets = useSafeAreaInsets();
+  const tabContentBottomPadding = useTabContentBottomPadding();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,10 +76,7 @@ export default function RegisterScreen() {
   return (
     <Screen bottomInset="none" topInset="navigation-bar">
       <KeyboardAwareScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: (Platform.OS === "web" ? 0 : insets.bottom) + space[12] },
-        ]}
+        contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
         <Card>

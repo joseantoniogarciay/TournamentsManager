@@ -7,3 +7,4 @@ export { LoadingTransition } from "./loading-transition";
 export { Screen } from "./screen";
 export { Text } from "./text";
 export { TextField } from "./text-field";
+export { useTabContentBottomPadding } from "./use-tab-content-bottom-padding";

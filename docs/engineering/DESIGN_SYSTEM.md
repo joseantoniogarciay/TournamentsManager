@@ -31,7 +31,10 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
   la barra nativa superpuesta. El margen para que el último control no quede
   oculto pertenece al `contentContainerStyle` del `ScrollView`, no al contenedor
   `Screen`; así el contenido puede desplazarse completamente por encima de la
-  barra.
+  barra. Toda ruta bajo tabs usa el cálculo compartido
+  `useTabContentBottomPadding`. En web, donde el safe-area inferior es cero pero
+  la botonera estándar también se superpone, suma `space[10]` (40 px) al padding
+  base de `space[12]`; en apps usa el inset seguro más ese mismo padding base.
 - **Teclado y tabs:** en web la barra de tabs se ancla al borde inferior del
   viewport visual, también al aparecer el teclado. El padding inferior de un
   formulario web no toma el safe-area inset, porque puede variar al aparecer el

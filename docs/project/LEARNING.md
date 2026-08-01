@@ -162,8 +162,11 @@ Para cada capacidad se sigue el ciclo:
   y el margen de seguridad debe pertenecer al contenedor desplazable.
 - **Evidencia:** `Screen` admite omitir su inset inferior en rutas bajo
   `NativeTabs`; Inicio, Torneos y las rutas de Cuenta lo hacen. Los `ScrollView`
-  de esos flujos mantienen su `paddingBottom` de `space[12]`, de modo que el
-  último control se puede llevar por encima de la barra nativa.
+  de esos flujos usan `useTabContentBottomPadding`, de modo que el último
+  control se puede llevar por encima de la barra nativa. En web, el cálculo
+  añade `space[10]` (40 px) porque su safe-area inferior es cero y la botonera
+  estándar permanece superpuesta; se aplica a cualquier ruta bajo tabs, no solo
+  a Inicio.
 - **Coste aceptado:** no se introduce una segunda abstracción de layout ni se
   fija una altura de tab bar, que variaría según plataforma y versión del sistema.
 

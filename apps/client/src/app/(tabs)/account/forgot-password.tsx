@@ -5,13 +5,22 @@ import { space } from "@tournaments-manager/design-tokens";
 import { requestRecovery } from "@/features/password-recovery/api";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
-import { Button, Card, KeyboardAwareScrollView, Screen, Text, TextField } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  KeyboardAwareScrollView,
+  Screen,
+  Text,
+  TextField,
+  useTabContentBottomPadding,
+} from "@/shared/ui";
 
 export default function ForgotPasswordScreen() {
   const t = getTranslator();
   const { show } = useFeedback();
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
+  const tabContentBottomPadding = useTabContentBottomPadding();
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const submit = async () => {
     if (!valid) return;
@@ -27,8 +36,8 @@ export default function ForgotPasswordScreen() {
     }
   };
   return (
-    <Screen topInset="navigation-bar">
-      <KeyboardAwareScrollView>
+    <Screen bottomInset="none" topInset="navigation-bar">
+      <KeyboardAwareScrollView contentContainerStyle={{ paddingBottom: tabContentBottomPadding }}>
         <Card>
           <View style={styles.form}>
             <Text color="secondary">{t("password_recovery_description")}</Text>

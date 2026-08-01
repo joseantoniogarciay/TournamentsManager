@@ -49,6 +49,11 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Toda pantalla deja al menos 10 px entre el área segura o el borde inferior de
   una navigation bar y su primer contenido; la implementación vigente usa 12 px
   mediante `Screen`.
+- Las rutas bajo tabs reservan el espacio de la botonera en el
+  `contentContainerStyle` de su contenido desplazable mediante
+  `useTabContentBottomPadding`, nunca en `Screen`. El cálculo compartido suma
+  `space[12]` al inset seguro en iOS y Android; en web, donde ese inset es cero
+  pero la botonera permanece superpuesta, suma además `space[10]` (40 px).
 - No se usa `SafeAreaView` de React Native cuando haya que sumar padding propio:
   en iOS puede ignorarlo. `Screen` combina `useSafeAreaInsets` con una `View`.
   Las rutas bajo una cabecera nativa declaran `topInset="navigation-bar"` para

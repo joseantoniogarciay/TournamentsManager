@@ -17,7 +17,7 @@ export default function AccountLayout() {
         headerTitleStyle: { color: colors.text.primary },
       }}
     >
-      <Stack.Screen name="index" options={{ headerTitle: () => null }}>
+      <Stack.Screen name="index" options={{ title: "" }}>
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button
             accessibilityLabel={t("account_settings_accessibility_label")}
