@@ -39,6 +39,13 @@ Google ──> external_identities ──────────┘
 Antes de entregar una credencial Google, el cliente solicita un challenge de
 cinco minutos y usa el nonce devuelto al iniciar Google. El backend consume ese
 challenge una sola vez tras validar el ID token; no es una sesión ni una cuenta.
+
+En desarrollo, el cliente web registra `http://localhost:8081` como origen y
+URI de redirección del cliente OAuth web. iOS y Android usan clientes OAuth
+nativos separados, asociados respectivamente al identificador de bundle o
+paquete y, en Android, a la huella SHA-1 del certificado que firma la build. Los
+IDs de cliente son públicos y se declaran fuera de Git; el backend admite sus
+audiencias mediante `GOOGLE_CLIENT_IDS`.
 ```
 
 El cliente transporta credenciales y usa la sesión resultante. No decide la
@@ -125,175 +132,52 @@ usuario quiere registrar después su email real:
 4. tras verificarlo, actualiza el canal de contacto;
 5. el vínculo `(apple, subject)` permanece sin cambios.
 
-Si el email ya corresponde a otro usuario, no se actualiza ni fusiona
-automáticamente: se exige demostrar acceso a ambas cuentas.
+Si el email ya corresponde a otro usuario, se deniega el cambio: no se fusionan
+ni se vinculan cuentas distintas.
 
-## Primera entrada con Google para una cuenta local existente
+## Primera entrada con Google
 
-Una coincidencia de email es una señal para iniciar vinculación, no autorización
-para completarla.
+Una identidad externa se resuelve únicamente por `(issuer, subject)`:
 
 ```text
 Google verificado
       │
-      ├── ya existe (google, subject) ──> login
+      ├── ya existe (google, subject) ──> login en su cuenta
       │
       └── no existe
              │
-             ├── no hay cuenta candidata ──> alta
-             └── existe email local ───────> prueba fresca
-                                                  │
-                                                  ├── contraseña actual
-                                                  └── enlace/código de un solo uso
+             ├── email no usado ─────────> alta Google con username
+             └── email ya usado ─────────> denegar; usar el método existente
 ```
 
-Después de la prueba fresca se vincula `(google, subject)` al usuario interno. A
-partir de entonces puede autenticarse con ambos métodos.
+No se envía un desafío de vinculación ni se crea sesión cuando una identidad
+nueva declara un email que ya pertenece a otra cuenta. El cliente muestra un
+aviso genérico para iniciar sesión con el método habitual y añadir otro acceso
+desde `Cuenta > Seguridad`; no revela qué proveedor usa una cuenta existente.
 
-La validación enviada al registrar la cuenta demostró control del email en aquel
-momento. La vinculación es una acción sensible posterior y exige control actual.
-
-## Estado pendiente de vinculación
-
-Autenticar correctamente con Google o Apple no concede acceso si el proveedor
-todavía no está vinculado y existe una cuenta local candidata. Se crea un intento
-de vinculación, no una sesión de usuario.
-
-```text
-provider_authenticated
-          │
-          ▼
-pending_email_confirmation
-       │             │
-       │             ├── caduca / se cancela ──> expired
-       │
-       └── enlace válido
-                 │
-                 ▼
-               linked
-                 │
-                 ▼
-           session_eligible
-```
-
-Mientras está `pending_email_confirmation`:
-
-- no existe todavía la identidad externa definitiva;
-- no se emite una sesión normal ni se autorizan acciones;
-- el intento queda ligado al usuario candidato, proveedor y `subject`
-  previamente verificado;
-- el enlace contiene un token aleatorio, con caducidad y de un solo uso;
-- se almacena una representación no reutilizable del token, no el secreto en
-  claro.
-
-Abrir el enlace no modifica la cuenta. La confirmación explícita hace que el
-backend compruebe token, estado y expiración. En una operación atómica crea el
-vínculo si no existe conflicto y consume el intento. Si el enlace caduca o ya fue
-usado, no se modifica ninguna cuenta.
-
-## Deep link y establecimiento de sesión
-
-El enlace de confirmación será una URL HTTPS del producto:
-
-- iOS podrá abrirla como Universal Link si la aplicación está instalada y la
-  asociación o preferencia del usuario lo permite;
-- Android podrá abrirla como App Link verificado si la aplicación está instalada
-  y asociada al dominio;
-- en cualquier otro caso se resolverá en la aplicación web.
-
-No se usarán custom schemes como mecanismo primario. El dominio y las
-aplicaciones demostrarán su asociación mediante los mecanismos de plataforma.
-
-El enlace transporta únicamente el token opaco y de un solo uso del intento. No
-contiene access tokens, refresh tokens ni identificadores de sesión.
-
-```text
-GET /auth/link/confirm?token=...
-          │
-          ├── iOS associated ────> Universal Link
-          ├── Android associated ─> App Link
-          └── fallback ──────────> Web
-          │
-          ▼
-show blocking transition
-          │
-          ▼
-POST confirmation to backend
-          │
-          ▼
-consume attempt + link identity + create session
-          │
-          ▼
-replace web URL with home / or reset native navigation
-```
-
-La ruta del enlace es una pantalla transitoria del cliente, no el endpoint REST
-que modifica la cuenta. Su forma conceptual es:
-
-```text
-https://<base-url>/auth/link/confirm?token=<opaque-token>
-```
-
-`GET` es seguro: puede validar lo necesario para presentar la pantalla, pero no
-consume el intento, no vincula la identidad y no crea una sesión. Esto protege el
-flujo frente a aperturas repetidas, previsualizaciones e inspecciones automáticas
-del enlace.
-
-Mientras el cliente confirma el enlace y reemplaza la sesión, una capa global
-bloquea la interacción para que no quede visible ni operable el estado de la
-identidad anterior. Tras éxito, la web reemplaza la URL por `/`; las aplicaciones
-reconstruyen las raíces de Inicio, Torneos y Cuenta, descartando modales y pilas
-previas. Cada raíz carga sus datos al recibir foco, no como efecto del reset.
-
-La persona confirma mediante una acción explícita. El cliente realiza entonces
-un `POST` al backend; la ruta y los DTO concretos se incorporarán a OpenAPI antes
-de implementarse y el token se enviará en el cuerpo de la petición. El backend
-valida y consume el intento una sola vez, vincula la identidad y emite la nueva
-sesión. Las peticiones concurrentes o repetidas no pueden producir más de un
-consumo válido.
-
-Tras confirmar y crear el vínculo:
-
-- sin sesión previa, se crea la sesión del usuario vinculado;
-- si la sesión previa pertenece al mismo usuario, se mantiene la identidad y se
-  rota la sesión cuando corresponda;
-- si pertenece a otro usuario, el cliente sustituye automáticamente su sesión
-  local por una sesión nueva del usuario vinculado.
-
-No se modifica el `user_id` de una sesión existente. El backend crea una sesión
-nueva y la sustitución solo ocurre después de haberla emitido correctamente. Las
-sesiones de otros dispositivos no se cambian por este switch.
-
-Después del éxito, web y aplicaciones sustituyen la ruta de confirmación por la
-home `/`; no añaden otra entrada al historial y el token deja de estar visible.
-Si el token es inválido, ha caducado, fue cancelado o ya se consumió, el cliente
-muestra un estado de error y una recuperación posible en vez de redirigir
-silenciosamente.
-
-En web, la sesión se entregará mediante el mecanismo seguro que se decida para
-cookies. En aplicaciones, el cliente canjeará un resultado de confirmación por la
-sesión mediante la API. Los secretos de sesión no aparecerán en URLs, historial,
-analytics ni logs.
-
-La URL base se configura por entorno y nunca se deriva de un encabezado `Host`
-no confiable. La pantalla de confirmación evitará recursos de terceros, no
-registrará el token y usará `Referrer-Policy: no-referrer`.
+Desde Seguridad, una persona con sesión y reautenticación reciente puede añadir
+una contraseña o una identidad social todavía no vinculada a ninguna cuenta. Si
+el `(issuer, subject)` ya pertenece a otra cuenta, la operación falla sin mover
+ni duplicar la identidad; si pertenece a la misma cuenta, no crea un duplicado.
+No existe fusión de cuentas: las ligas, administraciones y seguimientos
+permanecen ligados al ID de la cuenta que los creó. Véanse ADR-0066 y ADR-0067.
+La API y la interfaz de Seguridad requieren primero el mecanismo común de
+reautenticación reciente; por eso no forman parte todavía del endpoint de inicio
+de Google implementado en este incremento.
 
 ## Invariantes de seguridad
 
 - Los sujetos externos no son identificadores del dominio.
 - Email no es clave de una identidad federada.
 - Toda entrada del cliente es no confiable.
-- Vincular, desvincular y cambiar email requiere reautenticación.
+- Un `(issuer, subject)` ya vinculado no se puede mover a otra cuenta; solo una
+  adición idempotente a su misma cuenta puede aceptarse.
+- Un email ya perteneciente a otra cuenta no permite crear, vincular ni fusionar
+  cuentas.
 - Debe permanecer al menos un método de acceso.
 - La recuperación local no crea ni vincula proveedores.
 - Los mensajes públicos no enumeran cuentas.
 - Tokens, códigos y secretos no se escriben en logs.
-- Un intento pendiente no es una sesión ni concede permisos.
-- Una sesión nunca cambia de propietario; un switch crea y selecciona otra.
-- `GET` no consume un intento ni cambia identidad o sesión.
-- Solo una confirmación explícita mediante `POST` puede consumir el intento.
-- El token se elimina de la navegación tras el éxito.
 
 ## Recuperación de contraseña local
 

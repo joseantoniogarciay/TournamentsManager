@@ -12,10 +12,12 @@ import (
 	"syscall"
 	"time"
 
+	googleadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/google"
 	httpadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/http"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
 	smtpadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/smtp"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/config"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
@@ -49,10 +51,15 @@ func run() error {
 	}
 	registrationService := registration.NewService(postgres.NewRegistrationRepository(pool), mailer)
 	accountLeagues := postgres.NewAccountLeagueRepository(pool)
+	var federatedService *federated.Service
+	if len(appConfig.GoogleClientIDs) > 0 {
+		service := federated.NewService(postgres.NewFederatedRepository(pool), googleadapter.NewVerifier(appConfig.GoogleClientIDs))
+		federatedService = &service
+	}
 
 	server := &http.Server{
 		Addr:              appConfig.HTTPAddr,
-		Handler:           httpadapter.NewHandler(registrationService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins),
+		Handler:           httpadapter.NewHandler(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

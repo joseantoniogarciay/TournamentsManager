@@ -7,6 +7,7 @@
  */
 import type {
   RateLimitProblemResponse,
+  ServiceUnavailableProblemResponse,
   Username,
   UsernameAvailability,
   ValidationProblemResponse,
@@ -27,11 +28,18 @@ export type getUsernameAvailabilityResponse429 = {
   status: 429;
 };
 
+export type getUsernameAvailabilityResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
 export type getUsernameAvailabilityResponseSuccess = getUsernameAvailabilityResponse200 & {
   headers: Headers;
 };
 export type getUsernameAvailabilityResponseError = (
-  getUsernameAvailabilityResponse400 | getUsernameAvailabilityResponse429
+  | getUsernameAvailabilityResponse400
+  | getUsernameAvailabilityResponse429
+  | getUsernameAvailabilityResponse503
 ) & {
   headers: Headers;
 };

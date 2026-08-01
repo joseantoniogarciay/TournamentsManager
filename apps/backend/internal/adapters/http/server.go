@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
@@ -28,12 +29,19 @@ const (
 
 // NewHandler construye las rutas de infraestructura disponibles antes de los
 // endpoints de negocio.
-func NewHandler(registrationService registration.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string) http.Handler {
+func NewHandler(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string) http.Handler {
 	mux := http.NewServeMux()
 	availabilityLimiter := newRequestLimiter(usernameAvailabilityLimit, usernameAvailabilityWindow)
 	mux.HandleFunc("GET /healthz", healthz)
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService))
+	if federatedService != nil {
+		mux.HandleFunc("POST /v1/google-login-challenges", createGoogleChallenge(*federatedService))
+		mux.HandleFunc("POST /v1/google-sessions", createGoogleSession(*federatedService))
+	} else {
+		mux.HandleFunc("POST /v1/google-login-challenges", unavailableFederatedLogin)
+		mux.HandleFunc("POST /v1/google-sessions", unavailableFederatedLogin)
+	}
 	passwordResetLimiter := newRequestLimiter(10, time.Minute)
 	mux.HandleFunc("POST /v1/password-resets", requestPasswordReset(registrationService, passwordResetLimiter))
 	mux.HandleFunc("POST /v1/password-reset-links", inspectPasswordReset(registrationService))
@@ -45,6 +53,74 @@ func NewHandler(registrationService registration.Service, authenticator sessionA
 	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)
 	return requireAllowedOrigin(corsAllowedOrigins, mux)
+}
+
+func unavailableFederatedLogin(w http.ResponseWriter, _ *http.Request) {
+	writeProblem(w, http.StatusServiceUnavailable, "El acceso con Google no está disponible")
+}
+
+type googleSessionRequest struct {
+	ChallengeID      string `json:"challengeId"`
+	IDToken          string `json:"idToken"`
+	SessionTransport string `json:"sessionTransport"`
+	Username         string `json:"username"`
+	Locale           string `json:"locale"`
+}
+
+func createGoogleChallenge(service federated.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		challenge, err := service.CreateChallenge(r.Context())
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo iniciar Google")
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"id": challenge.ID, "nonce": challenge.Nonce, "expiresAt": challenge.ExpiresAt})
+	}
+}
+
+func createGoogleSession(service federated.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body googleSessionRequest
+		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") {
+			writeValidationProblem(w)
+			return
+		}
+		var registrationInput *federated.Registration
+		if body.Username != "" {
+			registrationInput = &federated.Registration{Username: body.Username, Locale: body.Locale}
+		}
+		established, err := service.Authenticate(r.Context(), body.ChallengeID, body.IDToken, registrationInput)
+		if errors.Is(err, federated.ErrRegistration) {
+			w.WriteHeader(http.StatusAccepted)
+			return
+		}
+		if errors.Is(err, federated.ErrEmailConflict) {
+			writeProblem(w, http.StatusConflict, "No se pudo iniciar sesión con este método")
+			return
+		}
+		if errors.Is(err, federated.ErrChallengeInvalid) {
+			writeValidationProblem(w)
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo iniciar sesión")
+			return
+		}
+		writeFederatedSession(w, body.SessionTransport, established)
+	}
+}
+
+func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession) {
+	response := map[string]any{"user": map[string]string{"id": established.AccountID, "username": established.Username}, "delivery": transport, "expiresAt": established.IdleExpiresAt, "refreshExpiresAt": established.RefreshExpiresAt}
+	if transport == "cookie" {
+		http.SetCookie(w, &http.Cookie{Name: "__Host-tm_session", Value: established.AccessToken, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+	} else {
+		response["sessionToken"], response["refreshToken"] = established.AccessToken, established.RefreshToken
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 type passwordResetRequest struct {

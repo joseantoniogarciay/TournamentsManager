@@ -70,12 +70,21 @@ colecciones. Torneos y Cuenta expresan su estado actual mientras llegan los
 flujos autenticados y los datos reales. El alcance funcional aceptado se
 documenta en [Producto](../../docs/project/PRODUCT.md).
 
-Cuenta ofrece el recorrido local de acceso y una ruta de registro. El acceso
-federado con Google permanece identificado como no disponible hasta que exista
-su adaptador OIDC en el cliente. Desde la rueda de ajustes se puede elegir tema
-claro, oscuro o sistema; la preferencia se guarda localmente y no requiere
-sesión. Las notificaciones no se solicitan todavía: siguen fuera del alcance
-aceptado y el control lo comunica sin simular un permiso del sistema.
+Cuenta ofrece el recorrido local de acceso y una ruta de registro. Google pide
+primero un challenge propio y pasa su nonce al proveedor; el ID token resultante
+se entrega al backend, que establece la sesión o pide un `username` para una
+cuenta nueva. No hay vínculo automático por email. Desde la rueda de ajustes se
+puede elegir tema claro, oscuro o sistema; la preferencia se guarda localmente y
+no requiere sesión. Las notificaciones no se solicitan todavía: siguen fuera del
+alcance aceptado y el control lo comunica sin simular un permiso del sistema.
+
+El cliente ya declara `expo-auth-session`; los IDs OAuth públicos por plataforma
+se configuran fuera de Git a partir de `.env.example`. Deben pertenecer al mismo
+proyecto Google que las audiencias `GOOGLE_CLIENT_IDS` del backend. Desarrollo
+puede usar la marca **FastTourney** y el correo de la cuenta propietaria como
+usuario de prueba. Antes de producción se sustituye por un correo operativo del
+dominio propio (por ejemplo, `support@fasttourney.com`) y se verifican dominio,
+web y URLs públicas de producto y privacidad.
 
 ## Estructura
 

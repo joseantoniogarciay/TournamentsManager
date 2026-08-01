@@ -59,7 +59,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0007](../adr/0007-use-a-modular-monolith-backend.md)                                         | Usar un monolito modular para el backend                             | Aceptado              | 2026-07-24 |
 | [0008](../adr/0008-use-a-universal-react-native-client.md)                                    | Usar un cliente universal con React Native                           | Aceptado              | 2026-07-24 |
 | [0009](../adr/0009-use-rest-and-openapi-contract-first.md)                                    | Usar REST con OpenAPI contract-first                                 | Aceptado              | 2026-07-24 |
-| [0010](../adr/0010-own-identity-with-federated-login.md)                                      | Gestionar identidad propia con login federado                        | Aceptado              | 2026-07-24 |
+| [0010](../adr/0010-own-identity-with-federated-login.md)                                      | Gestionar identidad propia con login federado                        | Superado parcialmente | 2026-07-24 |
 | [0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md)                                      | Usar PostgreSQL con pgx, sqlc y goose                                | Aceptado              | 2026-07-24 |
 | [0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md)                                     | Fijar el toolchain Go y aislar las herramientas                      | Aceptado              | 2026-07-24 |
 | [0013](../adr/0013-use-develop-as-integration-branch.md)                                      | Usar `develop` como rama de integración                              | Aceptado              | 2026-07-24 |
@@ -99,7 +99,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0047](../adr/0047-organize-initial-postgresql-schema-and-sqlc.md)                            | Organizar esquema PostgreSQL inicial y sqlc                          | Aceptado              | 2026-07-27 |
 | [0048](../adr/0048-require-username-at-registration-and-rotate-verification.md)               | Requerir username en el alta y rotar la verificación pendiente       | Superado parcialmente | 2026-07-27 |
 | [0049](../adr/0049-use-public-league-ids-for-read-only-access.md)                             | Usar IDs públicos de liga para la lectura de solo lectura            | Aceptado              | 2026-07-27 |
-| [0050](../adr/0050-include-google-federated-login-in-first-increment.md)                      | Incluir login federado con Google en el primer incremento            | Aceptado              | 2026-07-27 |
+| [0050](../adr/0050-include-google-federated-login-in-first-increment.md)                      | Incluir login federado con Google en el primer incremento            | Superado parcialmente | 2026-07-27 |
 | [0051](../adr/0051-use-single-use-google-login-challenges.md)                                 | Usar challenges de un solo uso para el login con Google              | Aceptado              | 2026-07-27 |
 | [0052](../adr/0052-make-registration-draft-optional.md)                                       | Hacer opcional el borrador en el alta                                | Aceptado              | 2026-07-27 |
 | [0053](../adr/0053-keep-a-single-resettable-local-initial-schema.md)                          | Mantener un único esquema inicial local reseteable                   | Aceptado              | 2026-07-27 |
@@ -115,6 +115,8 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0063](../adr/0063-persist-account-locale-from-registration-for-email-localization.md)        | Persistir locale de cuenta desde el registro para localizar emails   | Aceptado              | 2026-07-31 |
 | [0064](../adr/0064-recover-local-passwords-with-single-use-email-links.md)                    | Recuperar contraseñas locales con enlaces de email de un solo uso    | Aceptado              | 2026-07-31 |
 | [0065](../adr/0065-create-a-new-session-after-password-reset.md)                              | Crear una sesión nueva tras restablecer la contraseña                | Aceptado              | 2026-07-31 |
+| [0066](../adr/0066-deny-cross-account-identity-linking-and-merges.md)                         | Denegar vinculación y fusión entre cuentas distintas                 | Superado parcialmente | 2026-08-01 |
+| [0067](../adr/0067-allow-authenticated-same-account-access-method-linking.md)                 | Añadir métodos de acceso solo a la cuenta autenticada                | Aceptado              | 2026-08-01 |
 
 ## Trazabilidad de un cambio
 

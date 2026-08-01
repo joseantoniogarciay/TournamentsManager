@@ -55,19 +55,6 @@ type FederatedLoginChallenge struct {
 	ConsumedAt pgtype.Timestamptz
 }
 
-type IdentityLinkAttempt struct {
-	ID                 pgtype.UUID
-	CandidateAccountID pgtype.UUID
-	Provider           string
-	Issuer             string
-	Subject            string
-	TokenHash          []byte
-	CreatedAt          pgtype.Timestamptz
-	ExpiresAt          pgtype.Timestamptz
-	ConsumedAt         pgtype.Timestamptz
-	InvalidatedAt      pgtype.Timestamptz
-}
-
 type League struct {
 	ID                 pgtype.UUID
 	OrganizerAccountID pgtype.UUID

@@ -29,6 +29,43 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-08-01 — El nonce de una sesión externa debe venir de nuestra API
+
+- **Aprendido:** el cliente no genera ni interpreta la prueba de identidad de
+  Google. Solicita un challenge de un solo uso, transmite su nonce al proveedor
+  y entrega únicamente el ID token resultante a la API.
+- **Evidencia:** la feature `federated-google` usa las operaciones OpenAPI con
+  `apiFetch`; `expo-auth-session` recibe el nonce como parámetro de autorización
+  y el backend valida después issuer, audience, expiración y nonce.
+- **Coste aceptado:** la creación de un cliente Android necesita el SHA-1 del
+  certificado con que se firme la build. No se sustituye por la huella de iOS ni
+  se publica una app Android sin esa restricción.
+
+### 2026-08-01 — Un popup de identidad exige preparar su prueba antes del gesto
+
+- **Aprendido:** en web, esperar una petición antes de abrir la autenticación
+  puede hacer que el navegador bloquee el popup. El challenge se prepara al
+  llegar a Cuenta; si no está disponible, el toque solo reintenta esa
+  preparación y el siguiente abre Google.
+- **Evidencia:** `useGoogleAuthentication` separa `isPreparing` de la
+  autenticación ya abierta. La pantalla reemplaza el icono por progreso durante
+  ambos estados; Google controla su propia superficie, por lo que Cuenta no
+  añade una barrera de interacción redundante.
+- **Coste aceptado:** tras un fallo o una caducidad poco frecuentes puede hacer
+  falta un segundo toque. Se evita abrir ventanas vacías o automatizar un popup
+  fuera del gesto, que sería menos fiable y menos accesible.
+
+### 2026-08-01 — Bloquear depende del compromiso de la operación
+
+- **Aprendido:** un loader no basta para proteger una operación propia ya
+  enviada. Registro usa `InteractionBlocker` desde el `POST` hasta su respuesta
+  para impedir navegación, edición o nuevos envíos durante ese intervalo.
+- **Evidencia:** la validación local y las consultas de disponibilidad no
+  bloquean la ruta; el bloqueo comienza exclusivamente con `isSubmitting`.
+- **Coste aceptado:** la barrera es transparente y anuncia progreso al lector
+  de pantalla. No se aplica a una precarga reversible de Google, donde la
+  persona puede cambiar libremente a otro método de acceso.
+
 ### 2026-07-30 — Un recorrido vertical hace visibles los límites
 
 - **Aprendido:** una ruta HTTP no es toda la API ni toda la lógica del backend.

@@ -16,7 +16,6 @@ de estado posteriores a `published`.
 accounts 1 ── 0..1 local_credentials
     │ 1
     ├──── * external_identities
-    ├──── * identity_link_attempts
     ├──── 0..1 league_drafts ── * draft_teams
     ├──── * email_verification_tokens
     ├──── * sessions
@@ -37,9 +36,8 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `accounts`                   | `id`, `email`, `locale`, `state`, `username`, `created_at`, `verified_at`, `expires_at`                                | `locale` es uno de `es`, `en`, `it` o `fr`; índice único sobre `lower(email)` para acceso; username único y en minúsculas; estado `pending_verification` o `verified`; pendiente expira a los 7 días. |
 | `local_credentials`          | `account_id`, `password_hash`, `created_at`, `updated_at`                                                              | PK/FK uno a uno; hash Argon2id; ninguna contraseña recuperable.                                                                                                                    |
-| `external_identities`        | `id`, `account_id`, `provider`, `issuer`, `subject`, `created_at`                                                      | `(issuer, subject)` único; una identidad Google pertenece a una cuenta y una cuenta tiene como máximo una identidad Google.                                                        |
+| `external_identities`        | `id`, `account_id`, `provider`, `issuer`, `subject`, `created_at`                                                      | `(issuer, subject)` único; una identidad Google pertenece a una cuenta y una cuenta tiene como máximo una identidad Google. Se añade solo desde Seguridad a la cuenta autenticada y nunca se mueve entre cuentas. |
 | `federated_login_challenges` | `id`, `provider`, `nonce_hash`, `expires_at`, `consumed_at`, `created_at`                                              | Google únicamente; nonce de 5 min, de un solo uso y sin sesión asociada.                                                                                                           |
-| `identity_link_attempts`     | `id`, `candidate_account_id`, `provider`, `issuer`, `subject`, `token_hash`, `expires_at`, `consumed_at`, `created_at` | confirma un vínculo Google con una cuenta local mediante desafío fresco; no crea sesión hasta consumirlo.                                                                          |
 | `email_verification_tokens`  | `id`, `account_id`, `token_hash`, `expires_at`, `consumed_at`, `invalidated_at`, `created_at`                          | hash único por contexto; expira a 24 h; activo, consumido e invalidado son excluyentes; solo hay un token activo por cuenta.                                                       |
 | `sessions`                   | `id`, `account_id`, `token_hash`, `created_at`, `last_seen_at`, `idle_expires_at`, `absolute_expires_at`, `revoked_at` | hash único; válida solo si la cuenta está verificada, no revocada y ambos vencimientos son futuros.                                                                                |
 | `league_drafts`              | `id`, `account_id`, `name`, `created_at`, `updated_at`, `expires_at`                                                   | FK a cuenta pendiente, una fila por cuenta en este incremento; se borra con la purga de la cuenta.                                                                                 |
@@ -67,8 +65,9 @@ minúsculo antes de guardar.
 3. **Login:** compara Argon2id; crea una sesión si la cuenta está verificada o,
    si está pendiente, invalida el token activo y crea uno nuevo sin sesión.
    El login Google valida y consume un challenge, resuelve `(issuer, subject)` y
-   crea la misma clase de sesión; una identidad nueva sigue la verificación de
-   correo y una coincidencia local inicia vinculación explícita.
+   crea la misma clase de sesión. Una identidad nueva crea una cuenta Google
+   solo si su email no pertenece ya a otra cuenta; no hay vinculación ni fusión
+   basada en coincidencia de email.
 4. **Publicación:** exige sesión válida y propiedad. Valida nombre y al menos dos
    equipos; crea liga, equipos y todos los partidos, y elimina el borrador dentro
    de una transacción.

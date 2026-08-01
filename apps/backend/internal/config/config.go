@@ -15,6 +15,7 @@ const (
 	smtpFromEnv           = "SMTP_FROM"
 	publicBaseURLEnv      = "PUBLIC_BASE_URL"
 	corsAllowedOriginsEnv = "CORS_ALLOWED_ORIGINS"
+	googleClientIDsEnv    = "GOOGLE_CLIENT_IDS"
 )
 
 // Config contiene únicamente la configuración necesaria para arrancar la API.
@@ -25,6 +26,7 @@ type Config struct {
 	SMTPFrom           string
 	PublicBaseURL      string
 	CORSAllowedOrigins []string
+	GoogleClientIDs    []string
 }
 
 // Load obtiene la configuración desde el entorno y falla antes de abrir puertos
@@ -68,6 +70,7 @@ func load(getenv func(string) string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	googleClientIDs := parseCommaSeparated(getenv(googleClientIDsEnv))
 
 	return Config{
 		DatabaseURL:        databaseURL,
@@ -76,7 +79,18 @@ func load(getenv func(string) string) (Config, error) {
 		SMTPFrom:           smtpFrom,
 		PublicBaseURL:      publicBaseURL,
 		CORSAllowedOrigins: corsAllowedOrigins,
+		GoogleClientIDs:    googleClientIDs,
 	}, nil
+}
+
+func parseCommaSeparated(raw string) []string {
+	var values []string
+	for _, value := range strings.Split(raw, ",") {
+		if value = strings.TrimSpace(value); value != "" {
+			values = append(values, value)
+		}
+	}
+	return values
 }
 
 func validPublicBaseURL(parsedURL *url.URL) bool {

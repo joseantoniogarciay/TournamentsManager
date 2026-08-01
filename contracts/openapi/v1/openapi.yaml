@@ -108,6 +108,7 @@ paths:
               schema: { $ref: "#/components/schemas/UsernameAvailability" }
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
   /registrations:
     post:
       tags: [Registration]
@@ -247,11 +248,12 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/GoogleLoginChallenge" }
         "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
   /google-sessions:
     post:
       tags: [Federated identity]
       operationId: createGoogleSession
-      summary: Valida Google y crea una sesión para una identidad ya vinculada
+      summary: Valida Google e inicia sesión o crea una cuenta Google nueva
       security: []
       requestBody:
         required: true
@@ -265,9 +267,12 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/SessionEstablishment" }
         "202":
-          description: La identidad requiere alta o confirmación de vinculación; no hay sesión.
+          description: La identidad es nueva y requiere elegir username para crear una cuenta Google; no hay sesión.
         "400": { $ref: "#/components/responses/ValidationProblem" }
-        "409": { $ref: "#/components/responses/VerificationConflictProblem" }
+        "409":
+          description: La identidad es nueva, pero su email ya pertenece a otra cuenta; no se vincula ni se crea sesión.
+          $ref: "#/components/responses/VerificationConflictProblem"
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
   /me/league-draft:
     get:
       tags: [Drafts]
@@ -423,6 +428,9 @@ components:
       description: Límite de solicitudes alcanzado.
       headers:
         Retry-After: { schema: { type: integer, minimum: 1 } }
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    ServiceUnavailableProblem:
+      description: Operación temporalmente no disponible.
       content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
   schemas:
     UUID:
@@ -580,10 +588,17 @@ components:
         expiresAt: { type: string, format: date-time }
     GoogleAuthenticationRequest:
       type: object
-      required: [challengeId, idToken]
+      required: [challengeId, idToken, sessionTransport]
       properties:
         challengeId: { $ref: "#/components/schemas/UUID" }
         idToken: { $ref: "#/components/schemas/OpaqueToken" }
+        sessionTransport: { $ref: "#/components/schemas/Transport" }
+        username:
+          description: Requerido solo para crear una cuenta Google nueva; se valida de nuevo al guardar.
+          allOf: [{ $ref: "#/components/schemas/Username" }]
+        locale:
+          description: Requerido junto a username para crear una cuenta Google nueva.
+          allOf: [{ $ref: "#/components/schemas/Locale" }]
     LeagueDraft:
       type: object
       required: [id, name, teams, expiresAt]

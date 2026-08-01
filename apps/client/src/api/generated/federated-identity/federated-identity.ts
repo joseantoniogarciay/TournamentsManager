@@ -9,6 +9,7 @@ import type {
   GoogleAuthenticationRequest,
   GoogleLoginChallenge,
   RateLimitProblemResponse,
+  ServiceUnavailableProblemResponse,
   SessionEstablishment,
   ValidationProblemResponse,
   VerificationConflictProblemResponse,
@@ -24,10 +25,17 @@ export type createGoogleLoginChallengeResponse429 = {
   status: 429;
 };
 
+export type createGoogleLoginChallengeResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
 export type createGoogleLoginChallengeResponseSuccess = createGoogleLoginChallengeResponse201 & {
   headers: Headers;
 };
-export type createGoogleLoginChallengeResponseError = createGoogleLoginChallengeResponse429 & {
+export type createGoogleLoginChallengeResponseError = (
+  createGoogleLoginChallengeResponse429 | createGoogleLoginChallengeResponse503
+) & {
   headers: Headers;
 };
 
@@ -76,13 +84,18 @@ export type createGoogleSessionResponse409 = {
   status: 409;
 };
 
+export type createGoogleSessionResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
 export type createGoogleSessionResponseSuccess = (
   createGoogleSessionResponse200 | createGoogleSessionResponse202
 ) & {
   headers: Headers;
 };
 export type createGoogleSessionResponseError = (
-  createGoogleSessionResponse400 | createGoogleSessionResponse409
+  createGoogleSessionResponse400 | createGoogleSessionResponse409 | createGoogleSessionResponse503
 ) & {
   headers: Headers;
 };
@@ -95,7 +108,7 @@ export const getCreateGoogleSessionUrl = () => {
 };
 
 /**
- * @summary Valida Google y crea una sesión para una identidad ya vinculada
+ * @summary Valida Google e inicia sesión o crea una cuenta Google nueva
  */
 export const createGoogleSession = async (
   googleAuthenticationRequest: GoogleAuthenticationRequest,

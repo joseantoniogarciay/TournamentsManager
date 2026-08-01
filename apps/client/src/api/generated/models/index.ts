@@ -43,6 +43,7 @@ export * from "./publishedLeagueState.js";
 export * from "./rateLimitProblemResponse.js";
 export * from "./registerRequest.js";
 export * from "./resendRegistrationVerificationBody.js";
+export * from "./serviceUnavailableProblemResponse.js";
 export * from "./sessionEstablishment.js";
 export * from "./teamInput.js";
 export * from "./transport.js";

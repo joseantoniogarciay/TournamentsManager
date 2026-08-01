@@ -66,7 +66,7 @@ func (r testRegistrationRepository) ConsumePasswordReset(context.Context, []byte
 }
 
 func testHandler() http.Handler {
-	return NewHandler(registration.Service{}, testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
+	return NewHandler(registration.Service{}, nil, testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
 }
 
 func TestHealthz(t *testing.T) {
@@ -122,7 +122,7 @@ func TestUsernameAvailabilityReturnsCurrentAvailability(t *testing.T) {
 	t.Parallel()
 
 	registrationService := registration.NewService(testRegistrationRepository{available: false}, nil)
-	handler := NewHandler(registrationService, testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
+	handler := NewHandler(registrationService, nil, testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/v1/usernames/already_taken/availability", nil)
 	request.Header.Set("Origin", "http://localhost:8081")
 	recorder := httptest.NewRecorder()
@@ -161,7 +161,7 @@ func TestUsernameAvailabilityRateLimitsByClientIP(t *testing.T) {
 	t.Parallel()
 
 	registrationService := registration.NewService(testRegistrationRepository{available: true}, nil)
-	handler := NewHandler(registrationService, testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
+	handler := NewHandler(registrationService, nil, testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
 	for range usernameAvailabilityLimit {
 		request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/v1/usernames/available_name/availability", nil)
 		request.RemoteAddr = "203.0.113.1:10000"
@@ -188,7 +188,7 @@ func TestUsernameAvailabilityRateLimitsByClientIP(t *testing.T) {
 func TestRegistrationRequiresSupportedLocale(t *testing.T) {
 	t.Parallel()
 
-	handler := NewHandler(registration.NewService(testRegistrationRepository{}, nil), testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
+	handler := NewHandler(registration.NewService(testRegistrationRepository{}, nil), nil, testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
 	for _, test := range []struct {
 		name   string
 		body   string
@@ -243,7 +243,7 @@ func TestListAccountLeaguesReturnsPage(t *testing.T) {
 	t.Parallel()
 
 	items := []leagues.Item{{ID: "019abcde-1111-7111-8111-111111111111", Name: "Liga", State: "published", CreatedAt: "2026-07-28T10:00:00Z", Relationship: "organizer"}}
-	handler := NewHandler(registration.Service{}, testAuthenticator{accountID: "019abcde-2222-7222-8222-222222222222"}, leagues.NewService(testLeagueRepository{items: items}), testAllowedOrigins)
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: "019abcde-2222-7222-8222-222222222222"}, leagues.NewService(testLeagueRepository{items: items}), testAllowedOrigins)
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/v1/me/leagues?relationship=administered&limit=1", nil)
 	request.Header.Set("Authorization", "Bearer opaque-session")
 	recorder := httptest.NewRecorder()
@@ -261,7 +261,7 @@ func TestListAccountLeaguesReturnsPage(t *testing.T) {
 func TestFollowLeagueRejectsCrossSiteCookieRequest(t *testing.T) {
 	t.Parallel()
 
-	handler := NewHandler(registration.Service{}, testAuthenticator{accountID: "019abcde-2222-7222-8222-222222222222"}, leagues.NewService(testLeagueRepository{followVisible: true}), testAllowedOrigins)
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: "019abcde-2222-7222-8222-222222222222"}, leagues.NewService(testLeagueRepository{followVisible: true}), testAllowedOrigins)
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodPut, "/v1/me/leagues/019abcde-1111-7111-8111-111111111111/follow", nil)
 	request.Header.Set("Origin", "https://evil.example")
 	request.AddCookie(&http.Cookie{Name: "__Host-tm_session", Value: "web-session"})
@@ -276,7 +276,7 @@ func TestFollowLeagueRejectsCrossSiteCookieRequest(t *testing.T) {
 func TestFollowLeagueAllowsBearerRequest(t *testing.T) {
 	t.Parallel()
 
-	handler := NewHandler(registration.Service{}, testAuthenticator{accountID: "019abcde-2222-7222-8222-222222222222"}, leagues.NewService(testLeagueRepository{followVisible: true}), testAllowedOrigins)
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: "019abcde-2222-7222-8222-222222222222"}, leagues.NewService(testLeagueRepository{followVisible: true}), testAllowedOrigins)
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodPut, "/v1/me/leagues/019abcde-1111-7111-8111-111111111111/follow", nil)
 	request.Header.Set("Authorization", "Bearer mobile-session")
 	recorder := httptest.NewRecorder()

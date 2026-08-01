@@ -242,31 +242,8 @@ CREATE INDEX federated_login_challenges_purge_idx
     ON federated_login_challenges (expires_at)
     WHERE consumed_at IS NULL;
 
-CREATE TABLE identity_link_attempts (
-    id uuid PRIMARY KEY DEFAULT uuidv7(),
-    candidate_account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
-    provider text NOT NULL CHECK (provider = 'google'),
-    issuer text NOT NULL CHECK (issuer = 'https://accounts.google.com'),
-    subject text NOT NULL CHECK (length(subject) BETWEEN 1 AND 255),
-    token_hash bytea NOT NULL UNIQUE CHECK (octet_length(token_hash) = 32),
-    created_at timestamptz NOT NULL DEFAULT now(),
-    expires_at timestamptz NOT NULL,
-    consumed_at timestamptz,
-    invalidated_at timestamptz,
-    CONSTRAINT identity_link_attempts_expiration CHECK (expires_at > created_at),
-    CONSTRAINT identity_link_attempts_consumption CHECK (consumed_at IS NULL OR consumed_at >= created_at),
-    CONSTRAINT identity_link_attempts_invalidation CHECK (invalidated_at IS NULL OR invalidated_at >= created_at),
-    CONSTRAINT identity_link_attempts_terminal_state CHECK (consumed_at IS NULL OR invalidated_at IS NULL)
-);
-
-CREATE UNIQUE INDEX identity_link_attempts_one_active_subject_idx
-    ON identity_link_attempts (issuer, subject)
-    WHERE consumed_at IS NULL AND invalidated_at IS NULL;
-
 -- +goose Down
 
-DROP INDEX identity_link_attempts_one_active_subject_idx;
-DROP TABLE identity_link_attempts;
 DROP INDEX federated_login_challenges_purge_idx;
 DROP TABLE federated_login_challenges;
 DROP TABLE external_identities;

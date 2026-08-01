@@ -76,6 +76,12 @@ su posición para no cerrar el aviso por accidente.
 Una acción externa que se represente solo con un icono de marca, como Google,
 conserva un objetivo táctil de al menos 44 px, forma circular y `accessibilityLabel`
 localizado. El asset se guarda localmente: no se descarga durante el uso de la app.
+El nonce requerido por un proveedor se precarga al mostrar su acción. Mientras
+se prepara, el icono se sustituye por un loader sin bloquear el resto de la
+pantalla; un toque posterior abre el proveedor. `InteractionBlocker` conserva
+una capa transparente modal, accesible y reutilizable para futuros estados que
+sí deban impedir la interacción de una ruta; no se usa cuando el proveedor
+externo ya presenta y controla su propia interfaz.
 
 La primera home usa las mismas primitivas de texto, botón y superficie: presenta
 una única acción principal, un acceso secundario a cuenta y contenido orientativo

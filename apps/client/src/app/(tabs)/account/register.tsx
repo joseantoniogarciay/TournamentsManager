@@ -7,7 +7,7 @@ import { space } from "@tournaments-manager/design-tokens";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
-import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
+import { Button, Card, InteractionBlocker, Screen, Text, TextField } from "@/shared/ui";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { registerLocalAccountRequest } from "@/features/registration/api";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -125,6 +125,9 @@ export default function RegisterScreen() {
           </View>
         </Card>
       </ScrollView>
+      {isSubmitting ? (
+        <InteractionBlocker accessibilityLabel={t("account_registration_submitting")} />
+      ) : null}
     </Screen>
   );
 }
