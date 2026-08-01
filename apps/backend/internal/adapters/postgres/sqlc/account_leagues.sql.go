@@ -11,6 +11,90 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const consumeReauthenticationTicket = `-- name: ConsumeReauthenticationTicket :one
+UPDATE reauthentication_tickets AS tickets
+SET consumed_at = now()
+FROM sessions
+WHERE tickets.token_hash = $2
+  AND tickets.session_id = sessions.id
+  AND sessions.token_hash = $1
+  AND sessions.revoked_at IS NULL
+  AND sessions.idle_expires_at > now()
+  AND sessions.absolute_expires_at > now()
+  AND tickets.consumed_at IS NULL
+  AND tickets.expires_at > now()
+RETURNING tickets.account_id
+`
+
+type ConsumeReauthenticationTicketParams struct {
+	TokenHash   []byte
+	TokenHash_2 []byte
+}
+
+func (q *Queries) ConsumeReauthenticationTicket(ctx context.Context, arg ConsumeReauthenticationTicketParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, consumeReauthenticationTicket, arg.TokenHash, arg.TokenHash_2)
+	var account_id pgtype.UUID
+	err := row.Scan(&account_id)
+	return account_id, err
+}
+
+const consumeReauthenticationTicketAndSetPassword = `-- name: ConsumeReauthenticationTicketAndSetPassword :execrows
+WITH consumed AS (
+    UPDATE reauthentication_tickets AS tickets
+    SET consumed_at = now()
+    FROM sessions
+    WHERE tickets.token_hash = $2
+      AND tickets.session_id = sessions.id
+      AND sessions.token_hash = $1
+      AND sessions.revoked_at IS NULL
+      AND sessions.idle_expires_at > now()
+      AND sessions.absolute_expires_at > now()
+      AND tickets.consumed_at IS NULL
+      AND tickets.expires_at > now()
+    RETURNING tickets.account_id
+)
+INSERT INTO local_credentials (account_id, password_hash)
+SELECT account_id, $3 FROM consumed
+ON CONFLICT (account_id) DO UPDATE SET password_hash = EXCLUDED.password_hash, updated_at = now()
+`
+
+type ConsumeReauthenticationTicketAndSetPasswordParams struct {
+	TokenHash    []byte
+	TokenHash_2  []byte
+	PasswordHash string
+}
+
+func (q *Queries) ConsumeReauthenticationTicketAndSetPassword(ctx context.Context, arg ConsumeReauthenticationTicketAndSetPasswordParams) (int64, error) {
+	result, err := q.db.Exec(ctx, consumeReauthenticationTicketAndSetPassword, arg.TokenHash, arg.TokenHash_2, arg.PasswordHash)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const createReauthenticationTicket = `-- name: CreateReauthenticationTicket :one
+INSERT INTO reauthentication_tickets (account_id, session_id, token_hash, expires_at)
+SELECT sessions.account_id, sessions.id, $2, now() + interval '5 minutes'
+FROM sessions
+WHERE sessions.token_hash = $1
+  AND sessions.revoked_at IS NULL
+  AND sessions.idle_expires_at > now()
+  AND sessions.absolute_expires_at > now()
+RETURNING id
+`
+
+type CreateReauthenticationTicketParams struct {
+	TokenHash   []byte
+	TokenHash_2 []byte
+}
+
+func (q *Queries) CreateReauthenticationTicket(ctx context.Context, arg CreateReauthenticationTicketParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createReauthenticationTicket, arg.TokenHash, arg.TokenHash_2)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const findAuthenticatedAccountID = `-- name: FindAuthenticatedAccountID :one
 SELECT sessions.account_id
 FROM sessions
@@ -54,6 +138,50 @@ func (q *Queries) FollowVisibleLeague(ctx context.Context, arg FollowVisibleLeag
 	var visible bool
 	err := row.Scan(&visible)
 	return visible, err
+}
+
+const getAccessMethods = `-- name: GetAccessMethods :one
+SELECT accounts.email, accounts.username,
+  EXISTS (SELECT 1 FROM local_credentials WHERE account_id = accounts.id) AS has_password,
+  EXISTS (SELECT 1 FROM external_identities WHERE account_id = accounts.id AND provider = 'google') AS has_google
+FROM accounts
+WHERE accounts.id = $1 AND accounts.state = 'verified'
+`
+
+type GetAccessMethodsRow struct {
+	Email       string
+	Username    string
+	HasPassword bool
+	HasGoogle   bool
+}
+
+func (q *Queries) GetAccessMethods(ctx context.Context, id pgtype.UUID) (GetAccessMethodsRow, error) {
+	row := q.db.QueryRow(ctx, getAccessMethods, id)
+	var i GetAccessMethodsRow
+	err := row.Scan(
+		&i.Email,
+		&i.Username,
+		&i.HasPassword,
+		&i.HasGoogle,
+	)
+	return i, err
+}
+
+const getCurrentPasswordHash = `-- name: GetCurrentPasswordHash :one
+SELECT local_credentials.password_hash
+FROM sessions
+JOIN local_credentials ON local_credentials.account_id = sessions.account_id
+WHERE sessions.token_hash = $1
+  AND sessions.revoked_at IS NULL
+  AND sessions.idle_expires_at > now()
+  AND sessions.absolute_expires_at > now()
+`
+
+func (q *Queries) GetCurrentPasswordHash(ctx context.Context, tokenHash []byte) (string, error) {
+	row := q.db.QueryRow(ctx, getCurrentPasswordHash, tokenHash)
+	var password_hash string
+	err := row.Scan(&password_hash)
+	return password_hash, err
 }
 
 const listAdministeredLeagues = `-- name: ListAdministeredLeagues :many
@@ -179,6 +307,30 @@ func (q *Queries) ListFollowedLeagues(ctx context.Context, arg ListFollowedLeagu
 		return nil, err
 	}
 	return items, nil
+}
+
+const revokeSession = `-- name: RevokeSession :execrows
+WITH revoked_session AS (
+    UPDATE sessions
+    SET revoked_at = now()
+    WHERE sessions.token_hash = $1
+      AND sessions.revoked_at IS NULL
+      AND sessions.idle_expires_at > now()
+      AND sessions.absolute_expires_at > now()
+    RETURNING id
+)
+UPDATE session_refresh_tokens
+SET revoked_at = now()
+WHERE session_id IN (SELECT id FROM revoked_session)
+  AND revoked_at IS NULL
+`
+
+func (q *Queries) RevokeSession(ctx context.Context, tokenHash []byte) (int64, error) {
+	result, err := q.db.Exec(ctx, revokeSession, tokenHash)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const unfollowLeague = `-- name: UnfollowLeague :exec

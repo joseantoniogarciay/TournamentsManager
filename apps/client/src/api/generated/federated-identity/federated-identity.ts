@@ -6,13 +6,83 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type {
+  AuthenticationProblemResponse,
   GoogleAuthenticationRequest,
+  GoogleIdentityLinkRequest,
   GoogleLoginChallenge,
   RateLimitProblemResponse,
+  ServiceUnavailableProblemResponse,
   SessionEstablishment,
   ValidationProblemResponse,
   VerificationConflictProblemResponse,
 } from "../models";
+
+export type createCurrentAccountGoogleIdentityResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type createCurrentAccountGoogleIdentityResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type createCurrentAccountGoogleIdentityResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type createCurrentAccountGoogleIdentityResponse409 = {
+  data: VerificationConflictProblemResponse;
+  status: 409;
+};
+
+export type createCurrentAccountGoogleIdentityResponseSuccess =
+  createCurrentAccountGoogleIdentityResponse204 & {
+    headers: Headers;
+  };
+export type createCurrentAccountGoogleIdentityResponseError = (
+  | createCurrentAccountGoogleIdentityResponse400
+  | createCurrentAccountGoogleIdentityResponse401
+  | createCurrentAccountGoogleIdentityResponse409
+) & {
+  headers: Headers;
+};
+
+export type createCurrentAccountGoogleIdentityResponse =
+  | createCurrentAccountGoogleIdentityResponseSuccess
+  | createCurrentAccountGoogleIdentityResponseError;
+
+export const getCreateCurrentAccountGoogleIdentityUrl = () => {
+  return `/me/google-identities`;
+};
+
+/**
+ * @summary Vincula Google a la cuenta actual con ticket reciente
+ */
+export const createCurrentAccountGoogleIdentity = async (
+  googleIdentityLinkRequest: GoogleIdentityLinkRequest,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<createCurrentAccountGoogleIdentityResponse> => {
+  const res = await (fetchFn ?? fetch)(getCreateCurrentAccountGoogleIdentityUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(googleIdentityLinkRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createCurrentAccountGoogleIdentityResponse["data"] = body
+    ? JSON.parse(body)
+    : undefined;
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as createCurrentAccountGoogleIdentityResponse;
+};
 
 export type createGoogleLoginChallengeResponse201 = {
   data: GoogleLoginChallenge;
@@ -24,10 +94,17 @@ export type createGoogleLoginChallengeResponse429 = {
   status: 429;
 };
 
+export type createGoogleLoginChallengeResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
 export type createGoogleLoginChallengeResponseSuccess = createGoogleLoginChallengeResponse201 & {
   headers: Headers;
 };
-export type createGoogleLoginChallengeResponseError = createGoogleLoginChallengeResponse429 & {
+export type createGoogleLoginChallengeResponseError = (
+  createGoogleLoginChallengeResponse429 | createGoogleLoginChallengeResponse503
+) & {
   headers: Headers;
 };
 
@@ -76,13 +153,18 @@ export type createGoogleSessionResponse409 = {
   status: 409;
 };
 
+export type createGoogleSessionResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
 export type createGoogleSessionResponseSuccess = (
   createGoogleSessionResponse200 | createGoogleSessionResponse202
 ) & {
   headers: Headers;
 };
 export type createGoogleSessionResponseError = (
-  createGoogleSessionResponse400 | createGoogleSessionResponse409
+  createGoogleSessionResponse400 | createGoogleSessionResponse409 | createGoogleSessionResponse503
 ) & {
   headers: Headers;
 };
@@ -95,7 +177,7 @@ export const getCreateGoogleSessionUrl = () => {
 };
 
 /**
- * @summary Valida Google y crea una sesión para una identidad ya vinculada
+ * @summary Valida Google e inicia sesión o crea una cuenta Google nueva
  */
 export const createGoogleSession = async (
   googleAuthenticationRequest: GoogleAuthenticationRequest,

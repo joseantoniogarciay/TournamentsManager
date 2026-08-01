@@ -67,3 +67,38 @@ func (r RegistrationRepository) CreatePending(ctx context.Context, input registr
 	}
 	return true, nil
 }
+
+// CreatePasswordReset persiste un token solo para una cuenta local verificada.
+func (r RegistrationRepository) CreatePasswordReset(ctx context.Context, email string, tokenHash []byte) (string, registration.Locale, bool, error) {
+	row, err := r.queries.CreatePasswordReset(ctx, sqlc.CreatePasswordResetParams{Lower: email, TokenHash: tokenHash})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", "", false, nil
+	}
+	if err != nil {
+		return "", "", false, err
+	}
+	return row.Email, registration.Locale(row.Locale), true, nil
+}
+
+// InspectPasswordReset devuelve el email de un token de restablecimiento vigente.
+func (r RegistrationRepository) InspectPasswordReset(ctx context.Context, hash []byte) (string, error) {
+	email, err := r.queries.InspectPasswordReset(ctx, hash)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", registration.ErrPasswordResetInvalid
+	}
+	return email, err
+}
+
+// ConsumePasswordReset cambia la credencial, revoca sesiones y crea la nueva atómicamente.
+func (r RegistrationRepository) ConsumePasswordReset(ctx context.Context, tokenHash []byte, passwordHash string, sessionHash, refreshHash []byte) (registration.Session, error) {
+	row, err := r.queries.ConsumePasswordReset(ctx, sqlc.ConsumePasswordResetParams{TokenHash: tokenHash, PasswordHash: passwordHash, TokenHash_2: sessionHash, TokenHash_3: refreshHash})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return registration.Session{}, registration.ErrPasswordResetInvalid
+	}
+	if err != nil {
+		return registration.Session{}, err
+	}
+	session := registration.Session{AccountID: row.ID.String(), Username: row.Username}
+	session.IdleExpiresAt, session.RefreshExpiresAt = row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)
+	return session, nil
+}

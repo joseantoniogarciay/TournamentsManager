@@ -246,3 +246,9 @@ El primer vertical slice tiene definidos formato, ciclo de vida, visibilidad,
 participantes, seguimiento, administración y resultados. Las mejoras aplazadas
 se mantienen en «Fuera del primer alcance»; no bloquean el esquema ni los
 contratos del primer corte.
+# Seguridad de la cuenta
+
+Una cuenta autenticada puede consultar su email, username y métodos de acceso,
+añadir o cambiar una contraseña y vincular Google tras reautenticarse. No puede
+eliminar métodos ni fusionar cuentas. Cerrar sesión elimina el estado local de
+inmediato e intenta la revocación remota sin bloquear la navegación.

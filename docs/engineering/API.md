@@ -189,3 +189,11 @@ Sin fijar todavía rutas ni payloads, la API necesitará capacidades para:
 
 El diseño debe esperar a las decisiones de visibilidad, incorporación,
 participantes e identidad descritas en [SYSTEM_OPTIONS.md](../governance/SYSTEM_OPTIONS.md).
+# Gestión de métodos de acceso
+
+Las rutas autenticadas `GET /v1/me/access-methods`, `POST
+/v1/me/reauthentication-tickets`, `PUT /v1/me/local-credential` y `POST
+/v1/me/google-identities` siguen el contrato OpenAPI. Los `401`, respuestas no
+tipadas y fallos de transporte no divulgan detalles del backend; el cliente usa
+su feedback localizado común salvo que un caso de producto aporte recuperación
+específica.

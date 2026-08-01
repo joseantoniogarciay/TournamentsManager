@@ -11,7 +11,7 @@ export default function TabLayout() {
 
   return (
     <NativeTabs
-      minimizeBehavior="onScrollDown"
+      minimizeBehavior="never"
       tintColor={color.brand.primary}
       unstable_nativeProps={{ colorScheme: resolvedTheme }}
     >

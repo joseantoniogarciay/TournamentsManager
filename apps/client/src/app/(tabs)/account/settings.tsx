@@ -1,23 +1,22 @@
 import { Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { color, control, radius, space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { type ThemePreference, usePreferences } from "@/shared/preferences/preferences-provider";
-import { Card, Screen, Text } from "@/shared/ui";
+import { Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
 const themeOptions: ThemePreference[] = ["system", "light", "dark"];
 
 export default function AccountSettingsScreen() {
   const t = getTranslator();
   const { colors, setThemePreference, themePreference } = usePreferences();
-  const insets = useSafeAreaInsets();
+  const tabContentBottomPadding = useTabContentBottomPadding();
 
   return (
     <Screen bottomInset="none" topInset="navigation-bar">
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[12] }]}
+        contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
         <Card>

@@ -6,13 +6,164 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type {
+  AccessMethods,
   AuthenticationProblemResponse,
   CurrentSession,
+  LocalCredentialRequest,
   LoginRequest,
   RateLimitProblemResponse,
+  ReauthenticationRequest,
+  ReauthenticationTicket,
   SessionEstablishment,
   ValidationProblemResponse,
 } from "../models";
+
+export type getAccessMethodsResponse200 = {
+  data: AccessMethods;
+  status: 200;
+};
+
+export type getAccessMethodsResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type getAccessMethodsResponseSuccess = getAccessMethodsResponse200 & {
+  headers: Headers;
+};
+export type getAccessMethodsResponseError = getAccessMethodsResponse401 & {
+  headers: Headers;
+};
+
+export type getAccessMethodsResponse =
+  getAccessMethodsResponseSuccess | getAccessMethodsResponseError;
+
+export const getGetAccessMethodsUrl = () => {
+  return `/me/access-methods`;
+};
+
+/**
+ * @summary Devuelve los datos de acceso de la cuenta actual
+ */
+export const getAccessMethods = async (
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<getAccessMethodsResponse> => {
+  const res = await (fetchFn ?? fetch)(getGetAccessMethodsUrl(), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getAccessMethodsResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as getAccessMethodsResponse;
+};
+
+export type createReauthenticationTicketResponse201 = {
+  data: ReauthenticationTicket;
+  status: 201;
+};
+
+export type createReauthenticationTicketResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type createReauthenticationTicketResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type createReauthenticationTicketResponseSuccess =
+  createReauthenticationTicketResponse201 & {
+    headers: Headers;
+  };
+export type createReauthenticationTicketResponseError = (
+  createReauthenticationTicketResponse400 | createReauthenticationTicketResponse401
+) & {
+  headers: Headers;
+};
+
+export type createReauthenticationTicketResponse =
+  createReauthenticationTicketResponseSuccess | createReauthenticationTicketResponseError;
+
+export const getCreateReauthenticationTicketUrl = () => {
+  return `/me/reauthentication-tickets`;
+};
+
+/**
+ * @summary Confirma un método actual y emite un ticket de un solo uso
+ */
+export const createReauthenticationTicket = async (
+  reauthenticationRequest: ReauthenticationRequest,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<createReauthenticationTicketResponse> => {
+  const res = await (fetchFn ?? fetch)(getCreateReauthenticationTicketUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reauthenticationRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createReauthenticationTicketResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as createReauthenticationTicketResponse;
+};
+
+export type putLocalCredentialResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type putLocalCredentialResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type putLocalCredentialResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type putLocalCredentialResponseSuccess = putLocalCredentialResponse204 & {
+  headers: Headers;
+};
+export type putLocalCredentialResponseError = (
+  putLocalCredentialResponse400 | putLocalCredentialResponse401
+) & {
+  headers: Headers;
+};
+
+export type putLocalCredentialResponse =
+  putLocalCredentialResponseSuccess | putLocalCredentialResponseError;
+
+export const getPutLocalCredentialUrl = () => {
+  return `/me/local-credential`;
+};
+
+/**
+ * @summary Añade o cambia la contraseña local con un ticket reciente
+ */
+export const putLocalCredential = async (
+  localCredentialRequest: LocalCredentialRequest,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<putLocalCredentialResponse> => {
+  const res = await (fetchFn ?? fetch)(getPutLocalCredentialUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(localCredentialRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: putLocalCredentialResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as putLocalCredentialResponse;
+};
 
 export type createSessionResponse200 = {
   data: SessionEstablishment;

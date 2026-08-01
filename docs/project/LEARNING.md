@@ -1,5 +1,30 @@
 # Registro de aprendizaje
 
+## 2026-08-01 — El feedback inmediato debe resolver una necesidad concreta
+
+La validación al escribir no se aplica por defecto: puede distraer y revelar un
+error antes de que la persona termine un campo. `TextField` admite el disparador
+`change` para requisitos progresivos, como los ocho caracteres de una contraseña:
+mientras se escribe muestra el mínimo pendiente y, al cumplirlo, lo sustituye
+por el indicador de fuerza. Los demás campos conservan la validación al perder
+el foco y al enviar.
+
+## 2026-08-01 — La interacción de un campo no es la del formulario
+
+La validación de formato se muestra al abandonar el campo correspondiente, sin
+revelar errores en campos que la persona todavía no ha visitado. El intento de
+envío sí muestra todos los errores pendientes. Por ello cada control conserva
+su propia marca de interacción y el formulario una marca distinta de intento de
+envío; usar una única marca global en ambos eventos produce feedback prematuro.
+
+## 2026-08-01 — OAuth tras una reautenticación
+
+Un popup OAuth web debe abrirse desde un gesto vigente. Por eso, después de
+validar una contraseña se presenta una acción explícita «Continuar con Google»:
+el challenge se crea solo tras la reautenticación y el popup no depende de que
+el navegador conserve el gesto a través de una petición de red. El modal se
+descarta al terminar y Cuenta recupera el estado desde la API.
+
 ## Método
 
 Para cada capacidad se sigue el ciclo:
@@ -28,6 +53,69 @@ Para cada capacidad se sigue el ciclo:
 | Terraform/AWS  | Aprovisionar y operar infraestructura             | Fundamentos IaC, cuentas y estado aceptados |
 
 ## Diario
+
+### 2026-08-01 — El foco compartido pertenece al perímetro del control
+
+- **Aprendido:** un campo compuesto por un contenedor y un `TextInput` debe
+  representar el foco en el contenedor, que es la caja que la persona percibe
+  como control, no en el input interno.
+- **Evidencia:** React Native Web conserva el `outline` del elemento HTML si no
+  se desactiva explícitamente; al mismo tiempo, el estado de foco de la primitiva
+  aplica `border.focus` al contenedor en web, iOS y Android.
+- **Coste aceptado:** se conserva un pequeño estado local en `TextField` para
+  delegar la apariencia al componente compartido y evitar CSS específico por ruta.
+
+### 2026-08-01 — Un degradado universal debe describir una geometría común
+
+- **Aprendido:** los puntos de inicio y final de un degradado no tienen idéntica
+  semántica en CSS y en los renderizadores nativos. Un punto desplazado puede
+  cambiar solo el ángulo en web y desplazar realmente el recorrido en iOS y
+  Android.
+- **Evidencia:** `expo-linear-gradient` convierte web a un `linear-gradient()`
+  CSS, mientras que iOS y Android dibujan el vector entre los puntos. Los tokens
+  de icono y botón usan ahora el mismo vector de esquina superior izquierda a
+  inferior derecha y las mismas paradas; el email replica la paleta azul
+  `#155EEF` y violeta `#7F56D9`, con azul sólido como fallback.
+- **Coste aceptado:** el backend no importa tokens TypeScript. La pequeña
+  duplicación de los valores CSS queda documentada y cubierta por la prueba del
+  email, evitando acoplar Go a la infraestructura del cliente.
+
+### 2026-08-01 — El nonce de una sesión externa debe venir de nuestra API
+
+- **Aprendido:** el cliente no genera ni interpreta la prueba de identidad de
+  Google. Solicita un challenge de un solo uso, transmite su nonce al proveedor
+  y entrega únicamente el ID token resultante a la API.
+- **Evidencia:** la feature `federated-google` usa las operaciones OpenAPI con
+  `apiFetch`; `expo-auth-session` recibe el nonce como parámetro de autorización
+  y el backend valida después issuer, audience, expiración y nonce.
+- **Coste aceptado:** la creación de un cliente Android necesita el SHA-1 del
+  certificado con que se firme la build. No se sustituye por la huella de iOS ni
+  se publica una app Android sin esa restricción.
+
+### 2026-08-01 — Un popup de identidad exige preparar su prueba antes del gesto
+
+- **Aprendido:** en web, esperar una petición antes de abrir la autenticación
+  puede hacer que el navegador bloquee el popup. El challenge se prepara al
+  llegar a Cuenta; si no está disponible, el toque solo reintenta esa
+  preparación y el siguiente abre Google.
+- **Evidencia:** `useGoogleAuthentication` separa `isPreparing` de la
+  autenticación ya abierta. La pantalla reemplaza el icono por progreso durante
+  ambos estados; Google controla su propia superficie, por lo que Cuenta no
+  añade una barrera de interacción redundante.
+- **Coste aceptado:** tras un fallo o una caducidad poco frecuentes puede hacer
+  falta un segundo toque. Se evita abrir ventanas vacías o automatizar un popup
+  fuera del gesto, que sería menos fiable y menos accesible.
+
+### 2026-08-01 — Bloquear depende del compromiso de la operación
+
+- **Aprendido:** un loader no basta para proteger una operación propia ya
+  enviada. Registro usa `InteractionBlocker` desde el `POST` hasta su respuesta
+  para impedir navegación, edición o nuevos envíos durante ese intervalo.
+- **Evidencia:** la validación local y las consultas de disponibilidad no
+  bloquean la ruta; el bloqueo comienza exclusivamente con `isSubmitting`.
+- **Coste aceptado:** la barrera es transparente y anuncia progreso al lector
+  de pantalla. No se aplica a una precarga reversible de Google, donde la
+  persona puede cambiar libremente a otro método de acceso.
 
 ### 2026-07-30 — Un recorrido vertical hace visibles los límites
 
@@ -91,8 +179,11 @@ Para cada capacidad se sigue el ciclo:
   y el margen de seguridad debe pertenecer al contenedor desplazable.
 - **Evidencia:** `Screen` admite omitir su inset inferior en rutas bajo
   `NativeTabs`; Inicio, Torneos y las rutas de Cuenta lo hacen. Los `ScrollView`
-  de esos flujos mantienen su `paddingBottom` de `space[12]`, de modo que el
-  último control se puede llevar por encima de la barra nativa.
+  de esos flujos usan `useTabContentBottomPadding`, de modo que el último
+  control se puede llevar por encima de la barra nativa. En web, el cálculo
+  añade `space[10]` (40 px) porque su safe-area inferior es cero y la botonera
+  estándar permanece superpuesta; se aplica a cualquier ruta bajo tabs, no solo
+  a Inicio.
 - **Coste aceptado:** no se introduce una segunda abstracción de layout ni se
   fija una altura de tab bar, que variaría según plataforma y versión del sistema.
 
@@ -117,10 +208,8 @@ Para cada capacidad se sigue el ciclo:
   una relación directa con el icono; limitarlo al borde de 1 px en la acción
   secondary conserva contraste y evita competir con la acción principal.
 - **Evidencia:** `Button` parte de azul sólido y superpone el token
-  `gradient.brandButton`, variante horizontal de `gradient.brand`: mantiene la
-  dirección visual del icono cuadrado al concentrar el recorrido en el extremo
-  derecho. El texto sobre esa marca usa un token blanco independiente del tema, no
-  el color inverso de la superficie de la app.
+  `gradient.brandButton`. El texto sobre esa marca usa un token blanco
+  independiente del tema, no el color inverso de la superficie de la app.
 - **Coste aceptado:** las acciones destructivas siguen usando rojo sólido, pues
   el degradado de marca no debe diluir su semántica de riesgo.
 
@@ -130,7 +219,7 @@ Para cada capacidad se sigue el ciclo:
   su presencia sin cambiar el ángulo ni convertir toda la acción en una superficie
   violeta.
 - **Evidencia:** `gradient.brand` y `gradient.brandButton` comparten las mismas
-  paradas; los botones conservan una geometría horizontal específica.
+  paradas y una geometría diagonal completa, común a web, iOS y Android.
 - **Coste aceptado:** la barra de tabs nativa mantiene un tint azul sólido, porque
   su API no admite un degradado uniforme para icono y etiqueta.
 
@@ -1074,7 +1163,95 @@ Para cada capacidad se sigue el ciclo:
 - **Regla reutilizable:** las preferencias de presentación que trascienden una
   entrega concreta pertenecen a la cuenta y se validan en el límite del backend.
 
+### 2026-07-31 — El gestor de contraseñas decide el guardado de credenciales
+
+- **Aprendido:** `new-password` permite que iOS, Android y la web propongan una
+  contraseña fuerte y creen o actualicen la entrada del gestor sin que el
+  producto manipule el llavero.
+- **Evidencia:** ADR-0064 separa la semántica del campo de la política del
+  backend: sugerencia de 15 o más, mínimo manual de 8 y validación final en API.
+- **Coste aceptado:** el medidor es orientativo; no reemplaza controles de
+  servidor ni afirma que una contraseña sea invulnerable.
+- **Regla reutilizable:** declarar la intención semántica correcta del campo y
+  dejar que el proveedor de credenciales conserve el secreto.
+
+### 2026-08-01 — La visibilidad de una contraseña es un control, no un carácter
+
+- **Aprendido:** un carácter Unicode no representa de manera consistente una
+  acción de mostrar u ocultar entre plataformas. El control debe expresar su
+  estado con los símbolos nativos de ojo y ojo tachado, además de conservar un
+  área táctil de 44 px.
+- **Evidencia:** `TextField` usa `expo-symbols`: SF Symbols en iOS y Material
+  Symbols en Android y web. La prop compartida recibe el estado visible para
+  que icono y etiqueta accesible cambien juntos.
+- **Coste aceptado:** se añade una dependencia pequeña incluida en Expo Go, en
+  vez de incorporar una biblioteca de iconos completa o assets duplicados.
+- **Regla reutilizable:** los iconos que describen un estado interactivo se
+  derivan del mismo estado que la acción y su etiqueta accesible.
+
+### 2026-08-01 — Una tab nativa no debe minimizarse si invalida su inset
+
+- **Aprendido:** la minimización de `NativeTabs` de iOS 26 altera el espacio
+  inferior que usa el scroll. Si no se recompone al cerrar el teclado hasta un
+  nuevo scroll, deja una separación visual incorrecta.
+- **Evidencia:** el problema desaparece al fijar `minimizeBehavior="never"`;
+  la barra mantiene una altura estable mientras el teclado entra y sale.
+- **Coste aceptado:** se renuncia a ocultar la tab bar al desplazarse. Es menor
+  que mantener un layout que puede quedarse desincronizado.
+- **Regla reutilizable:** una animación del contenedor de navegación solo se
+  conserva si mantiene correctos los insets tras cambios del teclado.
+
+### 2026-08-01 — La precarga de un proveedor no debe producir feedback fuera de su ruta
+
+- **Aprendido:** una tab puede montarse sin estar visible. Solicitar el nonce de
+  Google en el montaje convierte un fallo de preparación en un banner global al
+  iniciar en Inicio, donde no hay acción de Google.
+- **Evidencia:** la carga pasa al foco de Cuenta y sus fallos automáticos no se
+  publican como error; el botón sigue reintentando la carga y comunica los
+  fallos de una acción iniciada explícitamente.
+- **Coste aceptado:** la primera llegada a Cuenta puede mostrar brevemente el
+  loader del icono. Evita peticiones y feedback ajenos a la ruta visible.
+- **Regla reutilizable:** una precarga solo puede emitir feedback si la persona
+  ve y entiende la acción que la originó.
+
+### 2026-08-01 — El teclado cambia el viewport web y el inset nativo de forma distinta
+
+- **Aprendido:** el teclado virtual reduce el viewport visual de la web, mientras
+  que iOS necesita ajustar el inset del `ScrollView` para que su contenido siga
+  siendo desplazable. Dejar que la tab bar participe en el flujo normal puede
+  situarla por encima del borde visible en web.
+- **Evidencia:** la barra web se fija al borde inferior del viewport visual y
+  los formularios no suman el safe-area inset inferior dinámico en web; la
+  primitiva de formularios habilita `automaticallyAdjustKeyboardInsets` en iOS.
+  Al recuperar altura, solo Safari recibe una segunda medida de
+  `visualViewport` tras 250 ms para no conservar su valor intermedio.
+- **Coste aceptado:** se usa un selector CSS web moderno con fallback al layout
+  actual en navegadores sin `:has`; no se introduce una librería de teclado.
+- **Regla reutilizable:** tratar por separado el anclaje de navegación web y el
+  desplazamiento del contenido nativo al aparecer el teclado.
+
+### 2026-08-01 — Una ruta terminal no duplica su motivo en el banner global
+
+- **Aprendido:** cuando una ruta ya presenta el motivo de un fallo y la acción
+  de recuperación, repetir el texto en un banner superior reduce el espacio
+  útil y divide la atención sin añadir información.
+- **Evidencia:** `link/confirm` representa los enlaces ausentes, caducados,
+  consumidos y los fallos seguros no tipados dentro de una `Card`; deja de
+  publicar el mismo resultado mediante `FeedbackProvider`.
+- **Coste aceptado:** el aviso no persiste al salir de la ruta, lo cual es
+  correcto porque el motivo y su acción solo son relevantes mientras esa ruta
+  está visible.
+- **Regla reutilizable:** una pantalla terminal con recuperación propia usa
+  feedback en el contenido; el banner global se reserva para avisos que no
+  tengan una ruta visible que los explique.
+
 ## Regla de evidencia
 
 “Entendido” exige una explicación propia y una demostración. Un comando que
 funciona o una respuesta del asistente no son evidencia suficiente por sí solos.
+# 2026-08-01 — Reautenticación no equivale a sesión
+
+Un token de sesión demuestra que el cliente mantiene una sesión; no debe ser
+suficiente por sí solo para cambiar autenticadores persistentes. Un ticket
+breve, ligado a la sesión y consumido dentro de la transacción conserva ese
+límite sin crear una segunda sesión ni un estado de interfaz global.

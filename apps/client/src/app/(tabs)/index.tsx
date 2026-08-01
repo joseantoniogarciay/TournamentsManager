@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
 
@@ -10,14 +9,16 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
-import { Button, Card, Screen, Text } from "@/shared/ui";
+import { Button, Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 import { router, type Href } from "expo-router";
+
+const safeAreaProbeHeight = 500;
 
 export default function HomeScreen() {
   const { show } = useFeedback();
   const { resolvedTheme } = usePreferences();
   const { revision } = useSession();
-  const insets = useSafeAreaInsets();
+  const tabContentBottomPadding = useTabContentBottomPadding();
   const t = getTranslator();
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function HomeScreen() {
       <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
       <ScrollView
         key={revision}
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[12] }]}
+        contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}
         style={styles.scroll}
       >
@@ -78,6 +79,8 @@ export default function HomeScreen() {
             />
           </View>
         </Card>
+
+        <Card style={{ height: safeAreaProbeHeight }} />
       </ScrollView>
     </Screen>
   );

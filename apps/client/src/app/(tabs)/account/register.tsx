@@ -1,13 +1,21 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 
 import { space } from "@tournaments-manager/design-tokens";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
-import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  InteractionBlocker,
+  KeyboardAwareScrollView,
+  Screen,
+  Text,
+  TextField,
+  useTabContentBottomPadding,
+} from "@/shared/ui";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { registerLocalAccountRequest } from "@/features/registration/api";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -15,11 +23,12 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 export default function RegisterScreen() {
   const t = getTranslator();
   const { show } = useFeedback();
-  const insets = useSafeAreaInsets();
+  const tabContentBottomPadding = useTabContentBottomPadding();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isValid: usernameIsValid, status: usernameAvailability } =
     useUsernameAvailability(username);
@@ -31,11 +40,11 @@ export default function RegisterScreen() {
   const emailError = !isEmail(email) ? t("validation_email") : undefined;
   const passwordError = !password
     ? t("validation_password_required")
-    : password.length < 12
+    : password.length < 8
       ? t("validation_password_length")
       : undefined;
   const register = async () => {
-    setSubmitted(true);
+    setHasAttemptedSubmit(true);
     if (
       usernameError ||
       emailError ||
@@ -66,42 +75,55 @@ export default function RegisterScreen() {
 
   return (
     <Screen bottomInset="none" topInset="navigation-bar">
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[12] }]}
+      <KeyboardAwareScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
         <Card>
           <View style={styles.form}>
             <Text color="secondary">{t("account_register_description")}</Text>
             <TextField
-              error={submitted ? usernameError : undefined}
+              error={usernameError}
               feedback={usernameFeedback(t, usernameAvailability)}
               label={t("account_username_label")}
               autoCapitalize="none"
               autoCorrect={false}
-              onBlur={() => setSubmitted(true)}
               onChangeText={(value) => setUsername(value.toLowerCase())}
+              validationSubmitted={hasAttemptedSubmit}
+              validationTrigger="blur"
               value={username}
             />
             <TextField
               autoCapitalize="none"
               autoComplete="email"
-              error={submitted ? emailError : undefined}
+              error={emailError}
               keyboardType="email-address"
               label={t("account_email_label")}
-              onBlur={() => setSubmitted(true)}
               onChangeText={setEmail}
+              validationSubmitted={hasAttemptedSubmit}
+              validationTrigger="blur"
               value={email}
             />
             <TextField
               autoComplete="new-password"
-              error={submitted ? passwordError : undefined}
+              error={passwordError}
               label={t("account_password_label")}
-              onBlur={() => setSubmitted(true)}
               onChangeText={setPassword}
-              secureTextEntry
+              passwordVisibility={{
+                isVisible: passwordVisible,
+                label: t(passwordVisible ? "password_hide" : "password_show"),
+                onPress: () => setPasswordVisible(!passwordVisible),
+              }}
+              secureTextEntry={!passwordVisible}
+              validationSubmitted={hasAttemptedSubmit}
+              validationTrigger="change"
               value={password}
             />
+            {password.length >= 8 ? (
+              <Text color="secondary">
+                {password.length < 15 ? t("password_strength_ok") : t("password_strength_strong")}
+              </Text>
+            ) : null}
             <Button
               disabled={
                 usernameAvailability === "checking" || usernameAvailability === "unavailable"
@@ -112,7 +134,10 @@ export default function RegisterScreen() {
             />
           </View>
         </Card>
-      </ScrollView>
+      </KeyboardAwareScrollView>
+      {isSubmitting ? (
+        <InteractionBlocker accessibilityLabel={t("account_registration_submitting")} />
+      ) : null}
     </Screen>
   );
 }

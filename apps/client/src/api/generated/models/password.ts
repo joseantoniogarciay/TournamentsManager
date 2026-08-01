@@ -7,7 +7,7 @@
  */
 
 /**
- * @minLength 12
+ * @minLength 8
  * @maxLength 1024
  */
 export type Password = string;

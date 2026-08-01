@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -18,6 +19,9 @@ var ErrVerificationInvalid = errors.New("verificación inválida")
 
 // ErrRefreshInvalid indica un refresh vencido, revocado, usado o inválido.
 var ErrRefreshInvalid = errors.New("refresh inválido")
+
+// ErrPasswordResetInvalid indica un token de restablecimiento inválido, vencido o consumido.
+var ErrPasswordResetInvalid = errors.New("restablecimiento inválido")
 
 const (
 	passwordMemory      = 19 * 1024
@@ -54,6 +58,9 @@ type Repository interface {
 	IsUsernameAvailable(context.Context, string) (bool, error)
 	VerifyAndCreateSession(context.Context, []byte, []byte, []byte, []byte) (Session, error)
 	RotateSessionTokens(context.Context, []byte, []byte, []byte) (Session, error)
+	CreatePasswordReset(context.Context, string, []byte) (string, Locale, bool, error)
+	InspectPasswordReset(context.Context, []byte) (string, error)
+	ConsumePasswordReset(context.Context, []byte, string, []byte, []byte) (Session, error)
 }
 
 // Refresh rota un refresh opaco y emite los siguientes tokens de la sesión.
@@ -85,6 +92,7 @@ type Session struct {
 // Mailer entrega el enlace de verificación mediante el adaptador configurado.
 type Mailer interface {
 	SendVerification(context.Context, string, Locale, string) error
+	SendPasswordReset(context.Context, string, Locale, string) error
 }
 
 // Verify consume una verificación y crea una sesión opaca.
@@ -134,7 +142,7 @@ func (s Service) UsernameAvailable(ctx context.Context, username string) (bool, 
 // Register crea una cuenta pendiente. La respuesta no diferencia un email ya
 // existente para no convertir el endpoint en un oráculo de cuentas.
 func (s Service) Register(ctx context.Context, input Input) error {
-	passwordHash, err := hashPassword(input.Password)
+	passwordHash, err := HashPassword(input.Password)
 	if err != nil {
 		return fmt.Errorf("generar hash de contraseña: %w", err)
 	}
@@ -157,13 +165,88 @@ func (s Service) Register(ctx context.Context, input Input) error {
 	return nil
 }
 
-func hashPassword(password string) (string, error) {
+// RequestPasswordReset crea y entrega un enlace sin revelar si el email existe.
+func (s Service) RequestPasswordReset(ctx context.Context, email string) error {
+	token, hash, err := newPasswordResetToken()
+	if err != nil {
+		return err
+	}
+	recipient, locale, created, err := s.repository.CreatePasswordReset(ctx, strings.TrimSpace(email), hash)
+	if err != nil {
+		return err
+	}
+	if !created {
+		return nil
+	}
+	return s.mailer.SendPasswordReset(ctx, recipient, locale, token)
+}
+
+// InspectPasswordReset obtiene el email de un enlace válido sin consumirlo.
+func (s Service) InspectPasswordReset(ctx context.Context, token string) (string, error) {
+	hash := sha256.Sum256([]byte("password-reset:" + token))
+	email, err := s.repository.InspectPasswordReset(ctx, hash[:])
+	if err != nil {
+		return "", ErrPasswordResetInvalid
+	}
+	return email, nil
+}
+
+// ResetPassword consume el enlace, cambia la credencial y emite una sesión nueva.
+func (s Service) ResetPassword(ctx context.Context, token, password string) (Session, string, string, error) {
+	passwordHash, err := HashPassword(password)
+	if err != nil {
+		return Session{}, "", "", err
+	}
+	resetHash := sha256.Sum256([]byte("password-reset:" + token))
+	access, refresh := make([]byte, 32), make([]byte, 32)
+	if _, err := rand.Read(access); err != nil {
+		return Session{}, "", "", err
+	}
+	if _, err := rand.Read(refresh); err != nil {
+		return Session{}, "", "", err
+	}
+	accessToken, refreshToken := base64.RawURLEncoding.EncodeToString(access), base64.RawURLEncoding.EncodeToString(refresh)
+	accessHash, refreshHash := sha256.Sum256([]byte("session:"+accessToken)), sha256.Sum256([]byte("refresh:"+refreshToken))
+	session, err := s.repository.ConsumePasswordReset(ctx, resetHash[:], passwordHash, accessHash[:], refreshHash[:])
+	if err != nil {
+		return Session{}, "", "", ErrPasswordResetInvalid
+	}
+	return session, accessToken, refreshToken, nil
+}
+
+// HashPassword crea un verificador Argon2id con los parámetros vigentes.
+func HashPassword(password string) (string, error) {
 	salt := make([]byte, 16)
 	if _, err := rand.Read(salt); err != nil {
 		return "", err
 	}
 	hash := argon2.IDKey([]byte(password), salt, passwordIterations, passwordMemory, passwordParallelism, passwordKeyLength)
 	return fmt.Sprintf("$argon2id$v=19$m=%d,t=%d,p=%d$%s$%s", passwordMemory, passwordIterations, passwordParallelism, base64.RawStdEncoding.EncodeToString(salt), base64.RawStdEncoding.EncodeToString(hash)), nil
+}
+
+// VerifyPassword compara una contraseña con un verificador Argon2id vigente.
+// Un formato desconocido se considera una credencial inválida, no un error interno.
+func VerifyPassword(password, encoded string) bool {
+	parts := strings.Split(encoded, "$")
+	if len(parts) != 6 || parts[1] != "argon2id" || parts[2] != "v=19" {
+		return false
+	}
+	var memory uint32
+	var iterations uint32
+	var parallelism uint8
+	if _, err := fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &memory, &iterations, &parallelism); err != nil || memory == 0 || iterations == 0 || parallelism == 0 {
+		return false
+	}
+	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
+	if err != nil || len(salt) < 8 {
+		return false
+	}
+	expected, err := base64.RawStdEncoding.DecodeString(parts[5])
+	if err != nil || len(expected) != int(passwordKeyLength) {
+		return false
+	}
+	actual := argon2.IDKey([]byte(password), salt, iterations, memory, parallelism, passwordKeyLength)
+	return subtle.ConstantTimeCompare(actual, expected) == 1
 }
 
 func newVerificationToken() (string, []byte, error) {
@@ -173,6 +256,16 @@ func newVerificationToken() (string, []byte, error) {
 	}
 	token := base64.RawURLEncoding.EncodeToString(secret)
 	hash := sha256.Sum256([]byte("registration-verification:" + token))
+	return token, hash[:], nil
+}
+
+func newPasswordResetToken() (string, []byte, error) {
+	secret := make([]byte, 32)
+	if _, err := rand.Read(secret); err != nil {
+		return "", nil, err
+	}
+	token := base64.RawURLEncoding.EncodeToString(secret)
+	hash := sha256.Sum256([]byte("password-reset:" + token))
 	return token, hash[:], nil
 }
 

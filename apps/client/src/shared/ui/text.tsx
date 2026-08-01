@@ -1,5 +1,5 @@
 import { type PropsWithChildren } from "react";
-import { StyleSheet, Text as NativeText, type TextStyle } from "react-native";
+import { StyleSheet, Text as NativeText, type StyleProp, type TextStyle } from "react-native";
 
 import { color, typography } from "@tournaments-manager/design-tokens";
 
@@ -8,9 +8,10 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 type Props = PropsWithChildren<{
   variant?: "body" | "bodyLarge" | "caption" | "title" | "display";
   color?: "primary" | "secondary" | "inverse" | "onBrand" | "error" | "success";
+  style?: StyleProp<TextStyle>;
 }>;
 
-export function Text({ children, variant = "body", color: textColor = "primary" }: Props) {
+export function Text({ children, variant = "body", color: textColor = "primary", style }: Props) {
   const { colors } = usePreferences();
   const textColors = {
     primary: { color: colors.text.primary },
@@ -21,7 +22,7 @@ export function Text({ children, variant = "body", color: textColor = "primary" 
     success: { color: colors.feedback.success },
   };
   return (
-    <NativeText style={[styles.base, variants[variant], textColors[textColor]]}>
+    <NativeText style={[styles.base, variants[variant], textColors[textColor], style]}>
       {children}
     </NativeText>
   );

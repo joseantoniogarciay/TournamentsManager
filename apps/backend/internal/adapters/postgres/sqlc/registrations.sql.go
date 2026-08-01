@@ -11,6 +11,118 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const consumePasswordReset = `-- name: ConsumePasswordReset :one
+WITH consumed_token AS (
+    UPDATE password_reset_tokens
+    SET consumed_at = now()
+    WHERE password_reset_tokens.token_hash = $1
+      AND password_reset_tokens.consumed_at IS NULL
+      AND password_reset_tokens.invalidated_at IS NULL
+      AND password_reset_tokens.expires_at > now()
+    RETURNING account_id
+), changed_credential AS (
+    UPDATE local_credentials
+    SET password_hash = $2, updated_at = now()
+    WHERE account_id = (SELECT account_id FROM consumed_token)
+    RETURNING account_id
+), revoked_sessions AS (
+    UPDATE sessions
+    SET revoked_at = now()
+    WHERE account_id = (SELECT account_id FROM changed_credential)
+      AND revoked_at IS NULL
+), revoked_refreshes AS (
+    UPDATE session_refresh_tokens
+    SET revoked_at = now()
+    WHERE session_id IN (
+      SELECT id FROM sessions WHERE account_id = (SELECT account_id FROM changed_credential)
+    )
+      AND revoked_at IS NULL
+), created_session AS (
+    INSERT INTO sessions (account_id, token_hash, idle_expires_at, absolute_expires_at)
+    SELECT account_id, $3, now() + interval '7 days', now() + interval '7 days'
+    FROM changed_credential
+    RETURNING id, account_id, idle_expires_at
+), created_refresh AS (
+    INSERT INTO session_refresh_tokens (session_id, token_hash, expires_at)
+    SELECT id, $4, now() + interval '30 days' FROM created_session
+    RETURNING expires_at
+)
+SELECT accounts.id, accounts.username, created_session.idle_expires_at, created_refresh.expires_at
+FROM changed_credential
+JOIN accounts ON accounts.id = changed_credential.account_id
+JOIN created_session ON true
+JOIN created_refresh ON true
+`
+
+type ConsumePasswordResetParams struct {
+	TokenHash    []byte
+	PasswordHash string
+	TokenHash_2  []byte
+	TokenHash_3  []byte
+}
+
+type ConsumePasswordResetRow struct {
+	ID            pgtype.UUID
+	Username      string
+	IdleExpiresAt pgtype.Timestamptz
+	ExpiresAt     pgtype.Timestamptz
+}
+
+func (q *Queries) ConsumePasswordReset(ctx context.Context, arg ConsumePasswordResetParams) (ConsumePasswordResetRow, error) {
+	row := q.db.QueryRow(ctx, consumePasswordReset,
+		arg.TokenHash,
+		arg.PasswordHash,
+		arg.TokenHash_2,
+		arg.TokenHash_3,
+	)
+	var i ConsumePasswordResetRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.IdleExpiresAt,
+		&i.ExpiresAt,
+	)
+	return i, err
+}
+
+const createPasswordReset = `-- name: CreatePasswordReset :one
+WITH eligible_account AS (
+    SELECT accounts.id, accounts.email, accounts.locale
+    FROM accounts
+    JOIN local_credentials ON local_credentials.account_id = accounts.id
+    WHERE lower(accounts.email) = lower($1)
+      AND accounts.state = 'verified'
+), invalidated_tokens AS (
+    UPDATE password_reset_tokens
+    SET invalidated_at = now()
+    WHERE account_id = (SELECT id FROM eligible_account)
+      AND consumed_at IS NULL
+      AND invalidated_at IS NULL
+)
+INSERT INTO password_reset_tokens (account_id, token_hash, expires_at)
+SELECT id, $2, now() + interval '30 minutes'
+FROM eligible_account
+RETURNING (SELECT email FROM eligible_account) AS email,
+          (SELECT locale FROM eligible_account) AS locale
+`
+
+type CreatePasswordResetParams struct {
+	Lower     string
+	TokenHash []byte
+}
+
+type CreatePasswordResetRow struct {
+	Email  string
+	Locale string
+}
+
+func (q *Queries) CreatePasswordReset(ctx context.Context, arg CreatePasswordResetParams) (CreatePasswordResetRow, error) {
+	row := q.db.QueryRow(ctx, createPasswordReset, arg.Lower, arg.TokenHash)
+	var i CreatePasswordResetRow
+	err := row.Scan(&i.Email, &i.Locale)
+	return i, err
+}
+
 const createPendingRegistration = `-- name: CreatePendingRegistration :one
 WITH created_account AS (
     INSERT INTO accounts (email, locale, state, username, expires_at)
@@ -43,6 +155,23 @@ func (q *Queries) CreatePendingRegistration(ctx context.Context, arg CreatePendi
 		arg.PasswordHash,
 		arg.TokenHash,
 	)
+	var email string
+	err := row.Scan(&email)
+	return email, err
+}
+
+const inspectPasswordReset = `-- name: InspectPasswordReset :one
+SELECT accounts.email
+FROM password_reset_tokens
+JOIN accounts ON accounts.id = password_reset_tokens.account_id
+WHERE password_reset_tokens.token_hash = $1
+  AND password_reset_tokens.consumed_at IS NULL
+  AND password_reset_tokens.invalidated_at IS NULL
+  AND password_reset_tokens.expires_at > now()
+`
+
+func (q *Queries) InspectPasswordReset(ctx context.Context, tokenHash []byte) (string, error) {
+	row := q.db.QueryRow(ctx, inspectPasswordReset, tokenHash)
 	var email string
 	err := row.Scan(&email)
 	return email, err

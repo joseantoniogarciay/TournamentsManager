@@ -19,6 +19,7 @@ const environmentConfig = {
 } as const;
 
 const appLinkDomain = getAppLinkDomain(process.env.EXPO_PUBLIC_APP_LINK_URL);
+const googleRedirectSchemes = getGoogleRedirectSchemes();
 
 function getAppLinkDomain(appLinkURL: string | undefined) {
   if (!appLinkURL) return undefined;
@@ -29,17 +30,36 @@ function getAppLinkDomain(appLinkURL: string | undefined) {
   return parsedURL.hostname;
 }
 
+function getGoogleRedirectSchemes() {
+  const clientIDs = [
+    process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+  ];
+  return [
+    ...new Set(
+      clientIDs
+        .filter((clientID): clientID is string => Boolean(clientID))
+        .map(
+          (clientID) =>
+            `com.googleusercontent.apps.${clientID.replace(/\.apps\.googleusercontent\.com$/, "")}`,
+        ),
+    ),
+  ];
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: environmentConfig[appEnvironment].name,
   slug: "fast-tourney",
-  scheme: environmentConfig[appEnvironment].scheme,
+  scheme: [environmentConfig[appEnvironment].scheme, ...googleRedirectSchemes],
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/fast-tourney-icon.png",
   ios: {
     bundleIdentifier: environmentConfig[appEnvironment].bundleIdentifier,
-    associatedDomains: appLinkDomain ? [`applinks:${appLinkDomain}`] : undefined,
+    associatedDomains: appLinkDomain
+      ? [`applinks:${appLinkDomain}`, `webcredentials:${appLinkDomain}`]
+      : undefined,
   },
   android: {
     package: environmentConfig[appEnvironment].bundleIdentifier,
@@ -58,6 +78,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-router",
     "expo-secure-store",
+    "expo-web-browser",
     [
       "expo-splash-screen",
       {

@@ -2,6 +2,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -14,6 +15,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
@@ -28,19 +31,338 @@ const (
 
 // NewHandler construye las rutas de infraestructura disponibles antes de los
 // endpoints de negocio.
-func NewHandler(registrationService registration.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string) http.Handler {
+func NewHandler(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string) http.Handler {
 	mux := http.NewServeMux()
+	var accessService access.Service
+	if repository, ok := authenticator.(access.Repository); ok {
+		accessService = access.NewService(repository)
+	}
 	availabilityLimiter := newRequestLimiter(usernameAvailabilityLimit, usernameAvailabilityWindow)
 	mux.HandleFunc("GET /healthz", healthz)
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService))
+	if federatedService != nil {
+		mux.HandleFunc("POST /v1/google-login-challenges", createGoogleChallenge(*federatedService))
+		mux.HandleFunc("POST /v1/google-sessions", createGoogleSession(*federatedService))
+		mux.Handle("POST /v1/me/google-identities", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(createGoogleIdentity(*federatedService)))))
+	} else {
+		mux.HandleFunc("POST /v1/google-login-challenges", unavailableFederatedLogin)
+		mux.HandleFunc("POST /v1/google-sessions", unavailableFederatedLogin)
+		mux.HandleFunc("POST /v1/me/google-identities", unavailableFederatedLogin)
+	}
+	passwordResetLimiter := newRequestLimiter(10, time.Minute)
+	mux.HandleFunc("POST /v1/password-resets", requestPasswordReset(registrationService, passwordResetLimiter))
+	mux.HandleFunc("POST /v1/password-reset-links", inspectPasswordReset(registrationService))
+	mux.HandleFunc("POST /v1/password-reset-confirmations", confirmPasswordReset(registrationService))
 	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService))
 	mux.HandleFunc("POST /v1/sessions/refresh", refreshSession(registrationService))
+	mux.Handle("DELETE /v1/sessions", requireCookieCSRF(http.HandlerFunc(revokeCurrentSession(authenticator))))
+	mux.Handle("GET /v1/me/access-methods", requireSession(authenticator)(http.HandlerFunc(getAccessMethods(authenticator))))
+	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(createReauthenticationTicket(accessService, federatedService)))))
+	mux.Handle("PUT /v1/me/local-credential", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(putLocalCredential(accessService)))))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
 	followHandler := requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(followLeague(leagueService))))
 	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)
 	return requireAllowedOrigin(corsAllowedOrigins, mux)
+}
+
+type reauthenticationRequest struct{ Password, ChallengeID, IDToken string }
+type localCredentialRequest struct {
+	Ticket   string `json:"ticket"`
+	Password string `json:"password"`
+}
+
+func createReauthenticationTicket(service access.Service, federatedService *federated.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body reauthenticationRequest
+		credential, ok := sessionToken(r)
+		if !ok || decodeBody(r, &body) != nil || (body.Password == "" && (body.ChallengeID == "" || body.IDToken == "")) || (body.Password != "" && (body.ChallengeID != "" || body.IDToken != "")) {
+			writeValidationProblem(w)
+			return
+		}
+		var ticket, expiresAt string
+		var err error
+		if body.Password != "" {
+			if len(body.Password) < 8 || len(body.Password) > 1024 {
+				writeValidationProblem(w)
+				return
+			}
+			ticket, expiresAt, err = service.ReauthenticateWithPassword(r.Context(), credential.token, body.Password)
+		} else if federatedService == nil || !uuidPattern.MatchString(body.ChallengeID) {
+			writeValidationProblem(w)
+			return
+		} else {
+			accountID, _ := currentAccountID(r.Context())
+			ticket, expiresAt, err = federatedService.ReauthenticateGoogle(r.Context(), accountID, credential.token, body.ChallengeID, body.IDToken)
+		}
+		if errors.Is(err, access.ErrReauthenticationInvalid) {
+			writeProblem(w, http.StatusUnauthorized, "Reautenticación no válida")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo reautenticar")
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(map[string]string{"ticket": ticket, "expiresAt": expiresAt})
+	}
+}
+
+type googleIdentityLinkRequest struct{ Ticket, ChallengeID, IDToken string }
+
+func createGoogleIdentity(service federated.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body googleIdentityLinkRequest
+		credential, ok := sessionToken(r)
+		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" || body.IDToken == "" || !uuidPattern.MatchString(body.ChallengeID) {
+			writeValidationProblem(w)
+			return
+		}
+		if err := service.AddGoogleWithTicket(r.Context(), credential.token, body.Ticket, body.ChallengeID, body.IDToken); errors.Is(err, federated.ErrIdentityConflict) {
+			writeProblem(w, http.StatusConflict, "No se pudo vincular este método")
+			return
+		} else if errors.Is(err, federated.ErrChallengeInvalid) {
+			writeProblem(w, http.StatusUnauthorized, "Reautenticación no válida")
+			return
+		} else if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo vincular Google")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func putLocalCredential(service access.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body localCredentialRequest
+		credential, ok := sessionToken(r)
+		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" || len(body.Password) < 8 || len(body.Password) > 1024 {
+			writeValidationProblem(w)
+			return
+		}
+		if err := service.SetPassword(r.Context(), credential.token, body.Ticket, body.Password); errors.Is(err, access.ErrReauthenticationInvalid) {
+			writeProblem(w, http.StatusUnauthorized, "Reautenticación no válida")
+			return
+		} else if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo cambiar la contraseña")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func getAccessMethods(authenticator sessionAuthenticator) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		if !ok {
+			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			return
+		}
+		reader, ok := authenticator.(interface {
+			GetAccessMethods(context.Context, string) (leagues.AccessMethods, error)
+		})
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la cuenta")
+			return
+		}
+		access, err := reader.GetAccessMethods(r.Context(), accountID)
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la cuenta")
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"email": access.Email, "username": access.Username, "methods": map[string]bool{"password": access.HasPassword, "google": access.HasGoogle}})
+	}
+}
+
+type sessionRevoker interface {
+	RevokeSession(context.Context, string) error
+}
+
+func revokeCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		credential, ok := sessionToken(request)
+		if !ok {
+			writeProblem(writer, http.StatusUnauthorized, "Sesión no válida")
+			return
+		}
+		revoker, ok := authenticator.(sessionRevoker)
+		if !ok {
+			writeProblem(writer, http.StatusInternalServerError, "No se pudo revocar la sesión")
+			return
+		}
+		if err := revoker.RevokeSession(request.Context(), credential.token); err != nil {
+			writeProblem(writer, http.StatusInternalServerError, "No se pudo revocar la sesión")
+			return
+		}
+		if credential.transport == cookieSession {
+			http.SetCookie(writer, &http.Cookie{Name: "__Host-tm_session", Value: "", Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: -1})
+		}
+		writer.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func unavailableFederatedLogin(w http.ResponseWriter, _ *http.Request) {
+	writeProblem(w, http.StatusServiceUnavailable, "El acceso con Google no está disponible")
+}
+
+type googleSessionRequest struct {
+	ChallengeID      string `json:"challengeId"`
+	IDToken          string `json:"idToken"`
+	SessionTransport string `json:"sessionTransport"`
+	Username         string `json:"username"`
+	Locale           string `json:"locale"`
+}
+
+func createGoogleChallenge(service federated.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		challenge, err := service.CreateChallenge(r.Context())
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo iniciar Google")
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"id": challenge.ID, "nonce": challenge.Nonce, "expiresAt": challenge.ExpiresAt})
+	}
+}
+
+func createGoogleSession(service federated.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body googleSessionRequest
+		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") {
+			writeValidationProblem(w)
+			return
+		}
+		var registrationInput *federated.Registration
+		if body.Username != "" {
+			registrationInput = &federated.Registration{Username: body.Username, Locale: body.Locale}
+		}
+		established, err := service.Authenticate(r.Context(), body.ChallengeID, body.IDToken, registrationInput)
+		if errors.Is(err, federated.ErrRegistration) {
+			w.WriteHeader(http.StatusAccepted)
+			return
+		}
+		if errors.Is(err, federated.ErrEmailConflict) {
+			writeProblem(w, http.StatusConflict, "No se pudo iniciar sesión con este método")
+			return
+		}
+		if errors.Is(err, federated.ErrChallengeInvalid) {
+			writeValidationProblem(w)
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo iniciar sesión")
+			return
+		}
+		writeFederatedSession(w, body.SessionTransport, established)
+	}
+}
+
+func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession) {
+	response := map[string]any{"user": map[string]string{"id": established.AccountID, "username": established.Username}, "delivery": transport, "expiresAt": established.IdleExpiresAt, "refreshExpiresAt": established.RefreshExpiresAt}
+	if transport == "cookie" {
+		http.SetCookie(w, &http.Cookie{Name: "__Host-tm_session", Value: established.AccessToken, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+	} else {
+		response["sessionToken"], response["refreshToken"] = established.AccessToken, established.RefreshToken
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(response)
+}
+
+type passwordResetRequest struct {
+	Email string `json:"email"`
+}
+type passwordResetTokenRequest struct {
+	Token string `json:"token"`
+}
+type passwordResetConfirmationRequest struct {
+	Token            string `json:"token"`
+	Password         string `json:"password"`
+	SessionTransport string `json:"sessionTransport"`
+}
+
+func requestPasswordReset(service registration.Service, limiter *requestLimiter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body passwordResetRequest
+		if err := decodeBody(r, &body); err != nil || !validEmail(strings.TrimSpace(body.Email)) {
+			writeValidationProblem(w)
+			return
+		}
+		if allowed, retry := limiter.allow(clientIP(r)); !allowed {
+			w.Header().Set("Retry-After", strconv.Itoa(retry))
+			writeProblem(w, http.StatusTooManyRequests, "Demasiadas solicitudes")
+			return
+		}
+		if err := service.RequestPasswordReset(r.Context(), body.Email); err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo solicitar el restablecimiento")
+			return
+		}
+		w.WriteHeader(http.StatusAccepted)
+	}
+}
+func inspectPasswordReset(service registration.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body passwordResetTokenRequest
+		if err := decodeBody(r, &body); err != nil || body.Token == "" {
+			writeValidationProblem(w)
+			return
+		}
+		email, err := service.InspectPasswordReset(r.Context(), body.Token)
+		if errors.Is(err, registration.ErrPasswordResetInvalid) {
+			writeProblem(w, http.StatusConflict, "Enlace no válido")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo comprobar el enlace")
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"email": email})
+	}
+}
+func confirmPasswordReset(service registration.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body passwordResetConfirmationRequest
+		if err := decodeBody(r, &body); err != nil || body.Token == "" || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
+			writeValidationProblem(w)
+			return
+		}
+		session, access, refresh, err := service.ResetPassword(r.Context(), body.Token, body.Password)
+		if errors.Is(err, registration.ErrPasswordResetInvalid) {
+			writeProblem(w, http.StatusConflict, "Enlace no válido")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo cambiar la contraseña")
+			return
+		}
+		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
+		if body.SessionTransport == "cookie" {
+			http.SetCookie(w, &http.Cookie{Name: "__Host-tm_session", Value: access, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+		} else {
+			response["sessionToken"], response["refreshToken"] = access, refresh
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(response)
+	}
+}
+
+func decodeBody(r *http.Request, target any) error {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(target); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		return err
+	}
+	return nil
 }
 
 func refreshSession(service registration.Service) http.HandlerFunc {
@@ -213,9 +535,7 @@ type registerRequest struct {
 func register(service registration.Service) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var body registerRequest
-		decoder := json.NewDecoder(request.Body)
-		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&body); err != nil || decoder.Decode(&struct{}{}) != io.EOF {
+		if err := decodeBody(request, &body); err != nil {
 			writeValidationProblem(writer)
 			return
 		}
@@ -239,11 +559,15 @@ func register(service registration.Service) http.HandlerFunc {
 }
 
 func validRegistration(input registration.Input) bool {
-	if len(input.Email) == 0 || len(input.Email) > 254 || len(input.Password) < 12 || len(input.Password) > 1024 || !registration.IsSupportedLocale(input.Locale) || !usernamePattern.MatchString(input.Username) {
+	if len(input.Email) == 0 || len(input.Email) > 254 || len(input.Password) < 8 || len(input.Password) > 1024 || !registration.IsSupportedLocale(input.Locale) || !usernamePattern.MatchString(input.Username) {
 		return false
 	}
-	address, err := mail.ParseAddress(input.Email)
-	return err == nil && address.Address == input.Email && strings.Contains(input.Email, "@")
+	return validEmail(input.Email)
+}
+
+func validEmail(value string) bool {
+	address, err := mail.ParseAddress(value)
+	return err == nil && address.Address == value && strings.Contains(value, "@")
 }
 
 func writeValidationProblem(writer http.ResponseWriter) {

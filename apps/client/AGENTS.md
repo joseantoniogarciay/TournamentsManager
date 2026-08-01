@@ -49,6 +49,11 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Toda pantalla deja al menos 10 px entre el área segura o el borde inferior de
   una navigation bar y su primer contenido; la implementación vigente usa 12 px
   mediante `Screen`.
+- Las rutas bajo tabs reservan el espacio de la botonera en el
+  `contentContainerStyle` de su contenido desplazable mediante
+  `useTabContentBottomPadding`, nunca en `Screen`. El cálculo compartido suma
+  `space[12]` al inset seguro en iOS y Android; en web, donde ese inset es cero
+  pero la botonera permanece superpuesta, suma además `space[10]` (40 px).
 - No se usa `SafeAreaView` de React Native cuando haya que sumar padding propio:
   en iOS puede ignorarlo. `Screen` combina `useSafeAreaInsets` con una `View`.
   Las rutas bajo una cabecera nativa declaran `topInset="navigation-bar"` para
@@ -66,6 +71,14 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   expresar el estado real disponible y sus estados de carga, vacío y error.
 - Botones y controles mantienen semántica accesible, un objetivo táctil mínimo
   de 44 px y no permiten envíos duplicados.
+- La validación de formato de un formulario se muestra al abandonar cada campo
+  y al intentar enviarlo. Cada campo conserva su propia marca de interacción;
+  el intento de envío puede mostrar los errores de todos los campos, pero el
+  `blur` de uno nunca marca ni muestra errores en los demás.
+- `TextField` puede recibir `validationTrigger="change"` solo cuando el
+  feedback inmediato ayuda materialmente a completar un requisito, como la
+  longitud mínima de una contraseña. El comportamiento normal sigue siendo
+  `"blur"`; el indicador complementario no aparece hasta cumplir ese requisito.
 - Los formularios no muestran una acción de cancelar. La salida de la ruta se
   hace mediante el botón de atrás de la barra de navegación, que no muestra
   texto.

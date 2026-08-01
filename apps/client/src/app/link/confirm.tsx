@@ -2,23 +2,22 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
+import { space } from "@tournaments-manager/design-tokens";
+
 import {
   confirmRegistration,
   RegistrationVerificationError,
   type RegistrationVerificationFailure,
 } from "@/features/registration/api";
 import { usePendingVerification } from "@/features/registration/pending-verification";
-import { useFeedback } from "@/shared/feedback/feedback-provider";
-import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { useSession } from "@/shared/session/session-provider";
-import { Button, Screen, Text } from "@/shared/ui";
+import { Button, Card, Screen, Text } from "@/shared/ui";
 
 const minimumConfirmationTransitionDuration = 2_000;
 
 export default function LinkConfirmationScreen() {
   const t = getTranslator();
-  const { show } = useFeedback();
   const { token, setToken } = usePendingVerification();
   const { beginSessionReplacement, cancelSessionReplacement, completeSessionReplacement } =
     useSession();
@@ -50,22 +49,15 @@ export default function LinkConfirmationScreen() {
           await new Promise<void>((resolve) => setTimeout(resolve, remainingDuration));
         }
         setToken(null);
-        show({ kind: "success", message: t("link_confirmation_success") });
         completeSessionReplacement(session.user);
       })
       .catch((error: unknown) => {
         cancelSessionReplacement();
         if (error instanceof RegistrationVerificationError) {
           setConfirmationFailure(error.failure);
-          show({
-            kind: "generic-error",
-            message: t(getVerificationFailureMessageKey(error.failure)),
-          });
           return;
         }
         setConfirmationFailure("unexpected");
-        const failure = getRequestFailure(error);
-        show({ kind: failure.kind, message: t(failure.messageKey) });
       })
       .finally(() => setIsConfirming(false));
   }, [
@@ -75,39 +67,42 @@ export default function LinkConfirmationScreen() {
     confirmationFailure,
     isConfirming,
     setToken,
-    show,
-    t,
     token,
   ]);
 
-  const close = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace("/");
-  };
+  const returnHome = () => router.replace("/");
 
   if ((token || isConfirming) && !confirmationFailure) return <Screen />;
 
   return (
     <Screen>
       <View style={styles.content}>
-        <Text color="secondary">
-          {confirmationFailure && confirmationFailure !== "unexpected"
-            ? t(getVerificationFailureMessageKey(confirmationFailure))
-            : params.sent === "1"
-              ? t("account_registration_email_sent")
-              : t("link_confirmation_missing")}
-        </Text>
-        <Button label={t("common_close")} variant="secondary" onPress={close} />
+        <Card>
+          <View style={styles.cardContent}>
+            <Text color="secondary">
+              {confirmationFailure === "unexpected"
+                ? t("common_request_error")
+                : confirmationFailure
+                  ? t(getVerificationFailureMessageKey(confirmationFailure))
+                  : params.sent === "1"
+                    ? t("account_registration_email_sent")
+                    : t("link_confirmation_missing")}
+            </Text>
+            <Button
+              label={t("link_confirmation_action")}
+              variant="secondary"
+              onPress={returnHome}
+            />
+          </View>
+        </Card>
       </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, justifyContent: "center", gap: 16 },
+  content: { flex: 1, justifyContent: "center" },
+  cardContent: { gap: space[4] },
 });
 
 function getVerificationFailureMessageKey(failure: RegistrationVerificationFailure) {

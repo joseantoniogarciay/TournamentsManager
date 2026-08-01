@@ -17,7 +17,7 @@ export default function AccountLayout() {
         headerTitleStyle: { color: colors.text.primary },
       }}
     >
-      <Stack.Screen name="index" options={{ title: t("account_title") }}>
+      <Stack.Screen name="index" options={{ title: "" }}>
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button
             accessibilityLabel={t("account_settings_accessibility_label")}
@@ -27,6 +27,12 @@ export default function AccountLayout() {
         </Stack.Toolbar>
       </Stack.Screen>
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
+      <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
+      <Stack.Screen name="password" options={{ title: t("account_password_change_title") }} />
+      <Stack.Screen
+        name="google-link"
+        options={{ presentation: "modal", title: t("account_google_link_title") }}
+      />
       <Stack.Screen
         name="settings"
         options={{ presentation: "modal", title: t("account_settings_title") }}

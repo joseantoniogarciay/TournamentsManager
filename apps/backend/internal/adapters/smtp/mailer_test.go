@@ -33,6 +33,7 @@ func TestVerificationMessageUsesConfirmationRouteAndMultipartDesign(t *testing.T
 		"text/html; charset=UTF-8",
 		"https://links.example.test/link/confirm?token=test-token",
 		"Fast Tourney",
+		"background:#155eef;background-image:linear-gradient(135deg,transparent 0%,transparent 35%,#7f56d9 100%)",
 	} {
 		if !strings.Contains(contents, expected) {
 			t.Errorf("message does not contain %q", expected)
@@ -40,6 +41,9 @@ func TestVerificationMessageUsesConfirmationRouteAndMultipartDesign(t *testing.T
 	}
 	if strings.Contains(contents, "/verify-registration") {
 		t.Error("message still uses the old verification route")
+	}
+	if strings.Contains(contents, "#5b4bff") || strings.Contains(contents, "#e84a8a") {
+		t.Error("message still uses the previous violet-pink palette")
 	}
 }
 

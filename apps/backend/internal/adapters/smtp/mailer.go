@@ -53,6 +53,44 @@ func (m Mailer) SendVerification(ctx context.Context, recipient string, locale r
 	return nil
 }
 
+// SendPasswordReset entrega un enlace de un solo uso para elegir una contraseña nueva.
+func (m Mailer) SendPasswordReset(ctx context.Context, recipient string, locale registration.Locale, token string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	resetURL := *m.baseURL
+	resetURL.Path = "/link/password-reset"
+	query := resetURL.Query()
+	query.Set("token", token)
+	resetURL.RawQuery = query.Encode()
+	messageCopy, ok := localizedPasswordResetCopy(locale)
+	if !ok {
+		return fmt.Errorf("locale de email no admitido: %q", locale)
+	}
+	message := []byte("To: " + recipient + "\r\nFrom: " + m.from + "\r\nSubject: " + mime.QEncoding.Encode("UTF-8", messageCopy.subject) + "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n" + messageCopy.body + "\r\n\r\n" + resetURL.String() + "\r\n\r\n" + messageCopy.ignore + "\r\n")
+	if err := smtp.SendMail(m.address, nil, m.from, []string{recipient}, message); err != nil {
+		return fmt.Errorf("SMTP: %w", err)
+	}
+	return nil
+}
+
+type passwordResetCopy struct{ subject, body, ignore string }
+
+func localizedPasswordResetCopy(locale registration.Locale) (passwordResetCopy, bool) {
+	switch locale {
+	case registration.LocaleSpanish:
+		return passwordResetCopy{"Restablece tu contraseña de Fast Tourney", "Abre este enlace para elegir una contraseña nueva. Caduca en 30 minutos.", "Si no lo solicitaste, ignora este correo."}, true
+	case registration.LocaleEnglish:
+		return passwordResetCopy{"Reset your Fast Tourney password", "Open this link to choose a new password. It expires in 30 minutes.", "If you did not request this, ignore this email."}, true
+	case registration.LocaleItalian:
+		return passwordResetCopy{"Reimposta la password di Fast Tourney", "Apri questo link per scegliere una nuova password. Scade tra 30 minuti.", "Se non l'hai richiesto, ignora questa email."}, true
+	case registration.LocaleFrench:
+		return passwordResetCopy{"Réinitialisez votre mot de passe Fast Tourney", "Ouvrez ce lien pour choisir un nouveau mot de passe. Il expire dans 30 minutes.", "Si vous ne l'avez pas demandé, ignorez cet e-mail."}, true
+	default:
+		return passwordResetCopy{}, false
+	}
+}
+
 func validPublicURL(parsedURL *url.URL) bool {
 	if parsedURL.Scheme == "https" {
 		return true
@@ -137,9 +175,9 @@ var verificationHTML = template.Must(template.New("verification").Parse(`<!docty
 <html lang="{{.Language}}"><body style="margin:0;background:#f8fafc;color:#101828;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 16px"><tr><td align="center">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;overflow:hidden">
-      <tr><td style="padding:28px 32px;background:linear-gradient(135deg,#5b4bff,#e84a8a);color:#ffffff"><strong style="font-size:20px">Fast Tourney</strong><br><span style="font-size:13px;opacity:.9">{{.Tagline}}</span></td></tr>
+      <tr><td style="padding:28px 32px;background:#155eef;background-image:linear-gradient(135deg,transparent 0%,transparent 35%,#7f56d9 100%);color:#ffffff"><strong style="font-size:20px">Fast Tourney</strong><br><span style="font-size:13px;opacity:.9">{{.Tagline}}</span></td></tr>
       <tr><td style="padding:32px"><h1 style="margin:0 0 12px;font-size:26px;line-height:1.2">{{.Title}}</h1><p style="margin:0 0 24px;line-height:1.55">{{.Description}}</p>
-      <a href="{{.VerificationURL}}" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#5b4bff;color:#ffffff;text-decoration:none;font-weight:700">{{.Button}}</a>
+      <a href="{{.VerificationURL}}" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#155eef;background-image:linear-gradient(135deg,transparent 0%,transparent 35%,#7f56d9 100%);color:#ffffff;text-decoration:none;font-weight:700">{{.Button}}</a>
       <p style="margin:28px 0 0;color:#667085;font-size:13px;line-height:1.5">{{.Ignore}}</p></td></tr>
     </table>
   </td></tr></table>
