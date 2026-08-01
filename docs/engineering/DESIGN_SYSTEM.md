@@ -116,9 +116,17 @@ detección y la selección de catálogo se centralizan en `shared/i18n/locale.ts
 ## Errores de formulario
 
 La validación de formato se ejecuta al abandonar un campo y al intentar enviar.
+Como excepción acotada, `TextField` permite validarla al cambiar el texto cuando
+el feedback inmediato ayuda a completar un requisito, como la longitud mínima
+de una contraseña; el indicador complementario se muestra solo al cumplirlo.
 Los requisitos que dependan del servidor se muestran cuando llegue la respuesta.
 Un error por campo se asocia programáticamente a su control; el banner queda para
 errores que no se pueden atribuir a un campo.
+
+Una ruta terminal que ya explica el estado y ofrece la siguiente acción, como un
+enlace de verificación inválido, no publica además el mismo error en el banner:
+la card de la ruta es el único feedback. Así se evita duplicar el copy y ocupar
+espacio antes de que la persona pueda leer la recuperación disponible.
 
 Mensajes globales iniciales:
 

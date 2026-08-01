@@ -13,6 +13,8 @@ type Props = TextInputProps & {
   error?: string;
   feedback?: { message: string; tone: "help" | "success" };
   passwordVisibility?: { isVisible: boolean; label: string; onPress: () => void };
+  validationSubmitted?: boolean;
+  validationTrigger?: "blur" | "change";
 };
 
 export function TextField({
@@ -21,14 +23,24 @@ export function TextField({
   feedback,
   accessibilityHint,
   passwordVisibility,
+  validationSubmitted = false,
+  validationTrigger,
   onBlur,
+  onChangeText,
   onFocus,
   ...inputProps
 }: Props) {
   const { colors } = usePreferences();
   const [isFocused, setIsFocused] = useState(false);
-  const message = error ?? feedback?.message;
-  const messageColor = error ? "error" : feedback?.tone === "success" ? "success" : "secondary";
+  const [hasTriggeredValidation, setHasTriggeredValidation] = useState(false);
+  const visibleError =
+    validationTrigger && !validationSubmitted && !hasTriggeredValidation ? undefined : error;
+  const message = visibleError ?? feedback?.message;
+  const messageColor = visibleError
+    ? "error"
+    : feedback?.tone === "success"
+      ? "success"
+      : "secondary";
   return (
     <View style={styles.wrapper}>
       <Text variant="bodyLarge">{label}</Text>
@@ -38,7 +50,7 @@ export function TextField({
           {
             borderColor: isFocused
               ? colors.border.focus
-              : error
+              : visibleError
                 ? colors.border.error
                 : colors.border.default,
           },
@@ -49,7 +61,12 @@ export function TextField({
           accessibilityLabel={message ? `${label}. ${message}` : label}
           onBlur={(event) => {
             setIsFocused(false);
+            if (validationTrigger === "blur") setHasTriggeredValidation(true);
             onBlur?.(event);
+          }}
+          onChangeText={(value) => {
+            if (validationTrigger === "change") setHasTriggeredValidation(true);
+            onChangeText?.(value);
           }}
           onFocus={(event) => {
             setIsFocused(true);

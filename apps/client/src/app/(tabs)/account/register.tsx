@@ -28,7 +28,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isValid: usernameIsValid, status: usernameAvailability } =
     useUsernameAvailability(username);
@@ -44,7 +44,7 @@ export default function RegisterScreen() {
       ? t("validation_password_length")
       : undefined;
   const register = async () => {
-    setSubmitted(true);
+    setHasAttemptedSubmit(true);
     if (
       usernameError ||
       emailError ||
@@ -83,30 +83,31 @@ export default function RegisterScreen() {
           <View style={styles.form}>
             <Text color="secondary">{t("account_register_description")}</Text>
             <TextField
-              error={submitted ? usernameError : undefined}
+              error={usernameError}
               feedback={usernameFeedback(t, usernameAvailability)}
               label={t("account_username_label")}
               autoCapitalize="none"
               autoCorrect={false}
-              onBlur={() => setSubmitted(true)}
               onChangeText={(value) => setUsername(value.toLowerCase())}
+              validationSubmitted={hasAttemptedSubmit}
+              validationTrigger="blur"
               value={username}
             />
             <TextField
               autoCapitalize="none"
               autoComplete="email"
-              error={submitted ? emailError : undefined}
+              error={emailError}
               keyboardType="email-address"
               label={t("account_email_label")}
-              onBlur={() => setSubmitted(true)}
               onChangeText={setEmail}
+              validationSubmitted={hasAttemptedSubmit}
+              validationTrigger="blur"
               value={email}
             />
             <TextField
               autoComplete="new-password"
-              error={submitted ? passwordError : undefined}
+              error={passwordError}
               label={t("account_password_label")}
-              onBlur={() => setSubmitted(true)}
               onChangeText={setPassword}
               passwordVisibility={{
                 isVisible: passwordVisible,
@@ -114,15 +115,15 @@ export default function RegisterScreen() {
                 onPress: () => setPasswordVisible(!passwordVisible),
               }}
               secureTextEntry={!passwordVisible}
+              validationSubmitted={hasAttemptedSubmit}
+              validationTrigger="change"
               value={password}
             />
-            <Text color="secondary">
-              {password.length < 8
-                ? t("password_strength_weak")
-                : password.length < 15
-                  ? t("password_strength_ok")
-                  : t("password_strength_strong")}
-            </Text>
+            {password.length >= 8 ? (
+              <Text color="secondary">
+                {password.length < 15 ? t("password_strength_ok") : t("password_strength_strong")}
+              </Text>
+            ) : null}
             <Button
               disabled={
                 usernameAvailability === "checking" || usernameAvailability === "unavailable"

@@ -71,6 +71,14 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   expresar el estado real disponible y sus estados de carga, vacío y error.
 - Botones y controles mantienen semántica accesible, un objetivo táctil mínimo
   de 44 px y no permiten envíos duplicados.
+- La validación de formato de un formulario se muestra al abandonar cada campo
+  y al intentar enviarlo. Cada campo conserva su propia marca de interacción;
+  el intento de envío puede mostrar los errores de todos los campos, pero el
+  `blur` de uno nunca marca ni muestra errores en los demás.
+- `TextField` puede recibir `validationTrigger="change"` solo cuando el
+  feedback inmediato ayuda materialmente a completar un requisito, como la
+  longitud mínima de una contraseña. El comportamiento normal sigue siendo
+  `"blur"`; el indicador complementario no aparece hasta cumplir ese requisito.
 - Los formularios no muestran una acción de cancelar. La salida de la ruta se
   hace mediante el botón de atrás de la barra de navegación, que no muestra
   texto.

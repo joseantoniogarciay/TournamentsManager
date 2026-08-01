@@ -1,5 +1,22 @@
 # Registro de aprendizaje
 
+## 2026-08-01 — El feedback inmediato debe resolver una necesidad concreta
+
+La validación al escribir no se aplica por defecto: puede distraer y revelar un
+error antes de que la persona termine un campo. `TextField` admite el disparador
+`change` para requisitos progresivos, como los ocho caracteres de una contraseña:
+mientras se escribe muestra el mínimo pendiente y, al cumplirlo, lo sustituye
+por el indicador de fuerza. Los demás campos conservan la validación al perder
+el foco y al enviar.
+
+## 2026-08-01 — La interacción de un campo no es la del formulario
+
+La validación de formato se muestra al abandonar el campo correspondiente, sin
+revelar errores en campos que la persona todavía no ha visitado. El intento de
+envío sí muestra todos los errores pendientes. Por ello cada control conserva
+su propia marca de interacción y el formulario una marca distinta de intento de
+envío; usar una única marca global en ambos eventos produce feedback prematuro.
+
 ## 2026-08-01 — OAuth tras una reautenticación
 
 Un popup OAuth web debe abrirse desde un gesto vigente. Por eso, después de
@@ -1212,6 +1229,21 @@ Para cada capacidad se sigue el ciclo:
   actual en navegadores sin `:has`; no se introduce una librería de teclado.
 - **Regla reutilizable:** tratar por separado el anclaje de navegación web y el
   desplazamiento del contenido nativo al aparecer el teclado.
+
+### 2026-08-01 — Una ruta terminal no duplica su motivo en el banner global
+
+- **Aprendido:** cuando una ruta ya presenta el motivo de un fallo y la acción
+  de recuperación, repetir el texto en un banner superior reduce el espacio
+  útil y divide la atención sin añadir información.
+- **Evidencia:** `link/confirm` representa los enlaces ausentes, caducados,
+  consumidos y los fallos seguros no tipados dentro de una `Card`; deja de
+  publicar el mismo resultado mediante `FeedbackProvider`.
+- **Coste aceptado:** el aviso no persiste al salir de la ruta, lo cual es
+  correcto porque el motivo y su acción solo son relevantes mientras esa ruta
+  está visible.
+- **Regla reutilizable:** una pantalla terminal con recuperación propia usa
+  feedback en el contenido; el banner global se reserva para avisos que no
+  tengan una ruta visible que los explique.
 
 ## Regla de evidencia
 
