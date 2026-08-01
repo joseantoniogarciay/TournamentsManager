@@ -23,6 +23,8 @@ func (a testAuthenticator) Authenticate(context.Context, string) (string, error)
 	return a.accountID, nil
 }
 
+func (testAuthenticator) RevokeSession(context.Context, string) error { return nil }
+
 type testLeagueRepository struct {
 	items         []leagues.Item
 	followVisible bool
@@ -236,6 +238,23 @@ func TestListAccountLeaguesRejectsCookieAndBearerTogether(t *testing.T) {
 
 	if recorder.Code != http.StatusUnauthorized {
 		t.Errorf("status = %d, want %d", recorder.Code, http.StatusUnauthorized)
+	}
+}
+
+func TestRevokeCurrentSessionExpiresCookie(t *testing.T) {
+	t.Parallel()
+
+	request := httptest.NewRequestWithContext(context.Background(), http.MethodDelete, "/v1/sessions", nil)
+	request.AddCookie(&http.Cookie{Name: "__Host-tm_session", Value: "opaque-session"})
+	recorder := httptest.NewRecorder()
+
+	testHandler().ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusNoContent {
+		t.Errorf("status = %d, want %d", recorder.Code, http.StatusNoContent)
+	}
+	if cookie := recorder.Result().Cookies(); len(cookie) != 1 || cookie[0].MaxAge >= 0 {
+		t.Errorf("logout cookie = %#v, want expired cookie", cookie)
 	}
 }
 

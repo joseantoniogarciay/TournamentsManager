@@ -30,6 +30,12 @@ func (r *stubRepository) AddGoogleIdentity(context.Context, string, string, []by
 	r.addCalled = true
 	return r.addErr
 }
+func (*stubRepository) ReauthenticateGoogle(context.Context, string, string, string, []byte, Identity, []byte) error {
+	return nil
+}
+func (*stubRepository) AddGoogleIdentityWithTicket(context.Context, string, string, []byte, Identity, []byte) error {
+	return nil
+}
 
 func TestAuthenticateRejectsUnverifiedGoogleEmailBeforeRepository(t *testing.T) {
 	repository := &stubRepository{}

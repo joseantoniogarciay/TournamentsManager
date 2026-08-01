@@ -1,13 +1,21 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { space } from "@tournaments-manager/design-tokens";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
-import { Button, Card, InteractionBlocker, Screen, Text, TextField } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  InteractionBlocker,
+  KeyboardAwareScrollView,
+  Screen,
+  Text,
+  TextField,
+} from "@/shared/ui";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { registerLocalAccountRequest } from "@/features/registration/api";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -67,8 +75,11 @@ export default function RegisterScreen() {
 
   return (
     <Screen bottomInset="none" topInset="navigation-bar">
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[12] }]}
+      <KeyboardAwareScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: (Platform.OS === "web" ? 0 : insets.bottom) + space[12] },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <Card>
@@ -101,6 +112,7 @@ export default function RegisterScreen() {
               onBlur={() => setSubmitted(true)}
               onChangeText={setPassword}
               passwordVisibility={{
+                isVisible: passwordVisible,
                 label: t(passwordVisible ? "password_hide" : "password_show"),
                 onPress: () => setPasswordVisible(!passwordVisible),
               }}
@@ -124,7 +136,7 @@ export default function RegisterScreen() {
             />
           </View>
         </Card>
-      </ScrollView>
+      </KeyboardAwareScrollView>
       {isSubmitting ? (
         <InteractionBlocker accessibilityLabel={t("account_registration_submitting")} />
       ) : null}

@@ -9,7 +9,7 @@ import {
 } from "@/features/password-recovery/pending-link";
 import { getTranslator } from "@/shared/i18n/locale";
 import { useSession } from "@/shared/session/session-provider";
-import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
+import { Button, Card, KeyboardAwareScrollView, Screen, Text, TextField } from "@/shared/ui";
 
 export default function PasswordResetScreen() {
   const t = getTranslator();
@@ -62,34 +62,37 @@ export default function PasswordResetScreen() {
     );
   return (
     <Screen>
-      <Card>
-        <View style={styles.form}>
-          <Text variant="title">{t("password_recovery_new_title")}</Text>
-          <TextField
-            editable={false}
-            keyboardType="email-address"
-            label={t("account_email_label")}
-            value={email}
-          />
-          <TextField
-            autoComplete="new-password"
-            label={t("password_recovery_new_password")}
-            onChangeText={setPassword}
-            passwordVisibility={{
-              label: t(visible ? "password_hide" : "password_show"),
-              onPress: () => setVisible(!visible),
-            }}
-            secureTextEntry={!visible}
-            value={password}
-          />
-          <Text color="secondary">{strength(t, password)}</Text>
-          <Button
-            disabled={password.length < 8}
-            label={t("password_recovery_save")}
-            onPress={() => void submit()}
-          />
-        </View>
-      </Card>
+      <KeyboardAwareScrollView>
+        <Card>
+          <View style={styles.form}>
+            <Text variant="title">{t("password_recovery_new_title")}</Text>
+            <TextField
+              editable={false}
+              keyboardType="email-address"
+              label={t("account_email_label")}
+              value={email}
+            />
+            <TextField
+              autoComplete="new-password"
+              label={t("password_recovery_new_password")}
+              onChangeText={setPassword}
+              passwordVisibility={{
+                isVisible: visible,
+                label: t(visible ? "password_hide" : "password_show"),
+                onPress: () => setVisible(!visible),
+              }}
+              secureTextEntry={!visible}
+              value={password}
+            />
+            <Text color="secondary">{strength(t, password)}</Text>
+            <Button
+              disabled={password.length < 8}
+              label={t("password_recovery_save")}
+              onPress={() => void submit()}
+            />
+          </View>
+        </Card>
+      </KeyboardAwareScrollView>
     </Screen>
   );
 }

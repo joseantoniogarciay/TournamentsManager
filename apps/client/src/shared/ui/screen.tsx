@@ -1,5 +1,5 @@
 import { type PropsWithChildren } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { space } from "@tournaments-manager/design-tokens";
@@ -24,7 +24,10 @@ export function Screen({
         styles.screen,
         {
           backgroundColor: colors.surface.canvas,
-          paddingBottom: bottomInset === "safe-area" ? insets.bottom + space[4] : 0,
+          paddingBottom:
+            bottomInset === "safe-area"
+              ? (Platform.OS === "web" ? 0 : insets.bottom) + space[4]
+              : 0,
           paddingTop: (topInset === "safe-area" ? insets.top : 0) + space[3],
         },
       ]}

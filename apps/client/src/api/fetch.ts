@@ -2,7 +2,7 @@ import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
 import type { SessionEstablishment, User } from "./generated/models";
-import { refreshSession } from "./generated/session/session";
+import { refreshSession, revokeCurrentSession } from "./generated/session/session";
 
 const defaultAPIBaseURL = "http://127.0.0.1:8080/v1";
 const mobileSessionKey = "tm-mobile-session";
@@ -116,6 +116,24 @@ export async function saveMobileSession(session: SessionEstablishment) {
 
 export async function clearMobileSession() {
   if (Platform.OS !== "web") await SecureStore.deleteItemAsync(mobileSessionKey);
+}
+
+/** Inicia logout remoto sin mostrar ni propagar su resultado. */
+export async function revokeCurrentSessionSilently(session: MobileSession | null) {
+  try {
+    if (Platform.OS === "web") {
+      await revokeCurrentSession(undefined, apiFetch);
+      return;
+    }
+    if (!session) return;
+    await revokeCurrentSession(undefined, (input, init) => {
+      const headers = new Headers(init?.headers);
+      headers.set("Authorization", `Bearer ${session.accessToken}`);
+      return fetchWithAPIBase(input, { ...init, headers });
+    });
+  } catch {
+    // Best effort: la sesión local ya se elimina sin esperar a la red.
+  }
 }
 
 /** Registra el único coordinador autorizado para borrar una sesión inválida. */

@@ -24,6 +24,69 @@ tags:
   - name: Leagues
     description: Publicación y lectura pública de ligas visibles.
 paths:
+  /me/access-methods:
+    get:
+      tags: [Session]
+      operationId: getAccessMethods
+      summary: Devuelve los datos de acceso de la cuenta actual
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "200":
+          description: Datos de acceso disponibles.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccessMethods" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+  /me/reauthentication-tickets:
+    post:
+      tags: [Session]
+      operationId: createReauthenticationTicket
+      summary: Confirma un método actual y emite un ticket de un solo uso
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReauthenticationRequest" }
+      responses:
+        "201":
+          description: Ticket emitido; vence en cinco minutos y solo sirve para la sesión actual.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReauthenticationTicket" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+  /me/local-credential:
+    put:
+      tags: [Session]
+      operationId: putLocalCredential
+      summary: Añade o cambia la contraseña local con un ticket reciente
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LocalCredentialRequest" }
+      responses:
+        "204": { description: Contraseña local establecida. }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+  /me/google-identities:
+    post:
+      tags: [Federated identity]
+      operationId: createCurrentAccountGoogleIdentity
+      summary: Vincula Google a la cuenta actual con ticket reciente
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GoogleIdentityLinkRequest" }
+      responses:
+        "204": { description: Identidad vinculada o ya vinculada a la misma cuenta. }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "409": { $ref: "#/components/responses/VerificationConflictProblem" }
   /password-resets:
     post:
       tags: [Password recovery]
@@ -554,6 +617,47 @@ components:
         user: { $ref: "#/components/schemas/User" }
         idleExpiresAt: { type: string, format: date-time }
         absoluteExpiresAt: { type: string, format: date-time }
+    AccessMethods:
+      type: object
+      required: [email, username, methods]
+      properties:
+        email: { $ref: "#/components/schemas/Email" }
+        username: { $ref: "#/components/schemas/Username" }
+        methods:
+          type: object
+          required: [password, google]
+          properties:
+            password: { type: boolean }
+            google: { type: boolean }
+    ReauthenticationRequest:
+      type: object
+      oneOf:
+        - required: [password]
+          properties:
+            password: { $ref: "#/components/schemas/Password" }
+        - required: [challengeId, idToken]
+          properties:
+            challengeId: { $ref: "#/components/schemas/UUID" }
+            idToken: { $ref: "#/components/schemas/OpaqueToken" }
+    ReauthenticationTicket:
+      type: object
+      required: [ticket, expiresAt]
+      properties:
+        ticket: { $ref: "#/components/schemas/OpaqueToken" }
+        expiresAt: { type: string, format: date-time }
+    LocalCredentialRequest:
+      type: object
+      required: [ticket, password]
+      properties:
+        ticket: { $ref: "#/components/schemas/OpaqueToken" }
+        password: { $ref: "#/components/schemas/Password" }
+    GoogleIdentityLinkRequest:
+      type: object
+      required: [ticket, challengeId, idToken]
+      properties:
+        ticket: { $ref: "#/components/schemas/OpaqueToken" }
+        challengeId: { $ref: "#/components/schemas/UUID" }
+        idToken: { $ref: "#/components/schemas/OpaqueToken" }
     LeagueRelationshipFilter:
       type: string
       enum: [administered, followed]

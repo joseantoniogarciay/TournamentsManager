@@ -1,11 +1,11 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { space } from "@tournaments-manager/design-tokens";
 import { requestRecovery } from "@/features/password-recovery/api";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
-import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
+import { Button, Card, KeyboardAwareScrollView, Screen, Text, TextField } from "@/shared/ui";
 
 export default function ForgotPasswordScreen() {
   const t = getTranslator();
@@ -28,7 +28,7 @@ export default function ForgotPasswordScreen() {
   };
   return (
     <Screen topInset="navigation-bar">
-      <ScrollView>
+      <KeyboardAwareScrollView>
         <Card>
           <View style={styles.form}>
             <Text color="secondary">{t("password_recovery_description")}</Text>
@@ -49,7 +49,7 @@ export default function ForgotPasswordScreen() {
             />
           </View>
         </Card>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </Screen>
   );
 }

@@ -192,3 +192,7 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - Guías de arquitectura, desarrollo, datos, API, seguridad, observabilidad,
   despliegue, estilo y pruebas.
 - Plantillas de knowledge base, playbooks, runbooks, diagramas y retrospectivas.
+# Cambios no publicados
+
+- Añadida la gestión de métodos de acceso de ADR-0068: consulta de métodos,
+  logout local silencioso, reautenticación de un solo uso y contraseña local.

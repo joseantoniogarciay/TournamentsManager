@@ -6,7 +6,9 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type {
+  AuthenticationProblemResponse,
   GoogleAuthenticationRequest,
+  GoogleIdentityLinkRequest,
   GoogleLoginChallenge,
   RateLimitProblemResponse,
   ServiceUnavailableProblemResponse,
@@ -14,6 +16,73 @@ import type {
   ValidationProblemResponse,
   VerificationConflictProblemResponse,
 } from "../models";
+
+export type createCurrentAccountGoogleIdentityResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type createCurrentAccountGoogleIdentityResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type createCurrentAccountGoogleIdentityResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type createCurrentAccountGoogleIdentityResponse409 = {
+  data: VerificationConflictProblemResponse;
+  status: 409;
+};
+
+export type createCurrentAccountGoogleIdentityResponseSuccess =
+  createCurrentAccountGoogleIdentityResponse204 & {
+    headers: Headers;
+  };
+export type createCurrentAccountGoogleIdentityResponseError = (
+  | createCurrentAccountGoogleIdentityResponse400
+  | createCurrentAccountGoogleIdentityResponse401
+  | createCurrentAccountGoogleIdentityResponse409
+) & {
+  headers: Headers;
+};
+
+export type createCurrentAccountGoogleIdentityResponse =
+  | createCurrentAccountGoogleIdentityResponseSuccess
+  | createCurrentAccountGoogleIdentityResponseError;
+
+export const getCreateCurrentAccountGoogleIdentityUrl = () => {
+  return `/me/google-identities`;
+};
+
+/**
+ * @summary Vincula Google a la cuenta actual con ticket reciente
+ */
+export const createCurrentAccountGoogleIdentity = async (
+  googleIdentityLinkRequest: GoogleIdentityLinkRequest,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<createCurrentAccountGoogleIdentityResponse> => {
+  const res = await (fetchFn ?? fetch)(getCreateCurrentAccountGoogleIdentityUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(googleIdentityLinkRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createCurrentAccountGoogleIdentityResponse["data"] = body
+    ? JSON.parse(body)
+    : undefined;
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as createCurrentAccountGoogleIdentityResponse;
+};
 
 export type createGoogleLoginChallengeResponse201 = {
   data: GoogleLoginChallenge;

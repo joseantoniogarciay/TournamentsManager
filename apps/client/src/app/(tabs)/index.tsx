@@ -13,6 +13,8 @@ import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-ga
 import { Button, Card, Screen, Text } from "@/shared/ui";
 import { router, type Href } from "expo-router";
 
+const safeAreaProbeHeight = 500;
+
 export default function HomeScreen() {
   const { show } = useFeedback();
   const { resolvedTheme } = usePreferences();
@@ -78,6 +80,8 @@ export default function HomeScreen() {
             />
           </View>
         </Card>
+
+        <Card style={{ height: safeAreaProbeHeight }} />
       </ScrollView>
     </Screen>
   );

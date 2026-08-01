@@ -114,6 +114,20 @@ CREATE TABLE session_refresh_tokens (
 
 CREATE INDEX session_refresh_tokens_session_idx ON session_refresh_tokens (session_id);
 
+CREATE TABLE reauthentication_tickets (
+    id uuid PRIMARY KEY DEFAULT uuidv7(),
+    account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+    session_id uuid NOT NULL REFERENCES sessions (id) ON DELETE CASCADE,
+    token_hash bytea NOT NULL UNIQUE CHECK (octet_length(token_hash) = 32),
+    created_at timestamptz NOT NULL DEFAULT now(),
+    expires_at timestamptz NOT NULL,
+    consumed_at timestamptz,
+    CONSTRAINT reauthentication_tickets_expiration CHECK (expires_at > created_at),
+    CONSTRAINT reauthentication_tickets_consumption CHECK (consumed_at IS NULL OR consumed_at >= created_at)
+);
+
+CREATE INDEX reauthentication_tickets_session_idx ON reauthentication_tickets (session_id, expires_at);
+
 CREATE TABLE league_drafts (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     account_id uuid NOT NULL UNIQUE REFERENCES accounts (id) ON DELETE CASCADE,

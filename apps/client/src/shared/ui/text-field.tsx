@@ -1,3 +1,4 @@
+import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 
 import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
@@ -10,7 +11,7 @@ type Props = TextInputProps & {
   label: string;
   error?: string;
   feedback?: { message: string; tone: "help" | "success" };
-  passwordVisibility?: { label: string; onPress: () => void };
+  passwordVisibility?: { isVisible: boolean; label: string; onPress: () => void };
 };
 
 export function TextField({
@@ -41,10 +42,18 @@ export function TextField({
           <Pressable
             accessibilityLabel={passwordVisibility.label}
             accessibilityRole="button"
-            hitSlop={10}
             onPress={passwordVisibility.onPress}
+            style={styles.visibilityButton}
           >
-            <Text variant="caption">◉</Text>
+            <SymbolView
+              name={
+                passwordVisibility.isVisible
+                  ? { android: "visibility_off", ios: "eye.slash", web: "visibility_off" }
+                  : { android: "visibility", ios: "eye", web: "visibility" }
+              }
+              size={control.iconSize}
+              tintColor={colors.text.secondary}
+            />
           </Pressable>
         ) : null}
       </View>
@@ -72,5 +81,11 @@ const styles = StyleSheet.create({
     fontFamily: typography.family.system,
     fontSize: typography.size.bodyLarge,
     minHeight: control.minHeight,
+  },
+  visibilityButton: {
+    alignItems: "center",
+    height: control.minHeight,
+    justifyContent: "center",
+    width: control.minHeight,
   },
 });

@@ -1,13 +1,6 @@
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Image, Platform, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
@@ -15,6 +8,7 @@ import { control, radius, space } from "@tournaments-manager/design-tokens";
 import googleLogo from "../../../../assets/google-g.png";
 
 import { GoogleAuthenticationError } from "@/features/federated-google/api";
+import { getAccountAccessMethods } from "@/features/account-access/api";
 import { useGoogleAuthentication } from "@/features/federated-google/use-google-authentication";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
@@ -22,13 +16,21 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Button, Card, Screen, Text, TextField } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  ConfirmationDialog,
+  KeyboardAwareScrollView,
+  Screen,
+  Text,
+  TextField,
+} from "@/shared/ui";
 
 export default function AccountScreen() {
   const t = getTranslator();
   const { show } = useFeedback();
   const { colors } = usePreferences();
-  const { completeSessionReplacement, user } = useSession();
+  const { completeSessionReplacement, signOut, user } = useSession();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,6 +39,10 @@ export default function AccountScreen() {
   const [showPasswordError, setShowPasswordError] = useState(false);
   const [googleUsername, setGoogleUsername] = useState("");
   const [googleUsernameSubmitted, setGoogleUsernameSubmitted] = useState(false);
+  const [logoutConfirmationVisible, setLogoutConfirmationVisible] = useState(false);
+  const [accessMethods, setAccessMethods] = useState<Awaited<
+    ReturnType<typeof getAccountAccessMethods>
+  > | null>(null);
   const { isValid: googleUsernameIsValid, status: googleUsernameAvailability } =
     useUsernameAvailability(googleUsername);
   const {
@@ -47,6 +53,7 @@ export default function AccountScreen() {
     isConfigured: isGoogleConfigured,
     isPreparing: isGooglePreparing,
     isSubmitting: isGoogleSubmitting,
+    prepare: prepareGoogleAuthentication,
     requiresUsername,
     start: startGoogleAuthentication,
   } = useGoogleAuthentication({
@@ -79,6 +86,24 @@ export default function AccountScreen() {
     dismissGoogleError();
   }, [dismissGoogleError, googleError, show, t]);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) {
+        setAccessMethods(null);
+        return;
+      }
+      void getAccountAccessMethods()
+        .then(setAccessMethods)
+        .catch(() => setAccessMethods(null));
+    }, [user]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) prepareGoogleAuthentication();
+    }, [prepareGoogleAuthentication, user]),
+  );
+
   const signIn = () => {
     setShowEmailError(true);
     setShowPasswordError(true);
@@ -104,12 +129,51 @@ export default function AccountScreen() {
         <View style={{ paddingBottom: insets.bottom + space[12] }}>
           <Card>
             <View style={styles.form}>
-              <Text variant="title">{t("account_authenticated_title")}</Text>
-              <Text color="secondary">
-                {t("account_authenticated_mock").replace("{username}", user.username)}
-              </Text>
+              <Text variant="title">{t("account_access_data_title")}</Text>
+              <AccessRow label={t("account_email_label")} value={accessMethods?.email ?? "…"} />
+              <AccessRow
+                label={t("account_username_label")}
+                value={accessMethods?.username ?? user.username}
+              />
+              <AccessRow
+                label={t("account_password_label")}
+                value={t("account_access_password_action")}
+                onPress={() => router.push("/account/password" as never)}
+              />
+              <AccessRow
+                label={t("account_google_label")}
+                value={t(
+                  accessMethods?.methods.google
+                    ? "account_google_linked"
+                    : "account_access_google_action",
+                )}
+                onPress={() => router.push("/account/google-link" as never)}
+              />
             </View>
           </Card>
+          <Card>
+            <Pressable
+              accessibilityLabel={t("account_logout")}
+              accessibilityRole="button"
+              onPress={() => setLogoutConfirmationVisible(true)}
+              style={styles.logoutRow}
+            >
+              <Text color="error" variant="title">
+                ⎋
+              </Text>
+              <Text color="error">{t("account_logout")}</Text>
+              <Text color="secondary">›</Text>
+            </Pressable>
+          </Card>
+          <ConfirmationDialog
+            acceptLabel={t("account_logout")}
+            cancelLabel={t("common_cancel")}
+            description={t("account_logout_description")}
+            onAccept={() => void signOut()}
+            onCancel={() => setLogoutConfirmationVisible(false)}
+            title={t("account_logout_title")}
+            visible={logoutConfirmationVisible}
+          />
         </View>
       </Screen>
     );
@@ -117,8 +181,11 @@ export default function AccountScreen() {
 
   return (
     <Screen bottomInset="none" topInset="navigation-bar">
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[12] }]}
+      <KeyboardAwareScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: (Platform.OS === "web" ? 0 : insets.bottom) + space[12] },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <Card>
@@ -141,6 +208,7 @@ export default function AccountScreen() {
               onBlur={() => setShowPasswordError(true)}
               onChangeText={setPassword}
               passwordVisibility={{
+                isVisible: passwordVisible,
                 label: t(passwordVisible ? "password_hide" : "password_show"),
                 onPress: () => setPasswordVisible(!passwordVisible),
               }}
@@ -225,13 +293,14 @@ export default function AccountScreen() {
             variant="secondary"
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   content: { gap: space[5] },
+  accessRow: { gap: space[1] },
   form: { gap: space[4] },
   googleButton: {
     alignItems: "center",
@@ -245,7 +314,35 @@ const styles = StyleSheet.create({
   googleButtonDisabled: { opacity: 0.55 },
   googleLogo: { height: 22, width: 22 },
   register: { gap: space[3], marginHorizontal: space[5] },
+  logoutRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space[3],
+    justifyContent: "space-between",
+    minHeight: control.minHeight,
+  },
 });
+
+function AccessRow({
+  label,
+  value,
+  onPress,
+}: {
+  label: string;
+  value: string;
+  onPress?: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole={onPress ? "button" : undefined}
+      onPress={onPress}
+      style={styles.accessRow}
+    >
+      <Text color="secondary">{label}</Text>
+      <Text>{value}</Text>
+    </Pressable>
+  );
+}
 
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);

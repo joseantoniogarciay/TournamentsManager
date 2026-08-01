@@ -28,6 +28,11 @@ export default function AccountLayout() {
       </Stack.Screen>
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
       <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
+      <Stack.Screen name="password" options={{ title: t("account_password_change_title") }} />
+      <Stack.Screen
+        name="google-link"
+        options={{ presentation: "modal", title: t("account_google_link_title") }}
+      />
       <Stack.Screen
         name="settings"
         options={{ presentation: "modal", title: t("account_settings_title") }}

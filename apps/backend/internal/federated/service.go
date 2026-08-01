@@ -60,6 +60,37 @@ type Repository interface {
 	CreateChallenge(context.Context, []byte, time.Time) (string, error)
 	AuthenticateGoogle(context.Context, string, []byte, Identity, *Registration, []byte, []byte) (Session, error)
 	AddGoogleIdentity(context.Context, string, string, []byte, Identity) error
+	ReauthenticateGoogle(context.Context, string, string, string, []byte, Identity, []byte) error
+	AddGoogleIdentityWithTicket(context.Context, string, string, []byte, Identity, []byte) error
+}
+
+// ReauthenticateGoogle demuestra una identidad ya vinculada y emite un ticket de una sola vez.
+func (s Service) ReauthenticateGoogle(ctx context.Context, accountID, sessionToken, challengeID, idToken string) (string, string, error) {
+	identity, err := s.verify(ctx, idToken)
+	if err != nil {
+		return "", "", err
+	}
+	ticket, err := secret()
+	if err != nil {
+		return "", "", err
+	}
+	ticketDigest := sha256.Sum256([]byte("reauthentication-ticket:" + ticket))
+	challengeHash := sha256.Sum256([]byte("google-login-nonce:" + identity.Nonce))
+	if err := s.repository.ReauthenticateGoogle(ctx, accountID, sessionToken, challengeID, challengeHash[:], identity, ticketDigest[:]); err != nil {
+		return "", "", err
+	}
+	return ticket, s.now().Add(challengeLifetime).UTC().Format(time.RFC3339Nano), nil
+}
+
+// AddGoogleWithTicket vincula Google y consume el ticket en la misma transacción.
+func (s Service) AddGoogleWithTicket(ctx context.Context, sessionToken, ticket, challengeID, idToken string) error {
+	identity, err := s.verify(ctx, idToken)
+	if err != nil {
+		return err
+	}
+	ticketHash := sha256.Sum256([]byte("reauthentication-ticket:" + ticket))
+	challengeHash := sha256.Sum256([]byte("google-login-nonce:" + identity.Nonce))
+	return s.repository.AddGoogleIdentityWithTicket(ctx, sessionToken, challengeID, challengeHash[:], identity, ticketHash[:])
 }
 
 // Service coordina el caso de uso de inicio de sesión federado.

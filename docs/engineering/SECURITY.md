@@ -140,3 +140,10 @@ La gestión de configuración sigue
 
 No se declarará “seguro” un componente; se documentarán amenazas consideradas,
 controles, evidencia y riesgo residual.
+# Reautenticación para cambios de credenciales
+
+Los tickets de reautenticación son secretos de 256 bits, se persisten como
+SHA-256 con prefijo de propósito y se consumen transaccionalmente junto con la
+mutación. El ticket exige la misma sesión opaca válida y no se registra. La
+verificación de contraseña decodifica el formato Argon2id y compara la salida
+en tiempo constante; un formato inválido se trata como credencial no válida.

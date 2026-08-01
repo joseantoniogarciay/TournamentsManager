@@ -71,30 +71,26 @@ export function useGoogleAuthentication({
   );
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest(requestConfig);
 
-  const loadChallenge = useCallback(async () => {
-    setIsPreparing(true);
-    try {
-      setChallenge(await beginGoogleAuthentication());
-    } catch (nextError) {
-      setChallenge(null);
-      setError(nextError);
-    } finally {
-      setIsPreparing(false);
-    }
-  }, []);
-
-  // En web el popup debe abrirse desde el gesto de la persona. Precargamos el
-  // nonce para que el botón pueda llamar promptAsync directamente.
-  useEffect(() => {
-    if (!isConfigured) return;
-    void loadChallenge();
-  }, [isConfigured, loadChallenge]);
+  const loadChallenge = useCallback(
+    async ({ reportFailure = true }: { reportFailure?: boolean } = {}) => {
+      setIsPreparing(true);
+      try {
+        setChallenge(await beginGoogleAuthentication());
+      } catch (nextError) {
+        setChallenge(null);
+        if (reportFailure) setError(nextError);
+      } finally {
+        setIsPreparing(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!challenge) return;
     const refreshIn = Math.max(0, Date.parse(challenge.expiresAt) - Date.now() - 30_000);
     const timeout = setTimeout(() => {
-      void loadChallenge();
+      void loadChallenge({ reportFailure: false });
     }, refreshIn);
     return () => clearTimeout(timeout);
   }, [challenge, loadChallenge]);
@@ -145,7 +141,7 @@ export function useGoogleAuthentication({
     // la petición aún no están listos, este toque solo los prepara y el siguiente
     // podrá abrir Google sin que el navegador lo bloquee.
     if (!challenge || !request) {
-      await loadChallenge();
+      await loadChallenge({ reportFailure: true });
       return;
     }
     setIsPrompting(true);
@@ -166,6 +162,10 @@ export function useGoogleAuthentication({
     promptAsync,
     request,
   ]);
+
+  const prepare = useCallback(() => {
+    if (isConfigured) void loadChallenge({ reportFailure: false });
+  }, [isConfigured, loadChallenge]);
 
   const chooseUsername = useCallback(
     async (username: Username) => {
@@ -190,6 +190,7 @@ export function useGoogleAuthentication({
     isPreparing,
     isAuthenticating: isPrompting || isSubmitting,
     isSubmitting,
+    prepare,
     requiresUsername: Boolean(pendingAccount),
     start,
   };

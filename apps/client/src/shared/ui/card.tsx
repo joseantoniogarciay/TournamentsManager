@@ -1,17 +1,20 @@
 import { type PropsWithChildren } from "react";
-import { StyleSheet, View } from "react-native";
+import { type StyleProp, StyleSheet, type ViewStyle, View } from "react-native";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
 
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
-export function Card({ children }: PropsWithChildren) {
+type CardProps = PropsWithChildren<{ style?: StyleProp<ViewStyle> }>;
+
+export function Card({ children, style }: CardProps) {
   const { colors } = usePreferences();
   return (
     <View
       style={[
         styles.card,
         { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+        style,
       ]}
     >
       {children}

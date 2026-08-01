@@ -117,6 +117,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0065](../adr/0065-create-a-new-session-after-password-reset.md)                              | Crear una sesión nueva tras restablecer la contraseña                | Aceptado              | 2026-07-31 |
 | [0066](../adr/0066-deny-cross-account-identity-linking-and-merges.md)                         | Denegar vinculación y fusión entre cuentas distintas                 | Superado parcialmente | 2026-08-01 |
 | [0067](../adr/0067-allow-authenticated-same-account-access-method-linking.md)                 | Añadir métodos de acceso solo a la cuenta autenticada                | Aceptado              | 2026-08-01 |
+| [0068](../adr/0068-manage-account-access-methods-and-local-logout.md)                          | Gestionar métodos de acceso y cierre local de sesión                 | Aceptado              | 2026-08-01 |
 
 ## Trazabilidad de un cambio
 

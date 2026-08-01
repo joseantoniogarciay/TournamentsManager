@@ -31,6 +31,20 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
   oculto pertenece al `contentContainerStyle` del `ScrollView`, no al contenedor
   `Screen`; así el contenido puede desplazarse completamente por encima de la
   barra.
+- **Teclado y tabs:** en web la barra de tabs se ancla al borde inferior del
+  viewport visual, también al aparecer el teclado. El padding inferior de un
+  formulario web no toma el safe-area inset, porque puede variar al aparecer el
+  teclado. Solo Safari recibe además una segunda medida del viewport al terminar
+  de ocultar el teclado para descartar la altura intermedia. En iOS, los
+  `ScrollView` de formularios ajustan su inset de teclado para que el campo
+  activo pueda desplazarse por encima de la barra y el teclado.
+- **Web en iPhone:** el viewport web usa `viewport-fit=cover` para que la
+  superficie `canvas` alcance las zonas superior e inferior del navegador. Los
+  insets existentes siguen reservando esas zonas al contenido; el documento web
+  sincroniza su fondo y `theme-color` con el tema resuelto.
+- **Botonera web:** web usa la barra inferior estándar de `Tabs`, no el fallback
+  de `NativeTabs`. Conserva las tres rutas, iconos y colores semánticos; Cuenta
+  ofrece en su cabecera el mismo acceso localizado a Ajustes que las apps.
 - **Tipografía:** familia de sistema por plataforma; escala de 12 a 32 px y pesos
   de 400 a 700. Así se preserva legibilidad nativa sin dependencia externa.
 - **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base.
@@ -49,7 +63,7 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 | Componente        | Estados mínimos                                           | Regla de interacción                                                                                                                                                           |
 | ----------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Button            | primary, secondary, ghost, destructive, disabled, loading | `loading` deshabilita el control y reserva el ancho del texto para el loader.                                                                                                  |
-| TextField         | default, focus, filled, error, disabled                   | El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco.                                                                                   |
+| TextField         | default, focus, filled, error, disabled                   | El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. Un campo de contraseña que ofrece visibilidad muestra ojo u ojo tachado según su estado y mantiene un objetivo táctil de 44 px. |
 | Picker            | default, focus, selected, error, disabled                 | Abre un selector adaptado a plataforma y conserva etiqueta visible.                                                                                                            |
 | Checkbox / Switch | default, selected, disabled, error                        | Objetivo táctil mínimo de 44 px.                                                                                                                                               |
 | Card              | default, actionable, selected                             | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado.                                                                                    |
@@ -76,9 +90,11 @@ su posición para no cerrar el aviso por accidente.
 Una acción externa que se represente solo con un icono de marca, como Google,
 conserva un objetivo táctil de al menos 44 px, forma circular y `accessibilityLabel`
 localizado. El asset se guarda localmente: no se descarga durante el uso de la app.
-El nonce requerido por un proveedor se precarga al mostrar su acción. Mientras
-se prepara, el icono se sustituye por un loader sin bloquear el resto de la
-pantalla; un toque posterior abre el proveedor. `InteractionBlocker` conserva
+El nonce requerido por un proveedor se precarga al enfocar la ruta que muestra
+su acción, nunca al montar una tab que permanece oculta. Mientras se prepara,
+el icono se sustituye por un loader sin bloquear el resto de la pantalla; un
+fallo de esa precarga es silencioso y un toque posterior lo reintenta de forma
+explícita. `InteractionBlocker` conserva
 una capa transparente modal, accesible y reutilizable para futuros estados que
 sí deban impedir la interacción de una ruta; no se usa cuando el proveedor
 externo ya presenta y controla su propia interfaz.

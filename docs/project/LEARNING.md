@@ -1,5 +1,13 @@
 # Registro de aprendizaje
 
+## 2026-08-01 — OAuth tras una reautenticación
+
+Un popup OAuth web debe abrirse desde un gesto vigente. Por eso, después de
+validar una contraseña se presenta una acción explícita «Continuar con Google»:
+el challenge se crea solo tras la reautenticación y el popup no depende de que
+el navegador conserve el gesto a través de una petición de red. El modal se
+descarta al terminar y Cuenta recupera el estado desde la API.
+
 ## Método
 
 Para cada capacidad se sigue el ciclo:
@@ -1123,7 +1131,68 @@ Para cada capacidad se sigue el ciclo:
 - **Regla reutilizable:** declarar la intención semántica correcta del campo y
   dejar que el proveedor de credenciales conserve el secreto.
 
+### 2026-08-01 — La visibilidad de una contraseña es un control, no un carácter
+
+- **Aprendido:** un carácter Unicode no representa de manera consistente una
+  acción de mostrar u ocultar entre plataformas. El control debe expresar su
+  estado con los símbolos nativos de ojo y ojo tachado, además de conservar un
+  área táctil de 44 px.
+- **Evidencia:** `TextField` usa `expo-symbols`: SF Symbols en iOS y Material
+  Symbols en Android y web. La prop compartida recibe el estado visible para
+  que icono y etiqueta accesible cambien juntos.
+- **Coste aceptado:** se añade una dependencia pequeña incluida en Expo Go, en
+  vez de incorporar una biblioteca de iconos completa o assets duplicados.
+- **Regla reutilizable:** los iconos que describen un estado interactivo se
+  derivan del mismo estado que la acción y su etiqueta accesible.
+
+### 2026-08-01 — Una tab nativa no debe minimizarse si invalida su inset
+
+- **Aprendido:** la minimización de `NativeTabs` de iOS 26 altera el espacio
+  inferior que usa el scroll. Si no se recompone al cerrar el teclado hasta un
+  nuevo scroll, deja una separación visual incorrecta.
+- **Evidencia:** el problema desaparece al fijar `minimizeBehavior="never"`;
+  la barra mantiene una altura estable mientras el teclado entra y sale.
+- **Coste aceptado:** se renuncia a ocultar la tab bar al desplazarse. Es menor
+  que mantener un layout que puede quedarse desincronizado.
+- **Regla reutilizable:** una animación del contenedor de navegación solo se
+  conserva si mantiene correctos los insets tras cambios del teclado.
+
+### 2026-08-01 — La precarga de un proveedor no debe producir feedback fuera de su ruta
+
+- **Aprendido:** una tab puede montarse sin estar visible. Solicitar el nonce de
+  Google en el montaje convierte un fallo de preparación en un banner global al
+  iniciar en Inicio, donde no hay acción de Google.
+- **Evidencia:** la carga pasa al foco de Cuenta y sus fallos automáticos no se
+  publican como error; el botón sigue reintentando la carga y comunica los
+  fallos de una acción iniciada explícitamente.
+- **Coste aceptado:** la primera llegada a Cuenta puede mostrar brevemente el
+  loader del icono. Evita peticiones y feedback ajenos a la ruta visible.
+- **Regla reutilizable:** una precarga solo puede emitir feedback si la persona
+  ve y entiende la acción que la originó.
+
+### 2026-08-01 — El teclado cambia el viewport web y el inset nativo de forma distinta
+
+- **Aprendido:** el teclado virtual reduce el viewport visual de la web, mientras
+  que iOS necesita ajustar el inset del `ScrollView` para que su contenido siga
+  siendo desplazable. Dejar que la tab bar participe en el flujo normal puede
+  situarla por encima del borde visible en web.
+- **Evidencia:** la barra web se fija al borde inferior del viewport visual y
+  los formularios no suman el safe-area inset inferior dinámico en web; la
+  primitiva de formularios habilita `automaticallyAdjustKeyboardInsets` en iOS.
+  Al recuperar altura, solo Safari recibe una segunda medida de
+  `visualViewport` tras 250 ms para no conservar su valor intermedio.
+- **Coste aceptado:** se usa un selector CSS web moderno con fallback al layout
+  actual en navegadores sin `:has`; no se introduce una librería de teclado.
+- **Regla reutilizable:** tratar por separado el anclaje de navegación web y el
+  desplazamiento del contenido nativo al aparecer el teclado.
+
 ## Regla de evidencia
 
 “Entendido” exige una explicación propia y una demostración. Un comando que
 funciona o una respuesta del asistente no son evidencia suficiente por sí solos.
+# 2026-08-01 — Reautenticación no equivale a sesión
+
+Un token de sesión demuestra que el cliente mantiene una sesión; no debe ser
+suficiente por sí solo para cambiar autenticadores persistentes. Un ticket
+breve, ligado a la sesión y consumido dentro de la transacción conserva ese
+límite sin crear una segunda sesión ni un estado de interfaz global.

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/subtle"
 	"errors"
 	"time"
@@ -95,6 +96,66 @@ func (r FederatedRepository) AddGoogleIdentity(ctx context.Context, accountID, c
 		return err
 	}
 	if err := queries.CreateGoogleExternalIdentity(ctx, sqlc.CreateGoogleExternalIdentityParams{AccountID: parsedAccountID, Issuer: identity.Issuer, Subject: identity.Subject}); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// ReauthenticateGoogle valida una identidad de Google y emite un ticket asociado a la sesión.
+func (r FederatedRepository) ReauthenticateGoogle(ctx context.Context, accountID, sessionToken, challengeID string, nonceHash []byte, identity federated.Identity, ticketHash []byte) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	queries := r.queries.WithTx(tx)
+	if err := consumeChallenge(ctx, queries, challengeID, nonceHash); err != nil {
+		return err
+	}
+	owner, err := queries.FindGoogleIdentityOwner(ctx, sqlc.FindGoogleIdentityOwnerParams{Issuer: identity.Issuer, Subject: identity.Subject})
+	if errors.Is(err, pgx.ErrNoRows) || (err == nil && owner.String() != accountID) {
+		return federated.ErrIdentityConflict
+	}
+	if err != nil {
+		return err
+	}
+	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
+	if _, err := queries.CreateReauthenticationTicket(ctx, sqlc.CreateReauthenticationTicketParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash}); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// AddGoogleIdentityWithTicket consume el ticket y vincula una identidad de Google a la cuenta.
+func (r FederatedRepository) AddGoogleIdentityWithTicket(ctx context.Context, sessionToken, challengeID string, nonceHash []byte, identity federated.Identity, ticketHash []byte) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	queries := r.queries.WithTx(tx)
+	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
+	accountID, err := queries.ConsumeReauthenticationTicket(ctx, sqlc.ConsumeReauthenticationTicketParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return federated.ErrChallengeInvalid
+	}
+	if err != nil {
+		return err
+	}
+	if err := consumeChallenge(ctx, queries, challengeID, nonceHash); err != nil {
+		return err
+	}
+	owner, err := queries.FindGoogleIdentityOwner(ctx, sqlc.FindGoogleIdentityOwnerParams{Issuer: identity.Issuer, Subject: identity.Subject})
+	if err == nil {
+		if owner != accountID {
+			return federated.ErrIdentityConflict
+		}
+		return tx.Commit(ctx)
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+	if err := queries.CreateGoogleExternalIdentity(ctx, sqlc.CreateGoogleExternalIdentityParams{AccountID: accountID, Issuer: identity.Issuer, Subject: identity.Subject}); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)

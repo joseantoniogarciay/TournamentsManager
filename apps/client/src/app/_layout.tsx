@@ -1,4 +1,5 @@
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from "expo-router";
+import Head from "expo-router/head";
 import * as SplashScreen from "expo-splash-screen";
 import { type PropsWithChildren, useEffect } from "react";
 import { Platform } from "react-native";
@@ -33,9 +34,9 @@ function RootNavigator() {
   const { finishSessionReplacement, revision, transition } = useSession();
 
   useEffect(() => {
-    if (transition !== "resetting") return;
+    if (transition !== "resetting" && transition !== "signing-out") return;
 
-    router.replace("/");
+    router.replace(transition === "signing-out" ? "/account" : "/");
     let secondFrame: number | undefined;
     const firstFrame = requestAnimationFrame(() => {
       secondFrame = requestAnimationFrame(finishSessionReplacement);
@@ -62,7 +63,7 @@ function RootNavigator() {
 }
 
 function NavigationTheme({ children }: PropsWithChildren) {
-  const { resolvedTheme } = usePreferences();
+  const { colors, resolvedTheme } = usePreferences();
 
   useEffect(() => {
     if (Platform.OS !== "web") SplashScreen.hide();
@@ -70,7 +71,72 @@ function NavigationTheme({ children }: PropsWithChildren) {
 
   return (
     <ThemeProvider value={resolvedTheme === "dark" ? DarkTheme : DefaultTheme}>
+      <WebPageAppearance backgroundColor={colors.surface.canvas} />
       {children}
     </ThemeProvider>
   );
+}
+
+function WebPageAppearance({ backgroundColor }: { backgroundColor: string }) {
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+
+    document.documentElement.style.backgroundColor = backgroundColor;
+    document.body.style.backgroundColor = backgroundColor;
+  }, [backgroundColor]);
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || !window.visualViewport || !isSafari()) return;
+
+    const viewport = window.visualViewport;
+    let previousHeight = viewport.height;
+    let remeasureTimeout: ReturnType<typeof setTimeout> | undefined;
+    const remeasureAfterKeyboardCloses = () => {
+      const height = viewport.height;
+      if (height > previousHeight) {
+        if (remeasureTimeout) clearTimeout(remeasureTimeout);
+        remeasureTimeout = setTimeout(() => {
+          // Safari puede notificar una altura intermedia al terminar de ocultar
+          // el teclado. Reemitir la medida fuerza a React Native Web a usar la
+          // altura final, sin desplazar el contenido.
+          viewport.dispatchEvent(new Event("resize"));
+        }, 250);
+      }
+      previousHeight = height;
+    };
+
+    viewport.addEventListener("resize", remeasureAfterKeyboardCloses);
+    return () => {
+      viewport.removeEventListener("resize", remeasureAfterKeyboardCloses);
+      if (remeasureTimeout) clearTimeout(remeasureTimeout);
+    };
+  }, []);
+
+  if (Platform.OS !== "web") return null;
+
+  return (
+    <Head>
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+      />
+      <meta name="theme-color" content={backgroundColor} />
+      <style>{`
+        @supports selector(div:has(> [role="tablist"])) {
+          div:has(> [role="tablist"]) {
+            bottom: env(safe-area-inset-bottom) !important;
+            left: 0 !important;
+            position: fixed !important;
+            right: 0 !important;
+            z-index: 1 !important;
+          }
+        }
+      `}</style>
+    </Head>
+  );
+}
+
+function isSafari() {
+  const userAgent = navigator.userAgent;
+  return /Safari/.test(userAgent) && !/Chrome|Chromium|CriOS|EdgiOS|FxiOS/.test(userAgent);
 }

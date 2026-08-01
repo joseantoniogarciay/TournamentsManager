@@ -1,6 +1,7 @@
 import {
   clearMobileSession,
   getMobileSession,
+  revokeCurrentSessionSilently,
   setMobileSessionInvalidationHandler,
 } from "@/api/fetch";
 import {
@@ -21,11 +22,12 @@ type SessionContextValue = {
   isRestoring: boolean;
   revision: number;
   user: SessionUser | null;
-  transition: "idle" | "confirming" | "resetting";
+  transition: "idle" | "confirming" | "resetting" | "signing-out";
   beginSessionReplacement: () => void;
   completeSessionReplacement: (user: SessionUser) => void;
   cancelSessionReplacement: () => void;
   finishSessionReplacement: () => void;
+  signOut: () => Promise<void>;
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -46,6 +48,14 @@ export function SessionProvider({ children }: PropsWithChildren) {
   }, []);
   const cancelSessionReplacement = useCallback(() => setTransition("idle"), []);
   const finishSessionReplacement = useCallback(() => setTransition("idle"), []);
+  const signOut = useCallback(async () => {
+    const session = await getMobileSession();
+    void revokeCurrentSessionSilently(session);
+    await clearMobileSession();
+    setUser(null);
+    setRevision((current) => current + 1);
+    setTransition("signing-out");
+  }, []);
   const resetInvalidSession = useCallback(async () => {
     await clearMobileSession();
     setUser(null);
@@ -80,6 +90,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         completeSessionReplacement,
         cancelSessionReplacement,
         finishSessionReplacement,
+        signOut,
       }}
     >
       <View style={styles.root}>

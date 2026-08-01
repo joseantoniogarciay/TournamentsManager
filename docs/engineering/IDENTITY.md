@@ -198,3 +198,11 @@ guarde contraseñas largas.
 - [OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0.html)
 - [RFC 9110: métodos seguros](https://www.rfc-editor.org/rfc/rfc9110.html#name-safe-methods)
 - [OWASP: Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)
+# Métodos de acceso administrados
+
+ADR-0068 separa la sesión de producto de una prueba reciente de posesión. Una
+persona autenticada obtiene un ticket opaco, almacenado únicamente como hash,
+con cinco minutos de vida, ligado a su sesión y consumido por una única
+mutación: establecer la contraseña local o vincular Google. La reautenticación
+acepta la contraseña Argon2id vigente o una identidad Google ya vinculada a la
+misma cuenta; nunca usa el email para unir cuentas.

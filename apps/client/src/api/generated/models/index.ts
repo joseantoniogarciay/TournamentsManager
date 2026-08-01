@@ -6,6 +6,8 @@
  * OpenAPI spec version: 1.0.0-design
  */
 
+export * from "./accessMethods.js";
+export * from "./accessMethodsMethods.js";
 export * from "./accountLeague.js";
 export * from "./accountLeaguePage.js";
 export * from "./accountLeagueRelationship.js";
@@ -16,6 +18,7 @@ export * from "./draftInput.js";
 export * from "./draftNotFoundProblemResponse.js";
 export * from "./email.js";
 export * from "./googleAuthenticationRequest.js";
+export * from "./googleIdentityLinkRequest.js";
 export * from "./googleLoginChallenge.js";
 export * from "./inspectPasswordResetLinkBody.js";
 export * from "./leagueDraft.js";
@@ -23,6 +26,7 @@ export * from "./leagueDraftTeamsItem.js";
 export * from "./leagueRelationshipFilter.js";
 export * from "./leagueTeam.js";
 export * from "./listCurrentAccountLeaguesParams.js";
+export * from "./localCredentialRequest.js";
 export * from "./locale.js";
 export * from "./loginRequest.js";
 export * from "./match.js";
@@ -41,6 +45,8 @@ export * from "./publicLeagueState.js";
 export * from "./publishedLeague.js";
 export * from "./publishedLeagueState.js";
 export * from "./rateLimitProblemResponse.js";
+export * from "./reauthenticationRequest.js";
+export * from "./reauthenticationTicket.js";
 export * from "./registerRequest.js";
 export * from "./resendRegistrationVerificationBody.js";
 export * from "./serviceUnavailableProblemResponse.js";

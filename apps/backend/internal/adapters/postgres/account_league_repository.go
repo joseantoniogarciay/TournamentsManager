@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres/sqlc"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 )
@@ -33,6 +34,52 @@ func (r AccountLeagueRepository) Authenticate(ctx context.Context, token string)
 		return "", fmt.Errorf("buscar sesión: %w", err)
 	}
 	return uuidString(accountID), nil
+}
+
+// RevokeSession revoca la sesión presentada y sus refresh tokens de forma idempotente.
+func (r AccountLeagueRepository) RevokeSession(ctx context.Context, token string) error {
+	hash := sha256.Sum256([]byte("session:" + token))
+	_, err := r.queries.RevokeSession(ctx, hash[:])
+	return err
+}
+
+// GetAccessMethods devuelve los métodos de acceso configurados para una cuenta.
+func (r AccountLeagueRepository) GetAccessMethods(ctx context.Context, accountID string) (leagues.AccessMethods, error) {
+	id, err := uuidValue(accountID)
+	if err != nil {
+		return leagues.AccessMethods{}, err
+	}
+	row, err := r.queries.GetAccessMethods(ctx, id)
+	if err != nil {
+		return leagues.AccessMethods{}, err
+	}
+	return leagues.AccessMethods{Email: row.Email, Username: row.Username, HasPassword: row.HasPassword, HasGoogle: row.HasGoogle}, nil
+}
+
+// CurrentPasswordHash obtiene el verificador asociado a una sesión activa.
+func (r AccountLeagueRepository) CurrentPasswordHash(ctx context.Context, sessionToken string) (string, error) {
+	hash := sha256.Sum256([]byte("session:" + sessionToken))
+	return r.queries.GetCurrentPasswordHash(ctx, hash[:])
+}
+
+// CreateReauthenticationTicket guarda un ticket de reautenticación para una sesión.
+func (r AccountLeagueRepository) CreateReauthenticationTicket(ctx context.Context, sessionToken string, ticketHash []byte) error {
+	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
+	_, err := r.queries.CreateReauthenticationTicket(ctx, sqlc.CreateReauthenticationTicketParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash})
+	return err
+}
+
+// ConsumeReauthenticationTicketAndSetPassword consume el ticket y cambia la contraseña.
+func (r AccountLeagueRepository) ConsumeReauthenticationTicketAndSetPassword(ctx context.Context, sessionToken string, ticketHash []byte, passwordHash string) error {
+	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
+	rows, err := r.queries.ConsumeReauthenticationTicketAndSetPassword(ctx, sqlc.ConsumeReauthenticationTicketAndSetPasswordParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash, PasswordHash: passwordHash})
+	if err != nil {
+		return err
+	}
+	if rows != 1 {
+		return pgx.ErrNoRows
+	}
+	return nil
 }
 
 // List devuelve la página solicitada de relaciones con ligas.
@@ -125,3 +172,5 @@ func followedItems(rows []sqlc.ListFollowedLeaguesRow) []leagues.Item {
 	}
 	return items
 }
+
+var _ access.Repository = AccountLeagueRepository{}
