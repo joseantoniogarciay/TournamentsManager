@@ -1,4 +1,5 @@
 import { SymbolView } from "expo-symbols";
+import { useState } from "react";
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 
 import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
@@ -20,20 +21,40 @@ export function TextField({
   feedback,
   accessibilityHint,
   passwordVisibility,
+  onBlur,
+  onFocus,
   ...inputProps
 }: Props) {
   const { colors } = usePreferences();
+  const [isFocused, setIsFocused] = useState(false);
   const message = error ?? feedback?.message;
   const messageColor = error ? "error" : feedback?.tone === "success" ? "success" : "secondary";
   return (
     <View style={styles.wrapper}>
       <Text variant="bodyLarge">{label}</Text>
       <View
-        style={[styles.input, { borderColor: error ? colors.border.error : colors.border.default }]}
+        style={[
+          styles.input,
+          {
+            borderColor: isFocused
+              ? colors.border.focus
+              : error
+                ? colors.border.error
+                : colors.border.default,
+          },
+        ]}
       >
         <TextInput
           accessibilityHint={accessibilityHint}
           accessibilityLabel={message ? `${label}. ${message}` : label}
+          onBlur={(event) => {
+            setIsFocused(false);
+            onBlur?.(event);
+          }}
+          onFocus={(event) => {
+            setIsFocused(true);
+            onFocus?.(event);
+          }}
           placeholderTextColor={colors.text.placeholder}
           style={[styles.textInput, { color: colors.text.primary }]}
           {...inputProps}
@@ -77,15 +98,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: control.horizontalPadding,
   },
   textInput: {
+    borderWidth: 0,
     flex: 1,
     fontFamily: typography.family.system,
     fontSize: typography.size.bodyLarge,
     minHeight: control.minHeight,
+    outlineStyle: "solid",
+    outlineWidth: 0,
   },
   visibilityButton: {
     alignItems: "center",
     height: control.minHeight,
     justifyContent: "center",
+    marginRight: -space[2],
     width: control.minHeight,
   },
 });

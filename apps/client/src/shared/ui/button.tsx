@@ -16,6 +16,7 @@ type Props = {
   variant?: "primary" | "secondary" | "ghost" | "destructive";
   loading?: boolean;
   disabled?: boolean;
+  secondarySurfaceColor?: string;
 };
 
 export function Button({
@@ -24,6 +25,7 @@ export function Button({
   variant = "primary",
   loading = false,
   disabled = false,
+  secondarySurfaceColor,
 }: Props) {
   const { colors } = usePreferences();
   const isDisabled = disabled || loading;
@@ -55,7 +57,16 @@ export function Button({
     >
       {variant === "primary" ? <BrandGradient style={styles.base}>{content}</BrandGradient> : null}
       {variant === "secondary" ? (
-        <View style={[styles.base, styles.outline]}>{content}</View>
+        <BrandGradient style={[styles.base, styles.outline]}>
+          <View
+            style={[
+              styles.outlineContent,
+              { backgroundColor: secondarySurfaceColor ?? colors.surface.default },
+            ]}
+          >
+            {content}
+          </View>
+        </BrandGradient>
       ) : null}
       {variant === "ghost" || variant === "destructive" ? (
         <View
@@ -92,13 +103,19 @@ const styles = StyleSheet.create({
     minHeight: control.minHeight,
     borderRadius: radius.pill,
     justifyContent: "center",
+  },
+  content: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space[2],
+    justifyContent: "center",
     paddingHorizontal: control.horizontalPadding,
   },
-  content: { alignItems: "center", flexDirection: "row", gap: space[2], justifyContent: "center" },
-  outline: {
-    borderColor: color.brand.primary,
-    borderWidth: 1,
+  outline: { padding: 1 },
+  outlineContent: {
     borderRadius: radius.pill,
+    justifyContent: "center",
+    minHeight: control.minHeight - 2,
   },
   disabled: { opacity: 0.55 },
 });

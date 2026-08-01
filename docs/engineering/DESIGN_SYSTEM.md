@@ -17,13 +17,14 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
   que parezca un botón.
 - **Degradado de marca:** una base azul `#155EEF` recibe una superposición violeta
   `#7F56D9` limitada a la esquina inferior derecha. Su eje es diagonal hacia esa
-  esquina, como en el icono de la aplicación, pero el violeta se inicia después de
-  la esquina superior derecha y entra desde el 35 % del recorrido: no tiñe todo el
-  lateral. El icono cuadrado usa el
-  token `gradient.brand`; los botones horizontales usan `gradient.brandButton`,
-  cuya geometría mantiene el ángulo visual al recorrer poca anchura y toda la
-  altura. Las acciones primarias filled lo usan como superficie y llevan texto y
-  loader blancos en ambos temas; las secundarias lo reservan para un borde de 1 px.
+  esquina, como en el icono de la aplicación. El violeta entra desde el 35 % del
+  recorrido: no tiñe todo el lateral. El icono cuadrado usa el token
+  `gradient.brand` y los botones horizontales `gradient.brandButton`, ambos con
+  los mismos puntos diagonalizados para que web, iOS y Android compongan la misma
+  superficie. La cabecera y el CTA de los emails de verificación usan la misma
+  paleta y paradas en CSS, con azul sólido como fallback para clientes sin
+  soporte de degradados. Las acciones primarias filled llevan texto y loader
+  blancos en ambos temas; las secundarias lo reservan para un borde de 1 px.
 - **Navegación por tabs:** la tab activa usa el azul primario sólido. La barra
   nativa no admite un degradado como tint para icono y etiqueta.
 - **Área inferior bajo tabs:** las rutas de una tab extienden su superficie hasta
@@ -63,7 +64,7 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 | Componente        | Estados mínimos                                           | Regla de interacción                                                                                                                                                           |
 | ----------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Button            | primary, secondary, ghost, destructive, disabled, loading | `loading` deshabilita el control y reserva el ancho del texto para el loader.                                                                                                  |
-| TextField         | default, focus, filled, error, disabled                   | El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. Un campo de contraseña que ofrece visibilidad muestra ojo u ojo tachado según su estado y mantiene un objetivo táctil de 44 px. |
+| TextField         | default, focus, filled, error, disabled                   | El foco usa el borde azul primario del perímetro completo del campo; en web no se muestra un anillo interno adicional. El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. Un campo de contraseña que ofrece visibilidad muestra ojo u ojo tachado según su estado y mantiene un objetivo táctil de 44 px. |
 | Picker            | default, focus, selected, error, disabled                 | Abre un selector adaptado a plataforma y conserva etiqueta visible.                                                                                                            |
 | Checkbox / Switch | default, selected, disabled, error                        | Objetivo táctil mínimo de 44 px.                                                                                                                                               |
 | Card              | default, actionable, selected                             | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado.                                                                                    |

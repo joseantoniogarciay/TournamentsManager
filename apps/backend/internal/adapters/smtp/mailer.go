@@ -175,9 +175,9 @@ var verificationHTML = template.Must(template.New("verification").Parse(`<!docty
 <html lang="{{.Language}}"><body style="margin:0;background:#f8fafc;color:#101828;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 16px"><tr><td align="center">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;overflow:hidden">
-      <tr><td style="padding:28px 32px;background:linear-gradient(135deg,#5b4bff,#e84a8a);color:#ffffff"><strong style="font-size:20px">Fast Tourney</strong><br><span style="font-size:13px;opacity:.9">{{.Tagline}}</span></td></tr>
+      <tr><td style="padding:28px 32px;background:#155eef;background-image:linear-gradient(135deg,transparent 0%,transparent 35%,#7f56d9 100%);color:#ffffff"><strong style="font-size:20px">Fast Tourney</strong><br><span style="font-size:13px;opacity:.9">{{.Tagline}}</span></td></tr>
       <tr><td style="padding:32px"><h1 style="margin:0 0 12px;font-size:26px;line-height:1.2">{{.Title}}</h1><p style="margin:0 0 24px;line-height:1.55">{{.Description}}</p>
-      <a href="{{.VerificationURL}}" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#5b4bff;color:#ffffff;text-decoration:none;font-weight:700">{{.Button}}</a>
+      <a href="{{.VerificationURL}}" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#155eef;background-image:linear-gradient(135deg,transparent 0%,transparent 35%,#7f56d9 100%);color:#ffffff;text-decoration:none;font-weight:700">{{.Button}}</a>
       <p style="margin:28px 0 0;color:#667085;font-size:13px;line-height:1.5">{{.Ignore}}</p></td></tr>
     </table>
   </td></tr></table>

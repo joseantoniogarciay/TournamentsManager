@@ -34,7 +34,7 @@ export default function AccountLayout() {
               <WebIcon color={colors.text.primary} name="settings" size={control.iconSize} />
             </Pressable>
           ),
-          title: t("account_title"),
+          headerTitle: () => null,
         }}
       />
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />

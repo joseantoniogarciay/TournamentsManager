@@ -18,7 +18,7 @@ export const gradient = {
     colors: ["#7F56D900", "#7F56D900", "#7F56D9"],
     end: { x: 1, y: 1 },
     locations: [0, 0.35, 1],
-    start: { x: 0.85, y: 0 },
+    start: { x: 0, y: 0 },
   },
 } as const;
 

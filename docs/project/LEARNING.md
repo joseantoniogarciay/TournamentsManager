@@ -37,6 +37,32 @@ Para cada capacidad se sigue el ciclo:
 
 ## Diario
 
+### 2026-08-01 — El foco compartido pertenece al perímetro del control
+
+- **Aprendido:** un campo compuesto por un contenedor y un `TextInput` debe
+  representar el foco en el contenedor, que es la caja que la persona percibe
+  como control, no en el input interno.
+- **Evidencia:** React Native Web conserva el `outline` del elemento HTML si no
+  se desactiva explícitamente; al mismo tiempo, el estado de foco de la primitiva
+  aplica `border.focus` al contenedor en web, iOS y Android.
+- **Coste aceptado:** se conserva un pequeño estado local en `TextField` para
+  delegar la apariencia al componente compartido y evitar CSS específico por ruta.
+
+### 2026-08-01 — Un degradado universal debe describir una geometría común
+
+- **Aprendido:** los puntos de inicio y final de un degradado no tienen idéntica
+  semántica en CSS y en los renderizadores nativos. Un punto desplazado puede
+  cambiar solo el ángulo en web y desplazar realmente el recorrido en iOS y
+  Android.
+- **Evidencia:** `expo-linear-gradient` convierte web a un `linear-gradient()`
+  CSS, mientras que iOS y Android dibujan el vector entre los puntos. Los tokens
+  de icono y botón usan ahora el mismo vector de esquina superior izquierda a
+  inferior derecha y las mismas paradas; el email replica la paleta azul
+  `#155EEF` y violeta `#7F56D9`, con azul sólido como fallback.
+- **Coste aceptado:** el backend no importa tokens TypeScript. La pequeña
+  duplicación de los valores CSS queda documentada y cubierta por la prueba del
+  email, evitando acoplar Go a la infraestructura del cliente.
+
 ### 2026-08-01 — El nonce de una sesión externa debe venir de nuestra API
 
 - **Aprendido:** el cliente no genera ni interpreta la prueba de identidad de
@@ -162,10 +188,8 @@ Para cada capacidad se sigue el ciclo:
   una relación directa con el icono; limitarlo al borde de 1 px en la acción
   secondary conserva contraste y evita competir con la acción principal.
 - **Evidencia:** `Button` parte de azul sólido y superpone el token
-  `gradient.brandButton`, variante horizontal de `gradient.brand`: mantiene la
-  dirección visual del icono cuadrado al concentrar el recorrido en el extremo
-  derecho. El texto sobre esa marca usa un token blanco independiente del tema, no
-  el color inverso de la superficie de la app.
+  `gradient.brandButton`. El texto sobre esa marca usa un token blanco
+  independiente del tema, no el color inverso de la superficie de la app.
 - **Coste aceptado:** las acciones destructivas siguen usando rojo sólido, pues
   el degradado de marca no debe diluir su semántica de riesgo.
 
@@ -175,7 +199,7 @@ Para cada capacidad se sigue el ciclo:
   su presencia sin cambiar el ángulo ni convertir toda la acción en una superficie
   violeta.
 - **Evidencia:** `gradient.brand` y `gradient.brandButton` comparten las mismas
-  paradas; los botones conservan una geometría horizontal específica.
+  paradas y una geometría diagonal completa, común a web, iOS y Android.
 - **Coste aceptado:** la barra de tabs nativa mantiene un tint azul sólido, porque
   su API no admite un degradado uniforme para icono y etiqueta.
 

@@ -219,8 +219,11 @@ export default function AccountScreen() {
               accessibilityLabel={t("password_recovery_title")}
               accessibilityRole="button"
               onPress={() => router.push("/account/forgot-password" as never)}
+              style={styles.forgotPassword}
             >
-              <Text color="secondary">{t("password_recovery_title")}</Text>
+              <Text color="secondary" style={styles.forgotPasswordText}>
+                {t("password_recovery_title")}
+              </Text>
             </Pressable>
             <Button label={t("account_sign_in")} onPress={signIn} />
           </View>
@@ -290,6 +293,7 @@ export default function AccountScreen() {
           <Button
             label={t("account_register")}
             onPress={() => router.push("/account/register")}
+            secondarySurfaceColor={colors.surface.canvas}
             variant="secondary"
           />
         </View>
@@ -302,6 +306,8 @@ const styles = StyleSheet.create({
   content: { gap: space[5] },
   accessRow: { gap: space[1] },
   form: { gap: space[4] },
+  forgotPassword: { alignSelf: "flex-end", marginBottom: space[2] },
+  forgotPasswordText: { textDecorationLine: "underline" },
   googleButton: {
     alignItems: "center",
     alignSelf: "center",
