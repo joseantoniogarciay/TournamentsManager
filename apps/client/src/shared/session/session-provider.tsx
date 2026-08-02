@@ -18,13 +18,18 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { LoadingTransition } from "@/shared/ui";
 
 type SessionUser = { id: string; username: string };
+export type SessionReplacementDestination = "/" | "/account";
 type SessionContextValue = {
   isRestoring: boolean;
+  replacementDestination: SessionReplacementDestination;
   revision: number;
   user: SessionUser | null;
   transition: "idle" | "confirming" | "resetting" | "signing-out";
   beginSessionReplacement: () => void;
-  completeSessionReplacement: (user: SessionUser) => void;
+  completeSessionReplacement: (
+    user: SessionUser,
+    destination?: SessionReplacementDestination,
+  ) => void;
   cancelSessionReplacement: () => void;
   finishSessionReplacement: () => void;
   signOut: () => Promise<void>;
@@ -38,14 +43,20 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isRestoring, setIsRestoring] = useState(true);
   const [revision, setRevision] = useState(0);
+  const [replacementDestination, setReplacementDestination] =
+    useState<SessionReplacementDestination>("/");
   const [transition, setTransition] = useState<SessionContextValue["transition"]>("idle");
 
   const beginSessionReplacement = useCallback(() => setTransition("confirming"), []);
-  const completeSessionReplacement = useCallback((nextUser: SessionUser) => {
-    setUser(nextUser);
-    setRevision((current) => current + 1);
-    setTransition("resetting");
-  }, []);
+  const completeSessionReplacement = useCallback(
+    (nextUser: SessionUser, destination: SessionReplacementDestination = "/") => {
+      setUser(nextUser);
+      setRevision((current) => current + 1);
+      setReplacementDestination(destination);
+      setTransition("resetting");
+    },
+    [],
+  );
   const cancelSessionReplacement = useCallback(() => setTransition("idle"), []);
   const finishSessionReplacement = useCallback(() => setTransition("idle"), []);
   const signOut = useCallback(async () => {
@@ -85,6 +96,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         revision,
         user,
         isRestoring,
+        replacementDestination,
         transition,
         beginSessionReplacement,
         completeSessionReplacement,

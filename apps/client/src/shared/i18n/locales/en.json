@@ -61,6 +61,8 @@
   "account_google_rate_limited": "You have made too many attempts. Wait a moment and try again.",
   "account_google_unavailable": "Continue with Google (coming soon)",
   "account_local_login_unavailable": "Local sign-in will be available when the backend completes this flow.",
+  "account_login_invalid_credentials": "We could not sign you in. Check the credentials you entered.",
+  "account_login_verification_sent": "We sent a new verification link to your email.",
   "account_logout": "Sign out",
   "account_logout_description": "Your session will be closed on this device.",
   "account_logout_title": "Sign out?",

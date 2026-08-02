@@ -61,6 +61,8 @@
   "account_google_rate_limited": "Has hecho demasiados intentos. Espera un momento e inténtalo de nuevo.",
   "account_google_unavailable": "Continuar con Google (próximamente)",
   "account_local_login_unavailable": "El inicio de sesión local estará disponible cuando el backend complete este flujo.",
+  "account_login_invalid_credentials": "No ha sido posible iniciar sesión. Revisa las credenciales introducidas.",
+  "account_login_verification_sent": "Hemos enviado un nuevo enlace de verificación a tu correo.",
   "account_logout": "Cerrar sesión",
   "account_logout_description": "Se cerrará la sesión en este dispositivo.",
   "account_logout_title": "¿Cerrar sesión?",

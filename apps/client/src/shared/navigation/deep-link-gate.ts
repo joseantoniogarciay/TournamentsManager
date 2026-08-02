@@ -18,11 +18,12 @@ export function consumeDeferredInitialDeepLink() {
   return path;
 }
 
-function toInternalPath(path: string) {
-  if (path.startsWith("/")) return path;
+/** Convierte un enlace de plataforma en una ruta del router antes de navegar. */
+export function toInternalPath(path: string) {
+  if (path.startsWith("/") && !path.startsWith("//")) return path;
 
   try {
-    const url = new URL(path);
+    const url = new URL(path.startsWith("//") ? `https:${path}` : path);
     const prefix = url.protocol === "http:" || url.protocol === "https:" ? "" : `/${url.host}`;
     return `${prefix}${url.pathname}${url.search}${url.hash}`;
   } catch {

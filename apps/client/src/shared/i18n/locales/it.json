@@ -61,6 +61,8 @@
   "account_google_rate_limited": "Hai effettuato troppi tentativi. Attendi un momento e riprova.",
   "account_google_unavailable": "Continua con Google (prossimamente)",
   "account_local_login_unavailable": "L'accesso locale sarà disponibile quando il backend completerà questo flusso.",
+  "account_login_invalid_credentials": "Non è stato possibile effettuare l'accesso. Controlla le credenziali inserite.",
+  "account_login_verification_sent": "Abbiamo inviato un nuovo link di verifica alla tua email.",
   "account_logout": "Esci",
   "account_logout_description": "La sessione verrà chiusa su questo dispositivo.",
   "account_logout_title": "Vuoi uscire?",

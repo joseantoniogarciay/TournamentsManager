@@ -143,9 +143,10 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     },
     [clearAutoDismiss, dismiss, dragY, visibility],
   );
+  const contextValue = useMemo(() => ({ show }), [show]);
 
   return (
-    <FeedbackContext.Provider value={{ show }}>
+    <FeedbackContext.Provider value={contextValue}>
       <View style={styles.root}>
         {feedback ? (
           <Animated.View

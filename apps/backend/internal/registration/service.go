@@ -23,6 +23,9 @@ var ErrRefreshInvalid = errors.New("refresh inválido")
 // ErrPasswordResetInvalid indica un token de restablecimiento inválido, vencido o consumido.
 var ErrPasswordResetInvalid = errors.New("restablecimiento inválido")
 
+// ErrLoginInvalid no distingue email, contraseña ni estado para evitar enumerar cuentas.
+var ErrLoginInvalid = errors.New("credenciales inválidas")
+
 const (
 	passwordMemory      = 19 * 1024
 	passwordIterations  = 2
@@ -61,6 +64,61 @@ type Repository interface {
 	CreatePasswordReset(context.Context, string, []byte) (string, Locale, bool, error)
 	InspectPasswordReset(context.Context, []byte) (string, error)
 	ConsumePasswordReset(context.Context, []byte, string, []byte, []byte) (Session, error)
+	FindLocalAccountForLogin(context.Context, string) (LocalAccount, error)
+	CreateLocalLoginSession(context.Context, string, []byte, []byte) (Session, error)
+	RenewLoginVerification(context.Context, string, []byte) (string, Locale, error)
+}
+
+// LocalAccount reúne los datos de una cuenta necesarios para la autenticación local.
+type LocalAccount struct {
+	ID, Email, Username, PasswordHash string
+	Locale                            Locale
+	Verified                          bool
+}
+
+// LoginResult comunica una sesión creada o la renovación de una verificación pendiente.
+type LoginResult struct {
+	Session Session
+	Pending bool
+	Access  string
+	Refresh string
+}
+
+// Login verifica una credencial local y crea una sesión, o reenvía la verificación pendiente.
+func (s Service) Login(ctx context.Context, email, password string) (LoginResult, error) {
+	account, err := s.repository.FindLocalAccountForLogin(ctx, strings.TrimSpace(email))
+	if err != nil || !VerifyPassword(password, account.PasswordHash) {
+		return LoginResult{}, ErrLoginInvalid
+	}
+	if !account.Verified {
+		token, hash, err := newVerificationToken()
+		if err != nil {
+			return LoginResult{}, err
+		}
+		recipient, locale, err := s.repository.RenewLoginVerification(ctx, account.ID, hash)
+		if err != nil {
+			return LoginResult{}, err
+		}
+		if err := s.mailer.SendVerification(ctx, recipient, locale, token); err != nil {
+			return LoginResult{}, err
+		}
+		return LoginResult{Pending: true}, nil
+	}
+	access, refresh := make([]byte, 32), make([]byte, 32)
+	if _, err := rand.Read(access); err != nil {
+		return LoginResult{}, err
+	}
+	if _, err := rand.Read(refresh); err != nil {
+		return LoginResult{}, err
+	}
+	accessToken, refreshToken := base64.RawURLEncoding.EncodeToString(access), base64.RawURLEncoding.EncodeToString(refresh)
+	accessHash := sha256.Sum256([]byte("session:" + accessToken))
+	refreshHash := sha256.Sum256([]byte("refresh:" + refreshToken))
+	session, err := s.repository.CreateLocalLoginSession(ctx, account.ID, accessHash[:], refreshHash[:])
+	if err != nil {
+		return LoginResult{}, err
+	}
+	return LoginResult{Session: session, Access: accessToken, Refresh: refreshToken}, nil
 }
 
 // Refresh rota un refresh opaco y emite los siguientes tokens de la sesión.

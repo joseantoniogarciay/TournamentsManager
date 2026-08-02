@@ -40,7 +40,11 @@ func (r testLeagueRepository) Follow(_ context.Context, _ string, _ string) (boo
 
 func (r testLeagueRepository) Unfollow(context.Context, string, string) error { return nil }
 
-type testRegistrationRepository struct{ available bool }
+type testRegistrationRepository struct {
+	available    bool
+	loginAccount registration.LocalAccount
+	loginSession registration.Session
+}
 
 func (r testRegistrationRepository) CreatePending(context.Context, registration.Input, string, []byte) (bool, error) {
 	return false, nil
@@ -65,6 +69,43 @@ func (r testRegistrationRepository) InspectPasswordReset(context.Context, []byte
 }
 func (r testRegistrationRepository) ConsumePasswordReset(context.Context, []byte, string, []byte, []byte) (registration.Session, error) {
 	return registration.Session{}, registration.ErrPasswordResetInvalid
+}
+func (r testRegistrationRepository) FindLocalAccountForLogin(context.Context, string) (registration.LocalAccount, error) {
+	if r.loginAccount.ID == "" {
+		return registration.LocalAccount{}, registration.ErrLoginInvalid
+	}
+	return r.loginAccount, nil
+}
+func (r testRegistrationRepository) CreateLocalLoginSession(context.Context, string, []byte, []byte) (registration.Session, error) {
+	return r.loginSession, nil
+}
+
+func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
+	t.Parallel()
+	passwordHash, err := registration.HashPassword("correct horse battery staple")
+	if err != nil {
+		t.Fatalf("crear hash: %v", err)
+	}
+	repository := testRegistrationRepository{
+		loginAccount: registration.LocalAccount{ID: "019abcde-1111-7111-8111-111111111111", PasswordHash: passwordHash, Verified: true},
+		loginSession: registration.Session{AccountID: "019abcde-1111-7111-8111-111111111111", Username: "person", IdleExpiresAt: "2026-08-09T12:00:00Z", RefreshExpiresAt: "2026-09-01T12:00:00Z"},
+	}
+	handler := NewHandler(registration.NewService(repository, nil), nil, testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
+	request := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/v1/sessions", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","sessionTransport":"bearer"}`))
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusOK)
+	}
+	if !strings.Contains(recorder.Body.String(), `"delivery":"bearer"`) || !strings.Contains(recorder.Body.String(), `"sessionToken"`) || !strings.Contains(recorder.Body.String(), `"refreshToken"`) {
+		t.Errorf("body = %s, want bearer session tokens", recorder.Body.String())
+	}
+}
+func (r testRegistrationRepository) RenewLoginVerification(context.Context, string, []byte) (string, registration.Locale, error) {
+	return "", "", registration.ErrLoginInvalid
 }
 
 func testHandler() http.Handler {

@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Inicio de sesión local completo: `POST /v1/sessions` valida la contraseña
+  Argon2id, limita los intentos por IP e identificador y entrega una sesión
+  opaca. Cuenta conserva los secretos solo en Keychain/Keystore móvil y
+  reutiliza la cookie `HttpOnly` en web.
 - Creación de liga desde un borrador local: una cuenta verificada crea una liga
   «Sin empezar» y al iniciarla elige una o dos vueltas; el backend genera el
   calendario de forma atómica.

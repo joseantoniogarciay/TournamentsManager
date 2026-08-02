@@ -85,6 +85,41 @@ func (q *Queries) ConsumePasswordReset(ctx context.Context, arg ConsumePasswordR
 	return i, err
 }
 
+const createLocalLoginSession = `-- name: CreateLocalLoginSession :one
+WITH created_session AS (
+    INSERT INTO sessions (account_id, token_hash, idle_expires_at, absolute_expires_at)
+    VALUES ($1, $2, now() + interval '7 days', now() + interval '7 days')
+    RETURNING id, idle_expires_at
+), created_refresh AS (
+    INSERT INTO session_refresh_tokens (session_id, token_hash, expires_at)
+    SELECT created_session.id, $3, now() + interval '30 days' FROM created_session
+    RETURNING expires_at
+)
+SELECT accounts.username, created_session.idle_expires_at, created_refresh.expires_at
+FROM created_session
+CROSS JOIN created_refresh
+JOIN accounts ON accounts.id = $1
+`
+
+type CreateLocalLoginSessionParams struct {
+	ID          pgtype.UUID
+	TokenHash   []byte
+	TokenHash_2 []byte
+}
+
+type CreateLocalLoginSessionRow struct {
+	Username      string
+	IdleExpiresAt pgtype.Timestamptz
+	ExpiresAt     pgtype.Timestamptz
+}
+
+func (q *Queries) CreateLocalLoginSession(ctx context.Context, arg CreateLocalLoginSessionParams) (CreateLocalLoginSessionRow, error) {
+	row := q.db.QueryRow(ctx, createLocalLoginSession, arg.ID, arg.TokenHash, arg.TokenHash_2)
+	var i CreateLocalLoginSessionRow
+	err := row.Scan(&i.Username, &i.IdleExpiresAt, &i.ExpiresAt)
+	return i, err
+}
+
 const createPasswordReset = `-- name: CreatePasswordReset :one
 WITH eligible_account AS (
     SELECT accounts.id, accounts.email, accounts.locale
@@ -160,6 +195,37 @@ func (q *Queries) CreatePendingRegistration(ctx context.Context, arg CreatePendi
 	return email, err
 }
 
+const findLocalAccountForLogin = `-- name: FindLocalAccountForLogin :one
+SELECT accounts.id, accounts.email, accounts.locale, accounts.state, accounts.username,
+       local_credentials.password_hash
+FROM accounts
+JOIN local_credentials ON local_credentials.account_id = accounts.id
+WHERE lower(accounts.email) = lower($1)
+`
+
+type FindLocalAccountForLoginRow struct {
+	ID           pgtype.UUID
+	Email        string
+	Locale       string
+	State        string
+	Username     string
+	PasswordHash string
+}
+
+func (q *Queries) FindLocalAccountForLogin(ctx context.Context, lower string) (FindLocalAccountForLoginRow, error) {
+	row := q.db.QueryRow(ctx, findLocalAccountForLogin, lower)
+	var i FindLocalAccountForLoginRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Locale,
+		&i.State,
+		&i.Username,
+		&i.PasswordHash,
+	)
+	return i, err
+}
+
 const inspectPasswordReset = `-- name: InspectPasswordReset :one
 SELECT accounts.email
 FROM password_reset_tokens
@@ -190,6 +256,39 @@ func (q *Queries) IsUsernameAvailable(ctx context.Context, username string) (boo
 	var available bool
 	err := row.Scan(&available)
 	return available, err
+}
+
+const renewLoginVerification = `-- name: RenewLoginVerification :one
+WITH invalidated_tokens AS (
+    UPDATE email_verification_tokens
+    SET invalidated_at = now()
+    WHERE account_id = $1
+      AND consumed_at IS NULL
+      AND invalidated_at IS NULL
+), created_token AS (
+    INSERT INTO email_verification_tokens (account_id, token_hash, expires_at)
+    VALUES ($1, $2, now() + interval '24 hours')
+)
+SELECT accounts.email, accounts.locale
+FROM accounts
+WHERE accounts.id = $1 AND accounts.state = 'pending_verification'
+`
+
+type RenewLoginVerificationParams struct {
+	ID        pgtype.UUID
+	TokenHash []byte
+}
+
+type RenewLoginVerificationRow struct {
+	Email  string
+	Locale string
+}
+
+func (q *Queries) RenewLoginVerification(ctx context.Context, arg RenewLoginVerificationParams) (RenewLoginVerificationRow, error) {
+	row := q.db.QueryRow(ctx, renewLoginVerification, arg.ID, arg.TokenHash)
+	var i RenewLoginVerificationRow
+	err := row.Scan(&i.Email, &i.Locale)
+	return i, err
 }
 
 const rotateSessionTokens = `-- name: RotateSessionTokens :one

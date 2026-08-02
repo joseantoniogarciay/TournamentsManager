@@ -101,6 +101,14 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   conserva la versión que Expo resuelva para el SDK fijado. Después, vuelve a
   ejecutar `expo install --check`. Solo se aparta de esa versión con una decisión
   explícita del usuario y un development build que compile el módulo nativo.
+- Tras añadir, actualizar o configurar una dependencia con módulo nativo,
+  recompila e instala una development build antes de validar o diagnosticar su
+  comportamiento: los cambios de JavaScript no incorporan un pod, framework o
+  config plugin a una app ya instalada. Si la consola muestra un aviso como
+  `Unable to get the view config for <Módulo>`, la build activa no contiene el
+  módulo; detén el ajuste de estilos o lógica, ejecuta `expo run:ios` o
+  `expo run:android`, instala el binario resultante y verifica que el aviso haya
+  desaparecido antes de continuar.
 
 ## Cierre obligatorio
 

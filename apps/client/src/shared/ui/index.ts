@@ -1,6 +1,10 @@
 export { Button } from "./button";
 export { Card } from "./card";
-export { ConfirmationDialog } from "./confirmation-dialog";
+export {
+  ConfirmationDialog,
+  ConfirmationDialogProvider,
+  useConfirmationDialog,
+} from "./confirmation-dialog";
 export { InteractionBlocker } from "./interaction-blocker";
 export { KeyboardAwareScrollView } from "./keyboard-aware-scroll-view";
 export { LoadingTransition } from "./loading-transition";

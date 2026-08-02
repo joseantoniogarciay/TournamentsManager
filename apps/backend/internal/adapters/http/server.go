@@ -38,9 +38,11 @@ func NewHandler(registrationService registration.Service, federatedService *fede
 		accessService = access.NewService(repository)
 	}
 	availabilityLimiter := newRequestLimiter(usernameAvailabilityLimit, usernameAvailabilityWindow)
+	localLoginLimiter := newLoginLimiter(10, time.Minute)
 	mux.HandleFunc("GET /healthz", healthz)
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService))
+	mux.HandleFunc("POST /v1/sessions", createLocalSession(registrationService, localLoginLimiter))
 	if federatedService != nil {
 		mux.HandleFunc("POST /v1/google-login-challenges", createGoogleChallenge(*federatedService))
 		mux.HandleFunc("POST /v1/google-sessions", createGoogleSession(*federatedService))
@@ -637,6 +639,49 @@ type registerRequest struct {
 	Username string `json:"username"`
 }
 
+type loginRequest struct {
+	Email            string `json:"email"`
+	Password         string `json:"password"`
+	SessionTransport string `json:"sessionTransport"`
+}
+
+// createLocalSession autentica sin revelar si el email, la contraseña o el estado fallaron.
+func createLocalSession(service registration.Service, limiter *loginLimiter) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		var body loginRequest
+		if err := decodeBody(request, &body); err != nil || !validEmail(strings.TrimSpace(body.Email)) || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
+			writeValidationProblem(writer)
+			return
+		}
+		if allowed, retryAfter := limiter.allow(clientIP(request), strings.ToLower(strings.TrimSpace(body.Email))); !allowed {
+			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+			writeProblem(writer, http.StatusTooManyRequests, "Demasiados intentos de inicio de sesión")
+			return
+		}
+		result, err := service.Login(request.Context(), body.Email, body.Password)
+		if errors.Is(err, registration.ErrLoginInvalid) {
+			writeProblem(writer, http.StatusUnauthorized, "Credenciales no válidas")
+			return
+		}
+		if err != nil {
+			writeProblem(writer, http.StatusInternalServerError, "No se pudo iniciar sesión")
+			return
+		}
+		if result.Pending {
+			writer.WriteHeader(http.StatusAccepted)
+			return
+		}
+		response := map[string]any{"user": map[string]string{"id": result.Session.AccountID, "username": result.Session.Username}, "delivery": body.SessionTransport, "expiresAt": result.Session.IdleExpiresAt, "refreshExpiresAt": result.Session.RefreshExpiresAt}
+		if body.SessionTransport == "cookie" {
+			http.SetCookie(writer, &http.Cookie{Name: "__Host-tm_session", Value: result.Access, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+		} else {
+			response["sessionToken"], response["refreshToken"] = result.Access, result.Refresh
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(writer).Encode(response)
+	}
+}
+
 func register(service registration.Service) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var body registerRequest
@@ -694,6 +739,26 @@ type requestLimiter struct {
 	limit   int
 	mu      sync.Mutex
 	window  time.Duration
+}
+
+type loginLimiter struct {
+	byEmail, byIP *requestLimiter
+}
+
+func newLoginLimiter(limit int, window time.Duration) *loginLimiter {
+	return &loginLimiter{byEmail: newRequestLimiter(limit, window), byIP: newRequestLimiter(limit, window)}
+}
+
+func (l *loginLimiter) allow(ip, email string) (bool, int) {
+	allowedIP, retryIP := l.byIP.allow(ip)
+	allowedEmail, retryEmail := l.byEmail.allow(email)
+	if allowedIP && allowedEmail {
+		return true, 0
+	}
+	if retryIP > retryEmail {
+		return false, retryIP
+	}
+	return false, retryEmail
 }
 
 type requestLimit struct {

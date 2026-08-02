@@ -2,6 +2,77 @@
 
 ## 2026-08-02 — Preparar no es competir
 
+## 2026-08-02 — Un 401 de login es recuperable, no un fallo genérico
+
+El `401` documentado por `POST /v1/sessions` confirma que el servidor rechazó
+las credenciales sin revelar cuál falló. La feature de autenticación lo trata
+como un caso recuperable y muestra un mensaje localizado para revisar los datos
+introducidos; red, `5xx`, cuerpos inválidos y estados no previstos mantienen el
+fallback común seguro. Así no se generaliza el significado de `401` fuera de
+esta operación ni se expone el detalle del backend.
+
+## 2026-08-02 — Una mutación iniciada por un efecto necesita un cerrojo síncrono
+
+Un estado como `isConfirming` no evita que React ejecute dos veces un efecto
+antes del siguiente render, algo que el entorno de desarrollo hace
+intencionadamente. La confirmación de registro conserva el token ya iniciado
+en un `ref` antes de llamar a la API: así emite un único `POST` por token y no
+puede mostrar el `409` de su propia repetición tras haber creado la sesión.
+
+## 2026-08-02 — El destino tras iniciar sesión pertenece al recorrido que lo inició
+
+Un reemplazo de sesión no siempre implica ir a Inicio. La verificación mediante
+enlace y el restablecimiento conservan su regreso aceptado a `/`, mientras que
+un login local o con Google iniciado desde Cuenta vuelve a `/account`. El
+proveedor de sesión recibe ese destino de forma explícita y la navegación común
+lo aplica en las tres plataformas, sin duplicar condiciones por web, iOS o
+Android.
+
+## 2026-08-02 — Un blur no se debe tapar con la capa que debía complementar
+
+El material nativo de `BlurView` ya aporta una tinta visual. Superponer además
+el lienzo del tema al 68 % lo hacía casi opaco: se perdía el desenfoque y el
+color de fondo dominaba la pantalla. Además, un `Modal` de React Native vive en
+otra ventana y su `BlurView` no puede muestrear los píxeles de la ruta previa.
+El host de confirmaciones se monta en el layout raíz, como hermano posterior del
+árbol de navegación: cubre tabs y áreas seguras, y comparte la jerarquía visual
+de toda la aplicación. En un scrim de pantalla completa, el blur oscuro clásico
+de iOS es más predecible que los materiales dinámicos: estos últimos incorporan
+una tinta del sistema que puede dominar la superficie. Android conserva una
+atenuación neutra y leve como respaldo. Así el contexto se percibe sin competir
+con el diálogo.
+
+La separación de un diálogo no debe depender de que un tema tenga menos
+contraste. Un borde con el token semántico `border.default` conserva la misma
+intención en claro y oscuro, y deja que cada tema resuelva el valor adecuado sin
+crear un parche visual exclusivo para la variante oscura.
+
+## 2026-08-02 — El fondo de una confirmación es una salida explícita
+
+El área exterior del diálogo no es decorativa: tocarla ejecuta la misma acción
+que «Cancelar». La primitiva la expone además como un botón accesible con esa
+misma etiqueta, para que la interacción visual y la semántica no diverjan.
+
+## 2026-08-02 — El cierre de un popup OAuth web no pertenece al arranque nativo
+
+`maybeCompleteAuthSession()` resuelve el popup de OAuth al volver a una página
+web. En iOS y Android la sesión es nativa; invocar ese puente al recargar el
+bundle no aporta valor y puede interferir con el navegador del sistema. Por eso
+la operación queda limitada a web, mientras los flujos nativos conservan su
+redirect URI propio.
+
+## 2026-08-02 — Un enlace recibido siempre se normaliza antes de navegar
+
+Expo puede entregar un enlace a una app ya viva también durante un reload del
+bundle. Si una URL HTTPS se pasa sin normalizar al router, este puede delegarla
+en Safari como destino externo. `+native-intent` la convierte siempre en una
+ruta interna; solo el enlace de arranque se difiere hasta que Inicio está
+montado.
+
+Las URL protocol-relative (`//dominio/ruta`) son otro formato externo: empiezan
+por `/`, pero Expo Router las traduce a `https://…`. Por eso el normalizador las
+interpreta como URL antes de aceptar una cadena como ruta interna.
+
 Un borrador local reduce fricción sin convertir datos temporales en recursos del
 servidor. Una liga creada ya tiene organizador y ciclo de vida; mostrarla como
 «Sin empezar» evita confundirla con aquel borrador. Generar el calendario al
@@ -1278,3 +1349,32 @@ Un token de sesión demuestra que el cliente mantiene una sesión; no debe ser
 suficiente por sí solo para cambiar autenticadores persistentes. Un ticket
 breve, ligado a la sesión y consumido dentro de la transacción conserva ese
 límite sin crear una segunda sesión ni un estado de interfaz global.
+
+### 2026-08-02 — Iniciar sesión no autoriza persistir una contraseña
+
+- **Aprendido:** el formulario de login transmite la contraseña una sola vez al
+  endpoint público; el cliente solo conserva los secretos de sesión que emite
+  el backend y únicamente en el almacenamiento seguro nativo.
+- **Evidencia:** `POST /v1/sessions` compara Argon2id en el caso de uso, crea
+  hashes de access y refresh para PostgreSQL y devuelve los secretos solo para
+  el transporte Bearer. La web recibe una cookie `HttpOnly`.
+- **Coste aceptado:** el backend consulta PostgreSQL para autenticar y mantiene
+  dos secretos opacos para móvil; a cambio no se añade JWT ni una contraseña
+  recuperable en el cliente.
+- **Regla reutilizable:** una credencial de login no se guarda ni se reutiliza
+  como sesión; solo el backend decide y emite la credencial de sesión.
+
+### 2026-08-02 — Los callbacks de foco solo dependen de identidades estables
+
+- **Aprendido:** un callback entregado a `useFocusEffect` se vuelve a ejecutar
+  mientras la ruta tiene el foco cada vez que cambia alguna dependencia por
+  identidad. Si ese efecto actualiza estado, una función recreada en cada render
+  puede convertir una carga normal en un ciclo de actualizaciones.
+- **Evidencia:** `getTranslator` devolvía un closure nuevo en cada render de la
+  pestaña de torneos; la carga modificaba el estado y React Navigation volvía a
+  activar el efecto. Los traductores ahora se conservan por locale y el valor
+  del contexto de feedback se memoriza a partir de `show`.
+- **Coste aceptado:** se mantienen cuatro funciones de traducción de módulo,
+  un coste constante y despreciable que evita añadir estado global de idioma.
+- **Regla reutilizable:** toda dependencia de `useFocusEffect` que no cambie
+  por un dato de producto debe tener una identidad estable.

@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
 import { space } from "@tournaments-manager/design-tokens";
@@ -23,6 +23,7 @@ export default function LinkConfirmationScreen() {
     useSession();
   const params = useLocalSearchParams<{ sent?: string | string[]; token?: string | string[] }>();
   const [isConfirming, setIsConfirming] = useState(false);
+  const confirmingToken = useRef<string | null>(null);
   const [confirmationFailure, setConfirmationFailure] = useState<
     RegistrationVerificationFailure | "unexpected" | null
   >(null);
@@ -35,7 +36,11 @@ export default function LinkConfirmationScreen() {
   }, [params.token, setToken, token]);
 
   useEffect(() => {
-    if (!token || isConfirming || confirmationFailure) return;
+    if (!token || confirmationFailure || confirmingToken.current === token) return;
+
+    // El estado se actualiza tras el render; el ref impide una segunda mutación
+    // si React repite este efecto durante el desarrollo.
+    confirmingToken.current = token;
     setIsConfirming(true);
     beginSessionReplacement();
     const confirmationStartedAt = Date.now();
@@ -65,7 +70,6 @@ export default function LinkConfirmationScreen() {
     cancelSessionReplacement,
     completeSessionReplacement,
     confirmationFailure,
-    isConfirming,
     setToken,
     token,
   ]);

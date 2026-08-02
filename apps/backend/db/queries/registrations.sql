@@ -20,6 +20,43 @@ SELECT NOT EXISTS (
     WHERE username = $1
 ) AS available;
 
+-- name: FindLocalAccountForLogin :one
+SELECT accounts.id, accounts.email, accounts.locale, accounts.state, accounts.username,
+       local_credentials.password_hash
+FROM accounts
+JOIN local_credentials ON local_credentials.account_id = accounts.id
+WHERE lower(accounts.email) = lower($1);
+
+-- name: CreateLocalLoginSession :one
+WITH created_session AS (
+    INSERT INTO sessions (account_id, token_hash, idle_expires_at, absolute_expires_at)
+    VALUES ($1, $2, now() + interval '7 days', now() + interval '7 days')
+    RETURNING id, idle_expires_at
+), created_refresh AS (
+    INSERT INTO session_refresh_tokens (session_id, token_hash, expires_at)
+    SELECT created_session.id, $3, now() + interval '30 days' FROM created_session
+    RETURNING expires_at
+)
+SELECT accounts.username, created_session.idle_expires_at, created_refresh.expires_at
+FROM created_session
+CROSS JOIN created_refresh
+JOIN accounts ON accounts.id = $1;
+
+-- name: RenewLoginVerification :one
+WITH invalidated_tokens AS (
+    UPDATE email_verification_tokens
+    SET invalidated_at = now()
+    WHERE account_id = $1
+      AND consumed_at IS NULL
+      AND invalidated_at IS NULL
+), created_token AS (
+    INSERT INTO email_verification_tokens (account_id, token_hash, expires_at)
+    VALUES ($1, $2, now() + interval '24 hours')
+)
+SELECT accounts.email, accounts.locale
+FROM accounts
+WHERE accounts.id = $1 AND accounts.state = 'pending_verification';
+
 -- name: CreatePasswordReset :one
 WITH eligible_account AS (
     SELECT accounts.id, accounts.email, accounts.locale

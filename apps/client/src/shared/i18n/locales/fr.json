@@ -61,6 +61,8 @@
   "account_google_rate_limited": "Vous avez effectué trop de tentatives. Attendez un instant et réessayez.",
   "account_google_unavailable": "Continuer avec Google (bientôt disponible)",
   "account_local_login_unavailable": "La connexion locale sera disponible lorsque le backend aura terminé ce flux.",
+  "account_login_invalid_credentials": "Nous n’avons pas pu vous connecter. Vérifiez les identifiants saisis.",
+  "account_login_verification_sent": "Nous avons envoyé un nouveau lien de vérification à votre adresse e-mail.",
   "account_logout": "Se déconnecter",
   "account_logout_description": "Votre session sera fermée sur cet appareil.",
   "account_logout_title": "Se déconnecter ?",
