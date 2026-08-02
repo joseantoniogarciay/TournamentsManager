@@ -12,17 +12,32 @@ import (
 )
 
 // Verifier valida ID tokens de Google para las audiencias configuradas.
-type Verifier struct{ audiences []string }
+type Verifier struct {
+	audiences []string
+	validator tokenValidator
+}
+
+type tokenValidator interface {
+	Validate(context.Context, string, string) (*idtoken.Payload, error)
+}
+
+type defaultTokenValidator struct{}
+
+func (defaultTokenValidator) Validate(ctx context.Context, raw, audience string) (*idtoken.Payload, error) {
+	return idtoken.Validate(ctx, raw, audience)
+}
 
 // NewVerifier construye un verificador limitado a las audiencias permitidas.
-func NewVerifier(audiences []string) Verifier { return Verifier{audiences: audiences} }
+func NewVerifier(audiences []string) Verifier {
+	return Verifier{audiences: audiences, validator: defaultTokenValidator{}}
+}
 
 // Verify transforma un ID token Google validado en la identidad del dominio.
 func (v Verifier) Verify(ctx context.Context, raw string) (federated.Identity, error) {
 	var payload *idtoken.Payload
 	var err error
 	for _, audience := range v.audiences {
-		payload, err = idtoken.Validate(ctx, raw, audience)
+		payload, err = v.validator.Validate(ctx, raw, audience)
 		if err == nil {
 			break
 		}

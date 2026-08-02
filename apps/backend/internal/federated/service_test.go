@@ -49,6 +49,32 @@ func TestAuthenticateRejectsUnverifiedGoogleEmailBeforeRepository(t *testing.T) 
 	}
 }
 
+func TestAuthenticateRejectsInvalidGoogleIdentityBeforeRepository(t *testing.T) {
+	valid := Identity{Issuer: GoogleIssuer, Subject: "subject", Email: "person@example.test", Nonce: "nonce", EmailVerified: true}
+	for _, test := range []struct {
+		name     string
+		identity Identity
+	}{
+		{"issuer", Identity{Issuer: "https://issuer.example", Subject: valid.Subject, Email: valid.Email, Nonce: valid.Nonce, EmailVerified: true}},
+		{"subject", Identity{Issuer: valid.Issuer, Email: valid.Email, Nonce: valid.Nonce, EmailVerified: true}},
+		{"email", Identity{Issuer: valid.Issuer, Subject: valid.Subject, Email: " ", Nonce: valid.Nonce, EmailVerified: true}},
+		{"nonce", Identity{Issuer: valid.Issuer, Subject: valid.Subject, Email: valid.Email, EmailVerified: true}},
+		{"email not verified", Identity{Issuer: valid.Issuer, Subject: valid.Subject, Email: valid.Email, Nonce: valid.Nonce}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			repository := &stubRepository{}
+			service := NewService(repository, stubVerifier{identity: test.identity})
+			_, err := service.Authenticate(context.Background(), "019abcde-1111-7111-8111-111111111111", "token", nil)
+			if !errors.Is(err, ErrChallengeInvalid) {
+				t.Fatalf("Authenticate() error = %v, want %v", err, ErrChallengeInvalid)
+			}
+			if repository.authenticateCalled {
+				t.Fatal("repository was called for an invalid identity")
+			}
+		})
+	}
+}
+
 func TestAddGooglePreservesForeignSubjectConflict(t *testing.T) {
 	repository := &stubRepository{addErr: ErrIdentityConflict}
 	service := NewService(repository, stubVerifier{identity: Identity{Issuer: GoogleIssuer, Subject: "foreign-subject", Email: "person@example.test", Nonce: "nonce", EmailVerified: true}})

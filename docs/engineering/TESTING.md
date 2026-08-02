@@ -51,6 +51,21 @@ aislada ni una pirámide rígida.
 - La matriz de navegadores, sistemas operativos, dispositivos y anchos se
   definirá por riesgo, no intentando cubrir todas las combinaciones.
 
+## Evidencia de integración actual
+
+La suite PostgreSQL ejecutada en CI cubre solo las transacciones de mayor riesgo
+del vertical slice actual: creación e inicio de una liga, restablecimiento de
+contraseña (consumo único, revocación de sesiones y nueva sesión) y cambio de
+contraseña o vinculación de Google desde opciones de cuenta con ticket de
+reautenticación de un solo uso.
+Las validaciones, formatos y respuestas HTTP que no dependen de semántica real
+de PostgreSQL permanecen en pruebas unitarias o de handler.
+
+El adaptador Google valida su firma y audiencia con JWT y JWKS generados en la
+propia prueba, sin pedir tokens, credenciales ni certificados a Google. Las
+invariantes de identidad que afectan al dominio se prueban en el servicio
+federado antes de acceder a persistencia.
+
 ## Capas aceptadas
 
 - **Dominio y casos de uso:** pruebas unitarias rápidas con la biblioteca estándar
