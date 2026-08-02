@@ -5,17 +5,11 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
-import type { TeamInput } from "./teamInput.js";
 
-export interface DraftInput {
-  /**
-   * @minLength 1
-   * @maxLength 140
-   */
-  name: string;
-  /**
-   * @minItems 2
-   * @maxItems 64
-   */
-  teams: TeamInput[];
-}
+export type StartLeagueRequestRoundRobinLegs =
+  (typeof StartLeagueRequestRoundRobinLegs)[keyof typeof StartLeagueRequestRoundRobinLegs];
+
+export const StartLeagueRequestRoundRobinLegs = {
+  NUMBER_1: 1,
+  NUMBER_2: 2,
+} as const;

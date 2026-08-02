@@ -8,6 +8,7 @@ import { FeedbackProvider } from "@/shared/feedback/feedback-provider";
 import { PendingVerificationProvider } from "@/features/registration/pending-verification";
 import { SessionProvider, useSession } from "@/shared/session/session-provider";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
+import { ConfirmationDialogProvider } from "@/shared/ui";
 
 if (Platform.OS !== "web") {
   SplashScreen.setOptions({ duration: 240, fade: true });
@@ -18,25 +19,27 @@ export default function RootLayout() {
   return (
     <PreferencesProvider>
       <NavigationTheme>
-        <SessionProvider>
-          <PendingVerificationProvider>
-            <FeedbackProvider>
-              <RootNavigator />
-            </FeedbackProvider>
-          </PendingVerificationProvider>
-        </SessionProvider>
+        <FeedbackProvider>
+          <SessionProvider>
+            <PendingVerificationProvider>
+              <ConfirmationDialogProvider>
+                <RootNavigator />
+              </ConfirmationDialogProvider>
+            </PendingVerificationProvider>
+          </SessionProvider>
+        </FeedbackProvider>
       </NavigationTheme>
     </PreferencesProvider>
   );
 }
 
 function RootNavigator() {
-  const { finishSessionReplacement, revision, transition } = useSession();
+  const { finishSessionReplacement, replacementDestination, revision, transition } = useSession();
 
   useEffect(() => {
     if (transition !== "resetting" && transition !== "signing-out") return;
 
-    router.replace(transition === "signing-out" ? "/account" : "/");
+    router.replace(transition === "signing-out" ? "/account" : replacementDestination);
     let secondFrame: number | undefined;
     const firstFrame = requestAnimationFrame(() => {
       secondFrame = requestAnimationFrame(finishSessionReplacement);
@@ -45,7 +48,7 @@ function RootNavigator() {
       cancelAnimationFrame(firstFrame);
       if (secondFrame !== undefined) cancelAnimationFrame(secondFrame);
     };
-  }, [finishSessionReplacement, revision, transition]);
+  }, [finishSessionReplacement, replacementDestination, revision, transition]);
 
   return (
     <Stack key={revision} screenOptions={{ headerShown: false }}>

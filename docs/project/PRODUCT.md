@@ -50,9 +50,8 @@ autenticada.
 ### Cuenta pendiente de verificación
 
 Es un registro temporal tras un alta local con email, contraseña y `username`.
-Puede retomar el borrador asociado al verificar el correo, pero no recibe una
-sesión de producto ni permisos de negocio. Las cuentas y borradores pendientes
-caducan según la política que se defina antes de implementarla.
+No recibe una sesión de producto ni permisos de negocio. El borrador permanece
+solo en el almacenamiento local de la persona y no se asocia a la cuenta.
 
 ### Usuario autenticado y verificado
 
@@ -73,6 +72,11 @@ sesión verificada, la home también ofrece accesos rápidos a «Administro» y
 delegado se consideran administradas. Las ligas seguidas se consideran
 guardadas; cuando una liga cumple ambas relaciones, se muestra solo como
 administrada.
+
+Con sesión, Inicio muestra además hasta cinco ligas relacionadas con actividad
+reciente. La relación administrada prevalece sobre seguida si coinciden. Si no
+hay ninguna, explica que ahí aparecerán las últimas ligas que tengan actividad.
+Inicio y Torneos se actualizan mediante pull-to-refresh para una sesión activa.
 
 La sección «Torneos» separa las colecciones completas en «Administro» y «Sigo».
 Es una clasificación de navegación: las autorizaciones continúan verificándose
@@ -116,8 +120,8 @@ equipos ni a la competición en el primer corte.
 
 1. La persona proporciona correo electrónico, contraseña y `username` público.
 2. Acepta las condiciones necesarias.
-3. Se crea una cuenta pendiente de verificación y, si la persona preparó un
-   borrador, se asocia a ella.
+3. Se crea una cuenta pendiente de verificación; el borrador, si existe,
+   permanece local en el dispositivo.
 4. Verifica la propiedad del correo mediante el canal enviado.
 5. La cuenta se activa, puede iniciar sesión y puede publicar el torneo.
 
@@ -126,11 +130,9 @@ invalida su enlace anterior y envía otro correo de verificación; no crea sesi�
 hasta que se complete esa verificación.
 
 Un borrador local permite empezar sin sesión, pero no es requisito para crear la
-cuenta. Si se envía al iniciar el alta, se conserva en el servidor únicamente
-asociado a la cuenta pendiente, para poder continuar si la verificación se
-completa desde otro dispositivo. Una cuenta pendiente no puede publicar ni
-realizar acciones protegidas. Véase
-[ADR-0031](../adr/0031-preserve-pre-auth-tournament-drafts-until-verified.md).
+cuenta. No se sincroniza entre dispositivos y se descarta solo después de crear
+la liga correctamente. Una cuenta pendiente no puede publicar ni realizar
+acciones protegidas. Véase [ADR-0069](../adr/0069-keep-tournament-drafts-local-only.md).
 
 ### Login
 
@@ -195,8 +197,9 @@ o queda asociado temporalmente a una cuenta pendiente; se descarta y no forma
 parte de este ciclo.
 
 Una liga visible es consultable sin sesión por su ID público y el creador puede modificar sus equipos y
-datos estructurales. Al iniciarla, se validan los datos, se generan una sola vez
-los emparejamientos y se congelan equipos y reglas. Solo entonces los
+datos estructurales. En interfaz, `publicado` se muestra como «Sin empezar».
+Al iniciarla el creador elige una o dos vueltas, se validan los datos, se generan
+una sola vez los emparejamientos y se congelan equipos y reglas. Solo entonces los
 administradores pueden registrar o corregir resultados. El creador solo puede
 finalizarla cuando todos sus partidos tienen resultado. Si un equipo abandona en
 `en_curso`, solo el creador puede declararlo: todos sus partidos, pendientes o
@@ -246,6 +249,7 @@ El primer vertical slice tiene definidos formato, ciclo de vida, visibilidad,
 participantes, seguimiento, administración y resultados. Las mejoras aplazadas
 se mantienen en «Fuera del primer alcance»; no bloquean el esquema ni los
 contratos del primer corte.
+
 # Seguridad de la cuenta
 
 Una cuenta autenticada puede consultar su email, username y métodos de acceso,

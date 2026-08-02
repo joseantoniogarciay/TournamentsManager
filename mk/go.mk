@@ -11,7 +11,7 @@ GO_SOURCE := $(shell find $(BACKEND_DIR) -type f -name '*.go' -print -quit)
 	api-up local-api-up \
 	format-go format-check-go \
 	tidy tidy-check tidy-tools tidy-tools-check tidy-all \
-	lint-go test test-race build vuln sqlc-generate sqlc-generate-check
+	lint-go test test-integration test-race build vuln sqlc-generate sqlc-generate-check
 
 # Modifica todos los archivos Go con el formateador pineado.
 format-go:
@@ -59,6 +59,15 @@ else
 	$(GO_BACKEND) test $(GO_PACKAGES)
 endif
 
+# Ejecuta persistencia real solo contra una base aislada proporcionada de forma explícita.
+test-integration:
+	@if [ -z "$$TM_INTEGRATION_DATABASE_URL" ]; then \
+		echo "test-integration: omitido; TM_INTEGRATION_DATABASE_URL no está definido"; \
+	else \
+		psql "$$TM_INTEGRATION_DATABASE_URL" -v ON_ERROR_STOP=1 -f $(BACKEND_DIR)/db/schema/initial_schema.sql && \
+		TM_INTEGRATION_DATABASE_URL="$$TM_INTEGRATION_DATABASE_URL" TM_RUN_INTEGRATION=1 $(GO_BACKEND) test ./internal/adapters/postgres -run Integration -count=1; \
+	fi
+
 test-race:
 ifeq ($(strip $(GO_SOURCE)),)
 	@echo "test-race: omitido; todavía no existen paquetes Go"
@@ -80,8 +89,8 @@ else
 	$(GO_TOOL) govulncheck $(GO_PACKAGES)
 endif
 
-# Arranca las dependencias locales y la API Go en el host. Las migraciones se
-# mantienen como un paso explícito mediante `make db-migrate`.
+# Arranca las dependencias locales y la API Go en el host. El esquema inicial se
+# aplica explícitamente con `make db-schema-apply`.
 api-up: local-api-up
 
 local-api-up: local-config-check db-up

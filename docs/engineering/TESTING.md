@@ -17,7 +17,7 @@ aislada ni una pirámide rígida.
 | Invariante de dominio | Prueba rápida del dominio/caso de uso |
 | Consulta o transacción | Integración con PostgreSQL real |
 | Deriva SQL/esquema/Go | Generación `sqlc` y compilación |
-| Evolución de esquema | Migración desde vacío y desde versión anterior |
+| Esquema inicial | Aplicación desde vacío y generación `sqlc` |
 | Contrato externo | Prueba de contrato |
 | Deriva OpenAPI/Go | Validación del backend contra la descripción |
 | Deriva OpenAPI/TypeScript | Regeneración determinista y diff limpio |
@@ -40,7 +40,7 @@ aislada ni una pirámide rígida.
   un mock de `pgx` no sustituye esa evidencia.
 - La generación `sqlc` debe ser determinista y fallar si una consulta deja de ser
   compatible con el esquema.
-- Las migraciones `goose` se prueban sin depender del arranque de la API.
+- El esquema inicial se aplica explícitamente, sin depender del arranque de la API.
 - Toda corrección de bug incluye una reproducción automatizada cuando sea viable.
 - Las pruebas deben ser deterministas, aisladas y diagnosticables.
 - Los datos de prueba no contienen información real sensible.
@@ -51,14 +51,29 @@ aislada ni una pirámide rígida.
 - La matriz de navegadores, sistemas operativos, dispositivos y anchos se
   definirá por riesgo, no intentando cubrir todas las combinaciones.
 
+## Evidencia de integración actual
+
+La suite PostgreSQL ejecutada en CI cubre solo las transacciones de mayor riesgo
+del vertical slice actual: creación e inicio de una liga, restablecimiento de
+contraseña (consumo único, revocación de sesiones y nueva sesión) y cambio de
+contraseña o vinculación de Google desde opciones de cuenta con ticket de
+reautenticación de un solo uso.
+Las validaciones, formatos y respuestas HTTP que no dependen de semántica real
+de PostgreSQL permanecen en pruebas unitarias o de handler.
+
+El adaptador Google valida su firma y audiencia con JWT y JWKS generados en la
+propia prueba, sin pedir tokens, credenciales ni certificados a Google. Las
+invariantes de identidad que afectan al dominio se prueban en el servicio
+federado antes de acceder a persistencia.
+
 ## Capas aceptadas
 
 - **Dominio y casos de uso:** pruebas unitarias rápidas con la biblioteca estándar
   `testing`. Los dobles se usan solo en puertos externos reales, no para imitar
   `pgx` o tablas.
 - **Persistencia:** integración con PostgreSQL real para SQL, restricciones,
-  transacciones, migraciones y generación `sqlc`. Cada ejecución usa una base
-  de pruebas efímera creada y migrada desde vacío, nunca la base local de
+  transacciones, esquema inicial y generación `sqlc`. Cada ejecución usa una base
+  de pruebas efímera creada desde vacío, nunca la base local de
   desarrollo.
 - **HTTP y contratos:** handlers con `httptest`; validación y generación
   determinista para impedir deriva de OpenAPI respecto al backend y cliente.
@@ -75,6 +90,8 @@ ADR-0012 establece los comandos generales. ADR-0019 adopta `testing` y
 contenedores hasta que una necesidad repetida lo justifique:
 
 - `make test`: todos los paquetes del módulo;
+- `make test-integration`: aplica el esquema inicial y prueba PostgreSQL real cuando recibe una URL
+  de base aislada; en CI la proporciona el servicio efímero del workflow;
 - `make test-race`: detector de carreras para una comprobación más lenta;
 - `make check`: formato, lint y tests como feedback local;
 - `make verify`: añade módulos limpios, build y vulnerabilidades.
@@ -91,9 +108,10 @@ añadirá con el primer comportamiento observable o riesgo real.
 ## Decisiones pendientes
 
 - librerías de assertions y mocks, si se demuestran necesarias;
-- mecanismo concreto para crear, migrar y limpiar la base efímera de pruebas;
+- limpieza adicional de la base efímera de pruebas si el aislamiento por runner deja de ser suficiente;
 - organización, tags y presupuesto temporal;
-- ejecución local y CI;
+- ejecución local y CI: PostgreSQL 18.4 efímero en GitHub Actions para las
+  transacciones que declaran `TM_INTEGRATION_DATABASE_URL` (ADR-0071);
 - pruebas de carga, resiliencia y seguridad.
 - herramientas para pruebas del cliente universal y dispositivos objetivo;
 - matriz mínima de web, iOS, Android, móvil, tablet y escritorio;

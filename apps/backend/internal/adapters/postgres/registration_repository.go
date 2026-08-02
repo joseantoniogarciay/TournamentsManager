@@ -50,6 +50,47 @@ func (r RegistrationRepository) IsUsernameAvailable(ctx context.Context, usernam
 	return r.queries.IsUsernameAvailable(ctx, username)
 }
 
+// FindLocalAccountForLogin obtiene la credencial local y el estado de verificación por correo.
+func (r RegistrationRepository) FindLocalAccountForLogin(ctx context.Context, email string) (registration.LocalAccount, error) {
+	row, err := r.queries.FindLocalAccountForLogin(ctx, email)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return registration.LocalAccount{}, registration.ErrLoginInvalid
+	}
+	if err != nil {
+		return registration.LocalAccount{}, err
+	}
+	return registration.LocalAccount{ID: row.ID.String(), Email: row.Email, Locale: registration.Locale(row.Locale), Username: row.Username, PasswordHash: row.PasswordHash, Verified: row.State == "verified"}, nil
+}
+
+// CreateLocalLoginSession persiste los tokens hasheados de una nueva sesión local.
+func (r RegistrationRepository) CreateLocalLoginSession(ctx context.Context, accountID string, sessionHash, refreshHash []byte) (registration.Session, error) {
+	id, err := parseUUID(accountID)
+	if err != nil {
+		return registration.Session{}, err
+	}
+	row, err := r.queries.CreateLocalLoginSession(ctx, sqlc.CreateLocalLoginSessionParams{ID: id, TokenHash: sessionHash, TokenHash_2: refreshHash})
+	if err != nil {
+		return registration.Session{}, err
+	}
+	return registration.Session{AccountID: accountID, Username: row.Username, IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
+}
+
+// RenewLoginVerification rota el token de verificación pendiente y devuelve su destinatario.
+func (r RegistrationRepository) RenewLoginVerification(ctx context.Context, accountID string, tokenHash []byte) (string, registration.Locale, error) {
+	id, err := parseUUID(accountID)
+	if err != nil {
+		return "", "", err
+	}
+	row, err := r.queries.RenewLoginVerification(ctx, sqlc.RenewLoginVerificationParams{ID: id, TokenHash: tokenHash})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", "", registration.ErrLoginInvalid
+	}
+	if err != nil {
+		return "", "", err
+	}
+	return row.Email, registration.Locale(row.Locale), nil
+}
+
 // CreatePending crea los tres registros de identidad en una sola sentencia.
 func (r RegistrationRepository) CreatePending(ctx context.Context, input registration.Input, passwordHash string, tokenHash []byte) (bool, error) {
 	_, err := r.queries.CreatePendingRegistration(ctx, sqlc.CreatePendingRegistrationParams{

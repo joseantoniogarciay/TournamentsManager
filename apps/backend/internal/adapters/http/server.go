@@ -31,19 +31,27 @@ const (
 
 // NewHandler construye las rutas de infraestructura disponibles antes de los
 // endpoints de negocio.
-func NewHandler(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string) http.Handler {
+func NewHandler(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, creationServices ...leagues.CreationService) http.Handler {
+	return NewHandlerWithCookieSecurity(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, true, creationServices...)
+}
+
+// NewHandlerWithCookieSecurity configura cookies Secure salvo en loopback HTTP local.
+func NewHandlerWithCookieSecurity(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, creationServices ...leagues.CreationService) http.Handler {
 	mux := http.NewServeMux()
+	cookies := sessionCookies(cookieSecure)
 	var accessService access.Service
 	if repository, ok := authenticator.(access.Repository); ok {
 		accessService = access.NewService(repository)
 	}
 	availabilityLimiter := newRequestLimiter(usernameAvailabilityLimit, usernameAvailabilityWindow)
+	localLoginLimiter := newLoginLimiter(10, time.Minute)
 	mux.HandleFunc("GET /healthz", healthz)
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService))
+	mux.HandleFunc("POST /v1/sessions", createLocalSession(registrationService, localLoginLimiter, cookies))
 	if federatedService != nil {
 		mux.HandleFunc("POST /v1/google-login-challenges", createGoogleChallenge(*federatedService))
-		mux.HandleFunc("POST /v1/google-sessions", createGoogleSession(*federatedService))
+		mux.HandleFunc("POST /v1/google-sessions", createGoogleSession(*federatedService, cookies))
 		mux.Handle("POST /v1/me/google-identities", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(createGoogleIdentity(*federatedService)))))
 	} else {
 		mux.HandleFunc("POST /v1/google-login-challenges", unavailableFederatedLogin)
@@ -53,18 +61,179 @@ func NewHandler(registrationService registration.Service, federatedService *fede
 	passwordResetLimiter := newRequestLimiter(10, time.Minute)
 	mux.HandleFunc("POST /v1/password-resets", requestPasswordReset(registrationService, passwordResetLimiter))
 	mux.HandleFunc("POST /v1/password-reset-links", inspectPasswordReset(registrationService))
-	mux.HandleFunc("POST /v1/password-reset-confirmations", confirmPasswordReset(registrationService))
-	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService))
+	mux.HandleFunc("POST /v1/password-reset-confirmations", confirmPasswordReset(registrationService, cookies))
+	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService, cookies))
+	mux.Handle("GET /v1/sessions", requireSession(authenticator)(http.HandlerFunc(getCurrentSession(authenticator))))
 	mux.HandleFunc("POST /v1/sessions/refresh", refreshSession(registrationService))
-	mux.Handle("DELETE /v1/sessions", requireCookieCSRF(http.HandlerFunc(revokeCurrentSession(authenticator))))
+	mux.Handle("DELETE /v1/sessions", requireCookieCSRF(http.HandlerFunc(revokeCurrentSession(authenticator, cookies))))
 	mux.Handle("GET /v1/me/access-methods", requireSession(authenticator)(http.HandlerFunc(getAccessMethods(authenticator))))
 	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(createReauthenticationTicket(accessService, federatedService)))))
 	mux.Handle("PUT /v1/me/local-credential", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(putLocalCredential(accessService)))))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
+	mux.Handle("GET /v1/me/recent-leagues", requireSession(authenticator)(http.HandlerFunc(listRecentAccountLeagues(leagueService))))
 	followHandler := requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(followLeague(leagueService))))
 	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)
-	return requireAllowedOrigin(corsAllowedOrigins, mux)
+	if len(creationServices) > 0 {
+		creationService := creationServices[0]
+		mux.Handle("POST /v1/leagues", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(createLeague(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(startLeague(creationService)))))
+		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
+	}
+	withCookieName := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mux.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), sessionCookieNameContextKey{}, cookies.name)))
+	})
+	return requireAllowedOrigin(corsAllowedOrigins, withCookieName)
+}
+
+type sessionCookieSettings struct {
+	name   string
+	secure bool
+}
+
+func sessionCookies(secure bool) sessionCookieSettings {
+	if !secure {
+		return sessionCookieSettings{name: "tm_session"}
+	}
+	return sessionCookieSettings{name: "__Host-tm_session", secure: true}
+}
+
+func (cookies sessionCookieSettings) set(w http.ResponseWriter, value string, maxAge int) {
+	// #nosec G124 -- cookieSecure solo es false para PUBLIC_BASE_URL loopback HTTP.
+	http.SetCookie(w, &http.Cookie{Name: cookies.name, Value: value, Path: "/", Secure: cookies.secure, HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: maxAge})
+}
+
+func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
+	type currentSessionReader interface {
+		GetCurrentSession(context.Context, string) (leagues.CurrentSession, error)
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		reader, ok := authenticator.(currentSessionReader)
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la sesión")
+			return
+		}
+		token, ok := currentSessionToken(r.Context())
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		session, err := reader.GetCurrentSession(r.Context(), token)
+		if errors.Is(err, leagues.ErrUnauthenticated) {
+			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la sesión")
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"user":              map[string]string{"id": session.AccountID, "username": session.Username},
+			"idleExpiresAt":     session.IdleExpiresAt,
+			"absoluteExpiresAt": session.AbsoluteExpiresAt,
+		})
+	}
+}
+
+type leagueInput struct {
+	Name  string `json:"name"`
+	Teams []struct {
+		Name string `json:"name"`
+	} `json:"teams"`
+}
+type startLeagueInput struct {
+	RoundRobinLegs int `json:"roundRobinLegs"`
+}
+
+func createLeague(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		var body leagueInput
+		if err := decodeBody(r, &body); err != nil {
+			writeValidationProblem(w)
+			return
+		}
+		teams := make([]leagues.TeamInput, len(body.Teams))
+		for i, team := range body.Teams {
+			teams[i] = leagues.TeamInput{Name: team.Name}
+		}
+		league, err := service.Create(r.Context(), accountID, leagues.CreateInput{Name: body.Name, Teams: teams})
+		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
+			writeValidationProblem(w)
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo crear la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+func getPublicLeague(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		leagueID := r.PathValue("leagueId")
+		if !uuidPattern.MatchString(leagueID) {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.GetPublic(r.Context(), leagueID)
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+func startLeague(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		leagueID := r.PathValue("leagueId")
+		var body startLeagueInput
+		if !uuidPattern.MatchString(leagueID) || decodeBody(r, &body) != nil {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.Start(r.Context(), accountID, leagueID, leagues.StartInput{RoundRobinLegs: body.RoundRobinLegs})
+		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
+			writeValidationProblem(w)
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes iniciar esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueConflict) {
+			writeProblem(w, http.StatusConflict, "La liga ya no está sin empezar")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo iniciar la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
+	}
 }
 
 type reauthenticationRequest struct{ Password, ChallengeID, IDToken string }
@@ -183,7 +352,7 @@ type sessionRevoker interface {
 	RevokeSession(context.Context, string) error
 }
 
-func revokeCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
+func revokeCurrentSession(authenticator sessionAuthenticator, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		credential, ok := sessionToken(request)
 		if !ok {
@@ -200,7 +369,7 @@ func revokeCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
 			return
 		}
 		if credential.transport == cookieSession {
-			http.SetCookie(writer, &http.Cookie{Name: "__Host-tm_session", Value: "", Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: -1})
+			cookies.set(writer, "", -1)
 		}
 		writer.WriteHeader(http.StatusNoContent)
 	}
@@ -231,7 +400,7 @@ func createGoogleChallenge(service federated.Service) http.HandlerFunc {
 	}
 }
 
-func createGoogleSession(service federated.Service) http.HandlerFunc {
+func createGoogleSession(service federated.Service, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body googleSessionRequest
 		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") {
@@ -259,14 +428,14 @@ func createGoogleSession(service federated.Service) http.HandlerFunc {
 			writeProblem(w, http.StatusInternalServerError, "No se pudo iniciar sesión")
 			return
 		}
-		writeFederatedSession(w, body.SessionTransport, established)
+		writeFederatedSession(w, body.SessionTransport, established, cookies)
 	}
 }
 
-func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession) {
+func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession, cookies sessionCookieSettings) {
 	response := map[string]any{"user": map[string]string{"id": established.AccountID, "username": established.Username}, "delivery": transport, "expiresAt": established.IdleExpiresAt, "refreshExpiresAt": established.RefreshExpiresAt}
 	if transport == "cookie" {
-		http.SetCookie(w, &http.Cookie{Name: "__Host-tm_session", Value: established.AccessToken, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+		cookies.set(w, established.AccessToken, 0)
 	} else {
 		response["sessionToken"], response["refreshToken"] = established.AccessToken, established.RefreshToken
 	}
@@ -326,7 +495,7 @@ func inspectPasswordReset(service registration.Service) http.HandlerFunc {
 		_ = json.NewEncoder(w).Encode(map[string]string{"email": email})
 	}
 }
-func confirmPasswordReset(service registration.Service) http.HandlerFunc {
+func confirmPasswordReset(service registration.Service, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body passwordResetConfirmationRequest
 		if err := decodeBody(r, &body); err != nil || body.Token == "" || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
@@ -344,7 +513,7 @@ func confirmPasswordReset(service registration.Service) http.HandlerFunc {
 		}
 		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
-			http.SetCookie(w, &http.Cookie{Name: "__Host-tm_session", Value: access, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+			cookies.set(w, access, 0)
 		} else {
 			response["sessionToken"], response["refreshToken"] = access, refresh
 		}
@@ -423,7 +592,7 @@ type verificationRequest struct {
 	SessionTransport string `json:"sessionTransport"`
 }
 
-func verifyRegistration(service registration.Service) http.HandlerFunc {
+func verifyRegistration(service registration.Service, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var body verificationRequest
 		decoder := json.NewDecoder(request.Body)
@@ -444,7 +613,7 @@ func verifyRegistration(service registration.Service) http.HandlerFunc {
 		}
 		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
-			http.SetCookie(writer, &http.Cookie{Name: "__Host-tm_session", Value: sessionToken, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+			cookies.set(writer, sessionToken, 0)
 		} else {
 			response["sessionToken"] = sessionToken
 			response["refreshToken"] = refreshToken
@@ -513,6 +682,23 @@ func listAccountLeagues(service leagues.Service) http.HandlerFunc {
 	}
 }
 
+func listRecentAccountLeagues(service leagues.Service) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		accountID, authenticated := currentAccountID(request.Context())
+		if !authenticated {
+			writeProblem(writer, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		items, err := service.ListRecent(request.Context(), accountID)
+		if err != nil {
+			writeProblem(writer, http.StatusInternalServerError, "No se pudieron consultar las ligas recientes")
+			return
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(writer).Encode(items)
+	}
+}
+
 func listLimit(raw string) (int, bool) {
 	if raw == "" {
 		return 0, true
@@ -530,6 +716,49 @@ type registerRequest struct {
 	Locale   string `json:"locale"`
 	Password string `json:"password"`
 	Username string `json:"username"`
+}
+
+type loginRequest struct {
+	Email            string `json:"email"`
+	Password         string `json:"password"`
+	SessionTransport string `json:"sessionTransport"`
+}
+
+// createLocalSession autentica sin revelar si el email, la contraseña o el estado fallaron.
+func createLocalSession(service registration.Service, limiter *loginLimiter, cookies sessionCookieSettings) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		var body loginRequest
+		if err := decodeBody(request, &body); err != nil || !validEmail(strings.TrimSpace(body.Email)) || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
+			writeValidationProblem(writer)
+			return
+		}
+		if allowed, retryAfter := limiter.allow(clientIP(request), strings.ToLower(strings.TrimSpace(body.Email))); !allowed {
+			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+			writeProblem(writer, http.StatusTooManyRequests, "Demasiados intentos de inicio de sesión")
+			return
+		}
+		result, err := service.Login(request.Context(), body.Email, body.Password)
+		if errors.Is(err, registration.ErrLoginInvalid) {
+			writeProblem(writer, http.StatusUnauthorized, "Credenciales no válidas")
+			return
+		}
+		if err != nil {
+			writeProblem(writer, http.StatusInternalServerError, "No se pudo iniciar sesión")
+			return
+		}
+		if result.Pending {
+			writer.WriteHeader(http.StatusAccepted)
+			return
+		}
+		response := map[string]any{"user": map[string]string{"id": result.Session.AccountID, "username": result.Session.Username}, "delivery": body.SessionTransport, "expiresAt": result.Session.IdleExpiresAt, "refreshExpiresAt": result.Session.RefreshExpiresAt}
+		if body.SessionTransport == "cookie" {
+			cookies.set(writer, result.Access, 0)
+		} else {
+			response["sessionToken"], response["refreshToken"] = result.Access, result.Refresh
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(writer).Encode(response)
+	}
 }
 
 func register(service registration.Service) http.HandlerFunc {
@@ -589,6 +818,26 @@ type requestLimiter struct {
 	limit   int
 	mu      sync.Mutex
 	window  time.Duration
+}
+
+type loginLimiter struct {
+	byEmail, byIP *requestLimiter
+}
+
+func newLoginLimiter(limit int, window time.Duration) *loginLimiter {
+	return &loginLimiter{byEmail: newRequestLimiter(limit, window), byIP: newRequestLimiter(limit, window)}
+}
+
+func (l *loginLimiter) allow(ip, email string) (bool, int) {
+	allowedIP, retryIP := l.byIP.allow(ip)
+	allowedEmail, retryEmail := l.byEmail.allow(email)
+	if allowedIP && allowedEmail {
+		return true, 0
+	}
+	if retryIP > retryEmail {
+		return false, retryIP
+	}
+	return false, retryEmail
 }
 
 type requestLimit struct {

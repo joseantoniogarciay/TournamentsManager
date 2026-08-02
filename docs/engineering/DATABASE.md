@@ -1,16 +1,20 @@
 # Datos y persistencia
 
-> Estado: PostgreSQL, pgx, sqlc y goose aceptados; PostgreSQL 18.4 en Compose
+> Estado: PostgreSQL, pgx y sqlc activos; Goose queda reservado para la primera
+> migración real. PostgreSQL 18.4 en Compose
 > local. El esquema y las políticas operativas de producción continúan pendientes.
 
 ## Decisión vigente
 
-[ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) establece:
+[ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) establece la
+dirección de persistencia; ADR-0072 aplaza el uso de Goose hasta que exista una
+base que deba evolucionarse sin pérdida:
 
 - PostgreSQL como sistema de registro relacional principal;
 - `pgx` nativo para conexiones, pool y transacciones;
 - SQL escrito por el equipo y código Go tipado generado mediante `sqlc`;
-- migraciones SQL incrementales y versionadas mediante `goose`.
+- migraciones SQL incrementales y versionadas mediante `goose` cuando haya
+  datos que conservar.
 
 ```text
 Casos de uso y dominio
@@ -25,13 +29,13 @@ Adaptador y mapeos
           ├── pgx / pgxpool
           └── PostgreSQL
 
-Esquema versionado ── goose ──> PostgreSQL
+Esquema inicial ── psql ──> PostgreSQL
 ```
 
 `sqlc` es un generador, no un ORM ni un driver. Analiza el esquema y las
 consultas y produce funciones, parámetros, resultados y escaneo tipados. `pgx`
-es el driver que comunica Go con PostgreSQL. `goose` evoluciona el esquema fuera
-del arranque normal de la API.
+es el driver que comunica Go con PostgreSQL. Goose se activará para evolucionar
+el esquema fuera del arranque normal cuando haya datos que conservar.
 
 ## PostgreSQL local
 
@@ -61,12 +65,12 @@ migraciones se ejecutan desde el host. El procedimiento operativo está en el
 
 - Mientras solo exista PostgreSQL local y los datos sean descartables,
   [ADR-0053](../adr/0053-keep-a-single-resettable-local-initial-schema.md)
-  establece una excepción temporal: `00001_initial_schema.sql` es el único
-  esquema inicial y se reescribe tras un reset explícito. No se añaden pasos
-  incrementales durante esta etapa.
-- Las migraciones iniciales se escriben en SQL.
+  y [ADR-0072](../adr/0072-apply-a-resettable-initial-schema-without-migration-runner.md)
+  establecen una excepción temporal: `initial_schema.sql` es el único esquema
+  inicial y se reescribe tras un reset explícito. No se ejecutan migraciones
+  durante esta etapa.
 - Una migración aplicada en un entorno compartido es inmutable.
-- `goose` se ejecuta como paso explícito de desarrollo o despliegue, no como
+- Cuando se active, Goose se ejecutará como paso explícito de despliegue, no como
   efecto secundario de iniciar la API.
 - Toda migración se prueba desde una base vacía y sobre la versión anterior
   relevante.
@@ -98,7 +102,8 @@ El [modelo inicial de datos](INITIAL_DATA_MODEL.md), aceptado en ADR-0045,
 define las entidades, restricciones y transacciones del primer incremento.
 [ADR-0047](../adr/0047-organize-initial-postgresql-schema-and-sqlc.md), ajustado
 por ADR-0053, lo materializa en el único esquema inicial, sin crear aún consultas de negocio ni
-adaptadores. `db/migrations` es la fuente de esquema para Goose y sqlc; las
+adaptadores. `db/schema` es la fuente de esquema para sqlc y para aplicar la
+base efímera; las
 consultas futuras viven en `db/queries` y la salida generada bajo el adaptador
 PostgreSQL se versiona y no se edita manualmente.
 

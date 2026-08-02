@@ -7,7 +7,7 @@ import { Platform } from "react-native";
 import type { GoogleLoginChallenge } from "@/api/generated/models";
 import { beginGoogleAuthentication } from "@/features/federated-google/api";
 
-WebBrowser.maybeCompleteAuthSession();
+if (Platform.OS === "web") WebBrowser.maybeCompleteAuthSession();
 
 const clientIDs = {
   android: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,

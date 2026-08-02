@@ -22,7 +22,8 @@
   la comprobación de deriva forma parte de `make verify`.
 - El equipo escribe las consultas SQL; el código de acceso generado por `sqlc`
   no se modifica manualmente.
-- Las migraciones `goose` se ejecutan explícitamente y no al arrancar la API.
+- El esquema inicial se aplica explícitamente y no al arrancar la API; Goose no
+  se ejecuta durante la primera versión.
 - Toda generación debe ser reproducible mediante un comando versionado y producir
   un diff limpio cuando las entradas no cambian.
 
@@ -224,11 +225,12 @@ la API en primer plano. El contrato del backend exige `DATABASE_URL`,
 `CORS_ALLOWED_ORIGINS`; `apps/backend/.env.example` documenta únicamente
 valores locales de ejemplo. `make api-up` permanece como alias de compatibilidad.
 `PUBLIC_BASE_URL` es la URL del cliente a la que llega el correo, no la de la
-API: en local usa `http://127.0.0.1:8081`; fuera de loopback debe ser HTTPS y
+API: en local usa `http://localhost:8081`; así el navegador puede usar la
+excepción de desarrollo para cookies `Secure`. Fuera de loopback debe ser HTTPS y
 coincidir con `EXPO_PUBLIC_APP_LINK_URL` de la build móvil.
 El proceso comprueba PostgreSQL antes de abrir el puerto y expone `GET /healthz`
-en `HTTP_ADDR` (por defecto, `http://127.0.0.1:8080/healthz`). Las migraciones
-siguen siendo un paso explícito mediante `make db-migrate`; la API se detiene
+en `HTTP_ADDR` (por defecto, `http://127.0.0.1:8080/healthz`). El esquema inicial
+se aplica explícitamente con `make db-schema-apply`; la API se detiene
 con `Ctrl+C` y PostgreSQL, si se desea, con `make db-down`.
 
 ## Flujo de trabajo
@@ -266,6 +268,6 @@ comandos `make db-*`. El [Makefile](../../Makefile) raíz es el índice de
 automatización compartida; los comandos se separan por tecnología en
 [`mk/go.mk`](../../mk/go.mk), [`mk/typescript.mk`](../../mk/typescript.mk) y
 [`mk/postgres.mk`](../../mk/postgres.mk). Consulta el [runbook de PostgreSQL local](../runbooks/local-postgresql.md).
-Las migraciones `goose` se ejecutan separadamente con `make db-migrate`. Los
+El esquema inicial se aplica separadamente con `make db-schema-apply`. Los
 datos semilla funcionales permanecen aplazados hasta cerrar el primer vertical
 slice de producto.

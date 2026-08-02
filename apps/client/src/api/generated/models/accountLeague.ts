@@ -14,5 +14,6 @@ export interface AccountLeague {
   name: string;
   state: AccountLeagueState;
   createdAt: string;
+  lastActivityAt: string;
   relationship: AccountLeagueRelationship;
 }

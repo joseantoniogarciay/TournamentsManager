@@ -4,27 +4,36 @@ import {
   revokeCurrentSessionSilently,
   setMobileSessionInvalidationHandler,
 } from "@/api/fetch";
+import { useFeedback } from "@/shared/feedback/feedback-provider";
 import {
   createContext,
   type PropsWithChildren,
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { StyleSheet, View } from "react-native";
+import { Platform } from "react-native";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { LoadingTransition } from "@/shared/ui";
+import { restoreWebSession } from "./api";
 
 type SessionUser = { id: string; username: string };
+export type SessionReplacementDestination = "/" | "/account";
 type SessionContextValue = {
   isRestoring: boolean;
+  replacementDestination: SessionReplacementDestination;
   revision: number;
   user: SessionUser | null;
   transition: "idle" | "confirming" | "resetting" | "signing-out";
   beginSessionReplacement: () => void;
-  completeSessionReplacement: (user: SessionUser) => void;
+  completeSessionReplacement: (
+    user: SessionUser,
+    destination?: SessionReplacementDestination,
+  ) => void;
   cancelSessionReplacement: () => void;
   finishSessionReplacement: () => void;
   signOut: () => Promise<void>;
@@ -35,17 +44,26 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 /** Estado de sesión mínimo mientras se implementan lectura y cierre de sesión. */
 export function SessionProvider({ children }: PropsWithChildren) {
   const t = getTranslator();
+  const { show } = useFeedback();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isRestoring, setIsRestoring] = useState(true);
   const [revision, setRevision] = useState(0);
+  const [replacementDestination, setReplacementDestination] =
+    useState<SessionReplacementDestination>("/");
   const [transition, setTransition] = useState<SessionContextValue["transition"]>("idle");
+  const hasInvalidatedSession = useRef(false);
 
   const beginSessionReplacement = useCallback(() => setTransition("confirming"), []);
-  const completeSessionReplacement = useCallback((nextUser: SessionUser) => {
-    setUser(nextUser);
-    setRevision((current) => current + 1);
-    setTransition("resetting");
-  }, []);
+  const completeSessionReplacement = useCallback(
+    (nextUser: SessionUser, destination: SessionReplacementDestination = "/") => {
+      hasInvalidatedSession.current = false;
+      setUser(nextUser);
+      setRevision((current) => current + 1);
+      setReplacementDestination(destination);
+      setTransition("resetting");
+    },
+    [],
+  );
   const cancelSessionReplacement = useCallback(() => setTransition("idle"), []);
   const finishSessionReplacement = useCallback(() => setTransition("idle"), []);
   const signOut = useCallback(async () => {
@@ -57,13 +75,25 @@ export function SessionProvider({ children }: PropsWithChildren) {
     setTransition("signing-out");
   }, []);
   const resetInvalidSession = useCallback(async () => {
+    if (hasInvalidatedSession.current) return;
+    hasInvalidatedSession.current = true;
     await clearMobileSession();
     setUser(null);
     setRevision((current) => current + 1);
     setTransition("resetting");
-  }, []);
+    show({ kind: "generic-error", message: t("session_expired") });
+  }, [show, t]);
 
   useEffect(() => {
+    if (Platform.OS === "web") {
+      void restoreWebSession()
+        .then((session) => {
+          if (session) setUser(session);
+        })
+        .catch(() => undefined)
+        .finally(() => setIsRestoring(false));
+      return;
+    }
     void getMobileSession()
       .then(async (session) => {
         if (!session) return;
@@ -85,6 +115,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         revision,
         user,
         isRestoring,
+        replacementDestination,
         transition,
         beginSessionReplacement,
         completeSessionReplacement,

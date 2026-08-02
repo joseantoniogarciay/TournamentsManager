@@ -1,12 +1,24 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
 import googleLogo from "../../../../assets/google-g.png";
 
 import { GoogleAuthenticationError } from "@/features/federated-google/api";
+import {
+  authenticateLocalAccount,
+  LocalAuthenticationError,
+} from "@/features/local-authentication/api";
 import { getAccountAccessMethods } from "@/features/account-access/api";
 import { useGoogleAuthentication } from "@/features/federated-google/use-google-authentication";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
@@ -18,11 +30,11 @@ import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
   Card,
-  ConfirmationDialog,
   KeyboardAwareScrollView,
   Screen,
   Text,
   TextField,
+  useConfirmationDialog,
   useTabContentBottomPadding,
 } from "@/shared/ui";
 
@@ -31,15 +43,21 @@ export default function AccountScreen() {
   const { show } = useFeedback();
   const { colors } = usePreferences();
   const { completeSessionReplacement, signOut, user } = useSession();
+  const { confirm } = useConfirmationDialog();
+  const completeAccountSessionReplacement = useCallback(
+    (nextUser: Parameters<typeof completeSessionReplacement>[0]) =>
+      completeSessionReplacement(nextUser, "/account"),
+    [completeSessionReplacement],
+  );
   const tabContentBottomPadding = useTabContentBottomPadding();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const [showEmailError, setShowEmailError] = useState(false);
   const [showPasswordError, setShowPasswordError] = useState(false);
   const [googleUsername, setGoogleUsername] = useState("");
   const [googleUsernameSubmitted, setGoogleUsernameSubmitted] = useState(false);
-  const [logoutConfirmationVisible, setLogoutConfirmationVisible] = useState(false);
   const [accessMethods, setAccessMethods] = useState<Awaited<
     ReturnType<typeof getAccountAccessMethods>
   > | null>(null);
@@ -58,7 +76,7 @@ export default function AccountScreen() {
     start: startGoogleAuthentication,
   } = useGoogleAuthentication({
     locale: getCurrentLanguage(),
-    onSession: completeSessionReplacement,
+    onSession: completeAccountSessionReplacement,
   });
   const emailError = !isEmail(email) ? t("validation_email") : undefined;
   const passwordError = password ? undefined : t("validation_password_required");
@@ -104,11 +122,32 @@ export default function AccountScreen() {
     }, [prepareGoogleAuthentication, user]),
   );
 
-  const signIn = () => {
+  const signIn = async () => {
     setShowEmailError(true);
     setShowPasswordError(true);
     if (emailError || passwordError) return;
-    show({ kind: "generic-error", message: t("account_local_login_unavailable") });
+    setIsSigningIn(true);
+    try {
+      const result = await authenticateLocalAccount({
+        email,
+        password,
+        sessionTransport: Platform.OS === "web" ? "cookie" : "bearer",
+      });
+      if (result.kind === "pending-verification") {
+        show({ kind: "success", message: t("account_login_verification_sent") });
+        return;
+      }
+      completeAccountSessionReplacement(result.user);
+    } catch (error) {
+      if (error instanceof LocalAuthenticationError) {
+        show({ kind: "generic-error", message: t("account_login_invalid_credentials") });
+        return;
+      }
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    } finally {
+      setIsSigningIn(false);
+    }
   };
 
   const createGoogleAccount = () => {
@@ -121,6 +160,17 @@ export default function AccountScreen() {
       return;
     }
     void chooseUsername(googleUsername as never);
+  };
+
+  const confirmSignOut = () => {
+    confirm({
+      acceptLabel: t("account_logout"),
+      cancelLabel: t("common_cancel"),
+      description: t("account_logout_description"),
+      onAccept: () => void signOut(),
+      onCancel: () => undefined,
+      title: t("account_logout_title"),
+    });
   };
 
   if (user) {
@@ -158,7 +208,7 @@ export default function AccountScreen() {
             <Pressable
               accessibilityLabel={t("account_logout")}
               accessibilityRole="button"
-              onPress={() => setLogoutConfirmationVisible(true)}
+              onPress={confirmSignOut}
               style={styles.logoutRow}
             >
               <Text color="error" variant="title">
@@ -168,15 +218,6 @@ export default function AccountScreen() {
               <Text color="secondary">›</Text>
             </Pressable>
           </Card>
-          <ConfirmationDialog
-            acceptLabel={t("account_logout")}
-            cancelLabel={t("common_cancel")}
-            description={t("account_logout_description")}
-            onAccept={() => void signOut()}
-            onCancel={() => setLogoutConfirmationVisible(false)}
-            title={t("account_logout_title")}
-            visible={logoutConfirmationVisible}
-          />
         </ScrollView>
       </Screen>
     );
@@ -225,7 +266,12 @@ export default function AccountScreen() {
                 {t("password_recovery_title")}
               </Text>
             </Pressable>
-            <Button label={t("account_sign_in")} onPress={signIn} />
+            <Button
+              disabled={isSigningIn}
+              label={t("account_sign_in")}
+              loading={isSigningIn}
+              onPress={() => void signIn()}
+            />
           </View>
         </Card>
 

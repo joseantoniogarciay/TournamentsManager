@@ -1,5 +1,134 @@
 # Registro de aprendizaje
 
+## 2026-08-02 — Preparar no es competir
+
+## 2026-08-02 — Un 401 protegido invalida la sesión, no la feature visible
+
+Una operación protegida que recibe `401` ya no puede recuperar por sí sola: la
+credencial local dejó de representar una sesión autorizada. El transporte
+protegido delega la invalidación en un único coordinador, que borra los secretos,
+resetea la navegación y publica un aviso localizado una sola vez. Las
+operaciones públicas conservan su propio `401` —por ejemplo, credenciales de
+login incorrectas— y no activan este cierre global.
+
+## 2026-08-02 — Recuperar el foco no equivale a actualizar datos
+
+Las tabs mantienen su contexto durante la sesión; volver a enfocarlas no debe
+convertirse en sondeo de red. Cada colección carga una vez por cuenta y conserva
+el resultado al alternar tabs. Pull-to-refresh es la acción explícita que vuelve
+a consultar la API, mientras un nuevo login reinicia esa marca de carga.
+
+## 2026-08-02 — Actividad reciente no es fecha de creación
+
+Una colección ordenada por UUIDv7 o fecha de creación permite encontrar ligas
+nuevas, pero no informa de cambios posteriores. Inicio necesita una proyección
+propia, limitada a cinco relaciones y ordenada por una marca del dominio que se
+actualiza dentro de cada mutación relevante. Seguir una liga cambia la relación
+de una cuenta, no la actividad de la liga; mezclar ambas cosas haría que el
+resumen priorizara acciones personales en vez de cambios útiles del torneo.
+
+## 2026-08-02 — La colección principal elige su contexto, no su volumen
+
+Las pestañas «Administro» y «Sigo» comparten una única biblioteca visible para
+evitar dos bloques que compiten por atención. Al cargar la colección, se
+selecciona «Administro» si contiene alguna liga; solo cuando está vacía se abre
+«Sigo», incluso si esta última tiene más elementos. Así la prioridad expresa la
+relación de administración acordada y no una regla implícita basada en conteos.
+Cada liga conserva su propia card y un estado vacío se centra en el área libre
+bajo el selector, para que no parezca otro elemento de la colección.
+
+## 2026-08-02 — Un 401 de login es recuperable, no un fallo genérico
+
+El `401` documentado por `POST /v1/sessions` confirma que el servidor rechazó
+las credenciales sin revelar cuál falló. La feature de autenticación lo trata
+como un caso recuperable y muestra un mensaje localizado para revisar los datos
+introducidos; red, `5xx`, cuerpos inválidos y estados no previstos mantienen el
+fallback común seguro. Así no se generaliza el significado de `401` fuera de
+esta operación ni se expone el detalle del backend.
+
+## 2026-08-02 — Una mutación iniciada por un efecto necesita un cerrojo síncrono
+
+Un estado como `isConfirming` no evita que React ejecute dos veces un efecto
+antes del siguiente render, algo que el entorno de desarrollo hace
+intencionadamente. La confirmación de registro conserva el token ya iniciado
+en un `ref` antes de llamar a la API: así emite un único `POST` por token y no
+puede mostrar el `409` de su propia repetición tras haber creado la sesión.
+
+## 2026-08-02 — El destino tras iniciar sesión pertenece al recorrido que lo inició
+
+Un reemplazo de sesión no siempre implica ir a Inicio. La verificación mediante
+enlace y el restablecimiento conservan su regreso aceptado a `/`, mientras que
+un login local o con Google iniciado desde Cuenta vuelve a `/account`. El
+proveedor de sesión recibe ese destino de forma explícita y la navegación común
+lo aplica en las tres plataformas, sin duplicar condiciones por web, iOS o
+Android.
+
+## 2026-08-02 — Un blur no se debe tapar con la capa que debía complementar
+
+El material nativo de `BlurView` ya aporta una tinta visual. Superponer además
+el lienzo del tema al 68 % lo hacía casi opaco: se perdía el desenfoque y el
+color de fondo dominaba la pantalla. Además, un `Modal` de React Native vive en
+otra ventana y su `BlurView` no puede muestrear los píxeles de la ruta previa.
+El host de confirmaciones se monta en el layout raíz, como hermano posterior del
+árbol de navegación: cubre tabs y áreas seguras, y comparte la jerarquía visual
+de toda la aplicación. En un scrim de pantalla completa, el blur oscuro clásico
+de iOS es más predecible que los materiales dinámicos: estos últimos incorporan
+una tinta del sistema que puede dominar la superficie. Android conserva una
+atenuación neutra y leve como respaldo. Así el contexto se percibe sin competir
+con el diálogo.
+
+La separación de un diálogo no debe depender de que un tema tenga menos
+contraste. Un borde con el token semántico `border.default` conserva la misma
+intención en claro y oscuro, y deja que cada tema resuelva el valor adecuado sin
+crear un parche visual exclusivo para la variante oscura.
+
+## 2026-08-02 — El fondo de una confirmación es una salida explícita
+
+El área exterior del diálogo no es decorativa: tocarla ejecuta la misma acción
+que «Cancelar». La primitiva la expone además como un botón accesible con esa
+misma etiqueta, para que la interacción visual y la semántica no diverjan.
+
+## 2026-08-02 — El cierre de un popup OAuth web no pertenece al arranque nativo
+
+`maybeCompleteAuthSession()` resuelve el popup de OAuth al volver a una página
+web. En iOS y Android la sesión es nativa; invocar ese puente al recargar el
+bundle no aporta valor y puede interferir con el navegador del sistema. Por eso
+la operación queda limitada a web, mientras los flujos nativos conservan su
+redirect URI propio.
+
+## 2026-08-02 — Un enlace recibido siempre se normaliza antes de navegar
+
+Expo puede entregar un enlace a una app ya viva también durante un reload del
+bundle. Si una URL HTTPS se pasa sin normalizar al router, este puede delegarla
+en Safari como destino externo. `+native-intent` la convierte siempre en una
+ruta interna; solo el enlace de arranque se difiere hasta que Inicio está
+montado.
+
+Las URL protocol-relative (`//dominio/ruta`) son otro formato externo: empiezan
+por `/`, pero Expo Router las traduce a `https://…`. Por eso el normalizador las
+interpreta como URL antes de aceptar una cadena como ruta interna.
+
+Un borrador local reduce fricción sin convertir datos temporales en recursos del
+servidor. Una liga creada ya tiene organizador y ciclo de vida; mostrarla como
+«Sin empezar» evita confundirla con aquel borrador. Generar el calendario al
+iniciar permite elegir ida o vuelta en el límite donde equipos y reglas se
+congelan. La deuda aceptada es no recuperar un borrador desde otro dispositivo.
+Véanse ADR-0069 y ADR-0070.
+
+## 2026-08-02 — Una biblioteca clasifica relaciones, no permisos
+
+«Administro» y «Sigo» son colecciones distintas que el backend ya autoriza y
+pagina. El cliente las presenta sin inferir permisos desde la UI; al abrir una
+liga, la operación concreta vuelve a comprobar su autorización. Véanse
+ADR-0057 y ADR-0058.
+
+## 2026-08-02 — La integración necesita la misma base que falla en producción
+
+Una restricción SQL que impedía ida y vuelta no apareció en el caso de uso con
+dobles; la detectó la primera prueba contra PostgreSQL. CI levanta ahora una
+base efímera para repetir esa evidencia sin apuntar a datos locales. Véase
+ADR-0071.
+
 ## 2026-08-01 — El feedback inmediato debe resolver una necesidad concreta
 
 La validación al escribir no se aplica por defecto: puede distraer y revelar un
@@ -116,6 +245,36 @@ Para cada capacidad se sigue el ciclo:
 - **Coste aceptado:** la barrera es transparente y anuncia progreso al lector
   de pantalla. No se aplica a una precarga reversible de Google, donde la
   persona puede cambiar libremente a otro método de acceso.
+
+### 2026-08-02 — El formato condiciona el feedback de disponibilidad
+
+- **Aprendido:** el username del alta valida en cada cambio porque solo los
+  valores que cumplen la regex pueden consultar disponibilidad. Si deja de
+  cumplirla, se muestra de inmediato el mismo error de formato que aparecería
+  al perder foco; al corregirlo, el campo recupera su estado de comprobación y,
+  después, su disponibilidad.
+- **Evidencia:** la ruta `account/register` usa `validationTrigger="change"`
+  exclusivamente en el campo username. `useUsernameAvailability` continúa
+  cancelando la consulta previa y vuelve a comprobar únicamente entradas
+  válidas tras 400 ms.
+- **Coste aceptado:** el feedback de formato aparece desde la primera edición
+  del campo. Es una excepción acotada al patrón de disponibilidad; email y los
+  demás campos conservan validación al abandonar el control.
+
+### 2026-08-02 — La sesión web se restaura preguntando al backend
+
+- **Aprendido:** una cookie `HttpOnly` no puede convertirse en estado visible
+  leyendo almacenamiento local. Al arrancar la web consulta `GET /v1/sessions`:
+  una sesión válida devuelve su identidad y vigencia; `401` solo representa una
+  visita anónima y no muestra feedback.
+- **Evidencia:** el middleware conserva la credencial únicamente en el contexto
+  de la petición y el repositorio vuelve a validar su hash antes de devolver la
+  proyección `CurrentSession`. El provider web restaura solo un resultado `200`,
+  por lo que una comprobación iniciada antes de confirmar un enlace no borra la
+  nueva identidad.
+- **Coste aceptado:** web hace una consulta protegida al inicio. Es necesaria
+  para recuperar una cookie que JavaScript no puede leer y no cambia la
+  estrategia móvil, que restaura su estado desde Keychain/Keystore.
 
 ### 2026-07-30 — Un recorrido vertical hace visibles los límites
 
@@ -1249,9 +1408,39 @@ Para cada capacidad se sigue el ciclo:
 
 “Entendido” exige una explicación propia y una demostración. Un comando que
 funciona o una respuesta del asistente no son evidencia suficiente por sí solos.
+
 # 2026-08-01 — Reautenticación no equivale a sesión
 
 Un token de sesión demuestra que el cliente mantiene una sesión; no debe ser
 suficiente por sí solo para cambiar autenticadores persistentes. Un ticket
 breve, ligado a la sesión y consumido dentro de la transacción conserva ese
 límite sin crear una segunda sesión ni un estado de interfaz global.
+
+### 2026-08-02 — Iniciar sesión no autoriza persistir una contraseña
+
+- **Aprendido:** el formulario de login transmite la contraseña una sola vez al
+  endpoint público; el cliente solo conserva los secretos de sesión que emite
+  el backend y únicamente en el almacenamiento seguro nativo.
+- **Evidencia:** `POST /v1/sessions` compara Argon2id en el caso de uso, crea
+  hashes de access y refresh para PostgreSQL y devuelve los secretos solo para
+  el transporte Bearer. La web recibe una cookie `HttpOnly`.
+- **Coste aceptado:** el backend consulta PostgreSQL para autenticar y mantiene
+  dos secretos opacos para móvil; a cambio no se añade JWT ni una contraseña
+  recuperable en el cliente.
+- **Regla reutilizable:** una credencial de login no se guarda ni se reutiliza
+  como sesión; solo el backend decide y emite la credencial de sesión.
+
+### 2026-08-02 — Los callbacks de foco solo dependen de identidades estables
+
+- **Aprendido:** un callback entregado a `useFocusEffect` se vuelve a ejecutar
+  mientras la ruta tiene el foco cada vez que cambia alguna dependencia por
+  identidad. Si ese efecto actualiza estado, una función recreada en cada render
+  puede convertir una carga normal en un ciclo de actualizaciones.
+- **Evidencia:** `getTranslator` devolvía un closure nuevo en cada render de la
+  pestaña de torneos; la carga modificaba el estado y React Navigation volvía a
+  activar el efecto. Los traductores ahora se conservan por locale y el valor
+  del contexto de feedback se memoriza a partir de `show`.
+- **Coste aceptado:** se mantienen cuatro funciones de traducción de módulo,
+  un coste constante y despreciable que evita añadir estado global de idioma.
+- **Regla reutilizable:** toda dependencia de `useFocusEffect` que no cambie
+  por un dato de producto debe tener una identidad estable.

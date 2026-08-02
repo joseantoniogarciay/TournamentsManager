@@ -15,6 +15,7 @@ import { useSession } from "@/shared/session/session-provider";
 import { Button, Card, Screen, Text } from "@/shared/ui";
 
 const minimumConfirmationTransitionDuration = 2_000;
+const startedConfirmationTokens = new Set<string>();
 
 export default function LinkConfirmationScreen() {
   const t = getTranslator();
@@ -35,7 +36,14 @@ export default function LinkConfirmationScreen() {
   }, [params.token, setToken, token]);
 
   useEffect(() => {
-    if (!token || isConfirming || confirmationFailure) return;
+    const hasTokenInURL = typeof params.token === "string";
+    if (hasTokenInURL || !token || confirmationFailure || startedConfirmationTokens.has(token)) {
+      return;
+    }
+
+    // La ruta puede remontarse al retirar el token de la URL. El registro
+    // compartido conserva la mutación única también en ese caso.
+    startedConfirmationTokens.add(token);
     setIsConfirming(true);
     beginSessionReplacement();
     const confirmationStartedAt = Date.now();
@@ -59,20 +67,25 @@ export default function LinkConfirmationScreen() {
         }
         setConfirmationFailure("unexpected");
       })
-      .finally(() => setIsConfirming(false));
+      .finally(() => {
+        startedConfirmationTokens.delete(token);
+        setIsConfirming(false);
+      });
   }, [
     beginSessionReplacement,
     cancelSessionReplacement,
     completeSessionReplacement,
     confirmationFailure,
-    isConfirming,
+    params.token,
     setToken,
     token,
   ]);
 
   const returnHome = () => router.replace("/");
 
-  if ((token || isConfirming) && !confirmationFailure) return <Screen />;
+  if ((token || params.token || isConfirming) && !confirmationFailure) {
+    return <VerificationState message={t("link_confirmation_loading")} />;
+  }
 
   return (
     <Screen>
@@ -94,6 +107,18 @@ export default function LinkConfirmationScreen() {
               onPress={returnHome}
             />
           </View>
+        </Card>
+      </View>
+    </Screen>
+  );
+}
+
+function VerificationState({ message }: { message: string }) {
+  return (
+    <Screen>
+      <View style={styles.content}>
+        <Card>
+          <Text color="secondary">{message}</Text>
         </Card>
       </View>
     </Screen>

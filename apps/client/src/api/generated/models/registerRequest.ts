@@ -5,7 +5,6 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
-import type { DraftInput } from "./draftInput.js";
 import type { Email } from "./email.js";
 import type { Locale } from "./locale.js";
 import type { Password } from "./password.js";
@@ -16,5 +15,4 @@ export interface RegisterRequest {
   password: Password;
   username: Username;
   locale: Locale;
-  draft?: DraftInput;
 }

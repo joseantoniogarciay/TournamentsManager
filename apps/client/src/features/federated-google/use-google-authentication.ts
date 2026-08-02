@@ -14,7 +14,8 @@ import {
 type PendingGoogleAccount = { challenge: GoogleLoginChallenge; idToken: string };
 
 // Completa el popup de OAuth al volver a la web antes de que React monte la pantalla.
-WebBrowser.maybeCompleteAuthSession();
+// iOS y Android usan la sesión nativa y no deben tocar el navegador al recargar.
+if (Platform.OS === "web") WebBrowser.maybeCompleteAuthSession();
 
 const googleClientIDs = {
   android: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,

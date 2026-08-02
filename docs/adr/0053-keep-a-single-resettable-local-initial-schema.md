@@ -5,7 +5,7 @@
 - **Decisor:** Usuario
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0047, únicamente en la política temporal de evolución local
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0072, únicamente en el mecanismo de aplicación del esquema
 
 ## Problema
 

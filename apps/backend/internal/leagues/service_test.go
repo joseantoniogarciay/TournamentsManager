@@ -6,13 +6,18 @@ import (
 )
 
 type repositoryStub struct {
-	items []Item
-	limit int
+	items       []Item
+	recentItems []Item
+	limit       int
 }
 
 func (r *repositoryStub) List(_ context.Context, _ string, _ Relationship, _ string, limit int) ([]Item, error) {
 	r.limit = limit
 	return r.items, nil
+}
+
+func (r *repositoryStub) ListRecent(context.Context, string) ([]Item, error) {
+	return r.recentItems, nil
 }
 
 func (r *repositoryStub) Follow(context.Context, string, string) (bool, error) { return true, nil }
@@ -41,5 +46,14 @@ func TestListRejectsUnknownRelationship(t *testing.T) {
 	_, err := NewService(&repositoryStub{}).List(context.Background(), "account", "unknown", "", 20)
 	if err != ErrInvalidRelationship {
 		t.Errorf("List() error = %v, want %v", err, ErrInvalidRelationship)
+	}
+}
+
+func TestListRecentReturnsRepositorySummary(t *testing.T) {
+	t.Parallel()
+
+	items, err := NewService(&repositoryStub{recentItems: []Item{{ID: "recent"}}}).ListRecent(context.Background(), "account")
+	if err != nil || len(items) != 1 || items[0].ID != "recent" {
+		t.Fatalf("ListRecent() = %#v, %v; want the repository summary", items, err)
 	}
 }

@@ -118,7 +118,7 @@ WITH visible_league AS (
     SELECT id
     FROM leagues
     WHERE id = $1::uuid
-      AND state <> 'draft'
+      AND state IN ('published', 'in_progress', 'completed', 'cancelled')
 ), created_follow AS (
     INSERT INTO league_followers (league_id, account_id)
     SELECT id, $2::uuid
@@ -184,12 +184,43 @@ func (q *Queries) GetCurrentPasswordHash(ctx context.Context, tokenHash []byte) 
 	return password_hash, err
 }
 
+const getCurrentSession = `-- name: GetCurrentSession :one
+SELECT accounts.id, accounts.username, sessions.idle_expires_at, sessions.absolute_expires_at
+FROM sessions
+JOIN accounts ON accounts.id = sessions.account_id
+WHERE sessions.token_hash = $1
+  AND sessions.revoked_at IS NULL
+  AND sessions.idle_expires_at > now()
+  AND sessions.absolute_expires_at > now()
+  AND accounts.state = 'verified'
+`
+
+type GetCurrentSessionRow struct {
+	ID                pgtype.UUID
+	Username          string
+	IdleExpiresAt     pgtype.Timestamptz
+	AbsoluteExpiresAt pgtype.Timestamptz
+}
+
+func (q *Queries) GetCurrentSession(ctx context.Context, tokenHash []byte) (GetCurrentSessionRow, error) {
+	row := q.db.QueryRow(ctx, getCurrentSession, tokenHash)
+	var i GetCurrentSessionRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.IdleExpiresAt,
+		&i.AbsoluteExpiresAt,
+	)
+	return i, err
+}
+
 const listAdministeredLeagues = `-- name: ListAdministeredLeagues :many
 SELECT
     leagues.id,
     leagues.name,
     leagues.state,
     leagues.created_at,
+    leagues.last_activity_at,
     CASE
         WHEN leagues.organizer_account_id = $1::uuid THEN 'organizer'
         ELSE 'delegated'
@@ -214,11 +245,12 @@ type ListAdministeredLeaguesParams struct {
 }
 
 type ListAdministeredLeaguesRow struct {
-	ID           pgtype.UUID
-	Name         string
-	State        string
-	CreatedAt    pgtype.Timestamptz
-	Relationship string
+	ID             pgtype.UUID
+	Name           string
+	State          string
+	CreatedAt      pgtype.Timestamptz
+	LastActivityAt pgtype.Timestamptz
+	Relationship   string
 }
 
 func (q *Queries) ListAdministeredLeagues(ctx context.Context, arg ListAdministeredLeaguesParams) ([]ListAdministeredLeaguesRow, error) {
@@ -235,6 +267,7 @@ func (q *Queries) ListAdministeredLeagues(ctx context.Context, arg ListAdministe
 			&i.Name,
 			&i.State,
 			&i.CreatedAt,
+			&i.LastActivityAt,
 			&i.Relationship,
 		); err != nil {
 			return nil, err
@@ -253,6 +286,7 @@ SELECT
     leagues.name,
     leagues.state,
     leagues.created_at,
+    leagues.last_activity_at,
     'follower' AS relationship
 FROM leagues
 JOIN league_followers ON league_followers.league_id = leagues.id
@@ -276,11 +310,12 @@ type ListFollowedLeaguesParams struct {
 }
 
 type ListFollowedLeaguesRow struct {
-	ID           pgtype.UUID
-	Name         string
-	State        string
-	CreatedAt    pgtype.Timestamptz
-	Relationship string
+	ID             pgtype.UUID
+	Name           string
+	State          string
+	CreatedAt      pgtype.Timestamptz
+	LastActivityAt pgtype.Timestamptz
+	Relationship   string
 }
 
 func (q *Queries) ListFollowedLeagues(ctx context.Context, arg ListFollowedLeaguesParams) ([]ListFollowedLeaguesRow, error) {
@@ -297,6 +332,88 @@ func (q *Queries) ListFollowedLeagues(ctx context.Context, arg ListFollowedLeagu
 			&i.Name,
 			&i.State,
 			&i.CreatedAt,
+			&i.LastActivityAt,
+			&i.Relationship,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listRecentAccountLeagues = `-- name: ListRecentAccountLeagues :many
+WITH related_leagues AS (
+    SELECT
+        leagues.id,
+        leagues.name,
+        leagues.state,
+        leagues.created_at,
+        leagues.last_activity_at,
+        CASE
+            WHEN leagues.organizer_account_id = $1::uuid THEN 'organizer'
+            ELSE 'delegated'
+        END AS relationship
+    FROM leagues
+    LEFT JOIN league_administrators
+        ON league_administrators.league_id = leagues.id
+        AND league_administrators.account_id = $1::uuid
+    WHERE leagues.organizer_account_id = $1::uuid
+       OR league_administrators.account_id = $1::uuid
+
+    UNION ALL
+
+    SELECT
+        leagues.id,
+        leagues.name,
+        leagues.state,
+        leagues.created_at,
+        leagues.last_activity_at,
+        'follower' AS relationship
+    FROM leagues
+    JOIN league_followers ON league_followers.league_id = leagues.id
+    WHERE league_followers.account_id = $1::uuid
+      AND leagues.organizer_account_id <> $1::uuid
+      AND NOT EXISTS (
+          SELECT 1
+          FROM league_administrators
+          WHERE league_administrators.league_id = leagues.id
+            AND league_administrators.account_id = $1::uuid
+      )
+)
+SELECT id, name, state, created_at, last_activity_at, relationship
+FROM related_leagues
+ORDER BY last_activity_at DESC, id DESC
+LIMIT 5
+`
+
+type ListRecentAccountLeaguesRow struct {
+	ID             pgtype.UUID
+	Name           string
+	State          string
+	CreatedAt      pgtype.Timestamptz
+	LastActivityAt pgtype.Timestamptz
+	Relationship   string
+}
+
+func (q *Queries) ListRecentAccountLeagues(ctx context.Context, accountID pgtype.UUID) ([]ListRecentAccountLeaguesRow, error) {
+	rows, err := q.db.Query(ctx, listRecentAccountLeagues, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListRecentAccountLeaguesRow{}
+	for rows.Next() {
+		var i ListRecentAccountLeaguesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.State,
+			&i.CreatedAt,
+			&i.LastActivityAt,
 			&i.Relationship,
 		); err != nil {
 			return nil, err

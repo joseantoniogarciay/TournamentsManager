@@ -19,14 +19,6 @@ type Account struct {
 	ExpiresAt  pgtype.Timestamptz
 }
 
-type DraftTeam struct {
-	ID             pgtype.UUID
-	DraftID        pgtype.UUID
-	Name           string
-	NameNormalized string
-	Position       int32
-}
-
 type EmailVerificationToken struct {
 	ID            pgtype.UUID
 	AccountID     pgtype.UUID
@@ -68,21 +60,13 @@ type League struct {
 	PointsForLoss      int16
 	CreatedAt          pgtype.Timestamptz
 	PublishedAt        pgtype.Timestamptz
+	LastActivityAt     pgtype.Timestamptz
 }
 
 type LeagueAdministrator struct {
 	LeagueID   pgtype.UUID
 	AccountID  pgtype.UUID
 	AssignedAt pgtype.Timestamptz
-}
-
-type LeagueDraft struct {
-	ID        pgtype.UUID
-	AccountID pgtype.UUID
-	Name      string
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-	ExpiresAt pgtype.Timestamptz
 }
 
 type LeagueFollower struct {

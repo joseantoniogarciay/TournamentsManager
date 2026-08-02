@@ -18,7 +18,7 @@ internal/<capacidad>/            casos de uso, modelos y puertos de negocio
 internal/adapters/postgres/      implementación PostgreSQL de los puertos
 db/queries/                      SQL escrito por el equipo
 internal/adapters/postgres/sqlc/ código Go generado; no se edita a mano
-db/migrations/                   esquema PostgreSQL que sqlc usa como referencia
+db/schema/                       esquema PostgreSQL inicial que sqlc usa como referencia
 ```
 
 `cmd/api/main.go` construye las dependencias: abre el pool PostgreSQL, crea los
@@ -89,7 +89,7 @@ SELECT NOT EXISTS (
 `-- name: ...` es un comentario SQL al que `sqlc` da significado adicional:
 `IsUsernameAvailable` será el nombre del método Go y `:one` indica que la
 consulta devuelve una fila. Al ejecutar `make sqlc-generate`, `sqlc` analiza
-las consultas contra el esquema de `db/migrations/` y genera, entre otros,
+las consultas contra el esquema de `db/schema/` y genera, entre otros,
 `internal/adapters/postgres/sqlc/registrations.sql.go`:
 
 ```go

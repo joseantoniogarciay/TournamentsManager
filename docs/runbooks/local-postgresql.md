@@ -3,7 +3,7 @@
 > **Estado:** procedimiento implementado y validado con Docker Compose local.
 >
 > **Última prueba:** 2026-07-26 — arranque, `healthcheck`, reinicio con volumen
-> persistente, reset confirmado y migraciones vacías.
+> persistente, reset confirmado y esquema inicial reescribible.
 
 ## Alcance
 
@@ -15,7 +15,7 @@ ejecutan desde el host; no hay contenedores de frontend ni de API. Véase
 
 - Docker Desktop o Docker Engine con Docker Compose v2 y soporte de
   `docker compose up --wait`.
-- Go 1.26.5 para ejecutar migraciones mediante la herramienta versionada.
+- Cliente `psql` dentro del contenedor PostgreSQL para aplicar el esquema inicial.
 - Una copia local de cada contrato:
 
 ```bash
@@ -42,18 +42,19 @@ la base acepta conexiones. Para observar el arranque:
 make db-logs
 ```
 
-## Migraciones
+## Esquema inicial
 
-Las migraciones viven en `apps/backend/db/migrations` y se aplican explícitamente:
+Durante la primera versión no hay migraciones activas. El único esquema
+reescribible vive en `apps/backend/db/schema/initial_schema.sql` y se aplica
+explícitamente:
 
 ```bash
-make db-migrate
+make db-schema-apply
 ```
 
-El comando usa `DATABASE_URL` de `apps/backend/.env` y ejecuta `goose`; no inicia
-la API ni crea datos funcionales. Aún no hay migraciones porque esquema y primer
-vertical slice no están implementados. En ese estado informa que se omite y
-termina correctamente; al añadir la primera migración SQL, ejecutará `goose`.
+El comando usa el PostgreSQL local de Compose; no inicia la API ni crea datos
+funcionales. Tras un cambio incompatible, elimina antes el volumen con
+`make db-reset`, vuelve a arrancar PostgreSQL y aplica de nuevo el esquema.
 
 ## Parada, inspección y recuperación
 
@@ -71,8 +72,8 @@ make db-reset
 
 El comando exige escribir `RESET` y elimina únicamente el volumen nombrado del
 proyecto Compose. Durante la construcción inicial, ADR-0053 permite reescribir
-el único esquema `00001_initial_schema.sql` antes de este reset. Después repite
-`make db-up` y `make db-migrate`; no se conservan datos locales.
+el único esquema `initial_schema.sql` antes de este reset. Después repite
+`make db-up` y `make db-schema-apply`; no se conservan datos locales.
 
 ## Diagnóstico seguro
 
@@ -81,7 +82,7 @@ el único esquema `00001_initial_schema.sql` antes de este reset. Después repit
 | Falta `.env`                | `make db-up` informa la ruta ausente                                                      | Copiar el ejemplo correspondiente; no crear secretos en Git.                                                                                                                     |
 | El puerto 5432 está ocupado | `make db-status` y revisar el proceso que lo usa                                          | Detener el proceso ajeno o cambiar ambos contratos de puerto/URL mediante un cambio documentado.                                                                                 |
 | Salud no llega a `healthy`  | `make db-logs`                                                                            | Verificar usuario, base y contraseña solo en los `.env` locales; si el volumen contiene una inicialización previa incompatible, usar `db-reset` tras confirmar pérdida de datos. |
-| Migración no conecta        | Verificar que `make db-status` muestra PostgreSQL saludable y que `DATABASE_URL` coincide | Corregir el contrato de backend; no modificar migraciones aplicadas para ocultar el fallo.                                                                                       |
+| Esquema no conecta          | Verificar que `make db-status` muestra PostgreSQL saludable                              | Corregir el contrato local y reaplicar el esquema tras resetear si el cambio es incompatible.                                                                                   |
 
 ## Límites
 

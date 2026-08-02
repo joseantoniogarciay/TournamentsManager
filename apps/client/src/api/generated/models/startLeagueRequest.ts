@@ -5,12 +5,8 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
-import type { LeagueDraftTeamsItem } from "./leagueDraftTeamsItem.js";
-import type { Uuid } from "./uuid.js";
+import type { StartLeagueRequestRoundRobinLegs } from "./startLeagueRequestRoundRobinLegs.js";
 
-export interface LeagueDraft {
-  id: Uuid;
-  name: string;
-  teams: LeagueDraftTeamsItem[];
-  expiresAt: string;
+export interface StartLeagueRequest {
+  roundRobinLegs: StartLeagueRequestRoundRobinLegs;
 }

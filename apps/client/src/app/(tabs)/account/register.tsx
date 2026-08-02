@@ -90,7 +90,7 @@ export default function RegisterScreen() {
               autoCorrect={false}
               onChangeText={(value) => setUsername(value.toLowerCase())}
               validationSubmitted={hasAttemptedSubmit}
-              validationTrigger="blur"
+              validationTrigger="change"
               value={username}
             />
             <TextField

@@ -13,6 +13,12 @@ export type TranslationKey = keyof typeof en;
 type TranslationCatalog = Record<TranslationKey, string>;
 
 const catalogs: Record<SupportedLanguage, TranslationCatalog> = { en, es, fr, it };
+const translators: Record<SupportedLanguage, (key: TranslationKey) => string> = {
+  en: (key) => catalogs.en[key],
+  es: (key) => catalogs.es[key],
+  fr: (key) => catalogs.fr[key],
+  it: (key) => catalogs.it[key],
+};
 
 export function getCurrentLanguage(): SupportedLanguage {
   const languageCode = getLocales()[0]?.languageCode;
@@ -20,8 +26,7 @@ export function getCurrentLanguage(): SupportedLanguage {
 }
 
 export function getTranslator() {
-  const catalog = catalogs[getCurrentLanguage()];
-  return (key: TranslationKey) => catalog[key];
+  return translators[getCurrentLanguage()];
 }
 
 function isSupportedLanguage(
