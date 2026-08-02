@@ -1,5 +1,3 @@
--- +goose Up
-
 CREATE TABLE accounts (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     email text NOT NULL,
@@ -128,47 +126,23 @@ CREATE TABLE reauthentication_tickets (
 
 CREATE INDEX reauthentication_tickets_session_idx ON reauthentication_tickets (session_id, expires_at);
 
-CREATE TABLE league_drafts (
-    id uuid PRIMARY KEY DEFAULT uuidv7(),
-    account_id uuid NOT NULL UNIQUE REFERENCES accounts (id) ON DELETE CASCADE,
-    name text NOT NULL CHECK (length(btrim(name)) > 0),
-    created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now(),
-    expires_at timestamptz NOT NULL,
-    CONSTRAINT league_drafts_expiration CHECK (expires_at > created_at),
-    CONSTRAINT league_drafts_updated_at CHECK (updated_at >= created_at)
-);
-
-CREATE INDEX league_drafts_purge_idx ON league_drafts (expires_at);
-
-CREATE TABLE draft_teams (
-    id uuid PRIMARY KEY DEFAULT uuidv7(),
-    draft_id uuid NOT NULL REFERENCES league_drafts (id) ON DELETE CASCADE,
-    name text NOT NULL CHECK (length(btrim(name)) > 0),
-    name_normalized text NOT NULL CHECK (length(btrim(name_normalized)) > 0),
-    position integer NOT NULL CHECK (position > 0),
-    CONSTRAINT draft_teams_name_unique UNIQUE (draft_id, name_normalized),
-    CONSTRAINT draft_teams_position_unique UNIQUE (draft_id, position)
-);
-
 CREATE TABLE leagues (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     organizer_account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE RESTRICT,
     name text NOT NULL CHECK (length(btrim(name)) > 0),
     sport text NOT NULL DEFAULT 'football' CHECK (sport = 'football'),
     format text NOT NULL DEFAULT 'league' CHECK (format = 'league'),
-    state text NOT NULL DEFAULT 'draft' CHECK (
-        state IN ('draft', 'published', 'in_progress', 'completed', 'cancelled')
+    state text NOT NULL DEFAULT 'published' CHECK (
+        state IN ('published', 'in_progress', 'completed', 'cancelled')
     ),
-    round_robin_legs smallint NOT NULL DEFAULT 1 CHECK (round_robin_legs = 1),
+    round_robin_legs smallint NOT NULL DEFAULT 1 CHECK (round_robin_legs IN (1, 2)),
     points_for_win smallint NOT NULL DEFAULT 3 CHECK (points_for_win = 3),
     points_for_draw smallint NOT NULL DEFAULT 1 CHECK (points_for_draw = 1),
     points_for_loss smallint NOT NULL DEFAULT 0 CHECK (points_for_loss = 0),
     created_at timestamptz NOT NULL DEFAULT now(),
     published_at timestamptz,
     CONSTRAINT leagues_published_at CHECK (
-        (state = 'draft' AND published_at IS NULL)
-        OR (state <> 'draft' AND published_at IS NOT NULL)
+        published_at IS NOT NULL
     )
 );
 
@@ -225,9 +199,6 @@ CREATE TABLE matches (
         ON DELETE RESTRICT
 );
 
-CREATE UNIQUE INDEX matches_one_pair_per_league_idx
-    ON matches (league_id, LEAST(home_team_id, away_team_id), GREATEST(home_team_id, away_team_id));
-
 CREATE TABLE external_identities (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
@@ -255,28 +226,3 @@ CREATE TABLE federated_login_challenges (
 CREATE INDEX federated_login_challenges_purge_idx
     ON federated_login_challenges (expires_at)
     WHERE consumed_at IS NULL;
-
--- +goose Down
-
-DROP INDEX federated_login_challenges_purge_idx;
-DROP TABLE federated_login_challenges;
-DROP TABLE external_identities;
-DROP INDEX matches_one_pair_per_league_idx;
-DROP TABLE matches;
-DROP TABLE league_teams;
-DROP INDEX league_followers_account_idx;
-DROP TABLE league_followers;
-DROP INDEX league_administrators_account_idx;
-DROP TABLE league_administrators;
-DROP TABLE leagues;
-DROP TABLE draft_teams;
-DROP TABLE league_drafts;
-DROP INDEX session_refresh_tokens_session_idx;
-DROP TABLE session_refresh_tokens;
-DROP TABLE sessions;
-DROP INDEX password_reset_tokens_one_active_per_account_idx;
-DROP TABLE password_reset_tokens;
-DROP TABLE email_verification_tokens;
-DROP TABLE local_credentials;
-DROP INDEX accounts_email_lookup_unique_idx;
-DROP TABLE accounts;

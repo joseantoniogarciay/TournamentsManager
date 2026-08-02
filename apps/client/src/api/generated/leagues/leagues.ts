@@ -8,12 +8,12 @@
 import type {
   AccountLeaguePage,
   AuthenticationProblemResponse,
-  DraftNotFoundProblemResponse,
+  LeagueInput,
   ListCurrentAccountLeaguesParams,
   Problem,
   PublicLeague,
-  PublicationConflictProblemResponse,
   PublishedLeague,
+  StartLeagueRequest,
   Uuid,
   ValidationProblemResponse,
 } from "../models";
@@ -195,61 +195,54 @@ export const unfollowLeague = async (
   return { data, status: res.status, headers: res.headers } as unfollowLeagueResponse;
 };
 
-export type publishCurrentLeagueDraftResponse201 = {
+export type createLeagueResponse201 = {
   data: PublishedLeague;
   status: 201;
 };
 
-export type publishCurrentLeagueDraftResponse401 = {
+export type createLeagueResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type createLeagueResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
 };
 
-export type publishCurrentLeagueDraftResponse404 = {
-  data: DraftNotFoundProblemResponse;
-  status: 404;
-};
-
-export type publishCurrentLeagueDraftResponse409 = {
-  data: PublicationConflictProblemResponse;
-  status: 409;
-};
-
-export type publishCurrentLeagueDraftResponseSuccess = publishCurrentLeagueDraftResponse201 & {
+export type createLeagueResponseSuccess = createLeagueResponse201 & {
   headers: Headers;
 };
-export type publishCurrentLeagueDraftResponseError = (
-  | publishCurrentLeagueDraftResponse401
-  | publishCurrentLeagueDraftResponse404
-  | publishCurrentLeagueDraftResponse409
-) & {
+export type createLeagueResponseError = (createLeagueResponse400 | createLeagueResponse401) & {
   headers: Headers;
 };
 
-export type publishCurrentLeagueDraftResponse =
-  publishCurrentLeagueDraftResponseSuccess | publishCurrentLeagueDraftResponseError;
+export type createLeagueResponse = createLeagueResponseSuccess | createLeagueResponseError;
 
-export const getPublishCurrentLeagueDraftUrl = () => {
-  return `/me/league-draft/publication`;
+export const getCreateLeagueUrl = () => {
+  return `/leagues`;
 };
 
 /**
- * Exige sesión válida de la propietaria. Crea liga, equipos y partidos, y elimina el borrador en una única transacción.
- * @summary Publica el borrador actual como liga visible
+ * Exige sesión válida de la organizadora. La liga nace en published, sin partidos, y puede editarse hasta que se inicie.
+ * @summary Crea una liga visible sin empezar
  */
-export const publishCurrentLeagueDraft = async (
+export const createLeague = async (
+  leagueInput: LeagueInput,
   options?: RequestInit,
   fetchFn?: typeof globalThis.fetch,
-): Promise<publishCurrentLeagueDraftResponse> => {
-  const res = await (fetchFn ?? fetch)(getPublishCurrentLeagueDraftUrl(), {
+): Promise<createLeagueResponse> => {
+  const res = await (fetchFn ?? fetch)(getCreateLeagueUrl(), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(leagueInput),
   });
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: publishCurrentLeagueDraftResponse["data"] = body ? JSON.parse(body) : {};
-  return { data, status: res.status, headers: res.headers } as publishCurrentLeagueDraftResponse;
+  const data: createLeagueResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as createLeagueResponse;
 };
 
 export type getPublicLeagueResponse200 = {
@@ -292,4 +285,75 @@ export const getPublicLeague = async (
 
   const data: getPublicLeagueResponse["data"] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as getPublicLeagueResponse;
+};
+
+export type startLeagueResponse200 = {
+  data: PublicLeague;
+  status: 200;
+};
+
+export type startLeagueResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type startLeagueResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type startLeagueResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type startLeagueResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type startLeagueResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type startLeagueResponseSuccess = startLeagueResponse200 & {
+  headers: Headers;
+};
+export type startLeagueResponseError = (
+  | startLeagueResponse400
+  | startLeagueResponse401
+  | startLeagueResponse403
+  | startLeagueResponse404
+  | startLeagueResponse409
+) & {
+  headers: Headers;
+};
+
+export type startLeagueResponse = startLeagueResponseSuccess | startLeagueResponseError;
+
+export const getStartLeagueUrl = (leagueId: Uuid) => {
+  return `/leagues/${leagueId}/start`;
+};
+
+/**
+ * @summary Configura e inicia una liga publicada
+ */
+export const startLeague = async (
+  leagueId: Uuid,
+  startLeagueRequest: StartLeagueRequest,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<startLeagueResponse> => {
+  const res = await (fetchFn ?? fetch)(getStartLeagueUrl(leagueId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(startLeagueRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: startLeagueResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as startLeagueResponse;
 };

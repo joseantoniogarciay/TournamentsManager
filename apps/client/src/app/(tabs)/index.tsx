@@ -4,7 +4,6 @@ import { StatusBar } from "expo-status-bar";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
 
-import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
@@ -15,7 +14,6 @@ import { router, type Href } from "expo-router";
 const safeAreaProbeHeight = 500;
 
 export default function HomeScreen() {
-  const { show } = useFeedback();
   const { resolvedTheme } = usePreferences();
   const { revision } = useSession();
   const tabContentBottomPadding = useTabContentBottomPadding();
@@ -46,9 +44,7 @@ export default function HomeScreen() {
             </Text>
             <Button
               label={t("home_create_tournament")}
-              onPress={() =>
-                show({ kind: "generic-error", message: t("home_create_tournament_unavailable") })
-              }
+              onPress={() => router.push("/create-tournament" as Href)}
             />
           </View>
         </Card>

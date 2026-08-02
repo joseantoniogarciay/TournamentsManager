@@ -59,7 +59,7 @@ func run() error {
 
 	server := &http.Server{
 		Addr:              appConfig.HTTPAddr,
-		Handler:           httpadapter.NewHandler(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins),
+		Handler:           httpadapter.NewHandler(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, leagues.NewCreationService(accountLeagues)),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

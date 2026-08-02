@@ -1,4 +1,4 @@
-# PostgreSQL local: Docker Compose, ciclo de vida y migraciones explícitas.
+# PostgreSQL local: Docker Compose, ciclo de vida y esquema inicial explícito.
 # API Go y cliente Expo se ejecutan en el host durante desarrollo.
 
 POSTGRES_LOCAL_DIR := infra/local
@@ -8,7 +8,7 @@ POSTGRES_COMPOSE := docker compose --env-file $(POSTGRES_LOCAL_ENV) -f $(POSTGRE
 
 .PHONY: \
 	db-init db-env-check db-backend-env-check local-config-check \
-	db-up db-wait db-down db-status db-logs db-reset db-migrate
+	db-up db-wait db-down db-status db-logs db-reset db-schema-apply
 
 # Crea los contratos locales sin sobrescribir una configuración ya existente.
 db-init:
@@ -60,13 +60,7 @@ db-reset: db-env-check
 	[ "$$answer" = "RESET" ] || { echo "db-reset: cancelado"; exit 1; }
 	$(POSTGRES_COMPOSE) down --volumes --remove-orphans
 
-# Aplica migraciones explícitamente; no forma parte del arranque de la API.
-db-migrate: db-env-check db-backend-env-check
-	@if [ ! -d $(BACKEND_DIR)/db/migrations ] || \
-		! find $(BACKEND_DIR)/db/migrations -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then \
-		echo "db-migrate: omitido; todavía no existen migraciones"; \
-	else \
-		set -a; . $(BACKEND_ENV); set +a; \
-		[ -n "$$DATABASE_URL" ] || { echo "DATABASE_URL no está definido en $(BACKEND_ENV)"; exit 1; }; \
-		$(GO_TOOL) goose -dir db/migrations postgres "$$DATABASE_URL" up; \
-	fi
+# Aplica el esquema inicial explícitamente; no forma parte del arranque de la API.
+db-schema-apply: db-env-check
+	@sed '/^--/d' $(BACKEND_DIR)/db/schema/initial_schema.sql | \
+		$(POSTGRES_COMPOSE) exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1'

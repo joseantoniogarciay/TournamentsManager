@@ -5,9 +5,17 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
-import type { Problem } from "./problem.js";
+import type { TeamInput } from "./teamInput.js";
 
-/**
- * No existe un borrador publicable para la cuenta.
- */
-export type DraftNotFoundProblemResponse = Problem;
+export interface LeagueInput {
+  /**
+   * @minLength 1
+   * @maxLength 140
+   */
+  name: string;
+  /**
+   * @minItems 2
+   * @maxItems 64
+   */
+  teams: TeamInput[];
+}

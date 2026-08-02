@@ -1,5 +1,28 @@
 # Registro de aprendizaje
 
+## 2026-08-02 — Preparar no es competir
+
+Un borrador local reduce fricción sin convertir datos temporales en recursos del
+servidor. Una liga creada ya tiene organizador y ciclo de vida; mostrarla como
+«Sin empezar» evita confundirla con aquel borrador. Generar el calendario al
+iniciar permite elegir ida o vuelta en el límite donde equipos y reglas se
+congelan. La deuda aceptada es no recuperar un borrador desde otro dispositivo.
+Véanse ADR-0069 y ADR-0070.
+
+## 2026-08-02 — Una biblioteca clasifica relaciones, no permisos
+
+«Administro» y «Sigo» son colecciones distintas que el backend ya autoriza y
+pagina. El cliente las presenta sin inferir permisos desde la UI; al abrir una
+liga, la operación concreta vuelve a comprobar su autorización. Véanse
+ADR-0057 y ADR-0058.
+
+## 2026-08-02 — La integración necesita la misma base que falla en producción
+
+Una restricción SQL que impedía ida y vuelta no apareció en el caso de uso con
+dobles; la detectó la primera prueba contra PostgreSQL. CI levanta ahora una
+base efímera para repetir esa evidencia sin apuntar a datos locales. Véase
+ADR-0071.
+
 ## 2026-08-01 — El feedback inmediato debe resolver una necesidad concreta
 
 La validación al escribir no se aplica por defecto: puede distraer y revelar un

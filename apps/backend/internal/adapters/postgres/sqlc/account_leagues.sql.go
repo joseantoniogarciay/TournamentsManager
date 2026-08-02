@@ -118,7 +118,7 @@ WITH visible_league AS (
     SELECT id
     FROM leagues
     WHERE id = $1::uuid
-      AND state <> 'draft'
+      AND state IN ('published', 'in_progress', 'completed', 'cancelled')
 ), created_follow AS (
     INSERT INTO league_followers (league_id, account_id)
     SELECT id, $2::uuid

@@ -5,7 +5,7 @@
 
 ## Alcance
 
-Este modelo cubre alta local y con Google, verificación, sesión, borrador asociado,
+Este modelo cubre alta local y con Google, verificación, sesión,
 publicación/lectura de una liga y sus relaciones de seguimiento o administración
 delegada. No incorpora Apple, recuperación de contraseña, resultados ni cambios
 de estado posteriores a `published`.
@@ -16,7 +16,6 @@ de estado posteriores a `published`.
 accounts 1 ── 0..1 local_credentials
     │ 1
     ├──── * external_identities
-    ├──── 0..1 league_drafts ── * draft_teams
     ├──── * email_verification_tokens
     ├──── * sessions
     └──── * leagues (organizer)
@@ -42,7 +41,7 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | `sessions`                   | `id`, `account_id`, `token_hash`, `created_at`, `last_seen_at`, `idle_expires_at`, `absolute_expires_at`, `revoked_at` | hash único; válida solo si la cuenta está verificada, no revocada y ambos vencimientos son futuros.                                                                                |
 | `league_drafts`              | `id`, `account_id`, `name`, `created_at`, `updated_at`, `expires_at`                                                   | FK a cuenta pendiente, una fila por cuenta en este incremento; se borra con la purga de la cuenta.                                                                                 |
 | `draft_teams`                | `id`, `draft_id`, `name`, `position`                                                                                   | nombre normalizado único por borrador; `position` conserva el orden del cliente.                                                                                                   |
-| `leagues`                    | `id`, `organizer_account_id`, `name`, `sport`, `format`, `state`, `created_at`, `published_at`                         | `sport=football`, `format=league`, reglas 1 vuelta y 3-1-0; este incremento crea `draft` y publica a `published`.                                                                  |
+| `leagues`                    | `id`, `organizer_account_id`, `name`, `sport`, `format`, `state`, `created_at`, `published_at`                         | `sport=football`, `format=league`, puntuación 3-1-0; nace en `published` sin partidos y fija una o dos vueltas al iniciar.                                                        |
 | `league_administrators`      | `league_id`, `account_id`, `assigned_at`                                                                               | PK compuesta; concede exclusivamente la administración delegada que el dominio autorice. El creador se conserva en `leagues.organizer_account_id`, no se duplica.                  |
 | `league_followers`           | `league_id`, `account_id`, `followed_at`                                                                               | PK compuesta; guardar una liga no concede permisos. Una cuenta puede seguir una liga que también administra, aunque la colección de seguimiento la oculta para evitar duplicación. |
 | `league_teams`               | `id`, `league_id`, `name`, `position`                                                                                  | nombre normalizado único por liga; se crean desde el borrador en la publicación.                                                                                                   |

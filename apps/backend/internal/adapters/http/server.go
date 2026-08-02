@@ -31,7 +31,7 @@ const (
 
 // NewHandler construye las rutas de infraestructura disponibles antes de los
 // endpoints de negocio.
-func NewHandler(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string) http.Handler {
+func NewHandler(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, creationServices ...leagues.CreationService) http.Handler {
 	mux := http.NewServeMux()
 	var accessService access.Service
 	if repository, ok := authenticator.(access.Repository); ok {
@@ -64,7 +64,112 @@ func NewHandler(registrationService registration.Service, federatedService *fede
 	followHandler := requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(followLeague(leagueService))))
 	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)
+	if len(creationServices) > 0 {
+		creationService := creationServices[0]
+		mux.Handle("POST /v1/leagues", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(createLeague(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(startLeague(creationService)))))
+		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
+	}
 	return requireAllowedOrigin(corsAllowedOrigins, mux)
+}
+
+type leagueInput struct {
+	Name  string `json:"name"`
+	Teams []struct {
+		Name string `json:"name"`
+	} `json:"teams"`
+}
+type startLeagueInput struct {
+	RoundRobinLegs int `json:"roundRobinLegs"`
+}
+
+func createLeague(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		var body leagueInput
+		if err := decodeBody(r, &body); err != nil {
+			writeValidationProblem(w)
+			return
+		}
+		teams := make([]leagues.TeamInput, len(body.Teams))
+		for i, team := range body.Teams {
+			teams[i] = leagues.TeamInput{Name: team.Name}
+		}
+		league, err := service.Create(r.Context(), accountID, leagues.CreateInput{Name: body.Name, Teams: teams})
+		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
+			writeValidationProblem(w)
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo crear la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+func getPublicLeague(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		leagueID := r.PathValue("leagueId")
+		if !uuidPattern.MatchString(leagueID) {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.GetPublic(r.Context(), leagueID)
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+func startLeague(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		leagueID := r.PathValue("leagueId")
+		var body startLeagueInput
+		if !uuidPattern.MatchString(leagueID) || decodeBody(r, &body) != nil {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.Start(r.Context(), accountID, leagueID, leagues.StartInput{RoundRobinLegs: body.RoundRobinLegs})
+		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
+			writeValidationProblem(w)
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes iniciar esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueConflict) {
+			writeProblem(w, http.StatusConflict, "La liga ya no está sin empezar")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo iniciar la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
+	}
 }
 
 type reauthenticationRequest struct{ Password, ChallengeID, IDToken string }

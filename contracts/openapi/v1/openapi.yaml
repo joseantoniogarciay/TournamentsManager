@@ -336,20 +336,6 @@ paths:
           description: La identidad es nueva, pero su email ya pertenece a otra cuenta; no se vincula ni se crea sesión.
           $ref: "#/components/responses/VerificationConflictProblem"
         "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
-  /me/league-draft:
-    get:
-      tags: [Drafts]
-      operationId: getCurrentLeagueDraft
-      summary: Recupera el borrador transferido tras verificar la cuenta
-      security: [{ sessionCookie: [] }, { bearerSession: [] }]
-      responses:
-        "200":
-          description: Borrador actual de la cuenta.
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/LeagueDraft" }
-        "401": { $ref: "#/components/responses/AuthenticationProblem" }
-        "404": { $ref: "#/components/responses/DraftNotFoundProblem" }
   /me/leagues:
     get:
       tags: [Leagues]
@@ -414,24 +400,28 @@ paths:
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
         "403": { description: Origen no permitido para una mutación con cookie. }
-  /me/league-draft/publication:
+  /leagues:
     post:
       tags: [Leagues]
-      operationId: publishCurrentLeagueDraft
-      summary: Publica el borrador actual como liga visible
+      operationId: createLeague
+      summary: Crea una liga visible sin empezar
       description: >-
-        Exige sesión válida de la propietaria. Crea liga, equipos y partidos, y
-        elimina el borrador en una única transacción.
+        Exige sesión válida de la organizadora. La liga nace en published, sin
+        partidos, y puede editarse hasta que se inicie.
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LeagueInput" }
       responses:
         "201":
-          description: Liga publicada.
+          description: Liga creada sin empezar.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PublishedLeague" }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
-        "404": { $ref: "#/components/responses/DraftNotFoundProblem" }
-        "409": { $ref: "#/components/responses/PublicationConflictProblem" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
   /leagues/{leagueId}:
     get:
       tags: [Leagues]
@@ -455,6 +445,33 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: "#/components/schemas/Problem" }
+  /leagues/{leagueId}/start:
+    post:
+      tags: [Leagues]
+      operationId: startLeague
+      summary: Configura e inicia una liga publicada
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StartLeagueRequest" }
+      responses:
+        "200":
+          description: Liga iniciada y calendario generado.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicLeague" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga no existe. }
+        "409": { description: La liga ya no está sin empezar. }
 components:
   securitySchemes:
     sessionCookie:
@@ -480,12 +497,6 @@ components:
       content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
     VerificationExpiredProblem:
       description: Token vencido.
-      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
-    DraftNotFoundProblem:
-      description: No existe un borrador publicable para la cuenta.
-      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
-    PublicationConflictProblem:
-      description: El borrador no cumple las invariantes de publicación.
       content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
     RateLimitProblem:
       description: Límite de solicitudes alcanzado.
@@ -555,7 +566,7 @@ components:
       required: [name]
       properties:
         name: { type: string, minLength: 1, maxLength: 100 }
-    DraftInput:
+    LeagueInput:
       type: object
       required: [name, teams]
       properties:
@@ -573,7 +584,6 @@ components:
         password: { $ref: "#/components/schemas/Password" }
         username: { $ref: "#/components/schemas/Username" }
         locale: { $ref: "#/components/schemas/Locale" }
-        draft: { $ref: "#/components/schemas/DraftInput" }
     Locale:
       type: string
       enum: [es, en, it, fr]
@@ -703,22 +713,11 @@ components:
         locale:
           description: Requerido junto a username para crear una cuenta Google nueva.
           allOf: [{ $ref: "#/components/schemas/Locale" }]
-    LeagueDraft:
+    StartLeagueRequest:
       type: object
-      required: [id, name, teams, expiresAt]
+      required: [roundRobinLegs]
       properties:
-        id: { $ref: "#/components/schemas/UUID" }
-        name: { type: string }
-        teams:
-          type: array
-          items:
-            type: object
-            required: [id, name, position]
-            properties:
-              id: { $ref: "#/components/schemas/UUID" }
-              name: { type: string }
-              position: { type: integer, minimum: 1 }
-        expiresAt: { type: string, format: date-time }
+        roundRobinLegs: { type: integer, enum: [1, 2] }
     PublishedLeague:
       type: object
       required: [id, name, state, teams, matches]
