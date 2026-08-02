@@ -148,6 +148,7 @@ WITH consumed_token AS (
     SET revoked_at = now()
     WHERE sessions.token_hash = sqlc.narg(previous_session_hash)::bytea
       AND sessions.revoked_at IS NULL
+      AND EXISTS (SELECT 1 FROM verified_account)
     RETURNING id
 ), created_session AS (
     INSERT INTO sessions (account_id, token_hash, idle_expires_at, absolute_expires_at)

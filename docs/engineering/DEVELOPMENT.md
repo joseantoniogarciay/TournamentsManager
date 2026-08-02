@@ -225,7 +225,8 @@ la API en primer plano. El contrato del backend exige `DATABASE_URL`,
 `CORS_ALLOWED_ORIGINS`; `apps/backend/.env.example` documenta únicamente
 valores locales de ejemplo. `make api-up` permanece como alias de compatibilidad.
 `PUBLIC_BASE_URL` es la URL del cliente a la que llega el correo, no la de la
-API: en local usa `http://127.0.0.1:8081`; fuera de loopback debe ser HTTPS y
+API: en local usa `http://localhost:8081`; así el navegador puede usar la
+excepción de desarrollo para cookies `Secure`. Fuera de loopback debe ser HTTPS y
 coincidir con `EXPO_PUBLIC_APP_LINK_URL` de la build móvil.
 El proceso comprueba PostgreSQL antes de abrir el puerto y expone `GET /healthz`
 en `HTTP_ADDR` (por defecto, `http://127.0.0.1:8080/healthz`). El esquema inicial

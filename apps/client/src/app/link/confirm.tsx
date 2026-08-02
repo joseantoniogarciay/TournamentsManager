@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
 import { space } from "@tournaments-manager/design-tokens";
@@ -15,6 +15,7 @@ import { useSession } from "@/shared/session/session-provider";
 import { Button, Card, Screen, Text } from "@/shared/ui";
 
 const minimumConfirmationTransitionDuration = 2_000;
+const startedConfirmationTokens = new Set<string>();
 
 export default function LinkConfirmationScreen() {
   const t = getTranslator();
@@ -23,7 +24,6 @@ export default function LinkConfirmationScreen() {
     useSession();
   const params = useLocalSearchParams<{ sent?: string | string[]; token?: string | string[] }>();
   const [isConfirming, setIsConfirming] = useState(false);
-  const confirmingToken = useRef<string | null>(null);
   const [confirmationFailure, setConfirmationFailure] = useState<
     RegistrationVerificationFailure | "unexpected" | null
   >(null);
@@ -36,11 +36,14 @@ export default function LinkConfirmationScreen() {
   }, [params.token, setToken, token]);
 
   useEffect(() => {
-    if (!token || confirmationFailure || confirmingToken.current === token) return;
+    const hasTokenInURL = typeof params.token === "string";
+    if (hasTokenInURL || !token || confirmationFailure || startedConfirmationTokens.has(token)) {
+      return;
+    }
 
-    // El estado se actualiza tras el render; el ref impide una segunda mutación
-    // si React repite este efecto durante el desarrollo.
-    confirmingToken.current = token;
+    // La ruta puede remontarse al retirar el token de la URL. El registro
+    // compartido conserva la mutación única también en ese caso.
+    startedConfirmationTokens.add(token);
     setIsConfirming(true);
     beginSessionReplacement();
     const confirmationStartedAt = Date.now();
@@ -64,19 +67,25 @@ export default function LinkConfirmationScreen() {
         }
         setConfirmationFailure("unexpected");
       })
-      .finally(() => setIsConfirming(false));
+      .finally(() => {
+        startedConfirmationTokens.delete(token);
+        setIsConfirming(false);
+      });
   }, [
     beginSessionReplacement,
     cancelSessionReplacement,
     completeSessionReplacement,
     confirmationFailure,
+    params.token,
     setToken,
     token,
   ]);
 
   const returnHome = () => router.replace("/");
 
-  if ((token || isConfirming) && !confirmationFailure) return <Screen />;
+  if ((token || params.token || isConfirming) && !confirmationFailure) {
+    return <VerificationState message={t("link_confirmation_loading")} />;
+  }
 
   return (
     <Screen>
@@ -98,6 +107,18 @@ export default function LinkConfirmationScreen() {
               onPress={returnHome}
             />
           </View>
+        </Card>
+      </View>
+    </Screen>
+  );
+}
+
+function VerificationState({ message }: { message: string }) {
+  return (
+    <Screen>
+      <View style={styles.content}>
+        <Card>
+          <Text color="secondary">{message}</Text>
         </Card>
       </View>
     </Screen>

@@ -368,6 +368,26 @@ paths:
               schema: { $ref: "#/components/schemas/AccountLeaguePage" }
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
+  /me/recent-leagues:
+    get:
+      tags: [Leagues]
+      operationId: listRecentAccountLeagues
+      summary: Lista hasta cinco ligas relacionadas con actividad reciente
+      description: >-
+        Incluye una vez cada liga administrada o seguida por la cuenta actual.
+        Una relación administrada prevalece sobre seguida y el orden es por
+        actividad de liga descendente, con ID UUIDv7 descendente como desempate.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "200":
+          description: Resumen de hasta cinco ligas relacionadas recientes.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 5
+                items: { $ref: "#/components/schemas/AccountLeague" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /me/leagues/{leagueId}/follow:
     put:
       tags: [Leagues]
@@ -676,12 +696,13 @@ components:
       enum: [organizer, delegated, follower]
     AccountLeague:
       type: object
-      required: [id, name, state, createdAt, relationship]
+      required: [id, name, state, createdAt, lastActivityAt, relationship]
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
         state: { type: string, enum: [draft, published, in_progress, completed, cancelled] }
         createdAt: { type: string, format: date-time }
+        lastActivityAt: { type: string, format: date-time }
         relationship: { $ref: "#/components/schemas/AccountLeagueRelationship" }
     AccountLeaguePage:
       type: object

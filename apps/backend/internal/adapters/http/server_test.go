@@ -23,15 +23,32 @@ func (a testAuthenticator) Authenticate(context.Context, string) (string, error)
 	return a.accountID, nil
 }
 
+func (a testAuthenticator) GetCurrentSession(context.Context, string) (leagues.CurrentSession, error) {
+	if a.accountID == "" {
+		return leagues.CurrentSession{}, leagues.ErrUnauthenticated
+	}
+	return leagues.CurrentSession{
+		AccountID:         a.accountID,
+		Username:          "person",
+		IdleExpiresAt:     "2026-08-09T12:00:00Z",
+		AbsoluteExpiresAt: "2026-08-09T12:00:00Z",
+	}, nil
+}
+
 func (testAuthenticator) RevokeSession(context.Context, string) error { return nil }
 
 type testLeagueRepository struct {
 	items         []leagues.Item
+	recentItems   []leagues.Item
 	followVisible bool
 }
 
 func (r testLeagueRepository) List(_ context.Context, _ string, _ leagues.Relationship, _ string, _ int) ([]leagues.Item, error) {
 	return r.items, nil
+}
+
+func (r testLeagueRepository) ListRecent(context.Context, string) ([]leagues.Item, error) {
+	return r.recentItems, nil
 }
 
 func (r testLeagueRepository) Follow(_ context.Context, _ string, _ string) (bool, error) {
@@ -122,6 +139,39 @@ func TestHealthz(t *testing.T) {
 
 	if recorder.Code != http.StatusOK {
 		t.Errorf("status = %d, want %d", recorder.Code, http.StatusOK)
+	}
+}
+
+func TestGetCurrentSessionReturnsIdentity(t *testing.T) {
+	t.Parallel()
+
+	request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/v1/sessions", nil)
+	request.Header.Set("Authorization", "Bearer opaque-session")
+	recorder := httptest.NewRecorder()
+
+	testHandler().ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusOK)
+	}
+	if got := recorder.Header().Get("Cache-Control"); got != "no-store" {
+		t.Errorf("Cache-Control = %q, want no-store", got)
+	}
+	if body := recorder.Body.String(); !strings.Contains(body, `"id":"019abcde-1111-7111-8111-111111111111"`) || !strings.Contains(body, `"username":"person"`) {
+		t.Errorf("body = %s, want current session identity", body)
+	}
+}
+
+func TestGetCurrentSessionRequiresSession(t *testing.T) {
+	t.Parallel()
+
+	request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/v1/sessions", nil)
+	recorder := httptest.NewRecorder()
+
+	testHandler().ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Errorf("status = %d, want %d", recorder.Code, http.StatusUnauthorized)
 	}
 }
 
@@ -315,6 +365,25 @@ func TestListAccountLeaguesReturnsPage(t *testing.T) {
 	body, _ := io.ReadAll(recorder.Result().Body)
 	if !strings.Contains(string(body), `"relationship":"organizer"`) {
 		t.Errorf("body = %s, want organizer relationship", body)
+	}
+}
+
+func TestListRecentAccountLeaguesReturnsSummary(t *testing.T) {
+	t.Parallel()
+
+	items := []leagues.Item{{ID: "019abcde-1111-7111-8111-111111111111", Name: "Liga", State: "in_progress", CreatedAt: "2026-07-28T10:00:00Z", LastActivityAt: "2026-08-02T10:00:00Z", Relationship: "organizer"}}
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: "019abcde-2222-7222-8222-222222222222"}, leagues.NewService(testLeagueRepository{recentItems: items}), testAllowedOrigins)
+	request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/v1/me/recent-leagues", nil)
+	request.Header.Set("Authorization", "Bearer opaque-session")
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusOK)
+	}
+	body, _ := io.ReadAll(recorder.Result().Body)
+	if !strings.Contains(string(body), `"lastActivityAt":"2026-08-02T10:00:00Z"`) {
+		t.Errorf("body = %s, want recent activity", body)
 	}
 }
 

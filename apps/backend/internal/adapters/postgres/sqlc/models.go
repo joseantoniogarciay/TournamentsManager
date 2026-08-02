@@ -60,6 +60,7 @@ type League struct {
 	PointsForLoss      int16
 	CreatedAt          pgtype.Timestamptz
 	PublishedAt        pgtype.Timestamptz
+	LastActivityAt     pgtype.Timestamptz
 }
 
 type LeagueAdministrator struct {

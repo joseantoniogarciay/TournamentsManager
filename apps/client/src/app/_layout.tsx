@@ -19,15 +19,15 @@ export default function RootLayout() {
   return (
     <PreferencesProvider>
       <NavigationTheme>
-        <SessionProvider>
-          <PendingVerificationProvider>
-            <ConfirmationDialogProvider>
-              <FeedbackProvider>
+        <FeedbackProvider>
+          <SessionProvider>
+            <PendingVerificationProvider>
+              <ConfirmationDialogProvider>
                 <RootNavigator />
-              </FeedbackProvider>
-            </ConfirmationDialogProvider>
-          </PendingVerificationProvider>
-        </SessionProvider>
+              </ConfirmationDialogProvider>
+            </PendingVerificationProvider>
+          </SessionProvider>
+        </FeedbackProvider>
       </NavigationTheme>
     </PreferencesProvider>
   );

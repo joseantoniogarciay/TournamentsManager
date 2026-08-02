@@ -97,6 +97,37 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	}
 }
 
+func TestIntegrationRecentLeaguesOrdersActivityAndDeduplicatesRelationships(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	accountID := createVerifiedLocalAccount(t, ctx, pool, "person@example.test", "person", "correct password")
+	otherAccountID := createVerifiedLocalAccount(t, ctx, pool, "other@example.test", "other", "correct password")
+	var administeredID, followedID string
+	if err := pool.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, last_activity_at) VALUES ($1, 'Administrada', now() - interval '2 hours') RETURNING id::text`, accountID).Scan(&administeredID); err != nil {
+		t.Fatalf("crear liga administrada: %v", err)
+	}
+	if err := pool.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, last_activity_at) VALUES ($1, 'Seguida', now() - interval '1 hour') RETURNING id::text`, otherAccountID).Scan(&followedID); err != nil {
+		t.Fatalf("crear liga seguida: %v", err)
+	}
+	if _, err := pool.Exec(ctx, `INSERT INTO league_followers (league_id, account_id) VALUES ($1, $2), ($3, $2)`, administeredID, accountID, followedID); err != nil {
+		t.Fatalf("seguir ligas: %v", err)
+	}
+
+	items, err := leagues.NewService(NewAccountLeagueRepository(pool)).ListRecent(ctx, accountID)
+	if err != nil {
+		t.Fatalf("consultar recientes: %v", err)
+	}
+	if len(items) != 2 {
+		t.Fatalf("ligas recientes = %#v, se esperaban dos sin duplicados", items)
+	}
+	if items[0].ID != followedID || items[0].Relationship != "follower" {
+		t.Fatalf("primera liga = %#v, se esperaba la seguida más reciente", items[0])
+	}
+	if items[1].ID != administeredID || items[1].Relationship != "organizer" {
+		t.Fatalf("segunda liga = %#v, se esperaba la administrada una sola vez", items[1])
+	}
+}
+
 func TestIntegrationPasswordResetConsumesTokenRevokesSessionsAndCreatesNewSession(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)

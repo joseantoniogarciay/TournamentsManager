@@ -33,11 +33,12 @@ const (
 
 // Item es la proyección compacta de una liga relacionada.
 type Item struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	State        string `json:"state"`
-	CreatedAt    string `json:"createdAt"`
-	Relationship string `json:"relationship"`
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	State          string `json:"state"`
+	CreatedAt      string `json:"createdAt"`
+	LastActivityAt string `json:"lastActivityAt"`
+	Relationship   string `json:"relationship"`
 }
 
 // Page contiene una página de elementos y su cursor opcional.
@@ -49,8 +50,14 @@ type Page struct {
 // Repository persiste y consulta relaciones de ligas.
 type Repository interface {
 	List(context.Context, string, Relationship, string, int) ([]Item, error)
+	ListRecent(context.Context, string) ([]Item, error)
 	Follow(context.Context, string, string) (bool, error)
 	Unfollow(context.Context, string, string) error
+}
+
+// ListRecent devuelve hasta cinco ligas relacionadas con la actividad más reciente.
+func (s Service) ListRecent(ctx context.Context, accountID string) ([]Item, error) {
+	return s.repository.ListRecent(ctx, accountID)
 }
 
 // Follow guarda una liga visible para una cuenta.

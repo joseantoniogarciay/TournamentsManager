@@ -2,6 +2,41 @@
 
 ## 2026-08-02 — Preparar no es competir
 
+## 2026-08-02 — Un 401 protegido invalida la sesión, no la feature visible
+
+Una operación protegida que recibe `401` ya no puede recuperar por sí sola: la
+credencial local dejó de representar una sesión autorizada. El transporte
+protegido delega la invalidación en un único coordinador, que borra los secretos,
+resetea la navegación y publica un aviso localizado una sola vez. Las
+operaciones públicas conservan su propio `401` —por ejemplo, credenciales de
+login incorrectas— y no activan este cierre global.
+
+## 2026-08-02 — Recuperar el foco no equivale a actualizar datos
+
+Las tabs mantienen su contexto durante la sesión; volver a enfocarlas no debe
+convertirse en sondeo de red. Cada colección carga una vez por cuenta y conserva
+el resultado al alternar tabs. Pull-to-refresh es la acción explícita que vuelve
+a consultar la API, mientras un nuevo login reinicia esa marca de carga.
+
+## 2026-08-02 — Actividad reciente no es fecha de creación
+
+Una colección ordenada por UUIDv7 o fecha de creación permite encontrar ligas
+nuevas, pero no informa de cambios posteriores. Inicio necesita una proyección
+propia, limitada a cinco relaciones y ordenada por una marca del dominio que se
+actualiza dentro de cada mutación relevante. Seguir una liga cambia la relación
+de una cuenta, no la actividad de la liga; mezclar ambas cosas haría que el
+resumen priorizara acciones personales en vez de cambios útiles del torneo.
+
+## 2026-08-02 — La colección principal elige su contexto, no su volumen
+
+Las pestañas «Administro» y «Sigo» comparten una única biblioteca visible para
+evitar dos bloques que compiten por atención. Al cargar la colección, se
+selecciona «Administro» si contiene alguna liga; solo cuando está vacía se abre
+«Sigo», incluso si esta última tiene más elementos. Así la prioridad expresa la
+relación de administración acordada y no una regla implícita basada en conteos.
+Cada liga conserva su propia card y un estado vacío se centra en el área libre
+bajo el selector, para que no parezca otro elemento de la colección.
+
 ## 2026-08-02 — Un 401 de login es recuperable, no un fallo genérico
 
 El `401` documentado por `POST /v1/sessions` confirma que el servidor rechazó
@@ -210,6 +245,36 @@ Para cada capacidad se sigue el ciclo:
 - **Coste aceptado:** la barrera es transparente y anuncia progreso al lector
   de pantalla. No se aplica a una precarga reversible de Google, donde la
   persona puede cambiar libremente a otro método de acceso.
+
+### 2026-08-02 — El formato condiciona el feedback de disponibilidad
+
+- **Aprendido:** el username del alta valida en cada cambio porque solo los
+  valores que cumplen la regex pueden consultar disponibilidad. Si deja de
+  cumplirla, se muestra de inmediato el mismo error de formato que aparecería
+  al perder foco; al corregirlo, el campo recupera su estado de comprobación y,
+  después, su disponibilidad.
+- **Evidencia:** la ruta `account/register` usa `validationTrigger="change"`
+  exclusivamente en el campo username. `useUsernameAvailability` continúa
+  cancelando la consulta previa y vuelve a comprobar únicamente entradas
+  válidas tras 400 ms.
+- **Coste aceptado:** el feedback de formato aparece desde la primera edición
+  del campo. Es una excepción acotada al patrón de disponibilidad; email y los
+  demás campos conservan validación al abandonar el control.
+
+### 2026-08-02 — La sesión web se restaura preguntando al backend
+
+- **Aprendido:** una cookie `HttpOnly` no puede convertirse en estado visible
+  leyendo almacenamiento local. Al arrancar la web consulta `GET /v1/sessions`:
+  una sesión válida devuelve su identidad y vigencia; `401` solo representa una
+  visita anónima y no muestra feedback.
+- **Evidencia:** el middleware conserva la credencial únicamente en el contexto
+  de la petición y el repositorio vuelve a validar su hash antes de devolver la
+  proyección `CurrentSession`. El provider web restaura solo un resultado `200`,
+  por lo que una comprobación iniciada antes de confirmar un enlace no borra la
+  nueva identidad.
+- **Coste aceptado:** web hace una consulta protegida al inicio. Es necesaria
+  para recuperar una cookie que JavaScript no puede leer y no cambia la
+  estrategia móvil, que restaura su estado desde Keychain/Keystore.
 
 ### 2026-07-30 — Un recorrido vertical hace visibles los límites
 
@@ -1343,6 +1408,7 @@ Para cada capacidad se sigue el ciclo:
 
 “Entendido” exige una explicación propia y una demostración. Un comando que
 funciona o una respuesta del asistente no son evidencia suficiente por sí solos.
+
 # 2026-08-01 — Reautenticación no equivale a sesión
 
 Un token de sesión demuestra que el cliente mantiene una sesión; no debe ser

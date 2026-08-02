@@ -15,6 +15,8 @@ type sessionAuthenticator interface {
 
 type accountContextKey struct{}
 type sessionTransportContextKey struct{}
+type sessionTokenContextKey struct{}
+type sessionCookieNameContextKey struct{}
 
 type sessionTransport string
 
@@ -47,9 +49,15 @@ func requireSession(authenticator sessionAuthenticator) func(http.Handler) http.
 			}
 			requestContext := context.WithValue(request.Context(), accountContextKey{}, accountID)
 			requestContext = context.WithValue(requestContext, sessionTransportContextKey{}, credential.transport)
+			requestContext = context.WithValue(requestContext, sessionTokenContextKey{}, credential.token)
 			next.ServeHTTP(writer, request.WithContext(requestContext))
 		})
 	}
+}
+
+func currentSessionToken(ctx context.Context) (string, bool) {
+	token, ok := ctx.Value(sessionTokenContextKey{}).(string)
+	return token, ok && token != ""
 }
 
 func currentSessionTransport(ctx context.Context) (sessionTransport, bool) {
@@ -64,7 +72,7 @@ func currentAccountID(ctx context.Context) (string, bool) {
 
 func sessionToken(request *http.Request) (credential, bool) {
 	authorization := request.Header.Get("Authorization")
-	cookie, cookieErr := request.Cookie("__Host-tm_session")
+	cookie, cookieErr := request.Cookie(sessionCookieName(request.Context()))
 	if authorization != "" && cookieErr == nil {
 		return credential{}, false
 	}
@@ -79,4 +87,12 @@ func sessionToken(request *http.Request) (credential, bool) {
 		return credential{token: cookie.Value, transport: cookieSession}, true
 	}
 	return credential{}, false
+}
+
+func sessionCookieName(ctx context.Context) string {
+	name, ok := ctx.Value(sessionCookieNameContextKey{}).(string)
+	if !ok || name == "" {
+		return "__Host-tm_session"
+	}
+	return name
 }

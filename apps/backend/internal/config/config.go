@@ -25,6 +25,7 @@ type Config struct {
 	SMTPAddr           string
 	SMTPFrom           string
 	PublicBaseURL      string
+	CookieSecure       bool
 	CORSAllowedOrigins []string
 	GoogleClientIDs    []string
 }
@@ -78,6 +79,7 @@ func load(getenv func(string) string) (Config, error) {
 		SMTPAddr:           smtpAddr,
 		SMTPFrom:           smtpFrom,
 		PublicBaseURL:      publicBaseURL,
+		CookieSecure:       parsedPublicURL.Scheme == "https",
 		CORSAllowedOrigins: corsAllowedOrigins,
 		GoogleClientIDs:    googleClientIDs,
 	}, nil

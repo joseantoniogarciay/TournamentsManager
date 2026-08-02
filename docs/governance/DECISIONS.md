@@ -107,6 +107,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0055](../adr/0055-use-feature-first-client-architecture-and-platform-adaptive-navigation.md) | Usar cliente feature-first y navegación adaptativa                   | Aceptado              | 2026-07-28 |
 | [0056](../adr/0056-support-light-dark-system-theme-and-localized-clients.md)                  | Soportar tema y clientes localizados                                 | Aceptado              | 2026-07-28 |
 | [0057](../adr/0057-define-contextual-home-and-tournament-library.md)                          | Definir home contextual y biblioteca por relación                    | Aceptado              | 2026-07-28 |
+| [0073](../adr/0073-show-recent-related-leagues-on-home.md)                                    | Mostrar ligas relacionadas recientes en Inicio                       | Aceptado              | 2026-08-02 |
 | [0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md)               | Listar ligas relacionadas con colección paginada                     | Aceptado              | 2026-07-28 |
 | [0059](../adr/0059-centralize-session-authentication-at-the-http-boundary.md)                 | Centralizar autenticación de sesión en el borde HTTP                 | Aceptado              | 2026-07-28 |
 | [0060](../adr/0060-use-posthog-for-deferred-client-product-observability.md)                  | Usar PostHog diferido para observabilidad de producto del cliente    | Aceptado              | 2026-07-29 |
@@ -117,11 +118,11 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0065](../adr/0065-create-a-new-session-after-password-reset.md)                              | Crear una sesión nueva tras restablecer la contraseña                | Aceptado              | 2026-07-31 |
 | [0066](../adr/0066-deny-cross-account-identity-linking-and-merges.md)                         | Denegar vinculación y fusión entre cuentas distintas                 | Superado parcialmente | 2026-08-01 |
 | [0067](../adr/0067-allow-authenticated-same-account-access-method-linking.md)                 | Añadir métodos de acceso solo a la cuenta autenticada                | Aceptado              | 2026-08-01 |
-| [0068](../adr/0068-manage-account-access-methods-and-local-logout.md)                          | Gestionar métodos de acceso y cierre local de sesión                 | Aceptado              | 2026-08-01 |
-| [0069](../adr/0069-keep-tournament-drafts-local-only.md)                                       | Mantener los borradores de torneo solo en local                      | Aceptado              | 2026-08-01 |
-| [0070](../adr/0070-configure-league-when-starting.md)                                          | Configurar la liga al iniciarla                                      | Aceptado              | 2026-08-01 |
-| [0071](../adr/0071-run-postgresql-integration-tests-in-ci.md)                                  | Ejecutar integración PostgreSQL en CI                                | Aceptado              | 2026-08-02 |
-| [0072](../adr/0072-apply-a-resettable-initial-schema-without-migration-runner.md)              | Aplicar esquema inicial sin ejecutor de migraciones                  | Aceptado              | 2026-08-02 |
+| [0068](../adr/0068-manage-account-access-methods-and-local-logout.md)                         | Gestionar métodos de acceso y cierre local de sesión                 | Aceptado              | 2026-08-01 |
+| [0069](../adr/0069-keep-tournament-drafts-local-only.md)                                      | Mantener los borradores de torneo solo en local                      | Aceptado              | 2026-08-01 |
+| [0070](../adr/0070-configure-league-when-starting.md)                                         | Configurar la liga al iniciarla                                      | Aceptado              | 2026-08-01 |
+| [0071](../adr/0071-run-postgresql-integration-tests-in-ci.md)                                 | Ejecutar integración PostgreSQL en CI                                | Aceptado              | 2026-08-02 |
+| [0072](../adr/0072-apply-a-resettable-initial-schema-without-migration-runner.md)             | Aplicar esquema inicial sin ejecutor de migraciones                  | Aceptado              | 2026-08-02 |
 
 ## Trazabilidad de un cambio
 

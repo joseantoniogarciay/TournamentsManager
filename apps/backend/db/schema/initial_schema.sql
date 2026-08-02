@@ -141,12 +141,14 @@ CREATE TABLE leagues (
     points_for_loss smallint NOT NULL DEFAULT 0 CHECK (points_for_loss = 0),
     created_at timestamptz NOT NULL DEFAULT now(),
     published_at timestamptz,
+    last_activity_at timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT leagues_published_at CHECK (
         published_at IS NOT NULL
     )
 );
 
 CREATE INDEX leagues_organizer_idx ON leagues (organizer_account_id, created_at DESC);
+CREATE INDEX leagues_last_activity_idx ON leagues (last_activity_at DESC, id DESC);
 
 CREATE TABLE league_administrators (
     league_id uuid NOT NULL REFERENCES leagues (id) ON DELETE CASCADE,

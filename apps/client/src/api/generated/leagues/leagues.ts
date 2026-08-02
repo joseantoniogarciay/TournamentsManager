@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type {
+  AccountLeague,
   AccountLeaguePage,
   AuthenticationProblemResponse,
   LeagueInput,
@@ -77,6 +78,49 @@ export const listCurrentAccountLeagues = async (
 
   const data: listCurrentAccountLeaguesResponse["data"] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as listCurrentAccountLeaguesResponse;
+};
+
+export type listRecentAccountLeaguesResponse200 = {
+  data: AccountLeague[];
+  status: 200;
+};
+
+export type listRecentAccountLeaguesResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type listRecentAccountLeaguesResponseSuccess = listRecentAccountLeaguesResponse200 & {
+  headers: Headers;
+};
+export type listRecentAccountLeaguesResponseError = listRecentAccountLeaguesResponse401 & {
+  headers: Headers;
+};
+
+export type listRecentAccountLeaguesResponse =
+  listRecentAccountLeaguesResponseSuccess | listRecentAccountLeaguesResponseError;
+
+export const getListRecentAccountLeaguesUrl = () => {
+  return `/me/recent-leagues`;
+};
+
+/**
+ * Incluye una vez cada liga administrada o seguida por la cuenta actual. Una relación administrada prevalece sobre seguida y el orden es por actividad de liga descendente, con ID UUIDv7 descendente como desempate.
+ * @summary Lista hasta cinco ligas relacionadas con actividad reciente
+ */
+export const listRecentAccountLeagues = async (
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<listRecentAccountLeaguesResponse> => {
+  const res = await (fetchFn ?? fetch)(getListRecentAccountLeaguesUrl(), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listRecentAccountLeaguesResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as listRecentAccountLeaguesResponse;
 };
 
 export type followLeagueResponse204 = {

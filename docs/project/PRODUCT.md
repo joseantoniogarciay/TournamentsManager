@@ -73,6 +73,11 @@ delegado se consideran administradas. Las ligas seguidas se consideran
 guardadas; cuando una liga cumple ambas relaciones, se muestra solo como
 administrada.
 
+Con sesión, Inicio muestra además hasta cinco ligas relacionadas con actividad
+reciente. La relación administrada prevalece sobre seguida si coinciden. Si no
+hay ninguna, explica que ahí aparecerán las últimas ligas que tengan actividad.
+Inicio y Torneos se actualizan mediante pull-to-refresh para una sesión activa.
+
 La sección «Torneos» separa las colecciones completas en «Administro» y «Sigo».
 Es una clasificación de navegación: las autorizaciones continúan verificándose
 en el backend para cada liga y acción. La colección autenticada se define en
@@ -244,6 +249,7 @@ El primer vertical slice tiene definidos formato, ciclo de vida, visibilidad,
 participantes, seguimiento, administración y resultados. Las mejoras aplazadas
 se mantienen en «Fuera del primer alcance»; no bloquean el esquema ni los
 contratos del primer corte.
+
 # Seguridad de la cuenta
 
 Una cuenta autenticada puede consultar su email, username y métodos de acceso,

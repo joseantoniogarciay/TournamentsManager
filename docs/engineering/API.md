@@ -109,11 +109,14 @@ La fuente de verdad de diseño es
 [`contracts/openapi/v1/openapi.yaml`](../../contracts/openapi/v1/openapi.yaml).
 Usa OpenAPI 3.1, prefijo `/v1` y `application/problem+json` conforme a RFC 9457.
 Incluye alta, reenvío y confirmación de verificación, login, sesión actual y
-logout, consulta del borrador verificado, colección autenticada de ligas
-relacionadas, publicación y lectura pública por ID. `GET /me/leagues` pagina por
+logout, consulta del borrador verificado, colecciones autenticadas de ligas
+relacionadas y recientes, publicación y lectura pública por ID. `GET /me/leagues` pagina por
 UUIDv7 y filtra en el servidor las relaciones `administered` y `followed`; la
 segunda excluye una liga ya administrada para que la UI no la duplique. Véase
 [ADR-0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md).
+`GET /me/recent-leagues` devuelve como máximo cinco relaciones sin duplicados,
+ordenadas por actividad de liga; no es una colección paginada. Véase
+[ADR-0073](../adr/0073-show-recent-related-leagues-on-home.md).
 El alta exige identidad local y un locale efectivo de `es`, `en`, `it` o `fr`;
 el backend lo valida y lo persiste como preferencia de cuenta para localizar
 emails. El borrador es opcional y, si se envía, debe cumplir íntegramente las
@@ -189,6 +192,7 @@ Sin fijar todavía rutas ni payloads, la API necesitará capacidades para:
 
 El diseño debe esperar a las decisiones de visibilidad, incorporación,
 participantes e identidad descritas en [SYSTEM_OPTIONS.md](../governance/SYSTEM_OPTIONS.md).
+
 # Gestión de métodos de acceso
 
 Las rutas autenticadas `GET /v1/me/access-methods`, `POST

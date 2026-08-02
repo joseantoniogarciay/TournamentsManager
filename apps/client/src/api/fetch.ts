@@ -18,6 +18,7 @@ type MobileSession = {
 
 let refreshingSession: Promise<MobileSession | null> | null = null;
 let invalidateMobileSession: (() => Promise<void>) | null = null;
+let invalidatingSession: Promise<void> | null = null;
 
 /** La petición no llegó a recibir una respuesta HTTP de la API. */
 export class APIConnectionError extends Error {
@@ -32,6 +33,13 @@ export class APIUnexpectedResponseError extends Error {
   constructor(status: number) {
     super(`La API respondió con el estado no tratado ${status}`);
     this.name = "APIUnexpectedResponseError";
+  }
+}
+
+/** La API ha rechazado una sesión protegida y el coordinador ya la ha invalidado. */
+export class APISessionInvalidatedError extends Error {
+  constructor() {
+    super("La sesión fue rechazada por la API");
   }
 }
 
@@ -145,7 +153,14 @@ export function setMobileSessionInvalidationHandler(handler: () => Promise<void>
 }
 
 async function expireMobileSession() {
-  if (invalidateMobileSession) await invalidateMobileSession();
+  if (!invalidatingSession) {
+    invalidatingSession = (async () => {
+      if (invalidateMobileSession) await invalidateMobileSession();
+    })().finally(() => {
+      invalidatingSession = null;
+    });
+  }
+  await invalidatingSession;
 }
 
 async function refreshMobileSession(session: MobileSession) {
@@ -196,4 +211,14 @@ export const apiFetch: typeof globalThis.fetch = async (input, init) => {
     if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
   }
   return fetchWithAPIBase(input, { ...init, headers });
+};
+
+/** Invalida una sesión cuya operación protegida ya ha sido rechazada por la API. */
+export const authenticatedApiFetch: typeof globalThis.fetch = async (input, init) => {
+  const response = await apiFetch(input, init);
+  if (response.status === 401) {
+    await expireMobileSession();
+    throw new APISessionInvalidatedError();
+  }
+  return response;
 };
