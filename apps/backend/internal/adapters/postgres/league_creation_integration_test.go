@@ -103,10 +103,10 @@ func TestIntegrationRecentLeaguesOrdersActivityAndDeduplicatesRelationships(t *t
 	accountID := createVerifiedLocalAccount(t, ctx, pool, "person@example.test", "person", "correct password")
 	otherAccountID := createVerifiedLocalAccount(t, ctx, pool, "other@example.test", "other", "correct password")
 	var administeredID, followedID string
-	if err := pool.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, last_activity_at) VALUES ($1, 'Administrada', now() - interval '2 hours') RETURNING id::text`, accountID).Scan(&administeredID); err != nil {
+	if err := pool.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, published_at, last_activity_at) VALUES ($1, 'Administrada', now(), now() - interval '2 hours') RETURNING id::text`, accountID).Scan(&administeredID); err != nil {
 		t.Fatalf("crear liga administrada: %v", err)
 	}
-	if err := pool.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, last_activity_at) VALUES ($1, 'Seguida', now() - interval '1 hour') RETURNING id::text`, otherAccountID).Scan(&followedID); err != nil {
+	if err := pool.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, published_at, last_activity_at) VALUES ($1, 'Seguida', now(), now() - interval '1 hour') RETURNING id::text`, otherAccountID).Scan(&followedID); err != nil {
 		t.Fatalf("crear liga seguida: %v", err)
 	}
 	if _, err := pool.Exec(ctx, `INSERT INTO league_followers (league_id, account_id) VALUES ($1, $2), ($3, $2)`, administeredID, accountID, followedID); err != nil {
