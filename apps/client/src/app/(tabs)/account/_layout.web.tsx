@@ -5,11 +5,14 @@ import { control } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
+import { useSession } from "@/shared/session/session-provider";
+import { Text } from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
 export default function AccountLayout() {
   const t = getTranslator();
   const { colors } = usePreferences();
+  const { user } = useSession();
   const headerOptions = {
     headerBackButtonDisplayMode: "minimal" as const,
     headerShadowVisible: false,
@@ -24,6 +27,7 @@ export default function AccountLayout() {
       <Stack.Screen
         name="index"
         options={{
+          headerLeft: () => <Text variant="title">{user?.username}</Text>,
           headerRight: () => (
             <Pressable
               accessibilityLabel={t("account_settings_accessibility_label")}
@@ -37,6 +41,7 @@ export default function AccountLayout() {
           headerTitle: () => null,
         }}
       />
+      <Stack.Screen name="access" options={{ title: t("account_access_data_title") }} />
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
       <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
       <Stack.Screen name="password" options={{ title: t("account_password_change_title") }} />

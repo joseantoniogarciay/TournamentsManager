@@ -108,6 +108,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0056](../adr/0056-support-light-dark-system-theme-and-localized-clients.md)                  | Soportar tema y clientes localizados                                 | Aceptado              | 2026-07-28 |
 | [0057](../adr/0057-define-contextual-home-and-tournament-library.md)                          | Definir home contextual y biblioteca por relación                    | Aceptado              | 2026-07-28 |
 | [0073](../adr/0073-show-recent-related-leagues-on-home.md)                                    | Mostrar ligas relacionadas recientes en Inicio                       | Aceptado              | 2026-08-02 |
+| [0074](../adr/0074-schedule-account-deletion-with-a-recovery-window.md)                       | Programar eliminación de cuenta con ventana de recuperación          | Aceptado              | 2026-08-04 |
 | [0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md)               | Listar ligas relacionadas con colección paginada                     | Aceptado              | 2026-07-28 |
 | [0059](../adr/0059-centralize-session-authentication-at-the-http-boundary.md)                 | Centralizar autenticación de sesión en el borde HTTP                 | Aceptado              | 2026-07-28 |
 | [0060](../adr/0060-use-posthog-for-deferred-client-product-observability.md)                  | Usar PostHog diferido para observabilidad de producto del cliente    | Aceptado              | 2026-07-29 |

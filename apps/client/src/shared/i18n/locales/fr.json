@@ -40,6 +40,7 @@
   "account_authenticated_mock": "Connecté en tant que {username}. Le profil complet arrivera dans le prochain incrément.",
   "account_authenticated_title": "Session ouverte",
   "account_access_data_title": "Informations d’accès",
+  "account_access_email_description": "Cette adresse e-mail est associée à votre compte.",
   "account_access_google_action": "Associer Google",
   "account_access_password_action": "Ajouter ou modifier le mot de passe",
   "account_email_label": "E-mail",

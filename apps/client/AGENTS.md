@@ -91,6 +91,12 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   `--localhost` ni construyas manualmente una URL `exp://127.0.0.1:8081`:
   Metro puede quedar escuchando solo en IPv6 (`::1`) y Expo Go no alcanzará esa
   dirección IPv4.
+- En este entorno, Metro debe ejecutarse en una terminal interactiva que se
+  mantenga abierta; un `nohup ... &` lanzado desde una ejecución efímera no
+  persiste de forma fiable. Como `expo-dev-client` hace que Expo seleccione una
+  development build inicialmente, pulsa `s` para cambiar a **Expo Go**, espera
+  a que Metro imprima `› Metro: exp://<IP-LAN>:8081` y abre exactamente esa URL
+  en el simulador. No abras la URL `com.fasttourney...://expo-development-client`.
 - Antes de abrir el proyecto, ejecuta
   `pnpm --filter @tournaments-manager/client exec expo install --check`. Expo Go
   solo carga módulos nativos incluidos en su SDK; usa las versiones compatibles

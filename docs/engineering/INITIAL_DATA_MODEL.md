@@ -33,7 +33,7 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 
 | Tabla                        | Campos esenciales                                                                                                      | Restricciones de dominio                                                                                                                                                                                                            |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accounts`                   | `id`, `email`, `locale`, `state`, `username`, `created_at`, `verified_at`, `expires_at`                                | `locale` es uno de `es`, `en`, `it` o `fr`; índice único sobre `lower(email)` para acceso; username único y en minúsculas; estado `pending_verification` o `verified`; pendiente expira a los 7 días.                               |
+| `accounts`                   | `id`, `email`, `locale`, `state`, `username`, `created_at`, `verified_at`, `expires_at`, `deletion_requested_at`        | `locale` es uno de `es`, `en`, `it` o `fr`; índice único sobre `lower(email)` para acceso; username único y en minúsculas; estado `pending_verification`, `verified` o `deletion_pending`; pendiente expira a los 7 días y una baja conserva `deletion_requested_at` durante su ventana de recuperación de 30 días. |
 | `local_credentials`          | `account_id`, `password_hash`, `created_at`, `updated_at`                                                              | PK/FK uno a uno; hash Argon2id; ninguna contraseña recuperable.                                                                                                                                                                     |
 | `external_identities`        | `id`, `account_id`, `provider`, `issuer`, `subject`, `created_at`                                                      | `(issuer, subject)` único; una identidad Google pertenece a una cuenta y una cuenta tiene como máximo una identidad Google. Se añade solo desde Seguridad a la cuenta autenticada y nunca se mueve entre cuentas.                   |
 | `federated_login_challenges` | `id`, `provider`, `nonce_hash`, `expires_at`, `consumed_at`, `created_at`                                              | Google únicamente; nonce de 5 min, de un solo uso y sin sesión asociada.                                                                                                                                                            |
@@ -72,6 +72,10 @@ minúsculo antes de guardar.
    de una transacción.
 5. **Lectura pública:** busca por ID de liga, exige liga visible y devuelve solo
    proyección pública. No crea relaciones ni actualiza permisos.
+6. **Baja programada:** una cuenta verificada sin ligas propias pasa a
+   `deletion_pending` y conserva la fecha de solicitud. En una transacción se
+   invalidan sesiones y tokens, y se eliminan seguimientos y administraciones
+   delegadas. La purga física y la recuperación se definen después.
 
 La purga es un proceso operativo explícito, idempotente y auditable por conteos,
 sin registrar emails ni tokens. El `ON DELETE` y las FKs se concretarán en la

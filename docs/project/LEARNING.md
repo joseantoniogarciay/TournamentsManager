@@ -1,5 +1,24 @@
 # Registro de aprendizaje
 
+## 2026-08-04 — Una baja de cuenta no puede dejar una propiedad huérfana
+
+La baja lógica separa retirar de inmediato acceso y relaciones personales de
+aplazar la purga física durante una ventana de recuperación. La propiedad de una
+liga es distinta: no se borra ni transfiere implícitamente. Si la cuenta aún
+organiza una liga, el backend conserva la operación sin cambios y devuelve un
+conflicto de negocio que la feature explica con un banner. Así se evita convertir
+una eliminación de cuenta en una decisión oculta sobre datos compartidos.
+
+## 2026-08-04 — Expo Go requiere un Metro vivo y seleccionado explícitamente
+
+En esta sesión, un Metro iniciado con `nohup ... &` desde una ejecución efímera
+termina sin dejar un servidor utilizable. La vía fiable es mantener
+`pnpm --filter @tournaments-manager/client exec expo start --lan` en una
+terminal interactiva. Como la presencia de `expo-dev-client` selecciona por
+defecto una development build, hay que pulsar `s`, esperar la URL
+`exp://<IP-LAN>:8081` que imprime Metro y abrir esa URL exacta en Expo Go. La
+URL `com.fasttourney...://expo-development-client` no sirve para Expo Go.
+
 ## 2026-08-02 — Preparar no es competir
 
 ## 2026-08-02 — Un 401 protegido invalida la sesión, no la feature visible
@@ -1444,3 +1463,30 @@ límite sin crear una segunda sesión ni un estado de interfaz global.
   un coste constante y despreciable que evita añadir estado global de idioma.
 - **Regla reutilizable:** toda dependencia de `useFocusEffect` que no cambie
   por un dato de producto debe tener una identidad estable.
+
+### 2026-08-04 — Una tab resume y una ruta profunda detalla
+
+- **Aprendido:** la pestaña Cuenta puede mostrar solo la identidad visible y un
+  acceso a los datos sensibles, dejando email y métodos de autenticación en una
+  ruta propia con historial y cabecera nativos.
+- **Evidencia:** la ruta `/account/access` obtiene los métodos mediante el
+  adaptador `account-access`; Cuenta no duplica esa carga ni su presentación.
+- **Coste aceptado:** se añade una transición antes de cambiar una contraseña o
+  vincular Google, a cambio de una pantalla de Cuenta más clara y extensible.
+- **Regla reutilizable:** usar una ruta profunda para el detalle cuando una
+  pantalla de tab solo necesita resumir una sección de gestión.
+
+### 2026-08-04 — Un selector dependiente de red espera la primera respuesta
+
+- **Aprendido:** mostrar una selección antes de conocer las colecciones que la
+  determinan puede cambiarla de inmediato y producir una transición visual
+  confusa.
+- **Evidencia:** la biblioteca de torneos conserva un estado explícito de primera
+  carga y solo presenta «Administro» y «Sigo» después de recibir ambas
+  colecciones. La selección inicial prioriza «Administro» si tiene elementos o
+  si ambas colecciones están vacías; solo usa «Sigo» cuando es la única con
+  elementos.
+- **Coste aceptado:** se añade un booleano local, en lugar de una caché o store
+  compartida, porque el estado solo coordina el primer render de esta pantalla.
+- **Regla reutilizable:** un control cuyo valor inicial depende de varias
+  respuestas no se muestra hasta tener todos los datos que definen esa decisión.

@@ -109,7 +109,8 @@ La fuente de verdad de diseño es
 [`contracts/openapi/v1/openapi.yaml`](../../contracts/openapi/v1/openapi.yaml).
 Usa OpenAPI 3.1, prefijo `/v1` y `application/problem+json` conforme a RFC 9457.
 Incluye alta, reenvío y confirmación de verificación, login, sesión actual y
-logout, consulta del borrador verificado, colecciones autenticadas de ligas
+logout; la baja programada de cuenta se incorporará conforme a ADR-0074. Incluye
+también consulta del borrador verificado, colecciones autenticadas de ligas
 relacionadas y recientes, publicación y lectura pública por ID. `GET /me/leagues` pagina por
 UUIDv7 y filtra en el servidor las relaciones `administered` y `followed`; la
 segunda excluye una liga ya administrada para que la UI no la duplique. Véase

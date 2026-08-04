@@ -19,7 +19,6 @@ import {
   authenticateLocalAccount,
   LocalAuthenticationError,
 } from "@/features/local-authentication/api";
-import { getAccountAccessMethods } from "@/features/account-access/api";
 import { useGoogleAuthentication } from "@/features/federated-google/use-google-authentication";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
@@ -58,9 +57,6 @@ export default function AccountScreen() {
   const [showPasswordError, setShowPasswordError] = useState(false);
   const [googleUsername, setGoogleUsername] = useState("");
   const [googleUsernameSubmitted, setGoogleUsernameSubmitted] = useState(false);
-  const [accessMethods, setAccessMethods] = useState<Awaited<
-    ReturnType<typeof getAccountAccessMethods>
-  > | null>(null);
   const { isValid: googleUsernameIsValid, status: googleUsernameAvailability } =
     useUsernameAvailability(googleUsername);
   const {
@@ -103,18 +99,6 @@ export default function AccountScreen() {
     }
     dismissGoogleError();
   }, [dismissGoogleError, googleError, show, t]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!user) {
-        setAccessMethods(null);
-        return;
-      }
-      void getAccountAccessMethods()
-        .then(setAccessMethods)
-        .catch(() => setAccessMethods(null));
-    }, [user]),
-  );
 
   useFocusEffect(
     useCallback(() => {
@@ -180,44 +164,25 @@ export default function AccountScreen() {
           contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
           showsVerticalScrollIndicator={false}
         >
-          <Card>
-            <View style={styles.form}>
-              <Text variant="title">{t("account_access_data_title")}</Text>
-              <AccessRow label={t("account_email_label")} value={accessMethods?.email ?? "…"} />
-              <AccessRow
-                label={t("account_username_label")}
-                value={accessMethods?.username ?? user.username}
-              />
-              <AccessRow
-                label={t("account_password_label")}
-                value={t("account_access_password_action")}
-                onPress={() => router.push("/account/password" as never)}
-              />
-              <AccessRow
-                label={t("account_google_label")}
-                value={t(
-                  accessMethods?.methods.google
-                    ? "account_google_linked"
-                    : "account_access_google_action",
-                )}
-                onPress={() => router.push("/account/google-link" as never)}
-              />
-            </View>
-          </Card>
-          <Card>
+          <View style={styles.authenticatedContent}>
             <Pressable
-              accessibilityLabel={t("account_logout")}
+              accessibilityLabel={t("account_access_data_title")}
               accessibilityRole="button"
-              onPress={confirmSignOut}
-              style={styles.logoutRow}
+              onPress={() => router.push("/account/access" as never)}
+              style={[styles.navigationRow, { borderColor: colors.border.default }]}
             >
-              <Text color="error" variant="title">
-                ⎋
+              <Text variant="bodyLarge">{t("account_access_data_title")}</Text>
+              <Text color="secondary" variant="title">
+                ›
               </Text>
-              <Text color="error">{t("account_logout")}</Text>
-              <Text color="secondary">›</Text>
             </Pressable>
-          </Card>
+            <Button
+              label={t("account_logout")}
+              onPress={confirmSignOut}
+              secondarySurfaceColor={colors.surface.canvas}
+              variant="secondary"
+            />
+          </View>
         </ScrollView>
       </Screen>
     );
@@ -349,8 +314,8 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
+  authenticatedContent: { gap: space[6], marginHorizontal: space[5] },
   content: { gap: space[5] },
-  accessRow: { gap: space[1] },
   form: { gap: space[4] },
   forgotPassword: { alignSelf: "flex-end", marginBottom: space[2] },
   forgotPasswordText: { textDecorationLine: "underline" },
@@ -366,35 +331,15 @@ const styles = StyleSheet.create({
   googleButtonDisabled: { opacity: 0.55 },
   googleLogo: { height: 22, width: 22 },
   register: { gap: space[3], marginHorizontal: space[5] },
-  logoutRow: {
+  navigationRow: {
     alignItems: "center",
+    borderBottomWidth: 1,
+    borderTopWidth: 1,
     flexDirection: "row",
-    gap: space[3],
     justifyContent: "space-between",
-    minHeight: control.minHeight,
+    minHeight: control.minHeight + space[5],
   },
 });
-
-function AccessRow({
-  label,
-  value,
-  onPress,
-}: {
-  label: string;
-  value: string;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole={onPress ? "button" : undefined}
-      onPress={onPress}
-      style={styles.accessRow}
-    >
-      <Text color="secondary">{label}</Text>
-      <Text>{value}</Text>
-    </Pressable>
-  );
-}
 
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);

@@ -40,6 +40,7 @@
   "account_authenticated_mock": "Signed in as {username}. The full profile will arrive in the next increment.",
   "account_authenticated_title": "Signed in",
   "account_access_data_title": "Access details",
+  "account_access_email_description": "This is the email address associated with your account.",
   "account_access_google_action": "Link Google",
   "account_access_password_action": "Add or change password",
   "account_email_label": "Email",

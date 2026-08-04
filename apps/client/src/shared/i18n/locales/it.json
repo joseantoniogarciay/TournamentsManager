@@ -40,6 +40,7 @@
   "account_authenticated_mock": "Accesso effettuato come {username}. Il profilo completo arriverà nel prossimo incremento.",
   "account_authenticated_title": "Accesso effettuato",
   "account_access_data_title": "Dati di accesso",
+  "account_access_email_description": "Questo è l'indirizzo email associato al tuo account.",
   "account_access_google_action": "Collega Google",
   "account_access_password_action": "Aggiungi o modifica password",
   "account_email_label": "Email",

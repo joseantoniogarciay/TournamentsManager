@@ -206,5 +206,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - Plantillas de knowledge base, playbooks, runbooks, diagramas y retrospectivas.
 # Cambios no publicados
 
+- Aceptado ADR-0074: baja lógica de cuenta programada a 30 días, con retirada
+  inmediata de sesiones y relaciones no propietarias, y bloqueo mientras existan
+  ligas organizadas.
 - Añadida la gestión de métodos de acceso de ADR-0068: consulta de métodos,
   logout local silencioso, reautenticación de un solo uso y contraseña local.

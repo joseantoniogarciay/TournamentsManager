@@ -8,6 +8,9 @@
 - **Usuario interno:** identidad estable de TournamentsManager.
 - **Cuenta pendiente:** registro temporal de alta local que aún no puede iniciar
   una sesión de producto ni ejecutar acciones de negocio.
+- **Cuenta con baja programada:** cuenta sin sesión ni operaciones de producto,
+  conservada durante 30 días desde `deletion_requested_at` para una futura
+  recuperación o purga conforme a ADR-0074.
 - **Credencial local:** email y secreto de autenticación gestionados por el
   backend.
 - **Identidad externa:** vínculo con un proveedor mediante `issuer` y `subject`.
@@ -175,6 +178,8 @@ de Google implementado en este incremento.
 - Un email ya perteneciente a otra cuenta no permite crear, vincular ni fusionar
   cuentas.
 - Debe permanecer al menos un método de acceso.
+- Una cuenta con baja programada no puede autenticar hasta que se decida y
+  complete un flujo de recuperación.
 - La recuperación local no crea ni vincula proveedores.
 - Los mensajes públicos no enumeran cuentas.
 - Tokens, códigos y secretos no se escriben en logs.
