@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
@@ -69,6 +70,7 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 	mux.Handle("GET /v1/me/access-methods", requireSession(authenticator)(http.HandlerFunc(getAccessMethods(authenticator))))
 	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(createReauthenticationTicket(accessService, federatedService)))))
 	mux.Handle("PUT /v1/me/local-credential", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(putLocalCredential(accessService)))))
+	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
 	mux.Handle("GET /v1/me/recent-leagues", requireSession(authenticator)(http.HandlerFunc(listRecentAccountLeagues(leagueService))))
 	followHandler := requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(followLeague(leagueService))))
@@ -84,6 +86,39 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 		mux.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), sessionCookieNameContextKey{}, cookies.name)))
 	})
 	return requireAllowedOrigin(corsAllowedOrigins, withCookieName)
+}
+
+type accountDeletionScheduler interface {
+	ScheduleAccountDeletion(context.Context, string) (time.Time, error)
+}
+
+func scheduleAccountDeletion(authenticator sessionAuthenticator, cookies sessionCookieSettings) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		if !ok {
+			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			return
+		}
+		scheduler, ok := authenticator.(accountDeletionScheduler)
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo programar la eliminación")
+			return
+		}
+		effectiveAt, err := scheduler.ScheduleAccountDeletion(r.Context(), accountID)
+		if errors.Is(err, postgres.ErrAccountHasOwnedLeagues) {
+			writeProblem(w, http.StatusConflict, "No puedes eliminar la cuenta mientras tengas ligas organizadas")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo programar la eliminación")
+			return
+		}
+		if transport, _ := currentSessionTransport(r.Context()); transport == cookieSession {
+			cookies.set(w, "", -1)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"deletionEffectiveAt": effectiveAt})
+	}
 }
 
 type sessionCookieSettings struct {

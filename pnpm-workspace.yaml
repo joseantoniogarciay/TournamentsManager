@@ -7,17 +7,24 @@ allowBuilds:
   esbuild: false
   vue-demi: false
 
-minimumReleaseAgeExclude:
-  - "@redocly/cli@2.41.0"
-  - '@expo/cli@57.0.12'
-  - '@expo/router-server@57.0.5'
-  - expo-constants@57.0.9
-  - expo-modules-core@57.0.9
-  - expo@57.0.10
-  - '@expo/ui@57.0.9'
-  - expo-auth-session@57.0.6
-  - expo-linking@57.0.5
-  - expo-router@57.0.10
+# La instalación normal no puede modificar la resolución aprobada. Los cambios de
+# dependencias se hacen de forma deliberada con `pnpm add`, `pnpm update` o
+# `pnpm install --no-frozen-lockfile` y se revisa su diff.
+frozenLockfile: true
+
+# Retrasa una semana toda versión recién publicada, también transitiva. Si el
+# registro no aporta fecha o no existe una versión madura que cumpla el rango,
+# falla en vez de degradar la protección silenciosamente.
+minimumReleaseAge: 10080
+minimumReleaseAgeIgnoreMissingTime: false
+minimumReleaseAgeStrict: true
+
+# Los rangos de Expo Router admiten revisiones más nuevas que aún no han
+# madurado. Se fijan a las últimas revisiones anteriores compatibles para que el
+# árbol pueda respetar la política sin una exclusión por edad.
+overrides:
+  "@expo/log-box": 57.0.1
+  "@expo/metro-runtime": 57.0.4
 
 nodeLinker: isolated
 storeDir: .pnpm-store

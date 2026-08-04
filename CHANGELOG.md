@@ -206,6 +206,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - Plantillas de knowledge base, playbooks, runbooks, diagramas y retrospectivas.
 # Cambios no publicados
 
+- Aceptado ADR-0075: instalaciones locales congeladas y un periodo mínimo de
+  maduración de siete días para versiones de npm, incluidas las transitivas.
 - Aceptado ADR-0074: baja lógica de cuenta programada a 30 días, con retirada
   inmediata de sesiones y relaciones no propietarias, y bloqueo mientras existan
   ligas organizadas.

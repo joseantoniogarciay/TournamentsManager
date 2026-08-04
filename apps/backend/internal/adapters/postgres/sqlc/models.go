@@ -9,14 +9,15 @@ import (
 )
 
 type Account struct {
-	ID         pgtype.UUID
-	Email      string
-	Locale     string
-	State      string
-	Username   string
-	CreatedAt  pgtype.Timestamptz
-	VerifiedAt pgtype.Timestamptz
-	ExpiresAt  pgtype.Timestamptz
+	ID                  pgtype.UUID
+	Email               string
+	Locale              string
+	State               string
+	Username            string
+	CreatedAt           pgtype.Timestamptz
+	VerifiedAt          pgtype.Timestamptz
+	ExpiresAt           pgtype.Timestamptz
+	DeletionRequestedAt pgtype.Timestamptz
 }
 
 type EmailVerificationToken struct {

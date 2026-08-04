@@ -24,6 +24,20 @@ tags:
   - name: Leagues
     description: Publicación y lectura pública de ligas visibles.
 paths:
+  /me/account:
+    delete:
+      tags: [Session]
+      operationId: scheduleAccountDeletion
+      summary: Programa la eliminación de la cuenta actual
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "200":
+          description: Baja programada y accesos revocados.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountDeletionScheduled" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "409": { $ref: "#/components/responses/AccountDeletionConflictProblem" }
   /me/access-methods:
     get:
       tags: [Session]
@@ -526,6 +540,9 @@ components:
     ServiceUnavailableProblem:
       description: Operación temporalmente no disponible.
       content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    AccountDeletionConflictProblem:
+      description: La cuenta todavía organiza alguna liga.
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
   schemas:
     UUID:
       type: string
@@ -785,3 +802,8 @@ components:
         detail: { type: string }
         instance: { type: string, format: uri-reference }
         requestId: { type: string }
+    AccountDeletionScheduled:
+      type: object
+      required: [deletionEffectiveAt]
+      properties:
+        deletionEffectiveAt: { type: string, format: date-time }

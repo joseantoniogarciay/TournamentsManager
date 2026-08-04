@@ -7,6 +7,8 @@
  */
 import type {
   AccessMethods,
+  AccountDeletionConflictProblemResponse,
+  AccountDeletionScheduled,
   AuthenticationProblemResponse,
   CurrentSession,
   LocalCredentialRequest,
@@ -17,6 +19,55 @@ import type {
   SessionEstablishment,
   ValidationProblemResponse,
 } from "../models";
+
+export type scheduleAccountDeletionResponse200 = {
+  data: AccountDeletionScheduled;
+  status: 200;
+};
+
+export type scheduleAccountDeletionResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type scheduleAccountDeletionResponse409 = {
+  data: AccountDeletionConflictProblemResponse;
+  status: 409;
+};
+
+export type scheduleAccountDeletionResponseSuccess = scheduleAccountDeletionResponse200 & {
+  headers: Headers;
+};
+export type scheduleAccountDeletionResponseError = (
+  scheduleAccountDeletionResponse401 | scheduleAccountDeletionResponse409
+) & {
+  headers: Headers;
+};
+
+export type scheduleAccountDeletionResponse =
+  scheduleAccountDeletionResponseSuccess | scheduleAccountDeletionResponseError;
+
+export const getScheduleAccountDeletionUrl = () => {
+  return `/me/account`;
+};
+
+/**
+ * @summary Programa la eliminación de la cuenta actual
+ */
+export const scheduleAccountDeletion = async (
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<scheduleAccountDeletionResponse> => {
+  const res = await (fetchFn ?? fetch)(getScheduleAccountDeletionUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: scheduleAccountDeletionResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as scheduleAccountDeletionResponse;
+};
 
 export type getAccessMethodsResponse200 = {
   data: AccessMethods;

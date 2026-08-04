@@ -56,6 +56,14 @@ El runtime y el package manager están fijados por el repositorio. Tras clonar:
 pnpm install
 ```
 
+La instalación local usa el lockfile congelado por defecto: no resuelve ni
+escribe nuevas versiones. `pnpm-workspace.yaml` también retrasa siete días toda
+versión nueva, directa o transitiva. Para cambiar dependencias deliberadamente,
+usa `pnpm add`, `pnpm update` o `pnpm install --no-frozen-lockfile`, revisa el
+diff de manifiestos y lockfile, y no añadas exclusiones generales a esa espera.
+Si el registro no informa de la fecha de publicación o no existe una versión con
+al menos siete días dentro del rango solicitado, la resolución falla.
+
 Durante un cambio:
 
 ```bash

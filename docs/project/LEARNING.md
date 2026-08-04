@@ -1,5 +1,16 @@
 # Registro de aprendizaje
 
+## 2026-08-04 — El lockfile reproduce; la maduración reduce exposición futura
+
+Un lockfile con integridad evita que una instalación ordinaria cambie la
+resolución ya revisada, pero no decide qué hacer al incorporar una dependencia
+nueva. pnpm puede aplicar una edad mínima de publicación tanto a dependencias
+directas como transitivas. Configurar siete días, modo estricto y rechazo de
+metadatos sin fecha convierte la política en un fallo visible en vez de una
+convención fácil de omitir. No es una garantía de que un paquete antiguo sea
+seguro; las actualizaciones siguen requiriendo revisión del diff y respuesta a
+advisories.
+
 ## 2026-08-04 — Una baja de cuenta no puede dejar una propiedad huérfana
 
 La baja lógica separa retirar de inmediato acceso y relaciones personales de

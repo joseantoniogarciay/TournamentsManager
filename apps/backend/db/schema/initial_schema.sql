@@ -2,11 +2,12 @@ CREATE TABLE accounts (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     email text NOT NULL,
     locale text NOT NULL CHECK (locale IN ('es', 'en', 'it', 'fr')),
-    state text NOT NULL CHECK (state IN ('pending_verification', 'verified')),
+    state text NOT NULL CHECK (state IN ('pending_verification', 'verified', 'deletion_pending')),
     username text NOT NULL UNIQUE CHECK (username = lower(username)),
     created_at timestamptz NOT NULL DEFAULT now(),
     verified_at timestamptz,
     expires_at timestamptz,
+    deletion_requested_at timestamptz,
     CONSTRAINT accounts_state_lifecycle CHECK (
         (state = 'pending_verification'
             AND verified_at IS NULL
@@ -15,6 +16,11 @@ CREATE TABLE accounts (
         (state = 'verified'
             AND verified_at IS NOT NULL
             AND expires_at IS NULL)
+        OR
+        (state = 'deletion_pending'
+            AND verified_at IS NOT NULL
+            AND expires_at IS NULL
+            AND deletion_requested_at IS NOT NULL)
     )
 );
 

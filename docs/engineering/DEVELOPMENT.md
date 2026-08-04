@@ -109,6 +109,13 @@ workspace y formatea JavaScript, TypeScript y sus variantes JSX al guardar.
 
 - Node 24.18.0 LTS se selecciona mediante `devEngines.runtime`.
 - pnpm 11.17.0 gestiona un lockfile y los workspaces `apps/*` y `packages/*`.
+- La instalación local y CI usan el lockfile congelado; una instalación normal
+  no puede alterar la resolución. Los cambios intencionados usan `pnpm add`,
+  `pnpm update` o `pnpm install --no-frozen-lockfile` y requieren revisar el
+  diff resultante.
+- pnpm exige que cada versión nueva, directa o transitiva, tenga al menos siete
+  días (10 080 minutos). Si faltan metadatos temporales o no hay una versión
+  madura compatible, falla en lugar de instalar una versión más reciente.
 - El linker aislado exige que cada workspace declare sus dependencias directas.
 - TypeScript 6.0.3 usa `strict`, `noUncheckedIndexedAccess`,
   `exactOptionalPropertyTypes`, `noImplicitOverride` y `noEmit`.
