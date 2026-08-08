@@ -8,7 +8,7 @@ GO_TOOL := $(GO_BACKEND) tool -modfile=$(TOOL_MODFILE)
 GO_SOURCE := $(shell find $(BACKEND_DIR) -type f -name '*.go' -print -quit)
 
 .PHONY: \
-	api-up local-api-up \
+	api-up local-api-up dev-up dev-down dev-logs api-image-build \
 	format-go format-check-go \
 	tidy tidy-check tidy-tools tidy-tools-check tidy-all \
 	lint-go test test-integration test-race build vuln sqlc-generate sqlc-generate-check
@@ -96,6 +96,20 @@ api-up: local-api-up
 local-api-up: local-config-check db-up
 	@set -a; . $(BACKEND_ENV); set +a; \
 	$(GO_BACKEND) run ./cmd/api
+
+# Entorno diario: dependencias y API en Compose; Air recompila la API al guardar.
+dev-up: dev-config-check
+	$(DEV_COMPOSE) up --build --remove-orphans
+
+dev-down: dev-config-check
+	$(DEV_COMPOSE) down --remove-orphans
+
+dev-logs: dev-config-check
+	$(DEV_COMPOSE) logs --tail=200
+
+# Construye solo la etapa sin compilador ni Air que ejecutará un runtime futuro.
+api-image-build:
+	docker build --target runtime --tag tournaments-manager-api:local $(BACKEND_DIR)
 
 # sqlc solo se ejecuta al existir al menos una consulta del producto. Así se evita
 # generar código de relleno antes de que un caso de uso lo necesite.

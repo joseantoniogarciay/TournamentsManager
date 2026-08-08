@@ -3,7 +3,7 @@
 > Estado: toolchains Go y TypeScript aceptados en
 > [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md) y
 > [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md); el modelo de
-> entorno local está aceptado en [ADR-0018](../adr/0018-use-compose-for-local-service-dependencies.md)
+> entorno local está aceptado en [ADR-0076](../adr/0076-run-the-local-api-in-compose-with-air.md)
 > y su implementación está validada localmente.
 
 ## Principios
@@ -214,31 +214,42 @@ La configuración y los secretos siguen
   completos sin path. El backend falla si falta o incluye un valor inválido. En
   local se permiten `http://localhost:8081` y `http://127.0.0.1:8081`; cada
   entorno desplegado declara solo sus dominios web reales.
-- Docker Compose podrá usar `env_file` cuando se decida el entorno local.
+- El contrato de la API en Compose vive en `infra/local/api.docker.env`; usa
+  nombres de servicio (`postgres` y `mailpit`). El contrato host
+  `apps/backend/.env` conserva `127.0.0.1` y solo sirve para ejecutar la API
+  fuera de Docker de forma puntual.
 - No se introduce gestor de secretos hasta que exista evidencia operativa.
 
-### Arranque de la API Go
+### Arranque de la API Go en Compose
 
-Para levantar PostgreSQL local y la API desde el host:
+En un clon nuevo, crea los dos contratos de Compose una sola vez:
 
 ```bash
-make local-api-up
+make dev-init
 ```
 
-`make local-api-up` valida los contratos locales sin sobrescribirlos, espera a
-que PostgreSQL y Mailpit estén saludables, carga `apps/backend/.env` y mantiene
-la API en primer plano. El contrato del backend exige `DATABASE_URL`,
+Después, para levantar API, PostgreSQL y Mailpit:
+
+```bash
+make dev-up
+```
+
+`make dev-up` valida los contratos sin sobrescribirlos, espera a que PostgreSQL
+y Mailpit estén saludables y mantiene los logs en primer plano. El servicio API
+selecciona el target Docker `dev`: Air recompila y reinicia la API al guardar un
+archivo Go. El contrato `infra/local/api.docker.env` exige `DATABASE_URL`,
 `HTTP_ADDR`, `SMTP_ADDR`, `SMTP_FROM`, `PUBLIC_BASE_URL` y
-`CORS_ALLOWED_ORIGINS`; `apps/backend/.env.example` documenta únicamente
-valores locales de ejemplo. `make api-up` permanece como alias de compatibilidad.
+`CORS_ALLOWED_ORIGINS`.
 `PUBLIC_BASE_URL` es la URL del cliente a la que llega el correo, no la de la
 API: en local usa `http://localhost:8081`; así el navegador puede usar la
 excepción de desarrollo para cookies `Secure`. Fuera de loopback debe ser HTTPS y
 coincidir con `EXPO_PUBLIC_APP_LINK_URL` de la build móvil.
 El proceso comprueba PostgreSQL antes de abrir el puerto y expone `GET /healthz`
-en `HTTP_ADDR` (por defecto, `http://127.0.0.1:8080/healthz`). El esquema inicial
-se aplica explícitamente con `make db-schema-apply`; la API se detiene
-con `Ctrl+C` y PostgreSQL, si se desea, con `make db-down`.
+en `HTTP_ADDR` (publicado como `http://127.0.0.1:8080/healthz`). El esquema inicial
+se aplica explícitamente con `make db-schema-apply`; `Ctrl+C` detiene los
+contenedores y `make dev-down` los detiene de forma explícita conservando datos.
+`make api-image-build` construye el target `runtime`, que no contiene Air,
+fuentes ni compilador.
 
 ## Flujo de trabajo
 
@@ -263,15 +274,16 @@ Un cambio está terminado cuando:
 - no contiene secretos ni dependencias no justificadas.
 - conserva alineados contrato OpenAPI, implementación Go y cliente TypeScript.
 
-## Entorno local aceptado; implementación pendiente
+## Entorno local aceptado
 
-ADR-0018 delimita Docker Compose a dependencias de infraestructura: inicialmente
-solo PostgreSQL. La API Go y el cliente Expo —web, iOS y Android— se ejecutarán
-en el host durante el desarrollo. No habrá contenedores de frontend localmente.
+ADR-0076 ejecuta API, PostgreSQL y Mailpit en Docker Compose. El Dockerfile de
+la API comparte una etapa de módulos: `dev` añade Air y recibe el código mediante
+bind mount; `runtime` solo recibe el binario. El cliente Expo —web, iOS y
+Android— sigue en host; no hay contenedor de frontend local.
 
-La implementación fija PostgreSQL 18.4, `infra/local/compose.yaml`, contratos
-`.env.example` separados para Compose y backend, health check, volumen y los
-comandos `make db-*`. El [Makefile](../../Makefile) raíz es el índice de
+La implementación fija PostgreSQL 18.4, `infra/local/compose.dev.yaml`,
+contratos `.env.example` separados y health checks, volúmenes y comandos
+`make dev-*`/`make db-*`. El [Makefile](../../Makefile) raíz es el índice de
 automatización compartida; los comandos se separan por tecnología en
 [`mk/go.mk`](../../mk/go.mk), [`mk/typescript.mk`](../../mk/typescript.mk) y
 [`mk/postgres.mk`](../../mk/postgres.mk). Consulta el [runbook de PostgreSQL local](../runbooks/local-postgresql.md).

@@ -7,9 +7,9 @@
 
 ## Alcance
 
-Este runbook opera exclusivamente PostgreSQL local. API Go y cliente Expo se
-ejecutan desde el host; no hay contenedores de frontend ni de API. Véase
-[ADR-0018](../adr/0018-use-compose-for-local-service-dependencies.md).
+Este runbook opera el entorno local: PostgreSQL, Mailpit y API con Air en
+Compose. Expo sigue en host; no hay contenedor de frontend. Véase
+[ADR-0076](../adr/0076-run-the-local-api-in-compose-with-air.md).
 
 ## Prerrequisitos
 
@@ -20,26 +20,27 @@ ejecutan desde el host; no hay contenedores de frontend ni de API. Véase
 
 ```bash
 cp infra/local/.env.example infra/local/.env
-cp apps/backend/.env.example apps/backend/.env
+cp infra/local/api.docker.env.example infra/local/api.docker.env
 ```
 
-Edita ambos archivos para que usuario, contraseña y base coincidan. No subas los
+Edita los contratos para que usuario, contraseña y base coincidan. No subas los
 archivos `.env` a Git. La contraseña de ejemplo contiene caracteres seguros para
 una URL; si se cambia por una contraseña con caracteres reservados, actualiza
-`DATABASE_URL` con la codificación URL correspondiente.
+ambos `DATABASE_URL` con la codificación URL correspondiente. En
+`api.docker.env`, los hosts deben permanecer como `postgres` y `mailpit`.
 
 ## Arranque y verificación
 
 ```bash
-make db-up
-make db-status
+make dev-up
 ```
 
-`db-up` espera el `healthcheck`, que ejecuta `pg_isready`; si termina con éxito,
-la base acepta conexiones. Para observar el arranque:
+`dev-up` espera a que API, PostgreSQL y Mailpit estén disponibles. Air compila la
+API tras cada guardado Go. Comprueba `http://127.0.0.1:8080/healthz`; Mailpit se
+abre en `http://127.0.0.1:8025`. Para observar el arranque:
 
 ```bash
-make db-logs
+make dev-logs
 ```
 
 ## Esquema inicial
@@ -59,11 +60,13 @@ funcionales. Tras un cambio incompatible, elimina antes el volumen con
 ## Parada, inspección y recuperación
 
 ```bash
-make db-down
+make dev-down
 make db-status
 ```
 
-`db-down` conserva el volumen y, por tanto, los datos. Para eliminar por completo
+los datos locales, ejecuta:
+`dev-down` conserva el volumen y, por tanto, los datos. Para eliminar por completo
+los datos locales, ejecuta:
 los datos locales, ejecuta:
 
 ```bash
@@ -79,15 +82,14 @@ el único esquema `initial_schema.sql` antes de este reset. Después repite
 
 | Síntoma                     | Diagnóstico                                                                               | Mitigación                                                                                                                                                                       |
 | --------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Falta `.env`                | `make db-up` informa la ruta ausente                                                      | Copiar el ejemplo correspondiente; no crear secretos en Git.                                                                                                                     |
+| Falta `.env`                | `make dev-up` informa la ruta ausente                                                     | Copiar el ejemplo correspondiente; no crear secretos en Git.                                                                                                                     |
 | El puerto 5432 está ocupado | `make db-status` y revisar el proceso que lo usa                                          | Detener el proceso ajeno o cambiar ambos contratos de puerto/URL mediante un cambio documentado.                                                                                 |
-| Salud no llega a `healthy`  | `make db-logs`                                                                            | Verificar usuario, base y contraseña solo en los `.env` locales; si el volumen contiene una inicialización previa incompatible, usar `db-reset` tras confirmar pérdida de datos. |
+| Salud no llega a `healthy`  | `make dev-logs`                                                                           | Verificar usuario, base y contraseña solo en los `.env` locales; si el volumen contiene una inicialización previa incompatible, usar `db-reset` tras confirmar pérdida de datos. |
 | Esquema no conecta          | Verificar que `make db-status` muestra PostgreSQL saludable                              | Corregir el contrato local y reaplicar el esquema tras resetear si el cambio es incompatible.                                                                                   |
 
 ## Límites
 
 - No expongas PostgreSQL fuera de `127.0.0.1`.
-- No añadas Redis/Valkey, MinIO, observabilidad ni contenedores de aplicación
-  sin una decisión posterior.
-- Este procedimiento no sustituye una restauración de backup ni valida el
-  empaquetado de producción.
+- No añadas Redis/Valkey, MinIO u observabilidad sin una decisión posterior.
+- `make api-image-build` valida el empaquetado mínimo, pero este procedimiento no
+  sustituye una restauración de backup ni decide el despliegue real.

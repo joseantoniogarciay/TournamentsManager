@@ -68,7 +68,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0015](../adr/0015-use-expo-router-and-continuous-native-generation.md)                       | Usar Expo, Expo Router y CNG                                         | Aceptado              | 2026-07-24 |
 | [0016](../adr/0016-use-client-side-web-rendering-initially.md)                                | Usar rendering web client-side inicialmente                          | Aceptado              | 2026-07-24 |
 | [0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md)                         | Usar contratos de entorno, GitHub Environments y OIDC                | Aceptado              | 2026-07-24 |
-| [0018](../adr/0018-use-compose-for-local-service-dependencies.md)                             | Usar Docker Compose para dependencias locales de servicio            | Aceptado              | 2026-07-25 |
+| [0018](../adr/0018-use-compose-for-local-service-dependencies.md)                             | Usar Docker Compose para dependencias locales de servicio            | Superado por ADR-0076 | 2026-07-25 |
 | [0019](../adr/0019-use-risk-based-layered-testing.md)                                         | Usar pruebas por riesgo y capas                                      | Aceptado              | 2026-07-25 |
 | [0020](../adr/0020-use-minimal-correlated-observability.md)                                   | Usar observabilidad mínima correlacionada                            | Aceptado              | 2026-07-25 |
 | [0021](../adr/0021-use-advisory-ci-with-local-quality-gate.md)                                | Usar CI informativa con puerta de calidad local                      | Aceptado              | 2026-07-25 |
@@ -125,6 +125,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0070](../adr/0070-configure-league-when-starting.md)                                         | Configurar la liga al iniciarla                                      | Aceptado              | 2026-08-01 |
 | [0071](../adr/0071-run-postgresql-integration-tests-in-ci.md)                                 | Ejecutar integración PostgreSQL en CI                                | Aceptado              | 2026-08-02 |
 | [0072](../adr/0072-apply-a-resettable-initial-schema-without-migration-runner.md)             | Aplicar esquema inicial sin ejecutor de migraciones                  | Aceptado              | 2026-08-02 |
+| [0076](../adr/0076-run-the-local-api-in-compose-with-air.md)                                  | Ejecutar la API local en Compose con Air                             | Aceptado              | 2026-08-08 |
 
 ## Trazabilidad de un cambio
 

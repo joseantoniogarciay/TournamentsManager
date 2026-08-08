@@ -110,8 +110,11 @@ alta conservan la autoridad final sobre la unicidad.
 `internal/config/config_test.go` no inicia la API ni carga un `.env`: prueba esa
 validación inyectando valores controlados.
 
-Para el arranque local, `make local-api-up` carga `apps/backend/.env`, creado a
-partir de `.env.example`, y después inicia la API. Consulta
+Para el arranque local, `make dev-init` crea los contratos locales y `make dev-up`
+inicia la API en Docker Compose junto a PostgreSQL y Mailpit. Air recompila la
+API al guardar. `infra/local/api.docker.env` usa los nombres de servicio Docker,
+mientras `apps/backend/.env` queda disponible para un arranque puntual en host.
+Consulta
 [Desarrollo](../../docs/engineering/DEVELOPMENT.md) y el
 [runbook PostgreSQL local](../../docs/runbooks/local-postgresql.md) para los
 comandos y el contrato completo de variables.

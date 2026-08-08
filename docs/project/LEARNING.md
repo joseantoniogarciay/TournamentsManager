@@ -1,5 +1,16 @@
 # Registro de aprendizaje
 
+## 2026-08-08 — Paridad útil no significa llevar Air a producción
+
+Un Dockerfile multi-stage puede compartir la resolución de módulos y producir
+dos targets con responsabilidades distintas. `dev` incluye Air y observa el
+código montado para reducir el ciclo de edición; `runtime` recibe únicamente el
+binario estático, certificados y un UID no privilegiado. Compose practica la red
+real entre API, PostgreSQL y Mailpit, pero Air, bind mounts y el compilador no
+son parte del artefacto que se ejecutará fuera de desarrollo. Separar ambos
+targets evita tanto la divergencia completa como copiar herramientas de desarrollo
+en producción. Véase ADR-0076.
+
 ## 2026-08-04 — El lockfile reproduce; la maduración reduce exposición futura
 
 Un lockfile con integridad evita que una instalación ordinaria cambie la

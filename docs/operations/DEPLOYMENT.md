@@ -118,13 +118,14 @@ completa y recibir autorización explícita del usuario.
 
 ## Decisiones por fase
 
-### Fase 1
+### Desarrollo local
 
-Docker Compose para dependencias locales, configuración, datos, ciclo de vida y
-comandos. Conforme a [ADR-0018](../adr/0018-use-compose-for-local-service-dependencies.md),
-Compose operará inicialmente PostgreSQL; API Go y cliente Expo se ejecutan en el
-host durante desarrollo. La futura imagen OCI de la API no convierte Compose en
-entorno de desarrollo de la aplicación ni decide la forma de entrega web.
+Conforme a [ADR-0076](../adr/0076-run-the-local-api-in-compose-with-air.md),
+Compose ejecuta API, PostgreSQL y Mailpit. La API selecciona el target `dev` del
+Dockerfile y usa Air con el código montado; el target `runtime` queda reservado
+para validar el artefacto sin compilador ni Air. Expo se ejecuta en host por sus
+simuladores y herramientas nativas. Esta paridad local no decide aún el despliegue
+real del mini PC ni sustituye el runtime cloud futuro.
 
 ### Fase 4
 
