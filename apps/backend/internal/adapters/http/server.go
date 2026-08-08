@@ -46,6 +46,9 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 	}
 	availabilityLimiter := newRequestLimiter(usernameAvailabilityLimit, usernameAvailabilityWindow)
 	localLoginLimiter := newLoginLimiter(10, time.Minute)
+	cookieCSRF := func(next http.Handler) http.Handler {
+		return requireCookieCSRF(corsAllowedOrigins, next)
+	}
 	mux.HandleFunc("GET /healthz", healthz)
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService))
@@ -53,7 +56,7 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 	if federatedService != nil {
 		mux.HandleFunc("POST /v1/google-login-challenges", createGoogleChallenge(*federatedService))
 		mux.HandleFunc("POST /v1/google-sessions", createGoogleSession(*federatedService, cookies))
-		mux.Handle("POST /v1/me/google-identities", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(createGoogleIdentity(*federatedService)))))
+		mux.Handle("POST /v1/me/google-identities", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createGoogleIdentity(*federatedService)))))
 	} else {
 		mux.HandleFunc("POST /v1/google-login-challenges", unavailableFederatedLogin)
 		mux.HandleFunc("POST /v1/google-sessions", unavailableFederatedLogin)
@@ -66,20 +69,20 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService, cookies))
 	mux.Handle("GET /v1/sessions", requireSession(authenticator)(http.HandlerFunc(getCurrentSession(authenticator))))
 	mux.HandleFunc("POST /v1/sessions/refresh", refreshSession(registrationService))
-	mux.Handle("DELETE /v1/sessions", requireCookieCSRF(http.HandlerFunc(revokeCurrentSession(authenticator, cookies))))
+	mux.Handle("DELETE /v1/sessions", cookieCSRF(http.HandlerFunc(revokeCurrentSession(authenticator, cookies))))
 	mux.Handle("GET /v1/me/access-methods", requireSession(authenticator)(http.HandlerFunc(getAccessMethods(authenticator))))
-	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(createReauthenticationTicket(accessService, federatedService)))))
-	mux.Handle("PUT /v1/me/local-credential", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(putLocalCredential(accessService)))))
-	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
+	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createReauthenticationTicket(accessService, federatedService)))))
+	mux.Handle("PUT /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(putLocalCredential(accessService)))))
+	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
 	mux.Handle("GET /v1/me/recent-leagues", requireSession(authenticator)(http.HandlerFunc(listRecentAccountLeagues(leagueService))))
-	followHandler := requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(followLeague(leagueService))))
+	followHandler := requireSession(authenticator)(cookieCSRF(http.HandlerFunc(followLeague(leagueService))))
 	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)
 	if len(creationServices) > 0 {
 		creationService := creationServices[0]
-		mux.Handle("POST /v1/leagues", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(createLeague(creationService)))))
-		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(requireCookieCSRF(http.HandlerFunc(startLeague(creationService)))))
+		mux.Handle("POST /v1/leagues", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createLeague(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(startLeague(creationService)))))
 		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
 	}
 	withCookieName := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

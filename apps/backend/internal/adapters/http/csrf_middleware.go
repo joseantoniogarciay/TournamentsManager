@@ -2,8 +2,13 @@ package http
 
 import "net/http"
 
-func requireCookieCSRF(next http.Handler) http.Handler {
+func requireCookieCSRF(trustedOrigins []string, next http.Handler) http.Handler {
 	protection := http.NewCrossOriginProtection()
+	for _, origin := range trustedOrigins {
+		if err := protection.AddTrustedOrigin(origin); err != nil {
+			panic("el origen CORS validado debe ser válido para la protección CSRF")
+		}
+	}
 	protection.SetDenyHandler(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
 		writeProblem(writer, http.StatusForbidden, "Origen no permitido")
 	}))

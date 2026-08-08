@@ -359,6 +359,33 @@ Para cada capacidad se sigue el ciclo:
   arranque cómodo con `*` porque sería incompatible con las cookies de sesión y
   ocultaría qué frontends tienen permiso para consumir la API.
 
+### 2026-08-08 — CORS y CSRF deben compartir la misma confianza explícita
+
+- **Aprendido:** permitir un origen en CORS no hace que una protección CSRF lo
+  acepte automáticamente. Una mutación web autenticada por cookie necesita que
+  ambos controles conozcan el mismo origen confiable.
+- **Evidencia:** el borrado de cuenta desde `http://localhost:8081` alcanzaba
+  la API, pero recibía `403` de la protección CSRF pese a estar en
+  `CORS_ALLOWED_ORIGINS`. La API registra ahora cada origen ya validado también
+  como origen confiable del control CSRF y una prueba HTTP cubre ese flujo.
+- **Regla reutilizable:** CORS y CSRF conservan responsabilidades distintas;
+  cuando se permite una web con cookies, su allowlist validada debe alimentar
+  explícitamente ambos controles, sin convertir CORS en sustituto de CSRF.
+
+### 2026-08-08 — Invalidar una sesión también reinicia el estado de navegación
+
+- **Aprendido:** eliminar los secretos y el usuario en memoria no basta si el
+  contenedor de tabs conserva rutas profundas o vistas ya montadas de la sesión
+  anterior.
+- **Evidencia:** tras programar la eliminación, Inicio quedaba seleccionado
+  pero la ruta de datos de acceso podía conservarse hasta recargar. El reset
+  vacía la pila activa solo cuando puede cerrarse y reemplaza la ruta por el
+  destino anónimo; las tabs se remontan con la revisión de sesión que ya se
+  incrementa al cerrar sesión, caducar una credencial o borrar la cuenta.
+- **Regla reutilizable:** toda transición a sesión anónima reinicia a la vez la
+  identidad, las rutas profundas y los flujos de navegación dependientes de
+  sesión; no debe depender de una recarga del navegador.
+
 ### 2026-07-29 — La experiencia de usuario y el diagnóstico técnico requieren señales distintas
 
 - **Aprendido:** un replay explica la secuencia de interacción que precede a un

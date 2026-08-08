@@ -144,9 +144,11 @@ funcionar en el futuro; por ello no se admite el comodín `*`.
 
 Las operaciones protegidas pasan por middleware de sesión: acepta cookie o
 Bearer, nunca ambas credenciales a la vez, y deja el ID de cuenta en el contexto
-interno. La autorización por liga permanece en el caso de uso. Una protección
-CSRF independiente será requisito antes de una operación mutante por cookie.
-Véase [ADR-0059](../adr/0059-centralize-session-authentication-at-the-http-boundary.md).
+interno. La autorización por liga permanece en el caso de uso. Las mutaciones
+por cookie aplican una protección CSRF independiente y solo confían en los
+orígenes exactos ya validados en `CORS_ALLOWED_ORIGINS`; Bearer no usa ese
+control porque no viaja automáticamente con el navegador. Véase
+[ADR-0059](../adr/0059-centralize-session-authentication-at-the-http-boundary.md).
 
 ## Validación y generación
 

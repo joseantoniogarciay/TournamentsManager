@@ -39,6 +39,7 @@ function RootNavigator() {
   useEffect(() => {
     if (transition !== "resetting" && transition !== "signing-out") return;
 
+    if (router.canDismiss()) router.dismissAll();
     router.replace(transition === "signing-out" ? "/account" : replacementDestination);
     let secondFrame: number | undefined;
     const firstFrame = requestAnimationFrame(() => {
