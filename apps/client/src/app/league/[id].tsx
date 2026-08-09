@@ -285,7 +285,19 @@ export default function LeagueScreen() {
                     {isOrganizer ? <LeagueCreatorChip /> : null}
                     <Text color="secondary">{getLeagueStateLabel(t, league.state)}</Text>
                   </View>
-                  <Text color="secondary">{league.teams.map((team) => team.name).join(" · ")}</Text>
+                  <View style={styles.summaryActions}>
+                    <Button
+                      label={t("league_teams")}
+                      onPress={() => router.push(`/league/${league.id}/teams`)}
+                      variant="secondary"
+                    />
+                    <Button
+                      disabled
+                      label={t("league_standings")}
+                      onPress={() => undefined}
+                      variant="secondary"
+                    />
+                  </View>
                 </View>
               </Card>
               {Platform.OS !== "ios" && menuOpen ? (
@@ -487,6 +499,7 @@ const styles = StyleSheet.create({
   content: { paddingBottom: space[4] },
   listHeader: { gap: space[5], paddingBottom: space[5] },
   stack: { flex: 1, gap: space[3] },
+  summaryActions: { flexDirection: "row", gap: space[3] },
   leagueStatus: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   navigationButton: {
     alignItems: "center",

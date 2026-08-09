@@ -1,19 +1,30 @@
 import { APIUnexpectedResponseError, apiFetch, authenticatedApiFetch } from "@/api/fetch";
 import {
+  addLeagueTeam,
   assignLeagueAdministrator,
   cancelLeague,
   createLeague,
   getPublicLeague,
   listCurrentAccountLeagues,
   listRecentAccountLeagues,
+  removeLeagueTeam,
   startLeague,
 } from "@/api/generated/leagues/leagues";
-import type { LeagueInput, StartLeagueRequest } from "@/api/generated/models";
+import type { LeagueInput, StartLeagueRequest, TeamInput } from "@/api/generated/models";
 
 export async function createLeagueRequest(input: LeagueInput) {
   const response = await createLeague(input, undefined, authenticatedApiFetch);
   if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
   return response.data;
+}
+export async function addLeagueTeamRequest(leagueID: string, input: TeamInput) {
+  const response = await addLeagueTeam(leagueID, input, undefined, authenticatedApiFetch);
+  if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
+  return response.data;
+}
+export async function removeLeagueTeamRequest(leagueID: string, teamID: string) {
+  const response = await removeLeagueTeam(leagueID, teamID, undefined, authenticatedApiFetch);
+  if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
 }
 export async function startLeagueRequest(leagueID: string, input: StartLeagueRequest) {
   const response = await startLeague(leagueID, input, undefined, authenticatedApiFetch);

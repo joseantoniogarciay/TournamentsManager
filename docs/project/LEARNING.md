@@ -1698,3 +1698,18 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** al introducir delegación directa, conserva de forma
   explícita el permiso en la propiedad salvo que una decisión establezca una
   separación de deberes deliberada.
+
+### 2026-08-09 — La composición se modifica antes de generar el calendario
+
+- **Aprendido:** añadir un inscrito no debe exigir recrear una liga mientras la
+  competición todavía no ha empezado.
+- **Evidencia:** la nueva operación añade un único equipo, solo para la
+  organizadora y únicamente en `published`; el servidor bloquea la liga antes
+  de calcular la siguiente posición y rechaza duplicados, más de 64 equipos o
+  cualquier estado posterior.
+- **Coste aceptado:** se incorpora una mutación específica y un popup local en
+  la vista de equipos. La eliminación conserva al menos dos equipos; no se
+  implementa edición de la composición en curso ni regeneración de partidos.
+- **Regla reutilizable:** cuando una transición genera derivados persistidos,
+  concentra el último cambio estructural justo antes de esa transición y hazlo
+  cumplir también en el servidor.

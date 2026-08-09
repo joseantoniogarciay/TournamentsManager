@@ -506,6 +506,62 @@ paths:
         "403": { description: La sesión no pertenece a la organizadora. }
         "404": { description: La liga no existe. }
         "409": { description: La liga ya no está sin empezar. }
+  /leagues/{leagueId}/teams:
+    post:
+      tags: [Leagues]
+      operationId: addLeagueTeam
+      summary: Añade un equipo a una liga sin empezar
+      description: >-
+        Exige sesión de la organizadora. Solo se admite mientras la liga esté
+        publicada; al iniciarla, la composición queda congelada.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TeamInput" }
+      responses:
+        "201":
+          description: Equipo añadido a la composición de la liga.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LeagueTeam" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga no existe. }
+        "409": { description: "La liga ya se inició, alcanzó el límite o ya contiene ese nombre." }
+  /leagues/{leagueId}/teams/{teamId}:
+    delete:
+      tags: [Leagues]
+      operationId: removeLeagueTeam
+      summary: Elimina un equipo de una liga sin empezar
+      description: >-
+        Exige sesión de la organizadora. Solo se admite mientras la liga esté
+        publicada y conserva al menos dos equipos; para descartar la liga debe
+        usarse su cancelación explícita.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: teamId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "204": { description: Equipo eliminado de la composición de la liga. }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga o el equipo no existe. }
+        "409": { description: "La liga ya se inició o solo conserva dos equipos." }
   /leagues/{leagueId}/cancel:
     post:
       tags: [Leagues]

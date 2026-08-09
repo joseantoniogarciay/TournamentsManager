@@ -82,6 +82,8 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 	if len(creationServices) > 0 {
 		creationService := creationServices[0]
 		mux.Handle("POST /v1/leagues", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createLeague(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/teams", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(addLeagueTeam(creationService)))))
+		mux.Handle("DELETE /v1/leagues/{leagueId}/teams/{teamId}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeLeagueTeam(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(startLeague(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/cancel", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(cancelLeague(creationService)))))
 		mux.Handle("PUT /v1/leagues/{leagueId}/matches/{matchId}/result", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(recordMatchResult(creationService)))))
@@ -187,6 +189,9 @@ type leagueInput struct {
 type startLeagueInput struct {
 	RoundRobinLegs int `json:"roundRobinLegs"`
 }
+type teamInput struct {
+	Name string `json:"name"`
+}
 type matchResultInput struct {
 	HomeScore *int `json:"homeScore"`
 	AwayScore *int `json:"awayScore"`
@@ -220,6 +225,77 @@ func createLeague(service leagues.CreationService) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+func addLeagueTeam(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID := r.PathValue("leagueId")
+		var body teamInput
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || decodeBody(r, &body) != nil {
+			writeValidationProblem(w)
+			return
+		}
+		team, err := service.AddTeam(r.Context(), accountID, leagueID, leagues.TeamInput{Name: body.Name})
+		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
+			writeValidationProblem(w)
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes modificar los equipos de esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueTeamConflict) {
+			writeProblem(w, http.StatusConflict, "La liga no admite ese equipo")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo añadir el equipo")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(team)
+	}
+}
+func removeLeagueTeam(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID, teamID := r.PathValue("leagueId"), r.PathValue("teamId")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(teamID) {
+			writeValidationProblem(w)
+			return
+		}
+		err := service.RemoveTeam(r.Context(), accountID, leagueID, teamID)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes modificar los equipos de esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga o equipo no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueTeamConflict) {
+			writeProblem(w, http.StatusConflict, "La liga debe conservar al menos dos equipos sin empezar")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo eliminar el equipo")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 func getPublicLeague(service leagues.CreationService) http.HandlerFunc {

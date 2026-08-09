@@ -18,6 +18,8 @@ var (
 	ErrLeagueCancellationConflict = errors.New("liga no se puede cancelar")
 	// ErrLeagueAdministratorConflict indica que no se puede asignar la administración solicitada.
 	ErrLeagueAdministratorConflict = errors.New("administradora de liga inválida")
+	// ErrLeagueTeamConflict indica que la composición ya no admite el equipo solicitado.
+	ErrLeagueTeamConflict = errors.New("equipo de liga inválido")
 	// ErrMatchResultForbidden indica que la cuenta no administra resultados de la liga.
 	ErrMatchResultForbidden = errors.New("resultado no autorizado")
 	// ErrMatchResultConflict indica que la liga no admite resultados en su estado actual.
@@ -72,11 +74,27 @@ type League struct {
 // CreationRepository persiste y consulta el ciclo inicial de una liga.
 type CreationRepository interface {
 	Create(context.Context, string, CreateInput) (League, error)
+	AddTeam(context.Context, string, string, TeamInput) (Team, error)
+	RemoveTeam(context.Context, string, string, string) error
 	Start(context.Context, string, string, StartInput) (League, error)
 	Cancel(context.Context, string, string) (League, error)
 	AssignAdministrator(context.Context, string, string, string) error
 	RecordResult(context.Context, string, string, string, MatchResultInput) (League, error)
 	GetPublic(context.Context, string) (League, error)
+}
+
+// AddTeam incorpora un equipo mientras la liga siga sin empezar.
+func (s CreationService) AddTeam(ctx context.Context, accountID, leagueID string, input TeamInput) (Team, error) {
+	name := strings.TrimSpace(input.Name)
+	if name == "" || len(name) > 100 {
+		return Team{}, ErrInvalidLeagueInput
+	}
+	return s.repository.AddTeam(ctx, accountID, leagueID, TeamInput{Name: name})
+}
+
+// RemoveTeam elimina un equipo solo mientras la composición conserve el mínimo válido.
+func (s CreationService) RemoveTeam(ctx context.Context, accountID, leagueID, teamID string) error {
+	return s.repository.RemoveTeam(ctx, accountID, leagueID, teamID)
 }
 
 // CreationService coordina creación, consulta e inicio de ligas.

@@ -10,12 +10,14 @@ import type {
   AccountLeaguePage,
   AuthenticationProblemResponse,
   LeagueInput,
+  LeagueTeam,
   ListCurrentAccountLeaguesParams,
   MatchResultInput,
   Problem,
   PublicLeague,
   PublishedLeague,
   StartLeagueRequest,
+  TeamInput,
   Username,
   Uuid,
   ValidationProblemResponse,
@@ -402,6 +404,149 @@ export const startLeague = async (
 
   const data: startLeagueResponse["data"] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as startLeagueResponse;
+};
+
+export type addLeagueTeamResponse201 = {
+  data: LeagueTeam;
+  status: 201;
+};
+
+export type addLeagueTeamResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type addLeagueTeamResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type addLeagueTeamResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type addLeagueTeamResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type addLeagueTeamResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type addLeagueTeamResponseSuccess = addLeagueTeamResponse201 & {
+  headers: Headers;
+};
+export type addLeagueTeamResponseError = (
+  | addLeagueTeamResponse400
+  | addLeagueTeamResponse401
+  | addLeagueTeamResponse403
+  | addLeagueTeamResponse404
+  | addLeagueTeamResponse409
+) & {
+  headers: Headers;
+};
+
+export type addLeagueTeamResponse = addLeagueTeamResponseSuccess | addLeagueTeamResponseError;
+
+export const getAddLeagueTeamUrl = (leagueId: Uuid) => {
+  return `/leagues/${leagueId}/teams`;
+};
+
+/**
+ * Exige sesión de la organizadora. Solo se admite mientras la liga esté publicada; al iniciarla, la composición queda congelada.
+ * @summary Añade un equipo a una liga sin empezar
+ */
+export const addLeagueTeam = async (
+  leagueId: Uuid,
+  teamInput: TeamInput,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<addLeagueTeamResponse> => {
+  const res = await (fetchFn ?? fetch)(getAddLeagueTeamUrl(leagueId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(teamInput),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: addLeagueTeamResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as addLeagueTeamResponse;
+};
+
+export type removeLeagueTeamResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type removeLeagueTeamResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type removeLeagueTeamResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type removeLeagueTeamResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type removeLeagueTeamResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type removeLeagueTeamResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type removeLeagueTeamResponseSuccess = removeLeagueTeamResponse204 & {
+  headers: Headers;
+};
+export type removeLeagueTeamResponseError = (
+  | removeLeagueTeamResponse400
+  | removeLeagueTeamResponse401
+  | removeLeagueTeamResponse403
+  | removeLeagueTeamResponse404
+  | removeLeagueTeamResponse409
+) & {
+  headers: Headers;
+};
+
+export type removeLeagueTeamResponse =
+  removeLeagueTeamResponseSuccess | removeLeagueTeamResponseError;
+
+export const getRemoveLeagueTeamUrl = (leagueId: Uuid, teamId: Uuid) => {
+  return `/leagues/${leagueId}/teams/${teamId}`;
+};
+
+/**
+ * Exige sesión de la organizadora. Solo se admite mientras la liga esté publicada y conserva al menos dos equipos; para descartar la liga debe usarse su cancelación explícita.
+ * @summary Elimina un equipo de una liga sin empezar
+ */
+export const removeLeagueTeam = async (
+  leagueId: Uuid,
+  teamId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<removeLeagueTeamResponse> => {
+  const res = await (fetchFn ?? fetch)(getRemoveLeagueTeamUrl(leagueId, teamId), {
+    ...options,
+    method: "DELETE",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: removeLeagueTeamResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as removeLeagueTeamResponse;
 };
 
 export type cancelLeagueResponse200 = {
