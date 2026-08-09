@@ -83,6 +83,8 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 		creationService := creationServices[0]
 		mux.Handle("POST /v1/leagues", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createLeague(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(startLeague(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/cancel", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(cancelLeague(creationService)))))
+		mux.Handle("PUT /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(assignLeagueAdministrator(creationService)))))
 		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
 	}
 	withCookieName := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -271,6 +273,73 @@ func startLeague(service leagues.CreationService) http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+
+func cancelLeague(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		leagueID := r.PathValue("leagueId")
+		if !uuidPattern.MatchString(leagueID) {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.Cancel(r.Context(), accountID, leagueID)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes cancelar esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueCancellationConflict) {
+			writeProblem(w, http.StatusConflict, "La liga no se puede cancelar desde su estado actual")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo cancelar la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+
+func assignLeagueAdministrator(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID, username := r.PathValue("leagueId"), r.PathValue("username")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || !usernamePattern.MatchString(username) {
+			writeValidationProblem(w)
+			return
+		}
+		err := service.AssignAdministrator(r.Context(), accountID, leagueID, username)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes asignar administradoras en esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga o cuenta no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueAdministratorConflict) {
+			writeProblem(w, http.StatusConflict, "La organizadora no puede ser administradora delegada")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo asignar la administradora")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

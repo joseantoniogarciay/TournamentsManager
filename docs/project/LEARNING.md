@@ -11,6 +11,18 @@ son parte del artefacto que se ejecutará fuera de desarrollo. Separar ambos
 targets evita tanto la divergencia completa como copiar herramientas de desarrollo
 en producción. Véase ADR-0076.
 
+## 2026-08-09 — La maduración de dependencias necesita una salida de compatibilidad acotada
+
+Una edad mínima reduce exposición para actualizaciones ordinarias, pero no debe
+mantener una matriz de runtime que su propio proveedor declara incompatible. La
+salida segura no es excluir una familia completa de paquetes: una excepción
+exacta y versionada para el conjunto solicitado por Expo mantiene trazabilidad,
+permite reconstruir el binario nativo y deja el resto de la política intacto.
+La build limpia es imprescindible: typecheck y lockfile no prueban la
+compatibilidad entre JavaScript y los componentes nativos montados por iOS.
+
+Véase ADR-0077.
+
 ## 2026-08-04 — El lockfile reproduce; la maduración reduce exposición futura
 
 Un lockfile con integridad evita que una instalación ordinaria cambie la
@@ -1539,3 +1551,16 @@ límite sin crear una segunda sesión ni un estado de interfaz global.
   compartida, porque el estado solo coordina el primer render de esta pantalla.
 - **Regla reutilizable:** un control cuyo valor inicial depende de varias
   respuestas no se muestra hasta tener todos los datos que definen esa decisión.
+
+### 2026-08-09 — Las transiciones del ciclo se serializan sobre la entidad
+
+- **Aprendido:** dos acciones válidas por separado, como iniciar y cancelar una
+  liga, pueden competir sobre el mismo estado si se ejecutan al mismo tiempo.
+- **Evidencia:** el adaptador PostgreSQL bloquea la fila de `leagues` con `FOR
+  UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
+  y solo después actualiza a `in_progress` o `cancelled`.
+- **Coste aceptado:** una transición concurrente espera brevemente el bloqueo;
+  es menor que introducir colas, eventos o control de versiones optimista en
+  este primer ciclo.
+- **Regla reutilizable:** una transición exclusiva de una entidad se autoriza y
+  valida dentro de la transacción que modifica su estado.

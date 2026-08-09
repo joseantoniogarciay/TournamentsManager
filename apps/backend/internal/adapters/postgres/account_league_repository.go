@@ -180,6 +180,73 @@ func (r AccountLeagueRepository) Start(ctx context.Context, accountID, leagueID 
 	return r.GetPublic(ctx, leagueID)
 }
 
+// Cancel conserva la liga y sus datos, pero la saca del ciclo deportivo activo.
+func (r AccountLeagueRepository) Cancel(ctx context.Context, accountID, leagueID string) (leagues.League, error) {
+	account, err := uuidValue(accountID)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var organizer, state string
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
+		return leagues.League{}, leagues.ErrLeagueNotFound
+	} else if err != nil {
+		return leagues.League{}, err
+	}
+	if organizer != account.String() {
+		return leagues.League{}, leagues.ErrLeagueForbidden
+	}
+	if state != "published" && state != "in_progress" {
+		return leagues.League{}, leagues.ErrLeagueCancellationConflict
+	}
+	if _, err := tx.Exec(ctx, `UPDATE leagues SET state = 'cancelled', last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
+		return leagues.League{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return leagues.League{}, err
+	}
+	return r.GetPublic(ctx, leagueID)
+}
+
+// AssignAdministrator asigna directamente una cuenta verificada por su username público.
+func (r AccountLeagueRepository) AssignAdministrator(ctx context.Context, accountID, leagueID, username string) error {
+	account, err := uuidValue(accountID)
+	if err != nil {
+		return err
+	}
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var organizer string
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer); errors.Is(err, pgx.ErrNoRows) {
+		return leagues.ErrLeagueNotFound
+	} else if err != nil {
+		return err
+	}
+	if organizer != account.String() {
+		return leagues.ErrLeagueForbidden
+	}
+	var administrator string
+	if err := tx.QueryRow(ctx, `SELECT id::text FROM accounts WHERE username = $1 AND state = 'verified'`, username).Scan(&administrator); errors.Is(err, pgx.ErrNoRows) {
+		return leagues.ErrLeagueNotFound
+	} else if err != nil {
+		return err
+	}
+	if administrator == organizer {
+		return leagues.ErrLeagueAdministratorConflict
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO league_administrators (league_id, account_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, leagueID, administrator); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
 type fixture struct {
 	round, sequence int
 	home, away      string

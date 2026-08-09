@@ -82,6 +82,14 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	if err != nil {
 		t.Fatalf("crear liga: %v", err)
 	}
+	administratorID := createVerifiedLocalAccount(t, ctx, pool, "administrator@example.test", "administrator", "correct password")
+	if err := service.AssignAdministrator(ctx, accountID, created.ID, "administrator"); err != nil {
+		t.Fatalf("asignar administradora: %v", err)
+	}
+	var assigned bool
+	if err := pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM league_administrators WHERE league_id = $1 AND account_id = $2)`, created.ID, administratorID).Scan(&assigned); err != nil || !assigned {
+		t.Fatalf("comprobar administradora asignada = %v, %v", assigned, err)
+	}
 	if created.State != "published" || len(created.Teams) != 4 || len(created.Matches) != 0 {
 		t.Fatalf("liga creada = %#v, se esperaba publicada sin partidos", created)
 	}
@@ -94,6 +102,24 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	}
 	if _, err := service.Start(ctx, accountID, created.ID, leagues.StartInput{RoundRobinLegs: 1}); err != leagues.ErrLeagueConflict {
 		t.Fatalf("segundo inicio = %v, se esperaba %v", err, leagues.ErrLeagueConflict)
+	}
+	cancelled, err := service.Cancel(ctx, accountID, created.ID)
+	if err != nil {
+		t.Fatalf("cancelar liga: %v", err)
+	}
+	if cancelled.State != "cancelled" || len(cancelled.Teams) != 4 || len(cancelled.Matches) != 12 {
+		t.Fatalf("liga cancelada = %#v, se esperaban datos conservados y estado cancelled", cancelled)
+	}
+	if _, err := service.Cancel(ctx, accountID, created.ID); err != leagues.ErrLeagueCancellationConflict {
+		t.Fatalf("segunda cancelación = %v, se esperaba %v", err, leagues.ErrLeagueCancellationConflict)
+	}
+	published, err := service.Create(ctx, accountID, leagues.CreateInput{Name: "Liga sin empezar", Teams: []leagues.TeamInput{{Name: "Norte"}, {Name: "Sur"}}})
+	if err != nil {
+		t.Fatalf("crear segunda liga: %v", err)
+	}
+	cancelledPublished, err := service.Cancel(ctx, accountID, published.ID)
+	if err != nil || cancelledPublished.State != "cancelled" {
+		t.Fatalf("cancelar liga publicada = %#v, %v; se esperaba cancelled", cancelledPublished, err)
 	}
 }
 

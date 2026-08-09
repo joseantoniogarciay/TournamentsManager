@@ -5,7 +5,7 @@
 - **Decisor:** Usuario
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0077, solo para actualizaciones de compatibilidad de Expo solicitadas por Expo CLI
 
 ## Problema
 

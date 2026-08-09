@@ -3,6 +3,7 @@ package leagues
 import (
 	"context"
 	"errors"
+	"regexp"
 	"strings"
 )
 
@@ -13,6 +14,10 @@ var (
 	ErrLeagueForbidden = errors.New("liga no autorizada")
 	// ErrLeagueConflict indica que la transición de inicio no es válida.
 	ErrLeagueConflict = errors.New("liga no se puede iniciar")
+	// ErrLeagueCancellationConflict indica que la liga no puede cancelarse desde su estado actual.
+	ErrLeagueCancellationConflict = errors.New("liga no se puede cancelar")
+	// ErrLeagueAdministratorConflict indica que no se puede asignar la administración solicitada.
+	ErrLeagueAdministratorConflict = errors.New("administradora de liga inválida")
 )
 
 // TeamInput representa un equipo enviado durante la creación.
@@ -59,6 +64,8 @@ type League struct {
 type CreationRepository interface {
 	Create(context.Context, string, CreateInput) (League, error)
 	Start(context.Context, string, string, StartInput) (League, error)
+	Cancel(context.Context, string, string) (League, error)
+	AssignAdministrator(context.Context, string, string, string) error
 	GetPublic(context.Context, string) (League, error)
 }
 
@@ -85,6 +92,21 @@ func (s CreationService) Start(ctx context.Context, accountID, leagueID string, 
 	}
 	return s.repository.Start(ctx, accountID, leagueID, input)
 }
+
+// Cancel conserva una liga visible, pero impide que continúe su ciclo deportivo.
+func (s CreationService) Cancel(ctx context.Context, accountID, leagueID string) (League, error) {
+	return s.repository.Cancel(ctx, accountID, leagueID)
+}
+
+// AssignAdministrator asigna directamente una cuenta verificada identificada por username.
+func (s CreationService) AssignAdministrator(ctx context.Context, accountID, leagueID, username string) error {
+	if !usernamePattern.MatchString(username) {
+		return ErrInvalidLeagueInput
+	}
+	return s.repository.AssignAdministrator(ctx, accountID, leagueID, username)
+}
+
+var usernamePattern = regexp.MustCompile(`^[a-z0-9_]{3,30}$`)
 
 // GetPublic devuelve la proyección pública de una liga visible.
 func (s CreationService) GetPublic(ctx context.Context, leagueID string) (League, error) {

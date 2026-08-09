@@ -1,5 +1,7 @@
 import { APIUnexpectedResponseError, apiFetch, authenticatedApiFetch } from "@/api/fetch";
 import {
+  assignLeagueAdministrator,
+  cancelLeague,
   createLeague,
   getPublicLeague,
   listCurrentAccountLeagues,
@@ -18,19 +20,33 @@ export async function startLeagueRequest(leagueID: string, input: StartLeagueReq
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   return response.data;
 }
+export async function cancelLeagueRequest(leagueID: string) {
+  const response = await cancelLeague(leagueID, undefined, authenticatedApiFetch);
+  if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
+  return response.data;
+}
+export async function assignLeagueAdministratorRequest(leagueID: string, username: string) {
+  const response = await assignLeagueAdministrator(
+    leagueID,
+    username,
+    undefined,
+    authenticatedApiFetch,
+  );
+  if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
+}
 export async function getLeague(leagueID: string) {
   const response = await getPublicLeague(leagueID, undefined, apiFetch);
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   return response.data;
 }
-export async function canAdministerLeague(leagueID: string) {
+export async function getLeagueRelationship(leagueID: string) {
   const response = await listCurrentAccountLeagues(
     { relationship: "administered", limit: 50 },
     undefined,
     authenticatedApiFetch,
   );
-  if (response.status !== 200) return false;
-  return response.data.items.some((league) => league.id === leagueID);
+  if (response.status !== 200) return undefined;
+  return response.data.items.find((league) => league.id === leagueID)?.relationship;
 }
 export async function listRelatedLeagues(relationship: "administered" | "followed") {
   const response = await listCurrentAccountLeagues(

@@ -19,6 +19,25 @@ minimumReleaseAge: 10080
 minimumReleaseAgeIgnoreMissingTime: false
 minimumReleaseAgeStrict: true
 
+# ADR-0077 permite añadir aquí solo excepciones exactas `paquete@versión` cuando
+# Expo CLI exija actualizar su conjunto compatible. No se usan comodines ni
+# exclusiones persistentes por familia de paquetes.
+minimumReleaseAgeExclude:
+  - "@expo/cli@57.0.13"
+  - "@expo/config-plugins@57.0.7"
+  - "@expo/router-server@57.0.5"
+  - "@expo/ui@57.0.9"
+  - "babel-preset-expo@57.0.6"
+  - "expo-asset@57.0.9"
+  - "expo-auth-session@57.0.6"
+  - "expo-constants@57.0.9"
+  - "expo-file-system@57.0.2"
+  - "expo-linking@57.0.5"
+  - "expo-modules-core@57.0.10"
+  - "expo-router@57.0.11"
+  - "expo-symbols@57.0.2"
+  - "expo@57.0.11"
+
 # Los rangos de Expo Router admiten revisiones más nuevas que aún no han
 # madurado. Se fijan a las últimas revisiones anteriores compatibles para que el
 # árbol pueda respetar la política sin una exclusión por edad.

@@ -1,7 +1,7 @@
 # API
 
-> Estado: REST y OpenAPI contract-first aceptados; contrato del primer
-> incremento diseñado en ADR-0045, sin implementación todavía.
+> Estado: REST y OpenAPI contract-first aceptados; el primer incremento está
+> implementado de forma progresiva conforme a ADR-0045.
 
 ## Relación entre API y backend
 
@@ -122,6 +122,14 @@ El alta exige identidad local y un locale efectivo de `es`, `en`, `it` o `fr`;
 el backend lo valida y lo persiste como preferencia de cuenta para localizar
 emails. El borrador es opcional y, si se envía, debe cumplir íntegramente las
 restricciones de `DraftInput`.
+
+`POST /leagues/{leagueId}/cancel` expresa la transición de cancelación, igual
+que el inicio usa una operación explícita y no una mutación implícita de la
+lectura pública. Exige sesión de la organizadora y CSRF cuando se entrega por
+cookie; no recibe cuerpo ni motivo. Devuelve la proyección pública conservada
+en estado `cancelled`. Solo `published` e `in_progress` admiten la transición;
+una repetición o cualquier otro estado devuelve `409`, sin exponer detalles
+internos.
 
 La entrega de sesión se declara explícitamente: `cookie` para web (cookie
 `__Host-`) y `bearer` para móvil. El secreto solo aparece una vez en la respuesta

@@ -8,6 +8,14 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0077: una solicitud de compatibilidad de Expo CLI puede actualizar de
+  inmediato el conjunto necesario mediante excepciones exactas por versión; el
+  resto de dependencias conserva siete días de maduración y lockfile congelado.
+
+- Cancelación de ligas propias: `POST /v1/leagues/{leagueId}/cancel` conserva
+  equipos y calendario, exige sesión y CSRF por cookie, y solo permite la
+  transición desde `published` o `in_progress` a `cancelled`.
+
 - ADR-0076: API, PostgreSQL y Mailpit se levantan con `make dev-up`; Air se
   ejecuta solo en la etapa Docker `dev` y el mismo Dockerfile ofrece un runtime
   mínimo sin compilador para validar con `make api-image-build`.

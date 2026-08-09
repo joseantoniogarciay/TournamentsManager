@@ -506,6 +506,54 @@ paths:
         "403": { description: La sesión no pertenece a la organizadora. }
         "404": { description: La liga no existe. }
         "409": { description: La liga ya no está sin empezar. }
+  /leagues/{leagueId}/cancel:
+    post:
+      tags: [Leagues]
+      operationId: cancelLeague
+      summary: Cancela una liga publicada o en curso
+      description: >-
+        Exige sesión válida de la organizadora. No solicita motivo, conserva la
+        liga y la mantiene disponible para consulta pública en estado cancelled.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Liga cancelada y aún visible en modo de solo lectura.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicLeague" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga no existe. }
+        "409": { description: La liga no está publicada ni en curso. }
+  /leagues/{leagueId}/administrators/{username}:
+    put:
+      tags: [Leagues]
+      operationId: assignLeagueAdministrator
+      summary: Asigna directamente una administradora por username
+      description: >-
+        Exige sesión de la organizadora. La asignación es inmediata, idempotente
+        y no envía una invitación ni una notificación.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: username
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Username" }
+      responses:
+        "204": { description: La cuenta ya administra la liga. }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga o la cuenta no existe. }
+        "409": { description: No se puede asignar a la organizadora como administradora delegada. }
 components:
   securitySchemes:
     sessionCookie:
@@ -773,7 +821,7 @@ components:
         name: { type: string }
         sport: { type: string, enum: [football] }
         format: { type: string, enum: [league] }
-        state: { type: string, enum: [published, in_progress, completed] }
+        state: { type: string, enum: [published, in_progress, completed, cancelled] }
         teams: { type: array, items: { $ref: "#/components/schemas/LeagueTeam" } }
         matches: { type: array, items: { $ref: "#/components/schemas/Match" } }
     LeagueTeam:

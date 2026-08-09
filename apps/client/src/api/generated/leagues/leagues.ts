@@ -15,6 +15,7 @@ import type {
   PublicLeague,
   PublishedLeague,
   StartLeagueRequest,
+  Username,
   Uuid,
   ValidationProblemResponse,
 } from "../models";
@@ -400,4 +401,132 @@ export const startLeague = async (
 
   const data: startLeagueResponse["data"] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as startLeagueResponse;
+};
+
+export type cancelLeagueResponse200 = {
+  data: PublicLeague;
+  status: 200;
+};
+
+export type cancelLeagueResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type cancelLeagueResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type cancelLeagueResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type cancelLeagueResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type cancelLeagueResponseSuccess = cancelLeagueResponse200 & {
+  headers: Headers;
+};
+export type cancelLeagueResponseError = (
+  | cancelLeagueResponse401
+  | cancelLeagueResponse403
+  | cancelLeagueResponse404
+  | cancelLeagueResponse409
+) & {
+  headers: Headers;
+};
+
+export type cancelLeagueResponse = cancelLeagueResponseSuccess | cancelLeagueResponseError;
+
+export const getCancelLeagueUrl = (leagueId: Uuid) => {
+  return `/leagues/${leagueId}/cancel`;
+};
+
+/**
+ * Exige sesión válida de la organizadora. No solicita motivo, conserva la liga y la mantiene disponible para consulta pública en estado cancelled.
+ * @summary Cancela una liga publicada o en curso
+ */
+export const cancelLeague = async (
+  leagueId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<cancelLeagueResponse> => {
+  const res = await (fetchFn ?? fetch)(getCancelLeagueUrl(leagueId), {
+    ...options,
+    method: "POST",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: cancelLeagueResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as cancelLeagueResponse;
+};
+
+export type assignLeagueAdministratorResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type assignLeagueAdministratorResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type assignLeagueAdministratorResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type assignLeagueAdministratorResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type assignLeagueAdministratorResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type assignLeagueAdministratorResponseSuccess = assignLeagueAdministratorResponse204 & {
+  headers: Headers;
+};
+export type assignLeagueAdministratorResponseError = (
+  | assignLeagueAdministratorResponse401
+  | assignLeagueAdministratorResponse403
+  | assignLeagueAdministratorResponse404
+  | assignLeagueAdministratorResponse409
+) & {
+  headers: Headers;
+};
+
+export type assignLeagueAdministratorResponse =
+  assignLeagueAdministratorResponseSuccess | assignLeagueAdministratorResponseError;
+
+export const getAssignLeagueAdministratorUrl = (leagueId: Uuid, username: Username) => {
+  return `/leagues/${leagueId}/administrators/${username}`;
+};
+
+/**
+ * Exige sesión de la organizadora. La asignación es inmediata, idempotente y no envía una invitación ni una notificación.
+ * @summary Asigna directamente una administradora por username
+ */
+export const assignLeagueAdministrator = async (
+  leagueId: Uuid,
+  username: Username,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<assignLeagueAdministratorResponse> => {
+  const res = await (fetchFn ?? fetch)(getAssignLeagueAdministratorUrl(leagueId, username), {
+    ...options,
+    method: "PUT",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: assignLeagueAdministratorResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as assignLeagueAdministratorResponse;
 };

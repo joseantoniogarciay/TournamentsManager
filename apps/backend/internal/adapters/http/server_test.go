@@ -64,6 +64,31 @@ func (r testLeagueRepository) Follow(_ context.Context, _ string, _ string) (boo
 
 func (r testLeagueRepository) Unfollow(context.Context, string, string) error { return nil }
 
+type testCreationRepository struct {
+	cancelled leagues.League
+	cancelErr error
+}
+
+func (testCreationRepository) Create(context.Context, string, leagues.CreateInput) (leagues.League, error) {
+	return leagues.League{}, nil
+}
+
+func (testCreationRepository) Start(context.Context, string, string, leagues.StartInput) (leagues.League, error) {
+	return leagues.League{}, nil
+}
+
+func (r testCreationRepository) Cancel(context.Context, string, string) (leagues.League, error) {
+	return r.cancelled, r.cancelErr
+}
+
+func (testCreationRepository) AssignAdministrator(context.Context, string, string, string) error {
+	return nil
+}
+
+func (testCreationRepository) GetPublic(context.Context, string) (leagues.League, error) {
+	return leagues.League{}, nil
+}
+
 type testRegistrationRepository struct {
 	available    bool
 	loginAccount registration.LocalAccount
@@ -126,6 +151,53 @@ func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), `"delivery":"bearer"`) || !strings.Contains(recorder.Body.String(), `"sessionToken"`) || !strings.Contains(recorder.Body.String(), `"refreshToken"`) {
 		t.Errorf("body = %s, want bearer session tokens", recorder.Body.String())
+	}
+}
+
+func TestCancelLeagueAllowsBearerSession(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	creation := leagues.NewCreationService(testCreationRepository{cancelled: leagues.League{ID: leagueID, Name: "Liga", State: "cancelled", Teams: []leagues.Team{}, Matches: []leagues.Match{}}})
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, creation)
+	request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/cancel", nil)
+	request.Header.Set("Authorization", "Bearer session-token")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body = %s", recorder.Code, http.StatusOK, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"state":"cancelled"`) {
+		t.Errorf("body = %s, want cancelled league", recorder.Body.String())
+	}
+}
+
+func TestCancelLeagueMapsBusinessErrors(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	for name, test := range map[string]struct {
+		err    error
+		status int
+	}{
+		"not organizer": {err: leagues.ErrLeagueForbidden, status: http.StatusForbidden},
+		"wrong state":   {err: leagues.ErrLeagueCancellationConflict, status: http.StatusConflict},
+		"not found":     {err: leagues.ErrLeagueNotFound, status: http.StatusNotFound},
+	} {
+		t.Run(name, func(t *testing.T) {
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{cancelErr: test.err}))
+			request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/cancel", nil)
+			request.Header.Set("Authorization", "Bearer session-token")
+			recorder := httptest.NewRecorder()
+
+			handler.ServeHTTP(recorder, request)
+
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
 	}
 }
 func (r testRegistrationRepository) RenewLoginVerification(context.Context, string, []byte) (string, registration.Locale, error) {
