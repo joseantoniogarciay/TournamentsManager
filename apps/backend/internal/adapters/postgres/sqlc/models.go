@@ -70,6 +70,11 @@ type LeagueAdministrator struct {
 	AssignedAt pgtype.Timestamptz
 }
 
+type LeagueChampion struct {
+	LeagueID pgtype.UUID
+	TeamID   pgtype.UUID
+}
+
 type LeagueFollower struct {
 	LeagueID   pgtype.UUID
 	AccountID  pgtype.UUID

@@ -612,6 +612,69 @@ export const cancelLeague = async (
   return { data, status: res.status, headers: res.headers } as cancelLeagueResponse;
 };
 
+export type completeLeagueResponse200 = {
+  data: PublicLeague;
+  status: 200;
+};
+
+export type completeLeagueResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type completeLeagueResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type completeLeagueResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type completeLeagueResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type completeLeagueResponseSuccess = completeLeagueResponse200 & {
+  headers: Headers;
+};
+export type completeLeagueResponseError = (
+  | completeLeagueResponse401
+  | completeLeagueResponse403
+  | completeLeagueResponse404
+  | completeLeagueResponse409
+) & {
+  headers: Headers;
+};
+
+export type completeLeagueResponse = completeLeagueResponseSuccess | completeLeagueResponseError;
+
+export const getCompleteLeagueUrl = (leagueId: Uuid) => {
+  return `/leagues/${leagueId}/complete`;
+};
+
+/**
+ * Exige sesión válida de la organizadora y una liga en curso sin partidos pendientes. El backend calcula y conserva todos los co-campeones a partir de la clasificación; el cliente no envía una ganadora.
+ * @summary Finaliza explícitamente una liga con todos los resultados
+ */
+export const completeLeague = async (
+  leagueId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<completeLeagueResponse> => {
+  const res = await (fetchFn ?? fetch)(getCompleteLeagueUrl(leagueId), {
+    ...options,
+    method: "POST",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: completeLeagueResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as completeLeagueResponse;
+};
+
 export type recordMatchResultResponse200 = {
   data: PublicLeague;
   status: 200;

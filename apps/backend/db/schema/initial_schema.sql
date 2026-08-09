@@ -230,6 +230,15 @@ CREATE TABLE match_result_changes (
 
 CREATE INDEX match_result_changes_match_idx ON match_result_changes (match_id, changed_at);
 
+CREATE TABLE league_champions (
+    league_id uuid NOT NULL REFERENCES leagues (id) ON DELETE CASCADE,
+    team_id uuid NOT NULL,
+    PRIMARY KEY (league_id, team_id),
+    FOREIGN KEY (league_id, team_id)
+        REFERENCES league_teams (league_id, id)
+        ON DELETE RESTRICT
+);
+
 CREATE TABLE external_identities (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,

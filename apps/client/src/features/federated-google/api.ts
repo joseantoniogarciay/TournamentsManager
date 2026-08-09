@@ -3,7 +3,13 @@ import {
   createGoogleLoginChallenge,
   createGoogleSession,
 } from "@/api/generated/federated-identity/federated-identity";
-import type { GoogleLoginChallenge, LeagueInput, Locale, Transport, Username } from "@/api/generated/models";
+import type {
+  GoogleLoginChallenge,
+  LeagueInput,
+  Locale,
+  Transport,
+  Username,
+} from "@/api/generated/models";
 
 export type GoogleAuthenticationFailure = "conflict" | "rate-limited";
 

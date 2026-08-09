@@ -20,6 +20,7 @@ import {
   getLeagueRelationship,
   removeLeagueTeamRequest,
 } from "@/features/league-creation/api";
+import { maximumLeagueTeams } from "@/features/league-creation/draft";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
@@ -55,6 +56,13 @@ export default function LeagueTeamsScreen() {
 
   const canAddTeam = relationship === "organizer" && league?.state === "published";
   const canRemoveTeam = canAddTeam && (league?.teams.length ?? 0) > 2;
+  const openAddTeam = () => {
+    if ((league?.teams.length ?? 0) >= maximumLeagueTeams) {
+      show({ kind: "generic-error", message: t("league_team_limit_reached") });
+      return;
+    }
+    setAdding(true);
+  };
   const close = () => {
     if (router.canDismiss()) {
       router.dismiss();
@@ -69,6 +77,10 @@ export default function LeagueTeamsScreen() {
   };
   const save = async () => {
     if (!id || !name.trim()) return;
+    if ((league?.teams.length ?? 0) >= maximumLeagueTeams) {
+      show({ kind: "generic-error", message: t("league_team_limit_reached") });
+      return;
+    }
     setSaving(true);
     try {
       const team = await addLeagueTeamRequest(id, { name: name.trim() });
@@ -149,7 +161,7 @@ export default function LeagueTeamsScreen() {
             ? {
                 headerLeft: () => navigationButton(close, t("common_back"), "close"),
                 headerRight: canAddTeam
-                  ? () => navigationButton(() => setAdding(true), t("league_add_team"), "add")
+                  ? () => navigationButton(openAddTeam, t("league_add_team"), "add")
                   : undefined,
               }
             : {}),
@@ -169,7 +181,7 @@ export default function LeagueTeamsScreen() {
               <Stack.Toolbar.Button
                 accessibilityLabel={t("league_add_team")}
                 icon="plus"
-                onPress={() => setAdding(true)}
+                onPress={openAddTeam}
               />
             </Stack.Toolbar>
           ) : null}

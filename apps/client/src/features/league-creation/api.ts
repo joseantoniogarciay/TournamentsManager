@@ -3,6 +3,7 @@ import {
   addLeagueTeam,
   assignLeagueAdministrator,
   cancelLeague,
+  completeLeague,
   createLeague,
   getPublicLeague,
   listCurrentAccountLeagues,
@@ -33,6 +34,11 @@ export async function startLeagueRequest(leagueID: string, input: StartLeagueReq
 }
 export async function cancelLeagueRequest(leagueID: string) {
   const response = await cancelLeague(leagueID, undefined, authenticatedApiFetch);
+  if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
+  return response.data;
+}
+export async function completeLeagueRequest(leagueID: string) {
+  const response = await completeLeague(leagueID, undefined, authenticatedApiFetch);
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   return response.data;
 }

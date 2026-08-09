@@ -1713,3 +1713,55 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** cuando una transición genera derivados persistidos,
   concentra el último cambio estructural justo antes de esa transición y hazlo
   cumplir también en el servidor.
+
+### 2026-08-09 — Una clasificación es una proyección, no un formulario
+
+- **Aprendido:** puntos, posiciones y futuras victorias de torneo son derivados
+  de resultados persistidos; una interfaz solo puede mostrarlos, nunca
+  declararlos.
+- **Evidencia:** el caso de uso calcula la tabla tras leer o mutar una liga y el
+  contrato entrega filas con estadísticas y posición. La pantalla no contiene
+  un comparador ni suma puntos; explica las reglas configuradas. Las pruebas
+  cubren grupos empatados de dos, tres y cuatro equipos.
+- **Coste aceptado:** se mantiene una función de dominio con pruebas para una y
+  dos vueltas, en vez de guardar posiciones que deberían reconciliarse tras una
+  corrección de marcador. Antes de valorar materializarla se medirá el caso de
+  64 equipos a dos vueltas y 4.032 partidos, tanto al leer como al corregir un
+  marcador.
+- **Regla reutilizable:** cuando una lectura afectará a logros, historial o
+  perfil, deriva su valor de la fuente de verdad del backend antes de presentar
+  cualquier métrica al cliente.
+
+### 2026-08-09 — Un límite de dominio necesita feedback antes del rechazo
+
+- **Aprendido:** el servidor mantiene el máximo de 64 equipos, pero la persona
+  necesita conocer el motivo antes de intentar una operación que será rechazada.
+- **Evidencia:** el mismo límite compartido impide añadir un campo al borrador o
+  abrir el diálogo de una liga publicada y muestra un banner localizado.
+- **Coste aceptado:** el cliente anticipa el límite visible, sin sustituir la
+  comprobación transaccional del backend ante cambios simultáneos.
+- **Regla reutilizable:** replica en la interfaz una restricción estable para
+  orientar la acción, pero conserva siempre la validación definitiva en el
+  servidor.
+
+### 2026-08-09 — El cierre deportivo debe ser atómico y explícito
+
+- **Aprendido:** que el último marcador esté registrado no basta para cerrar una
+  liga: la organizadora conserva una revisión final y el servidor debe volver a
+  comprobar el estado bajo el mismo bloqueo que persiste el resultado oficial.
+- **Evidencia:** `POST /leagues/{leagueId}/complete` rechaza pendientes y
+  transiciones inválidas; calcula y guarda todas las posiciones 1 en la misma
+  transacción antes de fijar `completed`.
+- **Regla reutilizable:** cuando una transición congela derivados de negocio,
+  no los calcules fuera de la transacción ni aceptes que el cliente los envíe.
+
+### 2026-08-09 — Un diálogo que confirma una pantalla nativa pertenece a esa pantalla
+
+- **Aprendido:** en iOS una confirmación global puede quedar detrás de una ruta
+  presentada por navegación nativa, aunque su estado React se actualice.
+- **Evidencia:** la acción de finalizar era visible y recibía el toque, pero el
+  diálogo compartido no se presentaba sobre `fullScreenModal`. La confirmación
+  se movió a un `Modal` de la propia ruta y se validó en iPhone Simulator.
+- **Regla reutilizable:** cuando una mutación crítica se confirma dentro de una
+  ruta nativa, su modal debe compartir el host de esa ruta o verificarse en el
+  simulador antes de dar el flujo por utilizable.

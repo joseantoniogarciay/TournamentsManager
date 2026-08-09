@@ -179,8 +179,9 @@ y operación:
    que con contraseña.
 
 El corte siguiente implementa el registro y la corrección inmediata de
-marcadores por administradores delegados en ligas en curso. La clasificación,
-el cierre y la retirada de equipos conservan su entrega posterior.
+marcadores por administradores delegados en ligas en curso. La clasificación se
+calcula en backend y se expone como una proyección de lectura; la retirada de
+equipos conserva su entrega posterior.
 
 El alcance está aceptado en [ADR-0043](../adr/0043-deliver-publish-and-read-league-first-backend-increment.md).
 El Gate 0B está cerrado: el formato, los datos mínimos, el ciclo de vida, la
@@ -193,14 +194,22 @@ no bloquean el primer vertical slice.
 Las [ADR-0032](../adr/0032-define-minimum-football-league-data-and-lifecycle.md)
 y [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md) definen
 la estructura mínima de una liga: nombre, fútbol, formato liga, organizador,
-estado, equipos y partidos generados al iniciar. La configuración inicial es una
-vuelta con puntuación 3-1-0; no incluye fechas, horas, marcadores especiales ni
-clasificación.
+estado, equipos y partidos generados al iniciar. La configuración inicial permite
+una o dos vueltas con puntuación 3-1-0; no incluye fechas, horas ni marcadores
+especiales. Tras iniciarla, el backend calcula la clasificación: en dos vueltas
+prioriza la mini-clasificación entre empatados y en una, diferencia de goles y
+goles a favor generales; una igualdad que persiste comparte posición. La app
+solo presenta esta proyección (ADR-0081).
 
 El ciclo persistido es `publicado → en_curso → finalizado`, con `cancelado` como
 estado terminal desde `publicado` o `en_curso`. El borrador se prepara localmente
 o queda asociado temporalmente a una cuenta pendiente; se descarta y no forma
 parte de este ciclo.
+
+Cuando todos los partidos están resueltos, solo la organizadora puede finalizar
+explícitamente la liga. El backend conserva todos los equipos de la posición 1
+como co-campeones y la app muestra el resultado final antes de llevar a la
+clasificación. Una liga finalizada ya no admite marcadores ni correcciones.
 
 Una liga visible es consultable sin sesión por su ID público y el creador puede modificar sus equipos y
 datos estructurales. En interfaz, `publicado` se muestra como «Sin empezar».

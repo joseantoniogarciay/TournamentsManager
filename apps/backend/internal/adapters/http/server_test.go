@@ -65,13 +65,15 @@ func (r testLeagueRepository) Follow(_ context.Context, _ string, _ string) (boo
 func (r testLeagueRepository) Unfollow(context.Context, string, string) error { return nil }
 
 type testCreationRepository struct {
-	cancelled leagues.League
-	cancelErr error
-	team      leagues.Team
-	teamErr   error
-	removeErr error
-	result    leagues.League
-	resultErr error
+	cancelled   leagues.League
+	cancelErr   error
+	team        leagues.Team
+	teamErr     error
+	removeErr   error
+	result      leagues.League
+	resultErr   error
+	completed   leagues.League
+	completeErr error
 }
 
 func (testCreationRepository) Create(context.Context, string, leagues.CreateInput) (leagues.League, error) {
@@ -100,6 +102,10 @@ func (testCreationRepository) AssignAdministrator(context.Context, string, strin
 
 func (r testCreationRepository) RecordResult(context.Context, string, string, string, leagues.MatchResultInput) (leagues.League, error) {
 	return r.result, r.resultErr
+}
+
+func (r testCreationRepository) Complete(context.Context, string, string) (leagues.League, error) {
+	return r.completed, r.completeErr
 }
 
 func (testCreationRepository) GetPublic(context.Context, string) (leagues.League, error) {
@@ -211,6 +217,31 @@ func TestCancelLeagueMapsBusinessErrors(t *testing.T) {
 
 			handler.ServeHTTP(recorder, request)
 
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
+	}
+}
+
+func TestCompleteLeagueMapsBusinessErrors(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	for name, test := range map[string]struct {
+		err    error
+		status int
+	}{
+		"not organizer":   {err: leagues.ErrLeagueForbidden, status: http.StatusForbidden},
+		"pending matches": {err: leagues.ErrLeagueCompletionConflict, status: http.StatusConflict},
+		"not found":       {err: leagues.ErrLeagueNotFound, status: http.StatusNotFound},
+	} {
+		t.Run(name, func(t *testing.T) {
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{completeErr: test.err}))
+			request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/complete", nil)
+			request.Header.Set("Authorization", "Bearer session-token")
+			recorder := httptest.NewRecorder()
+			handler.ServeHTTP(recorder, request)
 			if recorder.Code != test.status {
 				t.Errorf("status = %d, want %d", recorder.Code, test.status)
 			}

@@ -7,8 +7,9 @@
 
 Este modelo cubre alta local y con Google, verificación, sesión,
 publicación/lectura de una liga, sus relaciones de seguimiento o administración
-delegada y resultados simples de partidos. No incorpora Apple ni reglas de
-clasificación, bajas o cierre.
+delegada, resultados simples, clasificación calculada y cierre explícito con
+co-campeones. No incorpora Apple, bajas ni resultados oficiales por cuenta:
+estos últimos siguen esperando la decisión de vinculación de cuentas a equipos.
 
 ## Entidades y relaciones
 
@@ -45,6 +46,7 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | `league_teams`               | `id`, `league_id`, `name`, `position`                                                                                  | nombre normalizado único por liga; se crean junto al borrador transferido o con una liga publicada.                                                                                                                                 |
 | `matches`                    | `id`, `league_id`, `round_number`, `sequence`, `home_team_id`, `away_team_id`, `state`                                 | un partido por pareja no ordenada de equipos; sin marcador o fecha; estado inicial `pending`.                                                                                                                                       |
 | `match_result_changes`        | `id`, `match_id`, `changed_by_account_id`, marcador anterior y nuevo, `changed_at`                                     | cada registro o corrección conserva la administradora y el marcador previo; el primer registro no tiene marcador anterior.                                                                                                           |
+| `league_champions`            | `league_id`, `team_id`                                                                                                  | PK compuesta; conserva todos los equipos de posición 1 cuando la liga se finaliza, incluidos los co-campeones.                                                                                                                       |
 
 El email conserva el valor aportado para entrega; `lower(email)` es solo la clave
 de comparación del producto. El locale de cuenta es una preferencia validada
@@ -78,6 +80,10 @@ minúsculo antes de guardar.
 7. **Resultado:** bloquea liga y partido, exige que la liga esté `in_progress` y
    que la cuenta figure en `league_administrators`; actualiza el marcador simple,
    guarda un cambio y actualiza `last_activity_at` atómicamente.
+8. **Finalización:** bloquea la liga, exige organizadora, estado `in_progress` y
+   ningún partido pendiente; recalcula la clasificación desde los marcadores que
+   están dentro de la misma transacción, persiste todas las posiciones 1 en
+   `league_champions` y cambia el estado a `completed` como una única unidad.
 
 La purga es un proceso operativo explícito, idempotente y auditable por conteos,
 sin registrar emails ni tokens. El `ON DELETE` y las FKs se concretarán en la

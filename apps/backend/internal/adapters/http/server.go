@@ -86,6 +86,7 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 		mux.Handle("DELETE /v1/leagues/{leagueId}/teams/{teamId}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeLeagueTeam(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(startLeague(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/cancel", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(cancelLeague(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/complete", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(completeLeague(creationService)))))
 		mux.Handle("PUT /v1/leagues/{leagueId}/matches/{matchId}/result", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(recordMatchResult(creationService)))))
 		mux.Handle("PUT /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(assignLeagueAdministrator(creationService)))))
 		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
@@ -384,6 +385,40 @@ func cancelLeague(service leagues.CreationService) http.HandlerFunc {
 		}
 		if err != nil {
 			writeProblem(w, http.StatusInternalServerError, "No se pudo cancelar la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+
+func completeLeague(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID := r.PathValue("leagueId")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.Complete(r.Context(), accountID, leagueID)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes finalizar esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueCompletionConflict) {
+			writeProblem(w, http.StatusConflict, "La liga aún no se puede finalizar")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo finalizar la liga")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")

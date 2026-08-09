@@ -184,8 +184,8 @@ func (r AccountLeagueRepository) RemoveTeam(ctx context.Context, accountID, leag
 
 // GetPublic devuelve la proyección visible de una liga ya creada.
 func (r AccountLeagueRepository) GetPublic(ctx context.Context, leagueID string) (leagues.League, error) {
-	league := leagues.League{Teams: []leagues.Team{}, Matches: []leagues.Match{}}
-	if err := r.pool.QueryRow(ctx, `SELECT id::text, name, sport, format, state FROM leagues WHERE id = $1 AND state <> 'draft'`, leagueID).Scan(&league.ID, &league.Name, &league.Sport, &league.Format, &league.State); errors.Is(err, pgx.ErrNoRows) {
+	league := leagues.League{Teams: []leagues.Team{}, Matches: []leagues.Match{}, ChampionTeamIDs: []string{}}
+	if err := r.pool.QueryRow(ctx, `SELECT id::text, name, sport, format, state, round_robin_legs FROM leagues WHERE id = $1 AND state <> 'draft'`, leagueID).Scan(&league.ID, &league.Name, &league.Sport, &league.Format, &league.State, &league.RoundRobinLegs); errors.Is(err, pgx.ErrNoRows) {
 		return leagues.League{}, leagues.ErrLeagueNotFound
 	} else if err != nil {
 		return leagues.League{}, err
@@ -203,6 +203,21 @@ func (r AccountLeagueRepository) GetPublic(ctx context.Context, leagueID string)
 		league.Teams = append(league.Teams, team)
 	}
 	if err := teams.Err(); err != nil {
+		return leagues.League{}, err
+	}
+	champions, err := r.pool.Query(ctx, `SELECT team_id::text FROM league_champions WHERE league_id = $1 ORDER BY team_id`, leagueID)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	defer champions.Close()
+	for champions.Next() {
+		var teamID string
+		if err := champions.Scan(&teamID); err != nil {
+			return leagues.League{}, err
+		}
+		league.ChampionTeamIDs = append(league.ChampionTeamIDs, teamID)
+	}
+	if err := champions.Err(); err != nil {
 		return leagues.League{}, err
 	}
 	matches, err := r.pool.Query(ctx, `SELECT id::text, round_number, sequence, home_team_id::text, away_team_id::text, state, home_score, away_score FROM matches WHERE league_id = $1 ORDER BY round_number, sequence`, leagueID)
@@ -266,6 +281,91 @@ func (r AccountLeagueRepository) RecordResult(ctx context.Context, accountID, le
 		return leagues.League{}, err
 	}
 	return r.GetPublic(ctx, leagueID)
+}
+
+// Complete cierra una liga completa y conserva en la misma transacción sus co-campeones.
+func (r AccountLeagueRepository) Complete(ctx context.Context, accountID, leagueID string) (leagues.League, error) {
+	account, err := uuidValue(accountID)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var organizer, state string
+	var legs int
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state, round_robin_legs FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state, &legs); errors.Is(err, pgx.ErrNoRows) {
+		return leagues.League{}, leagues.ErrLeagueNotFound
+	} else if err != nil {
+		return leagues.League{}, err
+	}
+	if organizer != account.String() {
+		return leagues.League{}, leagues.ErrLeagueForbidden
+	}
+	if state != "in_progress" {
+		return leagues.League{}, leagues.ErrLeagueCompletionConflict
+	}
+	var pending bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM matches WHERE league_id = $1 AND state <> 'completed')`, leagueID).Scan(&pending); err != nil {
+		return leagues.League{}, err
+	}
+	if pending {
+		return leagues.League{}, leagues.ErrLeagueCompletionConflict
+	}
+	league, err := loadLeagueForCompletion(ctx, tx, leagueID, legs)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	standings := leagues.CalculateStandings(league)
+	for _, standing := range standings {
+		if standing.Position != 1 {
+			continue
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO league_champions (league_id, team_id) VALUES ($1, $2)`, leagueID, standing.TeamID); err != nil {
+			return leagues.League{}, err
+		}
+	}
+	if _, err := tx.Exec(ctx, `UPDATE leagues SET state = 'completed', last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
+		return leagues.League{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return leagues.League{}, err
+	}
+	return r.GetPublic(ctx, leagueID)
+}
+
+func loadLeagueForCompletion(ctx context.Context, tx pgx.Tx, leagueID string, legs int) (leagues.League, error) {
+	league := leagues.League{RoundRobinLegs: legs, Teams: []leagues.Team{}, Matches: []leagues.Match{}}
+	teams, err := tx.Query(ctx, `SELECT id::text, name, position FROM league_teams WHERE league_id = $1 ORDER BY position`, leagueID)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	defer teams.Close()
+	for teams.Next() {
+		var team leagues.Team
+		if err := teams.Scan(&team.ID, &team.Name, &team.Position); err != nil {
+			return leagues.League{}, err
+		}
+		league.Teams = append(league.Teams, team)
+	}
+	if err := teams.Err(); err != nil {
+		return leagues.League{}, err
+	}
+	matches, err := tx.Query(ctx, `SELECT id::text, round_number, sequence, home_team_id::text, away_team_id::text, state, home_score, away_score FROM matches WHERE league_id = $1 ORDER BY round_number, sequence`, leagueID)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	defer matches.Close()
+	for matches.Next() {
+		var match leagues.Match
+		if err := matches.Scan(&match.ID, &match.RoundNumber, &match.Sequence, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore); err != nil {
+			return leagues.League{}, err
+		}
+		league.Matches = append(league.Matches, match)
+	}
+	return league, matches.Err()
 }
 
 // Start congela la configuración y genera una vuelta completa por cada leg.

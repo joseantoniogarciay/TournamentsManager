@@ -174,6 +174,37 @@ func TestIntegrationRecentLeaguesOrdersActivityAndDeduplicatesRelationships(t *t
 	}
 }
 
+func TestIntegrationLeagueCompletionPersistsCoChampions(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	accountID := createVerifiedLocalAccount(t, ctx, pool, "completion@example.test", "completion", "correct password")
+	service := leagues.NewCreationService(NewAccountLeagueRepository(pool))
+	created, err := service.Create(ctx, accountID, leagues.CreateInput{Name: "Liga empate", Teams: []leagues.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
+	if err != nil {
+		t.Fatalf("crear liga = %v", err)
+	}
+	started, err := service.Start(ctx, accountID, created.ID, leagues.StartInput{RoundRobinLegs: 1})
+	if err != nil {
+		t.Fatalf("iniciar liga = %v", err)
+	}
+	if _, err := service.Complete(ctx, accountID, created.ID); !errors.Is(err, leagues.ErrLeagueCompletionConflict) {
+		t.Fatalf("finalizar con pendiente = %v, se esperaba %v", err, leagues.ErrLeagueCompletionConflict)
+	}
+	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 1, AwayScore: 1}); err != nil {
+		t.Fatalf("registrar empate = %v", err)
+	}
+	completed, err := service.Complete(ctx, accountID, created.ID)
+	if err != nil {
+		t.Fatalf("finalizar liga = %v", err)
+	}
+	if completed.State != "completed" || len(completed.ChampionTeamIDs) != 2 {
+		t.Fatalf("liga finalizada = %#v; se esperaban dos co-campeones", completed)
+	}
+	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1}); !errors.Is(err, leagues.ErrMatchResultConflict) {
+		t.Fatalf("corregir liga finalizada = %v, se esperaba %v", err, leagues.ErrMatchResultConflict)
+	}
+}
+
 func TestIntegrationPasswordResetConsumesTokenRevokesSessionsAndCreatesNewSession(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)

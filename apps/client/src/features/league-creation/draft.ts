@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { LeagueInput } from "@/api/generated/models";
 
 const key = "tm-league-draft";
+export const maximumLeagueTeams = 64;
 export type LocalLeagueDraft = { name: string; teams: string[] };
 
 export async function getLocalLeagueDraft(): Promise<LocalLeagueDraft | null> {
@@ -37,7 +38,7 @@ export function toLeagueInput(draft: LocalLeagueDraft | null): LeagueInput | und
     !name ||
     name.length > 140 ||
     teams.length < 2 ||
-    teams.length > 64 ||
+    teams.length > maximumLeagueTeams ||
     new Set(teams.map((team) => team.toLowerCase())).size !== teams.length ||
     teams.some((team) => team.length > 100)
   ) {

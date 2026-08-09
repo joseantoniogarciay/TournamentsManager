@@ -586,6 +586,31 @@ paths:
         "403": { description: La sesión no pertenece a la organizadora. }
         "404": { description: La liga no existe. }
         "409": { description: La liga no está publicada ni en curso. }
+  /leagues/{leagueId}/complete:
+    post:
+      tags: [Leagues]
+      operationId: completeLeague
+      summary: Finaliza explícitamente una liga con todos los resultados
+      description: >-
+        Exige sesión válida de la organizadora y una liga en curso sin partidos
+        pendientes. El backend calcula y conserva todos los co-campeones a
+        partir de la clasificación; el cliente no envía una ganadora.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Liga finalizada con clasificación y campeonas oficiales.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicLeague" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga no existe. }
+        "409": { description: La liga no está en curso o aún tiene partidos pendientes. }
   /leagues/{leagueId}/matches/{matchId}/result:
     put:
       tags: [Leagues]
@@ -919,15 +944,45 @@ components:
         matches: { type: array, items: { $ref: "#/components/schemas/Match" } }
     PublicLeague:
       type: object
-      required: [id, name, sport, format, state, teams, matches]
+      required:
+        [id, name, sport, format, state, roundRobinLegs, teams, matches, standings, championTeamIds]
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
         sport: { type: string, enum: [football] }
         format: { type: string, enum: [league] }
         state: { type: string, enum: [published, in_progress, completed, cancelled] }
+        roundRobinLegs:
+          type: integer
+          enum: [1, 2]
+          description: Vueltas fijadas al iniciar; la clasificación usa este valor para aplicar desempates.
         teams: { type: array, items: { $ref: "#/components/schemas/LeagueTeam" } }
         matches: { type: array, items: { $ref: "#/components/schemas/Match" } }
+        standings:
+          description: Proyección calculada por el backend; vacía antes de iniciar o si la liga se cancela.
+          type: array
+          items: { $ref: "#/components/schemas/LeagueStanding" }
+        championTeamIds:
+          description: >-
+            Equipos de posición 1 conservados al finalizar. Está vacío hasta el
+            cierre explícito y admite más de uno cuando hay co-campeonato.
+          type: array
+          items: { $ref: "#/components/schemas/UUID" }
+    LeagueStanding:
+      type: object
+      required:
+        [position, teamId, played, won, drawn, lost, goalsFor, goalsAgainst, goalDifference, points]
+      properties:
+        position: { type: integer, minimum: 1 }
+        teamId: { $ref: "#/components/schemas/UUID" }
+        played: { type: integer, minimum: 0 }
+        won: { type: integer, minimum: 0 }
+        drawn: { type: integer, minimum: 0 }
+        lost: { type: integer, minimum: 0 }
+        goalsFor: { type: integer, minimum: 0 }
+        goalsAgainst: { type: integer, minimum: 0 }
+        goalDifference: { type: integer }
+        points: { type: integer, minimum: 0 }
     LeagueTeam:
       type: object
       required: [id, name]

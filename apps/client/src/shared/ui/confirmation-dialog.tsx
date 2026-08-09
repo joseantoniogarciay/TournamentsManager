@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { BackHandler, Platform, Pressable, StyleSheet, View } from "react-native";
+import { BackHandler, Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
 
@@ -100,42 +100,44 @@ export function ConfirmationDialog({
   if (!visible) return null;
 
   return (
-    <View accessibilityViewIsModal style={styles.backdrop}>
-      <BlurView
-        blurMethod="dimezisBlurViewSdk31Plus"
-        intensity={45}
-        pointerEvents="none"
-        style={styles.scrim}
-        tint="dark"
-      />
-      {Platform.OS === "android" ? (
-        <View
+    <Modal animationType="fade" onRequestClose={onCancel} transparent visible={visible}>
+      <View accessibilityViewIsModal style={styles.backdrop}>
+        <BlurView
+          blurMethod="dimezisBlurViewSdk31Plus"
+          intensity={45}
           pointerEvents="none"
-          style={[styles.androidDimmingLayer, { backgroundColor: colors.surface.canvas }]}
+          style={styles.scrim}
+          tint="dark"
         />
-      ) : null}
-      <Pressable
-        accessibilityLabel={cancelLabel}
-        accessibilityRole="button"
-        onPress={onCancel}
-        style={styles.dismissArea}
-      />
-      <View
-        style={[
-          styles.dialog,
-          { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-        ]}
-      >
-        <View style={styles.copy}>
-          <Text variant="title">{title}</Text>
-          <Text color="secondary">{description}</Text>
-        </View>
-        <View style={styles.actions}>
-          <Button label={acceptLabel} onPress={onAccept} />
-          <Button label={cancelLabel} onPress={onCancel} variant="secondary" />
+        {Platform.OS === "android" ? (
+          <View
+            pointerEvents="none"
+            style={[styles.androidDimmingLayer, { backgroundColor: colors.surface.canvas }]}
+          />
+        ) : null}
+        <Pressable
+          accessibilityLabel={cancelLabel}
+          accessibilityRole="button"
+          onPress={onCancel}
+          style={styles.dismissArea}
+        />
+        <View
+          style={[
+            styles.dialog,
+            { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+          ]}
+        >
+          <View style={styles.copy}>
+            <Text variant="title">{title}</Text>
+            <Text color="secondary">{description}</Text>
+          </View>
+          <View style={styles.actions}>
+            <Button label={acceptLabel} onPress={onAccept} />
+            <Button label={cancelLabel} onPress={onCancel} variant="secondary" />
+          </View>
         </View>
       </View>
-    </View>
+    </Modal>
   );
 }
 

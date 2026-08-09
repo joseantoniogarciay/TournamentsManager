@@ -9,6 +9,7 @@ import { createLeagueRequest } from "@/features/league-creation/api";
 import {
   clearLocalLeagueDraft,
   getLocalLeagueDraft,
+  maximumLeagueTeams,
   saveLocalLeagueDraft,
 } from "@/features/league-creation/draft";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
@@ -16,7 +17,7 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Button, Card, KeyboardAwareScrollView, Screen, Text, TextField } from "@/shared/ui";
+import { Button, Card, KeyboardAwareScrollView, Screen, TextField } from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
 export default function CreateTournamentScreen() {
@@ -78,6 +79,13 @@ export default function CreateTournamentScreen() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+  const addTeam = () => {
+    if (teams.length >= maximumLeagueTeams) {
+      show({ kind: "generic-error", message: t("league_team_limit_reached") });
+      return;
+    }
+    setTeams((current) => [...current, ""]);
   };
   const close = async () => {
     await clearLocalLeagueDraft();
@@ -167,11 +175,7 @@ export default function CreateTournamentScreen() {
                   value={team}
                 />
               ))}
-              <Button
-                label={t("league_add_team")}
-                onPress={() => setTeams((current) => [...current, ""])}
-                variant="secondary"
-              />
+              <Button label={t("league_add_team")} onPress={addTeam} variant="secondary" />
               <Button
                 label={t(user ? "league_publish" : "league_sign_in_to_publish")}
                 loading={isSubmitting}

@@ -10,6 +10,7 @@ import type { PublicLeague } from "@/api/generated/models";
 import {
   assignLeagueAdministratorRequest,
   cancelLeagueRequest,
+  completeLeagueRequest,
   getLeague,
   getLeagueRelationship,
   startLeagueRequest,
@@ -52,6 +53,9 @@ export default function LeagueScreen() {
   const [scores, setScores] = useState<Record<string, { home: string; away: string }>>({});
   const [savingMatchID, setSavingMatchID] = useState<string>();
   const [editingMatchID, setEditingMatchID] = useState<string>();
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [completionConfirmationOpen, setCompletionConfirmationOpen] = useState(false);
+  const [completionOpen, setCompletionOpen] = useState(false);
   useEffect(() => {
     if (!id) return;
     void getLeague(id)
@@ -107,6 +111,22 @@ export default function LeagueScreen() {
       },
       onCancel: () => undefined,
     });
+  const complete = () => setCompletionConfirmationOpen(true);
+  const confirmCompletion = () => {
+    if (!id) return;
+    setIsCompleting(true);
+    void completeLeagueRequest(id)
+      .then((completed) => {
+        setLeague(completed);
+        setCompletionConfirmationOpen(false);
+        setCompletionOpen(true);
+      })
+      .catch((error) => {
+        const failure = getRequestFailure(error);
+        show({ kind: failure.kind, message: t(failure.messageKey) });
+      })
+      .finally(() => setIsCompleting(false));
+  };
   const assign = async () => {
     if (!id) return;
     try {
@@ -158,6 +178,11 @@ export default function LeagueScreen() {
       </Screen>
     );
   const canCancel = league.state === "published" || league.state === "in_progress";
+  const canComplete =
+    isOrganizer &&
+    league.state === "in_progress" &&
+    league.matches.length > 0 &&
+    league.matches.every((match) => match.state === "completed");
   const teamsByID = new Map(league.teams.map((team) => [team.id, team.name]));
   const editingMatch = league.matches.find((match) => match.id === editingMatchID);
   const editingScore = editingMatch
@@ -292,9 +317,8 @@ export default function LeagueScreen() {
                       variant="secondary"
                     />
                     <Button
-                      disabled
                       label={t("league_standings")}
-                      onPress={() => undefined}
+                      onPress={() => router.push(`/league/${league.id}/standings`)}
                       variant="secondary"
                     />
                   </View>
@@ -375,6 +399,19 @@ export default function LeagueScreen() {
                   </View>
                 </Card>
               ) : null}
+              {canComplete ? (
+                <Card>
+                  <View style={styles.stack}>
+                    <Text variant="title">{t("league_complete_title")}</Text>
+                    <Text color="secondary">{t("league_complete_ready")}</Text>
+                    <Button
+                      label={t("league_complete")}
+                      loading={isCompleting}
+                      onPress={complete}
+                    />
+                  </View>
+                </Card>
+              ) : null}
             </View>
           }
           renderItem={({ item: match }) => {
@@ -417,6 +454,49 @@ export default function LeagueScreen() {
             </View>
           )}
         />
+        <Modal
+          animationType="fade"
+          onRequestClose={() => {
+            if (!isCompleting) setCompletionConfirmationOpen(false);
+          }}
+          transparent
+          visible={completionConfirmationOpen}
+        >
+          <View style={styles.completionBackdrop}>
+            <Pressable
+              accessibilityLabel={t("common_cancel")}
+              accessibilityRole="button"
+              disabled={isCompleting}
+              onPress={() => setCompletionConfirmationOpen(false)}
+              style={StyleSheet.absoluteFill}
+            />
+            <View
+              accessibilityViewIsModal
+              style={[
+                styles.completionModal,
+                { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+              ]}
+            >
+              <Text style={styles.completionTitle} variant="title">
+                {t("league_complete_title")}
+              </Text>
+              <Text color="secondary" style={styles.completionChampion}>
+                {t("league_complete_description")}
+              </Text>
+              <Button
+                label={t("league_complete")}
+                loading={isCompleting}
+                onPress={confirmCompletion}
+              />
+              <Button
+                disabled={isCompleting}
+                label={t("common_cancel")}
+                onPress={() => setCompletionConfirmationOpen(false)}
+                variant="secondary"
+              />
+            </View>
+          </View>
+        </Modal>
         <Modal
           animationType="fade"
           onRequestClose={() => {
@@ -491,6 +571,56 @@ export default function LeagueScreen() {
             ) : null}
           </View>
         </Modal>
+        <Modal
+          animationType="fade"
+          onRequestClose={() => setCompletionOpen(false)}
+          transparent
+          visible={completionOpen}
+        >
+          <View style={styles.completionBackdrop}>
+            <Pressable
+              accessibilityLabel={t("common_close")}
+              accessibilityRole="button"
+              onPress={() => setCompletionOpen(false)}
+              style={StyleSheet.absoluteFill}
+            />
+            <View
+              accessibilityViewIsModal
+              style={[
+                styles.completionModal,
+                { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+              ]}
+            >
+              <SymbolView name="trophy.fill" size={56} tintColor={colors.feedback.success} />
+              <Text style={styles.completionTitle} variant="display">
+                {t("league_completion_title")}
+              </Text>
+              <Text color="secondary" style={styles.completionChampion}>
+                {(league.championTeamIds ?? [])
+                  .map((teamID) => teamsByID.get(teamID))
+                  .filter((name): name is string => Boolean(name))
+                  .join(" · ")}
+              </Text>
+              <Text color="secondary">
+                {league.championTeamIds.length > 1
+                  ? t("league_completion_co_champions")
+                  : t("league_completion_champion")}
+              </Text>
+              <Button
+                label={t("league_completion_view_standings")}
+                onPress={() => {
+                  setCompletionOpen(false);
+                  router.push(`/league/${league.id}/standings`);
+                }}
+              />
+              <Button
+                label={t("common_close")}
+                onPress={() => setCompletionOpen(false)}
+                variant="secondary"
+              />
+            </View>
+          </View>
+        </Modal>
       </Screen>
     </>
   );
@@ -539,4 +669,22 @@ const styles = StyleSheet.create({
     padding: space[5],
     width: "100%",
   },
+  completionBackdrop: {
+    ...StyleSheet.absoluteFill,
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.48)",
+    justifyContent: "center",
+    padding: space[5],
+  },
+  completionChampion: { textAlign: "center" },
+  completionModal: {
+    alignItems: "center",
+    borderRadius: radius.card,
+    borderWidth: 1,
+    gap: space[3],
+    maxWidth: 440,
+    padding: space[6],
+    width: "100%",
+  },
+  completionTitle: { textAlign: "center" },
 });

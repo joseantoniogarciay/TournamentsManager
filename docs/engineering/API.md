@@ -169,6 +169,19 @@ proyección pública actualizada. Cada escritura se conserva internamente con el
 marcador anterior, autora e instante, conforme a ADR-0035 a ADR-0037. El
 historial no se expone todavía como una funcionalidad de disputa o restauración.
 
+`GET /v1/leagues/{leagueId}` y las respuestas de inicio, cancelación y resultado
+incluyen `standings`, una proyección calculada por el dominio a partir de los
+marcadores persistidos y las vueltas configuradas. El cliente no recalcula ni
+ordena la tabla. Una futura victoria de torneo en perfil se derivará de la misma
+fuente al finalizar la liga; no se aceptan títulos enviados por cliente. Véase
+[ADR-0081](../adr/0081-calculate-league-standings-in-the-backend.md).
+
+`POST /v1/leagues/{leagueId}/complete` pertenece únicamente a la organizadora.
+Solo acepta una liga en curso cuyos partidos estén todos resueltos; el backend
+recalcula la tabla bajo el bloqueo de la transición, guarda todos los equipos de
+posición 1 —incluidos co-campeones— y devuelve la proyección final. El cliente
+no envía ni elige una ganadora. Véanse ADR-0039 y ADR-0082.
+
 El cliente muestra feedback específico solo cuando el contrato ofrece una
 recuperación distinta; errores no tratados, `5xx` y respuestas inválidas usan el
 mensaje seguro común.

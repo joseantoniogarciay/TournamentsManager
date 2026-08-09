@@ -7,7 +7,13 @@ export async function recordMatchResultRequest(
   matchID: string,
   input: MatchResultInput,
 ) {
-  const response = await recordMatchResult(leagueID, matchID, input, undefined, authenticatedApiFetch);
+  const response = await recordMatchResult(
+    leagueID,
+    matchID,
+    input,
+    undefined,
+    authenticatedApiFetch,
+  );
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   return response.data;
 }

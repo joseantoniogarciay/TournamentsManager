@@ -130,6 +130,9 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0078](../adr/0078-transfer-local-drafts-with-registration.md)                                | Transferir el borrador local junto al alta                           | Aceptado              | 2026-08-09 |
 | [0079](../adr/0079-create-published-leagues-with-registration-drafts.md)                      | Crear liga publicada al transferir el borrador en el alta            | Aceptado              | 2026-08-09 |
 | [0080](../adr/0080-allow-organizers-to-manage-league-results.md)                              | Permitir al organizador gestionar resultados de su liga              | Aceptado              | 2026-08-09 |
+| [0081](../adr/0081-calculate-league-standings-in-the-backend.md)                              | Calcular la clasificación de liga en el backend                      | Aceptado              | 2026-08-09 |
+| [0082](../adr/0082-persist-co-champions-on-league-completion.md)                              | Persistir co-campeones al finalizar una liga                         | Aceptado              | 2026-08-09 |
+| [0083](../adr/0083-materialize-official-account-league-outcomes-on-completion.md)             | Materializar resultados oficiales por cuenta al finalizar una liga   | Aceptado              | 2026-08-09 |
 
 ## Trazabilidad de un cambio
 
