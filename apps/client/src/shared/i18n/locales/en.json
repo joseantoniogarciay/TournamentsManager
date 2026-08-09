@@ -184,6 +184,7 @@
   "league_complete_description": "It will close with the current standings and results can no longer be corrected.",
   "league_complete_ready": "All results are in. Review the standings before closing.",
   "league_completion_title": "League completed!",
+  "league_completion_already_completed": "The league has already been completed.",
   "league_completion_champion": "Champion",
   "league_completion_co_champions": "Shared champions",
   "league_completion_view_standings": "View final standings",

@@ -1767,6 +1767,18 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   la fuente de verdad, vuelve a validar dentro de la transacción y prueba el
   resultado de peticiones competidoras contra una base real.
 
+### 2026-08-09 — Un conflicto conocido debe recuperar el estado, no parecer un fallo
+
+- **Aprendido:** un `409` de cierre simultáneo informa de que otra petición ya
+  alcanzó el resultado deseado; tratarlo como error genérico hace que la
+  interfaz conserve un estado obsoleto.
+- **Evidencia:** la pantalla de liga reconoce solo el `409` del contrato de
+  finalización, cierra su confirmación, vuelve a leer la liga y muestra un
+  mensaje localizado. Los demás rechazos conservan el fallback seguro común.
+- **Regla reutilizable:** mapea cada estado de negocio declarado que habilite
+  una recuperación concreta en la feature dueña de la acción; nunca expongas
+  el cuerpo de error del backend.
+
 ### 2026-08-09 — Un diálogo que confirma una pantalla nativa pertenece a esa pantalla
 
 - **Aprendido:** en iOS una confirmación global puede quedar detrás de una ruta

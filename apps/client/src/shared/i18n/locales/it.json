@@ -184,6 +184,7 @@
   "league_complete_description": "Verrà chiusa con la classifica attuale e i risultati non potranno più essere corretti.",
   "league_complete_ready": "Tutti i risultati sono inseriti. Controlla la classifica prima di chiudere.",
   "league_completion_title": "Lega conclusa!",
+  "league_completion_already_completed": "La lega è già conclusa.",
   "league_completion_champion": "Campione",
   "league_completion_co_champions": "Co-campioni",
   "league_completion_view_standings": "Vedi classifica finale",

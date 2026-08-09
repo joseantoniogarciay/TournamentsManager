@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
+import { APIUnexpectedResponseError } from "@/api/fetch";
 import type { PublicLeague } from "@/api/generated/models";
 import {
   assignLeagueAdministratorRequest,
@@ -122,6 +123,17 @@ export default function LeagueScreen() {
         setCompletionOpen(true);
       })
       .catch((error) => {
+        if (error instanceof APIUnexpectedResponseError && error.status === 409) {
+          setCompletionConfirmationOpen(false);
+          show({ kind: "success", message: t("league_completion_already_completed") });
+          void getLeague(id)
+            .then(setLeague)
+            .catch((refreshError) => {
+              const failure = getRequestFailure(refreshError);
+              show({ kind: failure.kind, message: t(failure.messageKey) });
+            });
+          return;
+        }
         const failure = getRequestFailure(error);
         show({ kind: failure.kind, message: t(failure.messageKey) });
       })
