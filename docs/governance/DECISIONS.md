@@ -64,10 +64,11 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md)                                     | Fijar el toolchain Go y aislar las herramientas                      | Aceptado              | 2026-07-24 |
 | [0013](../adr/0013-use-develop-as-integration-branch.md)                                      | Usar `develop` como rama de integración                              | Aceptado              | 2026-07-24 |
 | [0014](../adr/0014-use-node-pnpm-and-strict-typescript.md)                                    | Usar Node LTS, pnpm y TypeScript estricto                            | Aceptado              | 2026-07-24 |
+| [0075](../adr/0075-freeze-local-lockfiles-and-delay-dependency-releases.md)                   | Congelar el lockfile local y retrasar versiones nuevas               | Aceptado              | 2026-08-04 |
 | [0015](../adr/0015-use-expo-router-and-continuous-native-generation.md)                       | Usar Expo, Expo Router y CNG                                         | Aceptado              | 2026-07-24 |
 | [0016](../adr/0016-use-client-side-web-rendering-initially.md)                                | Usar rendering web client-side inicialmente                          | Aceptado              | 2026-07-24 |
 | [0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md)                         | Usar contratos de entorno, GitHub Environments y OIDC                | Aceptado              | 2026-07-24 |
-| [0018](../adr/0018-use-compose-for-local-service-dependencies.md)                             | Usar Docker Compose para dependencias locales de servicio            | Aceptado              | 2026-07-25 |
+| [0018](../adr/0018-use-compose-for-local-service-dependencies.md)                             | Usar Docker Compose para dependencias locales de servicio            | Superado por ADR-0076 | 2026-07-25 |
 | [0019](../adr/0019-use-risk-based-layered-testing.md)                                         | Usar pruebas por riesgo y capas                                      | Aceptado              | 2026-07-25 |
 | [0020](../adr/0020-use-minimal-correlated-observability.md)                                   | Usar observabilidad mínima correlacionada                            | Aceptado              | 2026-07-25 |
 | [0021](../adr/0021-use-advisory-ci-with-local-quality-gate.md)                                | Usar CI informativa con puerta de calidad local                      | Aceptado              | 2026-07-25 |
@@ -108,6 +109,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0056](../adr/0056-support-light-dark-system-theme-and-localized-clients.md)                  | Soportar tema y clientes localizados                                 | Aceptado              | 2026-07-28 |
 | [0057](../adr/0057-define-contextual-home-and-tournament-library.md)                          | Definir home contextual y biblioteca por relación                    | Aceptado              | 2026-07-28 |
 | [0073](../adr/0073-show-recent-related-leagues-on-home.md)                                    | Mostrar ligas relacionadas recientes en Inicio                       | Aceptado              | 2026-08-02 |
+| [0074](../adr/0074-schedule-account-deletion-with-a-recovery-window.md)                       | Programar eliminación de cuenta con ventana de recuperación          | Aceptado              | 2026-08-04 |
 | [0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md)               | Listar ligas relacionadas con colección paginada                     | Aceptado              | 2026-07-28 |
 | [0059](../adr/0059-centralize-session-authentication-at-the-http-boundary.md)                 | Centralizar autenticación de sesión en el borde HTTP                 | Aceptado              | 2026-07-28 |
 | [0060](../adr/0060-use-posthog-for-deferred-client-product-observability.md)                  | Usar PostHog diferido para observabilidad de producto del cliente    | Aceptado              | 2026-07-29 |
@@ -123,6 +125,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0070](../adr/0070-configure-league-when-starting.md)                                         | Configurar la liga al iniciarla                                      | Aceptado              | 2026-08-01 |
 | [0071](../adr/0071-run-postgresql-integration-tests-in-ci.md)                                 | Ejecutar integración PostgreSQL en CI                                | Aceptado              | 2026-08-02 |
 | [0072](../adr/0072-apply-a-resettable-initial-schema-without-migration-runner.md)             | Aplicar esquema inicial sin ejecutor de migraciones                  | Aceptado              | 2026-08-02 |
+| [0076](../adr/0076-run-the-local-api-in-compose-with-air.md)                                  | Ejecutar la API local en Compose con Air                             | Aceptado              | 2026-08-08 |
 
 ## Trazabilidad de un cambio
 

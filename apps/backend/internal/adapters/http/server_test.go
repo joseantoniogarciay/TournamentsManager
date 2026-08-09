@@ -7,12 +7,19 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
 type testAuthenticator struct{ accountID string }
+
+type testDeletionAuthenticator struct{ testAuthenticator }
+
+func (testDeletionAuthenticator) ScheduleAccountDeletion(context.Context, string) (time.Time, error) {
+	return time.Date(2026, time.September, 7, 12, 0, 0, 0, time.UTC), nil
+}
 
 var testAllowedOrigins = []string{"http://localhost:8081"}
 
@@ -194,6 +201,25 @@ func TestCORSPreflightAllowsConfiguredOrigin(t *testing.T) {
 	}
 	if got := recorder.Header().Get("Access-Control-Allow-Credentials"); got != "true" {
 		t.Errorf("Access-Control-Allow-Credentials = %q, want true", got)
+	}
+}
+
+func TestScheduleAccountDeletionAllowsConfiguredCookieOrigin(t *testing.T) {
+	t.Parallel()
+
+	handler := NewHandler(registration.Service{}, nil, testDeletionAuthenticator{testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
+	request := httptest.NewRequestWithContext(context.Background(), http.MethodDelete, "/v1/me/account", nil)
+	request.Header.Set("Origin", "http://localhost:8081")
+	request.AddCookie(&http.Cookie{Name: "__Host-tm_session", Value: "opaque-session"})
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body = %s", recorder.Code, http.StatusOK, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"deletionEffectiveAt":"2026-09-07T12:00:00Z"`) {
+		t.Errorf("body = %s, want deletion effective date", recorder.Body.String())
 	}
 }
 

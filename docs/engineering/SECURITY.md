@@ -127,7 +127,9 @@ La gestión de configuración sigue
   de comandos.
 - CORS se configura mediante una allowlist exacta de orígenes públicos; no se
   usa `*` porque la web podrá enviar cookies de sesión. La allowlist no sustituye
-  la protección CSRF de mutaciones autenticadas por cookie.
+  la protección CSRF de mutaciones autenticadas por cookie. Para esas
+  mutaciones, los mismos orígenes validados se registran explícitamente como
+  confiables en la protección CSRF; un origen ajeno sigue rechazado.
 
 ## Gates futuros
 

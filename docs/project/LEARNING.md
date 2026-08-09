@@ -1,5 +1,46 @@
 # Registro de aprendizaje
 
+## 2026-08-08 — Paridad útil no significa llevar Air a producción
+
+Un Dockerfile multi-stage puede compartir la resolución de módulos y producir
+dos targets con responsabilidades distintas. `dev` incluye Air y observa el
+código montado para reducir el ciclo de edición; `runtime` recibe únicamente el
+binario estático, certificados y un UID no privilegiado. Compose practica la red
+real entre API, PostgreSQL y Mailpit, pero Air, bind mounts y el compilador no
+son parte del artefacto que se ejecutará fuera de desarrollo. Separar ambos
+targets evita tanto la divergencia completa como copiar herramientas de desarrollo
+en producción. Véase ADR-0076.
+
+## 2026-08-04 — El lockfile reproduce; la maduración reduce exposición futura
+
+Un lockfile con integridad evita que una instalación ordinaria cambie la
+resolución ya revisada, pero no decide qué hacer al incorporar una dependencia
+nueva. pnpm puede aplicar una edad mínima de publicación tanto a dependencias
+directas como transitivas. Configurar siete días, modo estricto y rechazo de
+metadatos sin fecha convierte la política en un fallo visible en vez de una
+convención fácil de omitir. No es una garantía de que un paquete antiguo sea
+seguro; las actualizaciones siguen requiriendo revisión del diff y respuesta a
+advisories.
+
+## 2026-08-04 — Una baja de cuenta no puede dejar una propiedad huérfana
+
+La baja lógica separa retirar de inmediato acceso y relaciones personales de
+aplazar la purga física durante una ventana de recuperación. La propiedad de una
+liga es distinta: no se borra ni transfiere implícitamente. Si la cuenta aún
+organiza una liga, el backend conserva la operación sin cambios y devuelve un
+conflicto de negocio que la feature explica con un banner. Así se evita convertir
+una eliminación de cuenta en una decisión oculta sobre datos compartidos.
+
+## 2026-08-04 — Expo Go requiere un Metro vivo y seleccionado explícitamente
+
+En esta sesión, un Metro iniciado con `nohup ... &` desde una ejecución efímera
+termina sin dejar un servidor utilizable. La vía fiable es mantener
+`pnpm --filter @tournaments-manager/client exec expo start --lan` en una
+terminal interactiva. Como la presencia de `expo-dev-client` selecciona por
+defecto una development build, hay que pulsar `s`, esperar la URL
+`exp://<IP-LAN>:8081` que imprime Metro y abrir esa URL exacta en Expo Go. La
+URL `com.fasttourney...://expo-development-client` no sirve para Expo Go.
+
 ## 2026-08-02 — Preparar no es competir
 
 ## 2026-08-02 — Un 401 protegido invalida la sesión, no la feature visible
@@ -317,6 +358,33 @@ Para cada capacidad se sigue el ciclo:
 - **Coste aceptado:** cada entorno debe declarar sus orígenes web. Se evita el
   arranque cómodo con `*` porque sería incompatible con las cookies de sesión y
   ocultaría qué frontends tienen permiso para consumir la API.
+
+### 2026-08-08 — CORS y CSRF deben compartir la misma confianza explícita
+
+- **Aprendido:** permitir un origen en CORS no hace que una protección CSRF lo
+  acepte automáticamente. Una mutación web autenticada por cookie necesita que
+  ambos controles conozcan el mismo origen confiable.
+- **Evidencia:** el borrado de cuenta desde `http://localhost:8081` alcanzaba
+  la API, pero recibía `403` de la protección CSRF pese a estar en
+  `CORS_ALLOWED_ORIGINS`. La API registra ahora cada origen ya validado también
+  como origen confiable del control CSRF y una prueba HTTP cubre ese flujo.
+- **Regla reutilizable:** CORS y CSRF conservan responsabilidades distintas;
+  cuando se permite una web con cookies, su allowlist validada debe alimentar
+  explícitamente ambos controles, sin convertir CORS en sustituto de CSRF.
+
+### 2026-08-08 — Invalidar una sesión también reinicia el estado de navegación
+
+- **Aprendido:** eliminar los secretos y el usuario en memoria no basta si el
+  contenedor de tabs conserva rutas profundas o vistas ya montadas de la sesión
+  anterior.
+- **Evidencia:** tras programar la eliminación, Inicio quedaba seleccionado
+  pero la ruta de datos de acceso podía conservarse hasta recargar. El reset
+  vacía la pila activa solo cuando puede cerrarse y reemplaza la ruta por el
+  destino anónimo; las tabs se remontan con la revisión de sesión que ya se
+  incrementa al cerrar sesión, caducar una credencial o borrar la cuenta.
+- **Regla reutilizable:** toda transición a sesión anónima reinicia a la vez la
+  identidad, las rutas profundas y los flujos de navegación dependientes de
+  sesión; no debe depender de una recarga del navegador.
 
 ### 2026-07-29 — La experiencia de usuario y el diagnóstico técnico requieren señales distintas
 
@@ -1444,3 +1512,30 @@ límite sin crear una segunda sesión ni un estado de interfaz global.
   un coste constante y despreciable que evita añadir estado global de idioma.
 - **Regla reutilizable:** toda dependencia de `useFocusEffect` que no cambie
   por un dato de producto debe tener una identidad estable.
+
+### 2026-08-04 — Una tab resume y una ruta profunda detalla
+
+- **Aprendido:** la pestaña Cuenta puede mostrar solo la identidad visible y un
+  acceso a los datos sensibles, dejando email y métodos de autenticación en una
+  ruta propia con historial y cabecera nativos.
+- **Evidencia:** la ruta `/account/access` obtiene los métodos mediante el
+  adaptador `account-access`; Cuenta no duplica esa carga ni su presentación.
+- **Coste aceptado:** se añade una transición antes de cambiar una contraseña o
+  vincular Google, a cambio de una pantalla de Cuenta más clara y extensible.
+- **Regla reutilizable:** usar una ruta profunda para el detalle cuando una
+  pantalla de tab solo necesita resumir una sección de gestión.
+
+### 2026-08-04 — Un selector dependiente de red espera la primera respuesta
+
+- **Aprendido:** mostrar una selección antes de conocer las colecciones que la
+  determinan puede cambiarla de inmediato y producir una transición visual
+  confusa.
+- **Evidencia:** la biblioteca de torneos conserva un estado explícito de primera
+  carga y solo presenta «Administro» y «Sigo» después de recibir ambas
+  colecciones. La selección inicial prioriza «Administro» si tiene elementos o
+  si ambas colecciones están vacías; solo usa «Sigo» cuando es la única con
+  elementos.
+- **Coste aceptado:** se añade un booleano local, en lugar de una caché o store
+  compartida, porque el estado solo coordina el primer render de esta pantalla.
+- **Regla reutilizable:** un control cuyo valor inicial depende de varias
+  respuestas no se muestra hasta tener todos los datos que definen esa decisión.

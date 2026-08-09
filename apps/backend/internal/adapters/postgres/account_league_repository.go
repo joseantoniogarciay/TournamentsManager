@@ -15,6 +15,9 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 )
 
+// ErrAccountHasOwnedLeagues indicates that the account still owns one or more leagues.
+var ErrAccountHasOwnedLeagues = errors.New("account has owned leagues")
+
 // AccountLeagueRepository persiste sesiones y relaciones de ligas.
 type AccountLeagueRepository struct {
 	pool    *pgxpool.Pool
@@ -24,6 +27,39 @@ type AccountLeagueRepository struct {
 // NewAccountLeagueRepository construye el adaptador de relaciones de cuenta.
 func NewAccountLeagueRepository(pool *pgxpool.Pool) AccountLeagueRepository {
 	return AccountLeagueRepository{pool: pool, queries: sqlc.New(pool)}
+}
+
+// ScheduleAccountDeletion revoca accesos y relaciones personales sin borrar la cuenta.
+func (r AccountLeagueRepository) ScheduleAccountDeletion(ctx context.Context, accountID string) (time.Time, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return time.Time{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var hasOwned bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM leagues WHERE organizer_account_id = $1)`, accountID).Scan(&hasOwned); err != nil {
+		return time.Time{}, err
+	}
+	if hasOwned {
+		return time.Time{}, ErrAccountHasOwnedLeagues
+	}
+	var requested time.Time
+	if err := tx.QueryRow(ctx, `UPDATE accounts SET state = 'deletion_pending', deletion_requested_at = now() WHERE id = $1 AND state = 'verified' RETURNING deletion_requested_at`, accountID).Scan(&requested); err != nil {
+		return time.Time{}, err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM league_followers WHERE account_id = $1`, accountID); err != nil {
+		return time.Time{}, err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM league_administrators WHERE account_id = $1`, accountID); err != nil {
+		return time.Time{}, err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM sessions WHERE account_id = $1`, accountID); err != nil {
+		return time.Time{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return time.Time{}, err
+	}
+	return requested.AddDate(0, 0, 30).UTC(), nil
 }
 
 // Create crea una liga publicada, todavía sin calendario.

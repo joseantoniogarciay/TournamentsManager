@@ -1,11 +1,11 @@
 # ADR-0018: Usar Docker Compose para dependencias locales de servicio
 
-- **Estado:** Aceptado
+- **Estado:** Superado por ADR-0076
 - **Fecha:** 2026-07-25
 - **Decisor:** Usuario, mediante aceptación explícita de la alternativa B
 - **Propietario del análisis:** Asistente como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0076
 
 ## Problema
 

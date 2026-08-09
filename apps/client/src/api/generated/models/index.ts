@@ -8,6 +8,8 @@
 
 export * from "./accessMethods.js";
 export * from "./accessMethodsMethods.js";
+export * from "./accountDeletionConflictProblemResponse.js";
+export * from "./accountDeletionScheduled.js";
 export * from "./accountLeague.js";
 export * from "./accountLeaguePage.js";
 export * from "./accountLeagueRelationship.js";

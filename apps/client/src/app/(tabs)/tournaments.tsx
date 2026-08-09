@@ -27,6 +27,7 @@ export default function TournamentsScreen() {
   const [followed, setFollowed] = useState<Awaited<ReturnType<typeof listRelatedLeagues>>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasLoadedLeagues, setHasLoadedLeagues] = useState(false);
   const [selectedRelationship, setSelectedRelationship] =
     useState<LeagueRelationship>("administered");
   const loadedAccountID = useRef<string | null>(null);
@@ -43,12 +44,15 @@ export default function TournamentsScreen() {
         ]);
         setAdministered(nextAdministered);
         setFollowed(nextFollowed);
-        setSelectedRelationship(nextAdministered.length > 0 ? "administered" : "followed");
+        setSelectedRelationship(
+          nextAdministered.length > 0 || nextFollowed.length === 0 ? "administered" : "followed",
+        );
       } catch (error) {
         if (error instanceof APISessionInvalidatedError) return;
         const failure = getRequestFailure(error);
         show({ kind: failure.kind, message: t(failure.messageKey) });
       } finally {
+        setHasLoadedLeagues(true);
         if (isManualRefresh) setIsRefreshing(false);
         else setIsLoading(false);
       }
@@ -64,6 +68,7 @@ export default function TournamentsScreen() {
         setFollowed([]);
         setIsLoading(false);
         setIsRefreshing(false);
+        setHasLoadedLeagues(false);
         return;
       }
       if (loadedAccountID.current === user.id) return;
@@ -96,12 +101,12 @@ export default function TournamentsScreen() {
             </View>
           </Card>
         ) : null}
-        {user && isLoading ? (
+        {user && (isLoading || !hasLoadedLeagues) ? (
           <Card>
             <Text>{t("common_loading")}</Text>
           </Card>
         ) : null}
-        {user && !isLoading ? (
+        {user && hasLoadedLeagues && !isLoading ? (
           <LeagueLibrary
             administered={administered}
             followed={followed}

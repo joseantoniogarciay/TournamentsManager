@@ -39,11 +39,11 @@ el esquema fuera del arranque normal cuando haya datos que conservar.
 
 ## PostgreSQL local
 
-[ADR-0018](../adr/0018-use-compose-for-local-service-dependencies.md) implementa
-PostgreSQL 18.4 mediante Docker Compose con volumen nombrado, salud basada en
-`pg_isready` y puerto expuesto exclusivamente en loopback. API Go, Expo y las
-migraciones se ejecutan desde el host. El procedimiento operativo está en el
-[runbook local](../runbooks/local-postgresql.md).
+[ADR-0076](../adr/0076-run-the-local-api-in-compose-with-air.md) implementa
+PostgreSQL 18.4 junto a API y Mailpit mediante Docker Compose, con volumen
+nombrado, salud basada en `pg_isready` y puerto expuesto exclusivamente en
+loopback. Expo y las migraciones se ejecutan desde el host. El procedimiento
+operativo está en el [runbook local](../runbooks/local-postgresql.md).
 
 ## Principios
 

@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0076: API, PostgreSQL y Mailpit se levantan con `make dev-up`; Air se
+  ejecuta solo en la etapa Docker `dev` y el mismo Dockerfile ofrece un runtime
+  mínimo sin compilador para validar con `make api-image-build`.
+
 - Inicio de sesión local completo: `POST /v1/sessions` valida la contraseña
   Argon2id, limita los intentos por IP e identificador y entrega una sesión
   opaca. Cuenta conserva los secretos solo en Keychain/Keystore móvil y
@@ -206,5 +210,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - Plantillas de knowledge base, playbooks, runbooks, diagramas y retrospectivas.
 # Cambios no publicados
 
+- Aceptado ADR-0075: instalaciones locales congeladas y un periodo mínimo de
+  maduración de siete días para versiones de npm, incluidas las transitivas.
+- Aceptado ADR-0074: baja lógica de cuenta programada a 30 días, con retirada
+  inmediata de sesiones y relaciones no propietarias, y bloqueo mientras existan
+  ligas organizadas.
 - Añadida la gestión de métodos de acceso de ADR-0068: consulta de métodos,
   logout local silencioso, reautenticación de un solo uso y contraseña local.

@@ -37,6 +37,7 @@ type SessionContextValue = {
   cancelSessionReplacement: () => void;
   finishSessionReplacement: () => void;
   signOut: () => Promise<void>;
+  completeAccountDeletion: () => Promise<void>;
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -73,6 +74,12 @@ export function SessionProvider({ children }: PropsWithChildren) {
     setUser(null);
     setRevision((current) => current + 1);
     setTransition("signing-out");
+  }, []);
+  const completeAccountDeletion = useCallback(async () => {
+    await clearMobileSession();
+    setUser(null);
+    setRevision((current) => current + 1);
+    setTransition("resetting");
   }, []);
   const resetInvalidSession = useCallback(async () => {
     if (hasInvalidatedSession.current) return;
@@ -122,6 +129,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         cancelSessionReplacement,
         finishSessionReplacement,
         signOut,
+        completeAccountDeletion,
       }}
     >
       <View style={styles.root}>

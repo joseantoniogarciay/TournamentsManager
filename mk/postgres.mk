@@ -4,10 +4,12 @@
 POSTGRES_LOCAL_DIR := infra/local
 POSTGRES_LOCAL_ENV := $(POSTGRES_LOCAL_DIR)/.env
 BACKEND_ENV := $(BACKEND_DIR)/.env
+DEV_API_ENV := $(POSTGRES_LOCAL_DIR)/api.docker.env
 POSTGRES_COMPOSE := docker compose --env-file $(POSTGRES_LOCAL_ENV) -f $(POSTGRES_LOCAL_DIR)/compose.yaml
+DEV_COMPOSE := docker compose --env-file $(POSTGRES_LOCAL_ENV) -f $(POSTGRES_LOCAL_DIR)/compose.dev.yaml
 
 .PHONY: \
-	db-init db-env-check db-backend-env-check local-config-check \
+	db-init dev-init db-env-check db-backend-env-check dev-api-env-check local-config-check dev-config-check \
 	db-up db-wait db-down db-status db-logs db-reset db-schema-apply
 
 # Crea los contratos locales sin sobrescribir una configuración ya existente.
@@ -17,6 +19,13 @@ db-init:
 	cp $(POSTGRES_LOCAL_DIR)/.env.example $(POSTGRES_LOCAL_ENV)
 	cp $(BACKEND_DIR)/.env.example $(BACKEND_ENV)
 	@echo "db-init: contratos creados; revisa las contraseñas locales antes de arrancar"
+
+# Prepara los contratos usados por Compose sin sobrescribir una configuración ya
+# existente. apps/backend/.env solo hace falta para el arranque host opcional.
+dev-init:
+	@if [ ! -e $(POSTGRES_LOCAL_ENV) ]; then cp $(POSTGRES_LOCAL_DIR)/.env.example $(POSTGRES_LOCAL_ENV); else echo "dev-init: $(POSTGRES_LOCAL_ENV) ya existe; se conserva"; fi
+	@if [ ! -e $(DEV_API_ENV) ]; then cp $(POSTGRES_LOCAL_DIR)/api.docker.env.example $(DEV_API_ENV); else echo "dev-init: $(DEV_API_ENV) ya existe; se conserva"; fi
+	@echo "dev-init: contratos Compose preparados; revisa las contraseñas locales antes de arrancar"
 
 db-env-check:
 	@test -f $(POSTGRES_LOCAL_ENV) || { echo "Falta $(POSTGRES_LOCAL_ENV). Ejecuta: make db-init"; exit 1; }
@@ -29,12 +38,22 @@ db-env-check:
 db-backend-env-check:
 	@test -f $(BACKEND_ENV) || { echo "Falta $(BACKEND_ENV). Ejecuta: make db-init"; exit 1; }
 
+dev-api-env-check:
+	@test -f $(DEV_API_ENV) || { echo "Falta $(DEV_API_ENV). Ejecuta: make dev-init"; exit 1; }
+
 # Valida los contratos locales sin mostrar valores ni sobrescribir archivos.
 local-config-check: db-env-check db-backend-env-check
 	@set -a; . $(BACKEND_ENV); set +a; \
 	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
 		eval "value=\$${$$name}"; \
 		[ -n "$$value" ] || { echo "Falta $$name en $(BACKEND_ENV). Revisa apps/backend/.env.example"; exit 1; }; \
+	done
+
+dev-config-check: db-env-check dev-api-env-check
+	@set -a; . $(DEV_API_ENV); set +a; \
+	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
+		eval "value=\$${$$name}"; \
+		[ -n "$$value" ] || { echo "Falta $$name en $(DEV_API_ENV). Revisa infra/local/api.docker.env.example"; exit 1; }; \
 	done
 
 # Arranca PostgreSQL y espera a que el health check confirme que acepta conexiones.

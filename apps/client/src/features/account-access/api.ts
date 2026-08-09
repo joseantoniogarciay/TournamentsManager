@@ -2,6 +2,7 @@ import {
   createReauthenticationTicket,
   getAccessMethods,
   putLocalCredential,
+  scheduleAccountDeletion,
 } from "@/api/generated/session/session";
 import { createCurrentAccountGoogleIdentity } from "@/api/generated/federated-identity/federated-identity";
 import { apiFetch, APIUnexpectedResponseError } from "@/api/fetch";
@@ -10,6 +11,19 @@ export async function getAccountAccessMethods() {
   const response = await getAccessMethods(undefined, apiFetch);
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   return response.data;
+}
+
+export class AccountDeletionError extends Error {
+  constructor(readonly reason: "owned-leagues" | "unexpected") {
+    super(reason);
+  }
+}
+
+export async function deleteAccount() {
+  const response = await scheduleAccountDeletion(undefined, apiFetch);
+  if (response.status === 200) return response.data;
+  if (response.status === 409) throw new AccountDeletionError("owned-leagues");
+  throw new AccountDeletionError("unexpected");
 }
 
 export async function setAccountPassword(currentPassword: string, password: string) {

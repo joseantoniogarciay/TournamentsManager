@@ -4,13 +4,16 @@ import { color } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
+import { useSession } from "@/shared/session/session-provider";
 
 export default function TabLayout() {
   const t = getTranslator();
   const { resolvedTheme } = usePreferences();
+  const { revision } = useSession();
 
   return (
     <NativeTabs
+      key={revision}
       minimizeBehavior="never"
       tintColor={color.brand.primary}
       unstable_nativeProps={{ colorScheme: resolvedTheme }}
