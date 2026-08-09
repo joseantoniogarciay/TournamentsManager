@@ -1,5 +1,27 @@
 # Registro de aprendizaje
 
+## 2026-08-09 — Un resumen autenticado no repite el onboarding
+
+La home cambia de trabajo al existir sesión: pasa de explicar cómo empezar a
+resumir los torneos de la cuenta. Mantener las cards introductorias después de
+autenticarse diluye la actividad reciente y repite información que ya no ayuda.
+La biblioteca conserva su acción de creación como botón flotante sobre la
+botonera; su espacio se reserva en el scroll para mantener accesible el último
+torneo. La creación se presenta como modal a pantalla completa en apps y como
+página directa en web; su barra ofrece una salida explícita, mientras el
+formulario no expone detalles internos sobre cómo persiste el borrador.
+Cuando hace falta autenticarse para completar la creación, Cuenta se apila como
+otra modal del flujo y, tras iniciar sesión, se vuelve a Crear liga en vez de
+cambiar de tab.
+
+## 2026-08-09 — Administrar y crear son relaciones distintas
+
+La colección «Administro» agrupa tanto al creador como a una cuenta delegada.
+La UI no debe inferir la propiedad desde esa pestaña: usa la relación explícita
+`organizer` para identificar al creador y mantiene el estado de la liga en un
+único helper localizado, evitando que una misma transición se describa de forma
+distinta según la pantalla.
+
 ## 2026-08-09 — La cuenta crea la frontera remota del borrador
 
 Un borrador puede ser local antes de que exista identidad y transferirse de forma
@@ -1564,7 +1586,7 @@ límite sin crear una segunda sesión ni un estado de interfaz global.
 - **Aprendido:** dos acciones válidas por separado, como iniciar y cancelar una
   liga, pueden competir sobre el mismo estado si se ejecutan al mismo tiempo.
 - **Evidencia:** el adaptador PostgreSQL bloquea la fila de `leagues` con `FOR
-  UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
+UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   y solo después actualiza a `in_progress` o `cancelled`.
 - **Coste aceptado:** una transición concurrente espera brevemente el bloqueo;
   es menor que introducir colas, eventos o control de versiones optimista en
@@ -1595,3 +1617,84 @@ límite sin crear una segunda sesión ni un estado de interfaz global.
   exponga `in_progress`.
 - **Regla reutilizable:** toda enumeración del contrato que llegue a una UI se
   traduce mediante una clave semántica compartida antes de renderizarse.
+
+### 2026-08-09 — La corrección rápida necesita una huella mínima
+
+- **Aprendido:** aplicar marcadores de inmediato no exige una capa de eventos o
+  aprobación, pero sí conservar quién reemplazó qué para poder explicar un
+  cambio.
+- **Evidencia:** la transacción bloquea liga y partido, actualiza el marcador y
+  añade una fila con el valor previo, el nuevo, la administradora y el instante.
+- **Coste aceptado:** el historial permanece interno; no se adelantan una UI de
+  restauración ni reglas de disputa.
+- **Regla reutilizable:** para una mutación corregible, una tabla de cambios
+  acotada suele ser suficiente antes de introducir event sourcing.
+
+### 2026-08-09 — El detalle conserva la salida y separa la edición del resumen
+
+- **Aprendido:** una ruta profunda necesita una salida explícita incluso cuando
+  se abre sin historial; la cabecera puede volver a la ruta previa y usar la
+  home como fallback seguro.
+- **Evidencia:** el detalle de liga se presenta como modal en apps y página en
+  web, con un título truncado a dos líneas y acciones agrupadas en el menú
+  nativo de la barra. Cada partido muestra primero equipos y marcador; los
+  campos de edición y su acción quedan en un bloque separado.
+- **Coste aceptado:** se añade un menú de cabecera adaptado a plataforma, sin
+  introducir una librería de menús ni duplicar la lógica de acciones.
+- **Regla reutilizable:** en una vista de gestión, separar lectura, entrada y
+  confirmación reduce el error de interacción sin crear nuevos estados de
+  producto.
+
+### 2026-08-09 — La jornada es contexto persistente de una lista de partidos
+
+- **Aprendido:** repetir la jornada dentro de cada partido desperdicia espacio
+  y se pierde el contexto al desplazarse por una lista larga.
+- **Evidencia:** el detalle agrupa los partidos por jornada y usa cabeceras de
+  sección persistentes; la jornada actual permanece visible hasta que la
+  siguiente toma su lugar.
+- **Coste aceptado:** la vista construye secciones locales a partir de los
+  partidos ya recibidos, sin solicitar una nueva proyección de API.
+- **Regla reutilizable:** cuando una colección tiene grupos secuenciales, una
+  cabecera sticky conserva el contexto con menos ruido que duplicar su etiqueta
+  en cada fila.
+
+### 2026-08-09 — Una mutación densa se edita fuera de la tarjeta de resumen
+
+- **Aprendido:** la tarjeta de un partido debe permitir escanear el cruce y su
+  marcador; los campos solo son necesarios durante la acción de registrar o
+  corregir el resultado.
+- **Evidencia:** el detalle abre un popup con los dos marcadores y bloquea esa
+  interacción mientras se guarda. Al recibir la proyección actualizada, cierra
+  el popup y sustituye la tarjeta sin navegación adicional.
+- **Coste aceptado:** el estado del popup y el marcador en edición es local a la
+  ruta, sin introducir una store ni una capa de formularios nueva.
+- **Regla reutilizable:** separar lectura de edición mejora la densidad de una
+  colección y reduce las acciones accidentales en móvil.
+
+### 2026-08-09 — El nombre JSON forma parte del contrato, no de la estructura interna
+
+- **Aprendido:** un campo correctamente leído y almacenado puede seguir siendo
+  invisible para el cliente si el serializador usa un nombre distinto al de
+  OpenAPI.
+- **Evidencia:** la jornada se persistía como `round_number`, pero la respuesta
+  emitía `roundNumber` mientras el contrato declaraba `round`; el cliente
+  generado recibía por tanto `undefined`.
+- **Coste aceptado:** una prueba HTTP adicional verifica el cuerpo JSON de una
+  mutación de resultado, además de las pruebas del dominio y persistencia.
+- **Regla reutilizable:** las pruebas de borde HTTP deben afirmar los nombres y
+  la forma del contrato público, no solo que las estructuras internas contengan
+  los valores esperados.
+
+### 2026-08-09 — La propiedad conserva las capacidades operativas delegables
+
+- **Aprendido:** delegar una tarea no debe impedir que la persona propietaria
+  pueda realizarla; hacerlo fuerza una asignación artificial incluso cuando
+  opera una liga pequeña por sí misma.
+- **Evidencia:** la autorización de resultados acepta la organizadora o una
+  administradora delegada, mientras que una cuenta ajena sigue siendo rechazada.
+- **Coste aceptado:** la comprobación consulta ambas relaciones ya existentes,
+  sin crear un rol adicional ni duplicar a la organizadora en la tabla de
+  delegaciones.
+- **Regla reutilizable:** al introducir delegación directa, conserva de forma
+  explícita el permiso en la propiedad salvo que una decisión establezca una
+  separación de deberes deliberada.

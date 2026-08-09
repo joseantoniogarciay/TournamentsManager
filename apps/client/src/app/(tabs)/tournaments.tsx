@@ -1,12 +1,20 @@
-import { router, useFocusEffect } from "expo-router";
+import { router, type Href, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { color, control, radius, space } from "@tournaments-manager/design-tokens";
 
 import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
 import { listRelatedLeagues } from "@/features/league-creation/api";
+import { LeagueCreatorChip } from "@/features/league-creation/components/league-creator-chip";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getLeagueStateLabel } from "@/shared/i18n/league-state";
@@ -15,10 +23,11 @@ import { useSession } from "@/shared/session/session-provider";
 import { Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
 type LeagueRelationship = "administered" | "followed";
+const floatingActionButtonSize = control.minHeight + 12;
 
 export default function TournamentsScreen() {
   const t = getTranslator();
-  const { revision, user } = useSession();
+  const { isRestoring, revision, user } = useSession();
   const { show } = useFeedback();
   const { colors } = usePreferences();
   const tabContentBottomPadding = useTabContentBottomPadding();
@@ -32,6 +41,8 @@ export default function TournamentsScreen() {
   const [selectedRelationship, setSelectedRelationship] =
     useState<LeagueRelationship>("administered");
   const loadedAccountID = useRef<string | null>(null);
+  const isInitialLoad = !isRestoring && Boolean(user) && !hasLoadedLeagues;
+  const showFloatingAction = !isRestoring && (!user || !isInitialLoad);
 
   const loadLeagues = useCallback(
     async (isManualRefresh = false) => {
@@ -81,7 +92,10 @@ export default function TournamentsScreen() {
   return (
     <Screen bottomInset="none">
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: tabContentBottomPadding + floatingActionButtonSize + space[5] },
+        ]}
         key={revision}
         refreshControl={
           user ? (
@@ -94,7 +108,7 @@ export default function TournamentsScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {!user ? (
+        {!isRestoring && !user ? (
           <Card>
             <View style={styles.copy}>
               <Text variant="title">{t("tournaments_title")}</Text>
@@ -102,12 +116,8 @@ export default function TournamentsScreen() {
             </View>
           </Card>
         ) : null}
-        {user && (isLoading || !hasLoadedLeagues) ? (
-          <Card>
-            <Text>{t("common_loading")}</Text>
-          </Card>
-        ) : null}
-        {user && hasLoadedLeagues && !isLoading ? (
+
+        {!isRestoring && user && hasLoadedLeagues && !isLoading ? (
           <LeagueLibrary
             administered={administered}
             followed={followed}
@@ -116,6 +126,20 @@ export default function TournamentsScreen() {
           />
         ) : null}
       </ScrollView>
+      {isInitialLoad ? (
+        <View
+          accessibilityLabel={t("common_loading")}
+          accessibilityRole="progressbar"
+          style={styles.loader}
+        >
+          <ActivityIndicator color={colors.text.primary} size="large" />
+        </View>
+      ) : null}
+      {showFloatingAction ? (
+        <View style={[styles.floatingAction, { bottom: tabContentBottomPadding - space[4] }]}>
+          <CreateTournamentButton />
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -173,7 +197,10 @@ function LeagueLibrary({
             >
               <View style={styles.copy}>
                 <Text>{league.name}</Text>
-                <Text color="secondary">{getLeagueStateLabel(t, league.state)}</Text>
+                <View style={styles.leagueState}>
+                  {league.relationship === "organizer" ? <LeagueCreatorChip /> : null}
+                  <Text color="secondary">{getLeagueStateLabel(t, league.state)}</Text>
+                </View>
               </View>
               <Text color="secondary">›</Text>
             </Pressable>
@@ -208,11 +235,48 @@ function Segment({
   );
 }
 
+function CreateTournamentButton() {
+  const t = getTranslator();
+
+  return (
+    <Pressable
+      accessibilityLabel={t("home_create_tournament")}
+      accessibilityRole="button"
+      onPress={() => router.push("/create-tournament" as Href)}
+    >
+      <View style={styles.floatingActionButton}>
+        <Text color="onBrand" variant="title">
+          {t("common_add")}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, justifyContent: "center" },
+  content: { flexGrow: 1 },
   copy: { gap: space[2] },
+  leagueState: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   empty: { alignItems: "center", flex: 1, justifyContent: "center", paddingHorizontal: space[5] },
+  floatingAction: { position: "absolute", right: space[5] },
+  floatingActionButton: {
+    alignItems: "center",
+    backgroundColor: color.brand.primary,
+    borderRadius: radius.pill,
+    height: floatingActionButtonSize,
+    justifyContent: "center",
+    width: floatingActionButtonSize,
+  },
   library: { flex: 1, gap: space[5] },
+  loader: {
+    alignItems: "center",
+    bottom: 0,
+    justifyContent: "center",
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
+  },
   row: {
     alignItems: "center",
     flexDirection: "row",

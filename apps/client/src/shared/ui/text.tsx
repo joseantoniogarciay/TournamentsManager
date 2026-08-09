@@ -8,10 +8,17 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 type Props = PropsWithChildren<{
   variant?: "body" | "bodyLarge" | "caption" | "title" | "display";
   color?: "primary" | "secondary" | "inverse" | "onBrand" | "error" | "success";
+  numberOfLines?: number;
   style?: StyleProp<TextStyle>;
 }>;
 
-export function Text({ children, variant = "body", color: textColor = "primary", style }: Props) {
+export function Text({
+  children,
+  variant = "body",
+  color: textColor = "primary",
+  numberOfLines,
+  style,
+}: Props) {
   const { colors } = usePreferences();
   const textColors = {
     primary: { color: colors.text.primary },
@@ -22,7 +29,10 @@ export function Text({ children, variant = "body", color: textColor = "primary",
     success: { color: colors.feedback.success },
   };
   return (
-    <NativeText style={[styles.base, variants[variant], textColors[textColor], style]}>
+    <NativeText
+      numberOfLines={numberOfLines}
+      style={[styles.base, variants[variant], textColors[textColor], style]}
+    >
       {children}
     </NativeText>
   );

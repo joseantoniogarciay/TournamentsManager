@@ -82,6 +82,10 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	if err != nil {
 		t.Fatalf("crear liga: %v", err)
 	}
+	publicCreated, err := service.GetPublic(ctx, created.ID)
+	if err != nil || publicCreated.Matches == nil || publicCreated.Teams == nil {
+		t.Fatalf("consultar liga recién creada = %#v, %v; se esperaban arrays no nulos", publicCreated, err)
+	}
 	administratorID := createVerifiedLocalAccount(t, ctx, pool, "administrator@example.test", "administrator", "correct password")
 	if err := service.AssignAdministrator(ctx, accountID, created.ID, "administrator"); err != nil {
 		t.Fatalf("asignar administradora: %v", err)
@@ -99,6 +103,22 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	}
 	if started.State != "in_progress" || len(started.Matches) != 12 {
 		t.Fatalf("liga iniciada = state %q, partidos %d; se esperaba in_progress y 12", started.State, len(started.Matches))
+	}
+	withOrganizerResult, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1})
+	if err != nil || withOrganizerResult.Matches[0].State != "completed" || withOrganizerResult.Matches[0].HomeScore == nil || *withOrganizerResult.Matches[0].HomeScore != 2 || withOrganizerResult.Matches[0].AwayScore == nil || *withOrganizerResult.Matches[0].AwayScore != 1 {
+		t.Fatalf("resultado de organizadora = %#v, %v; se esperaba marcador 2-1", withOrganizerResult.Matches[0], err)
+	}
+	withResult, err := service.RecordResult(ctx, administratorID, created.ID, started.Matches[1].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1})
+	if err != nil || withResult.Matches[0].State != "completed" || withResult.Matches[0].HomeScore == nil || *withResult.Matches[0].HomeScore != 2 || withResult.Matches[0].AwayScore == nil || *withResult.Matches[0].AwayScore != 1 {
+		t.Fatalf("registrar resultado = %#v, %v; se esperaba marcador 2-1", withResult.Matches[0], err)
+	}
+	corrected, err := service.RecordResult(ctx, administratorID, created.ID, started.Matches[1].ID, leagues.MatchResultInput{HomeScore: 3, AwayScore: 0})
+	if err != nil || corrected.Matches[0].HomeScore == nil || *corrected.Matches[0].HomeScore != 3 || corrected.Matches[0].AwayScore == nil || *corrected.Matches[0].AwayScore != 0 {
+		t.Fatalf("corregir resultado = %#v, %v; se esperaba marcador 3-0", corrected.Matches[0], err)
+	}
+	var historyCount, previousHome, previousAway int
+	if err := pool.QueryRow(ctx, `SELECT count(*), max(previous_home_score), max(previous_away_score) FROM match_result_changes WHERE match_id = $1`, started.Matches[1].ID).Scan(&historyCount, &previousHome, &previousAway); err != nil || historyCount != 2 || previousHome != 2 || previousAway != 1 {
+		t.Fatalf("historial = count %d, previo %d-%d, %v; se esperaban dos cambios y previo 2-1", historyCount, previousHome, previousAway, err)
 	}
 	if _, err := service.Start(ctx, accountID, created.ID, leagues.StartInput{RoundRobinLegs: 1}); err != leagues.ErrLeagueConflict {
 		t.Fatalf("segundo inicio = %v, se esperaba %v", err, leagues.ErrLeagueConflict)

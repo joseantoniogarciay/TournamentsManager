@@ -18,6 +18,10 @@ var (
 	ErrLeagueCancellationConflict = errors.New("liga no se puede cancelar")
 	// ErrLeagueAdministratorConflict indica que no se puede asignar la administración solicitada.
 	ErrLeagueAdministratorConflict = errors.New("administradora de liga inválida")
+	// ErrMatchResultForbidden indica que la cuenta no administra resultados de la liga.
+	ErrMatchResultForbidden = errors.New("resultado no autorizado")
+	// ErrMatchResultConflict indica que la liga no admite resultados en su estado actual.
+	ErrMatchResultConflict = errors.New("resultado no se puede registrar")
 )
 
 // TeamInput representa un equipo enviado durante la creación.
@@ -32,6 +36,9 @@ type CreateInput struct {
 // StartInput fija las reglas que se congelan al iniciar.
 type StartInput struct{ RoundRobinLegs int }
 
+// MatchResultInput representa el marcador simple de fútbol.
+type MatchResultInput struct{ HomeScore, AwayScore int }
+
 // Team representa un equipo persistido de una liga.
 type Team struct {
 	ID       string `json:"id"`
@@ -42,11 +49,13 @@ type Team struct {
 // Match representa un partido generado de una liga.
 type Match struct {
 	ID          string `json:"id"`
-	RoundNumber int    `json:"roundNumber"`
+	RoundNumber int    `json:"round"`
 	Sequence    int    `json:"sequence"`
 	HomeTeamID  string `json:"homeTeamId"`
 	AwayTeamID  string `json:"awayTeamId"`
 	State       string `json:"state"`
+	HomeScore   *int   `json:"homeScore,omitempty"`
+	AwayScore   *int   `json:"awayScore,omitempty"`
 }
 
 // League es la proyección de una liga visible.
@@ -66,6 +75,7 @@ type CreationRepository interface {
 	Start(context.Context, string, string, StartInput) (League, error)
 	Cancel(context.Context, string, string) (League, error)
 	AssignAdministrator(context.Context, string, string, string) error
+	RecordResult(context.Context, string, string, string, MatchResultInput) (League, error)
 	GetPublic(context.Context, string) (League, error)
 }
 
@@ -104,6 +114,14 @@ func (s CreationService) AssignAdministrator(ctx context.Context, accountID, lea
 		return ErrInvalidLeagueInput
 	}
 	return s.repository.AssignAdministrator(ctx, accountID, leagueID, username)
+}
+
+// RecordResult aplica o corrige inmediatamente un marcador de una cuenta autorizada.
+func (s CreationService) RecordResult(ctx context.Context, accountID, leagueID, matchID string, input MatchResultInput) (League, error) {
+	if input.HomeScore < 0 || input.AwayScore < 0 {
+		return League{}, ErrInvalidLeagueInput
+	}
+	return s.repository.RecordResult(ctx, accountID, leagueID, matchID, input)
 }
 
 var usernamePattern = regexp.MustCompile(`^[a-z0-9_]{3,30}$`)

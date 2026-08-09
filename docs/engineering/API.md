@@ -160,6 +160,19 @@ orígenes exactos ya validados en `CORS_ALLOWED_ORIGINS`; Bearer no usa ese
 control porque no viaja automáticamente con el navegador. Véase
 [ADR-0059](../adr/0059-centralize-session-authentication-at-the-http-boundary.md).
 
+## Resultados de partidos
+
+`PUT /v1/leagues/{leagueId}/matches/{matchId}/result` acepta únicamente dos
+enteros no negativos (`homeScore`, `awayScore`). Exige a la organizadora o una
+administradora delegada y una liga `in_progress`; aplica el marcador de inmediato y devuelve la
+proyección pública actualizada. Cada escritura se conserva internamente con el
+marcador anterior, autora e instante, conforme a ADR-0035 a ADR-0037. El
+historial no se expone todavía como una funcionalidad de disputa o restauración.
+
+El cliente muestra feedback específico solo cuando el contrato ofrece una
+recuperación distinta; errores no tratados, `5xx` y respuestas inválidas usan el
+mensaje seguro común.
+
 ## Validación y generación
 
 [ADR-0046](../adr/0046-lint-and-generate-openapi-with-redocly-and-orval.md)

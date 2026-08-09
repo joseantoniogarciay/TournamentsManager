@@ -67,6 +67,8 @@ func (r testLeagueRepository) Unfollow(context.Context, string, string) error { 
 type testCreationRepository struct {
 	cancelled leagues.League
 	cancelErr error
+	result    leagues.League
+	resultErr error
 }
 
 func (testCreationRepository) Create(context.Context, string, leagues.CreateInput) (leagues.League, error) {
@@ -83,6 +85,10 @@ func (r testCreationRepository) Cancel(context.Context, string, string) (leagues
 
 func (testCreationRepository) AssignAdministrator(context.Context, string, string, string) error {
 	return nil
+}
+
+func (r testCreationRepository) RecordResult(context.Context, string, string, string, leagues.MatchResultInput) (leagues.League, error) {
+	return r.result, r.resultErr
 }
 
 func (testCreationRepository) GetPublic(context.Context, string) (leagues.League, error) {
@@ -190,6 +196,57 @@ func TestCancelLeagueMapsBusinessErrors(t *testing.T) {
 			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{cancelErr: test.err}))
 			request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/cancel", nil)
 			request.Header.Set("Authorization", "Bearer session-token")
+			recorder := httptest.NewRecorder()
+
+			handler.ServeHTTP(recorder, request)
+
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
+	}
+}
+
+func TestRecordMatchResultUsesTheContractRoundField(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	const matchID = "019abcde-3333-7333-8333-333333333333"
+	creation := leagues.NewCreationService(testCreationRepository{result: leagues.League{ID: leagueID, State: "in_progress", Teams: []leagues.Team{}, Matches: []leagues.Match{{ID: matchID, RoundNumber: 1, State: "completed"}}}})
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, creation)
+	request := httptest.NewRequest(http.MethodPut, "/v1/leagues/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(`{"homeScore":2,"awayScore":1}`))
+	request.Header.Set("Authorization", "Bearer session-token")
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body = %s", recorder.Code, http.StatusOK, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"round":1`) || strings.Contains(recorder.Body.String(), `"roundNumber"`) {
+		t.Errorf("body = %s, want the OpenAPI field round", recorder.Body.String())
+	}
+}
+
+func TestRecordMatchResultMapsBusinessErrors(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	const matchID = "019abcde-3333-7333-8333-333333333333"
+	for name, test := range map[string]struct {
+		err    error
+		status int
+	}{
+		"not administrator": {err: leagues.ErrMatchResultForbidden, status: http.StatusForbidden},
+		"wrong state":       {err: leagues.ErrMatchResultConflict, status: http.StatusConflict},
+		"not found":         {err: leagues.ErrLeagueNotFound, status: http.StatusNotFound},
+	} {
+		t.Run(name, func(t *testing.T) {
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{resultErr: test.err}))
+			request := httptest.NewRequest(http.MethodPut, "/v1/leagues/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(`{"homeScore":2,"awayScore":1}`))
+			request.Header.Set("Authorization", "Bearer session-token")
+			request.Header.Set("Content-Type", "application/json")
 			recorder := httptest.NewRecorder()
 
 			handler.ServeHTTP(recorder, request)

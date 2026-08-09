@@ -44,7 +44,16 @@ type Verifier interface {
 type Challenge struct{ ID, Nonce, ExpiresAt string }
 
 // Registration contiene los campos propios necesarios para crear una cuenta social.
-type Registration struct{ Username, Locale string }
+type Registration struct {
+	Username, Locale string
+	Draft            *Draft
+}
+
+// Draft es el torneo completo que puede crear una cuenta nueva en la misma transacción.
+type Draft struct {
+	Name  string
+	Teams []string
+}
 
 // Session describe la sesión persistida sin exponer sus tokens sensibles.
 type Session struct{ AccountID, Username, IdleExpiresAt, RefreshExpiresAt string }

@@ -92,7 +92,7 @@ func (r AccountLeagueRepository) Create(ctx context.Context, accountID string, i
 
 // GetPublic devuelve la proyección visible de una liga ya creada.
 func (r AccountLeagueRepository) GetPublic(ctx context.Context, leagueID string) (leagues.League, error) {
-	var league leagues.League
+	league := leagues.League{Teams: []leagues.Team{}, Matches: []leagues.Match{}}
 	if err := r.pool.QueryRow(ctx, `SELECT id::text, name, sport, format, state FROM leagues WHERE id = $1 AND state <> 'draft'`, leagueID).Scan(&league.ID, &league.Name, &league.Sport, &league.Format, &league.State); errors.Is(err, pgx.ErrNoRows) {
 		return leagues.League{}, leagues.ErrLeagueNotFound
 	} else if err != nil {
@@ -113,19 +113,67 @@ func (r AccountLeagueRepository) GetPublic(ctx context.Context, leagueID string)
 	if err := teams.Err(); err != nil {
 		return leagues.League{}, err
 	}
-	matches, err := r.pool.Query(ctx, `SELECT id::text, round_number, sequence, home_team_id::text, away_team_id::text, state FROM matches WHERE league_id = $1 ORDER BY round_number, sequence`, leagueID)
+	matches, err := r.pool.Query(ctx, `SELECT id::text, round_number, sequence, home_team_id::text, away_team_id::text, state, home_score, away_score FROM matches WHERE league_id = $1 ORDER BY round_number, sequence`, leagueID)
 	if err != nil {
 		return leagues.League{}, err
 	}
 	defer matches.Close()
 	for matches.Next() {
 		var match leagues.Match
-		if err := matches.Scan(&match.ID, &match.RoundNumber, &match.Sequence, &match.HomeTeamID, &match.AwayTeamID, &match.State); err != nil {
+		if err := matches.Scan(&match.ID, &match.RoundNumber, &match.Sequence, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore); err != nil {
 			return leagues.League{}, err
 		}
 		league.Matches = append(league.Matches, match)
 	}
 	return league, matches.Err()
+}
+
+// RecordResult guarda el marcador y una entrada de historial dentro de una única transacción.
+func (r AccountLeagueRepository) RecordResult(ctx context.Context, accountID, leagueID, matchID string, input leagues.MatchResultInput) (leagues.League, error) {
+	account, err := uuidValue(accountID)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var organizer, state string
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
+		return leagues.League{}, leagues.ErrLeagueNotFound
+	} else if err != nil {
+		return leagues.League{}, err
+	}
+	if state != "in_progress" {
+		return leagues.League{}, leagues.ErrMatchResultConflict
+	}
+	var administers bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM league_administrators WHERE league_id = $1 AND account_id = $2)`, leagueID, account).Scan(&administers); err != nil {
+		return leagues.League{}, err
+	}
+	if organizer != account.String() && !administers {
+		return leagues.League{}, leagues.ErrMatchResultForbidden
+	}
+	var previousHome, previousAway *int
+	if err := tx.QueryRow(ctx, `SELECT home_score, away_score FROM matches WHERE id = $1 AND league_id = $2 FOR UPDATE`, matchID, leagueID).Scan(&previousHome, &previousAway); errors.Is(err, pgx.ErrNoRows) {
+		return leagues.League{}, leagues.ErrLeagueNotFound
+	} else if err != nil {
+		return leagues.League{}, err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE matches SET state = 'completed', home_score = $3, away_score = $4 WHERE id = $1 AND league_id = $2`, matchID, leagueID, input.HomeScore, input.AwayScore); err != nil {
+		return leagues.League{}, err
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO match_result_changes (match_id, changed_by_account_id, previous_home_score, previous_away_score, home_score, away_score) VALUES ($1, $2, $3, $4, $5, $6)`, matchID, account, previousHome, previousAway, input.HomeScore, input.AwayScore); err != nil {
+		return leagues.League{}, err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE leagues SET last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
+		return leagues.League{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return leagues.League{}, err
+	}
+	return r.GetPublic(ctx, leagueID)
 }
 
 // Start congela la configuración y genera una vuelta completa por cada leg.

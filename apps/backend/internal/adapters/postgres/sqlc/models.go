@@ -99,6 +99,19 @@ type Match struct {
 	HomeTeamID  pgtype.UUID
 	AwayTeamID  pgtype.UUID
 	State       string
+	HomeScore   pgtype.Int4
+	AwayScore   pgtype.Int4
+}
+
+type MatchResultChange struct {
+	ID                 pgtype.UUID
+	MatchID            pgtype.UUID
+	ChangedByAccountID pgtype.UUID
+	PreviousHomeScore  pgtype.Int4
+	PreviousAwayScore  pgtype.Int4
+	HomeScore          int32
+	AwayScore          int32
+	ChangedAt          pgtype.Timestamptz
 }
 
 type PasswordResetToken struct {

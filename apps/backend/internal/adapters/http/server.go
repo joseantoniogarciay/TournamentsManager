@@ -84,6 +84,7 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 		mux.Handle("POST /v1/leagues", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createLeague(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(startLeague(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/cancel", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(cancelLeague(creationService)))))
+		mux.Handle("PUT /v1/leagues/{leagueId}/matches/{matchId}/result", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(recordMatchResult(creationService)))))
 		mux.Handle("PUT /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(assignLeagueAdministrator(creationService)))))
 		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
 	}
@@ -185,6 +186,10 @@ type leagueInput struct {
 }
 type startLeagueInput struct {
 	RoundRobinLegs int `json:"roundRobinLegs"`
+}
+type matchResultInput struct {
+	HomeScore *int `json:"homeScore"`
+	AwayScore *int `json:"awayScore"`
 }
 
 func createLeague(service leagues.CreationService) http.HandlerFunc {
@@ -303,6 +308,45 @@ func cancelLeague(service leagues.CreationService) http.HandlerFunc {
 		}
 		if err != nil {
 			writeProblem(w, http.StatusInternalServerError, "No se pudo cancelar la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+
+func recordMatchResult(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID, matchID := r.PathValue("leagueId"), r.PathValue("matchId")
+		var body matchResultInput
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(matchID) || decodeBody(r, &body) != nil || body.HomeScore == nil || body.AwayScore == nil {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.RecordResult(r.Context(), accountID, leagueID, matchID, leagues.MatchResultInput{HomeScore: *body.HomeScore, AwayScore: *body.AwayScore})
+		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
+			writeValidationProblem(w)
+			return
+		}
+		if errors.Is(err, leagues.ErrMatchResultForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes registrar resultados en esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga o partido no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrMatchResultConflict) {
+			writeProblem(w, http.StatusConflict, "La liga no está en curso")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo guardar el resultado")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -487,11 +531,12 @@ func unavailableFederatedLogin(w http.ResponseWriter, _ *http.Request) {
 }
 
 type googleSessionRequest struct {
-	ChallengeID      string `json:"challengeId"`
-	IDToken          string `json:"idToken"`
-	SessionTransport string `json:"sessionTransport"`
-	Username         string `json:"username"`
-	Locale           string `json:"locale"`
+	ChallengeID      string              `json:"challengeId"`
+	IDToken          string              `json:"idToken"`
+	SessionTransport string              `json:"sessionTransport"`
+	Username         string              `json:"username"`
+	Locale           string              `json:"locale"`
+	Draft            *registration.Draft `json:"draft"`
 }
 
 func createGoogleChallenge(service federated.Service) http.HandlerFunc {
@@ -510,13 +555,13 @@ func createGoogleChallenge(service federated.Service) http.HandlerFunc {
 func createGoogleSession(service federated.Service, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body googleSessionRequest
-		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") {
+		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") || (body.Draft != nil && (body.Username == "" || !validRegistrationDraft(body.Draft))) {
 			writeValidationProblem(w)
 			return
 		}
 		var registrationInput *federated.Registration
 		if body.Username != "" {
-			registrationInput = &federated.Registration{Username: body.Username, Locale: body.Locale}
+			registrationInput = &federated.Registration{Username: body.Username, Locale: body.Locale, Draft: toFederatedDraft(body.Draft)}
 		}
 		established, err := service.Authenticate(r.Context(), body.ChallengeID, body.IDToken, registrationInput)
 		if errors.Is(err, federated.ErrRegistration) {
@@ -537,6 +582,13 @@ func createGoogleSession(service federated.Service, cookies sessionCookieSetting
 		}
 		writeFederatedSession(w, body.SessionTransport, established, cookies)
 	}
+}
+
+func toFederatedDraft(draft *registration.Draft) *federated.Draft {
+	if draft == nil {
+		return nil
+	}
+	return &federated.Draft{Name: strings.TrimSpace(draft.Name), Teams: draft.Teams}
 }
 
 func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession, cookies sessionCookieSettings) {

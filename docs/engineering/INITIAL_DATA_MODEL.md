@@ -6,9 +6,9 @@
 ## Alcance
 
 Este modelo cubre alta local y con Google, verificación, sesión,
-publicación/lectura de una liga y sus relaciones de seguimiento o administración
-delegada. No incorpora Apple, recuperación de contraseña, resultados ni cambios
-de estado posteriores a `published`.
+publicación/lectura de una liga, sus relaciones de seguimiento o administración
+delegada y resultados simples de partidos. No incorpora Apple ni reglas de
+clasificación, bajas o cierre.
 
 ## Entidades y relaciones
 
@@ -44,6 +44,7 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | `league_followers`           | `league_id`, `account_id`, `followed_at`                                                                               | PK compuesta; guardar una liga no concede permisos. Una cuenta puede seguir una liga que también administra, aunque la colección de seguimiento la oculta para evitar duplicación.                                                  |
 | `league_teams`               | `id`, `league_id`, `name`, `position`                                                                                  | nombre normalizado único por liga; se crean junto al borrador transferido o con una liga publicada.                                                                                                                                 |
 | `matches`                    | `id`, `league_id`, `round_number`, `sequence`, `home_team_id`, `away_team_id`, `state`                                 | un partido por pareja no ordenada de equipos; sin marcador o fecha; estado inicial `pending`.                                                                                                                                       |
+| `match_result_changes`        | `id`, `match_id`, `changed_by_account_id`, marcador anterior y nuevo, `changed_at`                                     | cada registro o corrección conserva la administradora y el marcador previo; el primer registro no tiene marcador anterior.                                                                                                           |
 
 El email conserva el valor aportado para entrega; `lower(email)` es solo la clave
 de comparación del producto. El locale de cuenta es una preferencia validada
@@ -74,6 +75,9 @@ minúsculo antes de guardar.
    `deletion_pending` y conserva la fecha de solicitud. En una transacción se
    invalidan sesiones y tokens, y se eliminan seguimientos y administraciones
    delegadas. La purga física y la recuperación se definen después.
+7. **Resultado:** bloquea liga y partido, exige que la liga esté `in_progress` y
+   que la cuenta figure en `league_administrators`; actualiza el marcador simple,
+   guarda un cambio y actualiza `last_activity_at` atómicamente.
 
 La purga es un proceso operativo explícito, idempotente y auditable por conteos,
 sin registrar emails ni tokens. El `ON DELETE` y las FKs se concretarán en la
@@ -83,5 +87,5 @@ datos temporales.
 ## Límites intencionales
 
 No se persiste el borrador anónimo. Tampoco se añaden tablas genéricas de roles,
-proveedores, auditoría de resultados o eventos: no son necesarias para esta
-entrega y adelantarían decisiones ya aplazadas.
+proveedores o eventos: no son necesarias para esta entrega y adelantarían
+decisiones ya aplazadas.

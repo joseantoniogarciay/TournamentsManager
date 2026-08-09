@@ -67,6 +67,17 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 	if err := queries.CreateGoogleExternalIdentity(ctx, sqlc.CreateGoogleExternalIdentityParams{AccountID: accountID, Issuer: identity.Issuer, Subject: identity.Subject}); err != nil {
 		return federated.Session{}, err
 	}
+	if registration.Draft != nil {
+		var leagueID string
+		if err := tx.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, state, published_at) VALUES ($1, $2, 'published', now()) RETURNING id::text`, accountID, registration.Draft.Name).Scan(&leagueID); err != nil {
+			return federated.Session{}, err
+		}
+		for position, name := range registration.Draft.Teams {
+			if _, err := tx.Exec(ctx, `INSERT INTO league_teams (league_id, name, name_normalized, position) VALUES ($1, $2, lower($2), $3)`, leagueID, name, position+1); err != nil {
+				return federated.Session{}, err
+			}
+		}
+	}
 	return createSession(ctx, tx, queries, accountID, registration.Username, accessHash, refreshHash)
 }
 

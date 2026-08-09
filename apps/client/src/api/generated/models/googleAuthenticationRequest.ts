@@ -5,6 +5,7 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
+import type { LeagueInput } from "./leagueInput.js";
 import type { Locale } from "./locale.js";
 import type { OpaqueToken } from "./opaqueToken.js";
 import type { Transport } from "./transport.js";
@@ -19,4 +20,6 @@ export interface GoogleAuthenticationRequest {
   username?: Username;
   /** Requerido junto a username para crear una cuenta Google nueva. */
   locale?: Locale;
+  /** Torneo válido transferido únicamente al crear una cuenta Google nueva. */
+  draft?: LeagueInput;
 }

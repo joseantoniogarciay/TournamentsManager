@@ -65,7 +65,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0013](../adr/0013-use-develop-as-integration-branch.md)                                      | Usar `develop` como rama de integración                              | Aceptado              | 2026-07-24 |
 | [0014](../adr/0014-use-node-pnpm-and-strict-typescript.md)                                    | Usar Node LTS, pnpm y TypeScript estricto                            | Aceptado              | 2026-07-24 |
 | [0075](../adr/0075-freeze-local-lockfiles-and-delay-dependency-releases.md)                   | Congelar el lockfile local y retrasar versiones nuevas               | Aceptado              | 2026-08-04 |
-| [0077](../adr/0077-allow-immediate-expo-compatibility-updates.md)                              | Permitir actualizaciones inmediatas del conjunto compatible de Expo  | Aceptado              | 2026-08-09 |
+| [0077](../adr/0077-allow-immediate-expo-compatibility-updates.md)                             | Permitir actualizaciones inmediatas del conjunto compatible de Expo  | Aceptado              | 2026-08-09 |
 | [0015](../adr/0015-use-expo-router-and-continuous-native-generation.md)                       | Usar Expo, Expo Router y CNG                                         | Aceptado              | 2026-07-24 |
 | [0016](../adr/0016-use-client-side-web-rendering-initially.md)                                | Usar rendering web client-side inicialmente                          | Aceptado              | 2026-07-24 |
 | [0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md)                         | Usar contratos de entorno, GitHub Environments y OIDC                | Aceptado              | 2026-07-24 |
@@ -129,6 +129,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0076](../adr/0076-run-the-local-api-in-compose-with-air.md)                                  | Ejecutar la API local en Compose con Air                             | Aceptado              | 2026-08-08 |
 | [0078](../adr/0078-transfer-local-drafts-with-registration.md)                                | Transferir el borrador local junto al alta                           | Aceptado              | 2026-08-09 |
 | [0079](../adr/0079-create-published-leagues-with-registration-drafts.md)                      | Crear liga publicada al transferir el borrador en el alta            | Aceptado              | 2026-08-09 |
+| [0080](../adr/0080-allow-organizers-to-manage-league-results.md)                              | Permitir al organizador gestionar resultados de su liga              | Aceptado              | 2026-08-09 |
 
 ## Trazabilidad de un cambio
 

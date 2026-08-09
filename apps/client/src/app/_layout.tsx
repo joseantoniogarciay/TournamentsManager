@@ -55,6 +55,27 @@ function RootNavigator() {
     <Stack key={revision} screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
+        name="create-tournament"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
+        name="account-authentication"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
+        name="league/[id]"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
         name="link/confirm"
         options={{
           animation: "fade",

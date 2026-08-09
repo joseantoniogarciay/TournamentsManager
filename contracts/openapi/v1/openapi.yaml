@@ -530,6 +530,42 @@ paths:
         "403": { description: La sesión no pertenece a la organizadora. }
         "404": { description: La liga no existe. }
         "409": { description: La liga no está publicada ni en curso. }
+  /leagues/{leagueId}/matches/{matchId}/result:
+    put:
+      tags: [Leagues]
+      operationId: recordMatchResult
+      summary: Registra o corrige el resultado de un partido
+      description: >-
+        Exige sesión válida de la organizadora o una administradora delegada y
+        una liga en curso.
+        El resultado se aplica inmediatamente; una corrección conserva su
+        historial interno de valores y autora.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: matchId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MatchResultInput" }
+      responses:
+        "200":
+          description: Resultado aplicado y proyección pública actualizada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicLeague" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no administra los resultados de esta liga. }
+        "404": { description: La liga o el partido no existe. }
+        "409": { description: La liga no está en curso. }
   /leagues/{leagueId}/administrators/{username}:
     put:
       tags: [Leagues]
@@ -802,11 +838,20 @@ components:
         locale:
           description: Requerido junto a username para crear una cuenta Google nueva.
           allOf: [{ $ref: "#/components/schemas/Locale" }]
+        draft:
+          description: Torneo válido transferido únicamente al crear una cuenta Google nueva.
+          allOf: [{ $ref: "#/components/schemas/LeagueInput" }]
     StartLeagueRequest:
       type: object
       required: [roundRobinLegs]
       properties:
         roundRobinLegs: { type: integer, enum: [1, 2] }
+    MatchResultInput:
+      type: object
+      required: [homeScore, awayScore]
+      properties:
+        homeScore: { type: integer, minimum: 0 }
+        awayScore: { type: integer, minimum: 0 }
     PublishedLeague:
       type: object
       required: [id, name, state, teams, matches]
@@ -842,7 +887,9 @@ components:
         sequence: { type: integer, minimum: 1 }
         homeTeamId: { $ref: "#/components/schemas/UUID" }
         awayTeamId: { $ref: "#/components/schemas/UUID" }
-        state: { type: string, enum: [pending] }
+        state: { type: string, enum: [pending, completed] }
+        homeScore: { type: integer, minimum: 0 }
+        awayScore: { type: integer, minimum: 0 }
     Problem:
       type: object
       required: [type, title, status]

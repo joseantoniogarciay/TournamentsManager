@@ -11,6 +11,7 @@ import type {
   AuthenticationProblemResponse,
   LeagueInput,
   ListCurrentAccountLeaguesParams,
+  MatchResultInput,
   Problem,
   PublicLeague,
   PublishedLeague,
@@ -464,6 +465,80 @@ export const cancelLeague = async (
 
   const data: cancelLeagueResponse["data"] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as cancelLeagueResponse;
+};
+
+export type recordMatchResultResponse200 = {
+  data: PublicLeague;
+  status: 200;
+};
+
+export type recordMatchResultResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type recordMatchResultResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type recordMatchResultResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type recordMatchResultResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type recordMatchResultResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type recordMatchResultResponseSuccess = recordMatchResultResponse200 & {
+  headers: Headers;
+};
+export type recordMatchResultResponseError = (
+  | recordMatchResultResponse400
+  | recordMatchResultResponse401
+  | recordMatchResultResponse403
+  | recordMatchResultResponse404
+  | recordMatchResultResponse409
+) & {
+  headers: Headers;
+};
+
+export type recordMatchResultResponse =
+  recordMatchResultResponseSuccess | recordMatchResultResponseError;
+
+export const getRecordMatchResultUrl = (leagueId: Uuid, matchId: Uuid) => {
+  return `/leagues/${leagueId}/matches/${matchId}/result`;
+};
+
+/**
+ * Exige sesión válida de la organizadora o una administradora delegada y una liga en curso. El resultado se aplica inmediatamente; una corrección conserva su historial interno de valores y autora.
+ * @summary Registra o corrige el resultado de un partido
+ */
+export const recordMatchResult = async (
+  leagueId: Uuid,
+  matchId: Uuid,
+  matchResultInput: MatchResultInput,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<recordMatchResultResponse> => {
+  const res = await (fetchFn ?? fetch)(getRecordMatchResultUrl(leagueId, matchId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(matchResultInput),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: recordMatchResultResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as recordMatchResultResponse;
 };
 
 export type assignLeagueAdministratorResponse204 = {

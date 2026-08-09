@@ -29,6 +29,7 @@ export * from "./localCredentialRequest.js";
 export * from "./locale.js";
 export * from "./loginRequest.js";
 export * from "./match.js";
+export * from "./matchResultInput.js";
 export * from "./matchState.js";
 export * from "./opaqueToken.js";
 export * from "./password.js";

@@ -4,7 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 
-import type { GoogleLoginChallenge, Locale, Username } from "@/api/generated/models";
+import type { GoogleLoginChallenge, LeagueInput, Locale, Username } from "@/api/generated/models";
 
 import {
   beginGoogleAuthentication,
@@ -41,10 +41,12 @@ function getGoogleRedirectURI(clientID: string | undefined) {
  */
 export function useGoogleAuthentication({
   locale,
+  draft,
   onSession,
 }: {
+  draft?: LeagueInput;
   locale: Locale;
-  onSession: (user: { id: string; username: string }) => void;
+  onSession: (user: { id: string; username: string }, createdLeague: boolean) => void;
 }) {
   const [challenge, setChallenge] = useState<GoogleLoginChallenge | null>(null);
   const [pendingAccount, setPendingAccount] = useState<PendingGoogleAccount | null>(null);
@@ -101,6 +103,7 @@ export function useGoogleAuthentication({
       const result = await finishGoogleAuthentication({
         ...input,
         locale: username ? locale : undefined,
+        draft: username ? draft : undefined,
         sessionTransport,
         username,
       });
@@ -110,9 +113,9 @@ export function useGoogleAuthentication({
       }
       setChallenge(null);
       setPendingAccount(null);
-      onSession(result.session.user);
+      onSession(result.session.user, Boolean(username && draft));
     },
-    [locale, onSession, sessionTransport],
+    [draft, locale, onSession, sessionTransport],
   );
 
   useEffect(() => {

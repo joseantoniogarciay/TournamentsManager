@@ -92,8 +92,8 @@ del navegador. Véase [ADR-0057](../adr/0057-define-contextual-home-and-tourname
 ### Organizador
 
 Es inicialmente el usuario autenticado que creó el torneo, con permisos sobre él
-y capacidad de crear sus equipos. Conserva la propiedad y es el único que puede
-asignar o retirar administradores delegados.
+y capacidad de crear sus equipos y gestionar resultados. Conserva la propiedad y
+es el único que puede asignar o retirar administradores delegados.
 
 ### Administrador delegado
 
@@ -178,6 +178,10 @@ y operación:
 5. una persona inicia sesión con Google y recibe la misma clase de sesión propia
    que con contraseña.
 
+El corte siguiente implementa el registro y la corrección inmediata de
+marcadores por administradores delegados en ligas en curso. La clasificación,
+el cierre y la retirada de equipos conservan su entrega posterior.
+
 El alcance está aceptado en [ADR-0043](../adr/0043-deliver-publish-and-read-league-first-backend-increment.md).
 El Gate 0B está cerrado: el formato, los datos mínimos, el ciclo de vida, la
 visibilidad, los participantes, la administración, los resultados, las bajas, la
@@ -202,7 +206,7 @@ Una liga visible es consultable sin sesión por su ID público y el creador pued
 datos estructurales. En interfaz, `publicado` se muestra como «Sin empezar».
 Al iniciarla el creador elige una o dos vueltas, se validan los datos, se generan
 una sola vez los emparejamientos y se congelan equipos y reglas. Solo entonces los
-administradores pueden registrar o corregir resultados. El creador solo puede
+organizador y los administradores delegados pueden registrar o corregir resultados. El creador solo puede
 finalizarla cuando todos sus partidos tienen resultado. Si un equipo abandona en
 `en_curso`, solo el creador puede declararlo: todos sus partidos, pendientes o
 ya jugados, pasan a `3-0` a favor del rival y la liga continúa.

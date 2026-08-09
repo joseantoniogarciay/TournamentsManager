@@ -6,9 +6,9 @@
  * OpenAPI spec version: 1.0.0-design
  */
 
-export type MatchState = (typeof MatchState)[keyof typeof MatchState];
-
-export const MatchState = {
-  pending: "pending",
-  completed: "completed",
-} as const;
+export interface MatchResultInput {
+  /** @minimum 0 */
+  homeScore: number;
+  /** @minimum 0 */
+  awayScore: number;
+}

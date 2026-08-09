@@ -3,7 +3,7 @@ import {
   createGoogleLoginChallenge,
   createGoogleSession,
 } from "@/api/generated/federated-identity/federated-identity";
-import type { GoogleLoginChallenge, Locale, Transport, Username } from "@/api/generated/models";
+import type { GoogleLoginChallenge, LeagueInput, Locale, Transport, Username } from "@/api/generated/models";
 
 export type GoogleAuthenticationFailure = "conflict" | "rate-limited";
 
@@ -26,6 +26,7 @@ export async function beginGoogleAuthentication() {
 /** Entrega la prueba de Google al backend, que decide sesión, alta o conflicto. */
 export async function finishGoogleAuthentication(input: {
   challenge: GoogleLoginChallenge;
+  draft?: LeagueInput;
   idToken: string;
   locale?: Locale;
   sessionTransport: Transport;
@@ -34,6 +35,7 @@ export async function finishGoogleAuthentication(input: {
   const response = await createGoogleSession(
     {
       challengeId: input.challenge.id,
+      draft: input.draft,
       idToken: input.idToken,
       locale: input.locale,
       sessionTransport: input.sessionTransport,
