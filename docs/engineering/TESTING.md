@@ -57,7 +57,8 @@ La suite PostgreSQL ejecutada en CI cubre las transacciones de mayor riesgo del
 vertical slice actual: creación, inicio y cancelación de una liga; registro y
 corrección de resultados con historial; clasificación calculada desde los
 marcadores persistidos; autorización de las mutaciones; y cierre atómico con
-rechazo de partidos pendientes y co-campeones conservados. También cubre
+rechazo de partidos pendientes, co-campeones conservados y solicitudes de
+cierre concurrentes. También cubre
 restablecimiento de contraseña (consumo único, revocación de sesiones y nueva
 sesión) y cambio de contraseña o vinculación de Google desde opciones de cuenta
 con ticket de reautenticación de un solo uso.

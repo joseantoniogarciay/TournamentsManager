@@ -1755,6 +1755,18 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** cuando una transición congela derivados de negocio,
   no los calcules fuera de la transacción ni aceptes que el cliente los envíe.
 
+### 2026-08-09 — Dos peticiones simultáneas no son dos transiciones válidas
+
+- **Aprendido:** repetir una orden de cierre por un doble toque o reintento de
+  red no debe duplicar la transición ni sus derivados oficiales.
+- **Evidencia:** la integración lanza dos cierres a la vez: el bloqueo de fila
+  permite que uno complete la liga y obliga al otro a releer `completed` y
+  devolver conflicto. La tabla de campeones queda con una sola fila para una
+  liga con ganadora única.
+- **Regla reutilizable:** protege las transiciones de estado con un bloqueo de
+  la fuente de verdad, vuelve a validar dentro de la transacción y prueba el
+  resultado de peticiones competidoras contra una base real.
+
 ### 2026-08-09 — Un diálogo que confirma una pantalla nativa pertenece a esa pantalla
 
 - **Aprendido:** en iOS una confirmación global puede quedar detrás de una ruta

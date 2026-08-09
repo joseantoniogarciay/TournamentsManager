@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -243,6 +244,64 @@ func TestIntegrationLeagueCompletionPersistsCoChampions(t *testing.T) {
 	}
 	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1}); !errors.Is(err, leagues.ErrMatchResultConflict) {
 		t.Fatalf("corregir liga finalizada = %v, se esperaba %v", err, leagues.ErrMatchResultConflict)
+	}
+}
+
+func TestIntegrationConcurrentLeagueCompletionAllowsOneTransition(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	accountID := createVerifiedLocalAccount(t, ctx, pool, "concurrent-completion@example.test", "concurrent_completion", "correct password")
+	service := leagues.NewCreationService(NewAccountLeagueRepository(pool))
+	created, err := service.Create(ctx, accountID, leagues.CreateInput{Name: "Liga cierre simultáneo", Teams: []leagues.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
+	if err != nil {
+		t.Fatalf("crear liga = %v", err)
+	}
+	started, err := service.Start(ctx, accountID, created.ID, leagues.StartInput{RoundRobinLegs: 1})
+	if err != nil {
+		t.Fatalf("iniciar liga = %v", err)
+	}
+	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1}); err != nil {
+		t.Fatalf("registrar resultado = %v", err)
+	}
+
+	start := make(chan struct{})
+	errs := make(chan error, 2)
+	var group sync.WaitGroup
+	for range 2 {
+		group.Go(func() {
+			<-start
+			_, err := service.Complete(ctx, accountID, created.ID)
+			errs <- err
+		})
+	}
+	close(start)
+	group.Wait()
+	close(errs)
+
+	successes, conflicts := 0, 0
+	for err := range errs {
+		switch {
+		case err == nil:
+			successes++
+		case errors.Is(err, leagues.ErrLeagueCompletionConflict):
+			conflicts++
+		default:
+			t.Fatalf("finalización simultánea = %v; se esperaba éxito o conflicto", err)
+		}
+	}
+	if successes != 1 || conflicts != 1 {
+		t.Fatalf("finalizaciones simultáneas: éxitos/conflictos = %d/%d; se esperaba 1/1", successes, conflicts)
+	}
+	var state string
+	var champions int
+	if err := pool.QueryRow(ctx, `SELECT state FROM leagues WHERE id = $1`, created.ID).Scan(&state); err != nil {
+		t.Fatalf("consultar estado final = %v", err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM league_champions WHERE league_id = $1`, created.ID).Scan(&champions); err != nil {
+		t.Fatalf("contar campeones finales = %v", err)
+	}
+	if state != "completed" || champions != 1 {
+		t.Fatalf("estado/campeones tras cierre simultáneo = %q/%d; se esperaba completed/1", state, champions)
 	}
 }
 
