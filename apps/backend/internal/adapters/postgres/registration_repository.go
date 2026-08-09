@@ -14,6 +14,7 @@ import (
 // RegistrationRepository implementa la persistencia del alta local con sqlc.
 type RegistrationRepository struct {
 	queries *sqlc.Queries
+	pool    *pgxpool.Pool
 }
 
 // VerifyAndCreateSession consume una verificación y emite su sesión atómica.
@@ -42,7 +43,7 @@ func (r RegistrationRepository) RotateSessionTokens(ctx context.Context, refresh
 
 // NewRegistrationRepository conecta el puerto del caso de uso al pool PostgreSQL.
 func NewRegistrationRepository(pool *pgxpool.Pool) RegistrationRepository {
-	return RegistrationRepository{queries: sqlc.New(pool)}
+	return RegistrationRepository{pool: pool, queries: sqlc.New(pool)}
 }
 
 // IsUsernameAvailable consulta la restricción de unicidad sin crear una reserva.
@@ -93,17 +94,43 @@ func (r RegistrationRepository) RenewLoginVerification(ctx context.Context, acco
 
 // CreatePending crea los tres registros de identidad en una sola sentencia.
 func (r RegistrationRepository) CreatePending(ctx context.Context, input registration.Input, passwordHash string, tokenHash []byte) (bool, error) {
-	_, err := r.queries.CreatePendingRegistration(ctx, sqlc.CreatePendingRegistrationParams{
-		Email:        input.Email,
-		Locale:       string(input.Locale),
-		Username:     input.Username,
-		PasswordHash: passwordHash,
-		TokenHash:    tokenHash,
-	})
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	var accountID string
+	err = tx.QueryRow(ctx, `INSERT INTO accounts (email, locale, state, username, expires_at)
+		VALUES ($1, $2, 'pending_verification', $3, now() + interval '7 days')
+		ON CONFLICT DO NOTHING
+		RETURNING id::text`, input.Email, string(input.Locale), input.Username).Scan(&accountID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return false, nil
 	}
 	if err != nil {
+		return false, err
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO local_credentials (account_id, password_hash) VALUES ($1, $2)`, accountID, passwordHash); err != nil {
+		return false, err
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO email_verification_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() + interval '24 hours')`, accountID, tokenHash); err != nil {
+		return false, err
+	}
+	if input.Draft != nil {
+		var leagueID string
+		if err := tx.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, state, published_at)
+			VALUES ($1, $2, 'published', now()) RETURNING id::text`, accountID, input.Draft.Name).Scan(&leagueID); err != nil {
+			return false, err
+		}
+		for position, name := range input.Draft.Teams {
+			if _, err := tx.Exec(ctx, `INSERT INTO league_teams (league_id, name, name_normalized, position)
+				VALUES ($1, $2, lower($2), $3)`, leagueID, name, position+1); err != nil {
+				return false, err
+			}
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return false, err
 	}
 	return true, nil

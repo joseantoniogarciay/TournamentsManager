@@ -53,6 +53,13 @@ type Input struct {
 	Locale   Locale
 	Username string
 	Password string
+	Draft    *Draft
+}
+
+// Draft representa un borrador completo que cruza la frontera del alta.
+type Draft struct {
+	Name  string
+	Teams []string
 }
 
 // Repository persiste la cuenta pendiente, su credencial y su verificación.
@@ -331,6 +338,12 @@ func newPasswordResetToken() (string, []byte, error) {
 func NormalizeInput(input Input) Input {
 	input.Email = strings.TrimSpace(input.Email)
 	input.Username = strings.TrimSpace(input.Username)
+	if input.Draft != nil {
+		input.Draft.Name = strings.TrimSpace(input.Draft.Name)
+		for index := range input.Draft.Teams {
+			input.Draft.Teams[index] = strings.TrimSpace(input.Draft.Teams[index])
+		}
+	}
 	return input
 }
 

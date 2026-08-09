@@ -20,7 +20,7 @@ tags:
   - name: Federated identity
     description: Autenticación con Google y vinculación explícita de identidades.
   - name: Drafts
-    description: Borrador transferido después de verificar la cuenta.
+    description: Borrador local transferido junto al alta.
   - name: Leagues
     description: Publicación y lectura pública de ligas visibles.
 paths:
@@ -669,6 +669,9 @@ components:
         password: { $ref: "#/components/schemas/Password" }
         username: { $ref: "#/components/schemas/Username" }
         locale: { $ref: "#/components/schemas/Locale" }
+        draft:
+          description: Borrador local válido transferido junto al alta; es opcional.
+          allOf: [{ $ref: "#/components/schemas/LeagueInput" }]
     Locale:
       type: string
       enum: [es, en, it, fr]
@@ -765,7 +768,7 @@ components:
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
-        state: { type: string, enum: [draft, published, in_progress, completed, cancelled] }
+        state: { type: string, enum: [published, in_progress, completed, cancelled] }
         createdAt: { type: string, format: date-time }
         lastActivityAt: { type: string, format: date-time }
         relationship: { $ref: "#/components/schemas/AccountLeagueRelationship" }

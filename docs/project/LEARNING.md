@@ -1,5 +1,12 @@
 # Registro de aprendizaje
 
+## 2026-08-09 — La cuenta crea la frontera remota del borrador
+
+Un borrador puede ser local antes de que exista identidad y transferirse de forma
+atómica al crear una cuenta. La verificación no crea la liga: habilita la sesión
+y la consulta autenticada. Si el borrador ya es una liga válida, persiste como
+`published`, sin crear un estado temporal adicional. Véanse ADR-0078 y ADR-0079.
+
 ## 2026-08-08 — Paridad útil no significa llevar Air a producción
 
 Un Dockerfile multi-stage puede compartir la resolución de módulos y producir
@@ -1564,3 +1571,27 @@ límite sin crear una segunda sesión ni un estado de interfaz global.
   este primer ciclo.
 - **Regla reutilizable:** una transición exclusiva de una entidad se autoriza y
   valida dentro de la transacción que modifica su estado.
+
+### 2026-08-09 — El último deeplink reemplaza la intención pendiente
+
+- **Aprendido:** una ruta de confirmación no puede conservar un token previo
+  cuando recibe un enlace nuevo; de hacerlo, puede confirmar o mostrar el
+  resultado de una intención que la persona ya sustituyó.
+- **Evidencia:** la confirmación conserva el intento activo con un
+  `AbortController`, cancela el transporte anterior al recibir otro token y
+  solo permite que el intento vigente cambie sesión, feedback o navegación.
+- **Coste aceptado:** se mantiene un estado local mínimo de coordinación en la
+  ruta, sin persistir secretos ni crear un store global adicional.
+- **Regla reutilizable:** en una ruta que recibe acciones de un solo uso por
+  deeplink, el último enlace es la autoridad y las cancelaciones intencionadas
+  no producen feedback.
+
+### 2026-08-09 — Un estado de contrato no es copy de interfaz
+
+- **Aprendido:** los valores de estado que devuelve la API son identificadores
+  estables para el código, no textos que deba leer una persona.
+- **Evidencia:** una traducción compartida presenta los cuatro estados de liga
+  en la home, la biblioteca y el detalle, evitando que una de esas vistas
+  exponga `in_progress`.
+- **Regla reutilizable:** toda enumeración del contrato que llegue a una UI se
+  traduce mediante una clave semántica compartida antes de renderizarse.

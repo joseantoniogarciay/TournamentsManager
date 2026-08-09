@@ -10,6 +10,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { listRecentRelatedLeagues } from "@/features/league-creation/api";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
+import { getLeagueStateLabel } from "@/shared/i18n/league-state";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
@@ -129,9 +130,7 @@ export default function HomeScreen() {
                   >
                     <View style={styles.section}>
                       <Text>{league.name}</Text>
-                      <Text color="secondary">
-                        {league.state === "published" ? t("league_not_started") : league.state}
-                      </Text>
+                      <Text color="secondary">{getLeagueStateLabel(t, league.state)}</Text>
                     </View>
                     <Text color="secondary">›</Text>
                   </Pressable>

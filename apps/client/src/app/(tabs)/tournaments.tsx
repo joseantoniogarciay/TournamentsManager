@@ -9,6 +9,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { listRelatedLeagues } from "@/features/league-creation/api";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
+import { getLeagueStateLabel } from "@/shared/i18n/league-state";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import { Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
@@ -172,9 +173,7 @@ function LeagueLibrary({
             >
               <View style={styles.copy}>
                 <Text>{league.name}</Text>
-                <Text color="secondary">
-                  {league.state === "published" ? t("league_not_started") : league.state}
-                </Text>
+                <Text color="secondary">{getLeagueStateLabel(t, league.state)}</Text>
               </View>
               <Text color="secondary">›</Text>
             </Pressable>

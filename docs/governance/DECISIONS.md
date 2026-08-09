@@ -127,6 +127,8 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0071](../adr/0071-run-postgresql-integration-tests-in-ci.md)                                 | Ejecutar integración PostgreSQL en CI                                | Aceptado              | 2026-08-02 |
 | [0072](../adr/0072-apply-a-resettable-initial-schema-without-migration-runner.md)             | Aplicar esquema inicial sin ejecutor de migraciones                  | Aceptado              | 2026-08-02 |
 | [0076](../adr/0076-run-the-local-api-in-compose-with-air.md)                                  | Ejecutar la API local en Compose con Air                             | Aceptado              | 2026-08-08 |
+| [0078](../adr/0078-transfer-local-drafts-with-registration.md)                                | Transferir el borrador local junto al alta                           | Aceptado              | 2026-08-09 |
+| [0079](../adr/0079-create-published-leagues-with-registration-drafts.md)                      | Crear liga publicada al transferir el borrador en el alta            | Aceptado              | 2026-08-09 |
 
 ## Trazabilidad de un cambio
 

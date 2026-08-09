@@ -819,10 +819,11 @@ func healthz(writer http.ResponseWriter, _ *http.Request) {
 }
 
 type registerRequest struct {
-	Email    string `json:"email"`
-	Locale   string `json:"locale"`
-	Password string `json:"password"`
-	Username string `json:"username"`
+	Email    string       `json:"email"`
+	Locale   string       `json:"locale"`
+	Password string       `json:"password"`
+	Username string       `json:"username"`
+	Draft    *leagueInput `json:"draft"`
 }
 
 type loginRequest struct {
@@ -882,7 +883,15 @@ func register(service registration.Service) http.HandlerFunc {
 			Password: body.Password,
 			Username: body.Username,
 		})
-		if !validRegistration(input) {
+		if body.Draft != nil {
+			teams := make([]string, len(body.Draft.Teams))
+			for index, team := range body.Draft.Teams {
+				teams[index] = team.Name
+			}
+			input.Draft = &registration.Draft{Name: body.Draft.Name, Teams: teams}
+		}
+		input = registration.NormalizeInput(input)
+		if !validRegistration(input) || !validRegistrationDraft(input.Draft) {
 			writeValidationProblem(writer)
 			return
 		}
@@ -892,6 +901,24 @@ func register(service registration.Service) http.HandlerFunc {
 		}
 		writer.WriteHeader(http.StatusAccepted)
 	}
+}
+
+func validRegistrationDraft(draft *registration.Draft) bool {
+	if draft == nil {
+		return true
+	}
+	if len(strings.TrimSpace(draft.Name)) == 0 || len(draft.Name) > 140 || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
+		return false
+	}
+	seen := map[string]bool{}
+	for _, team := range draft.Teams {
+		name := strings.TrimSpace(team)
+		if name == "" || len(name) > 100 || seen[strings.ToLower(name)] {
+			return false
+		}
+		seen[strings.ToLower(name)] = true
+	}
+	return true
 }
 
 func validRegistration(input registration.Input) bool {

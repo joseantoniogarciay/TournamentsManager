@@ -121,7 +121,9 @@ ordenadas por actividad de liga; no es una colección paginada. Véase
 El alta exige identidad local y un locale efectivo de `es`, `en`, `it` o `fr`;
 el backend lo valida y lo persiste como preferencia de cuenta para localizar
 emails. El borrador es opcional y, si se envía, debe cumplir íntegramente las
-restricciones de `DraftInput`.
+restricciones de `LeagueInput`; crea una liga `published` asociada a la cuenta
+pendiente. Solo se expone en `GET /me/leagues` cuando una verificación concede
+una sesión válida.
 
 `POST /leagues/{leagueId}/cancel` expresa la transición de cancelación, igual
 que el inicio usa una operación explícita y no una mutación implícita de la

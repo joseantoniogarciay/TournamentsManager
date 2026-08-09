@@ -82,6 +82,7 @@ export default function CreateTournamentScreen() {
               label={t("league_name_label")}
               onChangeText={setName}
               validationSubmitted={submitted}
+              validationTrigger="blur"
               value={name}
             />
             {teams.map((team, index) => (
@@ -95,6 +96,7 @@ export default function CreateTournamentScreen() {
                   )
                 }
                 validationSubmitted={submitted}
+                validationTrigger="blur"
                 value={team}
               />
             ))}

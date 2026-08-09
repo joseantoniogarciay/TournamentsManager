@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
 import { space } from "@tournaments-manager/design-tokens";
@@ -15,7 +15,11 @@ import { useSession } from "@/shared/session/session-provider";
 import { Button, Card, Screen, Text } from "@/shared/ui";
 
 const minimumConfirmationTransitionDuration = 2_000;
-const startedConfirmationTokens = new Set<string>();
+
+type ConfirmationAttempt = {
+  controller: AbortController;
+  token: string;
+};
 
 export default function LinkConfirmationScreen() {
   const t = getTranslator();
@@ -27,28 +31,33 @@ export default function LinkConfirmationScreen() {
   const [confirmationFailure, setConfirmationFailure] = useState<
     RegistrationVerificationFailure | "unexpected" | null
   >(null);
+  const activeAttempt = useRef<ConfirmationAttempt | null>(null);
 
   useEffect(() => {
     const incomingToken = typeof params.token === "string" ? params.token : null;
-    if (!incomingToken || token) return;
+    if (!incomingToken || incomingToken === token) return;
+    activeAttempt.current?.controller.abort();
     setToken(incomingToken);
+    setConfirmationFailure(null);
     router.replace("/link/confirm");
   }, [params.token, setToken, token]);
 
   useEffect(() => {
     const hasTokenInURL = typeof params.token === "string";
-    if (hasTokenInURL || !token || confirmationFailure || startedConfirmationTokens.has(token)) {
+    if (hasTokenInURL || !token || confirmationFailure || activeAttempt.current?.token === token) {
       return;
     }
 
-    // La ruta puede remontarse al retirar el token de la URL. El registro
-    // compartido conserva la mutación única también en ese caso.
-    startedConfirmationTokens.add(token);
+    activeAttempt.current?.controller.abort();
+    const controller = new AbortController();
+    const attempt = { controller, token };
+    activeAttempt.current = attempt;
     setIsConfirming(true);
     beginSessionReplacement();
     const confirmationStartedAt = Date.now();
-    void confirmRegistration(token, Platform.OS === "web" ? "cookie" : "bearer")
+    void confirmRegistration(token, Platform.OS === "web" ? "cookie" : "bearer", controller.signal)
       .then(async (session) => {
+        if (controller.signal.aborted || activeAttempt.current !== attempt) return;
         const remainingDuration = Math.max(
           0,
           minimumConfirmationTransitionDuration - (Date.now() - confirmationStartedAt),
@@ -56,10 +65,12 @@ export default function LinkConfirmationScreen() {
         if (remainingDuration > 0) {
           await new Promise<void>((resolve) => setTimeout(resolve, remainingDuration));
         }
+        if (controller.signal.aborted || activeAttempt.current !== attempt) return;
         setToken(null);
         completeSessionReplacement(session.user);
       })
       .catch((error: unknown) => {
+        if (controller.signal.aborted || activeAttempt.current !== attempt) return;
         cancelSessionReplacement();
         if (error instanceof RegistrationVerificationError) {
           setConfirmationFailure(error.failure);
@@ -68,7 +79,8 @@ export default function LinkConfirmationScreen() {
         setConfirmationFailure("unexpected");
       })
       .finally(() => {
-        startedConfirmationTokens.delete(token);
+        if (activeAttempt.current !== attempt) return;
+        activeAttempt.current = null;
         setIsConfirming(false);
       });
   }, [

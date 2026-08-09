@@ -14,6 +14,7 @@ import {
 } from "@/features/league-creation/api";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
+import { getLeagueStateLabel } from "@/shared/i18n/league-state";
 import { getTranslator } from "@/shared/i18n/locale";
 import { useSession } from "@/shared/session/session-provider";
 import { Button, Card, Screen, Text, TextField, useConfirmationDialog } from "@/shared/ui";
@@ -105,9 +106,7 @@ export default function LeagueScreen() {
           <View style={styles.header}>
             <View style={styles.stack}>
               <Text variant="title">{league.name}</Text>
-              <Text color="secondary">
-                {league.state === "published" ? t("league_not_started") : league.state}
-              </Text>
+              <Text color="secondary">{getLeagueStateLabel(t, league.state)}</Text>
               <Text color="secondary">{league.teams.map((team) => team.name).join(" · ")}</Text>
             </View>
             <Pressable

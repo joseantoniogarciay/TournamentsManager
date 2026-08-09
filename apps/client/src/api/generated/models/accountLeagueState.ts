@@ -9,7 +9,6 @@
 export type AccountLeagueState = (typeof AccountLeagueState)[keyof typeof AccountLeagueState];
 
 export const AccountLeagueState = {
-  draft: "draft",
   published: "published",
   in_progress: "in_progress",
   completed: "completed",

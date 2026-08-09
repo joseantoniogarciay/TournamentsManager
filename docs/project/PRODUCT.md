@@ -50,8 +50,9 @@ autenticada.
 ### Cuenta pendiente de verificación
 
 Es un registro temporal tras un alta local con email, contraseña y `username`.
-No recibe una sesión de producto ni permisos de negocio. El borrador permanece
-solo en el almacenamiento local de la persona y no se asocia a la cuenta.
+No recibe una sesión de producto ni permisos de negocio. Un borrador completo
+permanece local hasta enviar el alta; entonces crea una liga publicada asociada a
+la cuenta pendiente, que no puede administrar ni listar hasta verificarla.
 
 ### Usuario autenticado y verificado
 
@@ -120,8 +121,8 @@ equipos ni a la competición en el primer corte.
 
 1. La persona proporciona correo electrónico, contraseña y `username` público.
 2. Acepta las condiciones necesarias.
-3. Se crea una cuenta pendiente de verificación; el borrador, si existe,
-   permanece local en el dispositivo.
+3. Se crea una cuenta pendiente de verificación y, si el borrador es completo,
+   se transfiere junto al alta y queda asociado a esa cuenta.
 4. Verifica la propiedad del correo mediante el canal enviado.
 5. La cuenta se activa, puede iniciar sesión y puede publicar el torneo.
 
@@ -130,9 +131,10 @@ invalida su enlace anterior y envía otro correo de verificación; no crea sesi�
 hasta que se complete esa verificación.
 
 Un borrador local permite empezar sin sesión, pero no es requisito para crear la
-cuenta. No se sincroniza entre dispositivos y se descarta solo después de crear
-la liga correctamente. Una cuenta pendiente no puede publicar ni realizar
-acciones protegidas. Véase [ADR-0069](../adr/0069-keep-tournament-drafts-local-only.md).
+cuenta. Si se transfiere al alta, se recupera tras verificar o iniciar sesión y
+se descarta localmente después de la aceptación del registro. Una cuenta pendiente
+no puede publicar ni realizar acciones protegidas. Véase
+[ADR-0078](../adr/0078-transfer-local-drafts-with-registration.md).
 
 ### Login
 
