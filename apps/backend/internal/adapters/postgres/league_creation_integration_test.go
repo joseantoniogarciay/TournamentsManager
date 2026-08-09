@@ -69,6 +69,15 @@ func sessionHash(token string) []byte {
 	return hash[:]
 }
 
+func leagueMatchByID(matches []leagues.Match, id string) (leagues.Match, bool) {
+	for _, match := range matches {
+		if match.ID == id {
+			return match, true
+		}
+	}
+	return leagues.Match{}, false
+}
+
 // Esta prueba usa una base efímera preparada por el comando de integración.
 func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	ctx := context.Background()
@@ -105,16 +114,19 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 		t.Fatalf("liga iniciada = state %q, partidos %d; se esperaba in_progress y 12", started.State, len(started.Matches))
 	}
 	withOrganizerResult, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1})
-	if err != nil || withOrganizerResult.Matches[0].State != "completed" || withOrganizerResult.Matches[0].HomeScore == nil || *withOrganizerResult.Matches[0].HomeScore != 2 || withOrganizerResult.Matches[0].AwayScore == nil || *withOrganizerResult.Matches[0].AwayScore != 1 {
-		t.Fatalf("resultado de organizadora = %#v, %v; se esperaba marcador 2-1", withOrganizerResult.Matches[0], err)
+	organizerMatch, found := leagueMatchByID(withOrganizerResult.Matches, started.Matches[0].ID)
+	if err != nil || !found || organizerMatch.State != "completed" || organizerMatch.HomeScore == nil || *organizerMatch.HomeScore != 2 || organizerMatch.AwayScore == nil || *organizerMatch.AwayScore != 1 {
+		t.Fatalf("resultado de organizadora = %#v, %v; se esperaba marcador 2-1", organizerMatch, err)
 	}
 	withResult, err := service.RecordResult(ctx, administratorID, created.ID, started.Matches[1].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1})
-	if err != nil || withResult.Matches[0].State != "completed" || withResult.Matches[0].HomeScore == nil || *withResult.Matches[0].HomeScore != 2 || withResult.Matches[0].AwayScore == nil || *withResult.Matches[0].AwayScore != 1 {
-		t.Fatalf("registrar resultado = %#v, %v; se esperaba marcador 2-1", withResult.Matches[0], err)
+	administratorMatch, found := leagueMatchByID(withResult.Matches, started.Matches[1].ID)
+	if err != nil || !found || administratorMatch.State != "completed" || administratorMatch.HomeScore == nil || *administratorMatch.HomeScore != 2 || administratorMatch.AwayScore == nil || *administratorMatch.AwayScore != 1 {
+		t.Fatalf("registrar resultado = %#v, %v; se esperaba marcador 2-1", administratorMatch, err)
 	}
 	corrected, err := service.RecordResult(ctx, administratorID, created.ID, started.Matches[1].ID, leagues.MatchResultInput{HomeScore: 3, AwayScore: 0})
-	if err != nil || corrected.Matches[0].HomeScore == nil || *corrected.Matches[0].HomeScore != 3 || corrected.Matches[0].AwayScore == nil || *corrected.Matches[0].AwayScore != 0 {
-		t.Fatalf("corregir resultado = %#v, %v; se esperaba marcador 3-0", corrected.Matches[0], err)
+	correctedMatch, found := leagueMatchByID(corrected.Matches, started.Matches[1].ID)
+	if err != nil || !found || correctedMatch.HomeScore == nil || *correctedMatch.HomeScore != 3 || correctedMatch.AwayScore == nil || *correctedMatch.AwayScore != 0 {
+		t.Fatalf("corregir resultado = %#v, %v; se esperaba marcador 3-0", correctedMatch, err)
 	}
 	var historyCount, previousHome, previousAway int
 	if err := pool.QueryRow(ctx, `SELECT count(*), max(previous_home_score), max(previous_away_score) FROM match_result_changes WHERE match_id = $1`, started.Matches[1].ID).Scan(&historyCount, &previousHome, &previousAway); err != nil || historyCount != 2 || previousHome != 2 || previousAway != 1 {
