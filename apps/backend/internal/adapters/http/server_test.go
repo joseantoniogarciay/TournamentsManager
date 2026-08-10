@@ -65,15 +65,17 @@ func (r testLeagueRepository) Follow(_ context.Context, _ string, _ string) (boo
 func (r testLeagueRepository) Unfollow(context.Context, string, string) error { return nil }
 
 type testCreationRepository struct {
-	cancelled   leagues.League
-	cancelErr   error
-	team        leagues.Team
-	teamErr     error
-	removeErr   error
-	result      leagues.League
-	resultErr   error
-	completed   leagues.League
-	completeErr error
+	administrators    []string
+	administratorsErr error
+	cancelled         leagues.League
+	cancelErr         error
+	team              leagues.Team
+	teamErr           error
+	removeErr         error
+	result            leagues.League
+	resultErr         error
+	completed         leagues.League
+	completeErr       error
 }
 
 func (testCreationRepository) Create(context.Context, string, leagues.CreateInput) (leagues.League, error) {
@@ -98,6 +100,14 @@ func (r testCreationRepository) Cancel(context.Context, string, string) (leagues
 
 func (testCreationRepository) AssignAdministrator(context.Context, string, string, string) error {
 	return nil
+}
+
+func (r testCreationRepository) ListAdministrators(context.Context, string, string) ([]string, error) {
+	return r.administrators, r.administratorsErr
+}
+
+func (r testCreationRepository) RemoveAdministrator(context.Context, string, string, string) error {
+	return r.removeErr
 }
 
 func (r testCreationRepository) RecordResult(context.Context, string, string, string, leagues.MatchResultInput) (leagues.League, error) {

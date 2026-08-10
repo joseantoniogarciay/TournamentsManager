@@ -49,6 +49,10 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Una card mantiene su padding interno definido por la primitiva y añade siempre
   20 px de margen exterior horizontal. El layout reserva además 20 px entre
   cards hermanas; no se corrige esa separación alterando el padding de la card.
+- En una lista formada por `Card`, un estado vacío, de error o cualquier bloque
+  que no sea card aplica por sí mismo `paddingHorizontal: space[5]`. El margen
+  ya pertenece a cada card, por lo que no se añade al contenedor común de la
+  lista: eso desplazaría las cards 40 px desde el borde.
 - `Screen` no añade padding horizontal: ese margen exterior pertenece a `Card`.
   Añadirlo en ambos sitios duplica la separación lateral.
 - **Muy importante — márgenes de contenido móvil:** un formulario, listado o
@@ -84,14 +88,13 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   termina en el banner seguro `common_request_error` al terminar su loader. No
   basta con invocar `show()` en un `catch`: el banner tiene que quedar visible
   dentro de la ruta modal activa y se comprueba así antes de cerrar el cambio.
-- **Workaround de banner al cerrar una ruta:** en iOS, publicar un banner y
-  llamar a `router.dismiss()` en el mismo flujo puede consumir su animación o
-  impedir que el host modal se presente. Conserva el host compartido por
-  `Screen`, encola el aviso con `showAfterNavigation()` antes de cerrar y deja
-  que el provider lo publique tras recuperar el foco de la ruta destino con
-  `navigationFeedbackDelayMs = 400`. No sustituirlo por un host raíz ni una
-  capa absoluta sin validarlo en simulador: ambos quedan por debajo o fuera de
-  la presentación nativa en este flujo.
+- Un éxito que queda visible al volver a una lista no muestra además un banner:
+  la ruta destino vuelve a leer la proyección y confirma el cambio con el dato
+  persistido. Los banners se reservan para errores o resultados no visibles.
+- `ConfirmationDialogProvider` conserva un estado común, pero cada `Screen`
+  monta `ConfirmationDialogHost`. No eleves el host al layout raíz: en iOS un
+  `Modal` raíz queda detrás de una ruta `fullScreenModal` y puede aparentar que
+  la confirmación se abrió en la tab bar.
 - Botones y controles mantienen semántica accesible, un objetivo táctil mínimo
   de 44 px y no permiten envíos duplicados.
 - La validación de formato de un formulario se muestra al abandonar cada campo

@@ -6,9 +6,11 @@ import {
   completeLeague,
   createLeague,
   getPublicLeague,
+  listLeagueAdministrators,
   listCurrentAccountLeagues,
   listRecentAccountLeagues,
   removeLeagueTeam,
+  removeLeagueAdministrator,
   startLeague,
 } from "@/api/generated/leagues/leagues";
 import type { LeagueInput, StartLeagueRequest, TeamInput, Username } from "@/api/generated/models";
@@ -63,6 +65,20 @@ export async function assignLeagueAdministratorRequest(leagueID: string, usernam
     authenticatedApiFetch,
   );
   if (response.status === 409) throw new LeagueAdministratorConflictError();
+  if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
+}
+export async function listLeagueAdministratorUsernames(leagueID: string) {
+  const response = await listLeagueAdministrators(leagueID, undefined, authenticatedApiFetch);
+  if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
+  return response.data.usernames;
+}
+export async function removeLeagueAdministratorRequest(leagueID: string, username: string) {
+  const response = await removeLeagueAdministrator(
+    leagueID,
+    username as Username,
+    undefined,
+    authenticatedApiFetch,
+  );
   if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
 }
 export async function searchPublicUsernames(query: string, signal: AbortSignal) {

@@ -207,13 +207,13 @@ El material nativo de `BlurView` ya aporta una tinta visual. Superponer además
 el lienzo del tema al 68 % lo hacía casi opaco: se perdía el desenfoque y el
 color de fondo dominaba la pantalla. Además, un `Modal` de React Native vive en
 otra ventana y su `BlurView` no puede muestrear los píxeles de la ruta previa.
-El host de confirmaciones se monta en el layout raíz, como hermano posterior del
-árbol de navegación: cubre tabs y áreas seguras, y comparte la jerarquía visual
-de toda la aplicación. En un scrim de pantalla completa, el blur oscuro clásico
-de iOS es más predecible que los materiales dinámicos: estos últimos incorporan
-una tinta del sistema que puede dominar la superficie. Android conserva una
-atenuación neutra y leve como respaldo. Así el contexto se percibe sin competir
-con el diálogo.
+El estado de confirmaciones se comparte, pero su host se monta en la `Screen`
+activa: así el `Modal` pertenece a la ruta presentada y no queda detrás de un
+`fullScreenModal` ni de la tab bar. En un scrim de pantalla completa, el blur
+oscuro clásico de iOS es más predecible que los materiales dinámicos: estos
+últimos incorporan una tinta del sistema que puede dominar la superficie.
+Android conserva una atenuación neutra y leve como respaldo. Así el contexto se
+percibe sin competir con el diálogo.
 
 La separación de un diálogo no debe depender de que un tema tenga menos
 contraste. Un borde con el token semántico `border.default` conserva la misma
@@ -1846,18 +1846,35 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   ruta nativa, su modal debe compartir el host de esa ruta o verificarse en el
   simulador antes de dar el flujo por utilizable.
 
-### 2026-08-10 — Un banner global necesita el host de la ruta nativa activa
+### 2026-08-10 — Si el destino muestra el resultado, no hace falta un éxito transitorio
 
-- **Aprendido:** en navegación nativa, una `Modal` React montada en la raíz no
-  se superpone a una ruta presentada por el sistema. El estado del aviso sí es
-  global, pero su host visual debe pertenecer a la ruta activa.
-- **Evidencia:** la asignación de una administradora publicaba el éxito y
-  cerraba inmediatamente la búsqueda. Al publicar el banner antes de que la
-  transición terminase, su animación avanzaba fuera de la ruta que finalmente
-  podía mostrarlo.
-- **Regla reutilizable:** conserva un único estado de feedback y hospeda su
-  vista reutilizable en cada `Screen` para respetar el orden nativo. Si una
-  acción cierra una ruta, espera a que la ruta destino reciba el foco y deja un
-  margen temporal explícito para que iOS termine de liberar el presentador antes
-  de montar el banner. Este margen es un compromiso conocido, respaldado por la
-  prueba manual, hasta disponer de una señal nativa más precisa.
+- **Aprendido:** después de añadir una administradora, la lista de
+  administradoras es una confirmación más clara y persistente que un banner de
+  éxito que desaparece.
+- **Evidencia:** el formulario cierra sobre el listado y este vuelve a consultar
+  el contrato al recibir foco. Antes de buscar, el formulario carga la misma
+  colección y filtra sus usernames junto al de la sesión; así no propone de
+  nuevo una cuenta ya delegada ni a la propia organizadora. La misma pantalla
+  permite retirar una cuenta con la confirmación y la fila compacta ya
+  establecidas para equipos.
+- **Coste aceptado:** se añaden las operaciones protegidas de listar y retirar
+  administradoras al contrato, en lugar de inferir la colección desde la
+  relación de la sesión o conservar una copia global en el cliente.
+- **Regla reutilizable:** tras una mutación que conduce a una pantalla capaz de
+  representar el nuevo estado, vuelve a leer esa proyección y evita un aviso de
+  éxito redundante; reserva el banner para recuperaciones, errores o resultados
+  que no queden visibles en la ruta destino.
+
+### 2026-08-10 — Una tabla móvil fija su identidad y desplaza solo el detalle
+
+- **Aprendido:** en una clasificación, posición, equipo y puntos son la identidad
+  de cada fila; las estadísticas complementan la comparación, pero no deben
+  ocultar esos tres datos al desplazar horizontalmente.
+- **Evidencia:** la tabla mantiene los dos extremos fijos y desplaza como un único
+  bloque `PJ`, `PG`, `PE`, `PP`, `GF`, `GC` y `DG`. El indicador y la ayuda aparecen
+  solo cuando ese bloque no cabe en el viewport.
+- **Coste aceptado:** se duplican las filas visuales de las tres columnas para
+  sincronizar su altura, sin añadir una librería de tabla ni estado compartido.
+- **Regla reutilizable:** para datos comparables y densos en móvil, fija la
+  identidad de la fila y su métrica principal; reserva el desplazamiento para
+  las columnas secundarias y no muestres affordances de scroll si no hay desborde.

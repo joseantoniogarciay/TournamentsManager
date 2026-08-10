@@ -7,6 +7,8 @@ import { space } from "@tournaments-manager/design-tokens";
 import { FeedbackBanner } from "@/shared/feedback/feedback-provider";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
+import { ConfirmationDialogHost } from "./confirmation-dialog";
+
 type ScreenProps = PropsWithChildren<{
   bottomInset?: "safe-area" | "none";
   topInset?: "safe-area" | "navigation-bar";
@@ -35,6 +37,7 @@ export function Screen({
     >
       {children}
       <FeedbackBanner />
+      <ConfirmationDialogHost />
     </View>
   );
 }

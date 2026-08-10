@@ -9,6 +9,7 @@ import type {
   AccountLeague,
   AccountLeaguePage,
   AuthenticationProblemResponse,
+  LeagueAdministrators,
   LeagueInput,
   LeagueTeam,
   ListCurrentAccountLeaguesParams,
@@ -749,6 +750,64 @@ export const recordMatchResult = async (
   return { data, status: res.status, headers: res.headers } as recordMatchResultResponse;
 };
 
+export type listLeagueAdministratorsResponse200 = {
+  data: LeagueAdministrators;
+  status: 200;
+};
+
+export type listLeagueAdministratorsResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type listLeagueAdministratorsResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type listLeagueAdministratorsResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type listLeagueAdministratorsResponseSuccess = listLeagueAdministratorsResponse200 & {
+  headers: Headers;
+};
+export type listLeagueAdministratorsResponseError = (
+  | listLeagueAdministratorsResponse401
+  | listLeagueAdministratorsResponse403
+  | listLeagueAdministratorsResponse404
+) & {
+  headers: Headers;
+};
+
+export type listLeagueAdministratorsResponse =
+  listLeagueAdministratorsResponseSuccess | listLeagueAdministratorsResponseError;
+
+export const getListLeagueAdministratorsUrl = (leagueId: Uuid) => {
+  return `/leagues/${leagueId}/administrators`;
+};
+
+/**
+ * Exige sesión de la organizadora de la liga.
+ * @summary Lista las administradoras delegadas de una liga
+ */
+export const listLeagueAdministrators = async (
+  leagueId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<listLeagueAdministratorsResponse> => {
+  const res = await (fetchFn ?? fetch)(getListLeagueAdministratorsUrl(leagueId), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listLeagueAdministratorsResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as listLeagueAdministratorsResponse;
+};
+
 export type assignLeagueAdministratorResponse204 = {
   data: void;
   status: 204;
@@ -812,4 +871,63 @@ export const assignLeagueAdministrator = async (
 
   const data: assignLeagueAdministratorResponse["data"] = body ? JSON.parse(body) : undefined;
   return { data, status: res.status, headers: res.headers } as assignLeagueAdministratorResponse;
+};
+
+export type removeLeagueAdministratorResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type removeLeagueAdministratorResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type removeLeagueAdministratorResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type removeLeagueAdministratorResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type removeLeagueAdministratorResponseSuccess = removeLeagueAdministratorResponse204 & {
+  headers: Headers;
+};
+export type removeLeagueAdministratorResponseError = (
+  | removeLeagueAdministratorResponse401
+  | removeLeagueAdministratorResponse403
+  | removeLeagueAdministratorResponse404
+) & {
+  headers: Headers;
+};
+
+export type removeLeagueAdministratorResponse =
+  removeLeagueAdministratorResponseSuccess | removeLeagueAdministratorResponseError;
+
+export const getRemoveLeagueAdministratorUrl = (leagueId: Uuid, username: Username) => {
+  return `/leagues/${leagueId}/administrators/${username}`;
+};
+
+/**
+ * Exige sesión de la organizadora. La retirada es idempotente.
+ * @summary Retira una administradora delegada por username
+ */
+export const removeLeagueAdministrator = async (
+  leagueId: Uuid,
+  username: Username,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<removeLeagueAdministratorResponse> => {
+  const res = await (fetchFn ?? fetch)(getRemoveLeagueAdministratorUrl(leagueId, username), {
+    ...options,
+    method: "DELETE",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: removeLeagueAdministratorResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as removeLeagueAdministratorResponse;
 };

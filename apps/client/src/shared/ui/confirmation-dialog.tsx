@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useFocusEffect } from "expo-router";
 import { BackHandler, Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
@@ -38,6 +39,9 @@ type ModalDialogProps = {
 
 type ConfirmationDialogContextValue = {
   confirm: (dialog: Omit<Props, "visible">) => void;
+  dialog: Omit<Props, "visible"> | null;
+  accept: () => void;
+  cancel: () => void;
 };
 
 const ConfirmationDialogContext = createContext<ConfirmationDialogContextValue | null>(null);
@@ -46,8 +50,6 @@ export function ConfirmationDialogProvider({ children }: PropsWithChildren) {
   const [dialog, setDialog] = useState<Omit<Props, "visible"> | null>(null);
   const confirm = useCallback((nextDialog: Omit<Props, "visible">) => setDialog(nextDialog), []);
   const dismiss = useCallback(() => setDialog(null), []);
-  const confirmContextValue = useMemo(() => ({ confirm }), [confirm]);
-
   const cancel = useCallback(() => {
     const onCancel = dialog?.onCancel;
     dismiss();
@@ -59,21 +61,14 @@ export function ConfirmationDialogProvider({ children }: PropsWithChildren) {
     dismiss();
     onAccept?.();
   }, [dialog, dismiss]);
+  const confirmContextValue = useMemo(
+    () => ({ accept, cancel, confirm, dialog }),
+    [accept, cancel, confirm, dialog],
+  );
 
   return (
     <ConfirmationDialogContext.Provider value={confirmContextValue}>
-      <View style={styles.host}>
-        <View
-          accessibilityElementsHidden={dialog !== null}
-          importantForAccessibility={dialog ? "no-hide-descendants" : "auto"}
-          style={styles.content}
-        >
-          {children}
-        </View>
-        {dialog ? (
-          <ConfirmationDialog {...dialog} onAccept={accept} onCancel={cancel} visible />
-        ) : null}
-      </View>
+      {children}
     </ConfirmationDialogContext.Provider>
   );
 }
@@ -82,7 +77,24 @@ export function useConfirmationDialog() {
   const value = useContext(ConfirmationDialogContext);
   if (!value)
     throw new Error("useConfirmationDialog debe usarse dentro de ConfirmationDialogProvider");
-  return value;
+  return { confirm: value.confirm };
+}
+
+export function ConfirmationDialogHost() {
+  const value = useContext(ConfirmationDialogContext);
+  const [isFocused, setIsFocused] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, []),
+  );
+  if (!value)
+    throw new Error("ConfirmationDialogHost debe usarse dentro de ConfirmationDialogProvider");
+  if (!isFocused || !value.dialog) return null;
+  return (
+    <ConfirmationDialog {...value.dialog} onAccept={value.accept} onCancel={value.cancel} visible />
+  );
 }
 
 export function ConfirmationDialog({
@@ -166,8 +178,6 @@ export function ModalDialog({
 
 const styles = StyleSheet.create({
   actions: { gap: space[3] },
-  content: { flex: 1 },
-  host: { flex: 1 },
   backdrop: {
     ...StyleSheet.absoluteFill,
     alignItems: "center",

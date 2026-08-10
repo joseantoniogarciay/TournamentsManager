@@ -220,7 +220,7 @@ export default function LeagueScreen() {
     .sort(([firstRound], [secondRound]) => firstRound - secondRound)
     .map(([round, data]) => ({ data, round }));
   const closeWebMenu = () => setMenuOpen(false);
-  const openAdministratorSearch = () => router.push(`/league/${league.id}/administrators`);
+  const openAdministrators = () => router.push(`/league/${league.id}/administrators`);
   const headerOptions = {
     headerBackVisible: false,
     headerShadowVisible: false,
@@ -297,8 +297,8 @@ export default function LeagueScreen() {
                 {t("league_share")}
               </Stack.Toolbar.MenuAction>
               {isOrganizer ? (
-                <Stack.Toolbar.MenuAction onPress={openAdministratorSearch}>
-                  {t("league_add_administrator")}
+                <Stack.Toolbar.MenuAction onPress={openAdministrators}>
+                  {t("league_administrators")}
                 </Stack.Toolbar.MenuAction>
               ) : null}
               {isOrganizer && canCancel && !isCancelling ? (
@@ -386,10 +386,10 @@ export default function LeagueScreen() {
                   {isOrganizer ? (
                     <>
                       <Button
-                        label={t("league_add_administrator")}
+                        label={t("league_administrators")}
                         onPress={() => {
                           closeWebMenu();
-                          openAdministratorSearch();
+                          openAdministrators();
                         }}
                         variant="ghost"
                       />

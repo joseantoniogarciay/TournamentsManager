@@ -102,7 +102,6 @@ export default function LeagueTeamsScreen() {
         ...current,
         teams: current.teams.filter((team) => team.id !== teamID),
       }));
-      show({ kind: "success", message: t("league_remove_team_removed") });
     } catch (error) {
       const failure = getRequestFailure(error);
       show({ kind: failure.kind, message: t(failure.messageKey) });
@@ -194,7 +193,7 @@ export default function LeagueTeamsScreen() {
             {league.teams.map((team) => (
               <Card density="compact" key={team.id}>
                 <View style={styles.teamRow}>
-                  <Text style={styles.teamName} variant="title">
+                  <Text style={styles.teamName} variant="bodyLarge">
                     {team.name}
                   </Text>
                   {canRemoveTeam ? (
@@ -247,6 +246,12 @@ export default function LeagueTeamsScreen() {
                 label={t("league_add_team_save")}
                 loading={saving}
                 onPress={() => void save()}
+              />
+              <Button
+                disabled={saving}
+                label={t("common_cancel")}
+                onPress={dismissDialog}
+                variant="secondary"
               />
             </View>
           </View>

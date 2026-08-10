@@ -100,6 +100,13 @@ function RootNavigator() {
         }}
       />
       <Stack.Screen
+        name="league/[id]/administrators/add"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
         name="link/confirm"
         options={{
           animation: "fade",

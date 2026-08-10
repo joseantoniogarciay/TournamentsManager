@@ -22,6 +22,9 @@ export default function LeagueStandingsScreen() {
   const league = useLeague(id);
   const { loadLeague } = useLeagueStore();
   const [informationVisible, setInformationVisible] = useState(false);
+  const [statisticsContentWidth, setStatisticsContentWidth] = useState(0);
+  const [statisticsViewportWidth, setStatisticsViewportWidth] = useState(0);
+  const statisticsOverflow = statisticsContentWidth > statisticsViewportWidth + 1;
 
   useEffect(() => {
     if (!id) return;
@@ -126,35 +129,15 @@ export default function LeagueStandingsScreen() {
                 <Text color="secondary">{t("league_standings_unavailable")}</Text>
               </Card>
             ) : (
-              <Card style={styles.tableCard}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View>
-                    <View
-                      style={[styles.row, styles.headerRow, { borderColor: colors.border.default }]}
-                    >
+              <View style={styles.table}>
+                <View style={styles.tableColumns}>
+                  <View style={styles.leftColumn}>
+                    <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
                       <Text color="secondary" style={styles.position}>
                         {t("league_standings_position")}
                       </Text>
-                      <Text color="secondary" style={styles.team}>
+                      <Text color="secondary" numberOfLines={1} style={styles.team}>
                         {t("league_standings_team")}
-                      </Text>
-                      <Text color="secondary" style={styles.stat}>
-                        {t("league_standings_played")}
-                      </Text>
-                      <Text color="secondary" style={styles.stat}>
-                        {t("league_standings_won")}
-                      </Text>
-                      <Text color="secondary" style={styles.stat}>
-                        {t("league_standings_drawn")}
-                      </Text>
-                      <Text color="secondary" style={styles.stat}>
-                        {t("league_standings_lost")}
-                      </Text>
-                      <Text color="secondary" style={styles.stat}>
-                        {t("league_standings_goal_difference")}
-                      </Text>
-                      <Text color="secondary" style={styles.points}>
-                        {t("league_standings_points")}
                       </Text>
                     </View>
                     {league.standings.map((standing) => (
@@ -166,26 +149,57 @@ export default function LeagueStandingsScreen() {
                         <Text numberOfLines={1} style={styles.team}>
                           {teams.get(standing.teamId) ?? ""}
                         </Text>
-                        <Text style={styles.stat}>{standing.played}</Text>
-                        <Text style={styles.stat}>{standing.won}</Text>
-                        <Text style={styles.stat}>{standing.drawn}</Text>
-                        <Text style={styles.stat}>{standing.lost}</Text>
-                        <Text style={styles.stat}>
-                          {standing.goalDifference > 0
-                            ? t("league_standings_positive_goal_difference").replace(
-                                "{value}",
-                                standing.goalDifference.toString(),
-                              )
-                            : standing.goalDifference}
-                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                  <View
+                    onLayout={(event) => setStatisticsViewportWidth(event.nativeEvent.layout.width)}
+                    style={styles.statisticsViewport}
+                  >
+                    <ScrollView
+                      horizontal
+                      onContentSizeChange={(width) => setStatisticsContentWidth(width)}
+                      showsHorizontalScrollIndicator={statisticsOverflow}
+                    >
+                      <View>
+                        <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
+                          <StatisticsHeader />
+                        </View>
+                        {league.standings.map((standing) => (
+                          <View
+                            key={standing.teamId}
+                            style={[styles.row, { borderColor: colors.border.default }]}
+                          >
+                            <StatisticsValues standing={standing} />
+                          </View>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  </View>
+                  <View style={styles.pointsColumn}>
+                    <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
+                      <Text color="secondary" style={styles.points}>
+                        {t("league_standings_points")}
+                      </Text>
+                    </View>
+                    {league.standings.map((standing) => (
+                      <View
+                        key={standing.teamId}
+                        style={[styles.row, { borderColor: colors.border.default }]}
+                      >
                         <Text style={styles.points} variant="title">
                           {standing.points}
                         </Text>
                       </View>
                     ))}
                   </View>
-                </ScrollView>
-              </Card>
+                </View>
+                {statisticsOverflow ? (
+                  <Text color="secondary" style={styles.scrollHint}>
+                    {t("league_standings_scroll_hint")}
+                  </Text>
+                ) : null}
+              </View>
             )}
           </ScrollView>
         )}
@@ -199,6 +213,63 @@ export default function LeagueStandingsScreen() {
         <Button label={t("common_ok")} onPress={() => setInformationVisible(false)} />
       </ModalDialog>
     </>
+  );
+}
+
+function StatisticsHeader() {
+  const t = getTranslator();
+
+  return (
+    <View style={styles.statisticsRow}>
+      <Text color="secondary" style={styles.stat}>
+        {t("league_standings_played")}
+      </Text>
+      <Text color="secondary" style={styles.stat}>
+        {t("league_standings_won")}
+      </Text>
+      <Text color="secondary" style={styles.stat}>
+        {t("league_standings_drawn")}
+      </Text>
+      <Text color="secondary" style={styles.stat}>
+        {t("league_standings_lost")}
+      </Text>
+      <Text color="secondary" style={styles.stat}>
+        {t("league_standings_goals_for")}
+      </Text>
+      <Text color="secondary" style={styles.stat}>
+        {t("league_standings_goals_against")}
+      </Text>
+      <Text color="secondary" style={styles.stat}>
+        {t("league_standings_goal_difference")}
+      </Text>
+    </View>
+  );
+}
+
+function StatisticsValues({
+  standing,
+}: {
+  standing: NonNullable<PublicLeague["standings"]>[number];
+}) {
+  const t = getTranslator();
+
+  return (
+    <View style={styles.statisticsRow}>
+      <Text style={styles.stat}>{standing.played}</Text>
+      <Text style={styles.stat}>{standing.won}</Text>
+      <Text style={styles.stat}>{standing.drawn}</Text>
+      <Text style={styles.stat}>{standing.lost}</Text>
+      <Text style={styles.stat}>{standing.goalsFor}</Text>
+      <Text style={styles.stat}>{standing.goalsAgainst}</Text>
+      <Text style={styles.stat}>
+        {standing.goalDifference > 0
+          ? t("league_standings_positive_goal_difference").replace(
+              "{value}",
+              standing.goalDifference.toString(),
+            )
+          : standing.goalDifference}
+      </Text>
+    </View>
   );
 }
 
@@ -221,8 +292,14 @@ function StandingsRulesContent({ league }: { league: PublicLeague | null | undef
 }
 
 const styles = StyleSheet.create({
-  content: { gap: space[5], paddingBottom: space[5] },
-  headerRow: { borderBottomWidth: 1 },
+  content: { gap: space[5], paddingBottom: space[5], paddingHorizontal: space[5] },
+  headerRow: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    minHeight: control.minHeight,
+  },
+  leftColumn: { flexShrink: 0, width: 164 },
   loader: { alignItems: "center", flex: 1, justifyContent: "center" },
   navigationButton: {
     alignItems: "center",
@@ -233,6 +310,7 @@ const styles = StyleSheet.create({
     width: control.minHeight,
   },
   points: { textAlign: "right", width: 44 },
+  pointsColumn: { flexShrink: 0, width: 44 },
   position: { textAlign: "center", width: 34 },
   row: {
     alignItems: "center",
@@ -241,7 +319,11 @@ const styles = StyleSheet.create({
     minHeight: control.minHeight,
   },
   stack: { gap: space[3] },
+  scrollHint: { paddingTop: space[2], textAlign: "right" },
   stat: { textAlign: "center", width: 36 },
-  tableCard: { paddingHorizontal: space[3] },
-  team: { flex: 1, minWidth: 120, paddingHorizontal: space[2] },
+  statisticsRow: { flexDirection: "row" },
+  statisticsViewport: { flex: 1, minWidth: 0 },
+  table: { width: "100%" },
+  tableColumns: { flexDirection: "row" },
+  team: { flex: 1, minWidth: 0, paddingHorizontal: space[2] },
 });

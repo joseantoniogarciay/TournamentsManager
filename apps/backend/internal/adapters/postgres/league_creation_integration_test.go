@@ -121,6 +121,16 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	if err := service.AssignAdministrator(ctx, accountID, created.ID, "administrator"); err != nil {
 		t.Fatalf("asignar administradora: %v", err)
 	}
+	administrators, err := service.ListAdministrators(ctx, accountID, created.ID)
+	if err != nil || len(administrators) != 1 || administrators[0] != "administrator" {
+		t.Fatalf("listar administradoras = %#v, %v", administrators, err)
+	}
+	if err := service.RemoveAdministrator(ctx, accountID, created.ID, "administrator"); err != nil {
+		t.Fatalf("retirar administradora: %v", err)
+	}
+	if err := service.AssignAdministrator(ctx, accountID, created.ID, "administrator"); err != nil {
+		t.Fatalf("reasignar administradora: %v", err)
+	}
 	var assigned bool
 	if err := pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM league_administrators WHERE league_id = $1 AND account_id = $2)`, created.ID, administratorID).Scan(&assigned); err != nil || !assigned {
 		t.Fatalf("comprobar administradora asignada = %v, %v", assigned, err)

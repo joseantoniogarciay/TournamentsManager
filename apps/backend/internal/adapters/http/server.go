@@ -92,6 +92,8 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 		mux.Handle("POST /v1/leagues/{leagueId}/complete", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(completeLeague(creationService)))))
 		mux.Handle("PUT /v1/leagues/{leagueId}/matches/{matchId}/result", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(recordMatchResult(creationService)))))
 		mux.Handle("PUT /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(assignLeagueAdministrator(creationService)))))
+		mux.Handle("GET /v1/leagues/{leagueId}/administrators", requireSession(authenticator)(http.HandlerFunc(listLeagueAdministrators(creationService))))
+		mux.Handle("DELETE /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeLeagueAdministrator(creationService)))))
 		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
 	}
 	withCookieName := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -495,6 +497,67 @@ func assignLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 		}
 		if err != nil {
 			writeProblem(w, http.StatusInternalServerError, "No se pudo asignar la administradora")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func listLeagueAdministrators(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID := r.PathValue("leagueId")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) {
+			writeValidationProblem(w)
+			return
+		}
+		usernames, err := service.ListAdministrators(r.Context(), accountID, leagueID)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes consultar administradoras en esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudieron consultar las administradoras")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(struct {
+			Usernames []string `json:"usernames"`
+		}{Usernames: usernames})
+	}
+}
+
+func removeLeagueAdministrator(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID, username := r.PathValue("leagueId"), r.PathValue("username")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || !usernamePattern.MatchString(username) {
+			writeValidationProblem(w)
+			return
+		}
+		err := service.RemoveAdministrator(r.Context(), accountID, leagueID, username)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes retirar administradoras en esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo retirar la administradora")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

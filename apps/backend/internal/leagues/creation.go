@@ -99,6 +99,8 @@ type CreationRepository interface {
 	Start(context.Context, string, string, StartInput) (League, error)
 	Cancel(context.Context, string, string) (League, error)
 	AssignAdministrator(context.Context, string, string, string) error
+	ListAdministrators(context.Context, string, string) ([]string, error)
+	RemoveAdministrator(context.Context, string, string, string) error
 	RecordResult(context.Context, string, string, string, MatchResultInput) (League, error)
 	Complete(context.Context, string, string) (League, error)
 	GetPublic(context.Context, string) (League, error)
@@ -156,6 +158,19 @@ func (s CreationService) AssignAdministrator(ctx context.Context, accountID, lea
 		return ErrInvalidLeagueInput
 	}
 	return s.repository.AssignAdministrator(ctx, accountID, leagueID, username)
+}
+
+// ListAdministrators devuelve las cuentas delegadas que la organizadora puede gestionar.
+func (s CreationService) ListAdministrators(ctx context.Context, accountID, leagueID string) ([]string, error) {
+	return s.repository.ListAdministrators(ctx, accountID, leagueID)
+}
+
+// RemoveAdministrator retira una administración delegada identificada por username.
+func (s CreationService) RemoveAdministrator(ctx context.Context, accountID, leagueID, username string) error {
+	if !usernamePattern.MatchString(username) {
+		return ErrInvalidLeagueInput
+	}
+	return s.repository.RemoveAdministrator(ctx, accountID, leagueID, username)
 }
 
 // RecordResult aplica o corrige inmediatamente un marcador de una cuenta autorizada.
