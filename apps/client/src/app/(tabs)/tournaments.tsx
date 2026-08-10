@@ -9,11 +9,12 @@ import {
   View,
 } from "react-native";
 
-import { color, control, radius, space } from "@tournaments-manager/design-tokens";
+import { color, control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
 import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
 import { listRelatedLeagues } from "@/features/league-creation/api";
+import { useLeagueState } from "@/features/league-creation/league-store";
 import { LeagueCreatorChip } from "@/features/league-creation/components/league-creator-chip";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
@@ -187,27 +188,38 @@ function LeagueLibrary({
           <Text color="secondary">{empty}</Text>
         </View>
       ) : (
-        leagues.map((league) => (
-          <Card key={league.id}>
-            <Pressable
-              accessibilityLabel={t("tournaments_open_league").replace("{name}", league.name)}
-              accessibilityRole="button"
-              onPress={() => router.push(`/league/${league.id}` as never)}
-              style={styles.row}
-            >
-              <View style={styles.copy}>
-                <Text>{league.name}</Text>
-                <View style={styles.leagueState}>
-                  {league.relationship === "organizer" ? <LeagueCreatorChip /> : null}
-                  <Text color="secondary">{getLeagueStateLabel(t, league.state)}</Text>
-                </View>
-              </View>
-              <Text color="secondary">›</Text>
-            </Pressable>
-          </Card>
-        ))
+        leagues.map((league) => <LeagueLibraryCard key={league.id} league={league} />)
       )}
     </View>
+  );
+}
+
+function LeagueLibraryCard({
+  league,
+}: {
+  league: Awaited<ReturnType<typeof listRelatedLeagues>>[number];
+}) {
+  const t = getTranslator();
+  const state = useLeagueState(league.id, league.state);
+
+  return (
+    <Card>
+      <Pressable
+        accessibilityLabel={t("tournaments_open_league").replace("{name}", league.name)}
+        accessibilityRole="button"
+        onPress={() => router.push(`/league/${league.id}` as never)}
+        style={styles.row}
+      >
+        <View style={styles.copy}>
+          <Text>{league.name}</Text>
+          <View style={styles.leagueState}>
+            {league.relationship === "organizer" ? <LeagueCreatorChip /> : null}
+            <Text color="secondary">{getLeagueStateLabel(t, state)}</Text>
+          </View>
+        </View>
+        <Text color="secondary">›</Text>
+      </Pressable>
+    </Card>
   );
 }
 
@@ -229,7 +241,9 @@ function Segment({
       onPress={onPress}
       style={[styles.segment, selected ? styles.segmentSelected : undefined]}
     >
-      <Text color={selected ? "onBrand" : "primary"}>{label}</Text>
+      <Text color={selected ? "onBrand" : "primary"} style={styles.segmentLabel}>
+        {label}
+      </Text>
       <Text color={selected ? "onBrand" : "secondary"}>{count}</Text>
     </Pressable>
   );
@@ -292,6 +306,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: control.minHeight,
   },
+  segmentLabel: { fontWeight: typography.weight.bold },
   segmentedBar: {
     borderRadius: radius.control,
     flexDirection: "row",

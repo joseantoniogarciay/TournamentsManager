@@ -1,25 +1,17 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useEffect, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
 import type { PublicLeague } from "@/api/generated/models";
-import { getLeague } from "@/features/league-creation/api";
+import { useLeague, useLeagueStore } from "@/features/league-creation/league-store";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Card, Screen, Text } from "@/shared/ui";
+import { Button, Card, ModalDialog, Screen, Text } from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
 export default function LeagueStandingsScreen() {
@@ -27,18 +19,17 @@ export default function LeagueStandingsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
   const { show } = useFeedback();
-  const [league, setLeague] = useState<PublicLeague | null>(null);
+  const league = useLeague(id);
+  const { loadLeague } = useLeagueStore();
   const [informationVisible, setInformationVisible] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    void getLeague(id)
-      .then(setLeague)
-      .catch((error) => {
-        const failure = getRequestFailure(error);
-        show({ kind: failure.kind, message: t(failure.messageKey) });
-      });
-  }, [id, show, t]);
+    void loadLeague(id).catch((error) => {
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    });
+  }, [id, loadLeague, show, t]);
 
   const teams = useMemo(() => new Map(league?.teams.map((team) => [team.id, team.name])), [league]);
   const close = () => {
@@ -117,7 +108,7 @@ export default function LeagueStandingsScreen() {
           <Stack.Toolbar placement="right">
             <Stack.Toolbar.Button
               accessibilityLabel={t("league_standings_information")}
-              icon="info.circle"
+              icon="info"
               onPress={() => setInformationVisible(true)}
             />
           </Stack.Toolbar>
@@ -130,19 +121,6 @@ export default function LeagueStandingsScreen() {
           </View>
         ) : (
           <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-            <Card>
-              <View style={styles.stack}>
-                <Text variant="title">{t("league_standings_rules_title")}</Text>
-                <Text color="secondary">{t("league_standings_rule_points")}</Text>
-                <Text color="secondary">
-                  {league.roundRobinLegs === 2
-                    ? t("league_standings_rule_two_legs")
-                    : t("league_standings_rule_one_leg")}
-                </Text>
-                <Text color="secondary">{t("league_standings_rule_general")}</Text>
-                <Text color="secondary">{t("league_standings_rule_shared")}</Text>
-              </View>
-            </Card>
             {league.standings.length === 0 ? (
               <Card>
                 <Text color="secondary">{t("league_standings_unavailable")}</Text>
@@ -212,61 +190,40 @@ export default function LeagueStandingsScreen() {
           </ScrollView>
         )}
       </Screen>
-      <Modal
-        transparent
+      <ModalDialog
+        dismissAccessibilityLabel={t("common_close")}
+        onDismiss={() => setInformationVisible(false)}
         visible={informationVisible}
-        onRequestClose={() => setInformationVisible(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <Pressable
-            accessibilityLabel={t("common_close")}
-            accessibilityRole="button"
-            onPress={() => setInformationVisible(false)}
-            style={StyleSheet.absoluteFill}
-          />
-          <Card>
-            <View style={styles.stack} accessibilityViewIsModal>
-              <Text variant="title">{t("league_standings_information")}</Text>
-              <Text color="secondary">{t("league_standings_rule_points")}</Text>
-              <Text color="secondary">
-                {league?.roundRobinLegs === 2
-                  ? t("league_standings_rule_two_legs")
-                  : t("league_standings_rule_one_leg")}
-              </Text>
-              <Text color="secondary">{t("league_standings_rule_general")}</Text>
-              <Text color="secondary">{t("league_standings_rule_shared")}</Text>
-              <Pressable
-                accessibilityLabel={t("common_close")}
-                accessibilityRole="button"
-                onPress={() => setInformationVisible(false)}
-                style={styles.closeButton}
-              >
-                <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
-              </Pressable>
-            </View>
-          </Card>
-        </View>
-      </Modal>
+        <StandingsRulesContent league={league} />
+        <Button label={t("common_ok")} onPress={() => setInformationVisible(false)} />
+      </ModalDialog>
     </>
   );
 }
 
+function StandingsRulesContent({ league }: { league: PublicLeague | null | undefined }) {
+  const t = getTranslator();
+
+  return (
+    <View style={styles.stack}>
+      <Text variant="title">{t("league_standings_rules_title")}</Text>
+      <Text color="secondary">{t("league_standings_rule_points")}</Text>
+      <Text color="secondary">
+        {league?.roundRobinLegs === 2
+          ? t("league_standings_rule_two_legs")
+          : t("league_standings_rule_one_leg")}
+      </Text>
+      <Text color="secondary">{t("league_standings_rule_general")}</Text>
+      <Text color="secondary">{t("league_standings_rule_shared")}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  closeButton: {
-    alignSelf: "flex-end",
-    height: control.minHeight,
-    justifyContent: "center",
-    width: control.minHeight,
-  },
   content: { gap: space[5], paddingBottom: space[5] },
   headerRow: { borderBottomWidth: 1 },
   loader: { alignItems: "center", flex: 1, justifyContent: "center" },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFill,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: space[5],
-  },
   navigationButton: {
     alignItems: "center",
     borderRadius: radius.pill,

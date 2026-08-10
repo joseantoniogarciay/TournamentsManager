@@ -28,6 +28,7 @@ var uuidPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 const (
 	usernameAvailabilityLimit  = 30
 	usernameAvailabilityWindow = time.Minute
+	userSearchLimit            = 60
 )
 
 // NewHandler construye las rutas de infraestructura disponibles antes de los
@@ -45,12 +46,14 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 		accessService = access.NewService(repository)
 	}
 	availabilityLimiter := newRequestLimiter(usernameAvailabilityLimit, usernameAvailabilityWindow)
+	userSearchLimiter := newRequestLimiter(userSearchLimit, usernameAvailabilityWindow)
 	localLoginLimiter := newLoginLimiter(10, time.Minute)
 	cookieCSRF := func(next http.Handler) http.Handler {
 		return requireCookieCSRF(corsAllowedOrigins, next)
 	}
 	mux.HandleFunc("GET /healthz", healthz)
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
+	mux.HandleFunc("GET /v1/users", searchUsers(registrationService, userSearchLimiter))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService))
 	mux.HandleFunc("POST /v1/sessions", createLocalSession(registrationService, localLoginLimiter, cookies))
 	if federatedService != nil {
@@ -495,6 +498,28 @@ func assignLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func searchUsers(service registration.Service, limiter *requestLimiter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query().Get("query")
+		if !usernamePattern.MatchString(query) {
+			writeValidationProblem(w)
+			return
+		}
+		if allowed, retryAfter := limiter.allow(clientIP(r)); !allowed {
+			w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+			writeProblem(w, http.StatusTooManyRequests, "Demasiadas búsquedas")
+			return
+		}
+		usernames, err := service.SearchUsernames(r.Context(), query)
+		if err != nil {
+			writeProblem(w, http.StatusServiceUnavailable, "No se pudieron buscar usuarios")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"usernames": usernames})
 	}
 }
 

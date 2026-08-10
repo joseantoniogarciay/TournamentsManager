@@ -13,13 +13,12 @@ import {
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
-import type { PublicLeague } from "@/api/generated/models";
 import {
   addLeagueTeamRequest,
-  getLeague,
   getLeagueRelationship,
   removeLeagueTeamRequest,
 } from "@/features/league-creation/api";
+import { useLeague, useLeagueStore } from "@/features/league-creation/league-store";
 import { maximumLeagueTeams } from "@/features/league-creation/draft";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -36,7 +35,8 @@ export default function LeagueTeamsScreen() {
   const { colors } = usePreferences();
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
-  const [league, setLeague] = useState<PublicLeague | null>(null);
+  const league = useLeague(id);
+  const { loadLeague, updateLeague } = useLeagueStore();
   const [relationship, setRelationship] = useState<string>();
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
@@ -45,14 +45,12 @@ export default function LeagueTeamsScreen() {
 
   useEffect(() => {
     if (!id) return;
-    void getLeague(id)
-      .then(setLeague)
-      .catch((error) => {
-        const failure = getRequestFailure(error);
-        show({ kind: failure.kind, message: t(failure.messageKey) });
-      });
+    void loadLeague(id).catch((error) => {
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    });
     if (user) void getLeagueRelationship(id).then(setRelationship);
-  }, [id, show, t, user]);
+  }, [id, loadLeague, show, t, user]);
 
   const canAddTeam = relationship === "organizer" && league?.state === "published";
   const canRemoveTeam = canAddTeam && (league?.teams.length ?? 0) > 2;
@@ -84,7 +82,7 @@ export default function LeagueTeamsScreen() {
     setSaving(true);
     try {
       const team = await addLeagueTeamRequest(id, { name: name.trim() });
-      setLeague((current) => (current ? { ...current, teams: [...current.teams, team] } : current));
+      updateLeague(id, (current) => ({ ...current, teams: [...current.teams, team] }));
       setAdding(false);
       setName("");
       show({ kind: "success", message: t("league_add_team_added") });
@@ -100,11 +98,10 @@ export default function LeagueTeamsScreen() {
     setRemovingTeamID(teamID);
     try {
       await removeLeagueTeamRequest(id, teamID);
-      setLeague((current) =>
-        current
-          ? { ...current, teams: current.teams.filter((team) => team.id !== teamID) }
-          : current,
-      );
+      updateLeague(id, (current) => ({
+        ...current,
+        teams: current.teams.filter((team) => team.id !== teamID),
+      }));
       show({ kind: "success", message: t("league_remove_team_removed") });
     } catch (error) {
       const failure = getRequestFailure(error);

@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  type ReactNode,
 } from "react";
 import { BackHandler, Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 
@@ -22,9 +23,17 @@ type Props = {
   title: string;
   description: string;
   acceptLabel: string;
+  acceptVariant?: "primary" | "destructive";
   cancelLabel: string;
   onAccept: () => void;
   onCancel: () => void;
+};
+
+type ModalDialogProps = {
+  visible: boolean;
+  dismissAccessibilityLabel: string;
+  onDismiss: () => void;
+  children: ReactNode;
 };
 
 type ConfirmationDialogContextValue = {
@@ -81,12 +90,11 @@ export function ConfirmationDialog({
   title,
   description,
   acceptLabel,
+  acceptVariant = "primary",
   cancelLabel,
   onAccept,
   onCancel,
 }: Props) {
-  const { colors } = usePreferences();
-
   useEffect(() => {
     if (!visible || Platform.OS === "web") return;
 
@@ -97,10 +105,32 @@ export function ConfirmationDialog({
     return () => subscription.remove();
   }, [onCancel, visible]);
 
+  return (
+    <ModalDialog dismissAccessibilityLabel={cancelLabel} onDismiss={onCancel} visible={visible}>
+      <View style={styles.copy}>
+        <Text variant="title">{title}</Text>
+        <Text color="secondary">{description}</Text>
+      </View>
+      <View style={styles.actions}>
+        <Button label={acceptLabel} onPress={onAccept} variant={acceptVariant} />
+        <Button label={cancelLabel} onPress={onCancel} variant="secondary" />
+      </View>
+    </ModalDialog>
+  );
+}
+
+export function ModalDialog({
+  visible,
+  dismissAccessibilityLabel,
+  onDismiss,
+  children,
+}: ModalDialogProps) {
+  const { colors } = usePreferences();
+
   if (!visible) return null;
 
   return (
-    <Modal animationType="fade" onRequestClose={onCancel} transparent visible={visible}>
+    <Modal animationType="fade" onRequestClose={onDismiss} transparent visible={visible}>
       <View accessibilityViewIsModal style={styles.backdrop}>
         <BlurView
           blurMethod="dimezisBlurViewSdk31Plus"
@@ -116,9 +146,9 @@ export function ConfirmationDialog({
           />
         ) : null}
         <Pressable
-          accessibilityLabel={cancelLabel}
+          accessibilityLabel={dismissAccessibilityLabel}
           accessibilityRole="button"
-          onPress={onCancel}
+          onPress={onDismiss}
           style={styles.dismissArea}
         />
         <View
@@ -127,14 +157,7 @@ export function ConfirmationDialog({
             { backgroundColor: colors.surface.default, borderColor: colors.border.default },
           ]}
         >
-          <View style={styles.copy}>
-            <Text variant="title">{title}</Text>
-            <Text color="secondary">{description}</Text>
-          </View>
-          <View style={styles.actions}>
-            <Button label={acceptLabel} onPress={onAccept} />
-            <Button label={cancelLabel} onPress={onCancel} variant="secondary" />
-          </View>
+          {children}
         </View>
       </View>
     </Modal>

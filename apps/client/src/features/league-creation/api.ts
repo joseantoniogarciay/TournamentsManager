@@ -11,7 +11,14 @@ import {
   removeLeagueTeam,
   startLeague,
 } from "@/api/generated/leagues/leagues";
-import type { LeagueInput, StartLeagueRequest, TeamInput } from "@/api/generated/models";
+import type { LeagueInput, StartLeagueRequest, TeamInput, Username } from "@/api/generated/models";
+import { searchUsers } from "@/api/generated/users/users";
+
+export class UserSearchRateLimitedError extends Error {
+  constructor() {
+    super("Búsqueda de usuarios limitada");
+  }
+}
 
 export async function createLeagueRequest(input: LeagueInput) {
   const response = await createLeague(input, undefined, authenticatedApiFetch);
@@ -50,6 +57,12 @@ export async function assignLeagueAdministratorRequest(leagueID: string, usernam
     authenticatedApiFetch,
   );
   if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
+}
+export async function searchPublicUsernames(query: string, signal: AbortSignal) {
+  const response = await searchUsers({ query: query as Username }, { signal }, apiFetch);
+  if (response.status === 200) return response.data.usernames;
+  if (response.status === 429) throw new UserSearchRateLimitedError();
+  throw new APIUnexpectedResponseError(response.status);
 }
 export async function getLeague(leagueID: string) {
   const response = await getPublicLeague(leagueID, undefined, apiFetch);

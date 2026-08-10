@@ -186,6 +186,30 @@ paths:
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "429": { $ref: "#/components/responses/RateLimitProblem" }
         "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
+  /users:
+    get:
+      tags: [Users]
+      operationId: searchUsers
+      summary: Busca usernames públicos por coincidencia parcial
+      description: >-
+        No requiere sesión. Devuelve como máximo veinte usernames de cuentas
+        verificadas cuyo nombre contiene query. No expone email, IDs, métodos
+        de acceso ni estado de cuenta.
+      security: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema: { $ref: "#/components/schemas/Username" }
+      responses:
+        "200":
+          description: Coincidencias públicas, ordenadas por username.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserSearchResponse" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
   /registrations:
     post:
       tags: [Registration]
@@ -732,6 +756,14 @@ components:
           description: >-
             Estado actual informativo; no constituye una reserva y puede cambiar
             antes de enviar el alta.
+    UserSearchResponse:
+      type: object
+      required: [usernames]
+      properties:
+        usernames:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/Username" }
     Password:
       type: string
       format: password

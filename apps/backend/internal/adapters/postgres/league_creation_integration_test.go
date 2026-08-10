@@ -167,6 +167,12 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	if _, err := service.Cancel(ctx, accountID, created.ID); err != leagues.ErrLeagueCancellationConflict {
 		t.Fatalf("segunda cancelación = %v, se esperaba %v", err, leagues.ErrLeagueCancellationConflict)
 	}
+	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 4, AwayScore: 0}); !errors.Is(err, leagues.ErrMatchResultConflict) {
+		t.Fatalf("registrar resultado tras cancelar = %v, se esperaba %v", err, leagues.ErrMatchResultConflict)
+	}
+	if _, err := service.Complete(ctx, accountID, created.ID); !errors.Is(err, leagues.ErrLeagueCompletionConflict) {
+		t.Fatalf("finalizar tras cancelar = %v, se esperaba %v", err, leagues.ErrLeagueCompletionConflict)
+	}
 	published, err := service.Create(ctx, accountID, leagues.CreateInput{Name: "Liga sin empezar", Teams: []leagues.TeamInput{{Name: "Norte"}, {Name: "Sur"}}})
 	if err != nil {
 		t.Fatalf("crear segunda liga: %v", err)

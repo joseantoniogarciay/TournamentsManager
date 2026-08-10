@@ -4,19 +4,17 @@ import { useEffect, useState } from "react";
 import { Modal, Platform, Pressable, SectionList, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { control, radius, space } from "@tournaments-manager/design-tokens";
+import { color, control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
 import { APIUnexpectedResponseError } from "@/api/fetch";
 import type { PublicLeague } from "@/api/generated/models";
 import {
-  assignLeagueAdministratorRequest,
   cancelLeagueRequest,
   completeLeagueRequest,
-  getLeague,
   getLeagueRelationship,
   startLeagueRequest,
 } from "@/features/league-creation/api";
-import { LeagueCreatorChip } from "@/features/league-creation/components/league-creator-chip";
+import { useLeague, useLeagueStore } from "@/features/league-creation/league-store";
 import { recordMatchResultRequest } from "@/features/match-results/api";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -45,35 +43,34 @@ export default function LeagueScreen() {
   const insets = useSafeAreaInsets();
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
-  const [league, setLeague] = useState<PublicLeague | null>(null);
+  const league = useLeague(id);
+  const { loadLeague, putLeague, refreshLeague } = useLeagueStore();
   const [relationship, setRelationship] = useState<string>();
   const [isStarting, setIsStarting] = useState(false);
+  const [roundRobinLegs, setRoundRobinLegs] = useState<1 | 2>(1);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [addingAdministrator, setAddingAdministrator] = useState(false);
-  const [username, setUsername] = useState("");
   const [scores, setScores] = useState<Record<string, { home: string; away: string }>>({});
   const [savingMatchID, setSavingMatchID] = useState<string>();
   const [editingMatchID, setEditingMatchID] = useState<string>();
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [completionConfirmationOpen, setCompletionConfirmationOpen] = useState(false);
   const [completionOpen, setCompletionOpen] = useState(false);
   useEffect(() => {
     if (!id) return;
-    void getLeague(id)
-      .then(setLeague)
-      .catch((error) => {
-        const failure = getRequestFailure(error);
-        show({ kind: failure.kind, message: t(failure.messageKey) });
-      });
+    void loadLeague(id).catch((error) => {
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    });
     if (user) void getLeagueRelationship(id).then(setRelationship);
-  }, [id, show, t, user]);
+  }, [id, loadLeague, show, t, user]);
   const isOrganizer = relationship === "organizer";
   const canManageResults = relationship === "organizer" || relationship === "delegated";
-  const start = async (roundRobinLegs: 1 | 2) => {
+  const start = async () => {
     if (!id) return;
     setIsStarting(true);
     try {
-      setLeague(await startLeagueRequest(id, { roundRobinLegs }));
+      putLeague(await startLeagueRequest(id, { roundRobinLegs }));
     } catch (error) {
       const failure = getRequestFailure(error);
       show({ kind: failure.kind, message: t(failure.messageKey) });
@@ -95,30 +92,35 @@ export default function LeagueScreen() {
       message: `${league.name}: ${base}/league/${id}`,
     });
   };
-  const cancel = () =>
+  const cancel = () => {
+    if (isCancelling) return;
     confirm({
       title: t("league_cancel_title"),
       description: t("league_cancel_description"),
       acceptLabel: t("league_cancel"),
+      acceptVariant: "destructive",
       cancelLabel: t("common_cancel"),
       onAccept: () => {
         if (!id) return;
+        setIsCancelling(true);
         void cancelLeagueRequest(id)
-          .then(setLeague)
+          .then(putLeague)
           .catch((error) => {
             const failure = getRequestFailure(error);
             show({ kind: failure.kind, message: t(failure.messageKey) });
-          });
+          })
+          .finally(() => setIsCancelling(false));
       },
       onCancel: () => undefined,
     });
+  };
   const complete = () => setCompletionConfirmationOpen(true);
   const confirmCompletion = () => {
     if (!id) return;
     setIsCompleting(true);
     void completeLeagueRequest(id)
       .then((completed) => {
-        setLeague(completed);
+        putLeague(completed);
         setCompletionConfirmationOpen(false);
         setCompletionOpen(true);
       })
@@ -126,30 +128,16 @@ export default function LeagueScreen() {
         if (error instanceof APIUnexpectedResponseError && error.status === 409) {
           setCompletionConfirmationOpen(false);
           show({ kind: "success", message: t("league_completion_already_completed") });
-          void getLeague(id)
-            .then(setLeague)
-            .catch((refreshError) => {
-              const failure = getRequestFailure(refreshError);
-              show({ kind: failure.kind, message: t(failure.messageKey) });
-            });
+          void refreshLeague(id).catch((refreshError) => {
+            const failure = getRequestFailure(refreshError);
+            show({ kind: failure.kind, message: t(failure.messageKey) });
+          });
           return;
         }
         const failure = getRequestFailure(error);
         show({ kind: failure.kind, message: t(failure.messageKey) });
       })
       .finally(() => setIsCompleting(false));
-  };
-  const assign = async () => {
-    if (!id) return;
-    try {
-      await assignLeagueAdministratorRequest(id, username);
-      setUsername("");
-      setAddingAdministrator(false);
-      show({ kind: "success", message: t("league_administrator_added") });
-    } catch (error) {
-      const failure = getRequestFailure(error);
-      show({ kind: failure.kind, message: t(failure.messageKey) });
-    }
   };
   const saveResult = async (matchID: string) => {
     if (!id) return;
@@ -165,7 +153,7 @@ export default function LeagueScreen() {
       return;
     setSavingMatchID(matchID);
     try {
-      setLeague(await recordMatchResultRequest(id, matchID, { homeScore, awayScore }));
+      putLeague(await recordMatchResultRequest(id, matchID, { homeScore, awayScore }));
       setEditingMatchID(undefined);
     } catch (error) {
       const failure = getRequestFailure(error);
@@ -195,6 +183,20 @@ export default function LeagueScreen() {
     league.state === "in_progress" &&
     league.matches.length > 0 &&
     league.matches.every((match) => match.state === "completed");
+  const primaryLeagueAction = (() => {
+    switch (league.state) {
+      case "published":
+        return isOrganizer
+          ? { label: t("league_start"), loading: isStarting, onPress: () => void start() }
+          : undefined;
+      case "in_progress":
+        return canComplete
+          ? { label: t("league_complete"), loading: isCompleting, onPress: complete }
+          : undefined;
+      default:
+        return undefined;
+    }
+  })();
   const teamsByID = new Map(league.teams.map((team) => [team.id, team.name]));
   const editingMatch = league.matches.find((match) => match.id === editingMatchID);
   const editingScore = editingMatch
@@ -218,6 +220,7 @@ export default function LeagueScreen() {
     .sort(([firstRound], [secondRound]) => firstRound - secondRound)
     .map(([round, data]) => ({ data, round }));
   const closeWebMenu = () => setMenuOpen(false);
+  const openAdministratorSearch = () => router.push(`/league/${league.id}/administrators`);
   const headerOptions = {
     headerBackVisible: false,
     headerShadowVisible: false,
@@ -294,11 +297,11 @@ export default function LeagueScreen() {
                 {t("league_share")}
               </Stack.Toolbar.MenuAction>
               {isOrganizer ? (
-                <Stack.Toolbar.MenuAction onPress={() => setAddingAdministrator(true)}>
+                <Stack.Toolbar.MenuAction onPress={openAdministratorSearch}>
                   {t("league_add_administrator")}
                 </Stack.Toolbar.MenuAction>
               ) : null}
-              {isOrganizer && canCancel ? (
+              {isOrganizer && canCancel && !isCancelling ? (
                 <Stack.Toolbar.MenuAction destructive onPress={cancel}>
                   {t("league_cancel")}
                 </Stack.Toolbar.MenuAction>
@@ -309,7 +312,13 @@ export default function LeagueScreen() {
       )}
       <Screen bottomInset="none" topInset="navigation-bar">
         <SectionList
-          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[4] }]}
+          contentContainerStyle={[
+            styles.content,
+            {
+              paddingBottom:
+                insets.bottom + (primaryLeagueAction ? space[12] + space[5] : space[4]),
+            },
+          ]}
           ItemSeparatorComponent={() => <View style={styles.matchSeparator} />}
           sections={matchSections}
           showsVerticalScrollIndicator={false}
@@ -318,24 +327,46 @@ export default function LeagueScreen() {
             <View style={styles.listHeader}>
               <Card>
                 <View style={styles.stack}>
-                  <View style={styles.leagueStatus}>
-                    {isOrganizer ? <LeagueCreatorChip /> : null}
-                    <Text color="secondary">{getLeagueStateLabel(t, league.state)}</Text>
-                  </View>
-                  <View style={styles.summaryActions}>
-                    <Button
-                      label={t("league_teams")}
-                      onPress={() => router.push(`/league/${league.id}/teams`)}
-                      variant="secondary"
-                    />
-                    <Button
-                      label={t("league_standings")}
-                      onPress={() => router.push(`/league/${league.id}/standings`)}
-                      variant="secondary"
-                    />
+                  <View style={styles.summaryList}>
+                    <View style={styles.summaryItem}>
+                      <View
+                        accessible={false}
+                        style={[styles.bullet, { backgroundColor: colors.text.secondary }]}
+                      />
+                      <Text color="secondary" style={styles.summaryText}>
+                        <Text style={styles.summaryLabel}>{t("league_creator_label")}</Text>
+                        {t("league_creator_permissions")}
+                      </Text>
+                    </View>
+                    <View style={styles.summaryItem}>
+                      <View
+                        accessible={false}
+                        style={[styles.bullet, { backgroundColor: colors.text.secondary }]}
+                      />
+                      <Text color="secondary" style={styles.summaryText}>
+                        <Text style={styles.summaryLabel}>{t("league_status_label")}</Text>
+                        {getLeagueStateLabel(t, league.state)}
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </Card>
+              <View style={styles.summaryActions}>
+                <View style={styles.summaryAction}>
+                  <Button
+                    label={t("league_teams")}
+                    onPress={() => router.push(`/league/${league.id}/teams`)}
+                    variant="secondary"
+                  />
+                </View>
+                <View style={styles.summaryAction}>
+                  <Button
+                    label={t("league_standings")}
+                    onPress={() => router.push(`/league/${league.id}/standings`)}
+                    variant="secondary"
+                  />
+                </View>
+              </View>
               {Platform.OS !== "ios" && menuOpen ? (
                 <View
                   accessibilityViewIsModal
@@ -358,11 +389,11 @@ export default function LeagueScreen() {
                         label={t("league_add_administrator")}
                         onPress={() => {
                           closeWebMenu();
-                          setAddingAdministrator(true);
+                          openAdministratorSearch();
                         }}
                         variant="ghost"
                       />
-                      {canCancel ? (
+                      {canCancel && !isCancelling ? (
                         <Button
                           label={t("league_cancel")}
                           onPress={() => {
@@ -376,51 +407,60 @@ export default function LeagueScreen() {
                   ) : null}
                 </View>
               ) : null}
-              {addingAdministrator ? (
-                <Card>
-                  <View style={styles.stack}>
-                    <Text variant="title">{t("league_add_administrator")}</Text>
-                    <TextField
-                      label={t("league_administrator_username")}
-                      onChangeText={setUsername}
-                      value={username}
-                      autoCapitalize="none"
-                    />
-                    <Button
-                      label={t("common_confirm")}
-                      onPress={() => void assign()}
-                      disabled={!username}
-                    />
-                  </View>
-                </Card>
-              ) : null}
               {league.state === "published" && isOrganizer ? (
                 <Card>
                   <View style={styles.stack}>
-                    <Text variant="title">{t("league_start_title")}</Text>
-                    <Button
-                      label={t("league_start_one_leg")}
-                      loading={isStarting}
-                      onPress={() => void start(1)}
-                    />
-                    <Button
-                      label={t("league_start_two_legs")}
-                      variant="secondary"
-                      onPress={() => void start(2)}
-                    />
-                  </View>
-                </Card>
-              ) : null}
-              {canComplete ? (
-                <Card>
-                  <View style={styles.stack}>
-                    <Text variant="title">{t("league_complete_title")}</Text>
-                    <Text color="secondary">{t("league_complete_ready")}</Text>
-                    <Button
-                      label={t("league_complete")}
-                      loading={isCompleting}
-                      onPress={complete}
-                    />
+                    <Text style={styles.configurationTitle} variant="bodyLarge">
+                      {t("league_start_title")}
+                    </Text>
+                    <View
+                      style={[styles.configurationOptions, { borderColor: colors.border.default }]}
+                    >
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: roundRobinLegs === 1 }}
+                        disabled={isStarting}
+                        onPress={() => setRoundRobinLegs(1)}
+                        style={[
+                          styles.configurationChip,
+                          roundRobinLegs === 1
+                            ? {
+                                backgroundColor: color.brand.primary,
+                                borderColor: color.brand.primary,
+                              }
+                            : {
+                                backgroundColor: colors.surface.default,
+                                borderColor: colors.border.default,
+                              },
+                        ]}
+                      >
+                        <Text color={roundRobinLegs === 1 ? "onBrand" : "primary"}>
+                          {t("league_start_one_leg")}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: roundRobinLegs === 2 }}
+                        disabled={isStarting}
+                        onPress={() => setRoundRobinLegs(2)}
+                        style={[
+                          styles.configurationChip,
+                          roundRobinLegs === 2
+                            ? {
+                                backgroundColor: color.brand.primary,
+                                borderColor: color.brand.primary,
+                              }
+                            : {
+                                backgroundColor: colors.surface.default,
+                                borderColor: colors.border.default,
+                              },
+                        ]}
+                      >
+                        <Text color={roundRobinLegs === 2 ? "onBrand" : "primary"}>
+                          {t("league_start_two_legs")}
+                        </Text>
+                      </Pressable>
+                    </View>
                   </View>
                 </Card>
               ) : null}
@@ -466,6 +506,15 @@ export default function LeagueScreen() {
             </View>
           )}
         />
+        {primaryLeagueAction ? (
+          <View style={[styles.floatingAction, { bottom: insets.bottom + space[3] }]}>
+            <Button
+              label={primaryLeagueAction.label}
+              loading={primaryLeagueAction.loading}
+              onPress={primaryLeagueAction.onPress}
+            />
+          </View>
+        ) : null}
         <Modal
           animationType="fade"
           onRequestClose={() => {
@@ -639,10 +688,41 @@ export default function LeagueScreen() {
 }
 const styles = StyleSheet.create({
   content: { paddingBottom: space[4] },
+  configurationChip: {
+    alignItems: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: control.minHeight,
+    paddingHorizontal: control.horizontalPadding,
+  },
+  configurationOptions: {
+    borderTopWidth: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space[2],
+    paddingTop: space[5],
+  },
+  configurationTitle: { fontWeight: typography.weight.semibold },
+  floatingAction: {
+    left: space[5],
+    position: "absolute",
+    right: space[5],
+  },
   listHeader: { gap: space[5], paddingBottom: space[5] },
   stack: { flex: 1, gap: space[3] },
-  summaryActions: { flexDirection: "row", gap: space[3] },
-  leagueStatus: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: space[2] },
+  bullet: {
+    borderRadius: radius.pill,
+    height: space[1],
+    marginTop: space[2],
+    width: space[1],
+  },
+  summaryAction: { flex: 1 },
+  summaryActions: { flexDirection: "row", gap: space[3], marginHorizontal: space[5] },
+  summaryItem: { alignItems: "flex-start", flexDirection: "row", gap: space[2] },
+  summaryLabel: { fontWeight: typography.weight.bold },
+  summaryList: { gap: space[2] },
+  summaryText: { flex: 1 },
   navigationButton: {
     alignItems: "center",
     borderRadius: radius.pill,

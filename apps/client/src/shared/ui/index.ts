@@ -3,6 +3,7 @@ export { Card } from "./card";
 export {
   ConfirmationDialog,
   ConfirmationDialogProvider,
+  ModalDialog,
   useConfirmationDialog,
 } from "./confirmation-dialog";
 export { InteractionBlocker } from "./interaction-blocker";

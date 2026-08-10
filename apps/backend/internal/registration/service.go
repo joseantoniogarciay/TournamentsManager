@@ -66,6 +66,7 @@ type Draft struct {
 type Repository interface {
 	CreatePending(context.Context, Input, string, []byte) (bool, error)
 	IsUsernameAvailable(context.Context, string) (bool, error)
+	SearchUsernames(context.Context, string) ([]string, error)
 	VerifyAndCreateSession(context.Context, []byte, []byte, []byte, []byte) (Session, error)
 	RotateSessionTokens(context.Context, []byte, []byte, []byte) (Session, error)
 	CreatePasswordReset(context.Context, string, []byte) (string, Locale, bool, error)
@@ -202,6 +203,11 @@ func NewService(repository Repository, mailer Mailer) Service {
 // El alta sigue siendo la autoridad para garantizar la unicidad bajo concurrencia.
 func (s Service) UsernameAvailable(ctx context.Context, username string) (bool, error) {
 	return s.repository.IsUsernameAvailable(ctx, username)
+}
+
+// SearchUsernames devuelve usernames públicos de cuentas verificadas.
+func (s Service) SearchUsernames(ctx context.Context, query string) ([]string, error) {
+	return s.repository.SearchUsernames(ctx, query)
 }
 
 // Register crea una cuenta pendiente. La respuesta no diferencia un email ya

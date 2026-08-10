@@ -126,6 +126,10 @@ func (r testRegistrationRepository) IsUsernameAvailable(context.Context, string)
 	return r.available, nil
 }
 
+func (testRegistrationRepository) SearchUsernames(context.Context, string) ([]string, error) {
+	return []string{}, nil
+}
+
 func (r testRegistrationRepository) VerifyAndCreateSession(context.Context, []byte, []byte, []byte, []byte) (registration.Session, error) {
 	return registration.Session{}, registration.ErrVerificationInvalid
 }

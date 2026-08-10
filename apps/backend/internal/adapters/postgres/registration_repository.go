@@ -51,6 +51,24 @@ func (r RegistrationRepository) IsUsernameAvailable(ctx context.Context, usernam
 	return r.queries.IsUsernameAvailable(ctx, username)
 }
 
+// SearchUsernames busca coincidencias públicas sin exponer otros datos de cuenta.
+func (r RegistrationRepository) SearchUsernames(ctx context.Context, query string) ([]string, error) {
+	rows, err := r.pool.Query(ctx, `SELECT username FROM accounts WHERE state = 'verified' AND username LIKE '%' || $1 || '%' ORDER BY username LIMIT 20`, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	usernames := []string{}
+	for rows.Next() {
+		var username string
+		if err := rows.Scan(&username); err != nil {
+			return nil, err
+		}
+		usernames = append(usernames, username)
+	}
+	return usernames, rows.Err()
+}
+
 // FindLocalAccountForLogin obtiene la credencial local y el estado de verificación por correo.
 func (r RegistrationRepository) FindLocalAccountForLogin(ctx context.Context, email string) (registration.LocalAccount, error) {
 	row, err := r.queries.FindLocalAccountForLogin(ctx, email)

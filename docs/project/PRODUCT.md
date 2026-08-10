@@ -222,10 +222,19 @@ ya jugados, pasan a `3-0` a favor del rival y la liga continúa.
 
 ## Cancelación
 
-Solo el creador puede cancelar una liga desde `publicado` o `en_curso`. No se
-exige motivo; la liga conserva sus datos y su URL pública muestra estado `cancelado`.
+Solo el creador puede cancelar una liga desde `publicado` o `en_curso`. La
+pantalla de detalle solicita confirmación explícita con el diálogo compartido
+del sistema de diseño antes de ejecutar esta acción destructiva. No se exige
+motivo; la liga conserva sus datos y su URL pública muestra estado `cancelado`.
 Las personas que la siguen verán ese estado al volver a «ligas seguidas». Este
 corte no envía email ni notificaciones push.
+
+`cancelado` es terminal en el corte actual: no admite registrar ni corregir
+resultados, ni finalizar la liga. Una futura restauración por el creador queda
+fuera del alcance presente y requerirá una decisión e implementación posteriores.
+Los lugares que ya muestran el estado —detalle y cajas de acceso a la liga—
+reflejan «Liga cancelada» usando su presentación existente; no se añade una
+etiqueta nueva.
 
 ## Visibilidad inicial
 

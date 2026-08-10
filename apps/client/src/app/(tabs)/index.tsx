@@ -9,6 +9,7 @@ import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
 import { listRecentRelatedLeagues } from "@/features/league-creation/api";
 import { LeagueCreatorChip } from "@/features/league-creation/components/league-creator-chip";
+import { useLeagueState } from "@/features/league-creation/league-store";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getLeagueStateLabel } from "@/shared/i18n/league-state";
@@ -117,25 +118,7 @@ export default function HomeScreen() {
                 <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
               </View>
             ) : (
-              recentLeagues.map((league) => (
-                <Card key={league.id}>
-                  <Pressable
-                    accessibilityLabel={t("tournaments_open_league").replace("{name}", league.name)}
-                    accessibilityRole="button"
-                    onPress={() => router.push(`/league/${league.id}` as Href)}
-                    style={styles.leagueRow}
-                  >
-                    <View style={styles.section}>
-                      <Text>{league.name}</Text>
-                      <View style={styles.leagueState}>
-                        {league.relationship === "organizer" ? <LeagueCreatorChip /> : null}
-                        <Text color="secondary">{getLeagueStateLabel(t, league.state)}</Text>
-                      </View>
-                    </View>
-                    <Text color="secondary">›</Text>
-                  </Pressable>
-                </Card>
-              ))
+              recentLeagues.map((league) => <RecentLeagueCard key={league.id} league={league} />)
             )}
           </View>
         ) : null}
@@ -143,6 +126,35 @@ export default function HomeScreen() {
         {!user && !isRestoring ? <GuestOnboarding t={t} /> : null}
       </ScrollView>
     </Screen>
+  );
+}
+
+function RecentLeagueCard({
+  league,
+}: {
+  league: Awaited<ReturnType<typeof listRecentRelatedLeagues>>[number];
+}) {
+  const t = getTranslator();
+  const state = useLeagueState(league.id, league.state);
+
+  return (
+    <Card>
+      <Pressable
+        accessibilityLabel={t("tournaments_open_league").replace("{name}", league.name)}
+        accessibilityRole="button"
+        onPress={() => router.push(`/league/${league.id}` as Href)}
+        style={styles.leagueRow}
+      >
+        <View style={styles.section}>
+          <Text>{league.name}</Text>
+          <View style={styles.leagueState}>
+            {league.relationship === "organizer" ? <LeagueCreatorChip /> : null}
+            <Text color="secondary">{getLeagueStateLabel(t, state)}</Text>
+          </View>
+        </View>
+        <Text color="secondary">›</Text>
+      </Pressable>
+    </Card>
   );
 }
 

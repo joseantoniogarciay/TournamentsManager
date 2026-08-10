@@ -82,6 +82,10 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Los formularios no muestran una acción de cancelar. La salida de la ruta se
   hace mediante el botón de atrás de la barra de navegación, que no muestra
   texto.
+- Todo popup reutiliza `ModalDialog` de `shared/ui`, la misma superficie que la
+  confirmación de cerrar sesión: blur de fondo, oscurecimiento Android, diálogo
+  centrado y cierre accesible mediante el backdrop. No se implementan `Modal`
+  ni scrims locales para un popup nuevo.
 
 ## Desarrollo en simulador con Expo Go
 

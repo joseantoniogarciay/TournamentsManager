@@ -1,5 +1,33 @@
 # Registro de aprendizaje
 
+## 2026-08-10 — Una mutación ya contiene la actualización de sus vistas
+
+Cuando el contrato devuelve la liga completa tras una mutación, repetir una
+consulta para actualizar otra pantalla desperdicia red y permite que las vistas
+diverjan. Un almacén reactivo por `leagueId` conserva esa proyección canónica y
+notifica únicamente a quienes la presentan. No sustituye una futura sincronía
+entre dispositivos: esa actualización seguirá necesitando refresh, revalidación
+o tiempo real. Véase ADR-0085.
+
+## 2026-08-10 — Un popup es una superficie compartida, no un modal local
+
+La confirmación de cerrar sesión fija la presentación de los popups: fondo con
+blur, oscurecimiento adicional en Android, diálogo centrado y cierre accesible
+desde el backdrop. `ModalDialog` conserva ese comportamiento para mensajes
+informativos de una sola acción y confirmaciones; cada pantalla aporta solo su
+contenido y sus botones. Así una corrección visual o de accesibilidad alcanza
+todas las variantes sin copiar un `Modal` ni sus capas.
+
+## 2026-08-10 — La ayuda contextual no compite con el estado de la pantalla
+
+Las reglas de clasificación se consultan bajo demanda desde la acción de
+información: antes de iniciar la liga la pantalla conserva solo el aviso de que
+la clasificación todavía no está disponible. Una vez iniciada, muestra la
+proyección y las reglas. La condición usa el estado de contrato `published`, no
+si la lista de posiciones está vacía. En la barra nativa, el símbolo sigue la
+convención de plataforma: `info` sin círculo en iOS y el icono de información
+con círculo en Android.
+
 ## 2026-08-09 — Un resumen autenticado no repite el onboarding
 
 La home cambia de trabajo al existir sesión: pasa de explicar cómo empezar a

@@ -6,6 +6,7 @@ import { Platform } from "react-native";
 
 import { FeedbackProvider } from "@/shared/feedback/feedback-provider";
 import { PendingVerificationProvider } from "@/features/registration/pending-verification";
+import { LeagueStoreProvider } from "@/features/league-creation/league-store";
 import { SessionProvider, useSession } from "@/shared/session/session-provider";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
 import { ConfirmationDialogProvider } from "@/shared/ui";
@@ -21,11 +22,13 @@ export default function RootLayout() {
       <NavigationTheme>
         <FeedbackProvider>
           <SessionProvider>
-            <PendingVerificationProvider>
-              <ConfirmationDialogProvider>
-                <RootNavigator />
-              </ConfirmationDialogProvider>
-            </PendingVerificationProvider>
+            <LeagueStoreProvider>
+              <PendingVerificationProvider>
+                <ConfirmationDialogProvider>
+                  <RootNavigator />
+                </ConfirmationDialogProvider>
+              </PendingVerificationProvider>
+            </LeagueStoreProvider>
           </SessionProvider>
         </FeedbackProvider>
       </NavigationTheme>
@@ -84,6 +87,13 @@ function RootNavigator() {
       />
       <Stack.Screen
         name="league/[id]/standings"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
+        name="league/[id]/administrators"
         options={{
           headerShown: true,
           presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
