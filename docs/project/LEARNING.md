@@ -1,5 +1,33 @@
 # Registro de aprendizaje
 
+## 2026-08-10 — Los patrones visuales repetidos necesitan una regla verificable
+
+Una ruta modal no debe recrear a ojo una `X` ni dejar su contenido a ras del
+dispositivo: en iOS reutiliza el control nativo de la barra y en web/Android el
+botón circular de 44 px con los tokens de superficie y borde. Una `Card` define
+su margen horizontal de 20 px, pero una pantalla de superficie plana no debe
+envolverse en una solo para obtenerlo: su contenedor desplazable aplica
+`paddingHorizontal: space[5]`. Si un diseño elimina la etiqueta visible de un
+campo, el placeholder y la etiqueta accesible siguen siendo textos localizados
+distintos. Estas reglas se han incorporado a la checklist obligatoria de
+`apps/client/AGENTS.md` para que una corrección puntual se convierta en una
+comprobación previa reutilizable.
+
+Un `409` solo recibe copy específico cuando el contrato de la operación cambia
+la recuperación: la autoasignación de la organizadora es uno de esos casos. La
+pantalla mantiene temporalmente ese resultado de búsqueda, a petición de
+producto, para validar que la persona recibe el banner antes de decidir filtrarlo
+preventivamente.
+
+El fallback genérico no se considera cubierto porque una pantalla llame a
+`show()` dentro de un `catch`: un host fuera del stack queda por debajo de un
+`fullScreenModal` nativo. El estado del feedback sigue siendo global, pero su
+superficie se presenta desde la `Screen` activa en una capa transparente sobre
+la escena. Así se coloca siempre tras el área segura global —también sobre una
+cabecera— y se descarta para recuperar cualquier control cubierto. La
+comprobación manual de un fallo no mapeado al terminar el loader completa la
+evidencia en la plataforma que se esté corrigiendo.
+
 ## 2026-08-10 — Una mutación ya contiene la actualización de sus vistas
 
 Cuando el contrato devuelve la liga completa tras una mutación, repetir una

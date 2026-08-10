@@ -20,6 +20,12 @@ export class UserSearchRateLimitedError extends Error {
   }
 }
 
+export class LeagueAdministratorConflictError extends Error {
+  constructor() {
+    super("Conflicto al asignar administradora de liga");
+  }
+}
+
 export async function createLeagueRequest(input: LeagueInput) {
   const response = await createLeague(input, undefined, authenticatedApiFetch);
   if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
@@ -56,6 +62,7 @@ export async function assignLeagueAdministratorRequest(leagueID: string, usernam
     undefined,
     authenticatedApiFetch,
   );
+  if (response.status === 409) throw new LeagueAdministratorConflictError();
   if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
 }
 export async function searchPublicUsernames(query: string, signal: AbortSignal) {

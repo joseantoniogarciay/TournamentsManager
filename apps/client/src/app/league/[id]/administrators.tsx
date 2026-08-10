@@ -3,10 +3,11 @@ import { SymbolView } from "expo-symbols";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet } from "react-native";
 
-import { control, space } from "@tournaments-manager/design-tokens";
+import { control, radius, space } from "@tournaments-manager/design-tokens";
 
 import {
   assignLeagueAdministratorRequest,
+  LeagueAdministratorConflictError,
   searchPublicUsernames,
   UserSearchRateLimitedError,
 } from "@/features/league-creation/api";
@@ -72,8 +73,12 @@ export default function AddLeagueAdministratorScreen() {
       show({ kind: "success", message: t("league_administrator_added") });
       close();
     } catch (error) {
-      const failure = getRequestFailure(error);
-      show({ kind: failure.kind, message: t(failure.messageKey) });
+      if (error instanceof LeagueAdministratorConflictError) {
+        show({ kind: "generic-error", message: t("league_administrator_self_assignment") });
+      } else {
+        const failure = getRequestFailure(error);
+        show({ kind: failure.kind, message: t(failure.messageKey) });
+      }
     } finally {
       setAssigning(undefined);
     }
@@ -83,7 +88,10 @@ export default function AddLeagueAdministratorScreen() {
       accessibilityLabel={t("common_close")}
       accessibilityRole="button"
       onPress={close}
-      style={styles.closeButton}
+      style={[
+        styles.closeButton,
+        { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+      ]}
     >
       {Platform.OS === "web" ? (
         <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
@@ -104,13 +112,23 @@ export default function AddLeagueAdministratorScreen() {
       <Stack.Screen
         options={{
           headerBackVisible: false,
-          headerLeft: () => closeButton,
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.surface.canvas },
           headerTintColor: colors.text.primary,
           title: t("league_add_administrator"),
         }}
-      />
+      >
+        {Platform.OS === "ios" ? (
+          <Stack.Toolbar placement="left">
+            <Stack.Toolbar.Button
+              accessibilityLabel={t("common_close")}
+              icon="xmark"
+              onPress={close}
+            />
+          </Stack.Toolbar>
+        ) : null}
+      </Stack.Screen>
+      {Platform.OS !== "ios" ? <Stack.Screen options={{ headerLeft: () => closeButton }} /> : null}
       <Screen topInset="navigation-bar">
         <ScrollView
           contentContainerStyle={styles.content}
@@ -118,11 +136,11 @@ export default function AddLeagueAdministratorScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <TextField
+            accessibilityLabel={t("league_administrator_username")}
             autoCapitalize="none"
             autoFocus
-            label={t("league_administrator_username")}
             onChangeText={(value) => setQuery(value.toLowerCase())}
-            placeholder={t("league_administrator_username")}
+            placeholder={t("league_administrator_username_placeholder")}
             value={query}
           />
           {searching ? <ActivityIndicator color={colors.text.primary} /> : null}
@@ -148,11 +166,13 @@ export default function AddLeagueAdministratorScreen() {
 const styles = StyleSheet.create({
   closeButton: {
     alignItems: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
     height: control.minHeight,
     justifyContent: "center",
     width: control.minHeight,
   },
-  content: { gap: space[3], paddingBottom: space[5] },
+  content: { gap: space[3], paddingBottom: space[5], paddingHorizontal: space[5] },
   row: {
     alignItems: "center",
     borderBottomWidth: 1,

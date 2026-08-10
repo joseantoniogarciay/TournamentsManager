@@ -1,6 +1,7 @@
 import {
   createContext,
   type PropsWithChildren,
+  type ReactElement,
   useCallback,
   useContext,
   useEffect,
@@ -11,21 +12,27 @@ import {
 import {
   AccessibilityInfo,
   Animated,
+  Modal,
   PanResponder,
   Pressable,
   StyleSheet,
   View,
 } from "react-native";
+import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { banner, motion, radius, space } from "@tournaments-manager/design-tokens";
 
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Text } from "@/shared/ui";
+import { Text } from "@/shared/ui/text";
 
 type Feedback = { message: string; kind: "network-error" | "generic-error" | "success" };
 type ActiveFeedback = Feedback & { id: number };
-type FeedbackContextValue = { show: (feedback: Feedback) => void };
+type FeedbackContextValue = {
+  banner: ReactElement | null;
+  dismiss: () => void;
+  show: (feedback: Feedback) => void;
+};
 const FeedbackContext = createContext<FeedbackContextValue | null>(null);
 
 export function FeedbackProvider({ children }: PropsWithChildren) {
@@ -143,45 +150,42 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     },
     [clearAutoDismiss, dismiss, dragY, visibility],
   );
-  const contextValue = useMemo(() => ({ show }), [show]);
-
-  return (
-    <FeedbackContext.Provider value={contextValue}>
-      <View style={styles.root}>
-        {feedback ? (
-          <Animated.View
-            {...panResponder.panHandlers}
-            style={[
-              styles.banner,
-              {
-                backgroundColor: colors.surface.default,
-                borderColor:
-                  feedback.kind === "success" ? colors.feedback.success : colors.feedback.error,
-                opacity: visibility,
-                top: insets.top + space[1],
-                transform: [
-                  {
-                    translateY: Animated.add(
-                      visibility.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [-space[3], 0],
-                      }),
-                      dragY,
-                    ),
-                  },
-                ],
-              },
-            ]}
-          >
-            <Pressable accessibilityRole="alert" onPress={() => dismiss(feedback.id)}>
-              <Text>{feedback.message}</Text>
-            </Pressable>
-          </Animated.View>
-        ) : null}
-        {children}
-      </View>
-    </FeedbackContext.Provider>
+  const bannerNode = feedback ? (
+    <Animated.View
+      {...panResponder.panHandlers}
+      style={[
+        styles.banner,
+        {
+          backgroundColor: colors.surface.default,
+          borderColor:
+            feedback.kind === "success" ? colors.feedback.success : colors.feedback.error,
+          opacity: visibility,
+          top: insets.top + space[1],
+          transform: [
+            {
+              translateY: Animated.add(
+                visibility.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-space[3], 0],
+                }),
+                dragY,
+              ),
+            },
+          ],
+        },
+      ]}
+    >
+      <Pressable accessibilityRole="alert" onPress={() => dismiss(feedback.id)}>
+        <Text>{feedback.message}</Text>
+      </Pressable>
+    </Animated.View>
+  ) : null;
+  const contextValue = useMemo(
+    () => ({ banner: bannerNode, dismiss, show }),
+    [bannerNode, dismiss, show],
   );
+
+  return <FeedbackContext.Provider value={contextValue}>{children}</FeedbackContext.Provider>;
 }
 
 export function useFeedback() {
@@ -190,8 +194,35 @@ export function useFeedback() {
   return value;
 }
 
+export function FeedbackBanner() {
+  const { banner: feedbackBanner, dismiss } = useFeedback();
+  const [isFocused, setIsFocused] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, []),
+  );
+  if (!feedbackBanner || !isFocused) return null;
+
+  return (
+    <Modal
+      animationType="none"
+      onRequestClose={() => dismiss()}
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
+      transparent
+      visible
+    >
+      <View pointerEvents="box-none" style={styles.modalHost}>
+        {feedbackBanner}
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  modalHost: { flex: 1 },
   banner: {
     borderRadius: radius.card,
     borderWidth: 1,
