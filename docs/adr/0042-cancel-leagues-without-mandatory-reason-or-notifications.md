@@ -81,6 +81,17 @@ sus datos, sigue consultable mediante enlace mostrando estado `cancelado` y los
 seguidores verán ese estado al volver a su lista. No se envían email ni push en
 el primer corte.
 
+**Aclaración registrada el 2026-08-10:** antes de ejecutar la cancelación, la
+pantalla de detalle pide una confirmación explícita mediante el diálogo
+compartido definido por el sistema de diseño. Al confirmarla, la liga pasa a
+`cancelado`, que es terminal en este corte: ya no admite registrar ni corregir
+resultados, ni finalizarse. La restauración por el creador se pospone para una
+decisión e incremento futuros; no forma parte del comportamiento actual.
+
+Las vistas que ya proyectan el estado de una liga —su detalle y las cajas desde
+las que se accede a ella— actualizan esa misma proyección a «Liga cancelada».
+No se añade una etiqueta ni una superficie de estado adicional.
+
 ## Consecuencias
 
 ### Positivas
@@ -88,15 +99,19 @@ el primer corte.
 - Cancelar no queda bloqueado por un formulario ni una entrega externa.
 - El estado final permanece visible y trazable.
 - El primer slice no necesita una plataforma de notificaciones.
+- La acción destructiva requiere una confirmación antes de cambiar el estado.
 
 ### Negativas y deuda aceptada
 
 - No hay explicación de la cancelación.
 - Los seguidores no reciben comunicación proactiva.
+- Una cancelación no se puede restaurar todavía.
 
 ## Validación
 
 - El creador cancela sin aportar texto.
+- La pantalla de detalle no ejecuta la cancelación hasta la confirmación
+  explícita de la persona creadora.
 - El enlace de una liga cancelada muestra el estado, sin habilitar cambios.
 - Las ligas seguidas muestran la cancelación al consultarse.
 - No se emite email ni push por la acción.
@@ -106,10 +121,12 @@ el primer corte.
 - Necesidad de explicar cancelaciones a grupos.
 - Necesidad de avisos urgentes o notificaciones configurables.
 - Requisitos de moderación o auditoría adicionales.
+- Restauración de una liga cancelada por su creador.
 
 ## Documentación afectada
 
 - [PRODUCT.md](../project/PRODUCT.md)
+- [DESIGN_SYSTEM.md](../engineering/DESIGN_SYSTEM.md)
 - [ROADMAP.md](../project/ROADMAP.md)
 - [LEARNING.md](../project/LEARNING.md)
 - [DECISIONS.md](../governance/DECISIONS.md)

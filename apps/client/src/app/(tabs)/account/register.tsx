@@ -19,6 +19,11 @@ import {
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { registerLocalAccountRequest } from "@/features/registration/api";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
+import {
+  clearLocalLeagueDraft,
+  getLocalLeagueDraft,
+  toLeagueInput,
+} from "@/features/league-creation/draft";
 
 export default function RegisterScreen() {
   const t = getTranslator();
@@ -57,12 +62,15 @@ export default function RegisterScreen() {
 
     setIsSubmitting(true);
     try {
+      const draft = toLeagueInput(await getLocalLeagueDraft());
       await registerLocalAccountRequest({
+        ...(draft ? { draft } : {}),
         email: email.trim(),
         locale: getCurrentLanguage(),
         password,
         username,
       });
+      if (draft) await clearLocalLeagueDraft();
       show({ kind: "success", message: t("account_registration_email_sent") });
       router.replace("/account");
     } catch (error) {

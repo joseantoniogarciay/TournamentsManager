@@ -8,18 +8,19 @@ import { radius, space } from "@tournaments-manager/design-tokens";
 import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
 import { listRecentRelatedLeagues } from "@/features/league-creation/api";
+import { LeagueCreatorChip } from "@/features/league-creation/components/league-creator-chip";
+import { useLeagueState } from "@/features/league-creation/league-store";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
+import { getLeagueStateLabel } from "@/shared/i18n/league-state";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
 import { Button, Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
-const safeAreaProbeHeight = 500;
-
 export default function HomeScreen() {
   const { colors, resolvedTheme } = usePreferences();
-  const { revision, user } = useSession();
+  const { isRestoring, revision, user } = useSession();
   const { show } = useFeedback();
   const tabContentBottomPadding = useTabContentBottomPadding();
   const t = getTranslator();
@@ -103,74 +104,89 @@ export default function HomeScreen() {
           </View>
         </Card>
 
-        {user && isLoading ? (
-          <Card>
-            <Text>{t("common_loading")}</Text>
-          </Card>
-        ) : null}
-
-        {user && !isLoading ? (
+        {user ? (
           <View style={styles.recentSection}>
             <Text style={styles.recentTitle} variant="title">
               {t("home_recent_leagues_title")}
             </Text>
-            {recentLeagues.length === 0 ? (
+            {isLoading ? (
+              <Text color="secondary" style={styles.recentEmpty}>
+                {t("common_loading")}
+              </Text>
+            ) : recentLeagues.length === 0 ? (
               <View style={styles.recentEmpty}>
                 <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
               </View>
             ) : (
-              recentLeagues.map((league) => (
-                <Card key={league.id}>
-                  <Pressable
-                    accessibilityLabel={t("tournaments_open_league").replace("{name}", league.name)}
-                    accessibilityRole="button"
-                    onPress={() => router.push(`/league/${league.id}` as Href)}
-                    style={styles.leagueRow}
-                  >
-                    <View style={styles.section}>
-                      <Text>{league.name}</Text>
-                      <Text color="secondary">
-                        {league.state === "published" ? t("league_not_started") : league.state}
-                      </Text>
-                    </View>
-                    <Text color="secondary">›</Text>
-                  </Pressable>
-                </Card>
-              ))
+              recentLeagues.map((league) => <RecentLeagueCard key={league.id} league={league} />)
             )}
           </View>
         ) : null}
 
-        <Card>
-          <View style={styles.section}>
-            <Text variant="title">{t("home_section_title")}</Text>
-            <Text color="secondary">{t("home_section_description")}</Text>
-          </View>
-        </Card>
-
-        <Card>
-          <View style={styles.steps}>
-            <Step
-              number="1"
-              title={t("home_step_1_title")}
-              description={t("home_step_1_description")}
-            />
-            <Step
-              number="2"
-              title={t("home_step_2_title")}
-              description={t("home_step_2_description")}
-            />
-            <Step
-              number="3"
-              title={t("home_step_3_title")}
-              description={t("home_step_3_description")}
-            />
-          </View>
-        </Card>
-
-        <Card style={{ height: safeAreaProbeHeight }} />
+        {!user && !isRestoring ? <GuestOnboarding t={t} /> : null}
       </ScrollView>
     </Screen>
+  );
+}
+
+function RecentLeagueCard({
+  league,
+}: {
+  league: Awaited<ReturnType<typeof listRecentRelatedLeagues>>[number];
+}) {
+  const t = getTranslator();
+  const state = useLeagueState(league.id, league.state);
+
+  return (
+    <Card>
+      <Pressable
+        accessibilityLabel={t("tournaments_open_league").replace("{name}", league.name)}
+        accessibilityRole="button"
+        onPress={() => router.push(`/league/${league.id}` as Href)}
+        style={styles.leagueRow}
+      >
+        <View style={styles.section}>
+          <Text>{league.name}</Text>
+          <View style={styles.leagueState}>
+            {league.relationship === "organizer" ? <LeagueCreatorChip /> : null}
+            <Text color="secondary">{getLeagueStateLabel(t, state)}</Text>
+          </View>
+        </View>
+        <Text color="secondary">›</Text>
+      </Pressable>
+    </Card>
+  );
+}
+
+function GuestOnboarding({ t }: { t: ReturnType<typeof getTranslator> }) {
+  return (
+    <>
+      <Card>
+        <View style={styles.section}>
+          <Text variant="title">{t("home_section_title")}</Text>
+          <Text color="secondary">{t("home_section_description")}</Text>
+        </View>
+      </Card>
+      <Card>
+        <View style={styles.steps}>
+          <Step
+            description={t("home_step_1_description")}
+            number="1"
+            title={t("home_step_1_title")}
+          />
+          <Step
+            description={t("home_step_2_description")}
+            number="2"
+            title={t("home_step_2_title")}
+          />
+          <Step
+            description={t("home_step_3_description")}
+            number="3"
+            title={t("home_step_3_title")}
+          />
+        </View>
+      </Card>
+    </>
   );
 }
 
@@ -202,13 +218,14 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { gap: space[5] },
   hero: { gap: space[4] },
+  leagueState: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   leagueRow: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
     minHeight: 44,
   },
-  recentEmpty: { alignItems: "center", paddingHorizontal: space[5] },
+  recentEmpty: { alignItems: "center", paddingHorizontal: space[5], textAlign: "center" },
   recentSection: { gap: space[5] },
   recentTitle: { marginHorizontal: space[5] },
   section: { gap: space[2] },

@@ -28,6 +28,7 @@ var uuidPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 const (
 	usernameAvailabilityLimit  = 30
 	usernameAvailabilityWindow = time.Minute
+	userSearchLimit            = 60
 )
 
 // NewHandler construye las rutas de infraestructura disponibles antes de los
@@ -45,12 +46,14 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 		accessService = access.NewService(repository)
 	}
 	availabilityLimiter := newRequestLimiter(usernameAvailabilityLimit, usernameAvailabilityWindow)
+	userSearchLimiter := newRequestLimiter(userSearchLimit, usernameAvailabilityWindow)
 	localLoginLimiter := newLoginLimiter(10, time.Minute)
 	cookieCSRF := func(next http.Handler) http.Handler {
 		return requireCookieCSRF(corsAllowedOrigins, next)
 	}
 	mux.HandleFunc("GET /healthz", healthz)
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
+	mux.HandleFunc("GET /v1/users", searchUsers(registrationService, userSearchLimiter))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService))
 	mux.HandleFunc("POST /v1/sessions", createLocalSession(registrationService, localLoginLimiter, cookies))
 	if federatedService != nil {
@@ -82,7 +85,15 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 	if len(creationServices) > 0 {
 		creationService := creationServices[0]
 		mux.Handle("POST /v1/leagues", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createLeague(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/teams", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(addLeagueTeam(creationService)))))
+		mux.Handle("DELETE /v1/leagues/{leagueId}/teams/{teamId}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeLeagueTeam(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(startLeague(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/cancel", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(cancelLeague(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/complete", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(completeLeague(creationService)))))
+		mux.Handle("PUT /v1/leagues/{leagueId}/matches/{matchId}/result", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(recordMatchResult(creationService)))))
+		mux.Handle("PUT /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(assignLeagueAdministrator(creationService)))))
+		mux.Handle("GET /v1/leagues/{leagueId}/administrators", requireSession(authenticator)(http.HandlerFunc(listLeagueAdministrators(creationService))))
+		mux.Handle("DELETE /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeLeagueAdministrator(creationService)))))
 		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
 	}
 	withCookieName := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -184,6 +195,13 @@ type leagueInput struct {
 type startLeagueInput struct {
 	RoundRobinLegs int `json:"roundRobinLegs"`
 }
+type teamInput struct {
+	Name string `json:"name"`
+}
+type matchResultInput struct {
+	HomeScore *int `json:"homeScore"`
+	AwayScore *int `json:"awayScore"`
+}
 
 func createLeague(service leagues.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -213,6 +231,77 @@ func createLeague(service leagues.CreationService) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+func addLeagueTeam(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID := r.PathValue("leagueId")
+		var body teamInput
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || decodeBody(r, &body) != nil {
+			writeValidationProblem(w)
+			return
+		}
+		team, err := service.AddTeam(r.Context(), accountID, leagueID, leagues.TeamInput{Name: body.Name})
+		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
+			writeValidationProblem(w)
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes modificar los equipos de esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueTeamConflict) {
+			writeProblem(w, http.StatusConflict, "La liga no admite ese equipo")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo añadir el equipo")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(team)
+	}
+}
+func removeLeagueTeam(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID, teamID := r.PathValue("leagueId"), r.PathValue("teamId")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(teamID) {
+			writeValidationProblem(w)
+			return
+		}
+		err := service.RemoveTeam(r.Context(), accountID, leagueID, teamID)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes modificar los equipos de esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga o equipo no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueTeamConflict) {
+			writeProblem(w, http.StatusConflict, "La liga debe conservar al menos dos equipos sin empezar")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo eliminar el equipo")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 func getPublicLeague(service leagues.CreationService) http.HandlerFunc {
@@ -271,6 +360,229 @@ func startLeague(service leagues.CreationService) http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+
+func cancelLeague(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		leagueID := r.PathValue("leagueId")
+		if !uuidPattern.MatchString(leagueID) {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.Cancel(r.Context(), accountID, leagueID)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes cancelar esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueCancellationConflict) {
+			writeProblem(w, http.StatusConflict, "La liga no se puede cancelar desde su estado actual")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo cancelar la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+
+func completeLeague(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID := r.PathValue("leagueId")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.Complete(r.Context(), accountID, leagueID)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes finalizar esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueCompletionConflict) {
+			writeProblem(w, http.StatusConflict, "La liga aún no se puede finalizar")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo finalizar la liga")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+
+func recordMatchResult(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID, matchID := r.PathValue("leagueId"), r.PathValue("matchId")
+		var body matchResultInput
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(matchID) || decodeBody(r, &body) != nil || body.HomeScore == nil || body.AwayScore == nil {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.RecordResult(r.Context(), accountID, leagueID, matchID, leagues.MatchResultInput{HomeScore: *body.HomeScore, AwayScore: *body.AwayScore})
+		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
+			writeValidationProblem(w)
+			return
+		}
+		if errors.Is(err, leagues.ErrMatchResultForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes registrar resultados en esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga o partido no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrMatchResultConflict) {
+			writeProblem(w, http.StatusConflict, "La liga no está en curso")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo guardar el resultado")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
+	}
+}
+
+func assignLeagueAdministrator(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID, username := r.PathValue("leagueId"), r.PathValue("username")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || !usernamePattern.MatchString(username) {
+			writeValidationProblem(w)
+			return
+		}
+		err := service.AssignAdministrator(r.Context(), accountID, leagueID, username)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes asignar administradoras en esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga o cuenta no disponible")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueAdministratorConflict) {
+			writeProblem(w, http.StatusConflict, "La organizadora no puede ser administradora delegada")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo asignar la administradora")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func listLeagueAdministrators(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID := r.PathValue("leagueId")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) {
+			writeValidationProblem(w)
+			return
+		}
+		usernames, err := service.ListAdministrators(r.Context(), accountID, leagueID)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes consultar administradoras en esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudieron consultar las administradoras")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(struct {
+			Usernames []string `json:"usernames"`
+		}{Usernames: usernames})
+	}
+}
+
+func removeLeagueAdministrator(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID, username := r.PathValue("leagueId"), r.PathValue("username")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || !usernamePattern.MatchString(username) {
+			writeValidationProblem(w)
+			return
+		}
+		err := service.RemoveAdministrator(r.Context(), accountID, leagueID, username)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "No puedes retirar administradoras en esta liga")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "No se pudo retirar la administradora")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func searchUsers(service registration.Service, limiter *requestLimiter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query().Get("query")
+		if !usernamePattern.MatchString(query) {
+			writeValidationProblem(w)
+			return
+		}
+		if allowed, retryAfter := limiter.allow(clientIP(r)); !allowed {
+			w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+			writeProblem(w, http.StatusTooManyRequests, "Demasiadas búsquedas")
+			return
+		}
+		usernames, err := service.SearchUsernames(r.Context(), query)
+		if err != nil {
+			writeProblem(w, http.StatusServiceUnavailable, "No se pudieron buscar usuarios")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"usernames": usernames})
 	}
 }
 
@@ -418,11 +730,12 @@ func unavailableFederatedLogin(w http.ResponseWriter, _ *http.Request) {
 }
 
 type googleSessionRequest struct {
-	ChallengeID      string `json:"challengeId"`
-	IDToken          string `json:"idToken"`
-	SessionTransport string `json:"sessionTransport"`
-	Username         string `json:"username"`
-	Locale           string `json:"locale"`
+	ChallengeID      string              `json:"challengeId"`
+	IDToken          string              `json:"idToken"`
+	SessionTransport string              `json:"sessionTransport"`
+	Username         string              `json:"username"`
+	Locale           string              `json:"locale"`
+	Draft            *registration.Draft `json:"draft"`
 }
 
 func createGoogleChallenge(service federated.Service) http.HandlerFunc {
@@ -441,13 +754,13 @@ func createGoogleChallenge(service federated.Service) http.HandlerFunc {
 func createGoogleSession(service federated.Service, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body googleSessionRequest
-		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") {
+		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") || (body.Draft != nil && (body.Username == "" || !validRegistrationDraft(body.Draft))) {
 			writeValidationProblem(w)
 			return
 		}
 		var registrationInput *federated.Registration
 		if body.Username != "" {
-			registrationInput = &federated.Registration{Username: body.Username, Locale: body.Locale}
+			registrationInput = &federated.Registration{Username: body.Username, Locale: body.Locale, Draft: toFederatedDraft(body.Draft)}
 		}
 		established, err := service.Authenticate(r.Context(), body.ChallengeID, body.IDToken, registrationInput)
 		if errors.Is(err, federated.ErrRegistration) {
@@ -468,6 +781,13 @@ func createGoogleSession(service federated.Service, cookies sessionCookieSetting
 		}
 		writeFederatedSession(w, body.SessionTransport, established, cookies)
 	}
+}
+
+func toFederatedDraft(draft *registration.Draft) *federated.Draft {
+	if draft == nil {
+		return nil
+	}
+	return &federated.Draft{Name: strings.TrimSpace(draft.Name), Teams: draft.Teams}
 }
 
 func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession, cookies sessionCookieSettings) {
@@ -750,10 +1070,11 @@ func healthz(writer http.ResponseWriter, _ *http.Request) {
 }
 
 type registerRequest struct {
-	Email    string `json:"email"`
-	Locale   string `json:"locale"`
-	Password string `json:"password"`
-	Username string `json:"username"`
+	Email    string       `json:"email"`
+	Locale   string       `json:"locale"`
+	Password string       `json:"password"`
+	Username string       `json:"username"`
+	Draft    *leagueInput `json:"draft"`
 }
 
 type loginRequest struct {
@@ -813,7 +1134,15 @@ func register(service registration.Service) http.HandlerFunc {
 			Password: body.Password,
 			Username: body.Username,
 		})
-		if !validRegistration(input) {
+		if body.Draft != nil {
+			teams := make([]string, len(body.Draft.Teams))
+			for index, team := range body.Draft.Teams {
+				teams[index] = team.Name
+			}
+			input.Draft = &registration.Draft{Name: body.Draft.Name, Teams: teams}
+		}
+		input = registration.NormalizeInput(input)
+		if !validRegistration(input) || !validRegistrationDraft(input.Draft) {
 			writeValidationProblem(writer)
 			return
 		}
@@ -823,6 +1152,24 @@ func register(service registration.Service) http.HandlerFunc {
 		}
 		writer.WriteHeader(http.StatusAccepted)
 	}
+}
+
+func validRegistrationDraft(draft *registration.Draft) bool {
+	if draft == nil {
+		return true
+	}
+	if len(strings.TrimSpace(draft.Name)) == 0 || len(draft.Name) > 140 || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
+		return false
+	}
+	seen := map[string]bool{}
+	for _, team := range draft.Teams {
+		name := strings.TrimSpace(team)
+		if name == "" || len(name) > 100 || seen[strings.ToLower(name)] {
+			return false
+		}
+		seen[strings.ToLower(name)] = true
+	}
+	return true
 }
 
 func validRegistration(input registration.Input) bool {

@@ -115,7 +115,11 @@ workspace y formatea JavaScript, TypeScript y sus variantes JSX al guardar.
   diff resultante.
 - pnpm exige que cada versión nueva, directa o transitiva, tenga al menos siete
   días (10 080 minutos). Si faltan metadatos temporales o no hay una versión
-  madura compatible, falla en lugar de instalar una versión más reciente.
+  madura compatible, falla en lugar de instalar una versión más reciente. La
+  única excepción es una corrección de compatibilidad solicitada por Expo CLI:
+  ADR-0077 registra versiones exactas en `minimumReleaseAgeExclude`, ejecuta
+  `expo install --fix`, fija los directos actualizados y exige una build nativa
+  limpia. No se usan comodines de paquetes Expo ni se omite la revisión del diff.
 - El linker aislado exige que cada workspace declare sus dependencias directas.
 - TypeScript 6.0.3 usa `strict`, `noUncheckedIndexedAccess`,
   `exactOptionalPropertyTypes`, `noImplicitOverride` y `noEmit`.

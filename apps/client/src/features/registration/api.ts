@@ -26,8 +26,12 @@ export async function registerLocalAccountRequest(input: RegisterRequest) {
   if (response.status !== 202) throw new APIUnexpectedResponseError(response.status);
 }
 
-export async function confirmRegistration(token: string, sessionTransport: "bearer" | "cookie") {
-  const response = await verifyRegistration({ token, sessionTransport }, undefined, apiFetch);
+export async function confirmRegistration(
+  token: string,
+  sessionTransport: "bearer" | "cookie",
+  signal?: AbortSignal,
+) {
+  const response = await verifyRegistration({ token, sessionTransport }, { signal }, apiFetch);
   if (response.status === 409) throw new RegistrationVerificationError("already-used");
   if (response.status === 410) throw new RegistrationVerificationError("expired");
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);

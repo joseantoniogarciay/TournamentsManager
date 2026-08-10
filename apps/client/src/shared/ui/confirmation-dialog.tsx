@@ -7,8 +7,10 @@ import {
   useEffect,
   useMemo,
   useState,
+  type ReactNode,
 } from "react";
-import { BackHandler, Platform, Pressable, StyleSheet, View } from "react-native";
+import { useFocusEffect } from "expo-router";
+import { BackHandler, Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
 
@@ -22,13 +24,24 @@ type Props = {
   title: string;
   description: string;
   acceptLabel: string;
+  acceptVariant?: "primary" | "destructive";
   cancelLabel: string;
   onAccept: () => void;
   onCancel: () => void;
 };
 
+type ModalDialogProps = {
+  visible: boolean;
+  dismissAccessibilityLabel: string;
+  onDismiss: () => void;
+  children: ReactNode;
+};
+
 type ConfirmationDialogContextValue = {
   confirm: (dialog: Omit<Props, "visible">) => void;
+  dialog: Omit<Props, "visible"> | null;
+  accept: () => void;
+  cancel: () => void;
 };
 
 const ConfirmationDialogContext = createContext<ConfirmationDialogContextValue | null>(null);
@@ -37,8 +50,6 @@ export function ConfirmationDialogProvider({ children }: PropsWithChildren) {
   const [dialog, setDialog] = useState<Omit<Props, "visible"> | null>(null);
   const confirm = useCallback((nextDialog: Omit<Props, "visible">) => setDialog(nextDialog), []);
   const dismiss = useCallback(() => setDialog(null), []);
-  const confirmContextValue = useMemo(() => ({ confirm }), [confirm]);
-
   const cancel = useCallback(() => {
     const onCancel = dialog?.onCancel;
     dismiss();
@@ -50,21 +61,14 @@ export function ConfirmationDialogProvider({ children }: PropsWithChildren) {
     dismiss();
     onAccept?.();
   }, [dialog, dismiss]);
+  const confirmContextValue = useMemo(
+    () => ({ accept, cancel, confirm, dialog }),
+    [accept, cancel, confirm, dialog],
+  );
 
   return (
     <ConfirmationDialogContext.Provider value={confirmContextValue}>
-      <View style={styles.host}>
-        <View
-          accessibilityElementsHidden={dialog !== null}
-          importantForAccessibility={dialog ? "no-hide-descendants" : "auto"}
-          style={styles.content}
-        >
-          {children}
-        </View>
-        {dialog ? (
-          <ConfirmationDialog {...dialog} onAccept={accept} onCancel={cancel} visible />
-        ) : null}
-      </View>
+      {children}
     </ConfirmationDialogContext.Provider>
   );
 }
@@ -73,7 +77,24 @@ export function useConfirmationDialog() {
   const value = useContext(ConfirmationDialogContext);
   if (!value)
     throw new Error("useConfirmationDialog debe usarse dentro de ConfirmationDialogProvider");
-  return value;
+  return { confirm: value.confirm };
+}
+
+export function ConfirmationDialogHost() {
+  const value = useContext(ConfirmationDialogContext);
+  const [isFocused, setIsFocused] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, []),
+  );
+  if (!value)
+    throw new Error("ConfirmationDialogHost debe usarse dentro de ConfirmationDialogProvider");
+  if (!isFocused || !value.dialog) return null;
+  return (
+    <ConfirmationDialog {...value.dialog} onAccept={value.accept} onCancel={value.cancel} visible />
+  );
 }
 
 export function ConfirmationDialog({
@@ -81,12 +102,11 @@ export function ConfirmationDialog({
   title,
   description,
   acceptLabel,
+  acceptVariant = "primary",
   cancelLabel,
   onAccept,
   onCancel,
 }: Props) {
-  const { colors } = usePreferences();
-
   useEffect(() => {
     if (!visible || Platform.OS === "web") return;
 
@@ -97,52 +117,67 @@ export function ConfirmationDialog({
     return () => subscription.remove();
   }, [onCancel, visible]);
 
+  return (
+    <ModalDialog dismissAccessibilityLabel={cancelLabel} onDismiss={onCancel} visible={visible}>
+      <View style={styles.copy}>
+        <Text variant="title">{title}</Text>
+        <Text color="secondary">{description}</Text>
+      </View>
+      <View style={styles.actions}>
+        <Button label={acceptLabel} onPress={onAccept} variant={acceptVariant} />
+        <Button label={cancelLabel} onPress={onCancel} variant="secondary" />
+      </View>
+    </ModalDialog>
+  );
+}
+
+export function ModalDialog({
+  visible,
+  dismissAccessibilityLabel,
+  onDismiss,
+  children,
+}: ModalDialogProps) {
+  const { colors } = usePreferences();
+
   if (!visible) return null;
 
   return (
-    <View accessibilityViewIsModal style={styles.backdrop}>
-      <BlurView
-        blurMethod="dimezisBlurViewSdk31Plus"
-        intensity={45}
-        pointerEvents="none"
-        style={styles.scrim}
-        tint="dark"
-      />
-      {Platform.OS === "android" ? (
-        <View
+    <Modal animationType="fade" onRequestClose={onDismiss} transparent visible={visible}>
+      <View accessibilityViewIsModal style={styles.backdrop}>
+        <BlurView
+          blurMethod="dimezisBlurViewSdk31Plus"
+          intensity={45}
           pointerEvents="none"
-          style={[styles.androidDimmingLayer, { backgroundColor: colors.surface.canvas }]}
+          style={styles.scrim}
+          tint="dark"
         />
-      ) : null}
-      <Pressable
-        accessibilityLabel={cancelLabel}
-        accessibilityRole="button"
-        onPress={onCancel}
-        style={styles.dismissArea}
-      />
-      <View
-        style={[
-          styles.dialog,
-          { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-        ]}
-      >
-        <View style={styles.copy}>
-          <Text variant="title">{title}</Text>
-          <Text color="secondary">{description}</Text>
-        </View>
-        <View style={styles.actions}>
-          <Button label={acceptLabel} onPress={onAccept} />
-          <Button label={cancelLabel} onPress={onCancel} variant="secondary" />
+        {Platform.OS === "android" ? (
+          <View
+            pointerEvents="none"
+            style={[styles.androidDimmingLayer, { backgroundColor: colors.surface.canvas }]}
+          />
+        ) : null}
+        <Pressable
+          accessibilityLabel={dismissAccessibilityLabel}
+          accessibilityRole="button"
+          onPress={onDismiss}
+          style={styles.dismissArea}
+        />
+        <View
+          style={[
+            styles.dialog,
+            { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+          ]}
+        >
+          {children}
         </View>
       </View>
-    </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   actions: { gap: space[3] },
-  content: { flex: 1 },
-  host: { flex: 1 },
   backdrop: {
     ...StyleSheet.absoluteFill,
     alignItems: "center",

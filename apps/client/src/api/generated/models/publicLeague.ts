@@ -5,9 +5,11 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
+import type { LeagueStanding } from "./leagueStanding.js";
 import type { LeagueTeam } from "./leagueTeam.js";
 import type { Match } from "./match.js";
 import type { PublicLeagueFormat } from "./publicLeagueFormat.js";
+import type { PublicLeagueRoundRobinLegs } from "./publicLeagueRoundRobinLegs.js";
 import type { PublicLeagueSport } from "./publicLeagueSport.js";
 import type { PublicLeagueState } from "./publicLeagueState.js";
 import type { Uuid } from "./uuid.js";
@@ -18,6 +20,12 @@ export interface PublicLeague {
   sport: PublicLeagueSport;
   format: PublicLeagueFormat;
   state: PublicLeagueState;
+  /** Vueltas fijadas al iniciar; la clasificación usa este valor para aplicar desempates. */
+  roundRobinLegs: PublicLeagueRoundRobinLegs;
   teams: LeagueTeam[];
   matches: Match[];
+  /** Proyección calculada por el backend; vacía antes de iniciar o si la liga se cancela. */
+  standings: LeagueStanding[];
+  /** Equipos de posición 1 conservados al finalizar. Está vacío hasta el cierre explícito y admite más de uno cuando hay co-campeonato. */
+  championTeamIds: Uuid[];
 }

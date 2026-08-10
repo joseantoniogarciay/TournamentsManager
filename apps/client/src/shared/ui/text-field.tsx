@@ -9,7 +9,7 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { Text } from "./text";
 
 type Props = TextInputProps & {
-  label: string;
+  label?: string;
   error?: string;
   feedback?: { message: string; tone: "help" | "success" };
   passwordVisibility?: { isVisible: boolean; label: string; onPress: () => void };
@@ -21,6 +21,7 @@ export function TextField({
   label,
   error,
   feedback,
+  accessibilityLabel,
   accessibilityHint,
   passwordVisibility,
   validationSubmitted = false,
@@ -36,6 +37,7 @@ export function TextField({
   const visibleError =
     validationTrigger && !validationSubmitted && !hasTriggeredValidation ? undefined : error;
   const message = visibleError ?? feedback?.message;
+  const resolvedAccessibilityLabel = accessibilityLabel ?? label ?? inputProps.placeholder;
   const messageColor = visibleError
     ? "error"
     : feedback?.tone === "success"
@@ -43,7 +45,7 @@ export function TextField({
       : "secondary";
   return (
     <View style={styles.wrapper}>
-      <Text variant="bodyLarge">{label}</Text>
+      {label ? <Text variant="bodyLarge">{label}</Text> : null}
       <View
         style={[
           styles.input,
@@ -58,7 +60,11 @@ export function TextField({
       >
         <TextInput
           accessibilityHint={accessibilityHint}
-          accessibilityLabel={message ? `${label}. ${message}` : label}
+          accessibilityLabel={
+            message && resolvedAccessibilityLabel
+              ? `${resolvedAccessibilityLabel}. ${message}`
+              : resolvedAccessibilityLabel
+          }
           onBlur={(event) => {
             setIsFocused(false);
             if (validationTrigger === "blur") setHasTriggeredValidation(true);

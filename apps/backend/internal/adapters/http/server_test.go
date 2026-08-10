@@ -64,6 +64,64 @@ func (r testLeagueRepository) Follow(_ context.Context, _ string, _ string) (boo
 
 func (r testLeagueRepository) Unfollow(context.Context, string, string) error { return nil }
 
+type testCreationRepository struct {
+	administrators    []string
+	administratorsErr error
+	cancelled         leagues.League
+	cancelErr         error
+	team              leagues.Team
+	teamErr           error
+	removeErr         error
+	result            leagues.League
+	resultErr         error
+	completed         leagues.League
+	completeErr       error
+}
+
+func (testCreationRepository) Create(context.Context, string, leagues.CreateInput) (leagues.League, error) {
+	return leagues.League{}, nil
+}
+
+func (r testCreationRepository) AddTeam(context.Context, string, string, leagues.TeamInput) (leagues.Team, error) {
+	return r.team, r.teamErr
+}
+
+func (r testCreationRepository) RemoveTeam(context.Context, string, string, string) error {
+	return r.removeErr
+}
+
+func (testCreationRepository) Start(context.Context, string, string, leagues.StartInput) (leagues.League, error) {
+	return leagues.League{}, nil
+}
+
+func (r testCreationRepository) Cancel(context.Context, string, string) (leagues.League, error) {
+	return r.cancelled, r.cancelErr
+}
+
+func (testCreationRepository) AssignAdministrator(context.Context, string, string, string) error {
+	return nil
+}
+
+func (r testCreationRepository) ListAdministrators(context.Context, string, string) ([]string, error) {
+	return r.administrators, r.administratorsErr
+}
+
+func (r testCreationRepository) RemoveAdministrator(context.Context, string, string, string) error {
+	return r.removeErr
+}
+
+func (r testCreationRepository) RecordResult(context.Context, string, string, string, leagues.MatchResultInput) (leagues.League, error) {
+	return r.result, r.resultErr
+}
+
+func (r testCreationRepository) Complete(context.Context, string, string) (leagues.League, error) {
+	return r.completed, r.completeErr
+}
+
+func (testCreationRepository) GetPublic(context.Context, string) (leagues.League, error) {
+	return leagues.League{}, nil
+}
+
 type testRegistrationRepository struct {
 	available    bool
 	loginAccount registration.LocalAccount
@@ -76,6 +134,10 @@ func (r testRegistrationRepository) CreatePending(context.Context, registration.
 
 func (r testRegistrationRepository) IsUsernameAvailable(context.Context, string) (bool, error) {
 	return r.available, nil
+}
+
+func (testRegistrationRepository) SearchUsernames(context.Context, string) ([]string, error) {
+	return []string{}, nil
 }
 
 func (r testRegistrationRepository) VerifyAndCreateSession(context.Context, []byte, []byte, []byte, []byte) (registration.Session, error) {
@@ -126,6 +188,207 @@ func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), `"delivery":"bearer"`) || !strings.Contains(recorder.Body.String(), `"sessionToken"`) || !strings.Contains(recorder.Body.String(), `"refreshToken"`) {
 		t.Errorf("body = %s, want bearer session tokens", recorder.Body.String())
+	}
+}
+
+func TestCancelLeagueAllowsBearerSession(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	creation := leagues.NewCreationService(testCreationRepository{cancelled: leagues.League{ID: leagueID, Name: "Liga", State: "cancelled", Teams: []leagues.Team{}, Matches: []leagues.Match{}}})
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, creation)
+	request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/cancel", nil)
+	request.Header.Set("Authorization", "Bearer session-token")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body = %s", recorder.Code, http.StatusOK, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"state":"cancelled"`) {
+		t.Errorf("body = %s, want cancelled league", recorder.Body.String())
+	}
+}
+
+func TestCancelLeagueMapsBusinessErrors(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	for name, test := range map[string]struct {
+		err    error
+		status int
+	}{
+		"not organizer": {err: leagues.ErrLeagueForbidden, status: http.StatusForbidden},
+		"wrong state":   {err: leagues.ErrLeagueCancellationConflict, status: http.StatusConflict},
+		"not found":     {err: leagues.ErrLeagueNotFound, status: http.StatusNotFound},
+	} {
+		t.Run(name, func(t *testing.T) {
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{cancelErr: test.err}))
+			request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/cancel", nil)
+			request.Header.Set("Authorization", "Bearer session-token")
+			recorder := httptest.NewRecorder()
+
+			handler.ServeHTTP(recorder, request)
+
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
+	}
+}
+
+func TestCompleteLeagueMapsBusinessErrors(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	for name, test := range map[string]struct {
+		err    error
+		status int
+	}{
+		"not organizer":   {err: leagues.ErrLeagueForbidden, status: http.StatusForbidden},
+		"pending matches": {err: leagues.ErrLeagueCompletionConflict, status: http.StatusConflict},
+		"not found":       {err: leagues.ErrLeagueNotFound, status: http.StatusNotFound},
+	} {
+		t.Run(name, func(t *testing.T) {
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{completeErr: test.err}))
+			request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/complete", nil)
+			request.Header.Set("Authorization", "Bearer session-token")
+			recorder := httptest.NewRecorder()
+			handler.ServeHTTP(recorder, request)
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
+	}
+}
+
+func TestAddLeagueTeamReturnsTheCreatedTeam(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	team := leagues.Team{ID: "019abcde-3333-7333-8333-333333333333", Name: "Azules", Position: 3}
+	creation := leagues.NewCreationService(testCreationRepository{team: team})
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, creation)
+	request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/teams", strings.NewReader(`{"name":"Azules"}`))
+	request.Header.Set("Authorization", "Bearer session-token")
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want %d; body = %s", recorder.Code, http.StatusCreated, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"name":"Azules"`) || !strings.Contains(recorder.Body.String(), `"id":"019abcde-3333-7333-8333-333333333333"`) {
+		t.Errorf("body = %s, want created team response", recorder.Body.String())
+	}
+}
+
+func TestAddLeagueTeamMapsBusinessErrors(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	for name, test := range map[string]struct {
+		err    error
+		status int
+	}{
+		"not organizer": {err: leagues.ErrLeagueForbidden, status: http.StatusForbidden},
+		"wrong state":   {err: leagues.ErrLeagueTeamConflict, status: http.StatusConflict},
+		"not found":     {err: leagues.ErrLeagueNotFound, status: http.StatusNotFound},
+	} {
+		t.Run(name, func(t *testing.T) {
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{teamErr: test.err}))
+			request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/teams", strings.NewReader(`{"name":"Azules"}`))
+			request.Header.Set("Authorization", "Bearer session-token")
+			request.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+
+			handler.ServeHTTP(recorder, request)
+
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
+	}
+}
+
+func TestRemoveLeagueTeamMapsBusinessErrors(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	const teamID = "019abcde-3333-7333-8333-333333333333"
+	for name, test := range map[string]struct {
+		err    error
+		status int
+	}{
+		"not organizer": {err: leagues.ErrLeagueForbidden, status: http.StatusForbidden},
+		"minimum teams": {err: leagues.ErrLeagueTeamConflict, status: http.StatusConflict},
+		"not found":     {err: leagues.ErrLeagueNotFound, status: http.StatusNotFound},
+	} {
+		t.Run(name, func(t *testing.T) {
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{removeErr: test.err}))
+			request := httptest.NewRequest(http.MethodDelete, "/v1/leagues/"+leagueID+"/teams/"+teamID, nil)
+			request.Header.Set("Authorization", "Bearer session-token")
+			recorder := httptest.NewRecorder()
+
+			handler.ServeHTTP(recorder, request)
+
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
+	}
+}
+
+func TestRecordMatchResultUsesTheContractRoundField(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	const matchID = "019abcde-3333-7333-8333-333333333333"
+	creation := leagues.NewCreationService(testCreationRepository{result: leagues.League{ID: leagueID, State: "in_progress", Teams: []leagues.Team{}, Matches: []leagues.Match{{ID: matchID, RoundNumber: 1, State: "completed"}}}})
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, creation)
+	request := httptest.NewRequest(http.MethodPut, "/v1/leagues/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(`{"homeScore":2,"awayScore":1}`))
+	request.Header.Set("Authorization", "Bearer session-token")
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body = %s", recorder.Code, http.StatusOK, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"round":1`) || strings.Contains(recorder.Body.String(), `"roundNumber"`) {
+		t.Errorf("body = %s, want the OpenAPI field round", recorder.Body.String())
+	}
+}
+
+func TestRecordMatchResultMapsBusinessErrors(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	const matchID = "019abcde-3333-7333-8333-333333333333"
+	for name, test := range map[string]struct {
+		err    error
+		status int
+	}{
+		"not administrator": {err: leagues.ErrMatchResultForbidden, status: http.StatusForbidden},
+		"wrong state":       {err: leagues.ErrMatchResultConflict, status: http.StatusConflict},
+		"not found":         {err: leagues.ErrLeagueNotFound, status: http.StatusNotFound},
+	} {
+		t.Run(name, func(t *testing.T) {
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{resultErr: test.err}))
+			request := httptest.NewRequest(http.MethodPut, "/v1/leagues/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(`{"homeScore":2,"awayScore":1}`))
+			request.Header.Set("Authorization", "Bearer session-token")
+			request.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+
+			handler.ServeHTTP(recorder, request)
+
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
 	}
 }
 func (r testRegistrationRepository) RenewLoginVerification(context.Context, string, []byte) (string, registration.Locale, error) {

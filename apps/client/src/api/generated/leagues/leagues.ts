@@ -9,12 +9,17 @@ import type {
   AccountLeague,
   AccountLeaguePage,
   AuthenticationProblemResponse,
+  LeagueAdministrators,
   LeagueInput,
+  LeagueTeam,
   ListCurrentAccountLeaguesParams,
+  MatchResultInput,
   Problem,
   PublicLeague,
   PublishedLeague,
   StartLeagueRequest,
+  TeamInput,
+  Username,
   Uuid,
   ValidationProblemResponse,
 } from "../models";
@@ -400,4 +405,529 @@ export const startLeague = async (
 
   const data: startLeagueResponse["data"] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as startLeagueResponse;
+};
+
+export type addLeagueTeamResponse201 = {
+  data: LeagueTeam;
+  status: 201;
+};
+
+export type addLeagueTeamResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type addLeagueTeamResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type addLeagueTeamResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type addLeagueTeamResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type addLeagueTeamResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type addLeagueTeamResponseSuccess = addLeagueTeamResponse201 & {
+  headers: Headers;
+};
+export type addLeagueTeamResponseError = (
+  | addLeagueTeamResponse400
+  | addLeagueTeamResponse401
+  | addLeagueTeamResponse403
+  | addLeagueTeamResponse404
+  | addLeagueTeamResponse409
+) & {
+  headers: Headers;
+};
+
+export type addLeagueTeamResponse = addLeagueTeamResponseSuccess | addLeagueTeamResponseError;
+
+export const getAddLeagueTeamUrl = (leagueId: Uuid) => {
+  return `/leagues/${leagueId}/teams`;
+};
+
+/**
+ * Exige sesión de la organizadora. Solo se admite mientras la liga esté publicada; al iniciarla, la composición queda congelada.
+ * @summary Añade un equipo a una liga sin empezar
+ */
+export const addLeagueTeam = async (
+  leagueId: Uuid,
+  teamInput: TeamInput,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<addLeagueTeamResponse> => {
+  const res = await (fetchFn ?? fetch)(getAddLeagueTeamUrl(leagueId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(teamInput),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: addLeagueTeamResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as addLeagueTeamResponse;
+};
+
+export type removeLeagueTeamResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type removeLeagueTeamResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type removeLeagueTeamResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type removeLeagueTeamResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type removeLeagueTeamResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type removeLeagueTeamResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type removeLeagueTeamResponseSuccess = removeLeagueTeamResponse204 & {
+  headers: Headers;
+};
+export type removeLeagueTeamResponseError = (
+  | removeLeagueTeamResponse400
+  | removeLeagueTeamResponse401
+  | removeLeagueTeamResponse403
+  | removeLeagueTeamResponse404
+  | removeLeagueTeamResponse409
+) & {
+  headers: Headers;
+};
+
+export type removeLeagueTeamResponse =
+  removeLeagueTeamResponseSuccess | removeLeagueTeamResponseError;
+
+export const getRemoveLeagueTeamUrl = (leagueId: Uuid, teamId: Uuid) => {
+  return `/leagues/${leagueId}/teams/${teamId}`;
+};
+
+/**
+ * Exige sesión de la organizadora. Solo se admite mientras la liga esté publicada y conserva al menos dos equipos; para descartar la liga debe usarse su cancelación explícita.
+ * @summary Elimina un equipo de una liga sin empezar
+ */
+export const removeLeagueTeam = async (
+  leagueId: Uuid,
+  teamId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<removeLeagueTeamResponse> => {
+  const res = await (fetchFn ?? fetch)(getRemoveLeagueTeamUrl(leagueId, teamId), {
+    ...options,
+    method: "DELETE",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: removeLeagueTeamResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as removeLeagueTeamResponse;
+};
+
+export type cancelLeagueResponse200 = {
+  data: PublicLeague;
+  status: 200;
+};
+
+export type cancelLeagueResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type cancelLeagueResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type cancelLeagueResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type cancelLeagueResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type cancelLeagueResponseSuccess = cancelLeagueResponse200 & {
+  headers: Headers;
+};
+export type cancelLeagueResponseError = (
+  | cancelLeagueResponse401
+  | cancelLeagueResponse403
+  | cancelLeagueResponse404
+  | cancelLeagueResponse409
+) & {
+  headers: Headers;
+};
+
+export type cancelLeagueResponse = cancelLeagueResponseSuccess | cancelLeagueResponseError;
+
+export const getCancelLeagueUrl = (leagueId: Uuid) => {
+  return `/leagues/${leagueId}/cancel`;
+};
+
+/**
+ * Exige sesión válida de la organizadora. No solicita motivo, conserva la liga y la mantiene disponible para consulta pública en estado cancelled.
+ * @summary Cancela una liga publicada o en curso
+ */
+export const cancelLeague = async (
+  leagueId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<cancelLeagueResponse> => {
+  const res = await (fetchFn ?? fetch)(getCancelLeagueUrl(leagueId), {
+    ...options,
+    method: "POST",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: cancelLeagueResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as cancelLeagueResponse;
+};
+
+export type completeLeagueResponse200 = {
+  data: PublicLeague;
+  status: 200;
+};
+
+export type completeLeagueResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type completeLeagueResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type completeLeagueResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type completeLeagueResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type completeLeagueResponseSuccess = completeLeagueResponse200 & {
+  headers: Headers;
+};
+export type completeLeagueResponseError = (
+  | completeLeagueResponse401
+  | completeLeagueResponse403
+  | completeLeagueResponse404
+  | completeLeagueResponse409
+) & {
+  headers: Headers;
+};
+
+export type completeLeagueResponse = completeLeagueResponseSuccess | completeLeagueResponseError;
+
+export const getCompleteLeagueUrl = (leagueId: Uuid) => {
+  return `/leagues/${leagueId}/complete`;
+};
+
+/**
+ * Exige sesión válida de la organizadora y una liga en curso sin partidos pendientes. El backend calcula y conserva todos los co-campeones a partir de la clasificación; el cliente no envía una ganadora.
+ * @summary Finaliza explícitamente una liga con todos los resultados
+ */
+export const completeLeague = async (
+  leagueId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<completeLeagueResponse> => {
+  const res = await (fetchFn ?? fetch)(getCompleteLeagueUrl(leagueId), {
+    ...options,
+    method: "POST",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: completeLeagueResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as completeLeagueResponse;
+};
+
+export type recordMatchResultResponse200 = {
+  data: PublicLeague;
+  status: 200;
+};
+
+export type recordMatchResultResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type recordMatchResultResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type recordMatchResultResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type recordMatchResultResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type recordMatchResultResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type recordMatchResultResponseSuccess = recordMatchResultResponse200 & {
+  headers: Headers;
+};
+export type recordMatchResultResponseError = (
+  | recordMatchResultResponse400
+  | recordMatchResultResponse401
+  | recordMatchResultResponse403
+  | recordMatchResultResponse404
+  | recordMatchResultResponse409
+) & {
+  headers: Headers;
+};
+
+export type recordMatchResultResponse =
+  recordMatchResultResponseSuccess | recordMatchResultResponseError;
+
+export const getRecordMatchResultUrl = (leagueId: Uuid, matchId: Uuid) => {
+  return `/leagues/${leagueId}/matches/${matchId}/result`;
+};
+
+/**
+ * Exige sesión válida de la organizadora o una administradora delegada y una liga en curso. El resultado se aplica inmediatamente; una corrección conserva su historial interno de valores y autora.
+ * @summary Registra o corrige el resultado de un partido
+ */
+export const recordMatchResult = async (
+  leagueId: Uuid,
+  matchId: Uuid,
+  matchResultInput: MatchResultInput,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<recordMatchResultResponse> => {
+  const res = await (fetchFn ?? fetch)(getRecordMatchResultUrl(leagueId, matchId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(matchResultInput),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: recordMatchResultResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as recordMatchResultResponse;
+};
+
+export type listLeagueAdministratorsResponse200 = {
+  data: LeagueAdministrators;
+  status: 200;
+};
+
+export type listLeagueAdministratorsResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type listLeagueAdministratorsResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type listLeagueAdministratorsResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type listLeagueAdministratorsResponseSuccess = listLeagueAdministratorsResponse200 & {
+  headers: Headers;
+};
+export type listLeagueAdministratorsResponseError = (
+  | listLeagueAdministratorsResponse401
+  | listLeagueAdministratorsResponse403
+  | listLeagueAdministratorsResponse404
+) & {
+  headers: Headers;
+};
+
+export type listLeagueAdministratorsResponse =
+  listLeagueAdministratorsResponseSuccess | listLeagueAdministratorsResponseError;
+
+export const getListLeagueAdministratorsUrl = (leagueId: Uuid) => {
+  return `/leagues/${leagueId}/administrators`;
+};
+
+/**
+ * Exige sesión de la organizadora de la liga.
+ * @summary Lista las administradoras delegadas de una liga
+ */
+export const listLeagueAdministrators = async (
+  leagueId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<listLeagueAdministratorsResponse> => {
+  const res = await (fetchFn ?? fetch)(getListLeagueAdministratorsUrl(leagueId), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listLeagueAdministratorsResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as listLeagueAdministratorsResponse;
+};
+
+export type assignLeagueAdministratorResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type assignLeagueAdministratorResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type assignLeagueAdministratorResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type assignLeagueAdministratorResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type assignLeagueAdministratorResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type assignLeagueAdministratorResponseSuccess = assignLeagueAdministratorResponse204 & {
+  headers: Headers;
+};
+export type assignLeagueAdministratorResponseError = (
+  | assignLeagueAdministratorResponse401
+  | assignLeagueAdministratorResponse403
+  | assignLeagueAdministratorResponse404
+  | assignLeagueAdministratorResponse409
+) & {
+  headers: Headers;
+};
+
+export type assignLeagueAdministratorResponse =
+  assignLeagueAdministratorResponseSuccess | assignLeagueAdministratorResponseError;
+
+export const getAssignLeagueAdministratorUrl = (leagueId: Uuid, username: Username) => {
+  return `/leagues/${leagueId}/administrators/${username}`;
+};
+
+/**
+ * Exige sesión de la organizadora. La asignación es inmediata, idempotente y no envía una invitación ni una notificación.
+ * @summary Asigna directamente una administradora por username
+ */
+export const assignLeagueAdministrator = async (
+  leagueId: Uuid,
+  username: Username,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<assignLeagueAdministratorResponse> => {
+  const res = await (fetchFn ?? fetch)(getAssignLeagueAdministratorUrl(leagueId, username), {
+    ...options,
+    method: "PUT",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: assignLeagueAdministratorResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as assignLeagueAdministratorResponse;
+};
+
+export type removeLeagueAdministratorResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type removeLeagueAdministratorResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type removeLeagueAdministratorResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type removeLeagueAdministratorResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type removeLeagueAdministratorResponseSuccess = removeLeagueAdministratorResponse204 & {
+  headers: Headers;
+};
+export type removeLeagueAdministratorResponseError = (
+  | removeLeagueAdministratorResponse401
+  | removeLeagueAdministratorResponse403
+  | removeLeagueAdministratorResponse404
+) & {
+  headers: Headers;
+};
+
+export type removeLeagueAdministratorResponse =
+  removeLeagueAdministratorResponseSuccess | removeLeagueAdministratorResponseError;
+
+export const getRemoveLeagueAdministratorUrl = (leagueId: Uuid, username: Username) => {
+  return `/leagues/${leagueId}/administrators/${username}`;
+};
+
+/**
+ * Exige sesión de la organizadora. La retirada es idempotente.
+ * @summary Retira una administradora delegada por username
+ */
+export const removeLeagueAdministrator = async (
+  leagueId: Uuid,
+  username: Username,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<removeLeagueAdministratorResponse> => {
+  const res = await (fetchFn ?? fetch)(getRemoveLeagueAdministratorUrl(leagueId, username), {
+    ...options,
+    method: "DELETE",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: removeLeagueAdministratorResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as removeLeagueAdministratorResponse;
 };

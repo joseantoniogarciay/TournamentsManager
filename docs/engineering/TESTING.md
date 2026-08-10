@@ -53,11 +53,15 @@ aislada ni una pirámide rígida.
 
 ## Evidencia de integración actual
 
-La suite PostgreSQL ejecutada en CI cubre solo las transacciones de mayor riesgo
-del vertical slice actual: creación e inicio de una liga, restablecimiento de
-contraseña (consumo único, revocación de sesiones y nueva sesión) y cambio de
-contraseña o vinculación de Google desde opciones de cuenta con ticket de
-reautenticación de un solo uso.
+La suite PostgreSQL ejecutada en CI cubre las transacciones de mayor riesgo del
+vertical slice actual: creación, inicio y cancelación de una liga; registro y
+corrección de resultados con historial; clasificación calculada desde los
+marcadores persistidos; autorización de las mutaciones; y cierre atómico con
+rechazo de partidos pendientes, co-campeones conservados y solicitudes de
+cierre concurrentes. También cubre
+restablecimiento de contraseña (consumo único, revocación de sesiones y nueva
+sesión) y cambio de contraseña o vinculación de Google desde opciones de cuenta
+con ticket de reautenticación de un solo uso.
 Las validaciones, formatos y respuestas HTTP que no dependen de semántica real
 de PostgreSQL permanecen en pruebas unitarias o de handler.
 

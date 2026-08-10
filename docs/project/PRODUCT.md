@@ -50,8 +50,9 @@ autenticada.
 ### Cuenta pendiente de verificación
 
 Es un registro temporal tras un alta local con email, contraseña y `username`.
-No recibe una sesión de producto ni permisos de negocio. El borrador permanece
-solo en el almacenamiento local de la persona y no se asocia a la cuenta.
+No recibe una sesión de producto ni permisos de negocio. Un borrador completo
+permanece local hasta enviar el alta; entonces crea una liga publicada asociada a
+la cuenta pendiente, que no puede administrar ni listar hasta verificarla.
 
 ### Usuario autenticado y verificado
 
@@ -91,8 +92,8 @@ del navegador. Véase [ADR-0057](../adr/0057-define-contextual-home-and-tourname
 ### Organizador
 
 Es inicialmente el usuario autenticado que creó el torneo, con permisos sobre él
-y capacidad de crear sus equipos. Conserva la propiedad y es el único que puede
-asignar o retirar administradores delegados.
+y capacidad de crear sus equipos y gestionar resultados. Conserva la propiedad y
+es el único que puede asignar o retirar administradores delegados.
 
 ### Administrador delegado
 
@@ -120,8 +121,8 @@ equipos ni a la competición en el primer corte.
 
 1. La persona proporciona correo electrónico, contraseña y `username` público.
 2. Acepta las condiciones necesarias.
-3. Se crea una cuenta pendiente de verificación; el borrador, si existe,
-   permanece local en el dispositivo.
+3. Se crea una cuenta pendiente de verificación y, si el borrador es completo,
+   se transfiere junto al alta y queda asociado a esa cuenta.
 4. Verifica la propiedad del correo mediante el canal enviado.
 5. La cuenta se activa, puede iniciar sesión y puede publicar el torneo.
 
@@ -130,9 +131,10 @@ invalida su enlace anterior y envía otro correo de verificación; no crea sesi�
 hasta que se complete esa verificación.
 
 Un borrador local permite empezar sin sesión, pero no es requisito para crear la
-cuenta. No se sincroniza entre dispositivos y se descarta solo después de crear
-la liga correctamente. Una cuenta pendiente no puede publicar ni realizar
-acciones protegidas. Véase [ADR-0069](../adr/0069-keep-tournament-drafts-local-only.md).
+cuenta. Si se transfiere al alta, se recupera tras verificar o iniciar sesión y
+se descarta localmente después de la aceptación del registro. Una cuenta pendiente
+no puede publicar ni realizar acciones protegidas. Véase
+[ADR-0078](../adr/0078-transfer-local-drafts-with-registration.md).
 
 ### Login
 
@@ -176,6 +178,11 @@ y operación:
 5. una persona inicia sesión con Google y recibe la misma clase de sesión propia
    que con contraseña.
 
+El corte siguiente implementa el registro y la corrección inmediata de
+marcadores por administradores delegados en ligas en curso. La clasificación se
+calcula en backend y se expone como una proyección de lectura; la retirada de
+equipos conserva su entrega posterior.
+
 El alcance está aceptado en [ADR-0043](../adr/0043-deliver-publish-and-read-league-first-backend-increment.md).
 El Gate 0B está cerrado: el formato, los datos mínimos, el ciclo de vida, la
 visibilidad, los participantes, la administración, los resultados, las bajas, la
@@ -187,30 +194,47 @@ no bloquean el primer vertical slice.
 Las [ADR-0032](../adr/0032-define-minimum-football-league-data-and-lifecycle.md)
 y [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md) definen
 la estructura mínima de una liga: nombre, fútbol, formato liga, organizador,
-estado, equipos y partidos generados al iniciar. La configuración inicial es una
-vuelta con puntuación 3-1-0; no incluye fechas, horas, marcadores especiales ni
-clasificación.
+estado, equipos y partidos generados al iniciar. La configuración inicial permite
+una o dos vueltas con puntuación 3-1-0; no incluye fechas, horas ni marcadores
+especiales. Tras iniciarla, el backend calcula la clasificación: en dos vueltas
+prioriza la mini-clasificación entre empatados y en una, diferencia de goles y
+goles a favor generales; una igualdad que persiste comparte posición. La app
+solo presenta esta proyección (ADR-0081).
 
 El ciclo persistido es `publicado → en_curso → finalizado`, con `cancelado` como
 estado terminal desde `publicado` o `en_curso`. El borrador se prepara localmente
 o queda asociado temporalmente a una cuenta pendiente; se descarta y no forma
 parte de este ciclo.
 
+Cuando todos los partidos están resueltos, solo la organizadora puede finalizar
+explícitamente la liga. El backend conserva todos los equipos de la posición 1
+como co-campeones y la app muestra el resultado final antes de llevar a la
+clasificación. Una liga finalizada ya no admite marcadores ni correcciones.
+
 Una liga visible es consultable sin sesión por su ID público y el creador puede modificar sus equipos y
 datos estructurales. En interfaz, `publicado` se muestra como «Sin empezar».
 Al iniciarla el creador elige una o dos vueltas, se validan los datos, se generan
 una sola vez los emparejamientos y se congelan equipos y reglas. Solo entonces los
-administradores pueden registrar o corregir resultados. El creador solo puede
+organizador y los administradores delegados pueden registrar o corregir resultados. El creador solo puede
 finalizarla cuando todos sus partidos tienen resultado. Si un equipo abandona en
 `en_curso`, solo el creador puede declararlo: todos sus partidos, pendientes o
 ya jugados, pasan a `3-0` a favor del rival y la liga continúa.
 
 ## Cancelación
 
-Solo el creador puede cancelar una liga desde `publicado` o `en_curso`. No se
-exige motivo; la liga conserva sus datos y su URL pública muestra estado `cancelado`.
+Solo el creador puede cancelar una liga desde `publicado` o `en_curso`. La
+pantalla de detalle solicita confirmación explícita con el diálogo compartido
+del sistema de diseño antes de ejecutar esta acción destructiva. No se exige
+motivo; la liga conserva sus datos y su URL pública muestra estado `cancelado`.
 Las personas que la siguen verán ese estado al volver a «ligas seguidas». Este
 corte no envía email ni notificaciones push.
+
+`cancelado` es terminal en el corte actual: no admite registrar ni corregir
+resultados, ni finalizar la liga. Una futura restauración por el creador queda
+fuera del alcance presente y requerirá una decisión e implementación posteriores.
+Los lugares que ya muestran el estado —detalle y cajas de acceso a la liga—
+reflejan «Liga cancelada» usando su presentación existente; no se añade una
+etiqueta nueva.
 
 ## Visibilidad inicial
 

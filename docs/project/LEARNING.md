@@ -1,5 +1,90 @@
 # Registro de aprendizaje
 
+## 2026-08-10 — Los patrones visuales repetidos necesitan una regla verificable
+
+Una ruta modal no debe recrear a ojo una `X` ni dejar su contenido a ras del
+dispositivo: en iOS reutiliza el control nativo de la barra y en web/Android el
+botón circular de 44 px con los tokens de superficie y borde. Una `Card` define
+su margen horizontal de 20 px, pero una pantalla de superficie plana no debe
+envolverse en una solo para obtenerlo: su contenedor desplazable aplica
+`paddingHorizontal: space[5]`. Si un diseño elimina la etiqueta visible de un
+campo, el placeholder y la etiqueta accesible siguen siendo textos localizados
+distintos. Estas reglas se han incorporado a la checklist obligatoria de
+`apps/client/AGENTS.md` para que una corrección puntual se convierta en una
+comprobación previa reutilizable.
+
+Un `409` solo recibe copy específico cuando el contrato de la operación cambia
+la recuperación: la autoasignación de la organizadora es uno de esos casos. La
+pantalla mantiene temporalmente ese resultado de búsqueda, a petición de
+producto, para validar que la persona recibe el banner antes de decidir filtrarlo
+preventivamente.
+
+El fallback genérico no se considera cubierto porque una pantalla llame a
+`show()` dentro de un `catch`: un host fuera del stack queda por debajo de un
+`fullScreenModal` nativo. El estado del feedback sigue siendo global, pero su
+superficie se presenta desde la `Screen` activa en una capa transparente sobre
+la escena. Así se coloca siempre tras el área segura global —también sobre una
+cabecera— y se descarta para recuperar cualquier control cubierto. La
+comprobación manual de un fallo no mapeado al terminar el loader completa la
+evidencia en la plataforma que se esté corrigiendo.
+
+## 2026-08-10 — Una mutación ya contiene la actualización de sus vistas
+
+Cuando el contrato devuelve la liga completa tras una mutación, repetir una
+consulta para actualizar otra pantalla desperdicia red y permite que las vistas
+diverjan. Un almacén reactivo por `leagueId` conserva esa proyección canónica y
+notifica únicamente a quienes la presentan. No sustituye una futura sincronía
+entre dispositivos: esa actualización seguirá necesitando refresh, revalidación
+o tiempo real. Véase ADR-0085.
+
+## 2026-08-10 — Un popup es una superficie compartida, no un modal local
+
+La confirmación de cerrar sesión fija la presentación de los popups: fondo con
+blur, oscurecimiento adicional en Android, diálogo centrado y cierre accesible
+desde el backdrop. `ModalDialog` conserva ese comportamiento para mensajes
+informativos de una sola acción y confirmaciones; cada pantalla aporta solo su
+contenido y sus botones. Así una corrección visual o de accesibilidad alcanza
+todas las variantes sin copiar un `Modal` ni sus capas.
+
+## 2026-08-10 — La ayuda contextual no compite con el estado de la pantalla
+
+Las reglas de clasificación se consultan bajo demanda desde la acción de
+información: antes de iniciar la liga la pantalla conserva solo el aviso de que
+la clasificación todavía no está disponible. Una vez iniciada, muestra la
+proyección y las reglas. La condición usa el estado de contrato `published`, no
+si la lista de posiciones está vacía. En la barra nativa, el símbolo sigue la
+convención de plataforma: `info` sin círculo en iOS y el icono de información
+con círculo en Android.
+
+## 2026-08-09 — Un resumen autenticado no repite el onboarding
+
+La home cambia de trabajo al existir sesión: pasa de explicar cómo empezar a
+resumir los torneos de la cuenta. Mantener las cards introductorias después de
+autenticarse diluye la actividad reciente y repite información que ya no ayuda.
+La biblioteca conserva su acción de creación como botón flotante sobre la
+botonera; su espacio se reserva en el scroll para mantener accesible el último
+torneo. La creación se presenta como modal a pantalla completa en apps y como
+página directa en web; su barra ofrece una salida explícita, mientras el
+formulario no expone detalles internos sobre cómo persiste el borrador.
+Cuando hace falta autenticarse para completar la creación, Cuenta se apila como
+otra modal del flujo y, tras iniciar sesión, se vuelve a Crear liga en vez de
+cambiar de tab.
+
+## 2026-08-09 — Administrar y crear son relaciones distintas
+
+La colección «Administro» agrupa tanto al creador como a una cuenta delegada.
+La UI no debe inferir la propiedad desde esa pestaña: usa la relación explícita
+`organizer` para identificar al creador y mantiene el estado de la liga en un
+único helper localizado, evitando que una misma transición se describa de forma
+distinta según la pantalla.
+
+## 2026-08-09 — La cuenta crea la frontera remota del borrador
+
+Un borrador puede ser local antes de que exista identidad y transferirse de forma
+atómica al crear una cuenta. La verificación no crea la liga: habilita la sesión
+y la consulta autenticada. Si el borrador ya es una liga válida, persiste como
+`published`, sin crear un estado temporal adicional. Véanse ADR-0078 y ADR-0079.
+
 ## 2026-08-08 — Paridad útil no significa llevar Air a producción
 
 Un Dockerfile multi-stage puede compartir la resolución de módulos y producir
@@ -10,6 +95,18 @@ real entre API, PostgreSQL y Mailpit, pero Air, bind mounts y el compilador no
 son parte del artefacto que se ejecutará fuera de desarrollo. Separar ambos
 targets evita tanto la divergencia completa como copiar herramientas de desarrollo
 en producción. Véase ADR-0076.
+
+## 2026-08-09 — La maduración de dependencias necesita una salida de compatibilidad acotada
+
+Una edad mínima reduce exposición para actualizaciones ordinarias, pero no debe
+mantener una matriz de runtime que su propio proveedor declara incompatible. La
+salida segura no es excluir una familia completa de paquetes: una excepción
+exacta y versionada para el conjunto solicitado por Expo mantiene trazabilidad,
+permite reconstruir el binario nativo y deja el resto de la política intacto.
+La build limpia es imprescindible: typecheck y lockfile no prueban la
+compatibilidad entre JavaScript y los componentes nativos montados por iOS.
+
+Véase ADR-0077.
 
 ## 2026-08-04 — El lockfile reproduce; la maduración reduce exposición futura
 
@@ -110,13 +207,13 @@ El material nativo de `BlurView` ya aporta una tinta visual. Superponer además
 el lienzo del tema al 68 % lo hacía casi opaco: se perdía el desenfoque y el
 color de fondo dominaba la pantalla. Además, un `Modal` de React Native vive en
 otra ventana y su `BlurView` no puede muestrear los píxeles de la ruta previa.
-El host de confirmaciones se monta en el layout raíz, como hermano posterior del
-árbol de navegación: cubre tabs y áreas seguras, y comparte la jerarquía visual
-de toda la aplicación. En un scrim de pantalla completa, el blur oscuro clásico
-de iOS es más predecible que los materiales dinámicos: estos últimos incorporan
-una tinta del sistema que puede dominar la superficie. Android conserva una
-atenuación neutra y leve como respaldo. Así el contexto se percibe sin competir
-con el diálogo.
+El estado de confirmaciones se comparte, pero su host se monta en la `Screen`
+activa: así el `Modal` pertenece a la ruta presentada y no queda detrás de un
+`fullScreenModal` ni de la tab bar. En un scrim de pantalla completa, el blur
+oscuro clásico de iOS es más predecible que los materiales dinámicos: estos
+últimos incorporan una tinta del sistema que puede dominar la superficie.
+Android conserva una atenuación neutra y leve como respaldo. Así el contexto se
+percibe sin competir con el diálogo.
 
 La separación de un diálogo no debe depender de que un tema tenga menos
 contraste. Un borde con el token semántico `border.default` conserva la misma
@@ -1539,3 +1636,245 @@ límite sin crear una segunda sesión ni un estado de interfaz global.
   compartida, porque el estado solo coordina el primer render de esta pantalla.
 - **Regla reutilizable:** un control cuyo valor inicial depende de varias
   respuestas no se muestra hasta tener todos los datos que definen esa decisión.
+
+### 2026-08-09 — Las transiciones del ciclo se serializan sobre la entidad
+
+- **Aprendido:** dos acciones válidas por separado, como iniciar y cancelar una
+  liga, pueden competir sobre el mismo estado si se ejecutan al mismo tiempo.
+- **Evidencia:** el adaptador PostgreSQL bloquea la fila de `leagues` con `FOR
+UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
+  y solo después actualiza a `in_progress` o `cancelled`.
+- **Coste aceptado:** una transición concurrente espera brevemente el bloqueo;
+  es menor que introducir colas, eventos o control de versiones optimista en
+  este primer ciclo.
+- **Regla reutilizable:** una transición exclusiva de una entidad se autoriza y
+  valida dentro de la transacción que modifica su estado.
+
+### 2026-08-09 — El último deeplink reemplaza la intención pendiente
+
+- **Aprendido:** una ruta de confirmación no puede conservar un token previo
+  cuando recibe un enlace nuevo; de hacerlo, puede confirmar o mostrar el
+  resultado de una intención que la persona ya sustituyó.
+- **Evidencia:** la confirmación conserva el intento activo con un
+  `AbortController`, cancela el transporte anterior al recibir otro token y
+  solo permite que el intento vigente cambie sesión, feedback o navegación.
+- **Coste aceptado:** se mantiene un estado local mínimo de coordinación en la
+  ruta, sin persistir secretos ni crear un store global adicional.
+- **Regla reutilizable:** en una ruta que recibe acciones de un solo uso por
+  deeplink, el último enlace es la autoridad y las cancelaciones intencionadas
+  no producen feedback.
+
+### 2026-08-09 — Un estado de contrato no es copy de interfaz
+
+- **Aprendido:** los valores de estado que devuelve la API son identificadores
+  estables para el código, no textos que deba leer una persona.
+- **Evidencia:** una traducción compartida presenta los cuatro estados de liga
+  en la home, la biblioteca y el detalle, evitando que una de esas vistas
+  exponga `in_progress`.
+- **Regla reutilizable:** toda enumeración del contrato que llegue a una UI se
+  traduce mediante una clave semántica compartida antes de renderizarse.
+
+### 2026-08-09 — La corrección rápida necesita una huella mínima
+
+- **Aprendido:** aplicar marcadores de inmediato no exige una capa de eventos o
+  aprobación, pero sí conservar quién reemplazó qué para poder explicar un
+  cambio.
+- **Evidencia:** la transacción bloquea liga y partido, actualiza el marcador y
+  añade una fila con el valor previo, el nuevo, la administradora y el instante.
+- **Coste aceptado:** el historial permanece interno; no se adelantan una UI de
+  restauración ni reglas de disputa.
+- **Regla reutilizable:** para una mutación corregible, una tabla de cambios
+  acotada suele ser suficiente antes de introducir event sourcing.
+
+### 2026-08-09 — El detalle conserva la salida y separa la edición del resumen
+
+- **Aprendido:** una ruta profunda necesita una salida explícita incluso cuando
+  se abre sin historial; la cabecera puede volver a la ruta previa y usar la
+  home como fallback seguro.
+- **Evidencia:** el detalle de liga se presenta como modal en apps y página en
+  web, con un título truncado a dos líneas y acciones agrupadas en el menú
+  nativo de la barra. Cada partido muestra primero equipos y marcador; los
+  campos de edición y su acción quedan en un bloque separado.
+- **Coste aceptado:** se añade un menú de cabecera adaptado a plataforma, sin
+  introducir una librería de menús ni duplicar la lógica de acciones.
+- **Regla reutilizable:** en una vista de gestión, separar lectura, entrada y
+  confirmación reduce el error de interacción sin crear nuevos estados de
+  producto.
+
+### 2026-08-09 — La jornada es contexto persistente de una lista de partidos
+
+- **Aprendido:** repetir la jornada dentro de cada partido desperdicia espacio
+  y se pierde el contexto al desplazarse por una lista larga.
+- **Evidencia:** el detalle agrupa los partidos por jornada y usa cabeceras de
+  sección persistentes; la jornada actual permanece visible hasta que la
+  siguiente toma su lugar.
+- **Coste aceptado:** la vista construye secciones locales a partir de los
+  partidos ya recibidos, sin solicitar una nueva proyección de API.
+- **Regla reutilizable:** cuando una colección tiene grupos secuenciales, una
+  cabecera sticky conserva el contexto con menos ruido que duplicar su etiqueta
+  en cada fila.
+
+### 2026-08-09 — Una mutación densa se edita fuera de la tarjeta de resumen
+
+- **Aprendido:** la tarjeta de un partido debe permitir escanear el cruce y su
+  marcador; los campos solo son necesarios durante la acción de registrar o
+  corregir el resultado.
+- **Evidencia:** el detalle abre un popup con los dos marcadores y bloquea esa
+  interacción mientras se guarda. Al recibir la proyección actualizada, cierra
+  el popup y sustituye la tarjeta sin navegación adicional.
+- **Coste aceptado:** el estado del popup y el marcador en edición es local a la
+  ruta, sin introducir una store ni una capa de formularios nueva.
+- **Regla reutilizable:** separar lectura de edición mejora la densidad de una
+  colección y reduce las acciones accidentales en móvil.
+
+### 2026-08-09 — El nombre JSON forma parte del contrato, no de la estructura interna
+
+- **Aprendido:** un campo correctamente leído y almacenado puede seguir siendo
+  invisible para el cliente si el serializador usa un nombre distinto al de
+  OpenAPI.
+- **Evidencia:** la jornada se persistía como `round_number`, pero la respuesta
+  emitía `roundNumber` mientras el contrato declaraba `round`; el cliente
+  generado recibía por tanto `undefined`.
+- **Coste aceptado:** una prueba HTTP adicional verifica el cuerpo JSON de una
+  mutación de resultado, además de las pruebas del dominio y persistencia.
+- **Regla reutilizable:** las pruebas de borde HTTP deben afirmar los nombres y
+  la forma del contrato público, no solo que las estructuras internas contengan
+  los valores esperados.
+
+### 2026-08-09 — La propiedad conserva las capacidades operativas delegables
+
+- **Aprendido:** delegar una tarea no debe impedir que la persona propietaria
+  pueda realizarla; hacerlo fuerza una asignación artificial incluso cuando
+  opera una liga pequeña por sí misma.
+- **Evidencia:** la autorización de resultados acepta la organizadora o una
+  administradora delegada, mientras que una cuenta ajena sigue siendo rechazada.
+- **Coste aceptado:** la comprobación consulta ambas relaciones ya existentes,
+  sin crear un rol adicional ni duplicar a la organizadora en la tabla de
+  delegaciones.
+- **Regla reutilizable:** al introducir delegación directa, conserva de forma
+  explícita el permiso en la propiedad salvo que una decisión establezca una
+  separación de deberes deliberada.
+
+### 2026-08-09 — La composición se modifica antes de generar el calendario
+
+- **Aprendido:** añadir un inscrito no debe exigir recrear una liga mientras la
+  competición todavía no ha empezado.
+- **Evidencia:** la nueva operación añade un único equipo, solo para la
+  organizadora y únicamente en `published`; el servidor bloquea la liga antes
+  de calcular la siguiente posición y rechaza duplicados, más de 64 equipos o
+  cualquier estado posterior.
+- **Coste aceptado:** se incorpora una mutación específica y un popup local en
+  la vista de equipos. La eliminación conserva al menos dos equipos; no se
+  implementa edición de la composición en curso ni regeneración de partidos.
+- **Regla reutilizable:** cuando una transición genera derivados persistidos,
+  concentra el último cambio estructural justo antes de esa transición y hazlo
+  cumplir también en el servidor.
+
+### 2026-08-09 — Una clasificación es una proyección, no un formulario
+
+- **Aprendido:** puntos, posiciones y futuras victorias de torneo son derivados
+  de resultados persistidos; una interfaz solo puede mostrarlos, nunca
+  declararlos.
+- **Evidencia:** el caso de uso calcula la tabla tras leer o mutar una liga y el
+  contrato entrega filas con estadísticas y posición. La pantalla no contiene
+  un comparador ni suma puntos; explica las reglas configuradas. Las pruebas
+  cubren grupos empatados de dos, tres y cuatro equipos.
+- **Coste aceptado:** se mantiene una función de dominio con pruebas para una y
+  dos vueltas, en vez de guardar posiciones que deberían reconciliarse tras una
+  corrección de marcador. Antes de valorar materializarla se medirá el caso de
+  64 equipos a dos vueltas y 4.032 partidos, tanto al leer como al corregir un
+  marcador.
+- **Regla reutilizable:** cuando una lectura afectará a logros, historial o
+  perfil, deriva su valor de la fuente de verdad del backend antes de presentar
+  cualquier métrica al cliente.
+
+### 2026-08-09 — Un límite de dominio necesita feedback antes del rechazo
+
+- **Aprendido:** el servidor mantiene el máximo de 64 equipos, pero la persona
+  necesita conocer el motivo antes de intentar una operación que será rechazada.
+- **Evidencia:** el mismo límite compartido impide añadir un campo al borrador o
+  abrir el diálogo de una liga publicada y muestra un banner localizado.
+- **Coste aceptado:** el cliente anticipa el límite visible, sin sustituir la
+  comprobación transaccional del backend ante cambios simultáneos.
+- **Regla reutilizable:** replica en la interfaz una restricción estable para
+  orientar la acción, pero conserva siempre la validación definitiva en el
+  servidor.
+
+### 2026-08-09 — El cierre deportivo debe ser atómico y explícito
+
+- **Aprendido:** que el último marcador esté registrado no basta para cerrar una
+  liga: la organizadora conserva una revisión final y el servidor debe volver a
+  comprobar el estado bajo el mismo bloqueo que persiste el resultado oficial.
+- **Evidencia:** `POST /leagues/{leagueId}/complete` rechaza pendientes y
+  transiciones inválidas; calcula y guarda todas las posiciones 1 en la misma
+  transacción antes de fijar `completed`.
+- **Regla reutilizable:** cuando una transición congela derivados de negocio,
+  no los calcules fuera de la transacción ni aceptes que el cliente los envíe.
+
+### 2026-08-09 — Dos peticiones simultáneas no son dos transiciones válidas
+
+- **Aprendido:** repetir una orden de cierre por un doble toque o reintento de
+  red no debe duplicar la transición ni sus derivados oficiales.
+- **Evidencia:** la integración lanza dos cierres a la vez: el bloqueo de fila
+  permite que uno complete la liga y obliga al otro a releer `completed` y
+  devolver conflicto. La tabla de campeones queda con una sola fila para una
+  liga con ganadora única.
+- **Regla reutilizable:** protege las transiciones de estado con un bloqueo de
+  la fuente de verdad, vuelve a validar dentro de la transacción y prueba el
+  resultado de peticiones competidoras contra una base real.
+
+### 2026-08-09 — Un conflicto conocido debe recuperar el estado, no parecer un fallo
+
+- **Aprendido:** un `409` de cierre simultáneo informa de que otra petición ya
+  alcanzó el resultado deseado; tratarlo como error genérico hace que la
+  interfaz conserve un estado obsoleto.
+- **Evidencia:** la pantalla de liga reconoce solo el `409` del contrato de
+  finalización, cierra su confirmación, vuelve a leer la liga y muestra un
+  mensaje localizado. Los demás rechazos conservan el fallback seguro común.
+- **Regla reutilizable:** mapea cada estado de negocio declarado que habilite
+  una recuperación concreta en la feature dueña de la acción; nunca expongas
+  el cuerpo de error del backend.
+
+### 2026-08-09 — Un diálogo que confirma una pantalla nativa pertenece a esa pantalla
+
+- **Aprendido:** en iOS una confirmación global puede quedar detrás de una ruta
+  presentada por navegación nativa, aunque su estado React se actualice.
+- **Evidencia:** la acción de finalizar era visible y recibía el toque, pero el
+  diálogo compartido no se presentaba sobre `fullScreenModal`. La confirmación
+  se movió a un `Modal` de la propia ruta y se validó en iPhone Simulator.
+- **Regla reutilizable:** cuando una mutación crítica se confirma dentro de una
+  ruta nativa, su modal debe compartir el host de esa ruta o verificarse en el
+  simulador antes de dar el flujo por utilizable.
+
+### 2026-08-10 — Si el destino muestra el resultado, no hace falta un éxito transitorio
+
+- **Aprendido:** después de añadir una administradora, la lista de
+  administradoras es una confirmación más clara y persistente que un banner de
+  éxito que desaparece.
+- **Evidencia:** el formulario cierra sobre el listado y este vuelve a consultar
+  el contrato al recibir foco. Antes de buscar, el formulario carga la misma
+  colección y filtra sus usernames junto al de la sesión; así no propone de
+  nuevo una cuenta ya delegada ni a la propia organizadora. La misma pantalla
+  permite retirar una cuenta con la confirmación y la fila compacta ya
+  establecidas para equipos.
+- **Coste aceptado:** se añaden las operaciones protegidas de listar y retirar
+  administradoras al contrato, en lugar de inferir la colección desde la
+  relación de la sesión o conservar una copia global en el cliente.
+- **Regla reutilizable:** tras una mutación que conduce a una pantalla capaz de
+  representar el nuevo estado, vuelve a leer esa proyección y evita un aviso de
+  éxito redundante; reserva el banner para recuperaciones, errores o resultados
+  que no queden visibles en la ruta destino.
+
+### 2026-08-10 — Una tabla móvil fija su identidad y desplaza solo el detalle
+
+- **Aprendido:** en una clasificación, posición, equipo y puntos son la identidad
+  de cada fila; las estadísticas complementan la comparación, pero no deben
+  ocultar esos tres datos al desplazar horizontalmente.
+- **Evidencia:** la tabla mantiene los dos extremos fijos y desplaza como un único
+  bloque `PJ`, `PG`, `PE`, `PP`, `GF`, `GC` y `DG`. El indicador y la ayuda aparecen
+  solo cuando ese bloque no cabe en el viewport.
+- **Coste aceptado:** se duplican las filas visuales de las tres columnas para
+  sincronizar su altura, sin añadir una librería de tabla ni estado compartido.
+- **Regla reutilizable:** para datos comparables y densos en móvil, fija la
+  identidad de la fila y su métrica principal; reserva el desplazamiento para
+  las columnas secundarias y no muestres affordances de scroll si no hay desborde.

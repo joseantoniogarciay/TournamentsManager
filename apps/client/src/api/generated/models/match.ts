@@ -17,4 +17,8 @@ export interface Match {
   homeTeamId: Uuid;
   awayTeamId: Uuid;
   state: MatchState;
+  /** @minimum 0 */
+  homeScore?: number;
+  /** @minimum 0 */
+  awayScore?: number;
 }

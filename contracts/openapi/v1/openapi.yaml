@@ -20,7 +20,7 @@ tags:
   - name: Federated identity
     description: Autenticación con Google y vinculación explícita de identidades.
   - name: Drafts
-    description: Borrador transferido después de verificar la cuenta.
+    description: Borrador local transferido junto al alta.
   - name: Leagues
     description: Publicación y lectura pública de ligas visibles.
 paths:
@@ -183,6 +183,30 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/UsernameAvailability" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
+  /users:
+    get:
+      tags: [Users]
+      operationId: searchUsers
+      summary: Busca usernames públicos por coincidencia parcial
+      description: >-
+        No requiere sesión. Devuelve como máximo veinte usernames de cuentas
+        verificadas cuyo nombre contiene query. No expone email, IDs, métodos
+        de acceso ni estado de cuenta.
+      security: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema: { $ref: "#/components/schemas/Username" }
+      responses:
+        "200":
+          description: Coincidencias públicas, ordenadas por username.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserSearchResponse" }
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "429": { $ref: "#/components/responses/RateLimitProblem" }
         "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
@@ -506,6 +530,212 @@ paths:
         "403": { description: La sesión no pertenece a la organizadora. }
         "404": { description: La liga no existe. }
         "409": { description: La liga ya no está sin empezar. }
+  /leagues/{leagueId}/teams:
+    post:
+      tags: [Leagues]
+      operationId: addLeagueTeam
+      summary: Añade un equipo a una liga sin empezar
+      description: >-
+        Exige sesión de la organizadora. Solo se admite mientras la liga esté
+        publicada; al iniciarla, la composición queda congelada.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TeamInput" }
+      responses:
+        "201":
+          description: Equipo añadido a la composición de la liga.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LeagueTeam" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga no existe. }
+        "409": { description: "La liga ya se inició, alcanzó el límite o ya contiene ese nombre." }
+  /leagues/{leagueId}/teams/{teamId}:
+    delete:
+      tags: [Leagues]
+      operationId: removeLeagueTeam
+      summary: Elimina un equipo de una liga sin empezar
+      description: >-
+        Exige sesión de la organizadora. Solo se admite mientras la liga esté
+        publicada y conserva al menos dos equipos; para descartar la liga debe
+        usarse su cancelación explícita.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: teamId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "204": { description: Equipo eliminado de la composición de la liga. }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga o el equipo no existe. }
+        "409": { description: "La liga ya se inició o solo conserva dos equipos." }
+  /leagues/{leagueId}/cancel:
+    post:
+      tags: [Leagues]
+      operationId: cancelLeague
+      summary: Cancela una liga publicada o en curso
+      description: >-
+        Exige sesión válida de la organizadora. No solicita motivo, conserva la
+        liga y la mantiene disponible para consulta pública en estado cancelled.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Liga cancelada y aún visible en modo de solo lectura.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicLeague" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga no existe. }
+        "409": { description: La liga no está publicada ni en curso. }
+  /leagues/{leagueId}/complete:
+    post:
+      tags: [Leagues]
+      operationId: completeLeague
+      summary: Finaliza explícitamente una liga con todos los resultados
+      description: >-
+        Exige sesión válida de la organizadora y una liga en curso sin partidos
+        pendientes. El backend calcula y conserva todos los co-campeones a
+        partir de la clasificación; el cliente no envía una ganadora.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Liga finalizada con clasificación y campeonas oficiales.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicLeague" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga no existe. }
+        "409": { description: La liga no está en curso o aún tiene partidos pendientes. }
+  /leagues/{leagueId}/matches/{matchId}/result:
+    put:
+      tags: [Leagues]
+      operationId: recordMatchResult
+      summary: Registra o corrige el resultado de un partido
+      description: >-
+        Exige sesión válida de la organizadora o una administradora delegada y
+        una liga en curso.
+        El resultado se aplica inmediatamente; una corrección conserva su
+        historial interno de valores y autora.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: matchId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MatchResultInput" }
+      responses:
+        "200":
+          description: Resultado aplicado y proyección pública actualizada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicLeague" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no administra los resultados de esta liga. }
+        "404": { description: La liga o el partido no existe. }
+        "409": { description: La liga no está en curso. }
+  /leagues/{leagueId}/administrators:
+    get:
+      tags: [Leagues]
+      operationId: listLeagueAdministrators
+      summary: Lista las administradoras delegadas de una liga
+      description: Exige sesión de la organizadora de la liga.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Administradoras delegadas actuales, ordenadas por username.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LeagueAdministrators" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga no existe. }
+  /leagues/{leagueId}/administrators/{username}:
+    put:
+      tags: [Leagues]
+      operationId: assignLeagueAdministrator
+      summary: Asigna directamente una administradora por username
+      description: >-
+        Exige sesión de la organizadora. La asignación es inmediata, idempotente
+        y no envía una invitación ni una notificación.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: username
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Username" }
+      responses:
+        "204": { description: La cuenta ya administra la liga. }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga o la cuenta no existe. }
+        "409": { description: No se puede asignar a la organizadora como administradora delegada. }
+    delete:
+      tags: [Leagues]
+      operationId: removeLeagueAdministrator
+      summary: Retira una administradora delegada por username
+      description: Exige sesión de la organizadora. La retirada es idempotente.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: username
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/Username" }
+      responses:
+        "204": { description: La cuenta ya no administra la liga. }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga no existe. }
 components:
   securitySchemes:
     sessionCookie:
@@ -567,6 +797,21 @@ components:
           description: >-
             Estado actual informativo; no constituye una reserva y puede cambiar
             antes de enviar el alta.
+    UserSearchResponse:
+      type: object
+      required: [usernames]
+      properties:
+        usernames:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/Username" }
+    LeagueAdministrators:
+      type: object
+      required: [usernames]
+      properties:
+        usernames:
+          type: array
+          items: { $ref: "#/components/schemas/Username" }
     Password:
       type: string
       format: password
@@ -621,6 +866,9 @@ components:
         password: { $ref: "#/components/schemas/Password" }
         username: { $ref: "#/components/schemas/Username" }
         locale: { $ref: "#/components/schemas/Locale" }
+        draft:
+          description: Borrador local válido transferido junto al alta; es opcional.
+          allOf: [{ $ref: "#/components/schemas/LeagueInput" }]
     Locale:
       type: string
       enum: [es, en, it, fr]
@@ -717,7 +965,7 @@ components:
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
-        state: { type: string, enum: [draft, published, in_progress, completed, cancelled] }
+        state: { type: string, enum: [published, in_progress, completed, cancelled] }
         createdAt: { type: string, format: date-time }
         lastActivityAt: { type: string, format: date-time }
         relationship: { $ref: "#/components/schemas/AccountLeagueRelationship" }
@@ -751,11 +999,20 @@ components:
         locale:
           description: Requerido junto a username para crear una cuenta Google nueva.
           allOf: [{ $ref: "#/components/schemas/Locale" }]
+        draft:
+          description: Torneo válido transferido únicamente al crear una cuenta Google nueva.
+          allOf: [{ $ref: "#/components/schemas/LeagueInput" }]
     StartLeagueRequest:
       type: object
       required: [roundRobinLegs]
       properties:
         roundRobinLegs: { type: integer, enum: [1, 2] }
+    MatchResultInput:
+      type: object
+      required: [homeScore, awayScore]
+      properties:
+        homeScore: { type: integer, minimum: 0 }
+        awayScore: { type: integer, minimum: 0 }
     PublishedLeague:
       type: object
       required: [id, name, state, teams, matches]
@@ -767,15 +1024,45 @@ components:
         matches: { type: array, items: { $ref: "#/components/schemas/Match" } }
     PublicLeague:
       type: object
-      required: [id, name, sport, format, state, teams, matches]
+      required:
+        [id, name, sport, format, state, roundRobinLegs, teams, matches, standings, championTeamIds]
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
         sport: { type: string, enum: [football] }
         format: { type: string, enum: [league] }
-        state: { type: string, enum: [published, in_progress, completed] }
+        state: { type: string, enum: [published, in_progress, completed, cancelled] }
+        roundRobinLegs:
+          type: integer
+          enum: [1, 2]
+          description: Vueltas fijadas al iniciar; la clasificación usa este valor para aplicar desempates.
         teams: { type: array, items: { $ref: "#/components/schemas/LeagueTeam" } }
         matches: { type: array, items: { $ref: "#/components/schemas/Match" } }
+        standings:
+          description: Proyección calculada por el backend; vacía antes de iniciar o si la liga se cancela.
+          type: array
+          items: { $ref: "#/components/schemas/LeagueStanding" }
+        championTeamIds:
+          description: >-
+            Equipos de posición 1 conservados al finalizar. Está vacío hasta el
+            cierre explícito y admite más de uno cuando hay co-campeonato.
+          type: array
+          items: { $ref: "#/components/schemas/UUID" }
+    LeagueStanding:
+      type: object
+      required:
+        [position, teamId, played, won, drawn, lost, goalsFor, goalsAgainst, goalDifference, points]
+      properties:
+        position: { type: integer, minimum: 1 }
+        teamId: { $ref: "#/components/schemas/UUID" }
+        played: { type: integer, minimum: 0 }
+        won: { type: integer, minimum: 0 }
+        drawn: { type: integer, minimum: 0 }
+        lost: { type: integer, minimum: 0 }
+        goalsFor: { type: integer, minimum: 0 }
+        goalsAgainst: { type: integer, minimum: 0 }
+        goalDifference: { type: integer }
+        points: { type: integer, minimum: 0 }
     LeagueTeam:
       type: object
       required: [id, name]
@@ -791,7 +1078,9 @@ components:
         sequence: { type: integer, minimum: 1 }
         homeTeamId: { $ref: "#/components/schemas/UUID" }
         awayTeamId: { $ref: "#/components/schemas/UUID" }
-        state: { type: string, enum: [pending] }
+        state: { type: string, enum: [pending, completed] }
+        homeScore: { type: integer, minimum: 0 }
+        awayScore: { type: integer, minimum: 0 }
     Problem:
       type: object
       required: [type, title, status]

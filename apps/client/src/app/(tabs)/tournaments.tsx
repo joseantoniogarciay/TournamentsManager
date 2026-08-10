@@ -1,23 +1,34 @@
-import { router, useFocusEffect } from "expo-router";
+import { router, type Href, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
-import { color, control, radius, space } from "@tournaments-manager/design-tokens";
+import { color, control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
 import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
 import { listRelatedLeagues } from "@/features/league-creation/api";
+import { useLeagueState } from "@/features/league-creation/league-store";
+import { LeagueCreatorChip } from "@/features/league-creation/components/league-creator-chip";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
+import { getLeagueStateLabel } from "@/shared/i18n/league-state";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import { Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
 type LeagueRelationship = "administered" | "followed";
+const floatingActionButtonSize = control.minHeight + 12;
 
 export default function TournamentsScreen() {
   const t = getTranslator();
-  const { revision, user } = useSession();
+  const { isRestoring, revision, user } = useSession();
   const { show } = useFeedback();
   const { colors } = usePreferences();
   const tabContentBottomPadding = useTabContentBottomPadding();
@@ -31,6 +42,8 @@ export default function TournamentsScreen() {
   const [selectedRelationship, setSelectedRelationship] =
     useState<LeagueRelationship>("administered");
   const loadedAccountID = useRef<string | null>(null);
+  const isInitialLoad = !isRestoring && Boolean(user) && !hasLoadedLeagues;
+  const showFloatingAction = !isRestoring && (!user || !isInitialLoad);
 
   const loadLeagues = useCallback(
     async (isManualRefresh = false) => {
@@ -80,7 +93,10 @@ export default function TournamentsScreen() {
   return (
     <Screen bottomInset="none">
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: tabContentBottomPadding + floatingActionButtonSize + space[5] },
+        ]}
         key={revision}
         refreshControl={
           user ? (
@@ -93,7 +109,7 @@ export default function TournamentsScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {!user ? (
+        {!isRestoring && !user ? (
           <Card>
             <View style={styles.copy}>
               <Text variant="title">{t("tournaments_title")}</Text>
@@ -101,12 +117,8 @@ export default function TournamentsScreen() {
             </View>
           </Card>
         ) : null}
-        {user && (isLoading || !hasLoadedLeagues) ? (
-          <Card>
-            <Text>{t("common_loading")}</Text>
-          </Card>
-        ) : null}
-        {user && hasLoadedLeagues && !isLoading ? (
+
+        {!isRestoring && user && hasLoadedLeagues && !isLoading ? (
           <LeagueLibrary
             administered={administered}
             followed={followed}
@@ -115,6 +127,20 @@ export default function TournamentsScreen() {
           />
         ) : null}
       </ScrollView>
+      {isInitialLoad ? (
+        <View
+          accessibilityLabel={t("common_loading")}
+          accessibilityRole="progressbar"
+          style={styles.loader}
+        >
+          <ActivityIndicator color={colors.text.primary} size="large" />
+        </View>
+      ) : null}
+      {showFloatingAction ? (
+        <View style={[styles.floatingAction, { bottom: tabContentBottomPadding - space[4] }]}>
+          <CreateTournamentButton />
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -162,26 +188,38 @@ function LeagueLibrary({
           <Text color="secondary">{empty}</Text>
         </View>
       ) : (
-        leagues.map((league) => (
-          <Card key={league.id}>
-            <Pressable
-              accessibilityLabel={t("tournaments_open_league").replace("{name}", league.name)}
-              accessibilityRole="button"
-              onPress={() => router.push(`/league/${league.id}` as never)}
-              style={styles.row}
-            >
-              <View style={styles.copy}>
-                <Text>{league.name}</Text>
-                <Text color="secondary">
-                  {league.state === "published" ? t("league_not_started") : league.state}
-                </Text>
-              </View>
-              <Text color="secondary">›</Text>
-            </Pressable>
-          </Card>
-        ))
+        leagues.map((league) => <LeagueLibraryCard key={league.id} league={league} />)
       )}
     </View>
+  );
+}
+
+function LeagueLibraryCard({
+  league,
+}: {
+  league: Awaited<ReturnType<typeof listRelatedLeagues>>[number];
+}) {
+  const t = getTranslator();
+  const state = useLeagueState(league.id, league.state);
+
+  return (
+    <Card>
+      <Pressable
+        accessibilityLabel={t("tournaments_open_league").replace("{name}", league.name)}
+        accessibilityRole="button"
+        onPress={() => router.push(`/league/${league.id}` as never)}
+        style={styles.row}
+      >
+        <View style={styles.copy}>
+          <Text>{league.name}</Text>
+          <View style={styles.leagueState}>
+            {league.relationship === "organizer" ? <LeagueCreatorChip /> : null}
+            <Text color="secondary">{getLeagueStateLabel(t, state)}</Text>
+          </View>
+        </View>
+        <Text color="secondary">›</Text>
+      </Pressable>
+    </Card>
   );
 }
 
@@ -203,17 +241,56 @@ function Segment({
       onPress={onPress}
       style={[styles.segment, selected ? styles.segmentSelected : undefined]}
     >
-      <Text color={selected ? "onBrand" : "primary"}>{label}</Text>
+      <Text color={selected ? "onBrand" : "primary"} style={styles.segmentLabel}>
+        {label}
+      </Text>
       <Text color={selected ? "onBrand" : "secondary"}>{count}</Text>
     </Pressable>
   );
 }
 
+function CreateTournamentButton() {
+  const t = getTranslator();
+
+  return (
+    <Pressable
+      accessibilityLabel={t("home_create_tournament")}
+      accessibilityRole="button"
+      onPress={() => router.push("/create-tournament" as Href)}
+    >
+      <View style={styles.floatingActionButton}>
+        <Text color="onBrand" variant="title">
+          {t("common_add")}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, justifyContent: "center" },
+  content: { flexGrow: 1 },
   copy: { gap: space[2] },
+  leagueState: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   empty: { alignItems: "center", flex: 1, justifyContent: "center", paddingHorizontal: space[5] },
+  floatingAction: { position: "absolute", right: space[5] },
+  floatingActionButton: {
+    alignItems: "center",
+    backgroundColor: color.brand.primary,
+    borderRadius: radius.pill,
+    height: floatingActionButtonSize,
+    justifyContent: "center",
+    width: floatingActionButtonSize,
+  },
   library: { flex: 1, gap: space[5] },
+  loader: {
+    alignItems: "center",
+    bottom: 0,
+    justifyContent: "center",
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
+  },
   row: {
     alignItems: "center",
     flexDirection: "row",
@@ -229,6 +306,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: control.minHeight,
   },
+  segmentLabel: { fontWeight: typography.weight.bold },
   segmentedBar: {
     borderRadius: radius.control,
     flexDirection: "row",

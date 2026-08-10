@@ -194,8 +194,14 @@ CREATE TABLE matches (
     sequence integer NOT NULL CHECK (sequence > 0),
     home_team_id uuid NOT NULL,
     away_team_id uuid NOT NULL,
-    state text NOT NULL DEFAULT 'pending' CHECK (state = 'pending'),
+    state text NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'completed')),
+    home_score integer,
+    away_score integer,
     CONSTRAINT matches_distinct_teams CHECK (home_team_id <> away_team_id),
+    CONSTRAINT matches_score_lifecycle CHECK (
+        (state = 'pending' AND home_score IS NULL AND away_score IS NULL)
+        OR (state = 'completed' AND home_score >= 0 AND away_score >= 0)
+    ),
     CONSTRAINT matches_round_sequence_unique UNIQUE (league_id, round_number, sequence),
     CONSTRAINT matches_home_team_fk
         FOREIGN KEY (league_id, home_team_id)
@@ -203,6 +209,32 @@ CREATE TABLE matches (
         ON DELETE RESTRICT,
     CONSTRAINT matches_away_team_fk
         FOREIGN KEY (league_id, away_team_id)
+        REFERENCES league_teams (league_id, id)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE match_result_changes (
+    id uuid PRIMARY KEY DEFAULT uuidv7(),
+    match_id uuid NOT NULL REFERENCES matches (id) ON DELETE CASCADE,
+    changed_by_account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE RESTRICT,
+    previous_home_score integer,
+    previous_away_score integer,
+    home_score integer NOT NULL CHECK (home_score >= 0),
+    away_score integer NOT NULL CHECK (away_score >= 0),
+    changed_at timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT match_result_changes_previous_scores CHECK (
+        (previous_home_score IS NULL AND previous_away_score IS NULL)
+        OR (previous_home_score >= 0 AND previous_away_score >= 0)
+    )
+);
+
+CREATE INDEX match_result_changes_match_idx ON match_result_changes (match_id, changed_at);
+
+CREATE TABLE league_champions (
+    league_id uuid NOT NULL REFERENCES leagues (id) ON DELETE CASCADE,
+    team_id uuid NOT NULL,
+    PRIMARY KEY (league_id, team_id),
+    FOREIGN KEY (league_id, team_id)
         REFERENCES league_teams (league_id, id)
         ON DELETE RESTRICT
 );

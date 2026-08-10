@@ -30,7 +30,7 @@ export class APIConnectionError extends Error {
 
 /** La API respondió con un estado que la feature no trata como útil para la persona. */
 export class APIUnexpectedResponseError extends Error {
-  constructor(status: number) {
+  constructor(readonly status: number) {
     super(`La API respondió con el estado no tratado ${status}`);
     this.name = "APIUnexpectedResponseError";
   }

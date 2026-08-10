@@ -41,11 +41,26 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Las pantallas usan tokens semánticos y primitivas de `shared/ui`; no introducen
   hexadecimales, medidas repetidas, fuentes remotas ni una librería de UI sin ADR
   aceptado.
+- **Muy importante — consistencia de controles de cierre:** toda ruta modal o de
+  pantalla completa reutiliza el patrón visual de cierre existente: objetivo de
+  44 px circular, con superficie y borde en web/Android, y
+  `Stack.Toolbar.Button` en iOS. Nunca se añade una `X` plana local; antes de
+  crearla se compara con `create-tournament` o la ruta modal equivalente.
 - Una card mantiene su padding interno definido por la primitiva y añade siempre
   20 px de margen exterior horizontal. El layout reserva además 20 px entre
   cards hermanas; no se corrige esa separación alterando el padding de la card.
+- En una lista formada por `Card`, un estado vacío, de error o cualquier bloque
+  que no sea card aplica por sí mismo `paddingHorizontal: space[5]`. El margen
+  ya pertenece a cada card, por lo que no se añade al contenedor común de la
+  lista: eso desplazaría las cards 40 px desde el borde.
 - `Screen` no añade padding horizontal: ese margen exterior pertenece a `Card`.
   Añadirlo en ambos sitios duplica la separación lateral.
+- **Muy importante — márgenes de contenido móvil:** un formulario, listado o
+  bloque de contenido no puede quedar a ras de los laterales. Debe vivir en una
+  `Card` (que aporta los 20 px exteriores) o en una primitiva de layout
+  compartida que aplique exactamente ese margen. Si no requiere superficie de
+  card, el `contentContainerStyle` desplazable aplica `paddingHorizontal:
+  space[5]`; no se compensa añadiendo padding horizontal a `Screen`.
 - Toda pantalla deja al menos 10 px entre el área segura o el borde inferior de
   una navigation bar y su primer contenido; la implementación vigente usa 12 px
   mediante `Screen`.
@@ -69,6 +84,17 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   exige justificar por escrito que el destino no pertenece al contrato.
 - La interfaz no inventa sesión, permisos, colecciones ni resultados. Debe
   expresar el estado real disponible y sus estados de carga, vacío y error.
+- Un fallo de API que la feature no mapee a una recuperación concreta siempre
+  termina en el banner seguro `common_request_error` al terminar su loader. No
+  basta con invocar `show()` en un `catch`: el banner tiene que quedar visible
+  dentro de la ruta modal activa y se comprueba así antes de cerrar el cambio.
+- Un éxito que queda visible al volver a una lista no muestra además un banner:
+  la ruta destino vuelve a leer la proyección y confirma el cambio con el dato
+  persistido. Los banners se reservan para errores o resultados no visibles.
+- `ConfirmationDialogProvider` conserva un estado común, pero cada `Screen`
+  monta `ConfirmationDialogHost`. No eleves el host al layout raíz: en iOS un
+  `Modal` raíz queda detrás de una ruta `fullScreenModal` y puede aparentar que
+  la confirmación se abrió en la tab bar.
 - Botones y controles mantienen semántica accesible, un objetivo táctil mínimo
   de 44 px y no permiten envíos duplicados.
 - La validación de formato de un formulario se muestra al abandonar cada campo
@@ -82,6 +108,13 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Los formularios no muestran una acción de cancelar. La salida de la ruta se
   hace mediante el botón de atrás de la barra de navegación, que no muestra
   texto.
+- Cuando el diseño pida un campo sin título visible, `TextField` recibe un
+  `placeholder` localizado y un `accessibilityLabel` localizado; no se conserva
+  una etiqueta visual redundante solo para cubrir accesibilidad.
+- Todo popup reutiliza `ModalDialog` de `shared/ui`, la misma superficie que la
+  confirmación de cerrar sesión: blur de fondo, oscurecimiento Android, diálogo
+  centrado y cierre accesible mediante el backdrop. No se implementan `Modal`
+  ni scrims locales para un popup nuevo.
 
 ## Desarrollo en simulador con Expo Go
 

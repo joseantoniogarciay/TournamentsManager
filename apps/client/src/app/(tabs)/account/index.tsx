@@ -37,7 +37,11 @@ import {
   useTabContentBottomPadding,
 } from "@/shared/ui";
 
-export default function AccountScreen() {
+type AccountScreenProps = {
+  sessionReplacementDestination?: "/account" | "/create-tournament";
+};
+
+export function AccountScreen({ sessionReplacementDestination = "/account" }: AccountScreenProps) {
   const t = getTranslator();
   const { show } = useFeedback();
   const { colors } = usePreferences();
@@ -45,8 +49,8 @@ export default function AccountScreen() {
   const { confirm } = useConfirmationDialog();
   const completeAccountSessionReplacement = useCallback(
     (nextUser: Parameters<typeof completeSessionReplacement>[0]) =>
-      completeSessionReplacement(nextUser, "/account"),
-    [completeSessionReplacement],
+      completeSessionReplacement(nextUser, sessionReplacementDestination),
+    [completeSessionReplacement, sessionReplacementDestination],
   );
   const tabContentBottomPadding = useTabContentBottomPadding();
   const [email, setEmail] = useState("");
@@ -311,6 +315,10 @@ export default function AccountScreen() {
       </KeyboardAwareScrollView>
     </Screen>
   );
+}
+
+export default function AccountTabScreen() {
+  return <AccountScreen />;
 }
 
 const styles = StyleSheet.create({

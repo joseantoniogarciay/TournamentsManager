@@ -1,7 +1,7 @@
 # API
 
-> Estado: REST y OpenAPI contract-first aceptados; contrato del primer
-> incremento diseñado en ADR-0045, sin implementación todavía.
+> Estado: REST y OpenAPI contract-first aceptados; el primer incremento está
+> implementado de forma progresiva conforme a ADR-0045.
 
 ## Relación entre API y backend
 
@@ -121,7 +121,17 @@ ordenadas por actividad de liga; no es una colección paginada. Véase
 El alta exige identidad local y un locale efectivo de `es`, `en`, `it` o `fr`;
 el backend lo valida y lo persiste como preferencia de cuenta para localizar
 emails. El borrador es opcional y, si se envía, debe cumplir íntegramente las
-restricciones de `DraftInput`.
+restricciones de `LeagueInput`; crea una liga `published` asociada a la cuenta
+pendiente. Solo se expone en `GET /me/leagues` cuando una verificación concede
+una sesión válida.
+
+`POST /leagues/{leagueId}/cancel` expresa la transición de cancelación, igual
+que el inicio usa una operación explícita y no una mutación implícita de la
+lectura pública. Exige sesión de la organizadora y CSRF cuando se entrega por
+cookie; no recibe cuerpo ni motivo. Devuelve la proyección pública conservada
+en estado `cancelled`. Solo `published` e `in_progress` admiten la transición;
+una repetición o cualquier otro estado devuelve `409`, sin exponer detalles
+internos.
 
 La entrega de sesión se declara explícitamente: `cookie` para web (cookie
 `__Host-`) y `bearer` para móvil. El secreto solo aparece una vez en la respuesta
@@ -149,6 +159,32 @@ por cookie aplican una protección CSRF independiente y solo confían en los
 orígenes exactos ya validados en `CORS_ALLOWED_ORIGINS`; Bearer no usa ese
 control porque no viaja automáticamente con el navegador. Véase
 [ADR-0059](../adr/0059-centralize-session-authentication-at-the-http-boundary.md).
+
+## Resultados de partidos
+
+`PUT /v1/leagues/{leagueId}/matches/{matchId}/result` acepta únicamente dos
+enteros no negativos (`homeScore`, `awayScore`). Exige a la organizadora o una
+administradora delegada y una liga `in_progress`; aplica el marcador de inmediato y devuelve la
+proyección pública actualizada. Cada escritura se conserva internamente con el
+marcador anterior, autora e instante, conforme a ADR-0035 a ADR-0037. El
+historial no se expone todavía como una funcionalidad de disputa o restauración.
+
+`GET /v1/leagues/{leagueId}` y las respuestas de inicio, cancelación y resultado
+incluyen `standings`, una proyección calculada por el dominio a partir de los
+marcadores persistidos y las vueltas configuradas. El cliente no recalcula ni
+ordena la tabla. Una futura victoria de torneo en perfil se derivará de la misma
+fuente al finalizar la liga; no se aceptan títulos enviados por cliente. Véase
+[ADR-0081](../adr/0081-calculate-league-standings-in-the-backend.md).
+
+`POST /v1/leagues/{leagueId}/complete` pertenece únicamente a la organizadora.
+Solo acepta una liga en curso cuyos partidos estén todos resueltos; el backend
+recalcula la tabla bajo el bloqueo de la transición, guarda todos los equipos de
+posición 1 —incluidos co-campeones— y devuelve la proyección final. El cliente
+no envía ni elige una ganadora. Véanse ADR-0039 y ADR-0082.
+
+El cliente muestra feedback específico solo cuando el contrato ofrece una
+recuperación distinta; errores no tratados, `5xx` y respuestas inválidas usan el
+mensaje seguro común.
 
 ## Validación y generación
 
