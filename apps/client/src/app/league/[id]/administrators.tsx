@@ -25,7 +25,7 @@ export default function AddLeagueAdministratorScreen() {
   const t = getTranslator();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
-  const { show } = useFeedback();
+  const { show, showAfterNavigation } = useFeedback();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<string[]>([]);
   const [searching, setSearching] = useState(false);
@@ -70,7 +70,7 @@ export default function AddLeagueAdministratorScreen() {
     setAssigning(username);
     try {
       await assignLeagueAdministratorRequest(id, username);
-      show({ kind: "success", message: t("league_administrator_added") });
+      showAfterNavigation({ kind: "success", message: t("league_administrator_added") });
       close();
     } catch (error) {
       if (error instanceof LeagueAdministratorConflictError) {

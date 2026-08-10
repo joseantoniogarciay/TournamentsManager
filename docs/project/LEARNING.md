@@ -1845,3 +1845,19 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** cuando una mutación crítica se confirma dentro de una
   ruta nativa, su modal debe compartir el host de esa ruta o verificarse en el
   simulador antes de dar el flujo por utilizable.
+
+### 2026-08-10 — Un banner global necesita el host de la ruta nativa activa
+
+- **Aprendido:** en navegación nativa, una `Modal` React montada en la raíz no
+  se superpone a una ruta presentada por el sistema. El estado del aviso sí es
+  global, pero su host visual debe pertenecer a la ruta activa.
+- **Evidencia:** la asignación de una administradora publicaba el éxito y
+  cerraba inmediatamente la búsqueda. Al publicar el banner antes de que la
+  transición terminase, su animación avanzaba fuera de la ruta que finalmente
+  podía mostrarlo.
+- **Regla reutilizable:** conserva un único estado de feedback y hospeda su
+  vista reutilizable en cada `Screen` para respetar el orden nativo. Si una
+  acción cierra una ruta, espera a que la ruta destino reciba el foco y deja un
+  margen temporal explícito para que iOS termine de liberar el presentador antes
+  de montar el banner. Este margen es un compromiso conocido, respaldado por la
+  prueba manual, hasta disponer de una señal nativa más precisa.

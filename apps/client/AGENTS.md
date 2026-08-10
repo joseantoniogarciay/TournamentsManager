@@ -84,6 +84,14 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   termina en el banner seguro `common_request_error` al terminar su loader. No
   basta con invocar `show()` en un `catch`: el banner tiene que quedar visible
   dentro de la ruta modal activa y se comprueba así antes de cerrar el cambio.
+- **Workaround de banner al cerrar una ruta:** en iOS, publicar un banner y
+  llamar a `router.dismiss()` en el mismo flujo puede consumir su animación o
+  impedir que el host modal se presente. Conserva el host compartido por
+  `Screen`, encola el aviso con `showAfterNavigation()` antes de cerrar y deja
+  que el provider lo publique tras recuperar el foco de la ruta destino con
+  `navigationFeedbackDelayMs = 400`. No sustituirlo por un host raíz ni una
+  capa absoluta sin validarlo en simulador: ambos quedan por debajo o fuera de
+  la presentación nativa en este flujo.
 - Botones y controles mantienen semántica accesible, un objetivo táctil mínimo
   de 44 px y no permiten envíos duplicados.
 - La validación de formato de un formulario se muestra al abandonar cada campo
