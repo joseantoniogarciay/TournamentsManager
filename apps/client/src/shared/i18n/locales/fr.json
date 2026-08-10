@@ -170,7 +170,6 @@
   "league_add_team_title": "Ajouter une équipe",
   "league_add_team_name": "Nom de l’équipe",
   "league_add_team_save": "Enregistrer l’équipe",
-  "league_add_team_added": "Équipe ajoutée.",
   "league_remove_team": "Supprimer l’équipe",
   "league_remove_team_title": "Supprimer l’équipe ?",
   "league_remove_team_description": "{name} sera retirée des inscrits.",

@@ -2,6 +2,7 @@ import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router
 import { SymbolView } from "expo-symbols";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -9,6 +10,7 @@ import {
   listLeagueAdministratorUsernames,
   removeLeagueAdministratorRequest,
 } from "@/features/league-creation/api";
+import { useLeague, useLeagueStore } from "@/features/league-creation/league-store";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
@@ -20,8 +22,11 @@ export default function LeagueAdministratorsScreen() {
   const t = getTranslator();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
+  const insets = useSafeAreaInsets();
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
+  const league = useLeague(id);
+  const { loadLeague } = useLeagueStore();
   const [administrators, setAdministrators] = useState<string[]>();
   const [loadFailed, setLoadFailed] = useState(false);
   const [removingUsername, setRemovingUsername] = useState<string>();
@@ -30,6 +35,10 @@ export default function LeagueAdministratorsScreen() {
     if (!id) return;
     setAdministrators(undefined);
     setLoadFailed(false);
+    void loadLeague(id).catch((error) => {
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    });
     void listLeagueAdministratorUsernames(id)
       .then(setAdministrators)
       .catch((error) => {
@@ -38,7 +47,7 @@ export default function LeagueAdministratorsScreen() {
         const failure = getRequestFailure(error);
         show({ kind: failure.kind, message: t(failure.messageKey) });
       });
-  }, [id, show, t]);
+  }, [id, loadLeague, show, t]);
   useFocusEffect(load);
 
   const close = () => {
@@ -72,6 +81,8 @@ export default function LeagueAdministratorsScreen() {
       onAccept: () => void remove(username),
       onCancel: () => undefined,
     });
+  const canAddAdministrator =
+    league !== undefined && league.state !== "completed" && league.state !== "cancelled";
   const navigationButton = (onPress: () => void, label: string, icon: "close" | "add") => (
     <Pressable
       accessibilityLabel={label}
@@ -111,11 +122,13 @@ export default function LeagueAdministratorsScreen() {
             ? {
                 headerLeft: () => navigationButton(close, t("common_back"), "close"),
                 headerRight: () =>
-                  navigationButton(
-                    () => router.push(`/league/${id}/administrators/add`),
-                    t("league_add_administrator"),
-                    "add",
-                  ),
+                  canAddAdministrator
+                    ? navigationButton(
+                        () => router.push(`/league/${id}/administrators/add`),
+                        t("league_add_administrator"),
+                        "add",
+                      )
+                    : null,
               }
             : {}),
         }}
@@ -129,22 +142,27 @@ export default function LeagueAdministratorsScreen() {
               onPress={close}
             />
           </Stack.Toolbar>
-          <Stack.Toolbar placement="right">
-            <Stack.Toolbar.Button
-              accessibilityLabel={t("league_add_administrator")}
-              icon="plus"
-              onPress={() => router.push(`/league/${id}/administrators/add`)}
-            />
-          </Stack.Toolbar>
+          {canAddAdministrator ? (
+            <Stack.Toolbar placement="right">
+              <Stack.Toolbar.Button
+                accessibilityLabel={t("league_add_administrator")}
+                icon="plus"
+                onPress={() => router.push(`/league/${id}/administrators/add`)}
+              />
+            </Stack.Toolbar>
+          ) : null}
         </>
       ) : null}
-      <Screen topInset="navigation-bar">
+      <Screen bottomInset="none" topInset="navigation-bar">
         {administrators === undefined ? (
           <View style={styles.loader}>
             <ActivityIndicator color={colors.text.primary} />
           </View>
         ) : (
-          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[5] }]}
+            showsVerticalScrollIndicator={false}
+          >
             {!loadFailed && administrators.length === 0 ? (
               <View style={styles.emptyState}>
                 <Text color="secondary">{t("league_administrators_empty")}</Text>

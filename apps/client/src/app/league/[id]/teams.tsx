@@ -10,6 +10,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -33,6 +34,7 @@ export default function LeagueTeamsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useSession();
   const { colors } = usePreferences();
+  const insets = useSafeAreaInsets();
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
   const league = useLeague(id);
@@ -85,7 +87,6 @@ export default function LeagueTeamsScreen() {
       updateLeague(id, (current) => ({ ...current, teams: [...current.teams, team] }));
       setAdding(false);
       setName("");
-      show({ kind: "success", message: t("league_add_team_added") });
     } catch (error) {
       const failure = getRequestFailure(error);
       show({ kind: failure.kind, message: t(failure.messageKey) });
@@ -183,13 +184,16 @@ export default function LeagueTeamsScreen() {
           ) : null}
         </>
       ) : null}
-      <Screen topInset="navigation-bar">
+      <Screen bottomInset="none" topInset="navigation-bar">
         {!league ? (
           <View style={styles.loader}>
             <ActivityIndicator color={colors.text.primary} />
           </View>
         ) : (
-          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[5] }]}
+            showsVerticalScrollIndicator={false}
+          >
             {league.teams.map((team) => (
               <Card density="compact" key={team.id}>
                 <View style={styles.teamRow}>

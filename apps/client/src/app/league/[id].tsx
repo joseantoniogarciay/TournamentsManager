@@ -26,6 +26,7 @@ import {
   Button,
   Card,
   LoadingTransition,
+  ModalDialog,
   Screen,
   Text,
   TextField,
@@ -316,7 +317,8 @@ export default function LeagueScreen() {
             styles.content,
             {
               paddingBottom:
-                insets.bottom + (primaryLeagueAction ? space[12] + space[5] : space[4]),
+                insets.bottom +
+                (primaryLeagueAction ? control.minHeight + space[3] + space[5] : space[4]),
             },
           ]}
           ItemSeparatorComponent={() => <View style={styles.matchSeparator} />}
@@ -515,49 +517,35 @@ export default function LeagueScreen() {
             />
           </View>
         ) : null}
-        <Modal
-          animationType="fade"
-          onRequestClose={() => {
+        <ModalDialog
+          dismissAccessibilityLabel={t("common_cancel")}
+          onDismiss={() => {
             if (!isCompleting) setCompletionConfirmationOpen(false);
           }}
-          transparent
           visible={completionConfirmationOpen}
         >
-          <View style={styles.completionBackdrop}>
-            <Pressable
-              accessibilityLabel={t("common_cancel")}
-              accessibilityRole="button"
-              disabled={isCompleting}
-              onPress={() => setCompletionConfirmationOpen(false)}
-              style={StyleSheet.absoluteFill}
-            />
-            <View
-              accessibilityViewIsModal
-              style={[
-                styles.completionModal,
-                { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-              ]}
-            >
-              <Text style={styles.completionTitle} variant="title">
-                {t("league_complete_title")}
-              </Text>
-              <Text color="secondary" style={styles.completionChampion}>
-                {t("league_complete_description")}
-              </Text>
-              <Button
-                label={t("league_complete")}
-                loading={isCompleting}
-                onPress={confirmCompletion}
-              />
-              <Button
-                disabled={isCompleting}
-                label={t("common_cancel")}
-                onPress={() => setCompletionConfirmationOpen(false)}
-                variant="secondary"
-              />
-            </View>
+          <View style={styles.completionConfirmationCopy}>
+            <Text style={styles.completionTitle} variant="title">
+              {t("league_complete_title")}
+            </Text>
+            <Text color="secondary" style={styles.completionChampion}>
+              {t("league_complete_description")}
+            </Text>
           </View>
-        </Modal>
+          <View style={styles.completionConfirmationActions}>
+            <Button
+              label={t("league_complete")}
+              loading={isCompleting}
+              onPress={confirmCompletion}
+            />
+            <Button
+              disabled={isCompleting}
+              label={t("common_cancel")}
+              onPress={() => setCompletionConfirmationOpen(false)}
+              variant="secondary"
+            />
+          </View>
+        </ModalDialog>
         <Modal
           animationType="fade"
           onRequestClose={() => {
@@ -632,56 +620,43 @@ export default function LeagueScreen() {
             ) : null}
           </View>
         </Modal>
-        <Modal
-          animationType="fade"
-          onRequestClose={() => setCompletionOpen(false)}
-          transparent
+        <ModalDialog
+          dismissAccessibilityLabel={t("common_close")}
+          onDismiss={() => setCompletionOpen(false)}
           visible={completionOpen}
         >
-          <View style={styles.completionBackdrop}>
-            <Pressable
-              accessibilityLabel={t("common_close")}
-              accessibilityRole="button"
-              onPress={() => setCompletionOpen(false)}
-              style={StyleSheet.absoluteFill}
-            />
-            <View
-              accessibilityViewIsModal
-              style={[
-                styles.completionModal,
-                { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-              ]}
-            >
-              <SymbolView name="trophy.fill" size={56} tintColor={colors.feedback.success} />
-              <Text style={styles.completionTitle} variant="display">
-                {t("league_completion_title")}
-              </Text>
-              <Text color="secondary" style={styles.completionChampion}>
-                {(league.championTeamIds ?? [])
-                  .map((teamID) => teamsByID.get(teamID))
-                  .filter((name): name is string => Boolean(name))
-                  .join(" · ")}
-              </Text>
-              <Text color="secondary">
-                {league.championTeamIds.length > 1
-                  ? t("league_completion_co_champions")
-                  : t("league_completion_champion")}
-              </Text>
-              <Button
-                label={t("league_completion_view_standings")}
-                onPress={() => {
-                  setCompletionOpen(false);
-                  router.push(`/league/${league.id}/standings`);
-                }}
-              />
-              <Button
-                label={t("common_close")}
-                onPress={() => setCompletionOpen(false)}
-                variant="secondary"
-              />
-            </View>
+          <View style={styles.completionSuccessContent}>
+            <SymbolView name="trophy.fill" size={56} tintColor={colors.feedback.success} />
+            <Text style={styles.completionTitle} variant="title">
+              {t("league_completion_title")}
+            </Text>
+            <Text style={styles.completionChampion} variant="display">
+              {(league.championTeamIds ?? [])
+                .map((teamID) => teamsByID.get(teamID))
+                .filter((name): name is string => Boolean(name))
+                .join(" · ")}
+            </Text>
+            <Text color="secondary">
+              {league.championTeamIds.length > 1
+                ? t("league_completion_co_champions")
+                : t("league_completion_champion")}
+            </Text>
           </View>
-        </Modal>
+          <View style={styles.completionSuccessActions}>
+            <Button
+              label={t("league_completion_view_standings")}
+              onPress={() => {
+                setCompletionOpen(false);
+                router.push(`/league/${league.id}/standings`);
+              }}
+            />
+            <Button
+              label={t("common_close")}
+              onPress={() => setCompletionOpen(false)}
+              variant="secondary"
+            />
+          </View>
+        </ModalDialog>
       </Screen>
     </>
   );
@@ -761,22 +736,13 @@ const styles = StyleSheet.create({
     padding: space[5],
     width: "100%",
   },
-  completionBackdrop: {
-    ...StyleSheet.absoluteFill,
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.48)",
-    justifyContent: "center",
-    padding: space[5],
-  },
+  completionConfirmationActions: { gap: space[3] },
+  completionConfirmationCopy: { gap: space[2] },
   completionChampion: { textAlign: "center" },
-  completionModal: {
+  completionSuccessActions: { gap: space[3] },
+  completionSuccessContent: {
     alignItems: "center",
-    borderRadius: radius.card,
-    borderWidth: 1,
     gap: space[3],
-    maxWidth: 440,
-    padding: space[6],
-    width: "100%",
   },
   completionTitle: { textAlign: "center" },
 });
