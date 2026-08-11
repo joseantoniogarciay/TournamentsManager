@@ -217,5 +217,14 @@
   "tournaments_administered_empty": "You are not managing any leagues yet.",
   "tournaments_followed": "I follow",
   "tournaments_followed_empty": "You are not following any leagues yet.",
-  "tournaments_open_league": "Open {name}"
+  "tournaments_open_league": "Open {name}",
+  "notifications_title": "Notifications",
+  "notifications_empty": "You have no notifications.",
+  "notifications_administrator_assigned": "You now manage {league}.",
+  "notifications_open_league": "Open league {league}",
+  "notifications_delete": "Delete notification",
+  "notifications_delete_all": "Delete all",
+  "notifications_delete_all_title": "Delete all notifications?",
+  "notifications_delete_all_description": "This action cannot be undone.",
+  "account_notifications_accessibility_label": "Open notifications"
 }

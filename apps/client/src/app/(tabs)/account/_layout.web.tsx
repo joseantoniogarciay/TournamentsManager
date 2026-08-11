@@ -8,6 +8,7 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import { Text } from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
+import { NotificationHeaderButton } from "@/features/notifications/header-button";
 
 export default function AccountLayout() {
   const t = getTranslator();
@@ -29,19 +30,26 @@ export default function AccountLayout() {
         options={{
           headerLeft: () => <Text variant="title">{user?.username}</Text>,
           headerRight: () => (
-            <Pressable
-              accessibilityLabel={t("account_settings_accessibility_label")}
-              accessibilityRole="button"
-              onPress={() => router.push("/account/settings")}
-              style={styles.headerButton}
-            >
-              <WebIcon color={colors.text.primary} name="settings" size={control.iconSize} />
-            </Pressable>
+            <>
+              {user ? <NotificationHeaderButton /> : null}
+              <Pressable
+                accessibilityLabel={t("account_settings_accessibility_label")}
+                accessibilityRole="button"
+                onPress={() => router.push("/account/settings")}
+                style={styles.headerButton}
+              >
+                <WebIcon color={colors.text.primary} name="settings" size={control.iconSize} />
+              </Pressable>
+            </>
           ),
           headerTitle: () => null,
         }}
       />
       <Stack.Screen name="access" options={{ title: t("account_access_data_title") }} />
+      <Stack.Screen
+        name="notifications"
+        options={{ presentation: "card", title: t("notifications_title") }}
+      />
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
       <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
       <Stack.Screen name="password" options={{ title: t("account_password_change_title") }} />

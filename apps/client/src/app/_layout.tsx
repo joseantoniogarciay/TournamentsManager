@@ -10,6 +10,7 @@ import { LeagueStoreProvider } from "@/features/league-creation/league-store";
 import { SessionProvider, useSession } from "@/shared/session/session-provider";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
 import { ConfirmationDialogProvider } from "@/shared/ui";
+import { NotificationProvider } from "@/features/notifications/notification-provider";
 
 if (Platform.OS !== "web") {
   SplashScreen.setOptions({ duration: 240, fade: true });
@@ -22,13 +23,15 @@ export default function RootLayout() {
       <NavigationTheme>
         <FeedbackProvider>
           <SessionProvider>
-            <LeagueStoreProvider>
-              <PendingVerificationProvider>
-                <ConfirmationDialogProvider>
-                  <RootNavigator />
-                </ConfirmationDialogProvider>
-              </PendingVerificationProvider>
-            </LeagueStoreProvider>
+            <NotificationProvider>
+              <LeagueStoreProvider>
+                <PendingVerificationProvider>
+                  <ConfirmationDialogProvider>
+                    <RootNavigator />
+                  </ConfirmationDialogProvider>
+                </PendingVerificationProvider>
+              </LeagueStoreProvider>
+            </NotificationProvider>
           </SessionProvider>
         </FeedbackProvider>
       </NavigationTheme>

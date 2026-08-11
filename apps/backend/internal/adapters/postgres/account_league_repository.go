@@ -14,6 +14,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres/sqlc"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
 )
 
 // ErrAccountHasOwnedLeagues indicates that the account still owns one or more leagues.
@@ -481,10 +482,59 @@ func (r AccountLeagueRepository) AssignAdministrator(ctx context.Context, accoun
 	if administrator == organizer {
 		return leagues.ErrLeagueAdministratorConflict
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO league_administrators (league_id, account_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, leagueID, administrator); err != nil {
+	result, err := tx.Exec(ctx, `INSERT INTO league_administrators (league_id, account_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, leagueID, administrator)
+	if err != nil {
 		return err
 	}
+	if result.RowsAffected() == 1 {
+		if _, err := tx.Exec(ctx, `INSERT INTO account_notifications (account_id, kind, league_id) VALUES ($1, 'league_administrator_assigned', $2)`, administrator, leagueID); err != nil {
+			return err
+		}
+	}
 	return tx.Commit(ctx)
+}
+
+// ListNotifications devuelve el buzón interno de la cuenta.
+func (r AccountLeagueRepository) ListNotifications(ctx context.Context, accountID string) ([]notifications.Item, error) {
+	rows, err := r.pool.Query(ctx, `SELECT account_notifications.id::text, account_notifications.kind, leagues.id::text, leagues.name, account_notifications.created_at::text, account_notifications.read_at::text FROM account_notifications JOIN leagues ON leagues.id = account_notifications.league_id WHERE account_notifications.account_id = $1 ORDER BY account_notifications.created_at DESC, account_notifications.id DESC`, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []notifications.Item{}
+	for rows.Next() {
+		var item notifications.Item
+		if err := rows.Scan(&item.ID, &item.Kind, &item.LeagueID, &item.LeagueName, &item.CreatedAt, &item.ReadAt); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
+
+// UnreadCount cuenta los avisos no leídos de la cuenta.
+func (r AccountLeagueRepository) UnreadCount(ctx context.Context, accountID string) (int, error) {
+	var count int
+	err := r.pool.QueryRow(ctx, `SELECT count(*) FROM account_notifications WHERE account_id = $1 AND read_at IS NULL`, accountID).Scan(&count)
+	return count, err
+}
+
+// MarkAllRead marca como leídos los avisos pendientes de la cuenta.
+func (r AccountLeagueRepository) MarkAllRead(ctx context.Context, accountID string) error {
+	_, err := r.pool.Exec(ctx, `UPDATE account_notifications SET read_at = now() WHERE account_id = $1 AND read_at IS NULL`, accountID)
+	return err
+}
+
+// Delete elimina un aviso que pertenezca a la cuenta.
+func (r AccountLeagueRepository) Delete(ctx context.Context, accountID, notificationID string) error {
+	_, err := r.pool.Exec(ctx, `DELETE FROM account_notifications WHERE id = $1 AND account_id = $2`, notificationID, accountID)
+	return err
+}
+
+// DeleteAll elimina todos los avisos de la cuenta.
+func (r AccountLeagueRepository) DeleteAll(ctx context.Context, accountID string) error {
+	_, err := r.pool.Exec(ctx, `DELETE FROM account_notifications WHERE account_id = $1`, accountID)
+	return err
 }
 
 // ListAdministrators devuelve las administradoras delegadas, exclusivamente a la organizadora.

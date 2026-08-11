@@ -134,6 +134,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0082](../adr/0082-persist-co-champions-on-league-completion.md)                              | Persistir co-campeones al finalizar una liga                         | Aceptado              | 2026-08-09 |
 | [0083](../adr/0083-materialize-official-account-league-outcomes-on-completion.md)             | Materializar resultados oficiales por cuenta al finalizar una liga   | Aceptado              | 2026-08-09 |
 | [0085](../adr/0085-share-canonical-league-state-in-the-client.md)                             | Compartir el estado canónico de cada liga en el cliente              | Aceptado              | 2026-08-10 |
+| [0086](../adr/0086-use-a-durable-internal-notification-inbox.md)                               | Usar un buzón interno de notificaciones duradero                     | Aceptado              | 2026-08-11 |
 
 ## Trazabilidad de un cambio
 

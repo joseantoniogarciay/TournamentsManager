@@ -19,6 +19,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
@@ -79,6 +80,14 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
 	mux.Handle("GET /v1/me/recent-leagues", requireSession(authenticator)(http.HandlerFunc(listRecentAccountLeagues(leagueService))))
+	if repository, ok := authenticator.(notifications.Repository); ok {
+		notificationService := notifications.NewService(repository)
+		mux.Handle("GET /v1/me/notifications", requireSession(authenticator)(http.HandlerFunc(listNotifications(notificationService))))
+		mux.Handle("GET /v1/me/notifications/unread-count", requireSession(authenticator)(http.HandlerFunc(unreadNotificationCount(notificationService))))
+		mux.Handle("POST /v1/me/notifications/read", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(markAllNotificationsRead(notificationService)))))
+		mux.Handle("DELETE /v1/me/notifications", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteAllNotifications(notificationService)))))
+		mux.Handle("DELETE /v1/me/notifications/{notificationId}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteNotification(notificationService)))))
+	}
 	followHandler := requireSession(authenticator)(cookieCSRF(http.HandlerFunc(followLeague(leagueService))))
 	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)

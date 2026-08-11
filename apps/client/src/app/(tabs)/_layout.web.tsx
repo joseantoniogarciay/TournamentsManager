@@ -5,10 +5,12 @@ import { color, control } from "@tournaments-manager/design-tokens";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { WebIcon } from "@/shared/ui/web-icon";
+import { useNotifications } from "@/features/notifications/notification-provider";
 
 export default function TabLayout() {
   const t = getTranslator();
   const { colors } = usePreferences();
+  const { count } = useNotifications();
 
   return (
     <Tabs
@@ -46,6 +48,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <WebIcon color={color as string} name="account" size={control.iconSize} />
           ),
+          tabBarBadge: count > 0 ? "•" : undefined,
           title: t("nav_account"),
         }}
       />

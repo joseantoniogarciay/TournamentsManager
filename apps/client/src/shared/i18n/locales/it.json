@@ -217,5 +217,14 @@
   "tournaments_administered_empty": "Non gestisci ancora alcun campionato.",
   "tournaments_followed": "Seguo",
   "tournaments_followed_empty": "Non segui ancora alcun campionato.",
-  "tournaments_open_league": "Apri {name}"
+  "tournaments_open_league": "Apri {name}",
+  "notifications_title": "Notifiche",
+  "notifications_empty": "Non hai notifiche.",
+  "notifications_administrator_assigned": "Ora gestisci {league}.",
+  "notifications_open_league": "Apri lega {league}",
+  "notifications_delete": "Elimina notifica",
+  "notifications_delete_all": "Elimina tutte",
+  "notifications_delete_all_title": "Eliminare tutte le notifiche?",
+  "notifications_delete_all_description": "Questa azione non può essere annullata.",
+  "account_notifications_accessibility_label": "Apri notifiche"
 }

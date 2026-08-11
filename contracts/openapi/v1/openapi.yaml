@@ -23,7 +23,71 @@ tags:
     description: Borrador local transferido junto al alta.
   - name: Leagues
     description: Publicación y lectura pública de ligas visibles.
+  - name: Notifications
+    description: Buzón interno de la cuenta autenticada.
 paths:
+  /me/notifications:
+    get:
+      tags: [Notifications]
+      operationId: listCurrentAccountNotifications
+      summary: Lista el buzón interno de la cuenta actual
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "200":
+          {
+            description: "Notificaciones actuales, de más reciente a más antigua.",
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/Notifications" } } },
+          }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+    delete:
+      tags: [Notifications]
+      operationId: deleteAllCurrentAccountNotifications
+      summary: Elimina todas las notificaciones de la cuenta actual
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "204": { description: Buzón eliminado. }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+  /me/notifications/read:
+    post:
+      tags: [Notifications]
+      operationId: markAllCurrentAccountNotificationsRead
+      summary: Marca como leídas todas las notificaciones de la cuenta actual
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "204": { description: Buzón marcado como leído. }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+  /me/notifications/unread-count:
+    get:
+      tags: [Notifications]
+      operationId: getCurrentAccountUnreadNotificationCount
+      summary: Devuelve el número de notificaciones no leídas
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "200":
+          {
+            description: "Contador actual.",
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/UnreadNotificationCount" } },
+              },
+          }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+  /me/notifications/{notificationId}:
+    delete:
+      tags: [Notifications]
+      operationId: deleteCurrentAccountNotification
+      summary: Elimina una notificación de la cuenta actual
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "204": { description: Notificación eliminada o inexistente. }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /me/account:
     delete:
       tags: [Session]
@@ -699,7 +763,8 @@ paths:
       summary: Asigna directamente una administradora por username
       description: >-
         Exige sesión de la organizadora. La asignación es inmediata, idempotente
-        y no envía una invitación ni una notificación.
+        y no envía una invitación. Cuando crea una delegación nueva, añade una
+        notificación interna al buzón de la administradora.
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       parameters:
         - name: leagueId
@@ -812,6 +877,28 @@ components:
         usernames:
           type: array
           items: { $ref: "#/components/schemas/Username" }
+    Notification:
+      type: object
+      required: [id, kind, leagueId, leagueName, createdAt, readAt]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        kind: { type: string, enum: [league_administrator_assigned] }
+        leagueId: { $ref: "#/components/schemas/UUID" }
+        leagueName: { type: string }
+        createdAt: { type: string, format: date-time }
+        readAt: { type: [string, "null"], format: date-time }
+    Notifications:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Notification" }
+    UnreadNotificationCount:
+      type: object
+      required: [count]
+      properties:
+        count: { type: integer, minimum: 0 }
     Password:
       type: string
       format: password

@@ -166,6 +166,21 @@ CREATE TABLE league_administrators (
 CREATE INDEX league_administrators_account_idx
     ON league_administrators (account_id, league_id DESC);
 
+CREATE TABLE account_notifications (
+    id uuid PRIMARY KEY DEFAULT uuidv7(),
+    account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
+    kind text NOT NULL CHECK (kind = 'league_administrator_assigned'),
+    league_id uuid NOT NULL REFERENCES leagues (id) ON DELETE CASCADE,
+    read_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX account_notifications_inbox_idx
+    ON account_notifications (account_id, created_at DESC, id DESC);
+CREATE INDEX account_notifications_unread_idx
+    ON account_notifications (account_id)
+    WHERE read_at IS NULL;
+
 CREATE TABLE league_followers (
     league_id uuid NOT NULL REFERENCES leagues (id) ON DELETE CASCADE,
     account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,

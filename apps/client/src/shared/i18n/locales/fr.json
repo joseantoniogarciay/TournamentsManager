@@ -217,5 +217,14 @@
   "tournaments_administered_empty": "Vous ne gérez encore aucun championnat.",
   "tournaments_followed": "Je suis",
   "tournaments_followed_empty": "Vous ne suivez encore aucun championnat.",
-  "tournaments_open_league": "Ouvrir {name}"
+  "tournaments_open_league": "Ouvrir {name}",
+  "notifications_title": "Notifications",
+  "notifications_empty": "Vous n’avez aucune notification.",
+  "notifications_administrator_assigned": "Vous gérez désormais {league}.",
+  "notifications_open_league": "Ouvrir la ligue {league}",
+  "notifications_delete": "Supprimer la notification",
+  "notifications_delete_all": "Tout supprimer",
+  "notifications_delete_all_title": "Supprimer toutes les notifications ?",
+  "notifications_delete_all_description": "Cette action est irréversible.",
+  "account_notifications_accessibility_label": "Ouvrir les notifications"
 }

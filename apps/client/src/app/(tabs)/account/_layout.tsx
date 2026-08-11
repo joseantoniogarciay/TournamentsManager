@@ -4,6 +4,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import { Text } from "@/shared/ui";
+import { NativeNotificationHeaderButton } from "@/features/notifications/native-header-button";
 
 export default function AccountLayout() {
   const t = getTranslator();
@@ -27,6 +28,11 @@ export default function AccountLayout() {
           </Stack.Toolbar.View>
         </Stack.Toolbar>
         <Stack.Toolbar placement="right">
+          {user ? (
+            <Stack.Toolbar.View hidesSharedBackground>
+              <NativeNotificationHeaderButton />
+            </Stack.Toolbar.View>
+          ) : null}
           <Stack.Toolbar.Button
             accessibilityLabel={t("account_settings_accessibility_label")}
             icon="gearshape"
@@ -35,6 +41,10 @@ export default function AccountLayout() {
         </Stack.Toolbar>
       </Stack.Screen>
       <Stack.Screen name="access" options={{ title: t("account_access_data_title") }} />
+      <Stack.Screen
+        name="notifications"
+        options={{ presentation: "modal", title: t("notifications_title") }}
+      />
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
       <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
       <Stack.Screen name="password" options={{ title: t("account_password_change_title") }} />

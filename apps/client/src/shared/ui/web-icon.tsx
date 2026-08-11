@@ -1,7 +1,16 @@
 import { createElement } from "react";
 
 type IconName =
-  "account" | "add" | "back" | "close" | "home" | "info" | "more" | "settings" | "tournament";
+  | "account"
+  | "add"
+  | "back"
+  | "bell"
+  | "close"
+  | "home"
+  | "info"
+  | "more"
+  | "settings"
+  | "tournament";
 
 type WebIconProps = {
   color: string;
@@ -13,6 +22,7 @@ const paths: Record<IconName, readonly string[]> = {
   account: ["M20 21a8 8 0 0 0-16 0", "M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"],
   add: ["M12 5v14", "M5 12h14"],
   back: ["m15 18-6-6 6-6"],
+  bell: ["M12 3a5 5 0 0 0-5 5v3.5L5 14v1h14v-1l-2-2.5V8a5 5 0 0 0-5-5Z", "M10 18a2 2 0 0 0 4 0"],
   close: ["m18 6-12 12", "m6 6 12 12"],
   home: ["m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10Z", "M9 21v-6h6v6"],
   info: ["M12 17v-5", "M12 7h.01", "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"],

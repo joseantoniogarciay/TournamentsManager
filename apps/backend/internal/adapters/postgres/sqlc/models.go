@@ -20,6 +20,15 @@ type Account struct {
 	DeletionRequestedAt pgtype.Timestamptz
 }
 
+type AccountNotification struct {
+	ID        pgtype.UUID
+	AccountID pgtype.UUID
+	Kind      string
+	LeagueID  pgtype.UUID
+	ReadAt    pgtype.Timestamptz
+	CreatedAt pgtype.Timestamptz
+}
+
 type EmailVerificationToken struct {
 	ID            pgtype.UUID
 	AccountID     pgtype.UUID

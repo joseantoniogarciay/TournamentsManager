@@ -217,5 +217,14 @@
   "tournaments_administered_empty": "Todavía no administras ninguna liga.",
   "tournaments_followed": "Sigo",
   "tournaments_followed_empty": "Todavía no sigues ninguna liga.",
-  "tournaments_open_league": "Abrir {name}"
+  "tournaments_open_league": "Abrir {name}",
+  "notifications_title": "Notificaciones",
+  "notifications_empty": "No tienes notificaciones.",
+  "notifications_administrator_assigned": "Ahora administras la liga {league}.",
+  "notifications_open_league": "Abrir liga {league}",
+  "notifications_delete": "Eliminar notificación",
+  "notifications_delete_all": "Eliminar todas",
+  "notifications_delete_all_title": "¿Eliminar todas las notificaciones?",
+  "notifications_delete_all_description": "Esta acción no se puede deshacer.",
+  "account_notifications_accessibility_label": "Abrir notificaciones"
 }
