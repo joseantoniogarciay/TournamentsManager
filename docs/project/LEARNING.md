@@ -2082,3 +2082,16 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** una conmutación de procesos no revierte la base de
   datos. Ambas versiones deben coexistir sobre el mismo esquema o el cambio
   necesita una estrategia explícita de evolución y recuperación.
+
+### 2026-08-13 — El contrato HTTP incluye los nombres y el formato de sus campos
+
+- **Aprendido:** que los valores del dominio sean correctos no basta si el
+  codificador JSON expone los nombres por defecto de Go o una fecha que no
+  cumple RFC 3339. El cliente generado consume los nombres definidos por
+  OpenAPI, no los nombres internos del struct.
+- **Evidencia:** las notificaciones llegaban como `ID` y `CreatedAt` y la fecha
+  procedente de PostgreSQL no era portable para `Date`; React recibía claves
+  ausentes y avisaba de elementos sin `key`.
+- **Regla reutilizable:** los DTO HTTP declaran explícitamente sus etiquetas
+  JSON y normalizan los tiempos a RFC 3339. Una prueba del handler verifica el
+  cuerpo serializado cuando una ruta tiene un cliente generado.

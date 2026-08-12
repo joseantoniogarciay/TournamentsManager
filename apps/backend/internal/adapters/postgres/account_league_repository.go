@@ -530,7 +530,7 @@ func (r AccountLeagueRepository) AssignAdministrator(ctx context.Context, accoun
 
 // ListNotifications devuelve el buzón interno de la cuenta.
 func (r AccountLeagueRepository) ListNotifications(ctx context.Context, accountID string) ([]notifications.Item, error) {
-	rows, err := r.pool.Query(ctx, `SELECT account_notifications.id::text, account_notifications.kind, leagues.id::text, leagues.name, account_notifications.created_at::text, account_notifications.read_at::text FROM account_notifications JOIN leagues ON leagues.id = account_notifications.league_id WHERE account_notifications.account_id = $1 ORDER BY account_notifications.created_at DESC, account_notifications.id DESC`, accountID)
+	rows, err := r.pool.Query(ctx, `SELECT account_notifications.id::text, account_notifications.kind, leagues.id::text, leagues.name, account_notifications.created_at, account_notifications.read_at FROM account_notifications JOIN leagues ON leagues.id = account_notifications.league_id WHERE account_notifications.account_id = $1 ORDER BY account_notifications.created_at DESC, account_notifications.id DESC`, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -538,8 +538,15 @@ func (r AccountLeagueRepository) ListNotifications(ctx context.Context, accountI
 	items := []notifications.Item{}
 	for rows.Next() {
 		var item notifications.Item
-		if err := rows.Scan(&item.ID, &item.Kind, &item.LeagueID, &item.LeagueName, &item.CreatedAt, &item.ReadAt); err != nil {
+		var createdAt time.Time
+		var readAt *time.Time
+		if err := rows.Scan(&item.ID, &item.Kind, &item.LeagueID, &item.LeagueName, &createdAt, &readAt); err != nil {
 			return nil, err
+		}
+		item.CreatedAt = createdAt.Format(time.RFC3339Nano)
+		if readAt != nil {
+			formattedReadAt := readAt.Format(time.RFC3339Nano)
+			item.ReadAt = &formattedReadAt
 		}
 		items = append(items, item)
 	}

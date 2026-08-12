@@ -227,8 +227,9 @@ export default function LeagueScreen() {
     headerShadowVisible: false,
     headerStyle: { backgroundColor: colors.surface.canvas },
     headerTintColor: colors.text.primary,
+    headerTitleAlign: "center" as const,
     headerTitle: () => (
-      <Text numberOfLines={2} style={styles.navigationTitle} variant="title">
+      <Text numberOfLines={1} style={styles.navigationTitle} variant="title">
         {league.name}
       </Text>
     ),

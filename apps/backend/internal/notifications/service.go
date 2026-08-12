@@ -5,8 +5,12 @@ import "context"
 
 // Item es una notificación mostrable en el buzón de una cuenta.
 type Item struct {
-	ID, Kind, LeagueID, LeagueName, CreatedAt string
-	ReadAt                                    *string
+	ID         string  `json:"id"`
+	Kind       string  `json:"kind"`
+	LeagueID   string  `json:"leagueId"`
+	LeagueName string  `json:"leagueName"`
+	CreatedAt  string  `json:"createdAt"`
+	ReadAt     *string `json:"readAt"`
 }
 
 // Repository persiste el buzón interno por cuenta.
