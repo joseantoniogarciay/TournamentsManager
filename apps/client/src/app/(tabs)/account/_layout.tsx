@@ -1,20 +1,41 @@
 import { Stack, router } from "expo-router";
+import { Platform } from "react-native";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Text } from "@/shared/ui";
+import { NavigationHeaderButton, Text } from "@/shared/ui";
 import { NativeNotificationHeaderButton } from "@/features/notifications/native-header-button";
 
 export default function AccountLayout() {
   const t = getTranslator();
   const { colors } = usePreferences();
   const { user } = useSession();
+  const goBackToAccount = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/account");
+  };
   return (
     <Stack
       screenOptions={{
         headerShadowVisible: false,
         headerBackButtonDisplayMode: "minimal",
+        headerBackVisible: Platform.OS === "ios",
+        ...(Platform.OS !== "ios"
+          ? {
+              headerLeft: () => (
+                <NavigationHeaderButton
+                  accessibilityLabel={t("common_back")}
+                  icon="back"
+                  nativeIcon={{ android: "arrow_back", ios: "chevron.left", web: "arrow_back" }}
+                  onPress={goBackToAccount}
+                />
+              ),
+            }
+          : {}),
         headerStyle: { backgroundColor: colors.surface.canvas },
         headerTintColor: colors.text.primary,
         headerTitleAlign: "center",
@@ -54,19 +75,29 @@ export default function AccountLayout() {
       />
       <Stack.Screen
         name="settings"
-        options={{ presentation: "modal", title: t("account_settings_title") }}
+        options={{
+          ...(Platform.OS !== "ios"
+            ? {
+                headerBackVisible: false,
+                headerLeft: () => (
+                  <NavigationHeaderButton
+                    accessibilityLabel={t("common_close")}
+                    icon="close"
+                    nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
+                    onPress={goBackToAccount}
+                  />
+                ),
+              }
+            : {}),
+          presentation: "modal",
+          title: t("account_settings_title"),
+        }}
       >
         <Stack.Toolbar placement="left">
           <Stack.Toolbar.Button
             accessibilityLabel={t("common_close")}
             icon="xmark"
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-                return;
-              }
-              router.replace("/account");
-            }}
+            onPress={goBackToAccount}
           />
         </Stack.Toolbar>
       </Stack.Screen>

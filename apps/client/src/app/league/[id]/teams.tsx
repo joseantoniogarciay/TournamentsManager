@@ -26,7 +26,15 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Button, Card, Screen, Text, TextField, useConfirmationDialog } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  NavigationHeaderButton,
+  Screen,
+  Text,
+  TextField,
+  useConfirmationDialog,
+} from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
 export default function LeagueTeamsScreen() {
@@ -119,30 +127,23 @@ export default function LeagueTeamsScreen() {
       onAccept: () => void remove(teamID),
       onCancel: () => undefined,
     });
-  const navigationButton = (onPress: () => void, label: string, icon: "close" | "add") => (
-    <Pressable
+  const navigationButton = (
+    onPress: () => void,
+    label: string,
+    icon: "close" | "add",
+    side: "left" | "right",
+  ) => (
+    <NavigationHeaderButton
       accessibilityLabel={label}
-      accessibilityRole="button"
+      icon={icon}
+      nativeIcon={
+        icon === "add"
+          ? { android: "add", ios: "plus", web: "add" }
+          : { android: "close", ios: "xmark", web: "close" }
+      }
       onPress={onPress}
-      style={[
-        styles.navigationButton,
-        { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-      ]}
-    >
-      {Platform.OS === "web" ? (
-        <WebIcon color={colors.text.primary} name={icon} size={control.iconSize} />
-      ) : (
-        <SymbolView
-          name={{
-            android: icon === "add" ? "add" : "close",
-            ios: icon === "add" ? "plus" : "xmark",
-            web: "close",
-          }}
-          size={control.iconSize}
-          tintColor={colors.text.primary}
-        />
-      )}
-    </Pressable>
+      side={side}
+    />
   );
 
   return (
@@ -156,9 +157,9 @@ export default function LeagueTeamsScreen() {
           title: t("league_teams"),
           ...(Platform.OS !== "ios"
             ? {
-                headerLeft: () => navigationButton(close, t("common_back"), "close"),
+                headerLeft: () => navigationButton(close, t("common_back"), "close", "left"),
                 headerRight: canAddTeam
-                  ? () => navigationButton(openAddTeam, t("league_add_team"), "add")
+                  ? () => navigationButton(openAddTeam, t("league_add_team"), "add", "right")
                   : undefined,
               }
             : {}),

@@ -1953,3 +1953,14 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** publica la política antes de recoger datos y enlázala
   desde el acceso, el registro y los ajustes; describe únicamente proveedores y
   tratamientos que estén realmente activos.
+
+### 2026-08-12 — La navegación debe conservar el mismo affordance sin ocultar la plataforma
+
+- **Aprendido:** un control de cabecera sin superficie ni margen lateral parece
+  accidental frente a las acciones circulares de las rutas profundas.
+- **Evidencia:** web y Android comparten `NavigationHeaderButton`, con objetivo
+  de 44 px, borde, superficie y 20 px respecto al lateral; iOS usa su toolbar
+  nativa equivalente.
+- **Regla reutilizable:** comparte el patrón visual de navegación entre web y
+  Android, pero deja que iOS use sus controles de barra cuando la plataforma ya
+  ofrece una presentación y un área táctil correctas.

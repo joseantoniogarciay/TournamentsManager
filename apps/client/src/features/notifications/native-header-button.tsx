@@ -1,12 +1,12 @@
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 
 import { color, control, space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Text } from "@/shared/ui";
+import { NavigationHeaderButton, Text } from "@/shared/ui";
 
 import { useNotifications } from "./notification-provider";
 
@@ -16,6 +16,25 @@ export function NativeNotificationHeaderButton() {
   const { colors } = usePreferences();
   const { count } = useNotifications();
 
+  const badge =
+    count > 0 ? (
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>{count > 99 ? "99+" : count}</Text>
+      </View>
+    ) : null;
+
+  if (Platform.OS !== "ios") {
+    return (
+      <NavigationHeaderButton
+        accessibilityLabel={t("account_notifications_accessibility_label")}
+        badge={badge}
+        icon="bell"
+        nativeIcon={{ android: "notifications", ios: "bell", web: "notifications" }}
+        onPress={() => router.push("/account/notifications" as never)}
+      />
+    );
+  }
+
   return (
     <Pressable
       accessibilityLabel={t("account_notifications_accessibility_label")}
@@ -24,11 +43,7 @@ export function NativeNotificationHeaderButton() {
       style={styles.button}
     >
       <SymbolView name="bell" size={control.iconSize} tintColor={colors.text.primary} />
-      {count > 0 ? (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{count > 99 ? "99+" : count}</Text>
-        </View>
-      ) : null}
+      {badge}
     </Pressable>
   );
 }
@@ -36,7 +51,7 @@ export function NativeNotificationHeaderButton() {
 const styles = StyleSheet.create({
   badge: {
     alignItems: "center",
-    backgroundColor: color.brand.primary,
+    backgroundColor: color.feedback.error,
     borderRadius: 10,
     minWidth: 20,
     paddingHorizontal: space[1],

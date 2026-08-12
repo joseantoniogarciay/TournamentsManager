@@ -1,13 +1,11 @@
 import { router, Stack } from "expo-router";
-import { SymbolView } from "expo-symbols";
-import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
 
-import { control, radius, space } from "@tournaments-manager/design-tokens";
+import { space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Card, Screen, Text } from "@/shared/ui";
-import { WebIcon } from "@/shared/ui/web-icon";
+import { Card, NavigationHeaderButton, Screen, Text } from "@/shared/ui";
 
 export default function PrivacyPolicyScreen() {
   const t = getTranslator();
@@ -37,34 +35,35 @@ export default function PrivacyPolicyScreen() {
       <Stack.Screen
         options={{
           headerBackVisible: false,
-          headerLeft: () => (
-            <Pressable
-              accessibilityLabel={t("common_close")}
-              accessibilityRole="button"
-              onPress={close}
-              style={[
-                styles.navigationButton,
-                { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-              ]}
-            >
-              {Platform.OS === "web" ? (
-                <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
-              ) : (
-                <SymbolView
-                  name={{ android: "close", ios: "xmark", web: "close" }}
-                  size={control.iconSize}
-                  tintColor={colors.text.primary}
-                />
-              )}
-            </Pressable>
-          ),
+          ...(Platform.OS !== "ios"
+            ? {
+                headerLeft: () => (
+                  <NavigationHeaderButton
+                    accessibilityLabel={t("common_close")}
+                    icon="close"
+                    nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
+                    onPress={close}
+                  />
+                ),
+              }
+            : {}),
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.surface.canvas },
           headerTintColor: colors.text.primary,
           headerTitle: t("privacy_policy_title"),
           headerTitleAlign: "center",
         }}
-      />
+      >
+        {Platform.OS === "ios" ? (
+          <Stack.Toolbar placement="left">
+            <Stack.Toolbar.Button
+              accessibilityLabel={t("common_close")}
+              icon="xmark"
+              onPress={close}
+            />
+          </Stack.Toolbar>
+        ) : null}
+      </Stack.Screen>
       <Screen bottomInset="none" topInset="navigation-bar">
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Card>
@@ -91,13 +90,5 @@ export default function PrivacyPolicyScreen() {
 const styles = StyleSheet.create({
   content: { gap: space[5], paddingBottom: space[8] },
   intro: { gap: space[3] },
-  navigationButton: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    height: control.minHeight,
-    justifyContent: "center",
-    width: control.minHeight,
-  },
   section: { gap: space[2] },
 });

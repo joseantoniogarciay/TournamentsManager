@@ -1,30 +1,27 @@
 import { router } from "expo-router";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { color, control, space } from "@tournaments-manager/design-tokens";
 import { useNotifications } from "./notification-provider";
 import { getTranslator } from "@/shared/i18n/locale";
-import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Text } from "@/shared/ui";
-import { WebIcon } from "@/shared/ui/web-icon";
+import { NavigationHeaderButton, Text } from "@/shared/ui";
 
 export function NotificationHeaderButton() {
   const t = getTranslator();
-  const { colors } = usePreferences();
   const { count } = useNotifications();
   return (
-    <Pressable
+    <NavigationHeaderButton
       accessibilityLabel={t("account_notifications_accessibility_label")}
-      accessibilityRole="button"
+      badge={
+        count > 0 ? (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{count > 99 ? "99+" : count}</Text>
+          </View>
+        ) : null
+      }
+      icon="bell"
+      nativeIcon="bell"
       onPress={() => router.push("/account/notifications" as never)}
-      style={styles.button}
-    >
-      <WebIcon color={colors.text.primary} name="bell" size={control.iconSize} />
-      {count > 0 ? (
-        <View style={[styles.badge, { backgroundColor: color.brand.primary }]}>
-          <Text style={styles.badgeText}>{count > 99 ? "99+" : count}</Text>
-        </View>
-      ) : null}
-    </Pressable>
+    />
   );
 }
 const styles = StyleSheet.create({
@@ -36,12 +33,14 @@ const styles = StyleSheet.create({
   },
   badge: {
     alignItems: "center",
-    borderRadius: 10,
+    backgroundColor: color.feedback.error,
+    borderRadius: control.minHeight / 2,
+    minHeight: 18,
     minWidth: 20,
     paddingHorizontal: space[1],
     position: "absolute",
-    right: 0,
-    top: 0,
+    right: -space[1],
+    top: -space[1],
   },
   badgeText: { color: "white", fontSize: 11 },
 });

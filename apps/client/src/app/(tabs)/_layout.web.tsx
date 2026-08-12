@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { StyleSheet, View } from "react-native";
 
 import { color, control } from "@tournaments-manager/design-tokens";
 
@@ -46,12 +47,27 @@ export default function TabLayout() {
         name="account"
         options={{
           tabBarIcon: ({ color }) => (
-            <WebIcon color={color as string} name="account" size={control.iconSize} />
+            <View style={styles.accountIcon}>
+              <WebIcon color={color as string} name="account" size={control.iconSize} />
+              {count > 0 ? <View style={styles.unreadDot} /> : null}
+            </View>
           ),
-          tabBarBadge: count > 0 ? "•" : undefined,
           title: t("nav_account"),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  accountIcon: { height: control.iconSize, position: "relative", width: control.iconSize },
+  unreadDot: {
+    backgroundColor: color.feedback.error,
+    borderRadius: 4,
+    height: 8,
+    position: "absolute",
+    right: -4,
+    top: -4,
+    width: 8,
+  },
+});

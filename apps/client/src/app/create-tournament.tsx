@@ -1,7 +1,6 @@
 import { router, Stack } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { useEffect, useState } from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -17,8 +16,14 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Button, Card, KeyboardAwareScrollView, Screen, TextField } from "@/shared/ui";
-import { WebIcon } from "@/shared/ui/web-icon";
+import {
+  Button,
+  Card,
+  KeyboardAwareScrollView,
+  NavigationHeaderButton,
+  Screen,
+  TextField,
+} from "@/shared/ui";
 
 export default function CreateTournamentScreen() {
   const t = getTranslator();
@@ -122,25 +127,12 @@ export default function CreateTournamentScreen() {
         <Stack.Screen
           options={{
             headerLeft: () => (
-              <Pressable
+              <NavigationHeaderButton
                 accessibilityLabel={t("common_close")}
-                accessibilityRole="button"
+                icon="close"
+                nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
                 onPress={() => void close()}
-                style={[
-                  styles.navigationButton,
-                  { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-                ]}
-              >
-                {Platform.OS === "web" ? (
-                  <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
-                ) : (
-                  <SymbolView
-                    name={{ android: "close", ios: "xmark", web: "close" }}
-                    size={control.iconSize}
-                    tintColor={colors.text.primary}
-                  />
-                )}
-              </Pressable>
+              />
             ),
           }}
         />

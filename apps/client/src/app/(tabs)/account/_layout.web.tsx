@@ -1,21 +1,36 @@
 import { Stack, router } from "expo-router";
-import { Pressable, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { control } from "@tournaments-manager/design-tokens";
+import { space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Text } from "@/shared/ui";
-import { WebIcon } from "@/shared/ui/web-icon";
+import { NavigationHeaderButton, Text } from "@/shared/ui";
 import { NotificationHeaderButton } from "@/features/notifications/header-button";
 
 export default function AccountLayout() {
   const t = getTranslator();
   const { colors } = usePreferences();
   const { user } = useSession();
+  const goBackToAccount = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/account");
+  };
   const headerOptions = {
     headerBackButtonDisplayMode: "minimal" as const,
+    headerBackVisible: false,
+    headerLeft: () => (
+      <NavigationHeaderButton
+        accessibilityLabel={t("common_back")}
+        icon="back"
+        nativeIcon={{ android: "arrow_back", ios: "chevron.left", web: "arrow_back" }}
+        onPress={goBackToAccount}
+      />
+    ),
     headerShadowVisible: false,
     headerStyle: { backgroundColor: colors.surface.canvas },
     headerTintColor: colors.text.primary,
@@ -28,19 +43,22 @@ export default function AccountLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerLeft: () => <Text variant="title">{user?.username}</Text>,
+          headerLeft: () => (
+            <View style={styles.username}>
+              <Text variant="title">{user?.username}</Text>
+            </View>
+          ),
           headerRight: () => (
-            <>
+            <View style={styles.headerActions}>
               {user ? <NotificationHeaderButton /> : null}
-              <Pressable
+              <NavigationHeaderButton
                 accessibilityLabel={t("account_settings_accessibility_label")}
-                accessibilityRole="button"
+                icon="settings"
+                nativeIcon="gearshape"
                 onPress={() => router.push("/account/settings")}
-                style={styles.headerButton}
-              >
-                <WebIcon color={colors.text.primary} name="settings" size={control.iconSize} />
-              </Pressable>
-            </>
+                side="right"
+              />
+            </View>
           ),
           headerTitle: () => null,
         }}
@@ -61,20 +79,14 @@ export default function AccountLayout() {
         name="settings"
         options={{
           headerLeft: () => (
-            <Pressable
+            <NavigationHeaderButton
               accessibilityLabel={t("common_close")}
-              accessibilityRole="button"
+              icon="close"
+              nativeIcon="xmark"
               onPress={() => {
-                if (router.canGoBack()) {
-                  router.back();
-                  return;
-                }
-                router.replace("/account");
+                goBackToAccount();
               }}
-              style={styles.headerButton}
-            >
-              <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
-            </Pressable>
+            />
           ),
           presentation: "card",
           title: t("account_settings_title"),
@@ -85,10 +97,6 @@ export default function AccountLayout() {
 }
 
 const styles = StyleSheet.create({
-  headerButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: control.minHeight,
-    minWidth: control.minHeight,
-  },
+  headerActions: { alignItems: "center", flexDirection: "row", gap: space[3] },
+  username: { marginLeft: space[5] },
 });

@@ -1,13 +1,10 @@
 import { router, Stack } from "expo-router";
-import { SymbolView } from "expo-symbols";
-import { Platform, Pressable, StyleSheet } from "react-native";
-
-import { control, radius } from "@tournaments-manager/design-tokens";
+import { Platform } from "react-native";
 
 import { AccountScreen } from "@/app/(tabs)/account";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { WebIcon } from "@/shared/ui/web-icon";
+import { NavigationHeaderButton } from "@/shared/ui";
 
 export default function AccountAuthenticationScreen() {
   const t = getTranslator();
@@ -25,46 +22,36 @@ export default function AccountAuthenticationScreen() {
       <Stack.Screen
         options={{
           headerBackVisible: false,
-          headerLeft: () => (
-            <Pressable
-              accessibilityLabel={t("common_close")}
-              accessibilityRole="button"
-              onPress={close}
-              style={[
-                styles.navigationButton,
-                { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-              ]}
-            >
-              {Platform.OS === "web" ? (
-                <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
-              ) : (
-                <SymbolView
-                  name={{ android: "close", ios: "xmark", web: "close" }}
-                  size={control.iconSize}
-                  tintColor={colors.text.primary}
-                />
-              )}
-            </Pressable>
-          ),
+          ...(Platform.OS !== "ios"
+            ? {
+                headerLeft: () => (
+                  <NavigationHeaderButton
+                    accessibilityLabel={t("common_close")}
+                    icon="close"
+                    nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
+                    onPress={close}
+                  />
+                ),
+              }
+            : {}),
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.surface.canvas },
           headerTintColor: colors.text.primary,
           headerTitle: t("account_title"),
           headerTitleAlign: "center",
         }}
-      />
+      >
+        {Platform.OS === "ios" ? (
+          <Stack.Toolbar placement="left">
+            <Stack.Toolbar.Button
+              accessibilityLabel={t("common_close")}
+              icon="xmark"
+              onPress={close}
+            />
+          </Stack.Toolbar>
+        ) : null}
+      </Stack.Screen>
       <AccountScreen sessionReplacementDestination="/create-tournament" />
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  navigationButton: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    height: control.minHeight,
-    justifyContent: "center",
-    width: control.minHeight,
-  },
-});

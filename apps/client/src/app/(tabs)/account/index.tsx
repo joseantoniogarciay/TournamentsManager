@@ -312,7 +312,9 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
             secondarySurfaceColor={colors.surface.canvas}
             variant="secondary"
           />
-          <PrivacyPolicyLink />
+          <View style={styles.privacyPolicyLink}>
+            <PrivacyPolicyLink />
+          </View>
         </View>
       </KeyboardAwareScrollView>
     </Screen>
@@ -340,6 +342,7 @@ const styles = StyleSheet.create({
   },
   googleButtonDisabled: { opacity: 0.55 },
   googleLogo: { height: 22, width: 22 },
+  privacyPolicyLink: { alignSelf: "flex-end", marginTop: space[12] + space[5] - space[3] },
   register: { gap: space[3], marginHorizontal: space[5] },
   navigationRow: {
     alignItems: "center",
