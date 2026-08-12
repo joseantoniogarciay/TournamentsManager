@@ -212,11 +212,17 @@ pnpm run openapi:ui
 make openapi-ui
 ```
 
-Scalar se sirve solo en `http://127.0.0.1:8082` y lee directamente
+Scalar se sirve solo en `http://127.0.0.1:8083` y lee directamente
 `contracts/openapi/v1/openapi.yaml`. Admite OpenAPI 3.1 y no es una fuente
 adicional del contrato ni forma parte del artefacto desplegable de la API.
 Para probar operaciones cuando exista el servidor Go local, el contrato apunta
-a `http://127.0.0.1:8080/v1`; el puerto `8082` queda reservado para Scalar.
+a `http://127.0.0.1:8080/v1`; el puerto `8083` queda reservado para Scalar.
+
+Cada release de desarrollo público publica además la misma referencia en
+`https://dev.fasttourney.com/api-docs/`. Es una copia estática del contrato de
+ese release y Scalar sustituye su servidor por
+`https://dev-api.fasttourney.com/v1`; no se publica en producción ni requiere
+un hostname, DNS o regla CORS adicional.
 
 ## Superficie candidata del primer vertical slice
 

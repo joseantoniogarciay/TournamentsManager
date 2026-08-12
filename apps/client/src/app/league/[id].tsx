@@ -34,7 +34,7 @@ import {
   useConfirmationDialog,
 } from "@/shared/ui";
 
-const localAppLinkURL = "http://localhost:8081";
+const localAppLinkURL = "http://localhost:8082";
 
 export default function LeagueScreen() {
   const t = getTranslator();

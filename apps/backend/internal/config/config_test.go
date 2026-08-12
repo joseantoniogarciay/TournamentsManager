@@ -15,7 +15,7 @@ func TestLoad(t *testing.T) {
 			smtpAddrEnv:           "127.0.0.1:1025",
 			smtpFromEnv:           "no-reply@example.test",
 			publicBaseURLEnv:      "http://127.0.0.1:8080",
-			corsAllowedOriginsEnv: "http://localhost:8081, http://127.0.0.1:8081",
+			corsAllowedOriginsEnv: "http://localhost:8082, http://127.0.0.1:8082",
 		}[key]
 	})
 	if err != nil {
@@ -58,7 +58,7 @@ func TestLoadRejectsNonHTTPSPublicBaseURLOutsideLoopback(t *testing.T) {
 			smtpAddrEnv:           "127.0.0.1:1025",
 			smtpFromEnv:           "no-reply@example.test",
 			publicBaseURLEnv:      "http://links.example.test",
-			corsAllowedOriginsEnv: "http://localhost:8081",
+			corsAllowedOriginsEnv: "http://localhost:8082",
 		}[key]
 	})
 	if err == nil || !strings.Contains(err.Error(), publicBaseURLEnv) {

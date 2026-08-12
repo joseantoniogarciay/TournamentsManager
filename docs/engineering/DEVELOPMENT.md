@@ -141,7 +141,7 @@ pnpm run verify
 ```
 
 `pnpm run openapi:ui` (o `make openapi-ui`) abre Scalar localmente en
-`http://127.0.0.1:8082` para explorar el contrato OpenAPI 3.1. No arranca el
+`http://127.0.0.1:8083` para explorar el contrato OpenAPI 3.1. No arranca el
 backend ni publica documentación. El contrato configura `http://127.0.0.1:8080/v1`
 como destino de la API local cuando el servidor Go esté disponible.
 
@@ -175,6 +175,11 @@ Para iniciar el cliente:
 pnpm --filter @tournaments-manager/client start
 pnpm --filter @tournaments-manager/client web
 ```
+
+El comando `web` fija Expo en `http://localhost:8082`. Si ese puerto está
+ocupado, se detiene el proceso que lo usa antes de iniciar el cliente; no se
+cambia la web a otro puerto porque los enlaces de correo y el origen CORS local
+están fijados a `8082`.
 
 El cliente declara dos variantes de aplicación en `apps/client/app.config.ts`:
 `development` muestra **Fast Tourney Dev** y `production` muestra **Fast
@@ -225,7 +230,7 @@ La configuración y los secretos siguen
   no a su propio `127.0.0.1`.
 - `CORS_ALLOWED_ORIGINS` es una lista separada por comas de orígenes web
   completos sin path. El backend falla si falta o incluye un valor inválido. En
-  local se permiten `http://localhost:8081` y `http://127.0.0.1:8081`; cada
+  local se permiten `http://localhost:8082` y `http://127.0.0.1:8082`; cada
   entorno desplegado declara solo sus dominios web reales: en desarrollo
   `https://dev.fasttourney.com` y en producción `https://fasttourney.com`.
 - El contrato de la API en Compose vive en `infra/local/api.docker.env`; usa
@@ -255,7 +260,7 @@ archivo Go. El contrato `infra/local/api.docker.env` exige `DATABASE_URL`,
 `HTTP_ADDR`, `SMTP_ADDR`, `SMTP_FROM`, `PUBLIC_BASE_URL` y
 `CORS_ALLOWED_ORIGINS`.
 `PUBLIC_BASE_URL` es la URL del cliente a la que llega el correo, no la de la
-API: en local usa `http://localhost:8081`; así el navegador puede usar la
+API: en local usa `http://localhost:8082`; así el navegador puede usar la
 excepción de desarrollo para cookies `Secure`. Fuera de loopback debe ser HTTPS y
 coincidir con `EXPO_PUBLIC_APP_LINK_URL` de la build móvil.
 El proceso comprueba PostgreSQL antes de abrir el puerto y expone `GET /healthz`

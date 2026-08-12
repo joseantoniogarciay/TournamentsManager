@@ -227,7 +227,7 @@ termina sin dejar un servidor utilizable. La vía fiable es mantener
 `pnpm --filter @tournaments-manager/client exec expo start --lan` en una
 terminal interactiva. Como la presencia de `expo-dev-client` selecciona por
 defecto una development build, hay que pulsar `s`, esperar la URL
-`exp://<IP-LAN>:8081` que imprime Metro y abrir esa URL exacta en Expo Go. La
+`exp://<IP-LAN>:8082` que imprime Metro y abrir esa URL exacta en Expo Go. La
 URL `com.fasttourney...://expo-development-client` no sirve para Expo Go.
 
 ## 2026-08-02 — Preparar no es competir
@@ -2118,3 +2118,20 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** los DTO HTTP declaran explícitamente sus etiquetas
   JSON y normalizan los tiempos a RFC 3339. Una prueba del handler verifica el
   cuerpo serializado cuando una ruta tiene un cliente generado.
+
+### 2026-08-13 — El puerto de la web local es parte de su contrato de enlaces
+
+- **Aprendido:** si Expo cambia automáticamente de puerto porque `8082` está
+  ocupado, los enlaces de correo apuntan a otro origen y dejan de abrir la web
+  local correcta.
+- **Regla reutilizable:** la web local se inicia explícitamente en `8082`; se
+  libera ese puerto antes de arrancarla y CORS solo autoriza sus orígenes
+  `localhost` y `127.0.0.1` en ese puerto.
+
+### 2026-08-13 — La documentación pública debe viajar con el release que describe
+
+- **Aprendido:** una referencia de API desplegada como proceso local separado
+  puede describir un contrato distinto al de la web o API pública actuales.
+- **Regla reutilizable:** el despliegue copia la UI de referencia y el OpenAPI
+  junto al artefacto web versionado; Caddy sirve esa ruta antes del fallback de
+  la SPA para mantenerla consistente y recuperable con el mismo SHA.

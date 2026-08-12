@@ -20,6 +20,10 @@ pnpm --filter @tournaments-manager/client android
 pnpm --filter @tournaments-manager/client web
 ```
 
+La web local escucha siempre en `http://localhost:8082`. Si el puerto está
+ocupado, libéralo antes de arrancar Expo: no se acepta desplazar el cliente a
+otro puerto, porque los enlaces de correo y el origen CORS local usan `8082`.
+
 ## Entornos de aplicación
 
 La configuración de Expo se resuelve en `app.config.ts`, con dos variantes:

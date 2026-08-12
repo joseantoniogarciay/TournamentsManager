@@ -31,6 +31,12 @@ backups. `deploy-dev-web.sh` ignora el `.env` local y limpia la caché de Metro
 para que ambas URL públicas se incorporen al bundle. Caddy no ejecuta Expo
 Metro.
 
+Cada release de dev también incorpora la referencia Scalar y la copia exacta de
+OpenAPI con la que se construyó. Caddy la sirve públicamente, sin DNS ni Access
+adicionales, en `https://dev.fasttourney.com/api-docs/`; la interfaz llama a
+`https://dev-api.fasttourney.com/v1` bajo el mismo origen web ya autorizado por
+CORS. La referencia no se indexa, como el resto del host de desarrollo.
+
 Para recuperar el último artefacto anterior, se usa
 `make dev-public-rollback SHA=<SHA-completo>`. La reversión cambia API y web al
 mismo SHA conservado, pero no sustituye una restauración de PostgreSQL.

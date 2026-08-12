@@ -160,6 +160,12 @@ conserva `503` para los hosts de producción no publicados. La configuración,
 volumen PostgreSQL y proyecto Compose de dev no se comparten con el entorno
 local ni con el futuro prod, conforme a ADR-0091.
 
+El mismo release contiene la referencia pública de desarrollo en
+`https://dev.fasttourney.com/api-docs/`. El script de despliegue copia la UI
+Scalar y `openapi.yaml` junto a la exportación web; Caddy atiende esa ruta antes
+del fallback de la SPA. Como usa el origen ya autorizado
+`dev.fasttourney.com`, no cambia CORS de `dev-api` ni exige otro hostname.
+
 ADR-0092 conserva dos despliegues recuperables de dev fuera de Git: cada uno
 lleva el SHA, una imagen runtime etiquetada y una exportación web estática. Caddy
 sirve el enlace simbólico de la versión activa y el rollback selecciona el SHA
