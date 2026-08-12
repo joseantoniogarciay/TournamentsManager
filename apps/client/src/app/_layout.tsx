@@ -75,6 +75,13 @@ function RootNavigator() {
         }}
       />
       <Stack.Screen
+        name="privacy-policy"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
         name="league/[id]"
         options={{
           headerShown: true,

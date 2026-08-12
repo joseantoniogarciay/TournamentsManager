@@ -30,6 +30,10 @@ CREATE INDEX accounts_pending_expiration_idx
     ON accounts (expires_at)
     WHERE state = 'pending_verification';
 
+CREATE INDEX accounts_deletion_purge_idx
+    ON accounts (deletion_requested_at, id)
+    WHERE state = 'deletion_pending';
+
 CREATE TABLE local_credentials (
     account_id uuid PRIMARY KEY REFERENCES accounts (id) ON DELETE CASCADE,
     password_hash text NOT NULL,
@@ -231,7 +235,7 @@ CREATE TABLE matches (
 CREATE TABLE match_result_changes (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     match_id uuid NOT NULL REFERENCES matches (id) ON DELETE CASCADE,
-    changed_by_account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE RESTRICT,
+    changed_by_account_id uuid REFERENCES accounts (id) ON DELETE SET NULL,
     previous_home_score integer,
     previous_away_score integer,
     home_score integer NOT NULL CHECK (home_score >= 0),

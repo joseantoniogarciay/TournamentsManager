@@ -74,7 +74,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0020](../adr/0020-use-minimal-correlated-observability.md)                                   | Usar observabilidad mínima correlacionada                            | Aceptado              | 2026-07-25 |
 | [0021](../adr/0021-use-advisory-ci-with-local-quality-gate.md)                                | Usar CI informativa con puerta de calidad local                      | Aceptado              | 2026-07-25 |
 | [0022](../adr/0022-package-backend-as-oci-image.md)                                           | Empaquetar la API como imagen OCI                                    | Aceptado              | 2026-07-25 |
-| [0023](../adr/0023-use-ecs-fargate-as-future-cloud-runtime.md)                                | Usar ECS con Fargate como runtime cloud futuro                       | Aceptado              | 2026-07-25 |
+| [0023](../adr/0023-use-ecs-fargate-as-future-cloud-runtime.md)                                | Usar ECS con Fargate como runtime cloud futuro                       | Superado por ADR-0088 | 2026-07-25 |
 | [0024](../adr/0024-use-ecr-and-digest-based-image-promotion.md)                               | Usar ECR y promoción por digest con releases selectivas              | Aceptado              | 2026-07-25 |
 | [0025](../adr/0025-use-terraform-for-infrastructure-as-code.md)                               | Usar Terraform para la infraestructura como código                   | Aceptado              | 2026-07-25 |
 | [0026](../adr/0026-use-aws-organizations-and-temporary-identities.md)                         | Usar AWS Organizations e identidades temporales                      | Aceptado              | 2026-07-25 |
@@ -135,6 +135,11 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0083](../adr/0083-materialize-official-account-league-outcomes-on-completion.md)             | Materializar resultados oficiales por cuenta al finalizar una liga   | Aceptado              | 2026-08-09 |
 | [0085](../adr/0085-share-canonical-league-state-in-the-client.md)                             | Compartir el estado canónico de cada liga en el cliente              | Aceptado              | 2026-08-10 |
 | [0086](../adr/0086-use-a-durable-internal-notification-inbox.md)                               | Usar un buzón interno de notificaciones duradero                     | Aceptado              | 2026-08-11 |
+| [0087](../adr/0087-use-caddy-for-home-beta-edge.md)                                             | Usar Caddy como borde HTTPS de la beta doméstica                     | Superado por ADR-0090 | 2026-08-11 |
+| [0088](../adr/0088-use-ephemeral-aws-learning-and-home-runtime.md)                             | Usar AWS efímero para aprendizaje y el Mac como runtime habitual     | Aceptado              | 2026-08-11 |
+| [0089](../adr/0089-use-fasttourney-domain-and-separated-app-link-hosts.md)                     | Usar `fasttourney.com` y separar hosts de enlaces por entorno        | Aceptado              | 2026-08-11 |
+| [0090](../adr/0090-use-cloudflare-tunnel-for-home-public-ingress.md)                            | Usar Cloudflare Tunnel como entrada pública doméstica                 | Aceptado              | 2026-08-11 |
+| [0091](../adr/0091-separate-local-and-public-development-compose-projects.md)                    | Separar Compose local y de desarrollo público                         | Aceptado              | 2026-08-11 |
 
 ## Trazabilidad de un cambio
 

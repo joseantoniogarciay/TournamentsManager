@@ -24,6 +24,7 @@ import { useUsernameAvailability } from "@/features/registration/username-availa
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
+import { PrivacyPolicyLink } from "@/shared/legal/privacy-policy-link";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
@@ -311,6 +312,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
             secondarySurfaceColor={colors.surface.canvas}
             variant="secondary"
           />
+          <PrivacyPolicyLink />
         </View>
       </KeyboardAwareScrollView>
     </Screen>

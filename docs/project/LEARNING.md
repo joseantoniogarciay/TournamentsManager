@@ -1,5 +1,69 @@
 # Registro de aprendizaje
 
+## 2026-08-12 — Una purga no debe retener identidad por preservar historia
+
+Eliminar una cuenta puede chocar con el historial compartido de una liga. La
+clave foránea de los cambios de resultado usa `ON DELETE SET NULL`: el resultado
+y su cronología continúan disponibles, pero la persona eliminada deja de ser
+identificable. El job se ejecuta fuera de la API mediante `launchd`, por lo que
+un reinicio de servidor no borra ni duplica su planificación.
+
+## 2026-08-12 — Descripción e indexación son controles independientes
+
+La meta description describe una página si un buscador decide mostrarla, pero no
+controla si puede indexarla. Un entorno público de desarrollo conserva
+metadatos útiles y envía `X-Robots-Tag: noindex, nofollow, noarchive` desde el
+borde para no aparecer en buscadores. Esto no limita el acceso ni sustituye
+controles de autenticación.
+
+## 2026-08-11 — El borde puede validarse sin publicar una aplicación incompleta
+
+Caddy puede obtener el certificado y ejercer el redirect canónico antes de que
+exista una web o API apta para Internet. Una respuesta `503` explícita evita que
+un puerto abierto revele por accidente un servicio interno o plantillas de
+asociación sin firmas reales. El proxy solo se añade junto con su artefacto y
+configuración verificables.
+
+## 2026-08-11 — Un host de enlaces es una frontera de confianza
+
+Universal Links y App Links no se conceden a una marca, sino a la combinación de
+host HTTPS, identificador de aplicación y firma. Separar `fasttourney.com` de
+`dev.fasttourney.com` evita que una build de desarrollo herede la asociación y
+las credenciales web de producción. Cada host publica únicamente sus propios
+ficheros `.well-known`. Véase ADR-0089.
+
+## 2026-08-11 — Un entorno de aprendizaje no tiene que estar encendido siempre
+
+Un entorno AWS enseña sus propiedades reales solo si se crea con IaC, se verifica
+y se destruye. Mantenerlo encendido sin tráfico convierte el aprendizaje en coste
+fijo. El Mac conserva dos ejecuciones aisladas —desarrollo y release doméstico—,
+pero esa separación no le concede alta disponibilidad: comparten equipo, red y
+alimentación. Véase ADR-0088.
+
+## 2026-08-11 — Un túnel evita abrir el router, pero no vuelve residencial al ISP
+
+Cloudflare Tunnel abre una conexión saliente desde el Mac y permite que
+Cloudflare termine HTTPS sin publicar la IP doméstica como origen ni mantener
+forwards/DDNS. Caddy puede seguir en loopback para enrutar por hostname. Esto
+reduce mucho la exposición de origen; no impide que una IP residencial ya
+conocida pueda recibir tráfico directo que sature su enlace. Véase ADR-0090.
+
+## 2026-08-11 — Un dev público no es el bucle local de Air
+
+Un proyecto Compose aporta namespace a sus contenedores, red y volúmenes, por lo
+que `tournaments-manager-dev` puede reutilizar los nombres internos `api` y
+`postgres` sin mezclarse con `tournaments-manager-local`. Para que los cambios
+diarios no alteren a usuarios externos, el primero usa la imagen `runtime` y web
+exportada estática; Air queda en local. Véase ADR-0091.
+
+## 2026-08-11 — DDNS y HTTPS resuelven problemas distintos
+
+Una IP doméstica dinámica exige que el DNS actualice el nombre público, pero no
+cifra ni enruta el tráfico. Caddy recibe HTTPS para ese nombre y lo reenvía a la
+API interna; en la alternativa inicial el router dirigía TCP 80/443 hacia Caddy.
+La decisión actual usa Cloudflare Tunnel (ADR-0090), que elimina esos forwards y
+el DDNS, sin publicar PostgreSQL ni el puerto interno de la API.
+
 ## 2026-08-10 — Los patrones visuales repetidos necesitan una regla verificable
 
 Una ruta modal no debe recrear a ojo una `X` ni dejar su contenido a ras del
@@ -1878,3 +1942,14 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** para datos comparables y densos en móvil, fija la
   identidad de la fila y su métrica principal; reserva el desplazamiento para
   las columnas secundarias y no muestres affordances de scroll si no hay desborde.
+
+### 2026-08-12 — La información de privacidad debe coincidir con el ciclo técnico real
+
+- **Aprendido:** una política no puede prometer recuperación de cuenta si el
+  producto solo ofrece una espera antes de su eliminación definitiva.
+- **Evidencia:** la baja queda pendiente 30 días y una tarea externa elimina la
+  cuenta en lotes; el historial de resultados conserva el dato deportivo y
+  anonimiza a su autora.
+- **Regla reutilizable:** publica la política antes de recoger datos y enlázala
+  desde el acceso, el registro y los ajustes; describe únicamente proveedores y
+  tratamientos que estén realmente activos.

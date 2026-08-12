@@ -130,6 +130,9 @@ La gestión de configuración sigue
   la protección CSRF de mutaciones autenticadas por cookie. Para esas
   mutaciones, los mismos orígenes validados se registran explícitamente como
   confiables en la protección CSRF; un origen ajeno sigue rechazado.
+- ADR-0089 fija esos orígenes públicos en `https://dev.fasttourney.com` para
+  desarrollo y `https://fasttourney.com` para producción. Cada host publica
+  exclusivamente la asociación de su propia aplicación nativa.
 
 ## Gates futuros
 

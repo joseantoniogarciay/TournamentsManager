@@ -1,0 +1,36 @@
+# Router HTTP local del Mac anfitrión.
+#
+# Cloudflare Tunnel termina el TLS público y alcanza este proceso por una
+# conexión saliente. Caddy no escucha en la LAN ni en la WAN; conserva el
+# enrutamiento por Host y la futura capacidad de proxy sin exponer la IP de casa.
+{
+	http_port 9080
+}
+
+http://www.fasttourney.com {
+	bind 127.0.0.1
+	redir https://fasttourney.com{uri} 308
+}
+
+http://fasttourney.com {
+	bind 127.0.0.1
+	respond "FastTourney todavía no está publicado.\n" 503
+}
+
+http://dev.fasttourney.com {
+	bind 127.0.0.1
+	header X-Robots-Tag "noindex, nofollow, noarchive"
+	root * /opt/homebrew/var/www/fasttourney/dev
+	try_files {path} /index.html
+	file_server
+}
+
+http://api.fasttourney.com {
+	bind 127.0.0.1
+	respond "La API de FastTourney todavía no está publicada.\n" 503
+}
+
+http://dev-api.fasttourney.com {
+	bind 127.0.0.1
+	reverse_proxy 127.0.0.1:8081
+}

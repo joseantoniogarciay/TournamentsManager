@@ -19,6 +19,7 @@ import {
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { registerLocalAccountRequest } from "@/features/registration/api";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
+import { PrivacyPolicyLink } from "@/shared/legal/privacy-policy-link";
 import {
   clearLocalLeagueDraft,
   getLocalLeagueDraft,
@@ -140,6 +141,7 @@ export default function RegisterScreen() {
               loading={isSubmitting}
               onPress={() => void register()}
             />
+            <PrivacyPolicyLink />
           </View>
         </Card>
       </KeyboardAwareScrollView>

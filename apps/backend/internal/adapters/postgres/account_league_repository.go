@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/accounts"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres/sqlc"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
@@ -30,6 +31,39 @@ type AccountLeagueRepository struct {
 func NewAccountLeagueRepository(pool *pgxpool.Pool) AccountLeagueRepository {
 	return AccountLeagueRepository{pool: pool, queries: sqlc.New(pool)}
 }
+
+// PurgeExpired elimina un lote de cuentas cuya ventana de baja ha vencido.
+// El CTE bloquea únicamente las cuentas seleccionadas y SKIP LOCKED evita esperar
+// a una transacción concurrente sobre una de ellas.
+func (r AccountLeagueRepository) PurgeExpired(ctx context.Context, limit int) (int64, error) {
+	if limit < 1 {
+		return 0, fmt.Errorf("límite de purga debe ser positivo")
+	}
+	command, err := r.pool.Exec(ctx, `
+		WITH candidates AS (
+			SELECT id
+			FROM accounts
+			WHERE state = 'deletion_pending'
+				AND deletion_requested_at <= now() - interval '30 days'
+				AND NOT EXISTS (
+					SELECT 1
+					FROM leagues
+					WHERE organizer_account_id = accounts.id
+				)
+			ORDER BY deletion_requested_at, id
+			FOR UPDATE SKIP LOCKED
+			LIMIT $1
+		)
+		DELETE FROM accounts
+		USING candidates
+		WHERE accounts.id = candidates.id`, limit)
+	if err != nil {
+		return 0, err
+	}
+	return command.RowsAffected(), nil
+}
+
+var _ accounts.PurgeRepository = AccountLeagueRepository{}
 
 // ScheduleAccountDeletion revoca accesos y relaciones personales sin borrar la cuenta.
 func (r AccountLeagueRepository) ScheduleAccountDeletion(ctx context.Context, accountID string) (time.Time, error) {

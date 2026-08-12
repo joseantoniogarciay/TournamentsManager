@@ -1,11 +1,11 @@
 # ADR-0023: Usar ECS con Fargate como runtime cloud futuro
 
-- **Estado:** Aceptado
+- **Estado:** Superado por ADR-0088
 - **Fecha:** 2026-07-25
 - **Decisor:** Usuario, mediante aceptación explícita de la alternativa A
 - **Propietario del análisis:** Asistente como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0088
 
 ## Problema
 

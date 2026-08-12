@@ -116,6 +116,25 @@ la navegación anónima igual que ante una sesión caducada.
 - Implementación de recuperación, purga, transferencia o cancelación de ligas.
 - Requisito de reautenticación, MFA o notificación fuera de banda.
 
+## Ampliación aceptada — 2026-08-12
+
+La ventana de 30 días concluye con una purga física automática. El usuario ha
+aceptado un comando interno de backend, ejecutado una vez al día por un
+LaunchAgent del Mac sobre el proyecto `tournaments-manager-dev`; no se expone un
+endpoint HTTP ni se introduce un temporizador dentro de la API.
+
+La purga selecciona como máximo 100 cuentas `deletion_pending` con la fecha
+vencida, las bloquea con `FOR UPDATE SKIP LOCKED` y las elimina mediante la base
+de datos. Una cuenta que organizase una liga sigue sin poder solicitar la baja.
+Las claves foráneas eliminan credenciales, sesiones, tokens, identidades y
+relaciones personales. El historial de cambios de resultado se conserva, pero
+su autora pasa a `NULL` con `ON DELETE SET NULL`; no se retiene la identidad de
+una cuenta eliminada para preservar la auditoría deportiva.
+
+La recuperación no está implementada todavía. Hasta que exista, los textos de
+producto y de privacidad describirán una espera de 30 días antes de la
+eliminación definitiva, no una capacidad de recuperar la cuenta.
+
 ## Documentación afectada
 
 - `docs/governance/DECISIONS.md`

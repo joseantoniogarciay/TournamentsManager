@@ -42,7 +42,7 @@
 | 15    | Observabilidad mínima                                 | Aceptada  | [ADR-0020](../adr/0020-use-minimal-correlated-observability.md)             |
 | 16    | CI y política de calidad                              | Aceptada  | [ADR-0021](../adr/0021-use-advisory-ci-with-local-quality-gate.md)          |
 | 17a   | Empaquetado de la API                                 | Aceptada  | [ADR-0022](../adr/0022-package-backend-as-oci-image.md)                    |
-| 17b   | Runtime cloud de la API                               | Aceptada  | [ADR-0023](../adr/0023-use-ecs-fargate-as-future-cloud-runtime.md)          |
+| 17b   | Runtime cloud de la API                               | Superada  | [ADR-0088](../adr/0088-use-ephemeral-aws-learning-and-home-runtime.md)      |
 | 17c   | Registry y promoción de la API                        | Aceptada  | [ADR-0024](../adr/0024-use-ecr-and-digest-based-image-promotion.md)         |
 | 18a   | Herramienta de IaC: Terraform                         | Aceptada  | [ADR-0025](../adr/0025-use-terraform-for-infrastructure-as-code.md)         |
 | 18b   | Fundación AWS: cuentas e identidad                    | Aceptada  | [ADR-0026](../adr/0026-use-aws-organizations-and-temporary-identities.md)   |

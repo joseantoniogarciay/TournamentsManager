@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
 import { color, control, radius, space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
+import { PrivacyPolicyLink } from "@/shared/legal/privacy-policy-link";
 import { type ThemePreference, usePreferences } from "@/shared/preferences/preferences-provider";
 import { Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
@@ -44,6 +45,11 @@ export default function AccountSettingsScreen() {
                 );
               })}
             </View>
+          </View>
+        </Card>
+        <Card>
+          <View style={styles.section}>
+            <PrivacyPolicyLink />
           </View>
         </Card>
 

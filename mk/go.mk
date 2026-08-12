@@ -8,7 +8,7 @@ GO_TOOL := $(GO_BACKEND) tool -modfile=$(TOOL_MODFILE)
 GO_SOURCE := $(shell find $(BACKEND_DIR) -type f -name '*.go' -print -quit)
 
 .PHONY: \
-	api-up local-api-up dev-up dev-down dev-logs api-image-build \
+	api-up local-api-up dev-up dev-down dev-logs dev-public-up dev-public-down dev-public-logs api-image-build \
 	format-go format-check-go \
 	tidy tidy-check tidy-tools tidy-tools-check tidy-all \
 	lint-go test test-integration test-race build vuln sqlc-generate sqlc-generate-check
