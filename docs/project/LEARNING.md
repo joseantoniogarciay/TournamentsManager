@@ -1988,3 +1988,28 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   debe acotarse a la estructura que pretende modificar; los indicadores de
   navegación de filas se comparten como iconos de 24 px, no como glifos de texto
   con tamaño accidental.
+
+### 2026-08-12 — Una exportación pública debe aislar configuración y caché locales
+
+- **Aprendido:** Expo incorpora `EXPO_PUBLIC_*` en el bundle y puede reutilizar
+  transformaciones de Metro; una exportación pública puede conservar por error
+  la URL de API local aunque el comando le proporcione una URL distinta.
+- **Evidencia:** el bundle de `dev.fasttourney.com` contenía
+  `http://localhost:8080/v1`, lo que activaba el permiso de acceso local de
+  Brave. El script de publicación desactiva la carga de `.env`, establece la
+  URL HTTPS de la API y del enlace compartido, y limpia la caché antes de
+  exportar.
+- **Regla reutilizable:** todo script que exporte un artefacto público con
+  configuración distinta de la local debe declarar sus variables, impedir
+  overrides de `.env` y reconstruir las transformaciones que las incorporan.
+
+### 2026-08-12 — HSTS pertenece a la respuesta HTTPS pública, no al salto interno
+
+- **Aprendido:** Cloudflare termina TLS para la persona visitante aunque el
+  túnel llegue por HTTP de loopback a Caddy. Por ello Caddy puede emitir HSTS y
+  Cloudflare lo entrega en la respuesta HTTPS pública.
+- **Decisión aplicada:** `max-age=31536000`, sin `includeSubDomains` ni
+  `preload`; esas extensiones se reservarán hasta poder garantizar HTTPS para
+  todos los subdominios presentes y futuros.
+- **Regla reutilizable:** validar una cabecera de seguridad tanto en el router
+  local como por HTTPS en el hostname público después de recargar el borde.

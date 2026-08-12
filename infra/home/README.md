@@ -19,12 +19,20 @@ validar cada hostname por el túnel, se eliminan los forwards TCP 80/443 y la
 configuración DDNS. Los proxies y archivos reales se añaden solo junto con sus
 respectivos artefactos y configuración.
 
-`deploy-dev-web.sh` exporta Expo con la base API de desarrollo y publica el
-artefacto en `/opt/homebrew/var/www/fasttourney/dev`; Caddy no ejecuta Expo Metro.
+`deploy-dev-web.sh` exporta Expo con la base API y el origen de enlaces de
+desarrollo, y publica el artefacto en `/opt/homebrew/var/www/fasttourney/dev`;
+ignora el `.env` local y limpia la caché de Metro para que ambas URL públicas se
+incorporen al bundle. Caddy no ejecuta Expo Metro.
 Como es un entorno de desarrollo público, su host añade
 `X-Robots-Tag: noindex, nofollow, noarchive` a todas sus respuestas. La web
 mantiene una meta description para que el documento tenga metadatos completos,
 pero esa descripción no solicita ni permite su indexación.
+
+Todos los hosts públicos añaden `Strict-Transport-Security: max-age=31536000`.
+Aunque Caddy recibe HTTP de loopback desde el túnel, Cloudflare termina la
+conexión HTTPS pública y reenvía la cabecera al cliente. No se usa
+`includeSubDomains` ni `preload`: ambas opciones comprometerían subdominios
+presentes y futuros, y se revisarán solo cuando todos puedan sostener HTTPS.
 
 La subcarpeta `launchd/` conserva plantillas de tareas del Mac que son
 operativamente separadas de Caddy. La purga de cuentas usa un LaunchAgent porque

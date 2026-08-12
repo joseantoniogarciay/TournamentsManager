@@ -150,6 +150,19 @@ Mailpit de dev solo se liga a `127.0.0.1:8026` y no tiene hostname público. Un
 SMTP transaccional con el DNS de remitente configurado es requisito antes de
 permitir que personas externas dependan de correos de verificación o recuperación.
 
+Antes de publicar el futuro artefacto web de producción, su script de exportación
+debe declarar, sin leer el `.env` local y limpiando la caché de Metro:
+
+```sh
+EXPO_PUBLIC_API_BASE_URL=https://api.fasttourney.com/v1
+EXPO_PUBLIC_APP_LINK_URL=https://fasttourney.com
+```
+
+La primera URL evita que la web pública contacte servicios locales; la segunda
+hace que los enlaces de liga compartidos apunten al dominio público. La
+publicación aún no está autorizada: `fasttourney.com` y `api.fasttourney.com`
+permanecen deliberadamente en `503`.
+
 ### Fase 4
 
 Necesidad de Kubernetes, k3d, manifests o empaquetado, recursos, probes,
