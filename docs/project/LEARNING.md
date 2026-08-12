@@ -2060,3 +2060,14 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   Caddy selecciona la web mediante un enlace simbólico atómico.
 - **Regla reutilizable:** no almacenar artefactos, imágenes o backups en Git;
   asociarlos a un SHA y distinguir rollback de código de restauración de datos.
+
+### 2026-08-12 — Un rollback sin corte requiere dos versiones compatibles
+
+- **Aprendido:** compilar y superar CI no garantiza que una versión funcione
+  ante tráfico y configuración reales; una retirada rápida limita el impacto.
+- **Dirección a decidir antes de producción:** blue/green detrás de Caddy:
+  validar una segunda instancia antes de dirigirle tráfico y conservar la
+  anterior mientras se observa la nueva.
+- **Regla reutilizable:** una conmutación de procesos no revierte la base de
+  datos. Ambas versiones deben coexistir sobre el mismo esquema o el cambio
+  necesita una estrategia explícita de evolución y recuperación.

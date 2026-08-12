@@ -38,6 +38,20 @@ topología completa.
 - ningún despliegue sin health checks y criterio de éxito;
 - ningún backup sin restauración probada.
 
+## Continuidad futura de producción
+
+**Pendiente de ADR antes de implementar.** Para evitar que un cambio de versión
+interrumpa las peticiones, producción evaluará un despliegue blue/green detrás de
+Caddy: la instancia nueva arranca separada, supera health checks y una validación
+funcional mínima, Caddy conmuta el tráfico y la instancia anterior permanece
+disponible durante un periodo breve de observación. Un rollback posterior vuelve
+a arrancar y validar el SHA anterior antes de conmutar otra vez.
+
+Durante la conmutación ambas versiones deben ser compatibles con el mismo
+esquema PostgreSQL. Los cambios destructivos o incompatibles exigirán una
+estrategia explícita de migración (por ejemplo, expand/contract, forward-fix o
+restauración), no solo volver a una imagen anterior.
+
 ## Límite de despliegue desde GitHub
 
 El repositorio será público, pero el acceso operativo no. CI construirá y
