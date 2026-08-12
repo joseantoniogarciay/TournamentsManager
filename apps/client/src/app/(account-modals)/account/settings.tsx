@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
 
 import { color, control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -46,15 +46,21 @@ export default function AccountSettingsScreen() {
             </View>
           </View>
         </Card>
-        <Card>
-          <View style={styles.notificationRow}>
-            <View style={styles.notificationCopy}>
-              <Text variant="title">{t("settings_notifications_title")}</Text>
-              <Text color="secondary">{t("settings_notifications_unavailable")}</Text>
+        {Platform.OS !== "web" ? (
+          <Card>
+            <View style={styles.notificationRow}>
+              <View style={styles.notificationCopy}>
+                <Text variant="title">{t("settings_notifications_title")}</Text>
+                <Text color="secondary">{t("settings_notifications_unavailable")}</Text>
+              </View>
+              <Switch
+                accessibilityLabel={t("settings_notifications_title")}
+                disabled
+                value={false}
+              />
             </View>
-            <Switch accessibilityLabel={t("settings_notifications_title")} disabled value={false} />
-          </View>
-        </Card>
+          </Card>
+        ) : null}
       </ScrollView>
     </Screen>
   );

@@ -12,6 +12,10 @@ import { PreferencesProvider, usePreferences } from "@/shared/preferences/prefer
 import { ConfirmationDialogProvider } from "@/shared/ui";
 import { NotificationProvider } from "@/features/notifications/notification-provider";
 
+export const unstable_settings = {
+  anchor: "(tabs)",
+};
+
 if (Platform.OS !== "web") {
   SplashScreen.setOptions({ duration: 240, fade: true });
   void SplashScreen.preventAutoHideAsync();
@@ -60,6 +64,7 @@ function RootNavigator() {
   return (
     <Stack key={revision} screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(account-modals)" options={{ presentation: "modal" }} />
       <Stack.Screen
         name="create-tournament"
         options={{

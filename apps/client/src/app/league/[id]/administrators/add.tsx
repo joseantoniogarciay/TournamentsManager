@@ -122,6 +122,7 @@ export default function AddLeagueAdministratorScreen() {
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.surface.canvas },
           headerTintColor: colors.text.primary,
+          headerTitleAlign: "center",
           title: t("league_add_administrator"),
         }}
       >

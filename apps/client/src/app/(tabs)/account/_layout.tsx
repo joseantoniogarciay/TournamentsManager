@@ -62,10 +62,6 @@ export default function AccountLayout() {
         </Stack.Toolbar>
       </Stack.Screen>
       <Stack.Screen name="access" options={{ title: t("account_access_data_title") }} />
-      <Stack.Screen
-        name="notifications"
-        options={{ presentation: "modal", title: t("notifications_title") }}
-      />
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
       <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
       <Stack.Screen name="password" options={{ title: t("account_password_change_title") }} />
@@ -73,34 +69,6 @@ export default function AccountLayout() {
         name="google-link"
         options={{ presentation: "modal", title: t("account_google_link_title") }}
       />
-      <Stack.Screen
-        name="settings"
-        options={{
-          ...(Platform.OS !== "ios"
-            ? {
-                headerBackVisible: false,
-                headerLeft: () => (
-                  <NavigationHeaderButton
-                    accessibilityLabel={t("common_close")}
-                    icon="close"
-                    nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
-                    onPress={goBackToAccount}
-                  />
-                ),
-              }
-            : {}),
-          presentation: "modal",
-          title: t("account_settings_title"),
-        }}
-      >
-        <Stack.Toolbar placement="left">
-          <Stack.Toolbar.Button
-            accessibilityLabel={t("common_close")}
-            icon="xmark"
-            onPress={goBackToAccount}
-          />
-        </Stack.Toolbar>
-      </Stack.Screen>
     </Stack>
   );
 }

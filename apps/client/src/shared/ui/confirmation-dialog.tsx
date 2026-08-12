@@ -138,16 +138,41 @@ export function ModalDialog({
   children,
 }: ModalDialogProps) {
   const { colors } = usePreferences();
+  const [webScrimVisible, setWebScrimVisible] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+
+    if (!visible) {
+      setWebScrimVisible(false);
+      return;
+    }
+
+    let secondFrame: ReturnType<typeof requestAnimationFrame> | undefined;
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => setWebScrimVisible(true));
+    });
+
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      if (secondFrame !== undefined) cancelAnimationFrame(secondFrame);
+    };
+  }, [visible]);
 
   if (!visible) return null;
 
   return (
-    <Modal animationType="fade" onRequestClose={onDismiss} transparent visible={visible}>
+    <Modal
+      animationType={Platform.OS === "web" ? "none" : "fade"}
+      onRequestClose={onDismiss}
+      transparent
+      visible={visible}
+    >
       <View accessibilityViewIsModal style={styles.backdrop}>
         {Platform.OS === "web" ? (
           <View
             pointerEvents="none"
-            style={[styles.webScrim, { backgroundColor: colors.surface.canvas }]}
+            style={[styles.webScrim, webScrimVisible && styles.webScrimVisible]}
           />
         ) : (
           <BlurView
@@ -212,6 +237,13 @@ const styles = StyleSheet.create({
   },
   webScrim: {
     ...StyleSheet.absoluteFill,
-    opacity: 0.8,
+    backdropFilter: "blur(0px)",
+    backgroundColor: "rgba(0, 0, 0, 0)",
+    transitionDuration: "160ms",
+    transitionProperty: "background-color, backdrop-filter",
+  },
+  webScrimVisible: {
+    backdropFilter: "blur(8px)",
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
   },
 });

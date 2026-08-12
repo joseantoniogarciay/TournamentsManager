@@ -61,9 +61,17 @@ versionan manualmente. La guía operativa completa, incluidos los requisitos loc
 ## Estado actual
 
 La navegación principal tiene tres secciones, en este orden: Inicio, Torneos y
-Cuenta. Cuenta conserva su propio flujo. En iOS, la botonera usa `NativeTabs`
+Cuenta. Cuenta conserva su propio flujo; en web, cerrar una ruta de ese flujo
+vuelve explícitamente a su raíz para no depender del historial de otra tab tras
+una recarga. En iOS, la botonera usa `NativeTabs`
 de Expo Router para delegar el acabado de la barra al sistema; esa API sigue
 siendo experimental y se reevaluará al actualizar Expo.
+
+Ajustes y Notificaciones conservan sus URLs bajo `/account`, pero se presentan
+desde el stack raíz como modales sobre las tabs en las tres plataformas. En web
+usan la capacidad experimental de modales de Expo Router, habilitada de forma
+explícita en los comandos de desarrollo, exportación y despliegue; se revisará
+al actualizar Expo SDK.
 
 Inicio muestra la orientación y las acciones disponibles sin inventar sesión ni
 colecciones. Torneos y Cuenta expresan su estado actual mientras llegan los

@@ -6,6 +6,14 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Fixed
+
+- Al cerrar una ruta de Cuenta en web, la aplicación vuelve a `/account` incluso
+  después de recargar una URL profunda; ya no depende del historial de otra tab.
+
+- Ajustes y Notificaciones conservan sus URLs de Cuenta, pero ahora son modales
+  del stack raíz con cierre mediante X sobre las tabs en web, iOS y Android.
+
 ### Added
 
 - ADR-0093: `tournaments-manager-dev` entrega correo por Resend SMTP con

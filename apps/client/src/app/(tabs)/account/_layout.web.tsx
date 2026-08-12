@@ -14,10 +14,8 @@ export default function AccountLayout() {
   const { colors } = usePreferences();
   const { user } = useSession();
   const goBackToAccount = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
+    // Tras recargar una ruta de Cuenta, el historial del navegador puede
+    // pertenecer a otra tab. El cierre de este flujo siempre vuelve a su raíz.
     router.replace("/account");
   };
   const headerOptions = {
@@ -64,33 +62,12 @@ export default function AccountLayout() {
         }}
       />
       <Stack.Screen name="access" options={{ title: t("account_access_data_title") }} />
-      <Stack.Screen
-        name="notifications"
-        options={{ presentation: "card", title: t("notifications_title") }}
-      />
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
       <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
       <Stack.Screen name="password" options={{ title: t("account_password_change_title") }} />
       <Stack.Screen
         name="google-link"
         options={{ presentation: "modal", title: t("account_google_link_title") }}
-      />
-      <Stack.Screen
-        name="settings"
-        options={{
-          headerLeft: () => (
-            <NavigationHeaderButton
-              accessibilityLabel={t("common_close")}
-              icon="close"
-              nativeIcon="xmark"
-              onPress={() => {
-                goBackToAccount();
-              }}
-            />
-          ),
-          presentation: "card",
-          title: t("account_settings_title"),
-        }}
       />
     </Stack>
   );

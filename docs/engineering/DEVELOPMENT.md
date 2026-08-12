@@ -202,6 +202,11 @@ development builds no reproducen fielmente la splash distribuida.
 La exportación web forma parte de `make verify` y se puede ejecutar de forma
 aislada con `make client-web-export`. Los directorios `.expo`, `ios` y `android`
 siguen sin versionarse; se generan solo mediante operaciones explícitas de Expo.
+Los comandos de cliente, exportación y despliegue fijan
+`EXPO_UNSTABLE_WEB_MODAL=1`: Ajustes y Notificaciones son modales web del stack
+raíz y la capacidad de Expo Router sigue marcada como experimental. La variable
+no pertenece a la configuración pública de la aplicación ni se deja a criterio
+de cada entorno; se revisará al actualizar el SDK.
 
 ## Configuración local
 

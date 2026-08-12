@@ -154,6 +154,7 @@ export default function LeagueTeamsScreen() {
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.surface.canvas },
           headerTintColor: colors.text.primary,
+          headerTitleAlign: "center",
           title: t("league_teams"),
           ...(Platform.OS !== "ios"
             ? {

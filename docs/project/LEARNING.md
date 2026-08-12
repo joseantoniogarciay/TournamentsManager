@@ -1,5 +1,22 @@
 # Registro de aprendizaje
 
+## 2026-08-13 — El marcador de una fila necesita jerarquía contenida
+
+La escala `display` (32 px) es adecuada para un título o un resultado aislado,
+pero comprime visualmente una fila de partido y puede dejar los glifos demasiado
+cerca de su borde. Un marcador dentro de una `Card` usa `title` en negrita:
+preserva la lectura inmediata sin introducir un token, variante o componente
+específico antes de que el patrón se repita.
+
+## 2026-08-13 — Un modal transversal no pertenece al stack de una tab
+
+Una ruta puede conservar su URL bajo `/account` y, aun así, presentarse desde el
+stack raíz. Ajustes y Notificaciones se elevan para que web, iOS y Android las
+coloquen sobre las tabs y compartan una salida explícita con X hacia Cuenta. En
+web esto requiere habilitar la capacidad experimental de modales de Expo Router
+en desarrollo, exportación y despliegue; no se activa solo de forma local para
+evitar que una build publicada vuelva a degradarlas a páginas de tab.
+
 ## 2026-08-12 — SMTP conserva la portabilidad si el dominio recibe un puerto
 
 El proveedor de correo resuelve entrega, reputación y DNS; el caso de uso solo
@@ -714,7 +731,9 @@ Para cada capacidad se sigue el ciclo:
   ubicarlos en la botonera evita duplicar accesos dentro de cada pantalla. Cuenta
   conserva un stack para que su evolución no altere el historial de Inicio.
 - **Evidencia:** grupo `(tabs)` de Expo Router, con Inicio en la primera
-  posición, y `NativeTabs` delegando el acabado Liquid Glass a iOS 26.
+  posición, y `NativeTabs` delegando el acabado Liquid Glass a iOS 26. En web,
+  el cierre de una ruta de Cuenta reemplaza explícitamente `/account`: tras una
+  recarga, el historial del navegador puede pertenecer a otra tab.
 - **Coste aceptado:** Torneos y Cuenta solo muestran su contexto hasta que sus
   flujos autenticados y colecciones tengan datos reales.
 
@@ -1976,12 +1995,16 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   Android, pero deja que iOS use sus controles de barra cuando la plataforma ya
   ofrece una presentación y un área táctil correctas.
 
-### 2026-08-12 — El blur web necesita una alternativa estable
+### 2026-08-13 — El blur web debe entrar con el scrim, no después del diálogo
 
-- **Aprendido:** un `BlurView` puede llegar al compositor web después de que el
-  portal del diálogo sea visible, exponiendo brevemente el contenido nítido.
-- **Regla reutilizable:** web usa un scrim neutro opaco desde el primer frame,
-  sin blur; iOS y Android conservan su tratamiento nativo ya validado.
+- **Aprendido:** `animationType="fade"` reduce la opacidad del ancestro del
+  `Modal`, aislando el grupo de composición y evitando que `backdrop-filter`
+  muestree la página mientras entra el diálogo. El blur aparece entonces de
+  golpe al final de la animación.
+- **Regla reutilizable:** en web, el `Modal` no anima su opacidad. El scrim se
+  monta transparente con `blur(0px)` y, tras dos frames de animación, transiciona
+  durante 160 ms al oscurecimiento y blur finales. iOS y Android conservan su
+  tratamiento nativo.
 
 ### 2026-08-12 — Una biblioteca bajo tabs necesita un viewport desplazable explícito
 
