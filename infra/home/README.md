@@ -24,8 +24,9 @@ alineado con `origin/develop`, construye la API runtime y llama a
 `deploy-dev-web.sh`. Cada export se guarda bajo
 `/opt/homebrew/var/www/fasttourney/dev/releases/<SHA>/` y contiene un manifiesto
 sin secretos con commit, imagen y fecha. Caddy sirve el enlace `current`; el
-cambio del enlace es atómico y se retienen solamente la versión actual y su
-predecesora. Git conserva fuente y configuración, no artefactos, imágenes ni
+cambio del enlace es atómico mediante `mv -h`, para reemplazar el enlace y no el
+directorio al que apunta en macOS, y se retienen solamente la versión actual y
+su predecesora. Git conserva fuente y configuración, no artefactos, imágenes ni
 backups. `deploy-dev-web.sh` ignora el `.env` local y limpia la caché de Metro
 para que ambas URL públicas se incorporen al bundle. Caddy no ejecuta Expo
 Metro.

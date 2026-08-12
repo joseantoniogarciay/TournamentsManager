@@ -40,7 +40,7 @@ DEV_API_IMAGE="$api_image" \
 
 next_link="$current_link.next"
 ln -s "releases/$release_sha" "$next_link"
-mv -f "$next_link" "$current_link"
+mv -f -h "$next_link" "$current_link"
 
 deployed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 printf '{\n  "commit": "%s",\n  "apiImage": "%s",\n  "deployedAt": "%s"\n}\n' \
