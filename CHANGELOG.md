@@ -8,6 +8,11 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0093: `tournaments-manager-dev` entrega correo por Resend SMTP con
+  STARTTLS y credenciales de solo envío; Mailpit queda exclusivamente en local.
+  La clave no se versiona y la activación externa requiere verificar SPF, DKIM y
+  DMARC del subdominio remitente.
+
 - Ruta pública de política de privacidad, localizada en español, inglés, italiano
   y francés, enlazada desde el acceso, el registro y los ajustes. Documenta la
   baja definitiva automática a los 30 días, las personas menores de 14 años y

@@ -75,7 +75,7 @@ dev-public-config-check:
 		[ -n "$$value" ] || { echo "Falta $$name en $(PUBLIC_DEV_ENV)"; exit 1; }; \
 	done
 	@set -a; . $(PUBLIC_DEV_API_ENV); set +a; \
-	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
+	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM SMTP_USERNAME SMTP_PASSWORD PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
 		eval "value=\$${$$name}"; \
 		[ -n "$$value" ] || { echo "Falta $$name en $(PUBLIC_DEV_API_ENV)"; exit 1; }; \
 	done

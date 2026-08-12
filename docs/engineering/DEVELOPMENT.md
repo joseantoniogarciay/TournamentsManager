@@ -319,5 +319,5 @@ make dev-public-schema-apply
 La web pública no ejecuta Expo Metro: se exporta estática con
 `infra/home/deploy-dev-web.sh` y Caddy la sirve en
 `https://dev.fasttourney.com`. La API queda en
-`https://dev-api.fasttourney.com`. Mailpit solo es accesible desde el Mac en
-`http://127.0.0.1:8026`; no sustituye un proveedor de correo real.
+`https://dev-api.fasttourney.com`. Mailpit solo es accesible en el ciclo local;
+el runtime público usa Resend SMTP autenticado con STARTTLS conforme a ADR-0093.

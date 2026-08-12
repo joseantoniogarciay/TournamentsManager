@@ -1,5 +1,16 @@
 # Registro de aprendizaje
 
+## 2026-08-12 — SMTP conserva la portabilidad si el dominio recibe un puerto
+
+El proveedor de correo resuelve entrega, reputación y DNS; el caso de uso solo
+necesita pedir que se entregue un enlace. Mantener SMTP en el adaptador evita
+que una API propietaria determine el modelo de identidad. En el entorno público
+la autenticación ocurre únicamente después de STARTTLS; Mailpit no se elimina,
+porque sigue resolviendo una necesidad distinta: inspección local sin secretos.
+El plan gratuito de Resend corta el envío al llegar a 100 correos diarios o
+3.000 mensuales, así que es un límite operativo que se monitoriza, no capacidad
+garantizada. Véase ADR-0093.
+
 ## 2026-08-12 — Una purga no debe retener identidad por preservar historia
 
 Eliminar una cuenta puede chocar con el historial compartido de una liga. La

@@ -14,6 +14,8 @@ const (
 	httpAddrEnv           = "HTTP_ADDR"
 	smtpAddrEnv           = "SMTP_ADDR"
 	smtpFromEnv           = "SMTP_FROM"
+	smtpUsernameEnv       = "SMTP_USERNAME"
+	smtpPasswordEnv       = "SMTP_PASSWORD"
 	publicBaseURLEnv      = "PUBLIC_BASE_URL"
 	corsAllowedOriginsEnv = "CORS_ALLOWED_ORIGINS"
 	googleClientIDsEnv    = "GOOGLE_CLIENT_IDS"
@@ -26,6 +28,8 @@ type Config struct {
 	HTTPAddr           string
 	SMTPAddr           string
 	SMTPFrom           string
+	SMTPUsername       string
+	SMTPPassword       string
 	PublicBaseURL      string
 	CookieSecure       bool
 	CORSAllowedOrigins []string
@@ -65,6 +69,11 @@ func load(getenv func(string) string) (Config, error) {
 	if smtpFrom == "" {
 		return Config{}, fmt.Errorf("%s debe estar definido", smtpFromEnv)
 	}
+	smtpUsername := getenv(smtpUsernameEnv)
+	smtpPassword := getenv(smtpPasswordEnv)
+	if (smtpUsername == "") != (smtpPassword == "") {
+		return Config{}, fmt.Errorf("%s y %s deben definirse juntos", smtpUsernameEnv, smtpPasswordEnv)
+	}
 	publicBaseURL := getenv(publicBaseURLEnv)
 	parsedPublicURL, err := url.Parse(publicBaseURL)
 	if err != nil || !validPublicBaseURL(parsedPublicURL) {
@@ -85,6 +94,8 @@ func load(getenv func(string) string) (Config, error) {
 		HTTPAddr:           httpAddr,
 		SMTPAddr:           smtpAddr,
 		SMTPFrom:           smtpFrom,
+		SMTPUsername:       smtpUsername,
+		SMTPPassword:       smtpPassword,
 		PublicBaseURL:      publicBaseURL,
 		CookieSecure:       parsedPublicURL.Scheme == "https",
 		CORSAllowedOrigins: corsAllowedOrigins,

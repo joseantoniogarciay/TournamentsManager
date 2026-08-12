@@ -14,19 +14,6 @@ services:
       retries: 20
       start_period: 10s
 
-  # Captura correo solo para diagnóstico en el Mac. No tiene ruta Caddy ni
-  # puerto público; se reemplazará por SMTP transaccional antes de invitar usuarios.
-  mailpit:
-    image: axllent/mailpit:v1.30.5
-    ports:
-      - "127.0.0.1:8026:8025"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8025/readyz"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-      start_period: 10s
-
   api:
     image: ${DEV_API_IMAGE:-tournaments-manager-dev-api:latest}
     build:
@@ -38,8 +25,6 @@ services:
       - "127.0.0.1:8081:8080"
     depends_on:
       postgres:
-        condition: service_healthy
-      mailpit:
         condition: service_healthy
 
 volumes:

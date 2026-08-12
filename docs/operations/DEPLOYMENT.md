@@ -168,9 +168,10 @@ integraciones ordinarias de `develop`; se reservan para producción o hitos
 distribuidos. Esto no equivale a backup: la base dev sigue sin dump ni
 restauración probada mientras sus datos sean descartables.
 
-Mailpit de dev solo se liga a `127.0.0.1:8026` y no tiene hostname público. Un
-SMTP transaccional con el DNS de remitente configurado es requisito antes de
-permitir que personas externas dependan de correos de verificación o recuperación.
+Mailpit pertenece solo al entorno local y no tiene hostname público. El entorno
+`dev` usa Resend por SMTP autenticado con STARTTLS; antes de invitar personas se
+verifica `mail.fasttourney.com` y sus registros SPF, DKIM y DMARC. La clave de
+solo envío vive fuera de Git en `infra/dev/api.docker.env`; véase ADR-0093.
 
 Antes de publicar el futuro artefacto web de producción, su script de exportación
 debe declarar, sin leer el `.env` local y limpiando la caché de Metro:

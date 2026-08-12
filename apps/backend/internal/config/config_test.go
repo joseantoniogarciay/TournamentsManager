@@ -66,6 +66,25 @@ func TestLoadRejectsNonHTTPSPublicBaseURLOutsideLoopback(t *testing.T) {
 	}
 }
 
+func TestLoadRejectsIncompleteSMTPCredentials(t *testing.T) {
+	t.Parallel()
+
+	_, err := load(func(key string) string {
+		return map[string]string{
+			databaseURLEnv:        "postgres://localhost:5432/tournaments",
+			httpAddrEnv:           "127.0.0.1:8080",
+			smtpAddrEnv:           "smtp.example.test:587",
+			smtpFromEnv:           "no-reply@example.test",
+			smtpUsernameEnv:       "resend",
+			publicBaseURLEnv:      "https://example.test",
+			corsAllowedOriginsEnv: "https://example.test",
+		}[key]
+	})
+	if err == nil || !strings.Contains(err.Error(), smtpPasswordEnv) {
+		t.Fatalf("load() error = %v, want error mentioning %s", err, smtpPasswordEnv)
+	}
+}
+
 func TestLoadRejectsMissingDatabaseURL(t *testing.T) {
 	t.Parallel()
 

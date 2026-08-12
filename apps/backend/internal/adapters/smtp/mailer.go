@@ -4,10 +4,12 @@ package smtp
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"html/template"
 	"mime"
 	"mime/multipart"
+	"net"
 	"net/smtp"
 	"net/url"
 	"strings"
@@ -17,18 +19,29 @@ import (
 
 // Mailer es el adaptador SMTP del correo de verificación local.
 type Mailer struct {
-	address string
-	from    string
-	baseURL *url.URL
+	address  string
+	from     string
+	username string
+	password string
+	host     string
+	baseURL  *url.URL
 }
 
-// NewMailer construye un adaptador SMTP sin credenciales para Mailpit local.
-func NewMailer(address, from, baseURL string) (Mailer, error) {
+// NewMailer construye un adaptador SMTP. Con credenciales exige STARTTLS antes
+// de autenticarse; sin ellas conserva el recorrido local de Mailpit.
+func NewMailer(address, from, username, password, baseURL string) (Mailer, error) {
 	parsedURL, err := url.Parse(baseURL)
 	if err != nil || parsedURL.Host == "" || !validPublicURL(parsedURL) {
 		return Mailer{}, fmt.Errorf("URL pública inválida")
 	}
-	return Mailer{address: address, from: from, baseURL: parsedURL}, nil
+	if (username == "") != (password == "") {
+		return Mailer{}, fmt.Errorf("credenciales SMTP incompletas")
+	}
+	host, _, err := net.SplitHostPort(address)
+	if err != nil || host == "" {
+		return Mailer{}, fmt.Errorf("dirección SMTP inválida")
+	}
+	return Mailer{address: address, from: from, username: username, password: password, host: host, baseURL: parsedURL}, nil
 }
 
 // SendVerification entrega un enlace HTTPS que la persona confirma explícitamente
@@ -47,7 +60,7 @@ func (m Mailer) SendVerification(ctx context.Context, recipient string, locale r
 	if err != nil {
 		return err
 	}
-	if err := smtp.SendMail(m.address, nil, m.from, []string{recipient}, message); err != nil {
+	if err := m.send([]string{recipient}, message); err != nil {
 		return fmt.Errorf("SMTP: %w", err)
 	}
 	return nil
@@ -68,10 +81,49 @@ func (m Mailer) SendPasswordReset(ctx context.Context, recipient string, locale 
 		return fmt.Errorf("locale de email no admitido: %q", locale)
 	}
 	message := []byte("To: " + recipient + "\r\nFrom: " + m.from + "\r\nSubject: " + mime.QEncoding.Encode("UTF-8", messageCopy.subject) + "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n" + messageCopy.body + "\r\n\r\n" + resetURL.String() + "\r\n\r\n" + messageCopy.ignore + "\r\n")
-	if err := smtp.SendMail(m.address, nil, m.from, []string{recipient}, message); err != nil {
+	if err := m.send([]string{recipient}, message); err != nil {
 		return fmt.Errorf("SMTP: %w", err)
 	}
 	return nil
+}
+
+func (m Mailer) send(recipients []string, message []byte) error {
+	if m.username == "" {
+		return smtp.SendMail(m.address, nil, m.from, recipients, message)
+	}
+
+	client, err := smtp.Dial(m.address)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = client.Quit()
+	}()
+	if ok, _ := client.Extension("STARTTLS"); !ok {
+		return fmt.Errorf("el servidor SMTP no ofrece STARTTLS")
+	}
+	if err := client.StartTLS(&tls.Config{MinVersion: tls.VersionTLS12, ServerName: m.host}); err != nil {
+		return fmt.Errorf("iniciar TLS SMTP: %w", err)
+	}
+	if err := client.Auth(smtp.PlainAuth("", m.username, m.password, m.host)); err != nil {
+		return fmt.Errorf("autenticar SMTP: %w", err)
+	}
+	if err := client.Mail(m.from); err != nil {
+		return err
+	}
+	for _, recipient := range recipients {
+		if err := client.Rcpt(recipient); err != nil {
+			return err
+		}
+	}
+	writer, err := client.Data()
+	if err != nil {
+		return err
+	}
+	if _, err := writer.Write(message); err != nil {
+		return err
+	}
+	return writer.Close()
 }
 
 type passwordResetCopy struct{ subject, body, ignore string }

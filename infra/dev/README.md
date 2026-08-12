@@ -1,14 +1,15 @@
 # Entorno público de desarrollo
 
 Este directorio define el proyecto Compose `tournaments-manager-dev`. Sus
-servicios internos se llaman `api`, `postgres` y `mailpit`; Docker añade el
+servicios internos se llaman `api` y `postgres`; Docker añade el
 namespace del proyecto, de modo que no colisionan con
 `tournaments-manager-local` ni con el futuro `tournaments-manager-prod`.
 
 La API usa el target `runtime` del Dockerfile: no incluye Air, fuentes ni bind
 mounts. Solo se publica en `127.0.0.1:8081`, donde Caddy la alcanza desde el
-Mac. PostgreSQL no publica ningún puerto. Mailpit queda en `127.0.0.1:8026`
-para inspección local y no tiene ruta Cloudflare/Caddy.
+Mac. PostgreSQL no publica ningún puerto. El correo se entrega mediante Resend
+SMTP; Mailpit se mantiene solo en el proyecto `tournaments-manager-local` para
+inspección y no tiene ruta Cloudflare/Caddy.
 
 La red del proyecto fija `172.19.0.0/16` para que la API pueda reconocer la
 gateway `172.19.0.1` como el único proxy de confianza. Caddy traduce
@@ -57,8 +58,12 @@ Releases quedan reservados para producción o hitos distribuidos.
 
 La web se exporta como estática con `infra/home/deploy-dev-web.sh`; no se usa
 `expo start --web` como servidor público. Antes de invitar usuarios que deban
-recibir emails, sustituye Mailpit por un proveedor SMTP transaccional y configura
-sus SPF/DKIM/DMARC.
+recibir emails, verifica `mail.fasttourney.com` en Resend y configura sus
+SPF/DKIM/DMARC. Crea una API key *Sending access* restringida a ese dominio y
+cópiala solo en `infra/dev/api.docker.env` como `SMTP_PASSWORD`; el usuario SMTP
+es `resend` y el endpoint es `smtp.resend.com:587` con STARTTLS. No actives
+invitaciones si el dominio aún figura como pendiente o si la clave ha aparecido
+en una terminal, un log o Git: revócala y crea otra.
 
 ## Purga de cuentas con baja vencida
 

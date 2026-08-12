@@ -11,11 +11,19 @@ import (
 func TestNewMailerRequiresHTTPSOutsideLoopback(t *testing.T) {
 	t.Parallel()
 
-	if _, err := NewMailer("127.0.0.1:1025", "no-reply@example.test", "http://example.test"); err == nil {
+	if _, err := NewMailer("127.0.0.1:1025", "no-reply@example.test", "", "", "http://example.test"); err == nil {
 		t.Fatal("NewMailer() error = nil, want invalid non-HTTPS public URL")
 	}
-	if _, err := NewMailer("127.0.0.1:1025", "no-reply@example.test", "https://links.example.test"); err != nil {
+	if _, err := NewMailer("127.0.0.1:1025", "no-reply@example.test", "", "", "https://links.example.test"); err != nil {
 		t.Fatalf("NewMailer() error = %v", err)
+	}
+}
+
+func TestNewMailerRejectsIncompleteCredentials(t *testing.T) {
+	t.Parallel()
+
+	if _, err := NewMailer("smtp.example.test:587", "no-reply@example.test", "resend", "", "https://links.example.test"); err == nil {
+		t.Fatal("NewMailer() error = nil, want incomplete SMTP credentials rejected")
 	}
 }
 
