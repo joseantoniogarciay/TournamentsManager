@@ -1,6 +1,6 @@
 /* global Scalar */
 
-Scalar.createApiReference("#api-reference", {
+Scalar.createApiReference("#app", {
   url: "/api-docs/openapi.yaml",
   servers: [
     {
