@@ -30,6 +30,7 @@ import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
   Card,
+  DisclosureIndicator,
   KeyboardAwareScrollView,
   Screen,
   Text,
@@ -177,9 +178,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
               style={[styles.navigationRow, { borderColor: colors.border.default }]}
             >
               <Text variant="bodyLarge">{t("account_access_data_title")}</Text>
-              <Text color="secondary" variant="title">
-                ›
-              </Text>
+              <DisclosureIndicator />
             </Pressable>
             <Button
               label={t("account_logout")}

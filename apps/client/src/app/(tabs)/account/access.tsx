@@ -13,7 +13,13 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Screen, Text, useConfirmationDialog, useTabContentBottomPadding } from "@/shared/ui";
+import {
+  DisclosureIndicator,
+  Screen,
+  Text,
+  useConfirmationDialog,
+  useTabContentBottomPadding,
+} from "@/shared/ui";
 
 export default function AccountAccessScreen() {
   const t = getTranslator();
@@ -110,9 +116,7 @@ function AccessNavigationRow({ label, onPress }: { label: string; onPress: () =>
       style={[styles.row, { borderColor: colors.border.default }]}
     >
       <Text variant="bodyLarge">{label}</Text>
-      <Text color="secondary" variant="title">
-        ›
-      </Text>
+      <DisclosureIndicator />
     </Pressable>
   );
 }

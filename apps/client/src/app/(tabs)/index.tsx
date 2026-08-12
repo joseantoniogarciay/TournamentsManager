@@ -16,7 +16,14 @@ import { getLeagueStateLabel } from "@/shared/i18n/league-state";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
-import { Button, Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  DisclosureIndicator,
+  Screen,
+  Text,
+  useTabContentBottomPadding,
+} from "@/shared/ui";
 
 export default function HomeScreen() {
   const { colors, resolvedTheme } = usePreferences();
@@ -152,7 +159,7 @@ function RecentLeagueCard({
             <Text color="secondary">{getLeagueStateLabel(t, state)}</Text>
           </View>
         </View>
-        <Text color="secondary">›</Text>
+        <DisclosureIndicator />
       </Pressable>
     </Card>
   );

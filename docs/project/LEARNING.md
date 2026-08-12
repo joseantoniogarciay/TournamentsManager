@@ -1971,3 +1971,20 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   portal del diálogo sea visible, exponiendo brevemente el contenido nítido.
 - **Regla reutilizable:** web usa un scrim neutro opaco desde el primer frame,
   sin blur; iOS y Android conservan su tratamiento nativo ya validado.
+
+### 2026-08-12 — Una biblioteca bajo tabs necesita un viewport desplazable explícito
+
+- **Aprendido:** una regla web que localiza la tab bar por
+  `[role="tablist"]` no puede asumir que solo existe la navegación principal;
+  un control segmentado accesible comparte correctamente ese mismo rol.
+- **Evidencia:** el selector global que fijaba cualquier padre de un `tablist`
+  convertía toda la biblioteca de torneos en `position: fixed`. La regla ahora
+  identifica además la ruta estable de la tab «Torneos», mientras la biblioteca
+  mantiene su selector fuera del `ScrollView` y conserva la reserva inferior
+  común de la botonera.
+- **Regla reutilizable:** en una ruta bajo tabs, el contenedor desplazable recibe
+  explícitamente el alto flexible y la reserva inferior de
+  `useTabContentBottomPadding`. Una regla global que dependa de semántica ARIA
+  debe acotarse a la estructura que pretende modificar; los indicadores de
+  navegación de filas se comparten como iconos de 24 px, no como glifos de texto
+  con tamaño accidental.

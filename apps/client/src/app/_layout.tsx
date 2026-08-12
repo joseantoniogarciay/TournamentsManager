@@ -189,7 +189,7 @@ function WebPageAppearance({ backgroundColor }: { backgroundColor: string }) {
       <meta name="theme-color" content={backgroundColor} />
       <style>{`
         @supports selector(div:has(> [role="tablist"])) {
-          div:has(> [role="tablist"]) {
+          div:has(> [role="tablist"] a[role="tab"][href="/tournaments"]) {
             bottom: env(safe-area-inset-bottom) !important;
             left: 0 !important;
             position: fixed !important;

@@ -7,6 +7,7 @@ export {
   ModalDialog,
   useConfirmationDialog,
 } from "./confirmation-dialog";
+export { DisclosureIndicator } from "./disclosure-indicator";
 export { InteractionBlocker } from "./interaction-blocker";
 export { KeyboardAwareScrollView } from "./keyboard-aware-scroll-view";
 export { LoadingTransition } from "./loading-transition";
