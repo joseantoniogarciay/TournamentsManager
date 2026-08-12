@@ -14,7 +14,7 @@ if [ "$branch" != "develop" ]; then
   exit 1
 fi
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
+if [ -n "$(git status --porcelain)" ]; then
   echo "El árbol Git debe estar limpio antes de desplegar dev." >&2
   exit 1
 fi
