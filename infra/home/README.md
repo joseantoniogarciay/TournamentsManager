@@ -33,6 +33,18 @@ Aunque Caddy recibe HTTP de loopback desde el túnel, Cloudflare termina la
 conexión HTTPS pública y reenvía la cabecera al cliente. No se usa
 `includeSubDomains` ni `preload`: ambas opciones comprometerían subdominios
 presentes y futuros, y se revisarán solo cuando todos puedan sostener HTTPS.
+Además, `X-Content-Type-Options: nosniff` evita interpretaciones de tipo
+inesperadas, `Referrer-Policy: strict-origin-when-cross-origin` limita la URL
+que se comparte al navegar fuera del sitio y `Permissions-Policy` desactiva
+cámara, geolocalización, micrófono, pagos y USB mientras la web no los requiere.
+
+La web de desarrollo publica una `Content-Security-Policy` que permite solo el
+propio host, su API de desarrollo y los orígenes de Google necesarios para el
+inicio de sesión federado; además niega objetos, embebido por iframes,
+formularios externos y bases ajenas. Antes de endurecerla, se publicó en modo
+`Content-Security-Policy-Report-Only` y se recorrieron los flujos públicos sin
+avisos; todo origen adicional debe justificarse por una capacidad real, nunca
+añadirse por comodidad.
 
 La subcarpeta `launchd/` conserva plantillas de tareas del Mac que son
 operativamente separadas de Caddy. La purga de cuentas usa un LaunchAgent porque

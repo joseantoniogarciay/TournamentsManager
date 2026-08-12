@@ -23,6 +23,7 @@ import { useGoogleAuthentication } from "@/features/federated-google/use-google-
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
+import { APIUnexpectedResponseError } from "@/api/fetch";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
 import { PrivacyPolicyLink } from "@/shared/legal/privacy-policy-link";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
@@ -131,6 +132,10 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
     } catch (error) {
       if (error instanceof LocalAuthenticationError) {
         show({ kind: "generic-error", message: t("account_login_invalid_credentials") });
+        return;
+      }
+      if (error instanceof APIUnexpectedResponseError && error.status === 429) {
+        show({ kind: "generic-error", message: t("account_rate_limited") });
         return;
       }
       const failure = getRequestFailure(error);

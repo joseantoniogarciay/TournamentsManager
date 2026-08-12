@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/netip"
 	"strings"
 	"testing"
 	"time"
@@ -567,6 +568,31 @@ func TestUsernameAvailabilityRateLimitsByClientIP(t *testing.T) {
 	}
 }
 
+func TestClientIPUsesForwardedAddressOnlyFromTrustedProxy(t *testing.T) {
+	t.Parallel()
+
+	trusted := newClientIPResolver([]netip.Prefix{netip.MustParsePrefix("192.168.65.0/24")})
+	for _, test := range []struct {
+		name       string
+		remoteAddr string
+		forwarded  string
+		want       string
+	}{
+		{"trusted docker proxy", "192.168.65.1:54321", "203.0.113.8", "203.0.113.8"},
+		{"untrusted peer cannot spoof", "198.51.100.2:54321", "203.0.113.8", "198.51.100.2"},
+		{"trusted proxy with invalid header", "192.168.65.1:54321", "not-an-ip", "192.168.65.1"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, "/", nil)
+			request.RemoteAddr = test.remoteAddr
+			request.Header.Set("X-Client-IP", test.forwarded)
+			if got := trusted(request); got != test.want {
+				t.Errorf("client IP = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
 func TestRegistrationRequiresSupportedLocale(t *testing.T) {
 	t.Parallel()
 
@@ -592,6 +618,34 @@ func TestRegistrationRequiresSupportedLocale(t *testing.T) {
 				t.Errorf("status = %d, want %d", recorder.Code, test.status)
 			}
 		})
+	}
+}
+
+func TestRegistrationRateLimitsByClientIP(t *testing.T) {
+	t.Parallel()
+
+	handler := NewHandler(registration.NewService(testRegistrationRepository{}, nil), nil, testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
+	for range registrationLimit {
+		request := httptest.NewRequest(http.MethodPost, "/v1/registrations", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"es"}`))
+		request.RemoteAddr = "203.0.113.1:10000"
+		request.Header.Set("Content-Type", "application/json")
+		recorder := httptest.NewRecorder()
+		handler.ServeHTTP(recorder, request)
+		if recorder.Code != http.StatusAccepted {
+			t.Fatalf("status = %d before limit, want %d", recorder.Code, http.StatusAccepted)
+		}
+	}
+
+	request := httptest.NewRequest(http.MethodPost, "/v1/registrations", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"es"}`))
+	request.RemoteAddr = "203.0.113.1:10000"
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusTooManyRequests {
+		t.Errorf("status = %d, want %d", recorder.Code, http.StatusTooManyRequests)
+	}
+	if recorder.Header().Get("Retry-After") == "" {
+		t.Error("Retry-After header is missing")
 	}
 }
 

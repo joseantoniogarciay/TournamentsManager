@@ -2013,3 +2013,40 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   todos los subdominios presentes y futuros.
 - **Regla reutilizable:** validar una cabecera de seguridad tanto en el router
   local como por HTTPS en el hostname público después de recargar el borde.
+
+### 2026-08-12 — Una CSP se despliega primero observando el artefacto real
+
+- **Aprendido:** una política de contenido demasiado genérica puede impedir que
+  el bundle web cargue aunque la aplicación compile correctamente. El modo
+  `Content-Security-Policy-Report-Only` permite descubrir esos desajustes sin
+  interrumpir a las personas usuarias.
+- **Evidencia:** inicio, acceso, registro, recuperación, privacidad y enlaces
+  de verificación de `dev.fasttourney.com` no registraron violaciones durante
+  la observación. La política obligatoria permite el origen propio, la API de
+  desarrollo y los endpoints de Google previstos para identidad federada.
+- **Regla reutilizable:** añadir un origen a CSP solo tras una ruta funcional
+  que lo requiera y comprobar el mismo flujo con la política en modo obligatorio.
+
+### 2026-08-12 — Las cabeceras complementan una CSP, no la duplican
+
+- **Aprendido:** CSP restringe el contenido que una página puede cargar, pero
+  no evita que el navegador adivine tipos MIME, filtre rutas completas como
+  referencia o habilite capacidades del dispositivo que la web no usa.
+- **Decisión aplicada:** el borde añade `nosniff`, una política de referrer
+  conservadora y desactiva mediante `Permissions-Policy` capacidades no
+  requeridas. `frame-ancestors 'none'` de CSP cubre el anti-embebido, por lo
+  que no se añade el encabezado legado `X-Frame-Options`.
+
+### 2026-08-12 — La IP reenviada es un límite de confianza, no un dato del cliente
+
+- **Aprendido:** detrás de Cloudflare Tunnel, Caddy y Docker, el socket de la
+  API identifica al proxy interno, no a la persona visitante. Sin una IP
+  reenviada fiable, los límites por IP agrupan a todas las personas o se pueden
+  falsear si se confía en una cabecera de cualquiera.
+- **Decisión aplicada:** Caddy copia `CF-Connecting-IP` en `X-Client-IP`; la
+  API solo la usa cuando el peer pertenece a `TRUSTED_PROXY_CIDRS`. Registro se
+  limita a cinco solicitudes por minuto e IP; acceso y recuperación conservan
+  sus límites existentes usando la misma identidad resuelta.
+- **Regla reutilizable:** cada proxy adicional exige revisar la red de confianza
+  y probar que una cabecera falsa desde un peer no confiable no cambia la IP
+  aplicada por la API.

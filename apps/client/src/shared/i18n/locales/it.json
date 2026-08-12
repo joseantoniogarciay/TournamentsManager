@@ -8,6 +8,7 @@
   "common_loading": "Caricamento",
   "common_network_error": "Non siamo riusciti a connetterci. Controlla la connessione e riprova.",
   "common_request_error": "Stiamo riscontrando dei problemi. Ci dispiace, riprova più tardi.",
+  "account_rate_limited": "Hai effettuato troppi tentativi. Attendi un momento e riprova.",
   "session_expired": "La tua sessione è scaduta. Accedi di nuovo.",
   "home_account": "Account",
   "home_account_accessibility_label": "Apri account",

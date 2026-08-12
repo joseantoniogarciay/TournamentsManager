@@ -67,7 +67,7 @@ func run(args []string) error {
 
 	server := &http.Server{
 		Addr:              appConfig.HTTPAddr,
-		Handler:           httpadapter.NewHandlerWithCookieSecurity(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, leagues.NewCreationService(accountLeagues)),
+		Handler:           httpadapter.NewHandlerWithCookieSecurityAndTrustedProxies(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, leagues.NewCreationService(accountLeagues)),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

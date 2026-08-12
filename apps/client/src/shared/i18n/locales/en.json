@@ -8,6 +8,7 @@
   "common_loading": "Loading",
   "common_network_error": "We could not connect. Check your connection and try again.",
   "common_request_error": "We are having problems. Sorry, please try again later.",
+  "account_rate_limited": "You have made too many attempts. Wait a moment and try again.",
   "session_expired": "Your session has expired. Sign in again.",
   "home_account": "Account",
   "home_account_accessibility_label": "Open account",

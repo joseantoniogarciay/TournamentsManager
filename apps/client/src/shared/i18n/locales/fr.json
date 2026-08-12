@@ -8,6 +8,7 @@
   "common_loading": "Chargement",
   "common_network_error": "Nous n’avons pas pu nous connecter. Vérifiez votre connexion et réessayez.",
   "common_request_error": "Nous rencontrons des problèmes. Désolés, réessayez plus tard.",
+  "account_rate_limited": "Vous avez effectué trop de tentatives. Attendez un instant et réessayez.",
   "session_expired": "Votre session a expiré. Connectez-vous à nouveau.",
   "home_account": "Compte",
   "home_account_accessibility_label": "Ouvrir le compte",

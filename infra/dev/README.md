@@ -10,6 +10,11 @@ mounts. Solo se publica en `127.0.0.1:8081`, donde Caddy la alcanza desde el
 Mac. PostgreSQL no publica ningún puerto. Mailpit queda en `127.0.0.1:8026`
 para inspección local y no tiene ruta Cloudflare/Caddy.
 
+La red del proyecto fija `172.19.0.0/16` para que la API pueda reconocer la
+gateway `172.19.0.1` como el único proxy de confianza. Caddy traduce
+`CF-Connecting-IP` a `X-Client-IP`; la API usa esta última exclusivamente desde
+esa gateway para sus límites de abuso.
+
 ## Primer arranque
 
 ```bash
