@@ -1964,3 +1964,10 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** comparte el patrón visual de navegación entre web y
   Android, pero deja que iOS use sus controles de barra cuando la plataforma ya
   ofrece una presentación y un área táctil correctas.
+
+### 2026-08-12 — El blur web necesita una alternativa estable
+
+- **Aprendido:** un `BlurView` puede llegar al compositor web después de que el
+  portal del diálogo sea visible, exponiendo brevemente el contenido nítido.
+- **Regla reutilizable:** web usa un scrim neutro opaco desde el primer frame,
+  sin blur; iOS y Android conservan su tratamiento nativo ya validado.
