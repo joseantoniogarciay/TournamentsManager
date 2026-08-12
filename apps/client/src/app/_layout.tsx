@@ -10,6 +10,7 @@ import { LeagueStoreProvider } from "@/features/league-creation/league-store";
 import { SessionProvider, useSession } from "@/shared/session/session-provider";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
 import { ConfirmationDialogProvider } from "@/shared/ui";
+import { NotificationProvider } from "@/features/notifications/notification-provider";
 
 if (Platform.OS !== "web") {
   SplashScreen.setOptions({ duration: 240, fade: true });
@@ -22,13 +23,15 @@ export default function RootLayout() {
       <NavigationTheme>
         <FeedbackProvider>
           <SessionProvider>
-            <LeagueStoreProvider>
-              <PendingVerificationProvider>
-                <ConfirmationDialogProvider>
-                  <RootNavigator />
-                </ConfirmationDialogProvider>
-              </PendingVerificationProvider>
-            </LeagueStoreProvider>
+            <NotificationProvider>
+              <LeagueStoreProvider>
+                <PendingVerificationProvider>
+                  <ConfirmationDialogProvider>
+                    <RootNavigator />
+                  </ConfirmationDialogProvider>
+                </PendingVerificationProvider>
+              </LeagueStoreProvider>
+            </NotificationProvider>
           </SessionProvider>
         </FeedbackProvider>
       </NavigationTheme>
@@ -66,6 +69,13 @@ function RootNavigator() {
       />
       <Stack.Screen
         name="account-authentication"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
+        name="privacy-policy"
         options={{
           headerShown: true,
           presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
@@ -179,7 +189,7 @@ function WebPageAppearance({ backgroundColor }: { backgroundColor: string }) {
       <meta name="theme-color" content={backgroundColor} />
       <style>{`
         @supports selector(div:has(> [role="tablist"])) {
-          div:has(> [role="tablist"]) {
+          div:has(> [role="tablist"] a[role="tab"][href="/tournaments"]) {
             bottom: env(safe-area-inset-bottom) !important;
             left: 0 !important;
             position: fixed !important;

@@ -1,5 +1,69 @@
 # Registro de aprendizaje
 
+## 2026-08-12 — Una purga no debe retener identidad por preservar historia
+
+Eliminar una cuenta puede chocar con el historial compartido de una liga. La
+clave foránea de los cambios de resultado usa `ON DELETE SET NULL`: el resultado
+y su cronología continúan disponibles, pero la persona eliminada deja de ser
+identificable. El job se ejecuta fuera de la API mediante `launchd`, por lo que
+un reinicio de servidor no borra ni duplica su planificación.
+
+## 2026-08-12 — Descripción e indexación son controles independientes
+
+La meta description describe una página si un buscador decide mostrarla, pero no
+controla si puede indexarla. Un entorno público de desarrollo conserva
+metadatos útiles y envía `X-Robots-Tag: noindex, nofollow, noarchive` desde el
+borde para no aparecer en buscadores. Esto no limita el acceso ni sustituye
+controles de autenticación.
+
+## 2026-08-11 — El borde puede validarse sin publicar una aplicación incompleta
+
+Caddy puede obtener el certificado y ejercer el redirect canónico antes de que
+exista una web o API apta para Internet. Una respuesta `503` explícita evita que
+un puerto abierto revele por accidente un servicio interno o plantillas de
+asociación sin firmas reales. El proxy solo se añade junto con su artefacto y
+configuración verificables.
+
+## 2026-08-11 — Un host de enlaces es una frontera de confianza
+
+Universal Links y App Links no se conceden a una marca, sino a la combinación de
+host HTTPS, identificador de aplicación y firma. Separar `fasttourney.com` de
+`dev.fasttourney.com` evita que una build de desarrollo herede la asociación y
+las credenciales web de producción. Cada host publica únicamente sus propios
+ficheros `.well-known`. Véase ADR-0089.
+
+## 2026-08-11 — Un entorno de aprendizaje no tiene que estar encendido siempre
+
+Un entorno AWS enseña sus propiedades reales solo si se crea con IaC, se verifica
+y se destruye. Mantenerlo encendido sin tráfico convierte el aprendizaje en coste
+fijo. El Mac conserva dos ejecuciones aisladas —desarrollo y release doméstico—,
+pero esa separación no le concede alta disponibilidad: comparten equipo, red y
+alimentación. Véase ADR-0088.
+
+## 2026-08-11 — Un túnel evita abrir el router, pero no vuelve residencial al ISP
+
+Cloudflare Tunnel abre una conexión saliente desde el Mac y permite que
+Cloudflare termine HTTPS sin publicar la IP doméstica como origen ni mantener
+forwards/DDNS. Caddy puede seguir en loopback para enrutar por hostname. Esto
+reduce mucho la exposición de origen; no impide que una IP residencial ya
+conocida pueda recibir tráfico directo que sature su enlace. Véase ADR-0090.
+
+## 2026-08-11 — Un dev público no es el bucle local de Air
+
+Un proyecto Compose aporta namespace a sus contenedores, red y volúmenes, por lo
+que `tournaments-manager-dev` puede reutilizar los nombres internos `api` y
+`postgres` sin mezclarse con `tournaments-manager-local`. Para que los cambios
+diarios no alteren a usuarios externos, el primero usa la imagen `runtime` y web
+exportada estática; Air queda en local. Véase ADR-0091.
+
+## 2026-08-11 — DDNS y HTTPS resuelven problemas distintos
+
+Una IP doméstica dinámica exige que el DNS actualice el nombre público, pero no
+cifra ni enruta el tráfico. Caddy recibe HTTPS para ese nombre y lo reenvía a la
+API interna; en la alternativa inicial el router dirigía TCP 80/443 hacia Caddy.
+La decisión actual usa Cloudflare Tunnel (ADR-0090), que elimina esos forwards y
+el DDNS, sin publicar PostgreSQL ni el puerto interno de la API.
+
 ## 2026-08-10 — Los patrones visuales repetidos necesitan una regla verificable
 
 Una ruta modal no debe recrear a ojo una `X` ni dejar su contenido a ras del
@@ -1878,3 +1942,111 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** para datos comparables y densos en móvil, fija la
   identidad de la fila y su métrica principal; reserva el desplazamiento para
   las columnas secundarias y no muestres affordances de scroll si no hay desborde.
+
+### 2026-08-12 — La información de privacidad debe coincidir con el ciclo técnico real
+
+- **Aprendido:** una política no puede prometer recuperación de cuenta si el
+  producto solo ofrece una espera antes de su eliminación definitiva.
+- **Evidencia:** la baja queda pendiente 30 días y una tarea externa elimina la
+  cuenta en lotes; el historial de resultados conserva el dato deportivo y
+  anonimiza a su autora.
+- **Regla reutilizable:** publica la política antes de recoger datos y enlázala
+  desde el acceso, el registro y los ajustes; describe únicamente proveedores y
+  tratamientos que estén realmente activos.
+
+### 2026-08-12 — La navegación debe conservar el mismo affordance sin ocultar la plataforma
+
+- **Aprendido:** un control de cabecera sin superficie ni margen lateral parece
+  accidental frente a las acciones circulares de las rutas profundas.
+- **Evidencia:** web y Android comparten `NavigationHeaderButton`, con objetivo
+  de 44 px, borde, superficie y 20 px respecto al lateral; iOS usa su toolbar
+  nativa equivalente.
+- **Regla reutilizable:** comparte el patrón visual de navegación entre web y
+  Android, pero deja que iOS use sus controles de barra cuando la plataforma ya
+  ofrece una presentación y un área táctil correctas.
+
+### 2026-08-12 — El blur web necesita una alternativa estable
+
+- **Aprendido:** un `BlurView` puede llegar al compositor web después de que el
+  portal del diálogo sea visible, exponiendo brevemente el contenido nítido.
+- **Regla reutilizable:** web usa un scrim neutro opaco desde el primer frame,
+  sin blur; iOS y Android conservan su tratamiento nativo ya validado.
+
+### 2026-08-12 — Una biblioteca bajo tabs necesita un viewport desplazable explícito
+
+- **Aprendido:** una regla web que localiza la tab bar por
+  `[role="tablist"]` no puede asumir que solo existe la navegación principal;
+  un control segmentado accesible comparte correctamente ese mismo rol.
+- **Evidencia:** el selector global que fijaba cualquier padre de un `tablist`
+  convertía toda la biblioteca de torneos en `position: fixed`. La regla ahora
+  identifica además la ruta estable de la tab «Torneos», mientras la biblioteca
+  mantiene su selector fuera del `ScrollView` y conserva la reserva inferior
+  común de la botonera.
+- **Regla reutilizable:** en una ruta bajo tabs, el contenedor desplazable recibe
+  explícitamente el alto flexible y la reserva inferior de
+  `useTabContentBottomPadding`. Una regla global que dependa de semántica ARIA
+  debe acotarse a la estructura que pretende modificar; los indicadores de
+  navegación de filas se comparten como iconos de 24 px, no como glifos de texto
+  con tamaño accidental.
+
+### 2026-08-12 — Una exportación pública debe aislar configuración y caché locales
+
+- **Aprendido:** Expo incorpora `EXPO_PUBLIC_*` en el bundle y puede reutilizar
+  transformaciones de Metro; una exportación pública puede conservar por error
+  la URL de API local aunque el comando le proporcione una URL distinta.
+- **Evidencia:** el bundle de `dev.fasttourney.com` contenía
+  `http://localhost:8080/v1`, lo que activaba el permiso de acceso local de
+  Brave. El script de publicación desactiva la carga de `.env`, establece la
+  URL HTTPS de la API y del enlace compartido, y limpia la caché antes de
+  exportar.
+- **Regla reutilizable:** todo script que exporte un artefacto público con
+  configuración distinta de la local debe declarar sus variables, impedir
+  overrides de `.env` y reconstruir las transformaciones que las incorporan.
+
+### 2026-08-12 — HSTS pertenece a la respuesta HTTPS pública, no al salto interno
+
+- **Aprendido:** Cloudflare termina TLS para la persona visitante aunque el
+  túnel llegue por HTTP de loopback a Caddy. Por ello Caddy puede emitir HSTS y
+  Cloudflare lo entrega en la respuesta HTTPS pública.
+- **Decisión aplicada:** `max-age=31536000`, sin `includeSubDomains` ni
+  `preload`; esas extensiones se reservarán hasta poder garantizar HTTPS para
+  todos los subdominios presentes y futuros.
+- **Regla reutilizable:** validar una cabecera de seguridad tanto en el router
+  local como por HTTPS en el hostname público después de recargar el borde.
+
+### 2026-08-12 — Una CSP se despliega primero observando el artefacto real
+
+- **Aprendido:** una política de contenido demasiado genérica puede impedir que
+  el bundle web cargue aunque la aplicación compile correctamente. El modo
+  `Content-Security-Policy-Report-Only` permite descubrir esos desajustes sin
+  interrumpir a las personas usuarias.
+- **Evidencia:** inicio, acceso, registro, recuperación, privacidad y enlaces
+  de verificación de `dev.fasttourney.com` no registraron violaciones durante
+  la observación. La política obligatoria permite el origen propio, la API de
+  desarrollo y los endpoints de Google previstos para identidad federada.
+- **Regla reutilizable:** añadir un origen a CSP solo tras una ruta funcional
+  que lo requiera y comprobar el mismo flujo con la política en modo obligatorio.
+
+### 2026-08-12 — Las cabeceras complementan una CSP, no la duplican
+
+- **Aprendido:** CSP restringe el contenido que una página puede cargar, pero
+  no evita que el navegador adivine tipos MIME, filtre rutas completas como
+  referencia o habilite capacidades del dispositivo que la web no usa.
+- **Decisión aplicada:** el borde añade `nosniff`, una política de referrer
+  conservadora y desactiva mediante `Permissions-Policy` capacidades no
+  requeridas. `frame-ancestors 'none'` de CSP cubre el anti-embebido, por lo
+  que no se añade el encabezado legado `X-Frame-Options`.
+
+### 2026-08-12 — La IP reenviada es un límite de confianza, no un dato del cliente
+
+- **Aprendido:** detrás de Cloudflare Tunnel, Caddy y Docker, el socket de la
+  API identifica al proxy interno, no a la persona visitante. Sin una IP
+  reenviada fiable, los límites por IP agrupan a todas las personas o se pueden
+  falsear si se confía en una cabecera de cualquiera.
+- **Decisión aplicada:** Caddy copia `CF-Connecting-IP` en `X-Client-IP`; la
+  API solo la usa cuando el peer pertenece a `TRUSTED_PROXY_CIDRS`. Registro se
+  limita a cinco solicitudes por minuto e IP; acceso y recuperación conservan
+  sus límites existentes usando la misma identidad resuelta.
+- **Regla reutilizable:** cada proxy adicional exige revisar la red de confianza
+  y probar que una cabecera falsa desde un peer no confiable no cambia la IP
+  aplicada por la API.

@@ -46,7 +46,6 @@ export default function AccountSettingsScreen() {
             </View>
           </View>
         </Card>
-
         <Card>
           <View style={styles.notificationRow}>
             <View style={styles.notificationCopy}>

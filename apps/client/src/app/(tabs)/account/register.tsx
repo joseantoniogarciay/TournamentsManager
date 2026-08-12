@@ -19,6 +19,8 @@ import {
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { registerLocalAccountRequest } from "@/features/registration/api";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
+import { APIUnexpectedResponseError } from "@/api/fetch";
+import { PrivacyPolicyLink } from "@/shared/legal/privacy-policy-link";
 import {
   clearLocalLeagueDraft,
   getLocalLeagueDraft,
@@ -74,6 +76,10 @@ export default function RegisterScreen() {
       show({ kind: "success", message: t("account_registration_email_sent") });
       router.replace("/account");
     } catch (error) {
+      if (error instanceof APIUnexpectedResponseError && error.status === 429) {
+        show({ kind: "generic-error", message: t("account_rate_limited") });
+        return;
+      }
       const failure = getRequestFailure(error);
       show({ kind: failure.kind, message: t(failure.messageKey) });
     } finally {
@@ -140,6 +146,7 @@ export default function RegisterScreen() {
               loading={isSubmitting}
               onPress={() => void register()}
             />
+            <PrivacyPolicyLink />
           </View>
         </Card>
       </KeyboardAwareScrollView>

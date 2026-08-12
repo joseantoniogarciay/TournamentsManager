@@ -1,5 +1,4 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet } from "react-native";
 
@@ -17,8 +16,7 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Screen, Text, TextField } from "@/shared/ui";
-import { WebIcon } from "@/shared/ui/web-icon";
+import { NavigationHeaderButton, Screen, Text, TextField } from "@/shared/ui";
 
 const minimumQueryLength = 3;
 const debounceMilliseconds = 400;
@@ -97,21 +95,12 @@ export default function AddLeagueAdministratorScreen() {
     }
   };
   const closeButton = (
-    <Pressable
+    <NavigationHeaderButton
       accessibilityLabel={t("common_close")}
-      accessibilityRole="button"
+      icon="close"
+      nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
       onPress={close}
-      style={[
-        styles.closeButton,
-        { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-      ]}
-    >
-      {Platform.OS === "web" ? (
-        <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
-      ) : (
-        <SymbolView name="xmark" size={control.iconSize} tintColor={colors.text.primary} />
-      )}
-    </Pressable>
+    />
   );
   const visibleResults = results.filter(
     (username) => username !== user?.username && !administrators?.includes(username),

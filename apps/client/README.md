@@ -42,9 +42,9 @@ lo que pueden instalarse a la vez. Antes de distribuirlas se verificará que el
 dominio y ambos identificadores estén registrados en la cuenta de Apple.
 
 El enlace de verificación usa la ruta HTTPS `/link/confirm` y el de recuperación
-`/link/password-reset`. Antes de crear una
-build asociada se define `EXPO_PUBLIC_APP_LINK_URL` con el mismo origen que
-`PUBLIC_BASE_URL` del backend. Las plantillas de los ficheros que se publicarán
+`/link/password-reset`. Producción usa `https://fasttourney.com` y desarrollo
+`https://dev.fasttourney.com`; cada build recibe ese mismo origen mediante
+`PUBLIC_BASE_URL` del backend y `EXPO_PUBLIC_APP_LINK_URL`. Las plantillas de los ficheros que se publicarán
 en `/.well-known/` están en [infra/app-links](../../infra/app-links/README.md):
 requieren el Team ID de Apple y las huellas de firma Android reales, que no se
 deben adivinar ni sustituir por valores de ejemplo en producción. La plantilla

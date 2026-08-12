@@ -853,7 +853,7 @@ export const getAssignLeagueAdministratorUrl = (leagueId: Uuid, username: Userna
 };
 
 /**
- * Exige sesión de la organizadora. La asignación es inmediata, idempotente y no envía una invitación ni una notificación.
+ * Exige sesión de la organizadora. La asignación es inmediata, idempotente y no envía una invitación. Cuando crea una delegación nueva, añade una notificación interna al buzón de la administradora.
  * @summary Asigna directamente una administradora por username
  */
 export const assignLeagueAdministrator = async (

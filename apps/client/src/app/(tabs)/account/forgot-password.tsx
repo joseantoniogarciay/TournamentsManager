@@ -3,6 +3,7 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { space } from "@tournaments-manager/design-tokens";
 import { requestRecovery } from "@/features/password-recovery/api";
+import { APIUnexpectedResponseError } from "@/api/fetch";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator } from "@/shared/i18n/locale";
 import {
@@ -29,8 +30,14 @@ export default function ForgotPasswordScreen() {
       await requestRecovery(email.trim());
       show({ kind: "success", message: t("password_recovery_sent") });
       router.replace("/account");
-    } catch {
-      show({ kind: "generic-error", message: t("common_request_error") });
+    } catch (error) {
+      show({
+        kind: "generic-error",
+        message:
+          error instanceof APIUnexpectedResponseError && error.status === 429
+            ? t("account_rate_limited")
+            : t("common_request_error"),
+      });
     } finally {
       setSending(false);
     }

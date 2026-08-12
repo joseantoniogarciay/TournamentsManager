@@ -130,6 +130,15 @@ La gestión de configuración sigue
   la protección CSRF de mutaciones autenticadas por cookie. Para esas
   mutaciones, los mismos orígenes validados se registran explícitamente como
   confiables en la protección CSRF; un origen ajeno sigue rechazado.
+- Los límites de abuso se evalúan en la API. Cuando una API se publica a través
+  de Caddy y Docker, Caddy copia `CF-Connecting-IP` en `X-Client-IP` y la API
+  acepta esa cabecera solo si la conexión inmediata procede de
+  `TRUSTED_PROXY_CIDRS`. Esa lista contiene únicamente la red interna del proxy,
+  nunca rangos públicos ni direcciones de visitantes; una cabecera enviada por
+  un peer no confiable se ignora.
+- ADR-0089 fija esos orígenes públicos en `https://dev.fasttourney.com` para
+  desarrollo y `https://fasttourney.com` para producción. Cada host publica
+  exclusivamente la asociación de su propia aplicación nativa.
 
 ## Gates futuros
 

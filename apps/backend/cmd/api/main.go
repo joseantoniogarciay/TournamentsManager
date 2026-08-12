@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/accounts"
 	googleadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/google"
 	httpadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/http"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
@@ -25,13 +26,20 @@ import (
 const shutdownTimeout = 10 * time.Second
 
 func main() {
-	if err := run(); err != nil {
+	if err := run(os.Args[1:]); err != nil {
 		slog.Error("la API no pudo iniciarse", "error", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
+func run(args []string) error {
+	if len(args) == 1 && args[0] == "purge-expired-accounts" {
+		return purgeExpiredAccounts()
+	}
+	if len(args) > 0 {
+		return fmt.Errorf("orden no reconocida: %q", args[0])
+	}
+
 	appConfig, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("cargar configuración: %w", err)
@@ -59,7 +67,7 @@ func run() error {
 
 	server := &http.Server{
 		Addr:              appConfig.HTTPAddr,
-		Handler:           httpadapter.NewHandlerWithCookieSecurity(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, leagues.NewCreationService(accountLeagues)),
+		Handler:           httpadapter.NewHandlerWithCookieSecurityAndTrustedProxies(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, leagues.NewCreationService(accountLeagues)),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -85,4 +93,24 @@ func run() error {
 		}
 		return nil
 	}
+}
+
+func purgeExpiredAccounts() error {
+	appConfig, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("cargar configuración: %w", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	pool, err := postgres.NewPool(ctx, appConfig.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+	deleted, err := accounts.NewService(postgres.NewAccountLeagueRepository(pool)).PurgeExpired(ctx)
+	if err != nil {
+		return fmt.Errorf("purgar cuentas con baja vencida: %w", err)
+	}
+	slog.Info("purga de cuentas completada", "deleted_accounts", deleted)
+	return nil
 }

@@ -2,6 +2,8 @@
 .env
 .env.*
 infra/local/api.docker.env
+infra/dev/.env
+infra/dev/api.docker.env
 !.env.example
 *.pem
 *.key

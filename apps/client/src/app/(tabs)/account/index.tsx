@@ -23,12 +23,15 @@ import { useGoogleAuthentication } from "@/features/federated-google/use-google-
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
+import { APIUnexpectedResponseError } from "@/api/fetch";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
+import { PrivacyPolicyLink } from "@/shared/legal/privacy-policy-link";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
   Card,
+  DisclosureIndicator,
   KeyboardAwareScrollView,
   Screen,
   Text,
@@ -131,6 +134,10 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
         show({ kind: "generic-error", message: t("account_login_invalid_credentials") });
         return;
       }
+      if (error instanceof APIUnexpectedResponseError && error.status === 429) {
+        show({ kind: "generic-error", message: t("account_rate_limited") });
+        return;
+      }
       const failure = getRequestFailure(error);
       show({ kind: failure.kind, message: t(failure.messageKey) });
     } finally {
@@ -176,9 +183,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
               style={[styles.navigationRow, { borderColor: colors.border.default }]}
             >
               <Text variant="bodyLarge">{t("account_access_data_title")}</Text>
-              <Text color="secondary" variant="title">
-                ›
-              </Text>
+              <DisclosureIndicator />
             </Pressable>
             <Button
               label={t("account_logout")}
@@ -311,6 +316,9 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
             secondarySurfaceColor={colors.surface.canvas}
             variant="secondary"
           />
+          <View style={styles.privacyPolicyLink}>
+            <PrivacyPolicyLink />
+          </View>
         </View>
       </KeyboardAwareScrollView>
     </Screen>
@@ -338,6 +346,7 @@ const styles = StyleSheet.create({
   },
   googleButtonDisabled: { opacity: 0.55 },
   googleLogo: { height: 22, width: 22 },
+  privacyPolicyLink: { alignSelf: "flex-end", marginTop: space[12] + space[5] - space[3] },
   register: { gap: space[3], marginHorizontal: space[5] },
   navigationRow: {
     alignItems: "center",

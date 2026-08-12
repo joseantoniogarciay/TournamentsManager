@@ -144,13 +144,20 @@ export function ModalDialog({
   return (
     <Modal animationType="fade" onRequestClose={onDismiss} transparent visible={visible}>
       <View accessibilityViewIsModal style={styles.backdrop}>
-        <BlurView
-          blurMethod="dimezisBlurViewSdk31Plus"
-          intensity={45}
-          pointerEvents="none"
-          style={styles.scrim}
-          tint="dark"
-        />
+        {Platform.OS === "web" ? (
+          <View
+            pointerEvents="none"
+            style={[styles.webScrim, { backgroundColor: colors.surface.canvas }]}
+          />
+        ) : (
+          <BlurView
+            blurMethod="dimezisBlurViewSdk31Plus"
+            intensity={45}
+            pointerEvents="none"
+            style={styles.scrim}
+            tint="dark"
+          />
+        )}
         {Platform.OS === "android" ? (
           <View
             pointerEvents="none"
@@ -202,5 +209,9 @@ const styles = StyleSheet.create({
   androidDimmingLayer: {
     ...StyleSheet.absoluteFill,
     opacity: 0.16,
+  },
+  webScrim: {
+    ...StyleSheet.absoluteFill,
+    opacity: 0.8,
   },
 });

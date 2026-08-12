@@ -186,6 +186,10 @@ separar entornos mientras CNG pueda generar sus diferencias de forma declarativa
 Las variantes iOS declaran `com.fasttourney.app.dev` y `com.fasttourney.app`.
 Antes de distribuir una build nativa se verificará que ambos identificadores
 estén registrados y controlados en la cuenta de Apple.
+Sus enlaces HTTPS también están separados: `APP_ENV=development` usa
+`https://dev.fasttourney.com` y `APP_ENV=production` usa
+`https://fasttourney.com`. Una variable `EXPO_PUBLIC_APP_LINK_URL` solo puede
+sobrescribir temporalmente ese valor con otro origen HTTPS.
 
 La splash nativa se configura mediante el plugin `expo-splash-screen`: usa el
 icono local de Fast Tourney sobre las superficies `canvas` clara y oscura. En
@@ -217,7 +221,8 @@ La configuración y los secretos siguen
 - `CORS_ALLOWED_ORIGINS` es una lista separada por comas de orígenes web
   completos sin path. El backend falla si falta o incluye un valor inválido. En
   local se permiten `http://localhost:8081` y `http://127.0.0.1:8081`; cada
-  entorno desplegado declara solo sus dominios web reales.
+  entorno desplegado declara solo sus dominios web reales: en desarrollo
+  `https://dev.fasttourney.com` y en producción `https://fasttourney.com`.
 - El contrato de la API en Compose vive en `infra/local/api.docker.env`; usa
   nombres de servicio (`postgres` y `mailpit`). El contrato host
   `apps/backend/.env` conserva `127.0.0.1` y solo sirve para ejecutar la API
@@ -294,3 +299,25 @@ automatización compartida; los comandos se separan por tecnología en
 El esquema inicial se aplica separadamente con `make db-schema-apply`. Los
 datos semilla funcionales permanecen aplazados hasta cerrar el primer vertical
 slice de producto.
+
+## Desarrollo público aislado
+
+ADR-0091 añade `infra/dev/compose.yaml` con proyecto
+`tournaments-manager-dev`. Es un runtime de prueba para personas externas: la
+API usa el target Docker `runtime`, no monta código ni incluye Air; PostgreSQL
+tiene volumen propio y la API queda ligada solo a `127.0.0.1:8081`. Los servicios
+internos conservan los nombres `api`, `postgres` y `mailpit`; el namespace del
+proyecto los separa del Compose local.
+
+```bash
+make dev-public-init
+# Ajustar la misma contraseña única en infra/dev/.env y api.docker.env.
+make dev-public-up
+make dev-public-schema-apply
+```
+
+La web pública no ejecuta Expo Metro: se exporta estática con
+`infra/home/deploy-dev-web.sh` y Caddy la sirve en
+`https://dev.fasttourney.com`. La API queda en
+`https://dev-api.fasttourney.com`. Mailpit solo es accesible desde el Mac en
+`http://127.0.0.1:8026`; no sustituye un proveedor de correo real.

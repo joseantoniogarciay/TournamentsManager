@@ -9,8 +9,8 @@
 - **Cuenta pendiente:** registro temporal de alta local que aún no puede iniciar
   una sesión de producto ni ejecutar acciones de negocio.
 - **Cuenta con baja programada:** cuenta sin sesión ni operaciones de producto,
-  conservada durante 30 días desde `deletion_requested_at` para una futura
-  recuperación o purga conforme a ADR-0074.
+  retenida durante 30 días desde `deletion_requested_at` antes de su purga
+  definitiva conforme a ADR-0074. La recuperación aún no está implementada.
 - **Credencial local:** email y secreto de autenticación gestionados por el
   backend.
 - **Identidad externa:** vínculo con un proveedor mediante `issuer` y `subject`.

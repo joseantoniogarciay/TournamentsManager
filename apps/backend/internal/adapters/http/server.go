@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/mail"
+	"net/netip"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,6 +20,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
@@ -29,6 +31,7 @@ const (
 	usernameAvailabilityLimit  = 30
 	usernameAvailabilityWindow = time.Minute
 	userSearchLimit            = 60
+	registrationLimit          = 5
 )
 
 // NewHandler construye las rutas de infraestructura disponibles antes de los
@@ -39,7 +42,14 @@ func NewHandler(registrationService registration.Service, federatedService *fede
 
 // NewHandlerWithCookieSecurity configura cookies Secure salvo en loopback HTTP local.
 func NewHandlerWithCookieSecurity(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, creationServices ...leagues.CreationService) http.Handler {
+	return NewHandlerWithCookieSecurityAndTrustedProxies(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, cookieSecure, nil, creationServices...)
+}
+
+// NewHandlerWithCookieSecurityAndTrustedProxies acepta la IP reenviada por Caddy
+// solo cuando la conexión inmediata se origina en una red de proxy configurada.
+func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, creationServices ...leagues.CreationService) http.Handler {
 	mux := http.NewServeMux()
+	resolveClientIP := newClientIPResolver(trustedProxyCIDRs)
 	cookies := sessionCookies(cookieSecure)
 	var accessService access.Service
 	if repository, ok := authenticator.(access.Repository); ok {
@@ -47,15 +57,16 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 	}
 	availabilityLimiter := newRequestLimiter(usernameAvailabilityLimit, usernameAvailabilityWindow)
 	userSearchLimiter := newRequestLimiter(userSearchLimit, usernameAvailabilityWindow)
+	registrationLimiter := newRequestLimiter(registrationLimit, time.Minute)
 	localLoginLimiter := newLoginLimiter(10, time.Minute)
 	cookieCSRF := func(next http.Handler) http.Handler {
 		return requireCookieCSRF(corsAllowedOrigins, next)
 	}
 	mux.HandleFunc("GET /healthz", healthz)
-	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter))
-	mux.HandleFunc("GET /v1/users", searchUsers(registrationService, userSearchLimiter))
-	mux.HandleFunc("POST /v1/registrations", register(registrationService))
-	mux.HandleFunc("POST /v1/sessions", createLocalSession(registrationService, localLoginLimiter, cookies))
+	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter, resolveClientIP))
+	mux.HandleFunc("GET /v1/users", searchUsers(registrationService, userSearchLimiter, resolveClientIP))
+	mux.HandleFunc("POST /v1/registrations", register(registrationService, registrationLimiter, resolveClientIP))
+	mux.HandleFunc("POST /v1/sessions", createLocalSession(registrationService, localLoginLimiter, cookies, resolveClientIP))
 	if federatedService != nil {
 		mux.HandleFunc("POST /v1/google-login-challenges", createGoogleChallenge(*federatedService))
 		mux.HandleFunc("POST /v1/google-sessions", createGoogleSession(*federatedService, cookies))
@@ -66,7 +77,7 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 		mux.HandleFunc("POST /v1/me/google-identities", unavailableFederatedLogin)
 	}
 	passwordResetLimiter := newRequestLimiter(10, time.Minute)
-	mux.HandleFunc("POST /v1/password-resets", requestPasswordReset(registrationService, passwordResetLimiter))
+	mux.HandleFunc("POST /v1/password-resets", requestPasswordReset(registrationService, passwordResetLimiter, resolveClientIP))
 	mux.HandleFunc("POST /v1/password-reset-links", inspectPasswordReset(registrationService))
 	mux.HandleFunc("POST /v1/password-reset-confirmations", confirmPasswordReset(registrationService, cookies))
 	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService, cookies))
@@ -79,6 +90,14 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
 	mux.Handle("GET /v1/me/recent-leagues", requireSession(authenticator)(http.HandlerFunc(listRecentAccountLeagues(leagueService))))
+	if repository, ok := authenticator.(notifications.Repository); ok {
+		notificationService := notifications.NewService(repository)
+		mux.Handle("GET /v1/me/notifications", requireSession(authenticator)(http.HandlerFunc(listNotifications(notificationService))))
+		mux.Handle("GET /v1/me/notifications/unread-count", requireSession(authenticator)(http.HandlerFunc(unreadNotificationCount(notificationService))))
+		mux.Handle("POST /v1/me/notifications/read", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(markAllNotificationsRead(notificationService)))))
+		mux.Handle("DELETE /v1/me/notifications", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteAllNotifications(notificationService)))))
+		mux.Handle("DELETE /v1/me/notifications/{notificationId}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteNotification(notificationService)))))
+	}
 	followHandler := requireSession(authenticator)(cookieCSRF(http.HandlerFunc(followLeague(leagueService))))
 	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)
@@ -564,14 +583,14 @@ func removeLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 	}
 }
 
-func searchUsers(service registration.Service, limiter *requestLimiter) http.HandlerFunc {
+func searchUsers(service registration.Service, limiter *requestLimiter, resolveClientIP clientIPResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query().Get("query")
 		if !usernamePattern.MatchString(query) {
 			writeValidationProblem(w)
 			return
 		}
-		if allowed, retryAfter := limiter.allow(clientIP(r)); !allowed {
+		if allowed, retryAfter := limiter.allow(resolveClientIP(r)); !allowed {
 			w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(w, http.StatusTooManyRequests, "Demasiadas búsquedas")
 			return
@@ -813,14 +832,14 @@ type passwordResetConfirmationRequest struct {
 	SessionTransport string `json:"sessionTransport"`
 }
 
-func requestPasswordReset(service registration.Service, limiter *requestLimiter) http.HandlerFunc {
+func requestPasswordReset(service registration.Service, limiter *requestLimiter, resolveClientIP clientIPResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body passwordResetRequest
 		if err := decodeBody(r, &body); err != nil || !validEmail(strings.TrimSpace(body.Email)) {
 			writeValidationProblem(w)
 			return
 		}
-		if allowed, retry := limiter.allow(clientIP(r)); !allowed {
+		if allowed, retry := limiter.allow(resolveClientIP(r)); !allowed {
 			w.Header().Set("Retry-After", strconv.Itoa(retry))
 			writeProblem(w, http.StatusTooManyRequests, "Demasiadas solicitudes")
 			return
@@ -913,14 +932,14 @@ func refreshSession(service registration.Service) http.HandlerFunc {
 	}
 }
 
-func usernameAvailability(service registration.Service, limiter *requestLimiter) http.HandlerFunc {
+func usernameAvailability(service registration.Service, limiter *requestLimiter, resolveClientIP clientIPResolver) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		username := request.PathValue("username")
 		if !usernamePattern.MatchString(username) {
 			writeValidationProblem(writer)
 			return
 		}
-		if allowed, retryAfter := limiter.allow(clientIP(request)); !allowed {
+		if allowed, retryAfter := limiter.allow(resolveClientIP(request)); !allowed {
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(writer, http.StatusTooManyRequests, "Demasiadas consultas de username")
 			return
@@ -937,12 +956,36 @@ func usernameAvailability(service registration.Service, limiter *requestLimiter)
 	}
 }
 
-func clientIP(request *http.Request) string {
-	host, _, err := net.SplitHostPort(request.RemoteAddr)
-	if err != nil {
+type clientIPResolver func(*http.Request) string
+
+func newClientIPResolver(trustedProxyCIDRs []netip.Prefix) clientIPResolver {
+	return func(request *http.Request) string {
+		peer := remoteAddrIP(request.RemoteAddr)
+		if peer.IsValid() {
+			for _, trustedProxyCIDR := range trustedProxyCIDRs {
+				if trustedProxyCIDR.Contains(peer) {
+					if forwarded, err := netip.ParseAddr(strings.TrimSpace(request.Header.Get("X-Client-IP"))); err == nil {
+						return forwarded.Unmap().String()
+					}
+					break
+				}
+			}
+			return peer.String()
+		}
 		return request.RemoteAddr
 	}
-	return host
+}
+
+func remoteAddrIP(remoteAddr string) netip.Addr {
+	host, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil {
+		host = remoteAddr
+	}
+	address, err := netip.ParseAddr(host)
+	if err != nil {
+		return netip.Addr{}
+	}
+	return address.Unmap()
 }
 
 type verificationRequest struct {
@@ -1084,14 +1127,14 @@ type loginRequest struct {
 }
 
 // createLocalSession autentica sin revelar si el email, la contraseña o el estado fallaron.
-func createLocalSession(service registration.Service, limiter *loginLimiter, cookies sessionCookieSettings) http.HandlerFunc {
+func createLocalSession(service registration.Service, limiter *loginLimiter, cookies sessionCookieSettings, resolveClientIP clientIPResolver) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var body loginRequest
 		if err := decodeBody(request, &body); err != nil || !validEmail(strings.TrimSpace(body.Email)) || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
 			writeValidationProblem(writer)
 			return
 		}
-		if allowed, retryAfter := limiter.allow(clientIP(request), strings.ToLower(strings.TrimSpace(body.Email))); !allowed {
+		if allowed, retryAfter := limiter.allow(resolveClientIP(request), strings.ToLower(strings.TrimSpace(body.Email))); !allowed {
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(writer, http.StatusTooManyRequests, "Demasiados intentos de inicio de sesión")
 			return
@@ -1120,7 +1163,7 @@ func createLocalSession(service registration.Service, limiter *loginLimiter, coo
 	}
 }
 
-func register(service registration.Service) http.HandlerFunc {
+func register(service registration.Service, limiter *requestLimiter, resolveClientIP clientIPResolver) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var body registerRequest
 		if err := decodeBody(request, &body); err != nil {
@@ -1144,6 +1187,11 @@ func register(service registration.Service) http.HandlerFunc {
 		input = registration.NormalizeInput(input)
 		if !validRegistration(input) || !validRegistrationDraft(input.Draft) {
 			writeValidationProblem(writer)
+			return
+		}
+		if allowed, retryAfter := limiter.allow(resolveClientIP(request)); !allowed {
+			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+			writeProblem(writer, http.StatusTooManyRequests, "Demasiados registros")
 			return
 		}
 		if err := service.Register(request.Context(), input); err != nil {

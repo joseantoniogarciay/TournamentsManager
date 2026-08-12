@@ -1,14 +1,17 @@
 import { Tabs } from "expo-router";
+import { StyleSheet, View } from "react-native";
 
 import { color, control } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { WebIcon } from "@/shared/ui/web-icon";
+import { useNotifications } from "@/features/notifications/notification-provider";
 
 export default function TabLayout() {
   const t = getTranslator();
   const { colors } = usePreferences();
+  const { count } = useNotifications();
 
   return (
     <Tabs
@@ -44,7 +47,10 @@ export default function TabLayout() {
         name="account"
         options={{
           tabBarIcon: ({ color }) => (
-            <WebIcon color={color as string} name="account" size={control.iconSize} />
+            <View style={styles.accountIcon}>
+              <WebIcon color={color as string} name="account" size={control.iconSize} />
+              {count > 0 ? <View style={styles.unreadDot} /> : null}
+            </View>
           ),
           title: t("nav_account"),
         }}
@@ -52,3 +58,16 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  accountIcon: { height: control.iconSize, position: "relative", width: control.iconSize },
+  unreadDot: {
+    backgroundColor: color.feedback.error,
+    borderRadius: 4,
+    height: 8,
+    position: "absolute",
+    right: -4,
+    top: -4,
+    width: 8,
+  },
+});

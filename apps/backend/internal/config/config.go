@@ -3,6 +3,7 @@ package config
 
 import (
 	"fmt"
+	"net/netip"
 	"net/url"
 	"os"
 	"strings"
@@ -16,6 +17,7 @@ const (
 	publicBaseURLEnv      = "PUBLIC_BASE_URL"
 	corsAllowedOriginsEnv = "CORS_ALLOWED_ORIGINS"
 	googleClientIDsEnv    = "GOOGLE_CLIENT_IDS"
+	trustedProxyCIDRsEnv  = "TRUSTED_PROXY_CIDRS"
 )
 
 // Config contiene únicamente la configuración necesaria para arrancar la API.
@@ -28,6 +30,7 @@ type Config struct {
 	CookieSecure       bool
 	CORSAllowedOrigins []string
 	GoogleClientIDs    []string
+	TrustedProxyCIDRs  []netip.Prefix
 }
 
 // Load obtiene la configuración desde el entorno y falla antes de abrir puertos
@@ -72,6 +75,10 @@ func load(getenv func(string) string) (Config, error) {
 		return Config{}, err
 	}
 	googleClientIDs := parseCommaSeparated(getenv(googleClientIDsEnv))
+	trustedProxyCIDRs, err := parseTrustedProxyCIDRs(getenv(trustedProxyCIDRsEnv))
+	if err != nil {
+		return Config{}, err
+	}
 
 	return Config{
 		DatabaseURL:        databaseURL,
@@ -82,7 +89,21 @@ func load(getenv func(string) string) (Config, error) {
 		CookieSecure:       parsedPublicURL.Scheme == "https",
 		CORSAllowedOrigins: corsAllowedOrigins,
 		GoogleClientIDs:    googleClientIDs,
+		TrustedProxyCIDRs:  trustedProxyCIDRs,
 	}, nil
+}
+
+func parseTrustedProxyCIDRs(raw string) ([]netip.Prefix, error) {
+	values := parseCommaSeparated(raw)
+	prefixes := make([]netip.Prefix, 0, len(values))
+	for _, value := range values {
+		prefix, err := netip.ParsePrefix(value)
+		if err != nil {
+			return nil, fmt.Errorf("%s contiene un CIDR inválido: %q", trustedProxyCIDRsEnv, value)
+		}
+		prefixes = append(prefixes, prefix.Masked())
+	}
+	return prefixes, nil
 }
 
 func parseCommaSeparated(raw string) []string {

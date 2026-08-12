@@ -27,12 +27,12 @@ import {
   Card,
   LoadingTransition,
   ModalDialog,
+  NavigationHeaderButton,
   Screen,
   Text,
   TextField,
   useConfirmationDialog,
 } from "@/shared/ui";
-import { WebIcon } from "@/shared/ui/web-icon";
 
 const localAppLinkURL = "http://localhost:8081";
 
@@ -240,46 +240,21 @@ export default function LeagueScreen() {
         <Stack.Screen
           options={{
             headerLeft: () => (
-              <Pressable
+              <NavigationHeaderButton
                 accessibilityLabel={t("common_back")}
-                accessibilityRole="button"
+                icon="close"
+                nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
                 onPress={returnToPreviousScreen}
-                style={[
-                  styles.navigationButton,
-                  { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-                ]}
-              >
-                {Platform.OS === "web" ? (
-                  <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
-                ) : (
-                  <SymbolView
-                    name={{ android: "close", ios: "xmark", web: "close" }}
-                    size={control.iconSize}
-                    tintColor={colors.text.primary}
-                  />
-                )}
-              </Pressable>
+              />
             ),
             headerRight: () => (
-              <Pressable
+              <NavigationHeaderButton
                 accessibilityLabel={t("league_actions")}
-                accessibilityRole="button"
+                icon="more"
+                nativeIcon={{ android: "more_vert", ios: "ellipsis", web: "more_vert" }}
                 onPress={() => setMenuOpen((open) => !open)}
-                style={[
-                  styles.navigationButton,
-                  { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-                ]}
-              >
-                {Platform.OS === "web" ? (
-                  <WebIcon color={colors.text.primary} name="more" size={control.iconSize} />
-                ) : (
-                  <SymbolView
-                    name={{ android: "more_vert", ios: "ellipsis", web: "more_vert" }}
-                    size={control.iconSize}
-                    tintColor={colors.text.primary}
-                  />
-                )}
-              </Pressable>
+                side="right"
+              />
             ),
           }}
         />

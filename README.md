@@ -114,7 +114,10 @@ La guía de recorrido y organización del backend está en
 | Observabilidad mínima | OpenTelemetry, Prometheus, Grafana, Loki y Tempo aceptados; Collector aplazado | [ADR-0020](docs/adr/0020-use-minimal-correlated-observability.md) |
 | Observabilidad de producto del cliente | PostHog Cloud diferido para beta distribuida; región UE, límite de gasto 0 € y sin autoridad sobre negocio | [ADR-0060](docs/adr/0060-use-posthog-for-deferred-client-product-observability.md) |
 | Empaquetado de la API | Imagen OCI/Docker aceptada | [ADR-0022](docs/adr/0022-package-backend-as-oci-image.md) |
-| Runtime cloud de la API | ECS con Fargate en Fase 5; todo el trabajo actual continúa local y sin coste AWS | [ADR-0023](docs/adr/0023-use-ecs-fargate-as-future-cloud-runtime.md) |
+| Runtime habitual y AWS | Mac para desarrollo y release doméstico; AWS efímero para aprendizaje y validación | [ADR-0088](docs/adr/0088-use-ephemeral-aws-learning-and-home-runtime.md) |
+| Dominio y deep links | `fasttourney.com` producción, `dev.fasttourney.com` desarrollo; API en `api` y `dev.api` | [ADR-0089](docs/adr/0089-use-fasttourney-domain-and-separated-app-link-hosts.md) |
+| Entrada pública doméstica | Cloudflare Tunnel; Caddy solo como router loopback | [ADR-0090](docs/adr/0090-use-cloudflare-tunnel-for-home-public-ingress.md) |
+| Entornos domésticos | Compose `local` con Air, `dev` público runtime y `prod` futuro aislado | [ADR-0091](docs/adr/0091-separate-local-and-public-development-compose-projects.md) |
 | Registry y promoción de la API | ECR privado, digest inmutable y releases selectivas futuras; sin recursos AWS aún | [ADR-0024](docs/adr/0024-use-ecr-and-digest-based-image-promotion.md) |
 | Infraestructura como código | Terraform aceptado; cuenta, estado remoto y red AWS pendientes, sin recursos creados | [ADR-0025](docs/adr/0025-use-terraform-for-infrastructure-as-code.md) |
 | Fundación AWS | Organizations con cuentas `management`, `nonprod` y `prod`; acceso temporal con Identity Center y MFA | [ADR-0026](docs/adr/0026-use-aws-organizations-and-temporary-identities.md) |

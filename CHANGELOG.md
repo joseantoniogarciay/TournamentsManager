@@ -8,6 +8,42 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Ruta pública de política de privacidad, localizada en español, inglés, italiano
+  y francés, enlazada desde el acceso, el registro y los ajustes. Documenta la
+  baja definitiva automática a los 30 días, las personas menores de 14 años y
+  el responsable del tratamiento.
+
+- La purga interna de cuentas con baja vencida elimina lotes de hasta 100
+  cuentas en el entorno público de desarrollo; conserva el historial de
+  resultados anonimizando su autora y se programa con una plantilla `launchd`.
+
+- La web de desarrollo publica una meta description y Caddy envía
+  `X-Robots-Tag: noindex, nofollow, noarchive` para que
+  `dev.fasttourney.com` no se indexe.
+
+- Configuración versionada de Caddy como router local de Cloudflare Tunnel:
+  redirect canónico de `www` y respuesta segura `503` hasta publicar los
+  servicios reales, sin listeners LAN/WAN.
+
+- ADR-0090: Cloudflare Tunnel es la entrada pública doméstica; las rutas
+  `fasttourney.com`, `www`, `dev`, `api` y `dev-api` están validadas sin DDNS
+  ni port forwards en UniFi.
+
+- ADR-0091: `tournaments-manager-dev` aísla el runtime público de desarrollo
+  del Compose local con Air; la web Expo se exporta estática y Mailpit no se
+  publica.
+
+- ADR-0089: `fasttourney.com` queda como dominio de producción y
+  `dev.fasttourney.com` como origen aislado de desarrollo; `dev-api` evita un
+  certificado de pago para la API de desarrollo y cada host de enlaces asocia
+  exclusivamente su aplicación nativa.
+
+- ADR-0088: el Mac será el runtime doméstico habitual; AWS se crea y destruye
+  temporalmente para aprendizaje y validación, sin coste cloud permanente.
+
+- ADR-0087: Caddy fue el borde HTTPS directo inicial y queda superado por el
+  túnel; no sustituye el ALB futuro de AWS.
+
 - ADR-0077: una solicitud de compatibilidad de Expo CLI puede actualizar de
   inmediato el conjunto necesario mediante excepciones exactas por versión; el
   resto de dependencias conserva siete días de maduración y lockfile congelado.

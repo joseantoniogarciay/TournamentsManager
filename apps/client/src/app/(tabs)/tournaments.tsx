@@ -21,7 +21,7 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getLeagueStateLabel } from "@/shared/i18n/league-state";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
+import { Card, DisclosureIndicator, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
 type LeagueRelationship = "administered" | "followed";
 const floatingActionButtonSize = control.minHeight + 12;
@@ -92,41 +92,36 @@ export default function TournamentsScreen() {
 
   return (
     <Screen bottomInset="none">
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: tabContentBottomPadding + floatingActionButtonSize + space[5] },
-        ]}
-        key={revision}
-        refreshControl={
-          user ? (
-            <RefreshControl
-              onRefresh={() => void loadLeagues(true)}
-              refreshing={isRefreshing}
-              tintColor={colors.border.focus}
-            />
-          ) : undefined
-        }
-        showsVerticalScrollIndicator={false}
-      >
-        {!isRestoring && !user ? (
-          <Card>
-            <View style={styles.copy}>
-              <Text variant="title">{t("tournaments_title")}</Text>
-              <Text color="secondary">{t("tournaments_description")}</Text>
-            </View>
-          </Card>
-        ) : null}
-
-        {!isRestoring && user && hasLoadedLeagues && !isLoading ? (
-          <LeagueLibrary
-            administered={administered}
-            followed={followed}
-            selectedRelationship={selectedRelationship}
-            onSelectRelationship={setSelectedRelationship}
-          />
-        ) : null}
-      </ScrollView>
+      {!isRestoring && user && hasLoadedLeagues && !isLoading ? (
+        <LeagueLibrary
+          administered={administered}
+          bottomPadding={tabContentBottomPadding + floatingActionButtonSize + space[5]}
+          followed={followed}
+          isRefreshing={isRefreshing}
+          onRefresh={() => void loadLeagues(true)}
+          onSelectRelationship={setSelectedRelationship}
+          selectedRelationship={selectedRelationship}
+        />
+      ) : (
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: tabContentBottomPadding + floatingActionButtonSize + space[5] },
+          ]}
+          key={revision}
+          showsVerticalScrollIndicator={false}
+          style={styles.scroll}
+        >
+          {!isRestoring && !user ? (
+            <Card>
+              <View style={styles.copy}>
+                <Text variant="title">{t("tournaments_title")}</Text>
+                <Text color="secondary">{t("tournaments_description")}</Text>
+              </View>
+            </Card>
+          ) : null}
+        </ScrollView>
+      )}
       {isInitialLoad ? (
         <View
           accessibilityLabel={t("common_loading")}
@@ -147,12 +142,18 @@ export default function TournamentsScreen() {
 
 function LeagueLibrary({
   administered,
+  bottomPadding,
   followed,
+  isRefreshing,
+  onRefresh,
   selectedRelationship,
   onSelectRelationship,
 }: {
   administered: Awaited<ReturnType<typeof listRelatedLeagues>>;
+  bottomPadding: number;
   followed: Awaited<ReturnType<typeof listRelatedLeagues>>;
+  isRefreshing: boolean;
+  onRefresh: () => void;
   selectedRelationship: LeagueRelationship;
   onSelectRelationship: (relationship: LeagueRelationship) => void;
 }) {
@@ -183,13 +184,26 @@ function LeagueLibrary({
           onPress={() => onSelectRelationship("followed")}
         />
       </View>
-      {leagues.length === 0 ? (
-        <View style={styles.empty}>
-          <Text color="secondary">{empty}</Text>
-        </View>
-      ) : (
-        leagues.map((league) => <LeagueLibraryCard key={league.id} league={league} />)
-      )}
+      <ScrollView
+        contentContainerStyle={[styles.libraryContent, { paddingBottom: bottomPadding }]}
+        refreshControl={
+          <RefreshControl
+            onRefresh={onRefresh}
+            refreshing={isRefreshing}
+            tintColor={colors.border.focus}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        style={styles.scroll}
+      >
+        {leagues.length === 0 ? (
+          <View style={styles.empty}>
+            <Text color="secondary">{empty}</Text>
+          </View>
+        ) : (
+          leagues.map((league) => <LeagueLibraryCard key={league.id} league={league} />)
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -217,7 +231,7 @@ function LeagueLibraryCard({
             <Text color="secondary">{getLeagueStateLabel(t, state)}</Text>
           </View>
         </View>
-        <Text color="secondary">›</Text>
+        <DisclosureIndicator />
       </Pressable>
     </Card>
   );
@@ -268,6 +282,7 @@ function CreateTournamentButton() {
 }
 
 const styles = StyleSheet.create({
+  scroll: { flex: 1, minHeight: 0 },
   content: { flexGrow: 1 },
   copy: { gap: space[2] },
   leagueState: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: space[2] },
@@ -281,7 +296,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: floatingActionButtonSize,
   },
-  library: { flex: 1, gap: space[5] },
+  library: { flex: 1, minHeight: 0, overflow: "hidden" },
+  libraryContent: { flexGrow: 1, gap: space[5] },
   loader: {
     alignItems: "center",
     bottom: 0,
@@ -310,6 +326,7 @@ const styles = StyleSheet.create({
   segmentedBar: {
     borderRadius: radius.control,
     flexDirection: "row",
+    marginBottom: space[5],
     marginHorizontal: space[5],
     padding: space[1],
   },

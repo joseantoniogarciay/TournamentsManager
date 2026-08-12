@@ -15,7 +15,7 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Card, Screen, Text, useConfirmationDialog } from "@/shared/ui";
+import { Card, NavigationHeaderButton, Screen, Text, useConfirmationDialog } from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
 export default function LeagueAdministratorsScreen() {
@@ -83,30 +83,23 @@ export default function LeagueAdministratorsScreen() {
     });
   const canAddAdministrator =
     league !== undefined && league.state !== "completed" && league.state !== "cancelled";
-  const navigationButton = (onPress: () => void, label: string, icon: "close" | "add") => (
-    <Pressable
+  const navigationButton = (
+    onPress: () => void,
+    label: string,
+    icon: "close" | "add",
+    side: "left" | "right",
+  ) => (
+    <NavigationHeaderButton
       accessibilityLabel={label}
-      accessibilityRole="button"
+      icon={icon}
+      nativeIcon={
+        icon === "add"
+          ? { android: "add", ios: "plus", web: "add" }
+          : { android: "close", ios: "xmark", web: "close" }
+      }
       onPress={onPress}
-      style={[
-        styles.navigationButton,
-        { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-      ]}
-    >
-      {Platform.OS === "web" ? (
-        <WebIcon color={colors.text.primary} name={icon} size={control.iconSize} />
-      ) : (
-        <SymbolView
-          name={{
-            android: icon === "add" ? "add" : "close",
-            ios: icon === "add" ? "plus" : "xmark",
-            web: "close",
-          }}
-          size={control.iconSize}
-          tintColor={colors.text.primary}
-        />
-      )}
-    </Pressable>
+      side={side}
+    />
   );
 
   return (
@@ -120,13 +113,14 @@ export default function LeagueAdministratorsScreen() {
           title: t("league_administrators"),
           ...(Platform.OS !== "ios"
             ? {
-                headerLeft: () => navigationButton(close, t("common_back"), "close"),
+                headerLeft: () => navigationButton(close, t("common_back"), "close", "left"),
                 headerRight: () =>
                   canAddAdministrator
                     ? navigationButton(
                         () => router.push(`/league/${id}/administrators/add`),
                         t("league_add_administrator"),
                         "add",
+                        "right",
                       )
                     : null,
               }

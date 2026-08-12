@@ -5,11 +5,13 @@ import { color } from "@tournaments-manager/design-tokens";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
+import { useNotifications } from "@/features/notifications/notification-provider";
 
 export default function TabLayout() {
   const t = getTranslator();
   const { resolvedTheme } = usePreferences();
   const { revision } = useSession();
+  const { count } = useNotifications();
 
   return (
     <NativeTabs
@@ -38,6 +40,7 @@ export default function TabLayout() {
           md={{ default: "person", selected: "person" }}
           sf={{ default: "person", selected: "person.fill" }}
         />
+        {count > 0 ? <NativeTabs.Trigger.Badge>•</NativeTabs.Trigger.Badge> : null}
       </NativeTabs.Trigger>
     </NativeTabs>
   );

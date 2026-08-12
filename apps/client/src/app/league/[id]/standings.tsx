@@ -1,7 +1,6 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -11,8 +10,7 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Button, Card, ModalDialog, Screen, Text } from "@/shared/ui";
-import { WebIcon } from "@/shared/ui/web-icon";
+import { Button, Card, ModalDialog, NavigationHeaderButton, Screen, Text } from "@/shared/ui";
 
 export default function LeagueStandingsScreen() {
   const t = getTranslator();
@@ -43,46 +41,21 @@ export default function LeagueStandingsScreen() {
     router.replace(id ? `/league/${id}` : "/");
   };
   const navigationButton = (
-    <Pressable
+    <NavigationHeaderButton
       accessibilityLabel={t("common_back")}
-      accessibilityRole="button"
+      icon="close"
+      nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
       onPress={close}
-      style={[
-        styles.navigationButton,
-        { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-      ]}
-    >
-      {Platform.OS === "web" ? (
-        <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
-      ) : (
-        <SymbolView
-          name={{ android: "close", ios: "xmark", web: "close" }}
-          size={control.iconSize}
-          tintColor={colors.text.primary}
-        />
-      )}
-    </Pressable>
+    />
   );
   const informationButton = (
-    <Pressable
+    <NavigationHeaderButton
       accessibilityLabel={t("league_standings_information")}
-      accessibilityRole="button"
+      icon="info"
+      nativeIcon={{ android: "info", ios: "info.circle", web: "info" }}
       onPress={() => setInformationVisible(true)}
-      style={[
-        styles.navigationButton,
-        { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-      ]}
-    >
-      {Platform.OS === "web" ? (
-        <WebIcon color={colors.text.primary} name="info" size={control.iconSize} />
-      ) : (
-        <SymbolView
-          name={{ android: "info", ios: "info.circle", web: "info" }}
-          size={control.iconSize}
-          tintColor={colors.text.primary}
-        />
-      )}
-    </Pressable>
+      side="right"
+    />
   );
 
   return (
