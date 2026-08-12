@@ -146,6 +146,14 @@ conserva `503` para los hosts de producción no publicados. La configuración,
 volumen PostgreSQL y proyecto Compose de dev no se comparten con el entorno
 local ni con el futuro prod, conforme a ADR-0091.
 
+ADR-0092 conserva dos despliegues recuperables de dev fuera de Git: cada uno
+lleva el SHA, una imagen runtime etiquetada y una exportación web estática. Caddy
+sirve el enlace simbólico de la versión activa y el rollback selecciona el SHA
+anterior sin tocar PostgreSQL. GitHub Releases y tags no se crean por las
+integraciones ordinarias de `develop`; se reservan para producción o hitos
+distribuidos. Esto no equivale a backup: la base dev sigue sin dump ni
+restauración probada mientras sus datos sean descartables.
+
 Mailpit de dev solo se liga a `127.0.0.1:8026` y no tiene hostname público. Un
 SMTP transaccional con el DNS de remitente configurado es requisito antes de
 permitir que personas externas dependan de correos de verificación o recuperación.

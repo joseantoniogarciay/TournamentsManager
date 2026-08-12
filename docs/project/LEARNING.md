@@ -2050,3 +2050,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** cada proxy adicional exige revisar la red de confianza
   y probar que una cabecera falsa desde un peer no confiable no cambia la IP
   aplicada por la API.
+
+### 2026-08-12 — Git conserva fuentes; el rollback necesita artefactos locales
+
+- **Aprendido:** un commit permite reconstruir una versión, pero no restaura de
+  forma inmediata la combinación exacta de imagen y web que servía el Mac.
+- **Decisión aplicada:** dev conserva solo el SHA actual y el anterior, junto
+  con una imagen runtime, una exportación estática y un manifiesto sin secretos.
+  Caddy selecciona la web mediante un enlace simbólico atómico.
+- **Regla reutilizable:** no almacenar artefactos, imágenes o backups en Git;
+  asociarlos a un SHA y distinguir rollback de código de restauración de datos.

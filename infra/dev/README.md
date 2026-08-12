@@ -24,6 +24,37 @@ make dev-public-up
 make dev-public-schema-apply
 ```
 
+## Actualización y reversión de dev
+
+Tras pasar `make verify` y la CI del commit de `develop`, el despliegue manual
+es:
+
+```bash
+make dev-public-deploy
+```
+
+El comando exige un árbol limpio cuyo `HEAD` coincida exactamente con
+`origin/develop`. Construye una imagen `runtime` etiquetada con el SHA completo,
+exporta la web estática en un directorio por SHA y publica ambas versiones. La
+web cambia mediante el enlace simbólico `current`, por lo que no mezcla archivos
+de dos exports. Se conservan el despliegue actual y el anterior bajo
+`/opt/homebrew/var/www/fasttourney/dev/releases/`; cada uno contiene un
+`deployment.json` con SHA, imagen y fecha. Git conserva el código, no estos
+artefactos locales.
+
+Para recuperar uno de los dos despliegues conservados:
+
+```bash
+make dev-public-rollback SHA=<SHA-completo>
+```
+
+La reversión recoloca API y web en el mismo SHA; no modifica PostgreSQL. Por
+tanto no sustituye una estrategia de backup/restauración cuando los datos de dev
+dejen de ser descartables.
+
+No hay GitHub Releases para los pushes normales de `develop`. Los tags y GitHub
+Releases quedan reservados para producción o hitos distribuidos.
+
 La web se exporta como estática con `infra/home/deploy-dev-web.sh`; no se usa
 `expo start --web` como servidor público. Antes de invitar usuarios que deban
 recibir emails, sustituye Mailpit por un proveedor SMTP transaccional y configura

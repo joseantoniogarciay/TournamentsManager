@@ -254,6 +254,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - Plantillas de knowledge base, playbooks, runbooks, diagramas y retrospectivas.
 # Cambios no publicados
 
+- Aceptado ADR-0092: dev conserva dos despliegues locales recuperables por SHA;
+  los GitHub Releases se reservan para producción o hitos distribuidos.
+
 - Aceptado ADR-0075: instalaciones locales congeladas y un periodo mínimo de
   maduración de siete días para versiones de npm, incluidas las transitivas.
 - Aceptado ADR-0074: baja lógica de cuenta programada a 30 días, con retirada

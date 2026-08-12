@@ -140,6 +140,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0089](../adr/0089-use-fasttourney-domain-and-separated-app-link-hosts.md)                     | Usar `fasttourney.com` y separar hosts de enlaces por entorno        | Aceptado              | 2026-08-11 |
 | [0090](../adr/0090-use-cloudflare-tunnel-for-home-public-ingress.md)                            | Usar Cloudflare Tunnel como entrada pública doméstica                 | Aceptado              | 2026-08-11 |
 | [0091](../adr/0091-separate-local-and-public-development-compose-projects.md)                    | Separar Compose local y de desarrollo público                         | Aceptado              | 2026-08-11 |
+| [0092](../adr/0092-retain-two-recoverable-development-deployments.md)                            | Conservar dos despliegues recuperables de desarrollo                  | Aceptado              | 2026-08-12 |
 
 ## Trazabilidad de un cambio
 

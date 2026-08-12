@@ -19,10 +19,20 @@ validar cada hostname por el túnel, se eliminan los forwards TCP 80/443 y la
 configuración DDNS. Los proxies y archivos reales se añaden solo junto con sus
 respectivos artefactos y configuración.
 
-`deploy-dev-web.sh` exporta Expo con la base API y el origen de enlaces de
-desarrollo, y publica el artefacto en `/opt/homebrew/var/www/fasttourney/dev`;
-ignora el `.env` local y limpia la caché de Metro para que ambas URL públicas se
-incorporen al bundle. Caddy no ejecuta Expo Metro.
+`deploy-dev.sh` es el único despliegue manual de dev: exige `develop` limpio y
+alineado con `origin/develop`, construye la API runtime y llama a
+`deploy-dev-web.sh`. Cada export se guarda bajo
+`/opt/homebrew/var/www/fasttourney/dev/releases/<SHA>/` y contiene un manifiesto
+sin secretos con commit, imagen y fecha. Caddy sirve el enlace `current`; el
+cambio del enlace es atómico y se retienen solamente la versión actual y su
+predecesora. Git conserva fuente y configuración, no artefactos, imágenes ni
+backups. `deploy-dev-web.sh` ignora el `.env` local y limpia la caché de Metro
+para que ambas URL públicas se incorporen al bundle. Caddy no ejecuta Expo
+Metro.
+
+Para recuperar el último artefacto anterior, se usa
+`make dev-public-rollback SHA=<SHA-completo>`. La reversión cambia API y web al
+mismo SHA conservado, pero no sustituye una restauración de PostgreSQL.
 Como es un entorno de desarrollo público, su host añade
 `X-Robots-Tag: noindex, nofollow, noarchive` a todas sus respuestas. La web
 mantiene una meta description para que el documento tenga metadatos completos,
