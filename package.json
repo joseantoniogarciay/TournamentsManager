@@ -23,7 +23,7 @@
     "openapi:lint": "redocly lint",
     "openapi:generate": "orval --config orval.config.ts",
     "openapi:generate:check": "pnpm run openapi:generate && git diff --exit-code -- apps/client/src/api/generated",
-    "openapi:ui": "scalar document serve contracts/openapi/v1/openapi.yaml --watch --port 8082",
+    "openapi:ui": "scalar document serve contracts/openapi/v1/openapi.yaml --watch --port 8083",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run openapi:lint",
     "verify": "pnpm run check"
   },

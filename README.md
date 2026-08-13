@@ -118,6 +118,7 @@ La guía de recorrido y organización del backend está en
 | Dominio y deep links | `fasttourney.com` producción, `dev.fasttourney.com` desarrollo; API en `api` y `dev.api` | [ADR-0089](docs/adr/0089-use-fasttourney-domain-and-separated-app-link-hosts.md) |
 | Entrada pública doméstica | Cloudflare Tunnel; Caddy solo como router loopback | [ADR-0090](docs/adr/0090-use-cloudflare-tunnel-for-home-public-ingress.md) |
 | Entornos domésticos | Compose `local` con Air, `dev` público runtime y `prod` futuro aislado | [ADR-0091](docs/adr/0091-separate-local-and-public-development-compose-projects.md) |
+| Retención de dev | Dos despliegues locales recuperables; releases GitHub solo para producción o hitos distribuidos | [ADR-0092](docs/adr/0092-retain-two-recoverable-development-deployments.md) |
 | Registry y promoción de la API | ECR privado, digest inmutable y releases selectivas futuras; sin recursos AWS aún | [ADR-0024](docs/adr/0024-use-ecr-and-digest-based-image-promotion.md) |
 | Infraestructura como código | Terraform aceptado; cuenta, estado remoto y red AWS pendientes, sin recursos creados | [ADR-0025](docs/adr/0025-use-terraform-for-infrastructure-as-code.md) |
 | Fundación AWS | Organizations con cuentas `management`, `nonprod` y `prod`; acceso temporal con Identity Center y MFA | [ADR-0026](docs/adr/0026-use-aws-organizations-and-temporary-identities.md) |

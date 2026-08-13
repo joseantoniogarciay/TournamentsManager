@@ -10,7 +10,7 @@ func requireCookieCSRF(trustedOrigins []string, next http.Handler) http.Handler 
 		}
 	}
 	protection.SetDenyHandler(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
-		writeProblem(writer, http.StatusForbidden, "Origen no permitido")
+		writeProblem(writer, http.StatusForbidden, "Origin is not allowed")
 	}))
 	protected := protection.Handler(next)
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {

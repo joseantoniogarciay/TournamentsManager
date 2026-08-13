@@ -38,6 +38,20 @@ topología completa.
 - ningún despliegue sin health checks y criterio de éxito;
 - ningún backup sin restauración probada.
 
+## Continuidad futura de producción
+
+**Pendiente de ADR antes de implementar.** Para evitar que un cambio de versión
+interrumpa las peticiones, producción evaluará un despliegue blue/green detrás de
+Caddy: la instancia nueva arranca separada, supera health checks y una validación
+funcional mínima, Caddy conmuta el tráfico y la instancia anterior permanece
+disponible durante un periodo breve de observación. Un rollback posterior vuelve
+a arrancar y validar el SHA anterior antes de conmutar otra vez.
+
+Durante la conmutación ambas versiones deben ser compatibles con el mismo
+esquema PostgreSQL. Los cambios destructivos o incompatibles exigirán una
+estrategia explícita de migración (por ejemplo, expand/contract, forward-fix o
+restauración), no solo volver a una imagen anterior.
+
 ## Límite de despliegue desde GitHub
 
 El repositorio será público, pero el acceso operativo no. CI construirá y
@@ -146,9 +160,24 @@ conserva `503` para los hosts de producción no publicados. La configuración,
 volumen PostgreSQL y proyecto Compose de dev no se comparten con el entorno
 local ni con el futuro prod, conforme a ADR-0091.
 
-Mailpit de dev solo se liga a `127.0.0.1:8026` y no tiene hostname público. Un
-SMTP transaccional con el DNS de remitente configurado es requisito antes de
-permitir que personas externas dependan de correos de verificación o recuperación.
+El mismo release contiene la referencia pública de desarrollo en
+`https://dev.fasttourney.com/api-docs/`. El script de despliegue copia la UI
+Scalar y `openapi.yaml` junto a la exportación web; Caddy atiende esa ruta antes
+del fallback de la SPA. Como usa el origen ya autorizado
+`dev.fasttourney.com`, no cambia CORS de `dev-api` ni exige otro hostname.
+
+ADR-0092 conserva dos despliegues recuperables de dev fuera de Git: cada uno
+lleva el SHA, una imagen runtime etiquetada y una exportación web estática. Caddy
+sirve el enlace simbólico de la versión activa y el rollback selecciona el SHA
+anterior sin tocar PostgreSQL. GitHub Releases y tags no se crean por las
+integraciones ordinarias de `develop`; se reservan para producción o hitos
+distribuidos. Esto no equivale a backup: la base dev sigue sin dump ni
+restauración probada mientras sus datos sean descartables.
+
+Mailpit pertenece solo al entorno local y no tiene hostname público. El entorno
+`dev` usa Resend por SMTP autenticado con STARTTLS; antes de invitar personas se
+verifica `mail.fasttourney.com` y sus registros SPF, DKIM y DMARC. La clave de
+solo envío vive fuera de Git en `infra/dev/api.docker.env`; véase ADR-0093.
 
 Antes de publicar el futuro artefacto web de producción, su script de exportación
 debe declarar, sin leer el `.env` local y limpiando la caché de Metro:

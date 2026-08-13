@@ -31,6 +31,43 @@ func (q *Queries) ConsumeGoogleLoginChallenge(ctx context.Context, id pgtype.UUI
 	return err
 }
 
+const consumeReauthenticationTicketAndRemoveGoogle = `-- name: ConsumeReauthenticationTicketAndRemoveGoogle :execrows
+WITH consumed AS (
+    UPDATE reauthentication_tickets AS tickets
+    SET consumed_at = now()
+    FROM sessions
+    WHERE tickets.token_hash = $2
+      AND tickets.session_id = sessions.id
+      AND sessions.token_hash = $1
+      AND sessions.revoked_at IS NULL
+      AND sessions.idle_expires_at > now()
+      AND sessions.absolute_expires_at > now()
+      AND tickets.consumed_at IS NULL
+      AND tickets.expires_at > now()
+    RETURNING tickets.account_id
+)
+DELETE FROM external_identities
+WHERE account_id IN (SELECT account_id FROM consumed)
+  AND provider = 'google'
+  AND EXISTS (
+      SELECT 1 FROM local_credentials
+      WHERE local_credentials.account_id = external_identities.account_id
+  )
+`
+
+type ConsumeReauthenticationTicketAndRemoveGoogleParams struct {
+	TokenHash   []byte
+	TokenHash_2 []byte
+}
+
+func (q *Queries) ConsumeReauthenticationTicketAndRemoveGoogle(ctx context.Context, arg ConsumeReauthenticationTicketAndRemoveGoogleParams) (int64, error) {
+	result, err := q.db.Exec(ctx, consumeReauthenticationTicketAndRemoveGoogle, arg.TokenHash, arg.TokenHash_2)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const createFederatedRefreshToken = `-- name: CreateFederatedRefreshToken :one
 INSERT INTO session_refresh_tokens (session_id, token_hash, expires_at)
 VALUES ($1, $2, now() + interval '30 days')

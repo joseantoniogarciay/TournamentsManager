@@ -1,4 +1,4 @@
-// Package http expone adaptadores HTTP de la API.
+// Package http exposes the API HTTP adapters.
 package http
 
 import (
@@ -34,19 +34,18 @@ const (
 	registrationLimit          = 5
 )
 
-// NewHandler construye las rutas de infraestructura disponibles antes de los
-// endpoints de negocio.
+// NewHandler builds the infrastructure routes available before business endpoints.
 func NewHandler(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, creationServices ...leagues.CreationService) http.Handler {
 	return NewHandlerWithCookieSecurity(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, true, creationServices...)
 }
 
-// NewHandlerWithCookieSecurity configura cookies Secure salvo en loopback HTTP local.
+// NewHandlerWithCookieSecurity configures Secure cookies except on local HTTP loopback.
 func NewHandlerWithCookieSecurity(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, creationServices ...leagues.CreationService) http.Handler {
 	return NewHandlerWithCookieSecurityAndTrustedProxies(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, cookieSecure, nil, creationServices...)
 }
 
-// NewHandlerWithCookieSecurityAndTrustedProxies acepta la IP reenviada por Caddy
-// solo cuando la conexión inmediata se origina en una red de proxy configurada.
+// NewHandlerWithCookieSecurityAndTrustedProxies accepts the IP forwarded by Caddy
+// only when the immediate connection originates from a configured proxy network.
 func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, creationServices ...leagues.CreationService) http.Handler {
 	mux := http.NewServeMux()
 	resolveClientIP := newClientIPResolver(trustedProxyCIDRs)
@@ -71,10 +70,12 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 		mux.HandleFunc("POST /v1/google-login-challenges", createGoogleChallenge(*federatedService))
 		mux.HandleFunc("POST /v1/google-sessions", createGoogleSession(*federatedService, cookies))
 		mux.Handle("POST /v1/me/google-identities", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createGoogleIdentity(*federatedService)))))
+		mux.Handle("DELETE /v1/me/google-identities", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteGoogleIdentity(*federatedService)))))
 	} else {
 		mux.HandleFunc("POST /v1/google-login-challenges", unavailableFederatedLogin)
 		mux.HandleFunc("POST /v1/google-sessions", unavailableFederatedLogin)
 		mux.HandleFunc("POST /v1/me/google-identities", unavailableFederatedLogin)
+		mux.HandleFunc("DELETE /v1/me/google-identities", unavailableFederatedLogin)
 	}
 	passwordResetLimiter := newRequestLimiter(10, time.Minute)
 	mux.HandleFunc("POST /v1/password-resets", requestPasswordReset(registrationService, passwordResetLimiter, resolveClientIP))
@@ -87,6 +88,7 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 	mux.Handle("GET /v1/me/access-methods", requireSession(authenticator)(http.HandlerFunc(getAccessMethods(authenticator))))
 	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createReauthenticationTicket(accessService, federatedService)))))
 	mux.Handle("PUT /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(putLocalCredential(accessService)))))
+	mux.Handle("DELETE /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteLocalCredential(accessService)))))
 	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
 	mux.Handle("GET /v1/me/recent-leagues", requireSession(authenticator)(http.HandlerFunc(listRecentAccountLeagues(leagueService))))
@@ -129,21 +131,21 @@ func scheduleAccountDeletion(authenticator sessionAuthenticator, cookies session
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
 		if !ok {
-			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		scheduler, ok := authenticator.(accountDeletionScheduler)
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo programar la eliminación")
+			writeProblem(w, http.StatusInternalServerError, "Could not schedule account deletion")
 			return
 		}
 		effectiveAt, err := scheduler.ScheduleAccountDeletion(r.Context(), accountID)
 		if errors.Is(err, postgres.ErrAccountHasOwnedLeagues) {
-			writeProblem(w, http.StatusConflict, "No puedes eliminar la cuenta mientras tengas ligas organizadas")
+			writeProblem(w, http.StatusConflict, "Account cannot be deleted while it owns leagues")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo programar la eliminación")
+			writeProblem(w, http.StatusInternalServerError, "Could not schedule account deletion")
 			return
 		}
 		if transport, _ := currentSessionTransport(r.Context()); transport == cookieSession {
@@ -167,7 +169,7 @@ func sessionCookies(secure bool) sessionCookieSettings {
 }
 
 func (cookies sessionCookieSettings) set(w http.ResponseWriter, value string, maxAge int) {
-	// #nosec G124 -- cookieSecure solo es false para PUBLIC_BASE_URL loopback HTTP.
+	// #nosec G124 -- cookieSecure is false only for a loopback HTTP PUBLIC_BASE_URL.
 	http.SetCookie(w, &http.Cookie{Name: cookies.name, Value: value, Path: "/", Secure: cookies.secure, HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: maxAge})
 }
 
@@ -178,21 +180,21 @@ func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reader, ok := authenticator.(currentSessionReader)
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not retrieve session")
 			return
 		}
 		token, ok := currentSessionToken(r.Context())
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		session, err := reader.GetCurrentSession(r.Context(), token)
 		if errors.Is(err, leagues.ErrUnauthenticated) {
-			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not retrieve session")
 			return
 		}
 		w.Header().Set("Cache-Control", "no-store")
@@ -226,7 +228,7 @@ func createLeague(service leagues.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		var body leagueInput
@@ -244,7 +246,7 @@ func createLeague(service leagues.CreationService) http.HandlerFunc {
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo crear la liga")
+			writeProblem(w, http.StatusInternalServerError, "Could not create league")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -258,7 +260,7 @@ func addLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 		leagueID := r.PathValue("leagueId")
 		var body teamInput
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || decodeBody(r, &body) != nil {
@@ -271,19 +273,19 @@ func addLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "No puedes modificar los equipos de esta liga")
+			writeProblem(w, http.StatusForbidden, "You cannot modify this league's teams")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			writeProblem(w, http.StatusNotFound, "League is unavailable")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueTeamConflict) {
-			writeProblem(w, http.StatusConflict, "La liga no admite ese equipo")
+			writeProblem(w, http.StatusConflict, "League cannot accept this team")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo añadir el equipo")
+			writeProblem(w, http.StatusInternalServerError, "Could not add team")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -296,7 +298,7 @@ func removeLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 		accountID, ok := currentAccountID(r.Context())
 		leagueID, teamID := r.PathValue("leagueId"), r.PathValue("teamId")
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(teamID) {
@@ -305,19 +307,19 @@ func removeLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 		}
 		err := service.RemoveTeam(r.Context(), accountID, leagueID, teamID)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "No puedes modificar los equipos de esta liga")
+			writeProblem(w, http.StatusForbidden, "You cannot modify this league's teams")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "Liga o equipo no disponible")
+			writeProblem(w, http.StatusNotFound, "League or team is unavailable")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueTeamConflict) {
-			writeProblem(w, http.StatusConflict, "La liga debe conservar al menos dos equipos sin empezar")
+			writeProblem(w, http.StatusConflict, "An unstarted league must keep at least two teams")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo eliminar el equipo")
+			writeProblem(w, http.StatusInternalServerError, "Could not remove team")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -332,11 +334,11 @@ func getPublicLeague(service leagues.CreationService) http.HandlerFunc {
 		}
 		league, err := service.GetPublic(r.Context(), leagueID)
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			writeProblem(w, http.StatusNotFound, "League is unavailable")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la liga")
+			writeProblem(w, http.StatusInternalServerError, "Could not retrieve league")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -347,7 +349,7 @@ func startLeague(service leagues.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		leagueID := r.PathValue("leagueId")
@@ -362,19 +364,19 @@ func startLeague(service leagues.CreationService) http.HandlerFunc {
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "No puedes iniciar esta liga")
+			writeProblem(w, http.StatusForbidden, "You cannot start this league")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			writeProblem(w, http.StatusNotFound, "League is unavailable")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueConflict) {
-			writeProblem(w, http.StatusConflict, "La liga ya no está sin empezar")
+			writeProblem(w, http.StatusConflict, "League is no longer unstarted")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo iniciar la liga")
+			writeProblem(w, http.StatusInternalServerError, "Could not start league")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -386,7 +388,7 @@ func cancelLeague(service leagues.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		leagueID := r.PathValue("leagueId")
@@ -396,19 +398,19 @@ func cancelLeague(service leagues.CreationService) http.HandlerFunc {
 		}
 		league, err := service.Cancel(r.Context(), accountID, leagueID)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "No puedes cancelar esta liga")
+			writeProblem(w, http.StatusForbidden, "You cannot cancel this league")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			writeProblem(w, http.StatusNotFound, "League is unavailable")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueCancellationConflict) {
-			writeProblem(w, http.StatusConflict, "La liga no se puede cancelar desde su estado actual")
+			writeProblem(w, http.StatusConflict, "League cannot be cancelled from its current state")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo cancelar la liga")
+			writeProblem(w, http.StatusInternalServerError, "Could not cancel league")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -421,7 +423,7 @@ func completeLeague(service leagues.CreationService) http.HandlerFunc {
 		accountID, ok := currentAccountID(r.Context())
 		leagueID := r.PathValue("leagueId")
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) {
@@ -430,19 +432,19 @@ func completeLeague(service leagues.CreationService) http.HandlerFunc {
 		}
 		league, err := service.Complete(r.Context(), accountID, leagueID)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "No puedes finalizar esta liga")
+			writeProblem(w, http.StatusForbidden, "You cannot complete this league")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			writeProblem(w, http.StatusNotFound, "League is unavailable")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueCompletionConflict) {
-			writeProblem(w, http.StatusConflict, "La liga aún no se puede finalizar")
+			writeProblem(w, http.StatusConflict, "League cannot be completed yet")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo finalizar la liga")
+			writeProblem(w, http.StatusInternalServerError, "Could not complete league")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -456,7 +458,7 @@ func recordMatchResult(service leagues.CreationService) http.HandlerFunc {
 		leagueID, matchID := r.PathValue("leagueId"), r.PathValue("matchId")
 		var body matchResultInput
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(matchID) || decodeBody(r, &body) != nil || body.HomeScore == nil || body.AwayScore == nil {
@@ -469,19 +471,19 @@ func recordMatchResult(service leagues.CreationService) http.HandlerFunc {
 			return
 		}
 		if errors.Is(err, leagues.ErrMatchResultForbidden) {
-			writeProblem(w, http.StatusForbidden, "No puedes registrar resultados en esta liga")
+			writeProblem(w, http.StatusForbidden, "You cannot record results for this league")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "Liga o partido no disponible")
+			writeProblem(w, http.StatusNotFound, "League or match is unavailable")
 			return
 		}
 		if errors.Is(err, leagues.ErrMatchResultConflict) {
-			writeProblem(w, http.StatusConflict, "La liga no está en curso")
+			writeProblem(w, http.StatusConflict, "League is not in progress")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo guardar el resultado")
+			writeProblem(w, http.StatusInternalServerError, "Could not save result")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -494,7 +496,7 @@ func assignLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 		accountID, ok := currentAccountID(r.Context())
 		leagueID, username := r.PathValue("leagueId"), r.PathValue("username")
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !usernamePattern.MatchString(username) {
@@ -503,19 +505,19 @@ func assignLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 		}
 		err := service.AssignAdministrator(r.Context(), accountID, leagueID, username)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "No puedes asignar administradoras en esta liga")
+			writeProblem(w, http.StatusForbidden, "You cannot assign administrators for this league")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "Liga o cuenta no disponible")
+			writeProblem(w, http.StatusNotFound, "League or account is unavailable")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueAdministratorConflict) {
-			writeProblem(w, http.StatusConflict, "La organizadora no puede ser administradora delegada")
+			writeProblem(w, http.StatusConflict, "League owner cannot be a delegated administrator")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo asignar la administradora")
+			writeProblem(w, http.StatusInternalServerError, "Could not assign administrator")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -527,7 +529,7 @@ func listLeagueAdministrators(service leagues.CreationService) http.HandlerFunc 
 		accountID, ok := currentAccountID(r.Context())
 		leagueID := r.PathValue("leagueId")
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) {
@@ -536,15 +538,15 @@ func listLeagueAdministrators(service leagues.CreationService) http.HandlerFunc 
 		}
 		usernames, err := service.ListAdministrators(r.Context(), accountID, leagueID)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "No puedes consultar administradoras en esta liga")
+			writeProblem(w, http.StatusForbidden, "You cannot view administrators for this league")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			writeProblem(w, http.StatusNotFound, "League is unavailable")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudieron consultar las administradoras")
+			writeProblem(w, http.StatusInternalServerError, "Could not retrieve administrators")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -559,7 +561,7 @@ func removeLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 		accountID, ok := currentAccountID(r.Context())
 		leagueID, username := r.PathValue("leagueId"), r.PathValue("username")
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !usernamePattern.MatchString(username) {
@@ -568,15 +570,15 @@ func removeLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 		}
 		err := service.RemoveAdministrator(r.Context(), accountID, leagueID, username)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "No puedes retirar administradoras en esta liga")
+			writeProblem(w, http.StatusForbidden, "You cannot remove administrators for this league")
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "Liga no disponible")
+			writeProblem(w, http.StatusNotFound, "League is unavailable")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo retirar la administradora")
+			writeProblem(w, http.StatusInternalServerError, "Could not remove administrator")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -592,12 +594,12 @@ func searchUsers(service registration.Service, limiter *requestLimiter, resolveC
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(r)); !allowed {
 			w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
-			writeProblem(w, http.StatusTooManyRequests, "Demasiadas búsquedas")
+			writeProblem(w, http.StatusTooManyRequests, "Too many searches")
 			return
 		}
 		usernames, err := service.SearchUsernames(r.Context(), query)
 		if err != nil {
-			writeProblem(w, http.StatusServiceUnavailable, "No se pudieron buscar usuarios")
+			writeProblem(w, http.StatusServiceUnavailable, "Could not search users")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -605,7 +607,10 @@ func searchUsers(service registration.Service, limiter *requestLimiter, resolveC
 	}
 }
 
-type reauthenticationRequest struct{ Password, ChallengeID, IDToken string }
+type reauthenticationRequest struct {
+	Password, ChallengeID, IDToken string
+	Purpose                        access.Purpose
+}
 type localCredentialRequest struct {
 	Ticket   string `json:"ticket"`
 	Password string `json:"password"`
@@ -615,7 +620,7 @@ func createReauthenticationTicket(service access.Service, federatedService *fede
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body reauthenticationRequest
 		credential, ok := sessionToken(r)
-		if !ok || decodeBody(r, &body) != nil || (body.Password == "" && (body.ChallengeID == "" || body.IDToken == "")) || (body.Password != "" && (body.ChallengeID != "" || body.IDToken != "")) {
+		if !ok || decodeBody(r, &body) != nil || !access.IsPurpose(body.Purpose) || (body.Password == "" && (body.ChallengeID == "" || body.IDToken == "")) || (body.Password != "" && (body.ChallengeID != "" || body.IDToken != "")) {
 			writeValidationProblem(w)
 			return
 		}
@@ -626,20 +631,32 @@ func createReauthenticationTicket(service access.Service, federatedService *fede
 				writeValidationProblem(w)
 				return
 			}
-			ticket, expiresAt, err = service.ReauthenticateWithPassword(r.Context(), credential.token, body.Password)
+			if body.Purpose == access.RemoveLocalPassword {
+				writeValidationProblem(w)
+				return
+			}
+			ticket, expiresAt, err = service.ReauthenticateWithPassword(r.Context(), credential.token, body.Password, body.Purpose)
 		} else if federatedService == nil || !uuidPattern.MatchString(body.ChallengeID) {
 			writeValidationProblem(w)
 			return
 		} else {
 			accountID, _ := currentAccountID(r.Context())
-			ticket, expiresAt, err = federatedService.ReauthenticateGoogle(r.Context(), accountID, credential.token, body.ChallengeID, body.IDToken)
+			if body.Purpose != access.SetLocalPassword && body.Purpose != access.RemoveLocalPassword {
+				writeValidationProblem(w)
+				return
+			}
+			ticket, expiresAt, err = federatedService.ReauthenticateGoogle(r.Context(), accountID, credential.token, body.ChallengeID, body.IDToken, string(body.Purpose))
 		}
-		if errors.Is(err, access.ErrReauthenticationInvalid) {
-			writeProblem(w, http.StatusUnauthorized, "Reautenticación no válida")
+		if errors.Is(err, federated.ErrIdentityConflict) {
+			writeProblem(w, http.StatusConflict, "Selected Google account is not linked to this account")
+			return
+		}
+		if errors.Is(err, access.ErrReauthenticationInvalid) || errors.Is(err, federated.ErrChallengeInvalid) {
+			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo reautenticar")
+			writeProblem(w, http.StatusInternalServerError, "Could not reauthenticate")
 			return
 		}
 		w.Header().Set("Cache-Control", "no-store")
@@ -660,13 +677,31 @@ func createGoogleIdentity(service federated.Service) http.HandlerFunc {
 			return
 		}
 		if err := service.AddGoogleWithTicket(r.Context(), credential.token, body.Ticket, body.ChallengeID, body.IDToken); errors.Is(err, federated.ErrIdentityConflict) {
-			writeProblem(w, http.StatusConflict, "No se pudo vincular este método")
+			writeProblem(w, http.StatusConflict, "Could not link this access method")
 			return
 		} else if errors.Is(err, federated.ErrChallengeInvalid) {
-			writeProblem(w, http.StatusUnauthorized, "Reautenticación no válida")
+			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		} else if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo vincular Google")
+			writeProblem(w, http.StatusInternalServerError, "Could not link Google")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+type reauthenticationTicketRequest struct{ Ticket string }
+
+func deleteGoogleIdentity(service federated.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body reauthenticationTicketRequest
+		credential, ok := sessionToken(r)
+		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" {
+			writeValidationProblem(w)
+			return
+		}
+		if err := service.RemoveGoogleWithTicket(r.Context(), credential.token, body.Ticket); err != nil {
+			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -682,10 +717,26 @@ func putLocalCredential(service access.Service) http.HandlerFunc {
 			return
 		}
 		if err := service.SetPassword(r.Context(), credential.token, body.Ticket, body.Password); errors.Is(err, access.ErrReauthenticationInvalid) {
-			writeProblem(w, http.StatusUnauthorized, "Reautenticación no válida")
+			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		} else if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo cambiar la contraseña")
+			writeProblem(w, http.StatusInternalServerError, "Could not change password")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func deleteLocalCredential(service access.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body reauthenticationTicketRequest
+		credential, ok := sessionToken(r)
+		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" {
+			writeValidationProblem(w)
+			return
+		}
+		if err := service.RemovePassword(r.Context(), credential.token, body.Ticket); err != nil {
+			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -696,19 +747,19 @@ func getAccessMethods(authenticator sessionAuthenticator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
 		if !ok {
-			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		reader, ok := authenticator.(interface {
 			GetAccessMethods(context.Context, string) (leagues.AccessMethods, error)
 		})
 		if !ok {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la cuenta")
+			writeProblem(w, http.StatusInternalServerError, "Could not retrieve account")
 			return
 		}
 		access, err := reader.GetAccessMethods(r.Context(), accountID)
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar la cuenta")
+			writeProblem(w, http.StatusInternalServerError, "Could not retrieve account")
 			return
 		}
 		w.Header().Set("Cache-Control", "no-store")
@@ -725,16 +776,16 @@ func revokeCurrentSession(authenticator sessionAuthenticator, cookies sessionCoo
 	return func(writer http.ResponseWriter, request *http.Request) {
 		credential, ok := sessionToken(request)
 		if !ok {
-			writeProblem(writer, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		revoker, ok := authenticator.(sessionRevoker)
 		if !ok {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo revocar la sesión")
+			writeProblem(writer, http.StatusInternalServerError, "Could not revoke session")
 			return
 		}
 		if err := revoker.RevokeSession(request.Context(), credential.token); err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo revocar la sesión")
+			writeProblem(writer, http.StatusInternalServerError, "Could not revoke session")
 			return
 		}
 		if credential.transport == cookieSession {
@@ -745,7 +796,7 @@ func revokeCurrentSession(authenticator sessionAuthenticator, cookies sessionCoo
 }
 
 func unavailableFederatedLogin(w http.ResponseWriter, _ *http.Request) {
-	writeProblem(w, http.StatusServiceUnavailable, "El acceso con Google no está disponible")
+	writeProblem(w, http.StatusServiceUnavailable, "Google sign-in is unavailable")
 }
 
 type googleSessionRequest struct {
@@ -761,11 +812,12 @@ func createGoogleChallenge(service federated.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		challenge, err := service.CreateChallenge(r.Context())
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo iniciar Google")
+			writeProblem(w, http.StatusInternalServerError, "Could not start Google sign-in")
 			return
 		}
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(map[string]string{"id": challenge.ID, "nonce": challenge.Nonce, "expiresAt": challenge.ExpiresAt})
 	}
 }
@@ -787,7 +839,7 @@ func createGoogleSession(service federated.Service, cookies sessionCookieSetting
 			return
 		}
 		if errors.Is(err, federated.ErrEmailConflict) {
-			writeProblem(w, http.StatusConflict, "No se pudo iniciar sesión con este método")
+			writeProblem(w, http.StatusConflict, "Could not sign in with this access method")
 			return
 		}
 		if errors.Is(err, federated.ErrChallengeInvalid) {
@@ -795,7 +847,7 @@ func createGoogleSession(service federated.Service, cookies sessionCookieSetting
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo iniciar sesión")
+			writeProblem(w, http.StatusInternalServerError, "Could not sign in")
 			return
 		}
 		writeFederatedSession(w, body.SessionTransport, established, cookies)
@@ -841,11 +893,11 @@ func requestPasswordReset(service registration.Service, limiter *requestLimiter,
 		}
 		if allowed, retry := limiter.allow(resolveClientIP(r)); !allowed {
 			w.Header().Set("Retry-After", strconv.Itoa(retry))
-			writeProblem(w, http.StatusTooManyRequests, "Demasiadas solicitudes")
+			writeProblem(w, http.StatusTooManyRequests, "Too many requests")
 			return
 		}
 		if err := service.RequestPasswordReset(r.Context(), body.Email); err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo solicitar el restablecimiento")
+			writeProblem(w, http.StatusInternalServerError, "Could not request password reset")
 			return
 		}
 		w.WriteHeader(http.StatusAccepted)
@@ -860,11 +912,11 @@ func inspectPasswordReset(service registration.Service) http.HandlerFunc {
 		}
 		email, err := service.InspectPasswordReset(r.Context(), body.Token)
 		if errors.Is(err, registration.ErrPasswordResetInvalid) {
-			writeProblem(w, http.StatusConflict, "Enlace no válido")
+			writeProblem(w, http.StatusConflict, "Invalid link")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo comprobar el enlace")
+			writeProblem(w, http.StatusInternalServerError, "Could not inspect link")
 			return
 		}
 		w.Header().Set("Cache-Control", "no-store")
@@ -881,11 +933,11 @@ func confirmPasswordReset(service registration.Service, cookies sessionCookieSet
 		}
 		session, access, refresh, err := service.ResetPassword(r.Context(), body.Token, body.Password)
 		if errors.Is(err, registration.ErrPasswordResetInvalid) {
-			writeProblem(w, http.StatusConflict, "Enlace no válido")
+			writeProblem(w, http.StatusConflict, "Invalid link")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo cambiar la contraseña")
+			writeProblem(w, http.StatusInternalServerError, "Could not change password")
 			return
 		}
 		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
@@ -915,16 +967,16 @@ func refreshSession(service registration.Service) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		authorization := request.Header.Get("Authorization")
 		if !strings.HasPrefix(authorization, "Bearer ") || len(authorization) == len("Bearer ") {
-			writeProblem(writer, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		session, accessToken, refreshToken, err := service.Refresh(request.Context(), strings.TrimPrefix(authorization, "Bearer "))
 		if errors.Is(err, registration.ErrRefreshInvalid) {
-			writeProblem(writer, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		if err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo renovar la sesión")
+			writeProblem(writer, http.StatusInternalServerError, "Could not refresh session")
 			return
 		}
 		writer.Header().Set("Content-Type", "application/json")
@@ -941,13 +993,13 @@ func usernameAvailability(service registration.Service, limiter *requestLimiter,
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(request)); !allowed {
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
-			writeProblem(writer, http.StatusTooManyRequests, "Demasiadas consultas de username")
+			writeProblem(writer, http.StatusTooManyRequests, "Too many username lookups")
 			return
 		}
 
 		available, err := service.UsernameAvailable(request.Context(), username)
 		if err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo consultar el username")
+			writeProblem(writer, http.StatusInternalServerError, "Could not retrieve username")
 			return
 		}
 		writer.Header().Set("Cache-Control", "no-store")
@@ -1005,11 +1057,11 @@ func verifyRegistration(service registration.Service, cookies sessionCookieSetti
 		previousSession, _ := sessionToken(request)
 		session, sessionToken, refreshToken, err := service.Verify(request.Context(), body.Token, previousSession.token)
 		if errors.Is(err, registration.ErrVerificationInvalid) {
-			writeProblem(writer, http.StatusConflict, "Verificación no válida")
+			writeProblem(writer, http.StatusConflict, "Invalid verification")
 			return
 		}
 		if err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo verificar la cuenta")
+			writeProblem(writer, http.StatusInternalServerError, "Could not verify account")
 			return
 		}
 		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
@@ -1029,7 +1081,7 @@ func followLeague(service leagues.Service) http.HandlerFunc {
 		accountID, authenticated := currentAccountID(request.Context())
 		leagueID := request.PathValue("leagueId")
 		if !authenticated {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(writer, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) {
@@ -1043,11 +1095,11 @@ func followLeague(service leagues.Service) http.HandlerFunc {
 			err = service.Unfollow(request.Context(), accountID, leagueID)
 		}
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(writer, http.StatusNotFound, "Liga no disponible")
+			writeProblem(writer, http.StatusNotFound, "League is unavailable")
 			return
 		}
 		if err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo actualizar el seguimiento")
+			writeProblem(writer, http.StatusInternalServerError, "Could not update follow status")
 			return
 		}
 		writer.WriteHeader(http.StatusNoContent)
@@ -1058,7 +1110,7 @@ func listAccountLeagues(service leagues.Service) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		accountID, authenticated := currentAccountID(request.Context())
 		if !authenticated {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(writer, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 
@@ -1075,7 +1127,7 @@ func listAccountLeagues(service leagues.Service) http.HandlerFunc {
 			return
 		}
 		if err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudieron consultar las ligas")
+			writeProblem(writer, http.StatusInternalServerError, "Could not retrieve leagues")
 			return
 		}
 		writer.Header().Set("Content-Type", "application/json")
@@ -1087,12 +1139,12 @@ func listRecentAccountLeagues(service leagues.Service) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		accountID, authenticated := currentAccountID(request.Context())
 		if !authenticated {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo resolver la sesión")
+			writeProblem(writer, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		items, err := service.ListRecent(request.Context(), accountID)
 		if err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudieron consultar las ligas recientes")
+			writeProblem(writer, http.StatusInternalServerError, "Could not retrieve recent leagues")
 			return
 		}
 		writer.Header().Set("Content-Type", "application/json")
@@ -1126,7 +1178,7 @@ type loginRequest struct {
 	SessionTransport string `json:"sessionTransport"`
 }
 
-// createLocalSession autentica sin revelar si el email, la contraseña o el estado fallaron.
+// createLocalSession authenticates without disclosing whether email, password, or state failed.
 func createLocalSession(service registration.Service, limiter *loginLimiter, cookies sessionCookieSettings, resolveClientIP clientIPResolver) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var body loginRequest
@@ -1136,16 +1188,16 @@ func createLocalSession(service registration.Service, limiter *loginLimiter, coo
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(request), strings.ToLower(strings.TrimSpace(body.Email))); !allowed {
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
-			writeProblem(writer, http.StatusTooManyRequests, "Demasiados intentos de inicio de sesión")
+			writeProblem(writer, http.StatusTooManyRequests, "Too many sign-in attempts")
 			return
 		}
 		result, err := service.Login(request.Context(), body.Email, body.Password)
 		if errors.Is(err, registration.ErrLoginInvalid) {
-			writeProblem(writer, http.StatusUnauthorized, "Credenciales no válidas")
+			writeProblem(writer, http.StatusUnauthorized, "Invalid credentials")
 			return
 		}
 		if err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo iniciar sesión")
+			writeProblem(writer, http.StatusInternalServerError, "Could not sign in")
 			return
 		}
 		if result.Pending {
@@ -1191,11 +1243,11 @@ func register(service registration.Service, limiter *requestLimiter, resolveClie
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(request)); !allowed {
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
-			writeProblem(writer, http.StatusTooManyRequests, "Demasiados registros")
+			writeProblem(writer, http.StatusTooManyRequests, "Too many registrations")
 			return
 		}
 		if err := service.Register(request.Context(), input); err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "No se pudo completar el registro")
+			writeProblem(writer, http.StatusInternalServerError, "Could not complete registration")
 			return
 		}
 		writer.WriteHeader(http.StatusAccepted)
@@ -1233,7 +1285,7 @@ func validEmail(value string) bool {
 }
 
 func writeValidationProblem(writer http.ResponseWriter) {
-	writeProblem(writer, http.StatusBadRequest, "La solicitud no es válida")
+	writeProblem(writer, http.StatusBadRequest, "Invalid request")
 }
 
 func writeProblem(writer http.ResponseWriter, status int, title string) {

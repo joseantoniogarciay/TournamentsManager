@@ -110,6 +110,7 @@ export default function LeagueAdministratorsScreen() {
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.surface.canvas },
           headerTintColor: colors.text.primary,
+          headerTitleAlign: "center",
           title: t("league_administrators"),
           ...(Platform.OS !== "ios"
             ? {
@@ -199,8 +200,13 @@ export default function LeagueAdministratorsScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { gap: space[5], paddingBottom: space[5] },
-  emptyState: { paddingHorizontal: space[5] },
+  content: { flexGrow: 1, gap: space[5], paddingBottom: space[5] },
+  emptyState: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: space[5],
+  },
   loader: { alignItems: "center", flex: 1, justifyContent: "center" },
   navigationButton: {
     alignItems: "center",

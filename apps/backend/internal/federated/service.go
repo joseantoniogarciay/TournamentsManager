@@ -1,4 +1,4 @@
-// Package federated contiene los casos de uso de identidad externa.
+// Package federated contains external identity use cases.
 package federated
 
 import (
@@ -13,68 +13,69 @@ import (
 )
 
 const (
-	// GoogleIssuer es el emisor canónico aceptado para los ID tokens de Google.
+	// GoogleIssuer is the accepted canonical issuer for Google ID tokens.
 	GoogleIssuer      = "https://accounts.google.com"
 	challengeLifetime = 5 * time.Minute
 )
 
 var (
-	// ErrChallengeInvalid indica que el challenge o su nonce no son válidos.
+	// ErrChallengeInvalid indicates that the challenge or its nonce is invalid.
 	ErrChallengeInvalid = errors.New("challenge federado inválido")
-	// ErrIdentityConflict indica que la identidad externa pertenece a otra cuenta.
+	// ErrIdentityConflict indicates that the external identity belongs to another account.
 	ErrIdentityConflict = errors.New("identidad federada en otra cuenta")
-	// ErrEmailConflict evita vincular por una coincidencia de correo entre cuentas.
+	// ErrEmailConflict prevents linking through a matching email across accounts.
 	ErrEmailConflict = errors.New("email ya pertenece a una cuenta")
-	// ErrRegistration indica que una cuenta nueva requiere sus datos de alta.
+	// ErrRegistration indicates that a new account requires registration data.
 	ErrRegistration = errors.New("alta Google requiere username")
 )
 
-// Identity es la identidad externa verificada que llega desde un proveedor OIDC.
+// Identity is the verified external identity received from an OIDC provider.
 type Identity struct {
 	Issuer, Subject, Email, Nonce string
 	EmailVerified                 bool
 }
 
-// Verifier valida el artefacto OIDC fuera del dominio.
+// Verifier validates the OIDC artifact outside the domain.
 type Verifier interface {
 	Verify(context.Context, string) (Identity, error)
 }
 
-// Challenge es la prueba de un solo uso que se entrega al cliente antes de OAuth.
+// Challenge is the single-use proof delivered to the client before OAuth.
 type Challenge struct{ ID, Nonce, ExpiresAt string }
 
-// Registration contiene los campos propios necesarios para crear una cuenta social.
+// Registration contains the fields required to create a social account.
 type Registration struct {
 	Username, Locale string
 	Draft            *Draft
 }
 
-// Draft es el torneo completo que puede crear una cuenta nueva en la misma transacción.
+// Draft is the complete tournament that can be created with a new account in the same transaction.
 type Draft struct {
 	Name  string
 	Teams []string
 }
 
-// Session describe la sesión persistida sin exponer sus tokens sensibles.
+// Session describes the persisted session without exposing its sensitive tokens.
 type Session struct{ AccountID, Username, IdleExpiresAt, RefreshExpiresAt string }
 
-// EstablishedSession une una sesión con los tokens entregados una sola vez.
+// EstablishedSession joins a session with its one-time-delivered tokens.
 type EstablishedSession struct {
 	Session
 	AccessToken, RefreshToken string
 }
 
-// Repository preserva las invariantes atómicas entre challenge, identidad y sesión.
+// Repository preserves atomic invariants across challenge, identity, and session.
 type Repository interface {
 	CreateChallenge(context.Context, []byte, time.Time) (string, error)
 	AuthenticateGoogle(context.Context, string, []byte, Identity, *Registration, []byte, []byte) (Session, error)
 	AddGoogleIdentity(context.Context, string, string, []byte, Identity) error
 	ReauthenticateGoogle(context.Context, string, string, string, []byte, Identity, []byte) error
 	AddGoogleIdentityWithTicket(context.Context, string, string, []byte, Identity, []byte) error
+	RemoveGoogleIdentityWithTicket(context.Context, string, []byte) error
 }
 
-// ReauthenticateGoogle demuestra una identidad ya vinculada y emite un ticket de una sola vez.
-func (s Service) ReauthenticateGoogle(ctx context.Context, accountID, sessionToken, challengeID, idToken string) (string, string, error) {
+// ReauthenticateGoogle proves an already linked identity and issues a single-use ticket.
+func (s Service) ReauthenticateGoogle(ctx context.Context, accountID, sessionToken, challengeID, idToken, purpose string) (string, string, error) {
 	identity, err := s.verify(ctx, idToken)
 	if err != nil {
 		return "", "", err
@@ -83,7 +84,7 @@ func (s Service) ReauthenticateGoogle(ctx context.Context, accountID, sessionTok
 	if err != nil {
 		return "", "", err
 	}
-	ticketDigest := sha256.Sum256([]byte("reauthentication-ticket:" + ticket))
+	ticketDigest := reauthenticationTicketHash(ticket, purpose)
 	challengeHash := sha256.Sum256([]byte("google-login-nonce:" + identity.Nonce))
 	if err := s.repository.ReauthenticateGoogle(ctx, accountID, sessionToken, challengeID, challengeHash[:], identity, ticketDigest[:]); err != nil {
 		return "", "", err
@@ -91,30 +92,41 @@ func (s Service) ReauthenticateGoogle(ctx context.Context, accountID, sessionTok
 	return ticket, s.now().Add(challengeLifetime).UTC().Format(time.RFC3339Nano), nil
 }
 
-// AddGoogleWithTicket vincula Google y consume el ticket en la misma transacción.
+// AddGoogleWithTicket links Google and consumes the ticket in the same transaction.
 func (s Service) AddGoogleWithTicket(ctx context.Context, sessionToken, ticket, challengeID, idToken string) error {
 	identity, err := s.verify(ctx, idToken)
 	if err != nil {
 		return err
 	}
-	ticketHash := sha256.Sum256([]byte("reauthentication-ticket:" + ticket))
+	ticketHash := reauthenticationTicketHash(ticket, "link-google")
 	challengeHash := sha256.Sum256([]byte("google-login-nonce:" + identity.Nonce))
 	return s.repository.AddGoogleIdentityWithTicket(ctx, sessionToken, challengeID, challengeHash[:], identity, ticketHash[:])
 }
 
-// Service coordina el caso de uso de inicio de sesión federado.
+// RemoveGoogleWithTicket removes Google only after a ticket established with
+// the local password, preserving that remaining access method.
+func (s Service) RemoveGoogleWithTicket(ctx context.Context, sessionToken, ticket string) error {
+	ticketHash := reauthenticationTicketHash(ticket, "unlink-google")
+	return s.repository.RemoveGoogleIdentityWithTicket(ctx, sessionToken, ticketHash[:])
+}
+
+func reauthenticationTicketHash(ticket, purpose string) [32]byte {
+	return sha256.Sum256([]byte("reauthentication-ticket:" + purpose + ":" + ticket))
+}
+
+// Service coordinates the federated sign-in use case.
 type Service struct {
 	repository Repository
 	verifier   Verifier
 	now        func() time.Time
 }
 
-// NewService construye el caso de uso con sus puertos de persistencia y verificación.
+// NewService builds the use case with its persistence and verification ports.
 func NewService(repository Repository, verifier Verifier) Service {
 	return Service{repository: repository, verifier: verifier, now: time.Now}
 }
 
-// CreateChallenge emite el nonce opaco de un solo uso previo a Google.
+// CreateChallenge issues the opaque single-use nonce required before Google.
 func (s Service) CreateChallenge(ctx context.Context) (Challenge, error) {
 	nonce, err := secret()
 	if err != nil {
@@ -129,7 +141,7 @@ func (s Service) CreateChallenge(ctx context.Context) (Challenge, error) {
 	return Challenge{ID: id, Nonce: nonce, ExpiresAt: expiresAt.UTC().Format(time.RFC3339Nano)}, nil
 }
 
-// Authenticate valida una prueba Google y obtiene una sesión o solicita el alta.
+// Authenticate validates a Google proof and obtains a session or requests registration.
 func (s Service) Authenticate(ctx context.Context, challengeID, idToken string, registration *Registration) (EstablishedSession, error) {
 	identity, err := s.verify(ctx, idToken)
 	if err != nil {
@@ -150,7 +162,7 @@ func (s Service) Authenticate(ctx context.Context, challengeID, idToken string, 
 	return EstablishedSession{Session: session, AccessToken: access, RefreshToken: refresh}, nil
 }
 
-// AddGoogle añade únicamente una identidad todavía libre a la cuenta ya autenticada.
+// AddGoogle adds only an identity still unlinked to the already authenticated account.
 func (s Service) AddGoogle(ctx context.Context, accountID, challengeID, idToken string) error {
 	identity, err := s.verify(ctx, idToken)
 	if err != nil {

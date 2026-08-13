@@ -1,4 +1,4 @@
-// Package config carga y valida la configuración de ejecución de la API.
+// Package config loads and validates API runtime configuration.
 package config
 
 import (
@@ -14,18 +14,22 @@ const (
 	httpAddrEnv           = "HTTP_ADDR"
 	smtpAddrEnv           = "SMTP_ADDR"
 	smtpFromEnv           = "SMTP_FROM"
+	smtpUsernameEnv       = "SMTP_USERNAME"
+	smtpPasswordEnv       = "SMTP_PASSWORD"
 	publicBaseURLEnv      = "PUBLIC_BASE_URL"
 	corsAllowedOriginsEnv = "CORS_ALLOWED_ORIGINS"
 	googleClientIDsEnv    = "GOOGLE_CLIENT_IDS"
 	trustedProxyCIDRsEnv  = "TRUSTED_PROXY_CIDRS"
 )
 
-// Config contiene únicamente la configuración necesaria para arrancar la API.
+// Config contains only the configuration needed to start the API.
 type Config struct {
 	DatabaseURL        string
 	HTTPAddr           string
 	SMTPAddr           string
 	SMTPFrom           string
+	SMTPUsername       string
+	SMTPPassword       string
 	PublicBaseURL      string
 	CookieSecure       bool
 	CORSAllowedOrigins []string
@@ -33,8 +37,8 @@ type Config struct {
 	TrustedProxyCIDRs  []netip.Prefix
 }
 
-// Load obtiene la configuración desde el entorno y falla antes de abrir puertos
-// o conexiones cuando falta un valor obligatorio.
+// Load gets configuration from the environment and fails before opening ports
+// or connections when a required value is missing.
 func Load() (Config, error) {
 	return load(os.Getenv)
 }
@@ -65,6 +69,11 @@ func load(getenv func(string) string) (Config, error) {
 	if smtpFrom == "" {
 		return Config{}, fmt.Errorf("%s debe estar definido", smtpFromEnv)
 	}
+	smtpUsername := getenv(smtpUsernameEnv)
+	smtpPassword := getenv(smtpPasswordEnv)
+	if (smtpUsername == "") != (smtpPassword == "") {
+		return Config{}, fmt.Errorf("%s y %s deben definirse juntos", smtpUsernameEnv, smtpPasswordEnv)
+	}
 	publicBaseURL := getenv(publicBaseURLEnv)
 	parsedPublicURL, err := url.Parse(publicBaseURL)
 	if err != nil || !validPublicBaseURL(parsedPublicURL) {
@@ -85,6 +94,8 @@ func load(getenv func(string) string) (Config, error) {
 		HTTPAddr:           httpAddr,
 		SMTPAddr:           smtpAddr,
 		SMTPFrom:           smtpFrom,
+		SMTPUsername:       smtpUsername,
+		SMTPPassword:       smtpPassword,
 		PublicBaseURL:      publicBaseURL,
 		CookieSecure:       parsedPublicURL.Scheme == "https",
 		CORSAllowedOrigins: corsAllowedOrigins,

@@ -14,12 +14,11 @@ export default function AccountLayout() {
   const { colors } = usePreferences();
   const { user } = useSession();
   const goBackToAccount = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
+    // Tras recargar una ruta de Cuenta, el historial del navegador puede
+    // pertenecer a otra tab. El cierre de este flujo siempre vuelve a su raíz.
     router.replace("/account");
   };
+  const goBackToAccess = () => router.replace("/account/access");
   const headerOptions = {
     headerBackButtonDisplayMode: "minimal" as const,
     headerBackVisible: false,
@@ -55,7 +54,7 @@ export default function AccountLayout() {
                 accessibilityLabel={t("account_settings_accessibility_label")}
                 icon="settings"
                 nativeIcon="gearshape"
-                onPress={() => router.push("/account/settings")}
+                onPress={() => router.push("/(account-modals)/account/settings")}
                 side="right"
               />
             </View>
@@ -64,33 +63,25 @@ export default function AccountLayout() {
         }}
       />
       <Stack.Screen name="access" options={{ title: t("account_access_data_title") }} />
-      <Stack.Screen
-        name="notifications"
-        options={{ presentation: "card", title: t("notifications_title") }}
-      />
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
       <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
-      <Stack.Screen name="password" options={{ title: t("account_password_change_title") }} />
       <Stack.Screen
-        name="google-link"
-        options={{ presentation: "modal", title: t("account_google_link_title") }}
-      />
-      <Stack.Screen
-        name="settings"
+        name="password"
         options={{
           headerLeft: () => (
             <NavigationHeaderButton
-              accessibilityLabel={t("common_close")}
-              icon="close"
-              nativeIcon="xmark"
-              onPress={() => {
-                goBackToAccount();
-              }}
+              accessibilityLabel={t("common_back")}
+              icon="back"
+              nativeIcon={{ android: "arrow_back", ios: "chevron.left", web: "arrow_back" }}
+              onPress={goBackToAccess}
             />
           ),
-          presentation: "card",
-          title: t("account_settings_title"),
+          title: t("account_password_change_title"),
         }}
+      />
+      <Stack.Screen
+        name="google-link"
+        options={{ presentation: "modal", title: t("account_google_link_title") }}
       />
     </Stack>
   );

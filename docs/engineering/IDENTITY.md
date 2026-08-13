@@ -43,12 +43,16 @@ Antes de entregar una credencial Google, el cliente solicita un challenge de
 cinco minutos y usa el nonce devuelto al iniciar Google. El backend consume ese
 challenge una sola vez tras validar el ID token; no es una sesión ni una cuenta.
 
-En desarrollo, el cliente web registra `http://localhost:8081` como origen y
-URI de redirección del cliente OAuth web. iOS y Android usan clientes OAuth
-nativos separados, asociados respectivamente al identificador de bundle o
-paquete y, en Android, a la huella SHA-1 del certificado que firma la build. Los
-IDs de cliente son públicos y se declaran fuera de Git; el backend admite sus
-audiencias mediante `GOOGLE_CLIENT_IDS`.
+Google solo se habilita en los entornos públicos `dev` y `prod`; el entorno
+local no configura clientes ni acepta audiencias Google. El cliente web de
+desarrollo registra `https://dev.fasttourney.com` como origen y
+`https://dev.fasttourney.com/account` como URI de redirección. El layout raíz
+resuelve el popup al regresar para que la ventana que lo inició conserve el
+recorrido de Cuenta. iOS y Android usan clientes OAuth nativos separados, asociados
+respectivamente al identificador de bundle o paquete y, en Android, a la huella
+SHA-1 del certificado que firma la build. Los IDs de cliente son públicos: el
+artefacto público de desarrollo los incorpora al exportarse y el backend admite
+sus audiencias mediante `GOOGLE_CLIENT_IDS`.
 ```
 
 El cliente transporta credenciales y usa la sesión resultante. No decide la
@@ -204,6 +208,13 @@ guarde contraseñas largas.
 - [RFC 9110: métodos seguros](https://www.rfc-editor.org/rfc/rfc9110.html#name-safe-methods)
 - [OWASP: Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)
 # Métodos de acceso administrados
+
+ADR-0094 completa la gestión de Google y contraseña: una cuenta conserva siempre
+al menos un método. Crear la primera contraseña desde una cuenta solo Google
+requiere una prueba Google reciente; cambiar una contraseña exige una credencial
+actual. Para retirar un método se acredita el otro que permanecerá. Los tickets
+opacos de reautenticación son de un uso, viven cinco minutos y solo autorizan la
+finalidad con que se emitieron.
 
 ADR-0068 separa la sesión de producto de una prueba reciente de posesión. Una
 persona autenticada obtiene un ticket opaco, almacenado únicamente como hash,

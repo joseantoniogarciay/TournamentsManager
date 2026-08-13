@@ -36,6 +36,9 @@ func (*stubRepository) ReauthenticateGoogle(context.Context, string, string, str
 func (*stubRepository) AddGoogleIdentityWithTicket(context.Context, string, string, []byte, Identity, []byte) error {
 	return nil
 }
+func (*stubRepository) RemoveGoogleIdentityWithTicket(context.Context, string, []byte) error {
+	return nil
+}
 
 func TestAuthenticateRejectsUnverifiedGoogleEmailBeforeRepository(t *testing.T) {
 	repository := &stubRepository{}

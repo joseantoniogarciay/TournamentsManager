@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { router, Tabs, usePathname } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
 import { color, control } from "@tournaments-manager/design-tokens";
@@ -12,6 +12,7 @@ export default function TabLayout() {
   const t = getTranslator();
   const { colors } = usePreferences();
   const { count } = useNotifications();
+  const pathname = usePathname();
 
   return (
     <Tabs
@@ -33,6 +34,7 @@ export default function TabLayout() {
           ),
           title: t("nav_home"),
         }}
+        listeners={{ tabPress: resetToTabRoot(pathname, "/") }}
       />
       <Tabs.Screen
         name="tournaments"
@@ -42,6 +44,7 @@ export default function TabLayout() {
           ),
           title: t("nav_tournaments"),
         }}
+        listeners={{ tabPress: resetToTabRoot(pathname, "/tournaments") }}
       />
       <Tabs.Screen
         name="account"
@@ -54,6 +57,7 @@ export default function TabLayout() {
           ),
           title: t("nav_account"),
         }}
+        listeners={{ tabPress: resetToTabRoot(pathname, "/account") }}
       />
     </Tabs>
   );
@@ -71,3 +75,15 @@ const styles = StyleSheet.create({
     width: 8,
   },
 });
+
+function resetToTabRoot(pathname: string, rootPath: "/" | "/tournaments" | "/account") {
+  return (event: { preventDefault: () => void }) => {
+    const isActiveTab =
+      pathname === rootPath || (rootPath !== "/" && pathname.startsWith(`${rootPath}/`));
+
+    if (!isActiveTab) return;
+
+    event.preventDefault();
+    router.replace(rootPath);
+  };
+}

@@ -33,6 +33,7 @@ import {
   Card,
   DisclosureIndicator,
   KeyboardAwareScrollView,
+  ModalDialog,
   Screen,
   Text,
   TextField,
@@ -68,6 +69,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
     useUsernameAvailability(googleUsername);
   const {
     chooseUsername,
+    dismissPendingAccount,
     dismissError: dismissGoogleError,
     error: googleError,
     isAuthenticating: isGoogleAuthenticating,
@@ -155,6 +157,13 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
       return;
     }
     void chooseUsername(googleUsername as never);
+  };
+
+  const dismissGoogleAccountCreation = () => {
+    if (isGoogleSubmitting) return;
+    dismissPendingAccount();
+    setGoogleUsername("");
+    setGoogleUsernameSubmitted(false);
   };
 
   const confirmSignOut = () => {
@@ -280,33 +289,35 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
           </View>
         </Card>
 
-        {requiresUsername ? (
-          <Card>
-            <View style={styles.form}>
-              <Text variant="title">{t("account_google_new_account_title")}</Text>
-              <Text color="secondary">{t("account_google_new_account_description")}</Text>
-              <TextField
-                autoCapitalize="none"
-                autoCorrect={false}
-                error={googleUsernameSubmitted ? googleUsernameError : undefined}
-                feedback={usernameFeedback(t, googleUsernameAvailability)}
-                label={t("account_username_label")}
-                onBlur={() => setGoogleUsernameSubmitted(true)}
-                onChangeText={(value) => setGoogleUsername(value.toLowerCase())}
-                value={googleUsername}
-              />
-              <Button
-                disabled={
-                  googleUsernameAvailability === "checking" ||
-                  googleUsernameAvailability === "unavailable"
-                }
-                label={t("account_google_create_account")}
-                loading={isGoogleSubmitting}
-                onPress={createGoogleAccount}
-              />
-            </View>
-          </Card>
-        ) : null}
+        <ModalDialog
+          dismissAccessibilityLabel={t("common_cancel")}
+          onDismiss={dismissGoogleAccountCreation}
+          visible={requiresUsername}
+        >
+          <View style={styles.form}>
+            <Text variant="title">{t("account_google_new_account_title")}</Text>
+            <Text color="secondary">{t("account_google_new_account_description")}</Text>
+            <TextField
+              autoCapitalize="none"
+              autoCorrect={false}
+              error={googleUsernameSubmitted ? googleUsernameError : undefined}
+              feedback={usernameFeedback(t, googleUsernameAvailability)}
+              label={t("account_username_label")}
+              onBlur={() => setGoogleUsernameSubmitted(true)}
+              onChangeText={(value) => setGoogleUsername(value.toLowerCase())}
+              value={googleUsername}
+            />
+            <Button
+              disabled={
+                googleUsernameAvailability === "checking" ||
+                googleUsernameAvailability === "unavailable"
+              }
+              label={t("account_google_create_account")}
+              loading={isGoogleSubmitting}
+              onPress={createGoogleAccount}
+            />
+          </View>
+        </ModalDialog>
 
         <View style={styles.register}>
           <Text color="secondary">{t("account_register_prompt")}</Text>

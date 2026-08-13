@@ -14,7 +14,7 @@ PUBLIC_DEV_COMPOSE := docker compose --env-file $(PUBLIC_DEV_ENV) -f $(PUBLIC_DE
 
 .PHONY: \
 	db-init dev-init db-env-check db-backend-env-check dev-api-env-check local-config-check dev-config-check \
-	dev-public-init dev-public-config-check dev-public-up dev-public-down dev-public-status dev-public-logs dev-public-schema-apply dev-public-purge \
+	dev-public-init dev-public-config-check dev-public-up dev-public-deploy dev-public-rollback dev-public-down dev-public-status dev-public-logs dev-public-schema-apply dev-public-purge \
 	db-up db-wait db-down db-status db-logs db-reset db-schema-apply
 
 # Crea los contratos locales sin sobrescribir una configuración ya existente.
@@ -75,13 +75,21 @@ dev-public-config-check:
 		[ -n "$$value" ] || { echo "Falta $$name en $(PUBLIC_DEV_ENV)"; exit 1; }; \
 	done
 	@set -a; . $(PUBLIC_DEV_API_ENV); set +a; \
-	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
+	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM SMTP_USERNAME SMTP_PASSWORD PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
 		eval "value=\$${$$name}"; \
 		[ -n "$$value" ] || { echo "Falta $$name en $(PUBLIC_DEV_API_ENV)"; exit 1; }; \
 	done
 
 dev-public-up: dev-public-config-check
 	$(PUBLIC_DEV_COMPOSE) up --build --detach --wait --remove-orphans
+
+# Despliegue manual y recuperable de origin/develop: conserva dos artefactos.
+dev-public-deploy: dev-public-config-check
+	./infra/home/deploy-dev.sh
+
+dev-public-rollback: dev-public-config-check
+	@test -n "$(SHA)" || { echo "Uso: make dev-public-rollback SHA=<SHA-completo>"; exit 1; }
+	./infra/home/rollback-dev.sh "$(SHA)"
 
 dev-public-down: dev-public-config-check
 	$(PUBLIC_DEV_COMPOSE) down --remove-orphans

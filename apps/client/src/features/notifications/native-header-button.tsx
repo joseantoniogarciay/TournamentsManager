@@ -30,7 +30,7 @@ export function NativeNotificationHeaderButton() {
         badge={badge}
         icon="bell"
         nativeIcon={{ android: "notifications", ios: "bell", web: "notifications" }}
-        onPress={() => router.push("/account/notifications" as never)}
+        onPress={() => router.push("/(account-modals)/account/notifications")}
       />
     );
   }
@@ -39,7 +39,7 @@ export function NativeNotificationHeaderButton() {
     <Pressable
       accessibilityLabel={t("account_notifications_accessibility_label")}
       accessibilityRole="button"
-      onPress={() => router.push("/account/notifications" as never)}
+      onPress={() => router.push("/(account-modals)/account/notifications")}
       style={styles.button}
     >
       <SymbolView name="bell" size={control.iconSize} tintColor={colors.text.primary} />

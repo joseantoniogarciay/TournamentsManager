@@ -1,22 +1,22 @@
-// Package accounts contiene los casos de uso del ciclo de vida de una cuenta.
+// Package accounts contains account lifecycle use cases.
 package accounts
 
 import "context"
 
 const purgeBatchSize = 100
 
-// PurgeRepository elimina cuentas cuya ventana de baja ya ha vencido.
+// PurgeRepository removes accounts whose deletion window has expired.
 type PurgeRepository interface {
 	PurgeExpired(context.Context, int) (int64, error)
 }
 
-// Service coordina operaciones del ciclo de vida de cuentas.
+// Service coordinates account lifecycle operations.
 type Service struct{ repository PurgeRepository }
 
-// NewService construye el servicio de cuentas.
+// NewService builds the account service.
 func NewService(repository PurgeRepository) Service { return Service{repository: repository} }
 
-// PurgeExpired elimina un lote acotado de cuentas con baja vencida.
+// PurgeExpired removes a bounded batch of accounts with expired deletion windows.
 func (s Service) PurgeExpired(ctx context.Context) (int64, error) {
 	return s.repository.PurgeExpired(ctx, purgeBatchSize)
 }

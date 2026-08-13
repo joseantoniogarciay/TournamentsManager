@@ -1,5 +1,39 @@
 # Registro de aprendizaje
 
+## 2026-08-13 — El marcador de una fila necesita jerarquía contenida
+
+La escala `display` (32 px) es adecuada para un título o un resultado aislado,
+pero comprime visualmente una fila de partido y puede dejar los glifos demasiado
+cerca de su borde. Un marcador dentro de una `Card` usa `title` en negrita:
+preserva la lectura inmediata sin introducir un token, variante o componente
+específico antes de que el patrón se repita.
+
+## 2026-08-13 — Un modal transversal no pertenece al stack de una tab
+
+Una ruta puede conservar su URL bajo `/account` y, aun así, presentarse desde el
+stack raíz. Ajustes y Notificaciones se elevan para que web, iOS y Android
+compartan una salida explícita con X hacia Cuenta. iOS y Android las presentan
+modalmente; web usa la página estable del stack porque el modal experimental de
+Expo Router puede reconstruir y sustituir la ruta activa al redimensionar.
+
+## 2026-08-13 — Una tab web recargada no conserva una pila que no existe
+
+Tras recargar una URL profunda, el navegador recupera la ruta pero no la pila
+interna de su tab. Pulsar esa misma tab debe reemplazar explícitamente su URL por
+la raíz; confiar solo en `popToTop` no cambia nada cuando no hay entradas que
+descartar. Android e iOS delegan el mismo gesto repetido en `NativeTabs`.
+
+## 2026-08-12 — SMTP conserva la portabilidad si el dominio recibe un puerto
+
+El proveedor de correo resuelve entrega, reputación y DNS; el caso de uso solo
+necesita pedir que se entregue un enlace. Mantener SMTP en el adaptador evita
+que una API propietaria determine el modelo de identidad. En el entorno público
+la autenticación ocurre únicamente después de STARTTLS; Mailpit no se elimina,
+porque sigue resolviendo una necesidad distinta: inspección local sin secretos.
+El plan gratuito de Resend corta el envío al llegar a 100 correos diarios o
+3.000 mensuales, así que es un límite operativo que se monitoriza, no capacidad
+garantizada. Véase ADR-0093.
+
 ## 2026-08-12 — Una purga no debe retener identidad por preservar historia
 
 Eliminar una cuenta puede chocar con el historial compartido de una liga. La
@@ -199,7 +233,7 @@ termina sin dejar un servidor utilizable. La vía fiable es mantener
 `pnpm --filter @tournaments-manager/client exec expo start --lan` en una
 terminal interactiva. Como la presencia de `expo-dev-client` selecciona por
 defecto una development build, hay que pulsar `s`, esperar la URL
-`exp://<IP-LAN>:8081` que imprime Metro y abrir esa URL exacta en Expo Go. La
+`exp://<IP-LAN>:8082` que imprime Metro y abrir esa URL exacta en Expo Go. La
 URL `com.fasttourney...://expo-development-client` no sirve para Expo Go.
 
 ## 2026-08-02 — Preparar no es competir
@@ -703,7 +737,9 @@ Para cada capacidad se sigue el ciclo:
   ubicarlos en la botonera evita duplicar accesos dentro de cada pantalla. Cuenta
   conserva un stack para que su evolución no altere el historial de Inicio.
 - **Evidencia:** grupo `(tabs)` de Expo Router, con Inicio en la primera
-  posición, y `NativeTabs` delegando el acabado Liquid Glass a iOS 26.
+  posición, y `NativeTabs` delegando el acabado Liquid Glass a iOS 26. En web,
+  el cierre de una ruta de Cuenta reemplaza explícitamente `/account`: tras una
+  recarga, el historial del navegador puede pertenecer a otra tab.
 - **Coste aceptado:** Torneos y Cuenta solo muestran su contexto hasta que sus
   flujos autenticados y colecciones tengan datos reales.
 
@@ -1965,12 +2001,16 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   Android, pero deja que iOS use sus controles de barra cuando la plataforma ya
   ofrece una presentación y un área táctil correctas.
 
-### 2026-08-12 — El blur web necesita una alternativa estable
+### 2026-08-13 — El blur web debe entrar con el scrim, no después del diálogo
 
-- **Aprendido:** un `BlurView` puede llegar al compositor web después de que el
-  portal del diálogo sea visible, exponiendo brevemente el contenido nítido.
-- **Regla reutilizable:** web usa un scrim neutro opaco desde el primer frame,
-  sin blur; iOS y Android conservan su tratamiento nativo ya validado.
+- **Aprendido:** `animationType="fade"` reduce la opacidad del ancestro del
+  `Modal`, aislando el grupo de composición y evitando que `backdrop-filter`
+  muestree la página mientras entra el diálogo. El blur aparece entonces de
+  golpe al final de la animación.
+- **Regla reutilizable:** en web, el `Modal` no anima su opacidad. El scrim se
+  monta transparente con `blur(0px)` y, tras dos frames de animación, transiciona
+  durante 160 ms al oscurecimiento y blur finales. iOS y Android conservan su
+  tratamiento nativo.
 
 ### 2026-08-12 — Una biblioteca bajo tabs necesita un viewport desplazable explícito
 
@@ -2050,3 +2090,74 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** cada proxy adicional exige revisar la red de confianza
   y probar que una cabecera falsa desde un peer no confiable no cambia la IP
   aplicada por la API.
+
+### 2026-08-12 — Git conserva fuentes; el rollback necesita artefactos locales
+
+- **Aprendido:** un commit permite reconstruir una versión, pero no restaura de
+  forma inmediata la combinación exacta de imagen y web que servía el Mac.
+- **Decisión aplicada:** dev conserva solo el SHA actual y el anterior, junto
+  con una imagen runtime, una exportación estática y un manifiesto sin secretos.
+  Caddy selecciona la web mediante un enlace simbólico atómico.
+- **Regla reutilizable:** no almacenar artefactos, imágenes o backups en Git;
+  asociarlos a un SHA y distinguir rollback de código de restauración de datos.
+
+### 2026-08-12 — Un rollback sin corte requiere dos versiones compatibles
+
+- **Aprendido:** compilar y superar CI no garantiza que una versión funcione
+  ante tráfico y configuración reales; una retirada rápida limita el impacto.
+- **Dirección a decidir antes de producción:** blue/green detrás de Caddy:
+  validar una segunda instancia antes de dirigirle tráfico y conservar la
+  anterior mientras se observa la nueva.
+- **Regla reutilizable:** una conmutación de procesos no revierte la base de
+  datos. Ambas versiones deben coexistir sobre el mismo esquema o el cambio
+  necesita una estrategia explícita de evolución y recuperación.
+
+### 2026-08-13 — El contrato HTTP incluye los nombres y el formato de sus campos
+
+- **Aprendido:** que los valores del dominio sean correctos no basta si el
+  codificador JSON expone los nombres por defecto de Go o una fecha que no
+  cumple RFC 3339. El cliente generado consume los nombres definidos por
+  OpenAPI, no los nombres internos del struct.
+- **Evidencia:** las notificaciones llegaban como `ID` y `CreatedAt` y la fecha
+  procedente de PostgreSQL no era portable para `Date`; React recibía claves
+  ausentes y avisaba de elementos sin `key`.
+- **Regla reutilizable:** los DTO HTTP declaran explícitamente sus etiquetas
+  JSON y normalizan los tiempos a RFC 3339. Una prueba del handler verifica el
+  cuerpo serializado cuando una ruta tiene un cliente generado.
+
+### 2026-08-13 — El puerto de la web local es parte de su contrato de enlaces
+
+- **Aprendido:** si Expo cambia automáticamente de puerto porque `8082` está
+  ocupado, los enlaces de correo apuntan a otro origen y dejan de abrir la web
+  local correcta.
+- **Regla reutilizable:** la web local se inicia explícitamente en `8082`; se
+  libera ese puerto antes de arrancarla y CORS solo autoriza sus orígenes
+  `localhost` y `127.0.0.1` en ese puerto.
+
+### 2026-08-13 — La documentación pública debe viajar con el release que describe
+
+- **Aprendido:** una referencia de API desplegada como proceso local separado
+  puede describir un contrato distinto al de la web o API pública actuales.
+- **Regla reutilizable:** el despliegue copia la UI de referencia y el OpenAPI
+  junto al artefacto web versionado; Caddy sirve esa ruta antes del fallback de
+  la SPA para mantenerla consistente y recuperable con el mismo SHA.
+
+### 2026-08-13 — El callback OAuth web debe cargar el cierre antes que su ruta
+
+- **Aprendido:** el callback se recibe en una ventana auxiliar. Si
+  `maybeCompleteAuthSession()` vive solo en una pantalla diferida, el popup puede
+  montar otra ruta y quedarse abierto como una segunda aplicación.
+- **Regla reutilizable:** el layout raíz web completa el popup antes de montar
+  Expo Router y el redirect URI es explícito hacia la ruta del recorrido que lo
+  inició. La continuación que necesita datos de cuenta se presenta con
+  `ModalDialog`, no como una card insertada en la pantalla subyacente.
+
+### 2026-08-13 — Retirar un acceso acredita el que permanece
+
+- **Aprendido:** permitir eliminar el único método de una cuenta convierte una
+  sesión válida en un callejón sin salida. Acreditar el método que permanece
+  protege además contra la retirada de una recuperación por quien solo controla
+  el método que quiere eliminar.
+- **Regla reutilizable:** cada ticket de reautenticación se vincula
+  criptográficamente a una finalidad y es de un uso; el backend comprueba en la
+  misma mutación que sigue existiendo otro método de acceso.

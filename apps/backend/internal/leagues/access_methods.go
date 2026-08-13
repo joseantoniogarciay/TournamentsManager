@@ -1,12 +1,12 @@
 package leagues
 
-// AccessMethods es la proyección mínima de credenciales de una cuenta autenticada.
+// AccessMethods is the minimal credential projection of an authenticated account.
 type AccessMethods struct {
 	Email, Username        string
 	HasPassword, HasGoogle bool
 }
 
-// CurrentSession es la identidad y vigencia de una sesión autenticada.
+// CurrentSession is the identity and validity of an authenticated session.
 type CurrentSession struct {
 	AccountID, Username, IdleExpiresAt, AbsoluteExpiresAt string
 }

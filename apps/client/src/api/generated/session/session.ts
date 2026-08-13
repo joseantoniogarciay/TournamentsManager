@@ -16,8 +16,10 @@ import type {
   RateLimitProblemResponse,
   ReauthenticationRequest,
   ReauthenticationTicket,
+  ReauthenticationTicketRequest,
   SessionEstablishment,
   ValidationProblemResponse,
+  VerificationConflictProblemResponse,
 } from "../models";
 
 export type scheduleAccountDeletionResponse200 = {
@@ -126,12 +128,19 @@ export type createReauthenticationTicketResponse401 = {
   status: 401;
 };
 
+export type createReauthenticationTicketResponse409 = {
+  data: VerificationConflictProblemResponse;
+  status: 409;
+};
+
 export type createReauthenticationTicketResponseSuccess =
   createReauthenticationTicketResponse201 & {
     headers: Headers;
   };
 export type createReauthenticationTicketResponseError = (
-  createReauthenticationTicketResponse400 | createReauthenticationTicketResponse401
+  | createReauthenticationTicketResponse400
+  | createReauthenticationTicketResponse401
+  | createReauthenticationTicketResponse409
 ) & {
   headers: Headers;
 };
@@ -214,6 +223,60 @@ export const putLocalCredential = async (
 
   const data: putLocalCredentialResponse["data"] = body ? JSON.parse(body) : undefined;
   return { data, status: res.status, headers: res.headers } as putLocalCredentialResponse;
+};
+
+export type deleteCurrentAccountLocalCredentialResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteCurrentAccountLocalCredentialResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type deleteCurrentAccountLocalCredentialResponseSuccess =
+  deleteCurrentAccountLocalCredentialResponse204 & {
+    headers: Headers;
+  };
+export type deleteCurrentAccountLocalCredentialResponseError =
+  deleteCurrentAccountLocalCredentialResponse401 & {
+    headers: Headers;
+  };
+
+export type deleteCurrentAccountLocalCredentialResponse =
+  | deleteCurrentAccountLocalCredentialResponseSuccess
+  | deleteCurrentAccountLocalCredentialResponseError;
+
+export const getDeleteCurrentAccountLocalCredentialUrl = () => {
+  return `/me/local-credential`;
+};
+
+/**
+ * @summary Elimina la contraseña local tras acreditar Google
+ */
+export const deleteCurrentAccountLocalCredential = async (
+  reauthenticationTicketRequest: ReauthenticationTicketRequest,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<deleteCurrentAccountLocalCredentialResponse> => {
+  const res = await (fetchFn ?? fetch)(getDeleteCurrentAccountLocalCredentialUrl(), {
+    ...options,
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reauthenticationTicketRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: deleteCurrentAccountLocalCredentialResponse["data"] = body
+    ? JSON.parse(body)
+    : undefined;
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as deleteCurrentAccountLocalCredentialResponse;
 };
 
 export type createSessionResponse200 = {

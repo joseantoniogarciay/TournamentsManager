@@ -6,7 +6,25 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Fixed
+
+- Al cerrar una ruta de Cuenta en web, la aplicación vuelve a `/account` incluso
+  después de recargar una URL profunda; ya no depende del historial de otra tab.
+
+- En web, volver a pulsar la tab activa reinicia su ruta a la raíz, incluso tras
+  recargar una pantalla profunda que no tiene pila de navegación que vaciar.
+
+- Ajustes y Notificaciones conservan sus URLs de Cuenta y su salida mediante X
+  desde el stack raíz. En web usan la presentación estable de página, para que
+  un cambio de tamaño no sustituya Notificaciones por Ajustes; iOS y Android
+  mantienen el modal nativo.
+
 ### Added
+
+- ADR-0093: `tournaments-manager-dev` entrega correo por Resend SMTP con
+  STARTTLS y credenciales de solo envío; Mailpit queda exclusivamente en local.
+  La clave no se versiona y la activación externa requiere verificar SPF, DKIM y
+  DMARC del subdominio remitente.
 
 - Ruta pública de política de privacidad, localizada en español, inglés, italiano
   y francés, enlazada desde el acceso, el registro y los ajustes. Documenta la
@@ -253,6 +271,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   despliegue, estilo y pruebas.
 - Plantillas de knowledge base, playbooks, runbooks, diagramas y retrospectivas.
 # Cambios no publicados
+
+- Aceptado ADR-0092: dev conserva dos despliegues locales recuperables por SHA;
+  los GitHub Releases se reservan para producción o hitos distribuidos.
 
 - Aceptado ADR-0075: instalaciones locales congeladas y un periodo mínimo de
   maduración de siete días para versiones de npm, incluidas las transitivas.

@@ -146,9 +146,11 @@ export default function RegisterScreen() {
               loading={isSubmitting}
               onPress={() => void register()}
             />
-            <PrivacyPolicyLink />
           </View>
         </Card>
+        <View style={styles.privacyPolicyLink}>
+          <PrivacyPolicyLink />
+        </View>
       </KeyboardAwareScrollView>
       {isSubmitting ? (
         <InteractionBlocker accessibilityLabel={t("account_registration_submitting")} />
@@ -160,6 +162,11 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   content: {},
   form: { gap: space[4] },
+  privacyPolicyLink: {
+    alignSelf: "flex-end",
+    marginHorizontal: space[5],
+    marginTop: space[12] + space[5],
+  },
 });
 
 function isEmail(value: string) {

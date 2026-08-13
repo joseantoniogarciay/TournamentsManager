@@ -34,7 +34,7 @@ import {
   useConfirmationDialog,
 } from "@/shared/ui";
 
-const localAppLinkURL = "http://localhost:8081";
+const localAppLinkURL = "http://localhost:8082";
 
 export default function LeagueScreen() {
   const t = getTranslator();
@@ -227,8 +227,9 @@ export default function LeagueScreen() {
     headerShadowVisible: false,
     headerStyle: { backgroundColor: colors.surface.canvas },
     headerTintColor: colors.text.primary,
+    headerTitleAlign: "center" as const,
     headerTitle: () => (
-      <Text numberOfLines={2} style={styles.navigationTitle} variant="title">
+      <Text numberOfLines={1} style={styles.navigationTitle} variant="title">
         {league.name}
       </Text>
     ),
@@ -344,46 +345,6 @@ export default function LeagueScreen() {
                   />
                 </View>
               </View>
-              {Platform.OS !== "ios" && menuOpen ? (
-                <View
-                  accessibilityViewIsModal
-                  style={[
-                    styles.menu,
-                    { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-                  ]}
-                >
-                  <Button
-                    label={t("league_share")}
-                    onPress={() => {
-                      closeWebMenu();
-                      void share();
-                    }}
-                    variant="ghost"
-                  />
-                  {isOrganizer ? (
-                    <>
-                      <Button
-                        label={t("league_administrators")}
-                        onPress={() => {
-                          closeWebMenu();
-                          openAdministrators();
-                        }}
-                        variant="ghost"
-                      />
-                      {canCancel && !isCancelling ? (
-                        <Button
-                          label={t("league_cancel")}
-                          onPress={() => {
-                            closeWebMenu();
-                            cancel();
-                          }}
-                          variant="destructive"
-                        />
-                      ) : null}
-                    </>
-                  ) : null}
-                </View>
-              ) : null}
               {league.state === "published" && isOrganizer ? (
                 <Card>
                   <View style={styles.stack}>
@@ -451,7 +412,7 @@ export default function LeagueScreen() {
                     <Text style={styles.teamName} variant="bodyLarge">
                       {teamsByID.get(match.homeTeamId)}
                     </Text>
-                    <Text style={styles.matchScore} variant="display">
+                    <Text style={styles.matchScore} variant="title">
                       {match.state === "completed"
                         ? `${match.homeScore} – ${match.awayScore}`
                         : "–"}
@@ -492,6 +453,44 @@ export default function LeagueScreen() {
             />
           </View>
         ) : null}
+        <ModalDialog
+          dismissAccessibilityLabel={t("common_close")}
+          onDismiss={closeWebMenu}
+          visible={Platform.OS !== "ios" && menuOpen}
+        >
+          <View style={styles.menuActions}>
+            <Button
+              label={t("league_share")}
+              onPress={() => {
+                closeWebMenu();
+                void share();
+              }}
+              variant="ghost"
+            />
+            {isOrganizer ? (
+              <>
+                <Button
+                  label={t("league_administrators")}
+                  onPress={() => {
+                    closeWebMenu();
+                    openAdministrators();
+                  }}
+                  variant="ghost"
+                />
+                {canCancel && !isCancelling ? (
+                  <Button
+                    label={t("league_cancel")}
+                    onPress={() => {
+                      closeWebMenu();
+                      cancel();
+                    }}
+                    variant="destructive"
+                  />
+                ) : null}
+              </>
+            ) : null}
+          </View>
+        </ModalDialog>
         <ModalDialog
           dismissAccessibilityLabel={t("common_cancel")}
           onDismiss={() => {
@@ -682,17 +681,15 @@ const styles = StyleSheet.create({
     width: control.minHeight,
   },
   navigationTitle: { maxWidth: 220, textAlign: "center" },
-  menu: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    gap: space[1],
-    marginHorizontal: space[5],
-    padding: space[2],
-  },
+  menuActions: { gap: space[1] },
   matchSeparator: { height: space[5] },
   match: { gap: space[3] },
   matchSummary: { alignItems: "center", flexDirection: "row", gap: space[2] },
-  matchScore: { minWidth: 48, textAlign: "center" },
+  matchScore: {
+    fontWeight: typography.weight.bold,
+    minWidth: 48,
+    textAlign: "center",
+  },
   scoreField: { flex: 1 },
   scoreFields: { flexDirection: "row", gap: space[3] },
   teamName: { flex: 1, textAlign: "center" },

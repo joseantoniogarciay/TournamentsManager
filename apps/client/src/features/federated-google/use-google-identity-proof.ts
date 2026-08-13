@@ -1,13 +1,10 @@
 import * as Google from "expo-auth-session/providers/google";
 import { makeRedirectUri } from "expo-auth-session";
-import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 
 import type { GoogleLoginChallenge } from "@/api/generated/models";
 import { beginGoogleAuthentication } from "@/features/federated-google/api";
-
-if (Platform.OS === "web") WebBrowser.maybeCompleteAuthSession();
 
 const clientIDs = {
   android: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
@@ -33,12 +30,13 @@ export function useGoogleIdentityProof(
   const [submitting, setSubmitting] = useState(false);
   const handled = useRef<unknown>(null);
   const id = clientID();
-  const redirectUri =
-    id && Platform.OS !== "web"
-      ? makeRedirectUri({
+  const redirectUri = !id
+    ? undefined
+    : Platform.OS === "web"
+      ? makeRedirectUri({ path: "account" })
+      : makeRedirectUri({
           native: `com.googleusercontent.apps.${id.replace(/\.apps\.googleusercontent\.com$/, "")}:/oauthredirect`,
-        })
-      : undefined;
+        });
   const config = useMemo(
     () => ({
       androidClientId: clientIDs.android,

@@ -14,25 +14,25 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 )
 
-// FederatedRepository usa consultas sqlc y una transacción para cada cambio de
-// challenge, identidad y sesión.
+// FederatedRepository uses sqlc queries and a transaction for each challenge,
+// identity, and session change.
 type FederatedRepository struct {
 	pool    *pgxpool.Pool
 	queries *sqlc.Queries
 }
 
-// NewFederatedRepository construye el adaptador PostgreSQL de identidad federada.
+// NewFederatedRepository builds the federated-identity PostgreSQL adapter.
 func NewFederatedRepository(pool *pgxpool.Pool) FederatedRepository {
 	return FederatedRepository{pool: pool, queries: sqlc.New(pool)}
 }
 
-// CreateChallenge persiste el hash y la caducidad de una prueba Google.
+// CreateChallenge persists a Google challenge hash and expiry.
 func (r FederatedRepository) CreateChallenge(ctx context.Context, nonceHash []byte, expiresAt time.Time) (string, error) {
 	id, err := r.queries.CreateGoogleLoginChallenge(ctx, sqlc.CreateGoogleLoginChallengeParams{NonceHash: nonceHash, ExpiresAt: pgtype.Timestamptz{Time: expiresAt, Valid: true}})
 	return id.String(), err
 }
 
-// AuthenticateGoogle consume el challenge y resuelve la identidad en una transacción.
+// AuthenticateGoogle consumes the challenge and resolves the identity in a transaction.
 func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID string, nonceHash []byte, identity federated.Identity, registration *federated.Registration, accessHash, refreshHash []byte) (federated.Session, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -81,7 +81,7 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 	return createSession(ctx, tx, queries, accountID, registration.Username, accessHash, refreshHash)
 }
 
-// AddGoogleIdentity agrega una identidad libre o confirma idempotentemente la propia.
+// AddGoogleIdentity adds an unlinked identity or idempotently confirms the account's own identity.
 func (r FederatedRepository) AddGoogleIdentity(ctx context.Context, accountID, challengeID string, nonceHash []byte, identity federated.Identity) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -112,7 +112,7 @@ func (r FederatedRepository) AddGoogleIdentity(ctx context.Context, accountID, c
 	return tx.Commit(ctx)
 }
 
-// ReauthenticateGoogle valida una identidad de Google y emite un ticket asociado a la sesión.
+// ReauthenticateGoogle validates a Google identity and issues a session-bound ticket.
 func (r FederatedRepository) ReauthenticateGoogle(ctx context.Context, accountID, sessionToken, challengeID string, nonceHash []byte, identity federated.Identity, ticketHash []byte) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -137,7 +137,7 @@ func (r FederatedRepository) ReauthenticateGoogle(ctx context.Context, accountID
 	return tx.Commit(ctx)
 }
 
-// AddGoogleIdentityWithTicket consume el ticket y vincula una identidad de Google a la cuenta.
+// AddGoogleIdentityWithTicket consumes the ticket and links a Google identity to the account.
 func (r FederatedRepository) AddGoogleIdentityWithTicket(ctx context.Context, sessionToken, challengeID string, nonceHash []byte, identity federated.Identity, ticketHash []byte) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -170,6 +170,20 @@ func (r FederatedRepository) AddGoogleIdentityWithTicket(ctx context.Context, se
 		return err
 	}
 	return tx.Commit(ctx)
+}
+
+// RemoveGoogleIdentityWithTicket deletes Google only when a local credential
+// remains, so the account can never lose its final access method.
+func (r FederatedRepository) RemoveGoogleIdentityWithTicket(ctx context.Context, sessionToken string, ticketHash []byte) error {
+	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
+	rows, err := r.queries.ConsumeReauthenticationTicketAndRemoveGoogle(ctx, sqlc.ConsumeReauthenticationTicketAndRemoveGoogleParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash})
+	if err != nil {
+		return err
+	}
+	if rows != 1 {
+		return pgx.ErrNoRows
+	}
+	return nil
 }
 
 func consumeChallenge(ctx context.Context, queries *sqlc.Queries, challengeID string, nonceHash []byte) error {

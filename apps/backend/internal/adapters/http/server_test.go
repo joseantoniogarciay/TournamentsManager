@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
@@ -22,7 +24,7 @@ func (testDeletionAuthenticator) ScheduleAccountDeletion(context.Context, string
 	return time.Date(2026, time.September, 7, 12, 0, 0, 0, time.UTC), nil
 }
 
-var testAllowedOrigins = []string{"http://localhost:8081"}
+var testAllowedOrigins = []string{"http://localhost:8082"}
 
 func (a testAuthenticator) Authenticate(context.Context, string) (string, error) {
 	if a.accountID == "" {
@@ -165,6 +167,67 @@ func (r testRegistrationRepository) FindLocalAccountForLogin(context.Context, st
 }
 func (r testRegistrationRepository) CreateLocalLoginSession(context.Context, string, []byte, []byte) (registration.Session, error) {
 	return r.loginSession, nil
+}
+
+type testFederatedRepository struct{ reauthenticationErr error }
+
+type testGoogleVerifier struct{ identity federated.Identity }
+
+func (v testGoogleVerifier) Verify(context.Context, string) (federated.Identity, error) {
+	return v.identity, nil
+}
+
+func (testFederatedRepository) CreateChallenge(context.Context, []byte, time.Time) (string, error) {
+	return "019abcde-1111-7111-8111-111111111111", nil
+}
+func (testFederatedRepository) AuthenticateGoogle(context.Context, string, []byte, federated.Identity, *federated.Registration, []byte, []byte) (federated.Session, error) {
+	return federated.Session{}, nil
+}
+func (testFederatedRepository) AddGoogleIdentity(context.Context, string, string, []byte, federated.Identity) error {
+	return nil
+}
+func (r testFederatedRepository) ReauthenticateGoogle(context.Context, string, string, string, []byte, federated.Identity, []byte) error {
+	return r.reauthenticationErr
+}
+
+func TestCreateReauthenticationTicketReportsSelectedGoogleAccountConflict(t *testing.T) {
+	service := federated.NewService(
+		testFederatedRepository{reauthenticationErr: federated.ErrIdentityConflict},
+		testGoogleVerifier{identity: federated.Identity{
+			Email:         "person@example.test",
+			EmailVerified: true,
+			Issuer:        federated.GoogleIssuer,
+			Nonce:         "nonce",
+			Subject:       "other-google-account",
+		}},
+	)
+	request := httptest.NewRequest(http.MethodPost, "/v1/me/reauthentication-tickets", strings.NewReader(`{"challengeId":"019abcde-1111-7111-8111-111111111111","idToken":"google-id-token","purpose":"set-local-password"}`))
+	request.Header.Set("Authorization", "Bearer session-token")
+	request = request.WithContext(context.WithValue(request.Context(), accountContextKey{}, "019abcde-2222-7222-8222-222222222222"))
+	recorder := httptest.NewRecorder()
+
+	createReauthenticationTicket(access.Service{}, &service).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusConflict)
+	}
+}
+func (testFederatedRepository) AddGoogleIdentityWithTicket(context.Context, string, string, []byte, federated.Identity, []byte) error {
+	return nil
+}
+func (testFederatedRepository) RemoveGoogleIdentityWithTicket(context.Context, string, []byte) error {
+	return nil
+}
+
+func TestCreateGoogleChallengeReturnsCreated(t *testing.T) {
+	service := federated.NewService(testFederatedRepository{}, nil)
+	recorder := httptest.NewRecorder()
+
+	createGoogleChallenge(service).ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, "/v1/google-login-challenges", nil))
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusCreated)
+	}
 }
 
 func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
@@ -450,7 +513,7 @@ func TestCORSPreflightAllowsConfiguredOrigin(t *testing.T) {
 	t.Parallel()
 
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodOptions, "/v1/registrations", nil)
-	request.Header.Set("Origin", "http://localhost:8081")
+	request.Header.Set("Origin", "http://localhost:8082")
 	request.Header.Set("Access-Control-Request-Method", http.MethodPost)
 	request.Header.Set("Access-Control-Request-Headers", "content-type")
 	recorder := httptest.NewRecorder()
@@ -460,7 +523,7 @@ func TestCORSPreflightAllowsConfiguredOrigin(t *testing.T) {
 	if recorder.Code != http.StatusNoContent {
 		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusNoContent)
 	}
-	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:8081" {
+	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:8082" {
 		t.Errorf("Access-Control-Allow-Origin = %q, want configured origin", got)
 	}
 	if got := recorder.Header().Get("Access-Control-Allow-Credentials"); got != "true" {
@@ -473,7 +536,7 @@ func TestScheduleAccountDeletionAllowsConfiguredCookieOrigin(t *testing.T) {
 
 	handler := NewHandler(registration.Service{}, nil, testDeletionAuthenticator{testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodDelete, "/v1/me/account", nil)
-	request.Header.Set("Origin", "http://localhost:8081")
+	request.Header.Set("Origin", "http://localhost:8082")
 	request.AddCookie(&http.Cookie{Name: "__Host-tm_session", Value: "opaque-session"})
 	recorder := httptest.NewRecorder()
 
@@ -507,7 +570,7 @@ func TestUsernameAvailabilityReturnsCurrentAvailability(t *testing.T) {
 	registrationService := registration.NewService(testRegistrationRepository{available: false}, nil)
 	handler := NewHandler(registrationService, nil, testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/v1/usernames/already_taken/availability", nil)
-	request.Header.Set("Origin", "http://localhost:8081")
+	request.Header.Set("Origin", "http://localhost:8082")
 	recorder := httptest.NewRecorder()
 
 	handler.ServeHTTP(recorder, request)
@@ -518,8 +581,8 @@ func TestUsernameAvailabilityReturnsCurrentAvailability(t *testing.T) {
 	if got := recorder.Header().Get("Cache-Control"); got != "no-store" {
 		t.Errorf("Cache-Control = %q, want no-store", got)
 	}
-	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:8081" {
-		t.Errorf("Access-Control-Allow-Origin = %q, want http://localhost:8081", got)
+	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:8082" {
+		t.Errorf("Access-Control-Allow-Origin = %q, want http://localhost:8082", got)
 	}
 	body, _ := io.ReadAll(recorder.Result().Body)
 	if !strings.Contains(string(body), `"available":false`) {

@@ -1,4 +1,4 @@
-// Package leagues contiene la consulta de colecciones de ligas relacionadas.
+// Package leagues contains related league collection queries.
 package leagues
 
 import (
@@ -12,26 +12,26 @@ const (
 )
 
 var (
-	// ErrInvalidRelationship indica un filtro de relación no permitido.
+	// ErrInvalidRelationship indicates a disallowed relationship filter.
 	ErrInvalidRelationship = errors.New("relación de liga inválida")
-	// ErrInvalidPage indica parámetros de paginación no permitidos.
+	// ErrInvalidPage indicates invalid pagination parameters.
 	ErrInvalidPage = errors.New("página de ligas inválida")
-	// ErrUnauthenticated indica que no hay una sesión válida.
+	// ErrUnauthenticated indicates that no valid session exists.
 	ErrUnauthenticated = errors.New("sesión no autenticada")
-	// ErrLeagueNotFound indica una liga inexistente o no visible.
+	// ErrLeagueNotFound indicates a nonexistent or invisible league.
 	ErrLeagueNotFound = errors.New("liga no disponible")
 )
 
-// Relationship identifica la perspectiva de una cuenta sobre una liga.
+// Relationship identifies an account's relationship with a league.
 type Relationship string
 
-// Relaciones admitidas por la colección de cuenta.
+// Relationships supported by the account collection.
 const (
 	Administered Relationship = "administered"
 	Followed     Relationship = "followed"
 )
 
-// Item es la proyección compacta de una liga relacionada.
+// Item is the compact projection of a related league.
 type Item struct {
 	ID             string `json:"id"`
 	Name           string `json:"name"`
@@ -41,13 +41,13 @@ type Item struct {
 	Relationship   string `json:"relationship"`
 }
 
-// Page contiene una página de elementos y su cursor opcional.
+// Page contains an item page and its optional cursor.
 type Page struct {
 	Items      []Item `json:"items"`
 	NextCursor string `json:"nextCursor,omitempty"`
 }
 
-// Repository persiste y consulta relaciones de ligas.
+// Repository persists and queries league relationships.
 type Repository interface {
 	List(context.Context, string, Relationship, string, int) ([]Item, error)
 	ListRecent(context.Context, string) ([]Item, error)
@@ -55,12 +55,12 @@ type Repository interface {
 	Unfollow(context.Context, string, string) error
 }
 
-// ListRecent devuelve hasta cinco ligas relacionadas con la actividad más reciente.
+// ListRecent returns up to five related leagues with the most recent activity.
 func (s Service) ListRecent(ctx context.Context, accountID string) ([]Item, error) {
 	return s.repository.ListRecent(ctx, accountID)
 }
 
-// Follow guarda una liga visible para una cuenta.
+// Follow saves a visible league for an account.
 func (s Service) Follow(ctx context.Context, accountID, leagueID string) error {
 	visible, err := s.repository.Follow(ctx, accountID, leagueID)
 	if err != nil {
@@ -72,18 +72,18 @@ func (s Service) Follow(ctx context.Context, accountID, leagueID string) error {
 	return nil
 }
 
-// Unfollow retira una liga guardada para una cuenta.
+// Unfollow removes a saved league from an account.
 func (s Service) Unfollow(ctx context.Context, accountID, leagueID string) error {
 	return s.repository.Unfollow(ctx, accountID, leagueID)
 }
 
-// Service coordina las colecciones y relaciones de ligas.
+// Service coordinates league collections and relationships.
 type Service struct{ repository Repository }
 
-// NewService construye el servicio con su puerto de persistencia.
+// NewService builds the service with its persistence port.
 func NewService(repository Repository) Service { return Service{repository: repository} }
 
-// List devuelve una página de ligas de la relación indicada.
+// List returns a league page for the specified relationship.
 func (s Service) List(ctx context.Context, accountID string, relationship Relationship, cursor string, limit int) (Page, error) {
 	if relationship != Administered && relationship != Followed {
 		return Page{}, ErrInvalidRelationship
