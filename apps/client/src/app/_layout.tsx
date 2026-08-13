@@ -1,5 +1,6 @@
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from "expo-router";
 import Head from "expo-router/head";
+import * as WebBrowser from "expo-web-browser";
 import * as SplashScreen from "expo-splash-screen";
 import { type PropsWithChildren, useEffect } from "react";
 import { Platform } from "react-native";
@@ -20,6 +21,11 @@ if (Platform.OS !== "web") {
   SplashScreen.setOptions({ duration: 240, fade: true });
   void SplashScreen.preventAutoHideAsync();
 }
+
+// El popup de OAuth vuelve a una ruta que puede no cargar la pantalla que inició
+// la autenticación. El layout raíz existe en ambos contextos y lo cierra antes
+// de que Expo Router monte la ruta de retorno.
+if (Platform.OS === "web") WebBrowser.maybeCompleteAuthSession();
 
 export default function RootLayout() {
   return (

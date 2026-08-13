@@ -1,6 +1,5 @@
 import * as Google from "expo-auth-session/providers/google";
 import { makeRedirectUri } from "expo-auth-session";
-import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 
@@ -12,10 +11,6 @@ import {
 } from "@/features/federated-google/api";
 
 type PendingGoogleAccount = { challenge: GoogleLoginChallenge; idToken: string };
-
-// Completa el popup de OAuth al volver a la web antes de que React monte la pantalla.
-// iOS y Android usan la sesión nativa y no deben tocar el navegador al recargar.
-if (Platform.OS === "web") WebBrowser.maybeCompleteAuthSession();
 
 const googleClientIDs = {
   android: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
@@ -30,7 +25,8 @@ function getPlatformClientID() {
 }
 
 function getGoogleRedirectURI(clientID: string | undefined) {
-  if (!clientID || Platform.OS === "web") return undefined;
+  if (!clientID) return undefined;
+  if (Platform.OS === "web") return makeRedirectUri({ path: "account" });
   const scheme = `com.googleusercontent.apps.${clientID.replace(/\.apps\.googleusercontent\.com$/, "")}`;
   return makeRedirectUri({ native: `${scheme}:/oauthredirect` });
 }
@@ -188,6 +184,7 @@ export function useGoogleAuthentication({
 
   return {
     chooseUsername,
+    dismissPendingAccount: () => setPendingAccount(null),
     dismissError: () => setError(null),
     error,
     isConfigured,

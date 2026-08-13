@@ -2135,3 +2135,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** el despliegue copia la UI de referencia y el OpenAPI
   junto al artefacto web versionado; Caddy sirve esa ruta antes del fallback de
   la SPA para mantenerla consistente y recuperable con el mismo SHA.
+
+### 2026-08-13 — El callback OAuth web debe cargar el cierre antes que su ruta
+
+- **Aprendido:** el callback se recibe en una ventana auxiliar. Si
+  `maybeCompleteAuthSession()` vive solo en una pantalla diferida, el popup puede
+  montar otra ruta y quedarse abierto como una segunda aplicación.
+- **Regla reutilizable:** el layout raíz web completa el popup antes de montar
+  Expo Router y el redirect URI es explícito hacia la ruta del recorrido que lo
+  inició. La continuación que necesita datos de cuenta se presenta con
+  `ModalDialog`, no como una card insertada en la pantalla subyacente.

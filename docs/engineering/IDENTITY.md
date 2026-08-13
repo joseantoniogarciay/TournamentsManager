@@ -45,8 +45,10 @@ challenge una sola vez tras validar el ID token; no es una sesión ni una cuenta
 
 Google solo se habilita en los entornos públicos `dev` y `prod`; el entorno
 local no configura clientes ni acepta audiencias Google. El cliente web de
-desarrollo registra `https://dev.fasttourney.com` como origen y URI de
-redirección. iOS y Android usan clientes OAuth nativos separados, asociados
+desarrollo registra `https://dev.fasttourney.com` como origen y
+`https://dev.fasttourney.com/account` como URI de redirección. El layout raíz
+resuelve el popup al regresar para que la ventana que lo inició conserve el
+recorrido de Cuenta. iOS y Android usan clientes OAuth nativos separados, asociados
 respectivamente al identificador de bundle o paquete y, en Android, a la huella
 SHA-1 del certificado que firma la build. Los IDs de cliente son públicos: el
 artefacto público de desarrollo los incorpora al exportarse y el backend admite
