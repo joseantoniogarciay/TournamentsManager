@@ -18,6 +18,7 @@ export default function AccountLayout() {
     // pertenecer a otra tab. El cierre de este flujo siempre vuelve a su raíz.
     router.replace("/account");
   };
+  const goBackToAccess = () => router.replace("/account/access");
   const headerOptions = {
     headerBackButtonDisplayMode: "minimal" as const,
     headerBackVisible: false,
@@ -64,7 +65,20 @@ export default function AccountLayout() {
       <Stack.Screen name="access" options={{ title: t("account_access_data_title") }} />
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
       <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
-      <Stack.Screen name="password" options={{ title: t("account_password_change_title") }} />
+      <Stack.Screen
+        name="password"
+        options={{
+          headerLeft: () => (
+            <NavigationHeaderButton
+              accessibilityLabel={t("common_back")}
+              icon="back"
+              nativeIcon={{ android: "arrow_back", ios: "chevron.left", web: "arrow_back" }}
+              onPress={goBackToAccess}
+            />
+          ),
+          title: t("account_password_change_title"),
+        }}
+      />
       <Stack.Screen
         name="google-link"
         options={{ presentation: "modal", title: t("account_google_link_title") }}

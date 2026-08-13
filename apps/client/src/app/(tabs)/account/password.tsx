@@ -55,7 +55,7 @@ export default function AccountPasswordScreen() {
         : googleTicket;
       if (!ticket) return;
       await setAccountPassword(ticket, password);
-      router.back();
+      router.replace("/account/access" as never);
     } catch (error) {
       const failure = getRequestFailure(error);
       show({ kind: failure.kind, message: t(failure.messageKey) });
