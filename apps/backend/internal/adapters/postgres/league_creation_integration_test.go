@@ -548,20 +548,10 @@ func TestIntegrationAccountOptionsRequireSingleUseReauthenticationTicket(t *test
 	if err != nil {
 		t.Fatalf("reautenticar con Google vinculada: %v", err)
 	}
-	reuseChallenge, err := google.CreateChallenge(ctx)
-	if err != nil {
-		t.Fatalf("crear challenge para consumir ticket Google: %v", err)
+	if err := service.RemovePassword(ctx, sessionToken, googleTicket); err != nil {
+		t.Fatalf("eliminar contraseña con ticket Google: %v", err)
 	}
-	verifier.identity.Nonce = reuseChallenge.Nonce
-	if err := google.AddGoogleWithTicket(ctx, sessionToken, googleTicket, reuseChallenge.ID, "google-id-token"); err != nil {
-		t.Fatalf("consumir ticket Google: %v", err)
-	}
-	reusedTicketChallenge, err := google.CreateChallenge(ctx)
-	if err != nil {
-		t.Fatalf("crear challenge para reusar ticket: %v", err)
-	}
-	verifier.identity.Nonce = reusedTicketChallenge.Nonce
-	if err := google.AddGoogleWithTicket(ctx, sessionToken, googleTicket, reusedTicketChallenge.ID, "google-id-token"); !errors.Is(err, federated.ErrChallengeInvalid) {
-		t.Fatalf("reutilizar ticket Google = %v, se esperaba %v", err, federated.ErrChallengeInvalid)
+	if err := service.RemovePassword(ctx, sessionToken, googleTicket); !errors.Is(err, access.ErrReauthenticationInvalid) {
+		t.Fatalf("reutilizar ticket Google = %v, se esperaba %v", err, access.ErrReauthenticationInvalid)
 	}
 }
