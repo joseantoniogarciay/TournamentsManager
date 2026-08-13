@@ -61,6 +61,7 @@
   "account_google_link_title": "Vincular Google",
   "account_google_linked": "Vinculado con Google",
   "account_google_unlink": "Desvincular",
+  "account_google_unlink_requires_password": "Para desvincular Google, primero crea una contraseña. Pulsa en Crear contraseña.",
   "account_google_unlink_title": "¿Desvincular Google?",
   "account_google_unlink_description": "Confirma tu contraseña para mantenerla como tu método de acceso.",
   "account_google_create_account": "Crear cuenta con Google",

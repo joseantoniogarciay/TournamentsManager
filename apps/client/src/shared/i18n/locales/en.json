@@ -61,6 +61,7 @@
   "account_google_link_title": "Link Google",
   "account_google_linked": "Linked with Google",
   "account_google_unlink": "Unlink",
+  "account_google_unlink_requires_password": "To unlink Google, create a password first. Select Create password.",
   "account_google_unlink_title": "Unlink Google?",
   "account_google_unlink_description": "Confirm your password to keep it as your sign-in method.",
   "account_google_create_account": "Create account with Google",

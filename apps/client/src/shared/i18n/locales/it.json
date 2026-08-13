@@ -61,6 +61,7 @@
   "account_google_link_title": "Collega Google",
   "account_google_linked": "Collegato a Google",
   "account_google_unlink": "Scollega",
+  "account_google_unlink_requires_password": "Per scollegare Google, crea prima una password. Seleziona Crea password.",
   "account_google_unlink_title": "Scollegare Google?",
   "account_google_unlink_description": "Conferma la password per mantenerla come metodo di accesso.",
   "account_google_create_account": "Crea un account con Google",

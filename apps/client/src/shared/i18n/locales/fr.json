@@ -61,6 +61,7 @@
   "account_google_link_title": "Associer Google",
   "account_google_linked": "Associé à Google",
   "account_google_unlink": "Dissocier",
+  "account_google_unlink_requires_password": "Pour dissocier Google, créez d’abord un mot de passe. Appuyez sur Créer un mot de passe.",
   "account_google_unlink_title": "Dissocier Google ?",
   "account_google_unlink_description": "Confirmez votre mot de passe pour le conserver comme méthode de connexion.",
   "account_google_create_account": "Créer un compte avec Google",

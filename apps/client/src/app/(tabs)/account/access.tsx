@@ -98,6 +98,13 @@ export default function AccountAccessScreen() {
       setGoogleUnlinking(false);
     }
   };
+  const requestGoogleUnlink = () => {
+    if (!accessMethods?.methods.password) {
+      show({ kind: "generic-error", message: t("account_google_unlink_requires_password") });
+      return;
+    }
+    setGoogleUnlinkVisible(true);
+  };
   const removePasswordProof = useCallback(
     async (challenge: { id: string }, idToken: string) => {
       const ticket = await reauthenticateWithGoogle(challenge.id, idToken, "remove-local-password");
@@ -159,7 +166,7 @@ export default function AccountAccessScreen() {
               <Text variant="bodyLarge">{t("account_google_linked")}</Text>
               <Button
                 label={t("account_google_unlink")}
-                onPress={() => setGoogleUnlinkVisible(true)}
+                onPress={requestGoogleUnlink}
                 secondarySurfaceColor={colors.surface.canvas}
                 variant="secondary"
               />
