@@ -37,9 +37,25 @@ export default function AccountPasswordScreen() {
   useEffect(() => {
     void getAccountAccessMethods().then((access) => setHasPassword(access.methods.password));
   }, []);
-  const onGoogleProof = useCallback(async (challenge: { id: string }, idToken: string) => {
-    setGoogleTicket(await reauthenticateWithGoogle(challenge.id, idToken, "set-local-password"));
-  }, []);
+  const onGoogleProof = useCallback(
+    async (challenge: { id: string }, idToken: string) => {
+      try {
+        setGoogleTicket(
+          await reauthenticateWithGoogle(challenge.id, idToken, "set-local-password"),
+        );
+      } catch (error) {
+        show({
+          kind: "generic-error",
+          message: t(
+            error instanceof GoogleLinkError && error.reason === "wrong-account"
+              ? "account_google_reauthentication_wrong_account"
+              : getRequestFailure(error).messageKey,
+          ),
+        });
+      }
+    },
+    [show, t],
+  );
   const proof = useGoogleIdentityProof(onGoogleProof);
   useEffect(() => {
     if (hasPassword === false) proof.prepare();
