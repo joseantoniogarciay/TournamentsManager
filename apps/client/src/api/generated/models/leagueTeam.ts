@@ -10,4 +10,6 @@ import type { Uuid } from "./uuid.js";
 export interface LeagueTeam {
   id: Uuid;
   name: string;
+  /** Indica que la organizadora declaró su baja durante la liga en curso. */
+  withdrawn: boolean;
 }

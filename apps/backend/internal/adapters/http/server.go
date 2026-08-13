@@ -108,6 +108,7 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 		mux.Handle("POST /v1/leagues", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createLeague(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/teams", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(addLeagueTeam(creationService)))))
 		mux.Handle("DELETE /v1/leagues/{leagueId}/teams/{teamId}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeLeagueTeam(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/teams/{teamId}/withdraw", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(withdrawLeagueTeam(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(startLeague(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/cancel", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(cancelLeague(creationService)))))
 		mux.Handle("POST /v1/leagues/{leagueId}/complete", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(completeLeague(creationService)))))
@@ -323,6 +324,40 @@ func removeLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func withdrawLeagueTeam(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID, teamID := r.PathValue("leagueId"), r.PathValue("teamId")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
+			return
+		}
+		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(teamID) {
+			writeValidationProblem(w)
+			return
+		}
+		league, err := service.WithdrawTeam(r.Context(), accountID, leagueID, teamID)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot withdraw teams from this league")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "League or team is unavailable")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueWithdrawalConflict) {
+			writeProblem(w, http.StatusConflict, "Team cannot be withdrawn from this league")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "Could not withdraw team")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(league)
 	}
 }
 func getPublicLeague(service leagues.CreationService) http.HandlerFunc {

@@ -182,6 +182,13 @@ recalcula la tabla bajo el bloqueo de la transición, guarda todos los equipos d
 posición 1 —incluidos co-campeones— y devuelve la proyección final. El cliente
 no envía ni elige una ganadora. Véanse ADR-0039 y ADR-0082.
 
+`POST /v1/leagues/{leagueId}/teams/{teamId}/withdraw` expresa una baja durante
+una liga en curso. Solo la organizadora puede ejecutarla una vez por equipo: la
+transacción conserva el equipo, completa todos sus partidos como `3-0` para el
+rival, registra cada sustitución en el historial y devuelve la proyección con
+la clasificación recalculada. Una repetición o una liga fuera de curso devuelve
+`409`. Véase ADR-0041.
+
 El cliente muestra feedback específico solo cuando el contrato ofrece una
 recuperación distinta; errores no tratados, `5xx` y respuestas inválidas usan el
 mensaje seguro común.

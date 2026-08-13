@@ -550,6 +550,71 @@ export const removeLeagueTeam = async (
   return { data, status: res.status, headers: res.headers } as removeLeagueTeamResponse;
 };
 
+export type withdrawLeagueTeamResponse200 = {
+  data: PublicLeague;
+  status: 200;
+};
+
+export type withdrawLeagueTeamResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type withdrawLeagueTeamResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type withdrawLeagueTeamResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type withdrawLeagueTeamResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type withdrawLeagueTeamResponseSuccess = withdrawLeagueTeamResponse200 & {
+  headers: Headers;
+};
+export type withdrawLeagueTeamResponseError = (
+  | withdrawLeagueTeamResponse401
+  | withdrawLeagueTeamResponse403
+  | withdrawLeagueTeamResponse404
+  | withdrawLeagueTeamResponse409
+) & {
+  headers: Headers;
+};
+
+export type withdrawLeagueTeamResponse =
+  withdrawLeagueTeamResponseSuccess | withdrawLeagueTeamResponseError;
+
+export const getWithdrawLeagueTeamUrl = (leagueId: Uuid, teamId: Uuid) => {
+  return `/leagues/${leagueId}/teams/${teamId}/withdraw`;
+};
+
+/**
+ * Exige sesión de la organizadora y una liga en curso. Conserva el equipo y todos los partidos como historial de la competición; cada uno pasa a 3-0 a favor de su rival y se registra el cambio.
+ * @summary Declara la baja de un equipo en una liga en curso
+ */
+export const withdrawLeagueTeam = async (
+  leagueId: Uuid,
+  teamId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<withdrawLeagueTeamResponse> => {
+  const res = await (fetchFn ?? fetch)(getWithdrawLeagueTeamUrl(leagueId, teamId), {
+    ...options,
+    method: "POST",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: withdrawLeagueTeamResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as withdrawLeagueTeamResponse;
+};
+
 export type cancelLeagueResponse200 = {
   data: PublicLeague;
   status: 200;

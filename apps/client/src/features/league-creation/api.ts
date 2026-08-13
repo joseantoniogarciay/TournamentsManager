@@ -12,6 +12,7 @@ import {
   removeLeagueTeam,
   removeLeagueAdministrator,
   startLeague,
+  withdrawLeagueTeam,
 } from "@/api/generated/leagues/leagues";
 import type { LeagueInput, StartLeagueRequest, TeamInput, Username } from "@/api/generated/models";
 import { searchUsers } from "@/api/generated/users/users";
@@ -41,6 +42,11 @@ export async function addLeagueTeamRequest(leagueID: string, input: TeamInput) {
 export async function removeLeagueTeamRequest(leagueID: string, teamID: string) {
   const response = await removeLeagueTeam(leagueID, teamID, undefined, authenticatedApiFetch);
   if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
+}
+export async function withdrawLeagueTeamRequest(leagueID: string, teamID: string) {
+  const response = await withdrawLeagueTeam(leagueID, teamID, undefined, authenticatedApiFetch);
+  if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
+  return response.data;
 }
 export async function startLeagueRequest(leagueID: string, input: StartLeagueRequest) {
   const response = await startLeague(leagueID, input, undefined, authenticatedApiFetch);

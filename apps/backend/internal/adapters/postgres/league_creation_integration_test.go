@@ -194,6 +194,61 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	}
 }
 
+func TestIntegrationWithdrawLeagueTeamAppliesUniformResultsAndKeepsHistory(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	organizerID := createVerifiedLocalAccount(t, ctx, pool, "withdraw-organizer@example.test", "withdraworganizer", "correct password")
+	outsiderID := createVerifiedLocalAccount(t, ctx, pool, "withdraw-outsider@example.test", "withdrawoutsider", "correct password")
+	service := leagues.NewCreationService(NewAccountLeagueRepository(pool))
+	created, err := service.Create(ctx, organizerID, leagues.CreateInput{Name: "Liga con baja", Teams: []leagues.TeamInput{{Name: "Azules"}, {Name: "Rojos"}, {Name: "Verdes"}}})
+	if err != nil {
+		t.Fatalf("crear liga = %v", err)
+	}
+	started, err := service.Start(ctx, organizerID, created.ID, leagues.StartInput{RoundRobinLegs: 1})
+	if err != nil {
+		t.Fatalf("iniciar liga = %v", err)
+	}
+	withdrawn := started.Teams[0]
+	match, found := leagueMatchBetweenTeams(started.Matches, withdrawn.ID, started.Teams[1].ID)
+	if !found {
+		t.Fatal("faltaba partido del equipo retirado")
+	}
+	if _, err := service.RecordResult(ctx, organizerID, created.ID, match.ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1}); err != nil {
+		t.Fatalf("registrar resultado previo = %v", err)
+	}
+	if _, err := service.WithdrawTeam(ctx, outsiderID, created.ID, withdrawn.ID); !errors.Is(err, leagues.ErrLeagueForbidden) {
+		t.Fatalf("baja ajena = %v, se esperaba prohibida", err)
+	}
+	updated, err := service.WithdrawTeam(ctx, organizerID, created.ID, withdrawn.ID)
+	if err != nil {
+		t.Fatalf("retirar equipo = %v", err)
+	}
+	for _, updatedMatch := range updated.Matches {
+		if updatedMatch.HomeTeamID != withdrawn.ID && updatedMatch.AwayTeamID != withdrawn.ID {
+			continue
+		}
+		if updatedMatch.State != "completed" || updatedMatch.HomeScore == nil || updatedMatch.AwayScore == nil {
+			t.Fatalf("partido retirado sin completar = %#v", updatedMatch)
+		}
+		if updatedMatch.HomeTeamID == withdrawn.ID && (*updatedMatch.HomeScore != 0 || *updatedMatch.AwayScore != 3) {
+			t.Fatalf("marcador local retirado = %d-%d", *updatedMatch.HomeScore, *updatedMatch.AwayScore)
+		}
+		if updatedMatch.AwayTeamID == withdrawn.ID && (*updatedMatch.HomeScore != 3 || *updatedMatch.AwayScore != 0) {
+			t.Fatalf("marcador visitante retirado = %d-%d", *updatedMatch.HomeScore, *updatedMatch.AwayScore)
+		}
+	}
+	if !updated.Teams[0].Withdrawn {
+		t.Fatalf("equipo retirado = %#v, se esperaba marcado", updated.Teams[0])
+	}
+	var historyCount int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM match_result_changes WHERE match_id = $1`, match.ID).Scan(&historyCount); err != nil || historyCount != 2 {
+		t.Fatalf("historial del resultado sustituido = %d, %v; se esperaban dos entradas", historyCount, err)
+	}
+	if _, err := service.WithdrawTeam(ctx, organizerID, created.ID, withdrawn.ID); !errors.Is(err, leagues.ErrLeagueWithdrawalConflict) {
+		t.Fatalf("segunda baja = %v, se esperaba conflicto", err)
+	}
+}
+
 func TestIntegrationRecentLeaguesOrdersActivityAndDeduplicatesRelationships(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)

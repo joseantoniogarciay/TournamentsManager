@@ -277,8 +277,9 @@ contratos del primer corte.
 # Seguridad de la cuenta
 
 Una cuenta autenticada puede consultar su email, username y métodos de acceso,
-añadir o cambiar una contraseña y vincular Google tras reautenticarse. No puede
-eliminar métodos ni fusionar cuentas. Cerrar sesión elimina el estado local de
+añadir o cambiar una contraseña y vincular Google tras reautenticarse. Puede
+retirar una contraseña o Google solo si acredita el otro método y la cuenta
+conserva al menos uno; no puede fusionar cuentas. Cerrar sesión elimina el estado local de
 inmediato e intenta la revocación remota sin bloquear la navegación. Puede
 solicitar una baja lógica de 30 días: se invalidan de inmediato sus sesiones y
 se retiran sus seguimientos y administraciones delegadas. Si organiza alguna
