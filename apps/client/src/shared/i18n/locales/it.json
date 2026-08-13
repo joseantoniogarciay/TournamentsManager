@@ -58,6 +58,7 @@
   "account_google_link_password_description": "Conferma la password prima di continuare con Google.",
   "account_google_link_ready_description": "La tua identità è confermata. Continua con l'account Google da collegare.",
   "account_google_link_reauthenticate": "Conferma identità",
+  "account_google_reauthentication_wrong_account": "Hai scelto un altro account Google. Accedi con l'account Google collegato a questo account.",
   "account_google_link_title": "Collega Google",
   "account_google_linked": "Collegato a Google",
   "account_google_unlink": "Scollega",

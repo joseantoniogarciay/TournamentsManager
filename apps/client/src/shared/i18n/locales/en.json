@@ -58,6 +58,7 @@
   "account_google_link_password_description": "Confirm your password before continuing with Google.",
   "account_google_link_ready_description": "Your identity is confirmed. Continue with the Google account you want to link.",
   "account_google_link_reauthenticate": "Confirm identity",
+  "account_google_reauthentication_wrong_account": "You selected a different Google account. Sign in with the Google account linked to this account.",
   "account_google_link_title": "Link Google",
   "account_google_linked": "Linked with Google",
   "account_google_unlink": "Unlink",

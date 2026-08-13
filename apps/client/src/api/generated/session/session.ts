@@ -19,6 +19,7 @@ import type {
   ReauthenticationTicketRequest,
   SessionEstablishment,
   ValidationProblemResponse,
+  VerificationConflictProblemResponse,
 } from "../models";
 
 export type scheduleAccountDeletionResponse200 = {
@@ -127,12 +128,19 @@ export type createReauthenticationTicketResponse401 = {
   status: 401;
 };
 
+export type createReauthenticationTicketResponse409 = {
+  data: VerificationConflictProblemResponse;
+  status: 409;
+};
+
 export type createReauthenticationTicketResponseSuccess =
   createReauthenticationTicketResponse201 & {
     headers: Headers;
   };
 export type createReauthenticationTicketResponseError = (
-  createReauthenticationTicketResponse400 | createReauthenticationTicketResponse401
+  | createReauthenticationTicketResponse400
+  | createReauthenticationTicketResponse401
+  | createReauthenticationTicketResponse409
 ) & {
   headers: Headers;
 };

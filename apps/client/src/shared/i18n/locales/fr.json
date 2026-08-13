@@ -58,6 +58,7 @@
   "account_google_link_password_description": "Confirmez votre mot de passe avant de continuer avec Google.",
   "account_google_link_ready_description": "Votre identité est confirmée. Continuez avec le compte Google à associer.",
   "account_google_link_reauthenticate": "Confirmer l'identité",
+  "account_google_reauthentication_wrong_account": "Vous avez choisi un autre compte Google. Connectez-vous avec le compte Google associé à ce compte.",
   "account_google_link_title": "Associer Google",
   "account_google_linked": "Associé à Google",
   "account_google_unlink": "Dissocier",

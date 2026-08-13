@@ -70,7 +70,9 @@ export function GoogleLinkDialog({
         ? t(
             proof.error.reason === "conflict"
               ? "account_google_link_conflict"
-              : "account_google_link_expired",
+              : proof.error.reason === "wrong-account"
+                ? "account_google_reauthentication_wrong_account"
+                : "account_google_link_expired",
           )
         : t(getRequestFailure(proof.error).messageKey);
     show({ kind: "generic-error", message });

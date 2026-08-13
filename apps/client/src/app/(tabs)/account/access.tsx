@@ -8,6 +8,7 @@ import {
   AccountDeletionError,
   deleteAccount,
   getAccountAccessMethods,
+  GoogleLinkError,
   reauthenticateWithPassword,
   reauthenticateWithGoogle,
   removeAccountPassword,
@@ -120,7 +121,15 @@ export default function AccountAccessScreen() {
   }, [passwordRemovalVisible, removePasswordGoogle.prepare]);
   useEffect(() => {
     if (!removePasswordGoogle.error) return;
-    show({ kind: "generic-error", message: t("common_request_error") });
+    show({
+      kind: "generic-error",
+      message: t(
+        removePasswordGoogle.error instanceof GoogleLinkError &&
+          removePasswordGoogle.error.reason === "wrong-account"
+          ? "account_google_reauthentication_wrong_account"
+          : "common_request_error",
+      ),
+    });
     setPasswordRemovalVisible(false);
   }, [removePasswordGoogle.error, show, t]);
 

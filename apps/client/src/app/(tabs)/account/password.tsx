@@ -6,6 +6,7 @@ import { space } from "@tournaments-manager/design-tokens";
 
 import {
   getAccountAccessMethods,
+  GoogleLinkError,
   reauthenticateWithGoogle,
   reauthenticateWithPassword,
   setAccountPassword,
@@ -43,6 +44,17 @@ export default function AccountPasswordScreen() {
   useEffect(() => {
     if (hasPassword === false) proof.prepare();
   }, [hasPassword, proof.prepare]);
+  useEffect(() => {
+    if (!proof.error) return;
+    show({
+      kind: "generic-error",
+      message: t(
+        proof.error instanceof GoogleLinkError && proof.error.reason === "wrong-account"
+          ? "account_google_reauthentication_wrong_account"
+          : getRequestFailure(proof.error).messageKey,
+      ),
+    });
+  }, [proof.error, show, t]);
   const valid =
     password.length >= 8 && (hasPassword ? currentPassword.length >= 8 : Boolean(googleTicket));
 

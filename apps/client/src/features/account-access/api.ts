@@ -48,7 +48,7 @@ export async function reauthenticateWithPassword(
 }
 
 export class GoogleLinkError extends Error {
-  constructor(readonly reason: "conflict" | "expired") {
+  constructor(readonly reason: "conflict" | "expired" | "wrong-account") {
     super(reason);
   }
 }
@@ -63,6 +63,7 @@ export async function reauthenticateWithGoogle(
     undefined,
     apiFetch,
   );
+  if (response.status === 409) throw new GoogleLinkError("wrong-account");
   if (response.status !== 201) throw new GoogleLinkError("expired");
   return response.data.ticket;
 }

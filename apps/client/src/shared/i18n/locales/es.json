@@ -58,6 +58,7 @@
   "account_google_link_password_description": "Confirma tu contraseña antes de continuar con Google.",
   "account_google_link_ready_description": "Tu identidad está confirmada. Continúa con la cuenta de Google que quieres vincular.",
   "account_google_link_reauthenticate": "Confirmar identidad",
+  "account_google_reauthentication_wrong_account": "Has elegido otra cuenta de Google. Inicia sesión con la cuenta de Google vinculada a esta cuenta.",
   "account_google_link_title": "Vincular Google",
   "account_google_linked": "Vinculado con Google",
   "account_google_unlink": "Desvincular",

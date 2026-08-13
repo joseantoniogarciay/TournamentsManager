@@ -647,6 +647,10 @@ func createReauthenticationTicket(service access.Service, federatedService *fede
 			}
 			ticket, expiresAt, err = federatedService.ReauthenticateGoogle(r.Context(), accountID, credential.token, body.ChallengeID, body.IDToken, string(body.Purpose))
 		}
+		if errors.Is(err, federated.ErrIdentityConflict) {
+			writeProblem(w, http.StatusConflict, "Selected Google account is not linked to this account")
+			return
+		}
 		if errors.Is(err, access.ErrReauthenticationInvalid) || errors.Is(err, federated.ErrChallengeInvalid) {
 			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
