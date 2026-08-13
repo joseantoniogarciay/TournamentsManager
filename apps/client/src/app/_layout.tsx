@@ -70,7 +70,10 @@ function RootNavigator() {
   return (
     <Stack key={revision} screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="(account-modals)" options={{ presentation: "modal" }} />
+      <Stack.Screen
+        name="(account-modals)"
+        options={{ presentation: Platform.OS === "web" ? "card" : "modal" }}
+      />
       <Stack.Screen
         name="create-tournament"
         options={{

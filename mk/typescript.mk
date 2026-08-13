@@ -20,7 +20,7 @@ typecheck:
 	$(PNPM) run typecheck
 
 client-web-export:
-	EXPO_UNSTABLE_WEB_MODAL=1 $(PNPM) --filter @tournaments-manager/client exec expo export --platform web --output-dir $(CLIENT_WEB_EXPORT_DIR)
+	$(PNPM) --filter @tournaments-manager/client exec expo export --platform web --output-dir $(CLIENT_WEB_EXPORT_DIR)
 
 openapi-lint:
 	$(PNPM) run openapi:lint

@@ -54,7 +54,7 @@ export default function AccountLayout() {
                 accessibilityLabel={t("account_settings_accessibility_label")}
                 icon="settings"
                 nativeIcon="gearshape"
-                onPress={() => router.push("/account/settings")}
+                onPress={() => router.push("/(account-modals)/account/settings")}
                 side="right"
               />
             </View>

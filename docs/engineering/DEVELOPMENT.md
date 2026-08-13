@@ -207,11 +207,11 @@ development builds no reproducen fielmente la splash distribuida.
 La exportación web forma parte de `make verify` y se puede ejecutar de forma
 aislada con `make client-web-export`. Los directorios `.expo`, `ios` y `android`
 siguen sin versionarse; se generan solo mediante operaciones explícitas de Expo.
-Los comandos de cliente, exportación y despliegue fijan
-`EXPO_UNSTABLE_WEB_MODAL=1`: Ajustes y Notificaciones son modales web del stack
-raíz y la capacidad de Expo Router sigue marcada como experimental. La variable
-no pertenece a la configuración pública de la aplicación ni se deja a criterio
-de cada entorno; se revisará al actualizar el SDK.
+Ajustes y Notificaciones permanecen en el stack raíz para compartir su salida
+con las tabs. En iOS y Android se presentan como modales nativos; en web usan la
+presentación estable de página del stack. No se habilita
+`EXPO_UNSTABLE_WEB_MODAL`: su implementación experimental puede reconstruir la
+ruta activa al redimensionar el viewport.
 
 ## Configuración local
 

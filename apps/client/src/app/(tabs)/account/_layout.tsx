@@ -58,7 +58,7 @@ export default function AccountLayout() {
           <Stack.Toolbar.Button
             accessibilityLabel={t("account_settings_accessibility_label")}
             icon="gearshape"
-            onPress={() => router.push("/account/settings")}
+            onPress={() => router.push("/(account-modals)/account/settings")}
           />
         </Stack.Toolbar>
       </Stack.Screen>

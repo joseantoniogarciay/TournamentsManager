@@ -11,11 +11,17 @@ específico antes de que el patrón se repita.
 ## 2026-08-13 — Un modal transversal no pertenece al stack de una tab
 
 Una ruta puede conservar su URL bajo `/account` y, aun así, presentarse desde el
-stack raíz. Ajustes y Notificaciones se elevan para que web, iOS y Android las
-coloquen sobre las tabs y compartan una salida explícita con X hacia Cuenta. En
-web esto requiere habilitar la capacidad experimental de modales de Expo Router
-en desarrollo, exportación y despliegue; no se activa solo de forma local para
-evitar que una build publicada vuelva a degradarlas a páginas de tab.
+stack raíz. Ajustes y Notificaciones se elevan para que web, iOS y Android
+compartan una salida explícita con X hacia Cuenta. iOS y Android las presentan
+modalmente; web usa la página estable del stack porque el modal experimental de
+Expo Router puede reconstruir y sustituir la ruta activa al redimensionar.
+
+## 2026-08-13 — Una tab web recargada no conserva una pila que no existe
+
+Tras recargar una URL profunda, el navegador recupera la ruta pero no la pila
+interna de su tab. Pulsar esa misma tab debe reemplazar explícitamente su URL por
+la raíz; confiar solo en `popToTop` no cambia nada cuando no hay entradas que
+descartar. Android e iOS delegan el mismo gesto repetido en `NativeTabs`.
 
 ## 2026-08-12 — SMTP conserva la portabilidad si el dominio recibe un puerto
 

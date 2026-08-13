@@ -151,9 +151,11 @@ cuando existe y usa `/` como fallback de inicio en frío; en web siempre navega 
 
 La home y la biblioteca de torneos conservan además una adaptación de navegación
 acotada: la app mantiene la pila de cada sección mientras permanece activa; la
-web usa URLs directas e historial del navegador. Las categorías «Administro» y
-«Sigo» son proyecciones de relaciones autorizadas por el backend, no estado de
-permisos en el cliente. Véase [ADR-0057](../adr/0057-define-contextual-home-and-tournament-library.md).
+web usa URLs directas e historial del navegador. Al volver a pulsar la tab web
+activa, su URL se reemplaza por la raíz para resolver correctamente una recarga
+en una ruta profunda sin pila interna. Las categorías «Administro» y «Sigo» son
+proyecciones de relaciones autorizadas por el backend, no estado de permisos en
+el cliente. Véase [ADR-0057](../adr/0057-define-contextual-home-and-tournament-library.md).
 
 La implementación inicial usa tres tabs de raíz: Inicio (`/`), Torneos y
 Cuenta, en ese orden. Cuenta dispone de un stack propio. En iOS 26 se usa

@@ -20,7 +20,7 @@ export function NotificationHeaderButton() {
       }
       icon="bell"
       nativeIcon="bell"
-      onPress={() => router.push("/account/notifications" as never)}
+      onPress={() => router.push("/(account-modals)/account/notifications")}
     />
   );
 }

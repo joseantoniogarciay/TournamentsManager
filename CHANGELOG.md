@@ -11,8 +11,13 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - Al cerrar una ruta de Cuenta en web, la aplicación vuelve a `/account` incluso
   después de recargar una URL profunda; ya no depende del historial de otra tab.
 
-- Ajustes y Notificaciones conservan sus URLs de Cuenta, pero ahora son modales
-  del stack raíz con cierre mediante X sobre las tabs en web, iOS y Android.
+- En web, volver a pulsar la tab activa reinicia su ruta a la raíz, incluso tras
+  recargar una pantalla profunda que no tiene pila de navegación que vaciar.
+
+- Ajustes y Notificaciones conservan sus URLs de Cuenta y su salida mediante X
+  desde el stack raíz. En web usan la presentación estable de página, para que
+  un cambio de tamaño no sustituya Notificaciones por Ajustes; iOS y Android
+  mantienen el modal nativo.
 
 ### Added
 
