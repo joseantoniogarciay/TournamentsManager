@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
@@ -165,6 +166,35 @@ func (r testRegistrationRepository) FindLocalAccountForLogin(context.Context, st
 }
 func (r testRegistrationRepository) CreateLocalLoginSession(context.Context, string, []byte, []byte) (registration.Session, error) {
 	return r.loginSession, nil
+}
+
+type testFederatedRepository struct{}
+
+func (testFederatedRepository) CreateChallenge(context.Context, []byte, time.Time) (string, error) {
+	return "019abcde-1111-7111-8111-111111111111", nil
+}
+func (testFederatedRepository) AuthenticateGoogle(context.Context, string, []byte, federated.Identity, *federated.Registration, []byte, []byte) (federated.Session, error) {
+	return federated.Session{}, nil
+}
+func (testFederatedRepository) AddGoogleIdentity(context.Context, string, string, []byte, federated.Identity) error {
+	return nil
+}
+func (testFederatedRepository) ReauthenticateGoogle(context.Context, string, string, string, []byte, federated.Identity, []byte) error {
+	return nil
+}
+func (testFederatedRepository) AddGoogleIdentityWithTicket(context.Context, string, string, []byte, federated.Identity, []byte) error {
+	return nil
+}
+
+func TestCreateGoogleChallengeReturnsCreated(t *testing.T) {
+	service := federated.NewService(testFederatedRepository{}, nil)
+	recorder := httptest.NewRecorder()
+
+	createGoogleChallenge(service).ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, "/v1/google-login-challenges", nil))
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusCreated)
+	}
 }
 
 func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
