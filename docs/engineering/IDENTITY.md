@@ -43,12 +43,14 @@ Antes de entregar una credencial Google, el cliente solicita un challenge de
 cinco minutos y usa el nonce devuelto al iniciar Google. El backend consume ese
 challenge una sola vez tras validar el ID token; no es una sesión ni una cuenta.
 
-En desarrollo, el cliente web registra `http://localhost:8082` como origen y
-URI de redirección del cliente OAuth web. iOS y Android usan clientes OAuth
-nativos separados, asociados respectivamente al identificador de bundle o
-paquete y, en Android, a la huella SHA-1 del certificado que firma la build. Los
-IDs de cliente son públicos y se declaran fuera de Git; el backend admite sus
-audiencias mediante `GOOGLE_CLIENT_IDS`.
+Google solo se habilita en los entornos públicos `dev` y `prod`; el entorno
+local no configura clientes ni acepta audiencias Google. El cliente web de
+desarrollo registra `https://dev.fasttourney.com` como origen y URI de
+redirección. iOS y Android usan clientes OAuth nativos separados, asociados
+respectivamente al identificador de bundle o paquete y, en Android, a la huella
+SHA-1 del certificado que firma la build. Los IDs de cliente son públicos: el
+artefacto público de desarrollo los incorpora al exportarse y el backend admite
+sus audiencias mediante `GOOGLE_CLIENT_IDS`.
 ```
 
 El cliente transporta credenciales y usa la sesión resultante. No decide la

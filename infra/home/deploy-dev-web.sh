@@ -32,6 +32,9 @@ EXPO_NO_DOTENV=1 \
 	EXPO_UNSTABLE_WEB_MODAL=1 \
 	EXPO_PUBLIC_API_BASE_URL=https://dev-api.fasttourney.com/v1 \
 	EXPO_PUBLIC_APP_LINK_URL=https://dev.fasttourney.com \
+	EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=267995166257-2favmuuhnu14p9na8le1rlmtpbgcb56g.apps.googleusercontent.com \
+	EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=267995166257-75hpab46tjjbcho5av9d6qfo2s3md80b.apps.googleusercontent.com \
+	EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=267995166257-rlqmqi79b16fddta929ah9o8f6792afc.apps.googleusercontent.com \
 	pnpm --filter @tournaments-manager/client exec expo export --platform web --clear --output-dir "$staging_directory"
 
 api_docs_directory="$staging_directory/api-docs"

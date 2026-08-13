@@ -35,6 +35,7 @@ mismo código y se distinguen mediante `APP_ENV`; el icono compartido es
 pnpm --filter @tournaments-manager/client start:dev
 pnpm --filter @tournaments-manager/client ios:dev
 pnpm --filter @tournaments-manager/client ios:prod
+pnpm --filter @tournaments-manager/client ios:public-dev
 ```
 
 Mientras CNG esté vigente no se crean ni editan targets Xcode versionados. Si
@@ -90,13 +91,16 @@ puede elegir tema claro, oscuro o sistema; la preferencia se guarda localmente y
 no requiere sesión. Las notificaciones no se solicitan todavía: siguen fuera del
 alcance aceptado y el control lo comunica sin simular un permiso del sistema.
 
-El cliente ya declara `expo-auth-session`; los IDs OAuth públicos por plataforma
-se configuran fuera de Git a partir de `.env.example`. Deben pertenecer al mismo
-proyecto Google que las audiencias `GOOGLE_CLIENT_IDS` del backend. Desarrollo
-puede usar la marca **FastTourney** y el correo de la cuenta propietaria como
-usuario de prueba. Antes de producción se sustituye por un correo operativo del
-dominio propio (por ejemplo, `support@fasttourney.com`) y se verifican dominio,
-web y URLs públicas de producto y privacidad.
+El login Google se deshabilita deliberadamente en local: no se declaran clientes
+ni audiencias allí. Los artefactos públicos `dev` y `prod` reciben IDs OAuth
+públicos del mismo proyecto Google que las audiencias `GOOGLE_CLIENT_IDS` de su
+API. El export de desarrollo los inyecta desde
+`infra/home/deploy-dev-web.sh`; para una prueba nativa contra `dev` usa
+`pnpm --filter @tournaments-manager/client ios:public-dev` o
+`pnpm --filter @tournaments-manager/client android:public-dev`. Antes de
+producción se sustituye el contacto por un correo operativo del dominio propio
+(por ejemplo, `support@fasttourney.com`) y se verifican dominio, web y URLs
+públicas de producto y privacidad.
 
 ## Estructura
 
