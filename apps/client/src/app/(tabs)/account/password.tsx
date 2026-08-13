@@ -71,13 +71,12 @@ export default function AccountPasswordScreen() {
       >
         <Card>
           <View style={styles.form}>
-            <Text color="secondary">
-              {t(
-                hasPassword
-                  ? "account_password_change_description"
-                  : "account_password_add_google_description",
-              )}
-            </Text>
+            {hasPassword ? (
+              <Text color="secondary">{t("account_password_change_description")}</Text>
+            ) : null}
+            {hasPassword === false && !googleTicket ? (
+              <Text color="secondary">{t("account_password_add_google_description")}</Text>
+            ) : null}
             {hasPassword ? (
               <TextField
                 autoComplete="current-password"
