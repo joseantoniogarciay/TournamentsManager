@@ -742,6 +742,20 @@ func (r AccountLeagueRepository) ConsumeReauthenticationTicketAndSetPassword(ctx
 	return nil
 }
 
+// ConsumeReauthenticationTicketAndRemovePassword removes the local method only
+// when Google remains available for the same account.
+func (r AccountLeagueRepository) ConsumeReauthenticationTicketAndRemovePassword(ctx context.Context, sessionToken string, ticketHash []byte) error {
+	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
+	rows, err := r.queries.ConsumeReauthenticationTicketAndRemovePassword(ctx, sqlc.ConsumeReauthenticationTicketAndRemovePasswordParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash})
+	if err != nil {
+		return err
+	}
+	if rows != 1 {
+		return pgx.ErrNoRows
+	}
+	return nil
+}
+
 // List returns the requested page of league relationships.
 func (r AccountLeagueRepository) List(ctx context.Context, accountID string, relationship leagues.Relationship, cursor string, limit int) ([]leagues.Item, error) {
 	accountUUID, err := uuidValue(accountID)

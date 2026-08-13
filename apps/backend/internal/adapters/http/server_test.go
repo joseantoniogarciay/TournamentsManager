@@ -185,6 +185,9 @@ func (testFederatedRepository) ReauthenticateGoogle(context.Context, string, str
 func (testFederatedRepository) AddGoogleIdentityWithTicket(context.Context, string, string, []byte, federated.Identity, []byte) error {
 	return nil
 }
+func (testFederatedRepository) RemoveGoogleIdentityWithTicket(context.Context, string, []byte) error {
+	return nil
+}
 
 func TestCreateGoogleChallengeReturnsCreated(t *testing.T) {
 	service := federated.NewService(testFederatedRepository{}, nil)

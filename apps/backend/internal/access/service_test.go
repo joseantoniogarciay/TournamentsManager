@@ -24,6 +24,10 @@ func (r *repositoryStub) ConsumeReauthenticationTicketAndSetPassword(context.Con
 	r.consumed = true
 	return nil
 }
+func (r *repositoryStub) ConsumeReauthenticationTicketAndRemovePassword(context.Context, string, []byte) error {
+	r.consumed = true
+	return nil
+}
 
 func TestReauthenticateWithPasswordVerifiesArgon2id(t *testing.T) {
 	hash, err := registration.HashPassword("correct horse battery staple")
@@ -32,13 +36,13 @@ func TestReauthenticateWithPasswordVerifiesArgon2id(t *testing.T) {
 	}
 	repository := &repositoryStub{passwordHash: hash}
 	service := NewService(repository)
-	if _, _, err := service.ReauthenticateWithPassword(context.Background(), "session", "wrong"); !errors.Is(err, ErrReauthenticationInvalid) {
+	if _, _, err := service.ReauthenticateWithPassword(context.Background(), "session", "wrong", SetLocalPassword); !errors.Is(err, ErrReauthenticationInvalid) {
 		t.Fatalf("wrong password error = %v", err)
 	}
 	if repository.created {
 		t.Fatal("ticket created for wrong password")
 	}
-	if _, _, err := service.ReauthenticateWithPassword(context.Background(), "session", "correct horse battery staple"); err != nil {
+	if _, _, err := service.ReauthenticateWithPassword(context.Background(), "session", "correct horse battery staple", SetLocalPassword); err != nil {
 		t.Fatal(err)
 	}
 	if !repository.created {

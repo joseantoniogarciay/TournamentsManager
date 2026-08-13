@@ -63,6 +63,29 @@ INSERT INTO local_credentials (account_id, password_hash)
 SELECT account_id, $3 FROM consumed
 ON CONFLICT (account_id) DO UPDATE SET password_hash = EXCLUDED.password_hash, updated_at = now();
 
+-- name: ConsumeReauthenticationTicketAndRemovePassword :execrows
+WITH consumed AS (
+    UPDATE reauthentication_tickets AS tickets
+    SET consumed_at = now()
+    FROM sessions
+    WHERE tickets.token_hash = $2
+      AND tickets.session_id = sessions.id
+      AND sessions.token_hash = $1
+      AND sessions.revoked_at IS NULL
+      AND sessions.idle_expires_at > now()
+      AND sessions.absolute_expires_at > now()
+      AND tickets.consumed_at IS NULL
+      AND tickets.expires_at > now()
+    RETURNING tickets.account_id
+)
+DELETE FROM local_credentials
+WHERE account_id IN (SELECT account_id FROM consumed)
+  AND EXISTS (
+      SELECT 1 FROM external_identities
+      WHERE external_identities.account_id = local_credentials.account_id
+        AND external_identities.provider = 'google'
+  );
+
 -- name: ConsumeReauthenticationTicket :one
 UPDATE reauthentication_tickets AS tickets
 SET consumed_at = now()

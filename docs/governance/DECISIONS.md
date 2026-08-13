@@ -142,6 +142,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0091](../adr/0091-separate-local-and-public-development-compose-projects.md)                    | Separar Compose local y de desarrollo público                         | Aceptado              | 2026-08-11 |
 | [0092](../adr/0092-retain-two-recoverable-development-deployments.md)                            | Conservar dos despliegues recuperables de desarrollo                  | Aceptado              | 2026-08-12 |
 | [0093](../adr/0093-use-resend-smtp-for-public-development-email.md)                              | Usar Resend SMTP para el correo del desarrollo público                | Aceptado              | 2026-08-12 |
+| [0094](../adr/0094-manage-removable-account-access-methods.md)                                   | Gestionar métodos de acceso añadibles y eliminables                    | Aceptado              | 2026-08-13 |
 
 ## Trazabilidad de un cambio
 

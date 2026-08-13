@@ -1,10 +1,14 @@
 import {
   createReauthenticationTicket,
+  deleteCurrentAccountLocalCredential,
   getAccessMethods,
   putLocalCredential,
   scheduleAccountDeletion,
 } from "@/api/generated/session/session";
-import { createCurrentAccountGoogleIdentity } from "@/api/generated/federated-identity/federated-identity";
+import {
+  createCurrentAccountGoogleIdentity,
+  deleteCurrentAccountGoogleIdentity,
+} from "@/api/generated/federated-identity/federated-identity";
 import { apiFetch, APIUnexpectedResponseError } from "@/api/fetch";
 
 export async function getAccountAccessMethods() {
@@ -26,19 +30,21 @@ export async function deleteAccount() {
   throw new AccountDeletionError("unexpected");
 }
 
-export async function setAccountPassword(currentPassword: string, password: string) {
-  const ticket = await createReauthenticationTicket(
-    { password: currentPassword },
-    undefined,
-    apiFetch,
-  );
-  if (ticket.status !== 201) throw new APIUnexpectedResponseError(ticket.status);
-  const response = await putLocalCredential(
-    { password, ticket: ticket.data.ticket },
-    undefined,
-    apiFetch,
-  );
+export type ReauthenticationPurpose =
+  "set-local-password" | "link-google" | "unlink-google" | "remove-local-password";
+
+export async function setAccountPassword(ticket: string, password: string) {
+  const response = await putLocalCredential({ password, ticket }, undefined, apiFetch);
   if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
+}
+
+export async function reauthenticateWithPassword(
+  password: string,
+  purpose: ReauthenticationPurpose,
+) {
+  const ticket = await createReauthenticationTicket({ password, purpose }, undefined, apiFetch);
+  if (ticket.status !== 201) throw new APIUnexpectedResponseError(ticket.status);
+  return ticket.data.ticket;
 }
 
 export class GoogleLinkError extends Error {
@@ -47,15 +53,13 @@ export class GoogleLinkError extends Error {
   }
 }
 
-export async function reauthenticateWithPassword(password: string) {
-  const response = await createReauthenticationTicket({ password }, undefined, apiFetch);
-  if (response.status !== 201) throw new GoogleLinkError("expired");
-  return response.data.ticket;
-}
-
-export async function reauthenticateWithGoogle(challengeId: string, idToken: string) {
+export async function reauthenticateWithGoogle(
+  challengeId: string,
+  idToken: string,
+  purpose: ReauthenticationPurpose,
+) {
   const response = await createReauthenticationTicket(
-    { challengeId, idToken },
+    { challengeId, idToken, purpose },
     undefined,
     apiFetch,
   );
@@ -72,4 +76,14 @@ export async function linkGoogle(ticket: string, challengeId: string, idToken: s
   if (response.status === 204) return;
   if (response.status === 409) throw new GoogleLinkError("conflict");
   throw new GoogleLinkError("expired");
+}
+
+export async function unlinkGoogle(ticket: string) {
+  const response = await deleteCurrentAccountGoogleIdentity({ ticket }, undefined, apiFetch);
+  if (response.status !== 204) throw new GoogleLinkError("expired");
+}
+
+export async function removeAccountPassword(ticket: string) {
+  const response = await deleteCurrentAccountLocalCredential({ ticket }, undefined, apiFetch);
+  if (response.status !== 204) throw new GoogleLinkError("expired");
 }

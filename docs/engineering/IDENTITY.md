@@ -209,6 +209,13 @@ guarde contraseñas largas.
 - [OWASP: Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)
 # Métodos de acceso administrados
 
+ADR-0094 completa la gestión de Google y contraseña: una cuenta conserva siempre
+al menos un método. Crear la primera contraseña desde una cuenta solo Google
+requiere una prueba Google reciente; cambiar una contraseña exige una credencial
+actual. Para retirar un método se acredita el otro que permanecerá. Los tickets
+opacos de reautenticación son de un uso, viven cinco minutos y solo autorizan la
+finalidad con que se emitieron.
+
 ADR-0068 separa la sesión de producto de una prueba reciente de posesión. Una
 persona autenticada obtiene un ticket opaco, almacenado únicamente como hash,
 con cinco minutos de vida, ligado a su sesión y consumido por una única

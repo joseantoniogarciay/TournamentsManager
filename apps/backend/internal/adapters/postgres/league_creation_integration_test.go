@@ -505,7 +505,7 @@ func TestIntegrationAccountOptionsRequireSingleUseReauthenticationTicket(t *test
 		t.Fatalf("crear sesión: %v", err)
 	}
 	service := access.NewService(NewAccountLeagueRepository(pool))
-	ticket, _, err := service.ReauthenticateWithPassword(ctx, sessionToken, "old correct password")
+	ticket, _, err := service.ReauthenticateWithPassword(ctx, sessionToken, "old correct password", access.SetLocalPassword)
 	if err != nil {
 		t.Fatalf("reautenticar: %v", err)
 	}
@@ -515,15 +515,15 @@ func TestIntegrationAccountOptionsRequireSingleUseReauthenticationTicket(t *test
 	if err := service.SetPassword(ctx, sessionToken, ticket, "another correct password"); !errors.Is(err, access.ErrReauthenticationInvalid) {
 		t.Fatalf("reutilizar ticket = %v, se esperaba %v", err, access.ErrReauthenticationInvalid)
 	}
-	if _, _, err := service.ReauthenticateWithPassword(ctx, sessionToken, "old correct password"); !errors.Is(err, access.ErrReauthenticationInvalid) {
+	if _, _, err := service.ReauthenticateWithPassword(ctx, sessionToken, "old correct password", access.SetLocalPassword); !errors.Is(err, access.ErrReauthenticationInvalid) {
 		t.Fatalf("reautenticar con contraseña previa = %v, se esperaba %v", err, access.ErrReauthenticationInvalid)
 	}
-	if _, _, err := service.ReauthenticateWithPassword(ctx, sessionToken, "new correct password"); err != nil {
+	if _, _, err := service.ReauthenticateWithPassword(ctx, sessionToken, "new correct password", access.SetLocalPassword); err != nil {
 		t.Fatalf("reautenticar con contraseña cambiada: %v", err)
 	}
 	verifier := &integrationGoogleVerifier{}
 	google := federated.NewService(NewFederatedRepository(pool), verifier)
-	localTicket, _, err := service.ReauthenticateWithPassword(ctx, sessionToken, "new correct password")
+	localTicket, _, err := service.ReauthenticateWithPassword(ctx, sessionToken, "new correct password", access.LinkGoogle)
 	if err != nil {
 		t.Fatalf("reautenticar para vincular Google: %v", err)
 	}
@@ -544,7 +544,7 @@ func TestIntegrationAccountOptionsRequireSingleUseReauthenticationTicket(t *test
 		t.Fatalf("crear challenge para reautenticar con Google: %v", err)
 	}
 	verifier.identity.Nonce = reauthenticationChallenge.Nonce
-	googleTicket, _, err := google.ReauthenticateGoogle(ctx, accountID, sessionToken, reauthenticationChallenge.ID, "google-id-token")
+	googleTicket, _, err := google.ReauthenticateGoogle(ctx, accountID, sessionToken, reauthenticationChallenge.ID, "google-id-token", string(access.RemoveLocalPassword))
 	if err != nil {
 		t.Fatalf("reautenticar con Google vinculada: %v", err)
 	}

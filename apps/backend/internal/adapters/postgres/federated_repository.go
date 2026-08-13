@@ -172,6 +172,20 @@ func (r FederatedRepository) AddGoogleIdentityWithTicket(ctx context.Context, se
 	return tx.Commit(ctx)
 }
 
+// RemoveGoogleIdentityWithTicket deletes Google only when a local credential
+// remains, so the account can never lose its final access method.
+func (r FederatedRepository) RemoveGoogleIdentityWithTicket(ctx context.Context, sessionToken string, ticketHash []byte) error {
+	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
+	rows, err := r.queries.ConsumeReauthenticationTicketAndRemoveGoogle(ctx, sqlc.ConsumeReauthenticationTicketAndRemoveGoogleParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash})
+	if err != nil {
+		return err
+	}
+	if rows != 1 {
+		return pgx.ErrNoRows
+	}
+	return nil
+}
+
 func consumeChallenge(ctx context.Context, queries *sqlc.Queries, challengeID string, nonceHash []byte) error {
 	id, err := parseUUID(challengeID)
 	if err != nil {

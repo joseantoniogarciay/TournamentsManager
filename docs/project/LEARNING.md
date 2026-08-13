@@ -2145,3 +2145,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   Expo Router y el redirect URI es explícito hacia la ruta del recorrido que lo
   inició. La continuación que necesita datos de cuenta se presenta con
   `ModalDialog`, no como una card insertada en la pantalla subyacente.
+
+### 2026-08-13 — Retirar un acceso acredita el que permanece
+
+- **Aprendido:** permitir eliminar el único método de una cuenta convierte una
+  sesión válida en un callejón sin salida. Acreditar el método que permanece
+  protege además contra la retirada de una recuperación por quien solo controla
+  el método que quiere eliminar.
+- **Regla reutilizable:** cada ticket de reautenticación se vincula
+  criptográficamente a una finalidad y es de un uso; el backend comprueba en la
+  misma mutación que sigue existiendo otro método de acceso.

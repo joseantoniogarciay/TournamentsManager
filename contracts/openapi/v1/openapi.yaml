@@ -149,6 +149,19 @@ paths:
         "204": { description: Contraseña local establecida. }
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
+    delete:
+      tags: [Session]
+      operationId: deleteCurrentAccountLocalCredential
+      summary: Elimina la contraseña local tras acreditar Google
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReauthenticationTicketRequest" }
+      responses:
+        "204": { description: Contraseña local eliminada. }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /me/google-identities:
     post:
       tags: [Federated identity]
@@ -165,6 +178,19 @@ paths:
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
         "409": { $ref: "#/components/responses/VerificationConflictProblem" }
+    delete:
+      tags: [Federated identity]
+      operationId: deleteCurrentAccountGoogleIdentity
+      summary: Desvincula Google tras acreditar la contraseña
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReauthenticationTicketRequest" }
+      responses:
+        "204": { description: Google desvinculado. }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /password-resets:
     post:
       tags: [Password recovery]
@@ -1013,6 +1039,7 @@ components:
             google: { type: boolean }
     ReauthenticationRequest:
       type: object
+      required: [purpose]
       oneOf:
         - required: [password]
           properties:
@@ -1021,6 +1048,10 @@ components:
           properties:
             challengeId: { $ref: "#/components/schemas/UUID" }
             idToken: { $ref: "#/components/schemas/OpaqueToken" }
+      properties:
+        purpose:
+          type: string
+          enum: [set-local-password, link-google, unlink-google, remove-local-password]
     ReauthenticationTicket:
       type: object
       required: [ticket, expiresAt]
@@ -1033,6 +1064,11 @@ components:
       properties:
         ticket: { $ref: "#/components/schemas/OpaqueToken" }
         password: { $ref: "#/components/schemas/Password" }
+    ReauthenticationTicketRequest:
+      type: object
+      required: [ticket]
+      properties:
+        ticket: { $ref: "#/components/schemas/OpaqueToken" }
     GoogleIdentityLinkRequest:
       type: object
       required: [ticket, challengeId, idToken]

@@ -45,3 +45,26 @@ RETURNING expires_at;
 
 -- name: FindGoogleIdentityOwner :one
 SELECT account_id FROM external_identities WHERE issuer = $1 AND subject = $2;
+
+-- name: ConsumeReauthenticationTicketAndRemoveGoogle :execrows
+WITH consumed AS (
+    UPDATE reauthentication_tickets AS tickets
+    SET consumed_at = now()
+    FROM sessions
+    WHERE tickets.token_hash = $2
+      AND tickets.session_id = sessions.id
+      AND sessions.token_hash = $1
+      AND sessions.revoked_at IS NULL
+      AND sessions.idle_expires_at > now()
+      AND sessions.absolute_expires_at > now()
+      AND tickets.consumed_at IS NULL
+      AND tickets.expires_at > now()
+    RETURNING tickets.account_id
+)
+DELETE FROM external_identities
+WHERE account_id IN (SELECT account_id FROM consumed)
+  AND provider = 'google'
+  AND EXISTS (
+      SELECT 1 FROM local_credentials
+      WHERE local_credentials.account_id = external_identities.account_id
+  );

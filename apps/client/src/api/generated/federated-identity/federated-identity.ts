@@ -11,6 +11,7 @@ import type {
   GoogleIdentityLinkRequest,
   GoogleLoginChallenge,
   RateLimitProblemResponse,
+  ReauthenticationTicketRequest,
   ServiceUnavailableProblemResponse,
   SessionEstablishment,
   ValidationProblemResponse,
@@ -82,6 +83,60 @@ export const createCurrentAccountGoogleIdentity = async (
     status: res.status,
     headers: res.headers,
   } as createCurrentAccountGoogleIdentityResponse;
+};
+
+export type deleteCurrentAccountGoogleIdentityResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteCurrentAccountGoogleIdentityResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type deleteCurrentAccountGoogleIdentityResponseSuccess =
+  deleteCurrentAccountGoogleIdentityResponse204 & {
+    headers: Headers;
+  };
+export type deleteCurrentAccountGoogleIdentityResponseError =
+  deleteCurrentAccountGoogleIdentityResponse401 & {
+    headers: Headers;
+  };
+
+export type deleteCurrentAccountGoogleIdentityResponse =
+  | deleteCurrentAccountGoogleIdentityResponseSuccess
+  | deleteCurrentAccountGoogleIdentityResponseError;
+
+export const getDeleteCurrentAccountGoogleIdentityUrl = () => {
+  return `/me/google-identities`;
+};
+
+/**
+ * @summary Desvincula Google tras acreditar la contraseña
+ */
+export const deleteCurrentAccountGoogleIdentity = async (
+  reauthenticationTicketRequest: ReauthenticationTicketRequest,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<deleteCurrentAccountGoogleIdentityResponse> => {
+  const res = await (fetchFn ?? fetch)(getDeleteCurrentAccountGoogleIdentityUrl(), {
+    ...options,
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reauthenticationTicketRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: deleteCurrentAccountGoogleIdentityResponse["data"] = body
+    ? JSON.parse(body)
+    : undefined;
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as deleteCurrentAccountGoogleIdentityResponse;
 };
 
 export type createGoogleLoginChallengeResponse201 = {

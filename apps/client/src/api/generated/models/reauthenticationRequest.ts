@@ -7,13 +7,18 @@
  */
 import type { OpaqueToken } from "./opaqueToken.js";
 import type { Password } from "./password.js";
+import type { ReauthenticationRequestPurpose } from "./reauthenticationRequestPurpose.js";
 import type { Uuid } from "./uuid.js";
 
 export type ReauthenticationRequest =
-  | {
+  | ({
       password: Password;
-    }
-  | {
+    } & {
+      purpose: ReauthenticationRequestPurpose;
+    })
+  | ({
       challengeId: Uuid;
       idToken: OpaqueToken;
-    };
+    } & {
+      purpose: ReauthenticationRequestPurpose;
+    });

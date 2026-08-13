@@ -71,10 +71,11 @@ type Repository interface {
 	AddGoogleIdentity(context.Context, string, string, []byte, Identity) error
 	ReauthenticateGoogle(context.Context, string, string, string, []byte, Identity, []byte) error
 	AddGoogleIdentityWithTicket(context.Context, string, string, []byte, Identity, []byte) error
+	RemoveGoogleIdentityWithTicket(context.Context, string, []byte) error
 }
 
 // ReauthenticateGoogle proves an already linked identity and issues a single-use ticket.
-func (s Service) ReauthenticateGoogle(ctx context.Context, accountID, sessionToken, challengeID, idToken string) (string, string, error) {
+func (s Service) ReauthenticateGoogle(ctx context.Context, accountID, sessionToken, challengeID, idToken, purpose string) (string, string, error) {
 	identity, err := s.verify(ctx, idToken)
 	if err != nil {
 		return "", "", err
@@ -83,7 +84,7 @@ func (s Service) ReauthenticateGoogle(ctx context.Context, accountID, sessionTok
 	if err != nil {
 		return "", "", err
 	}
-	ticketDigest := sha256.Sum256([]byte("reauthentication-ticket:" + ticket))
+	ticketDigest := reauthenticationTicketHash(ticket, purpose)
 	challengeHash := sha256.Sum256([]byte("google-login-nonce:" + identity.Nonce))
 	if err := s.repository.ReauthenticateGoogle(ctx, accountID, sessionToken, challengeID, challengeHash[:], identity, ticketDigest[:]); err != nil {
 		return "", "", err
@@ -97,9 +98,20 @@ func (s Service) AddGoogleWithTicket(ctx context.Context, sessionToken, ticket, 
 	if err != nil {
 		return err
 	}
-	ticketHash := sha256.Sum256([]byte("reauthentication-ticket:" + ticket))
+	ticketHash := reauthenticationTicketHash(ticket, "link-google")
 	challengeHash := sha256.Sum256([]byte("google-login-nonce:" + identity.Nonce))
 	return s.repository.AddGoogleIdentityWithTicket(ctx, sessionToken, challengeID, challengeHash[:], identity, ticketHash[:])
+}
+
+// RemoveGoogleWithTicket removes Google only after a ticket established with
+// the local password, preserving that remaining access method.
+func (s Service) RemoveGoogleWithTicket(ctx context.Context, sessionToken, ticket string) error {
+	ticketHash := reauthenticationTicketHash(ticket, "unlink-google")
+	return s.repository.RemoveGoogleIdentityWithTicket(ctx, sessionToken, ticketHash[:])
+}
+
+func reauthenticationTicketHash(ticket, purpose string) [32]byte {
+	return sha256.Sum256([]byte("reauthentication-ticket:" + purpose + ":" + ticket))
 }
 
 // Service coordinates the federated sign-in use case.

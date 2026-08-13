@@ -70,10 +70,12 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 		mux.HandleFunc("POST /v1/google-login-challenges", createGoogleChallenge(*federatedService))
 		mux.HandleFunc("POST /v1/google-sessions", createGoogleSession(*federatedService, cookies))
 		mux.Handle("POST /v1/me/google-identities", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createGoogleIdentity(*federatedService)))))
+		mux.Handle("DELETE /v1/me/google-identities", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteGoogleIdentity(*federatedService)))))
 	} else {
 		mux.HandleFunc("POST /v1/google-login-challenges", unavailableFederatedLogin)
 		mux.HandleFunc("POST /v1/google-sessions", unavailableFederatedLogin)
 		mux.HandleFunc("POST /v1/me/google-identities", unavailableFederatedLogin)
+		mux.HandleFunc("DELETE /v1/me/google-identities", unavailableFederatedLogin)
 	}
 	passwordResetLimiter := newRequestLimiter(10, time.Minute)
 	mux.HandleFunc("POST /v1/password-resets", requestPasswordReset(registrationService, passwordResetLimiter, resolveClientIP))
@@ -86,6 +88,7 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 	mux.Handle("GET /v1/me/access-methods", requireSession(authenticator)(http.HandlerFunc(getAccessMethods(authenticator))))
 	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createReauthenticationTicket(accessService, federatedService)))))
 	mux.Handle("PUT /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(putLocalCredential(accessService)))))
+	mux.Handle("DELETE /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteLocalCredential(accessService)))))
 	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
 	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
 	mux.Handle("GET /v1/me/recent-leagues", requireSession(authenticator)(http.HandlerFunc(listRecentAccountLeagues(leagueService))))
@@ -604,7 +607,10 @@ func searchUsers(service registration.Service, limiter *requestLimiter, resolveC
 	}
 }
 
-type reauthenticationRequest struct{ Password, ChallengeID, IDToken string }
+type reauthenticationRequest struct {
+	Password, ChallengeID, IDToken string
+	Purpose                        access.Purpose
+}
 type localCredentialRequest struct {
 	Ticket   string `json:"ticket"`
 	Password string `json:"password"`
@@ -614,7 +620,7 @@ func createReauthenticationTicket(service access.Service, federatedService *fede
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body reauthenticationRequest
 		credential, ok := sessionToken(r)
-		if !ok || decodeBody(r, &body) != nil || (body.Password == "" && (body.ChallengeID == "" || body.IDToken == "")) || (body.Password != "" && (body.ChallengeID != "" || body.IDToken != "")) {
+		if !ok || decodeBody(r, &body) != nil || !access.IsPurpose(body.Purpose) || (body.Password == "" && (body.ChallengeID == "" || body.IDToken == "")) || (body.Password != "" && (body.ChallengeID != "" || body.IDToken != "")) {
 			writeValidationProblem(w)
 			return
 		}
@@ -625,15 +631,23 @@ func createReauthenticationTicket(service access.Service, federatedService *fede
 				writeValidationProblem(w)
 				return
 			}
-			ticket, expiresAt, err = service.ReauthenticateWithPassword(r.Context(), credential.token, body.Password)
+			if body.Purpose == access.RemoveLocalPassword {
+				writeValidationProblem(w)
+				return
+			}
+			ticket, expiresAt, err = service.ReauthenticateWithPassword(r.Context(), credential.token, body.Password, body.Purpose)
 		} else if federatedService == nil || !uuidPattern.MatchString(body.ChallengeID) {
 			writeValidationProblem(w)
 			return
 		} else {
 			accountID, _ := currentAccountID(r.Context())
-			ticket, expiresAt, err = federatedService.ReauthenticateGoogle(r.Context(), accountID, credential.token, body.ChallengeID, body.IDToken)
+			if body.Purpose != access.SetLocalPassword && body.Purpose != access.RemoveLocalPassword {
+				writeValidationProblem(w)
+				return
+			}
+			ticket, expiresAt, err = federatedService.ReauthenticateGoogle(r.Context(), accountID, credential.token, body.ChallengeID, body.IDToken, string(body.Purpose))
 		}
-		if errors.Is(err, access.ErrReauthenticationInvalid) {
+		if errors.Is(err, access.ErrReauthenticationInvalid) || errors.Is(err, federated.ErrChallengeInvalid) {
 			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		}
@@ -672,6 +686,24 @@ func createGoogleIdentity(service federated.Service) http.HandlerFunc {
 	}
 }
 
+type reauthenticationTicketRequest struct{ Ticket string }
+
+func deleteGoogleIdentity(service federated.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body reauthenticationTicketRequest
+		credential, ok := sessionToken(r)
+		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" {
+			writeValidationProblem(w)
+			return
+		}
+		if err := service.RemoveGoogleWithTicket(r.Context(), credential.token, body.Ticket); err != nil {
+			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
 func putLocalCredential(service access.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body localCredentialRequest
@@ -685,6 +717,22 @@ func putLocalCredential(service access.Service) http.HandlerFunc {
 			return
 		} else if err != nil {
 			writeProblem(w, http.StatusInternalServerError, "Could not change password")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func deleteLocalCredential(service access.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body reauthenticationTicketRequest
+		credential, ok := sessionToken(r)
+		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" {
+			writeValidationProblem(w)
+			return
+		}
+		if err := service.RemovePassword(r.Context(), credential.token, body.Ticket); err != nil {
+			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
