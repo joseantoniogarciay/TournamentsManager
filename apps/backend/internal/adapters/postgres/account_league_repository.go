@@ -21,20 +21,20 @@ import (
 // ErrAccountHasOwnedLeagues indicates that the account still owns one or more leagues.
 var ErrAccountHasOwnedLeagues = errors.New("account has owned leagues")
 
-// AccountLeagueRepository persiste sesiones y relaciones de ligas.
+// AccountLeagueRepository persists sessions and league relationships.
 type AccountLeagueRepository struct {
 	pool    *pgxpool.Pool
 	queries *sqlc.Queries
 }
 
-// NewAccountLeagueRepository construye el adaptador de relaciones de cuenta.
+// NewAccountLeagueRepository builds the account-relationship adapter.
 func NewAccountLeagueRepository(pool *pgxpool.Pool) AccountLeagueRepository {
 	return AccountLeagueRepository{pool: pool, queries: sqlc.New(pool)}
 }
 
-// PurgeExpired elimina un lote de cuentas cuya ventana de baja ha vencido.
-// El CTE bloquea únicamente las cuentas seleccionadas y SKIP LOCKED evita esperar
-// a una transacción concurrente sobre una de ellas.
+// PurgeExpired removes a batch of accounts whose deletion window has expired.
+// The CTE locks only selected accounts, and SKIP LOCKED avoids waiting for a
+// concurrent transaction on one of them.
 func (r AccountLeagueRepository) PurgeExpired(ctx context.Context, limit int) (int64, error) {
 	if limit < 1 {
 		return 0, fmt.Errorf("límite de purga debe ser positivo")
@@ -65,7 +65,7 @@ func (r AccountLeagueRepository) PurgeExpired(ctx context.Context, limit int) (i
 
 var _ accounts.PurgeRepository = AccountLeagueRepository{}
 
-// ScheduleAccountDeletion revoca accesos y relaciones personales sin borrar la cuenta.
+// ScheduleAccountDeletion revokes access and personal relationships without deleting the account.
 func (r AccountLeagueRepository) ScheduleAccountDeletion(ctx context.Context, accountID string) (time.Time, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -98,7 +98,7 @@ func (r AccountLeagueRepository) ScheduleAccountDeletion(ctx context.Context, ac
 	return requested.AddDate(0, 0, 30).UTC(), nil
 }
 
-// Create crea una liga publicada, todavía sin calendario.
+// Create creates a published league without a schedule yet.
 func (r AccountLeagueRepository) Create(ctx context.Context, accountID string, input leagues.CreateInput) (leagues.League, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -126,7 +126,7 @@ func (r AccountLeagueRepository) Create(ctx context.Context, accountID string, i
 	return league, nil
 }
 
-// AddTeam añade un equipo a una liga publicada de su organizadora.
+// AddTeam adds a team to one of its owner's published leagues.
 func (r AccountLeagueRepository) AddTeam(ctx context.Context, accountID, leagueID string, input leagues.TeamInput) (leagues.Team, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -170,7 +170,7 @@ func (r AccountLeagueRepository) AddTeam(ctx context.Context, accountID, leagueI
 	return team, nil
 }
 
-// RemoveTeam elimina un equipo de una liga publicada sin rebajarla de dos inscritos.
+// RemoveTeam removes a team from a published league without reducing it below two entrants.
 func (r AccountLeagueRepository) RemoveTeam(ctx context.Context, accountID, leagueID, teamID string) error {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -217,7 +217,7 @@ func (r AccountLeagueRepository) RemoveTeam(ctx context.Context, accountID, leag
 	return tx.Commit(ctx)
 }
 
-// GetPublic devuelve la proyección visible de una liga ya creada.
+// GetPublic returns the visible projection of an existing league.
 func (r AccountLeagueRepository) GetPublic(ctx context.Context, leagueID string) (leagues.League, error) {
 	league := leagues.League{Teams: []leagues.Team{}, Matches: []leagues.Match{}, ChampionTeamIDs: []string{}}
 	if err := r.pool.QueryRow(ctx, `SELECT id::text, name, sport, format, state, round_robin_legs FROM leagues WHERE id = $1 AND state <> 'draft'`, leagueID).Scan(&league.ID, &league.Name, &league.Sport, &league.Format, &league.State, &league.RoundRobinLegs); errors.Is(err, pgx.ErrNoRows) {
@@ -270,7 +270,7 @@ func (r AccountLeagueRepository) GetPublic(ctx context.Context, leagueID string)
 	return league, matches.Err()
 }
 
-// RecordResult guarda el marcador y una entrada de historial dentro de una única transacción.
+// RecordResult stores the score and a history entry in a single transaction.
 func (r AccountLeagueRepository) RecordResult(ctx context.Context, accountID, leagueID, matchID string, input leagues.MatchResultInput) (leagues.League, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -318,7 +318,7 @@ func (r AccountLeagueRepository) RecordResult(ctx context.Context, accountID, le
 	return r.GetPublic(ctx, leagueID)
 }
 
-// Complete cierra una liga completa y conserva en la misma transacción sus co-campeones.
+// Complete closes a complete league and retains its co-champions in the same transaction.
 func (r AccountLeagueRepository) Complete(ctx context.Context, accountID, leagueID string) (leagues.League, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -403,7 +403,7 @@ func loadLeagueForCompletion(ctx context.Context, tx pgx.Tx, leagueID string, le
 	return league, matches.Err()
 }
 
-// Start congela la configuración y genera una vuelta completa por cada leg.
+// Start freezes configuration and generates a full round for each leg.
 func (r AccountLeagueRepository) Start(ctx context.Context, accountID, leagueID string, input leagues.StartInput) (leagues.League, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -455,7 +455,7 @@ func (r AccountLeagueRepository) Start(ctx context.Context, accountID, leagueID 
 	return r.GetPublic(ctx, leagueID)
 }
 
-// Cancel conserva la liga y sus datos, pero la saca del ciclo deportivo activo.
+// Cancel retains the league and its data but removes it from the active sporting lifecycle.
 func (r AccountLeagueRepository) Cancel(ctx context.Context, accountID, leagueID string) (leagues.League, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -487,7 +487,7 @@ func (r AccountLeagueRepository) Cancel(ctx context.Context, accountID, leagueID
 	return r.GetPublic(ctx, leagueID)
 }
 
-// AssignAdministrator asigna directamente una cuenta verificada por su username público.
+// AssignAdministrator directly assigns a verified account by its public username.
 func (r AccountLeagueRepository) AssignAdministrator(ctx context.Context, accountID, leagueID, username string) error {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -528,7 +528,7 @@ func (r AccountLeagueRepository) AssignAdministrator(ctx context.Context, accoun
 	return tx.Commit(ctx)
 }
 
-// ListNotifications devuelve el buzón interno de la cuenta.
+// ListNotifications returns the account's internal inbox.
 func (r AccountLeagueRepository) ListNotifications(ctx context.Context, accountID string) ([]notifications.Item, error) {
 	rows, err := r.pool.Query(ctx, `SELECT account_notifications.id::text, account_notifications.kind, leagues.id::text, leagues.name, account_notifications.created_at, account_notifications.read_at FROM account_notifications JOIN leagues ON leagues.id = account_notifications.league_id WHERE account_notifications.account_id = $1 ORDER BY account_notifications.created_at DESC, account_notifications.id DESC`, accountID)
 	if err != nil {
@@ -553,32 +553,32 @@ func (r AccountLeagueRepository) ListNotifications(ctx context.Context, accountI
 	return items, rows.Err()
 }
 
-// UnreadCount cuenta los avisos no leídos de la cuenta.
+// UnreadCount counts the account's unread notifications.
 func (r AccountLeagueRepository) UnreadCount(ctx context.Context, accountID string) (int, error) {
 	var count int
 	err := r.pool.QueryRow(ctx, `SELECT count(*) FROM account_notifications WHERE account_id = $1 AND read_at IS NULL`, accountID).Scan(&count)
 	return count, err
 }
 
-// MarkAllRead marca como leídos los avisos pendientes de la cuenta.
+// MarkAllRead marks the account's pending notifications as read.
 func (r AccountLeagueRepository) MarkAllRead(ctx context.Context, accountID string) error {
 	_, err := r.pool.Exec(ctx, `UPDATE account_notifications SET read_at = now() WHERE account_id = $1 AND read_at IS NULL`, accountID)
 	return err
 }
 
-// Delete elimina un aviso que pertenezca a la cuenta.
+// Delete removes a notification owned by the account.
 func (r AccountLeagueRepository) Delete(ctx context.Context, accountID, notificationID string) error {
 	_, err := r.pool.Exec(ctx, `DELETE FROM account_notifications WHERE id = $1 AND account_id = $2`, notificationID, accountID)
 	return err
 }
 
-// DeleteAll elimina todos los avisos de la cuenta.
+// DeleteAll removes all account notifications.
 func (r AccountLeagueRepository) DeleteAll(ctx context.Context, accountID string) error {
 	_, err := r.pool.Exec(ctx, `DELETE FROM account_notifications WHERE account_id = $1`, accountID)
 	return err
 }
 
-// ListAdministrators devuelve las administradoras delegadas, exclusivamente a la organizadora.
+// ListAdministrators returns delegated administrators exclusively to the league owner.
 func (r AccountLeagueRepository) ListAdministrators(ctx context.Context, accountID, leagueID string) ([]string, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -609,7 +609,7 @@ func (r AccountLeagueRepository) ListAdministrators(ctx context.Context, account
 	return administrators, rows.Err()
 }
 
-// RemoveAdministrator retira una administradora delegada exclusivamente a la organizadora.
+// RemoveAdministrator removes a delegated administrator exclusively for the league owner.
 func (r AccountLeagueRepository) RemoveAdministrator(ctx context.Context, accountID, leagueID, username string) error {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -665,7 +665,7 @@ func fixtures(ids []string, legs int) []fixture {
 	return result
 }
 
-// Authenticate resuelve una sesión opaca válida en su cuenta.
+// Authenticate resolves a valid opaque session to its account.
 func (r AccountLeagueRepository) Authenticate(ctx context.Context, token string) (string, error) {
 	hash := sha256.Sum256([]byte("session:" + token))
 	accountID, err := r.queries.FindAuthenticatedAccountID(ctx, hash[:])
@@ -678,7 +678,7 @@ func (r AccountLeagueRepository) Authenticate(ctx context.Context, token string)
 	return uuidString(accountID), nil
 }
 
-// GetCurrentSession devuelve la identidad y vigencia de la sesión presentada.
+// GetCurrentSession returns the identity and validity of the presented session.
 func (r AccountLeagueRepository) GetCurrentSession(ctx context.Context, token string) (leagues.CurrentSession, error) {
 	hash := sha256.Sum256([]byte("session:" + token))
 	row, err := r.queries.GetCurrentSession(ctx, hash[:])
@@ -696,14 +696,14 @@ func (r AccountLeagueRepository) GetCurrentSession(ctx context.Context, token st
 	}, nil
 }
 
-// RevokeSession revoca la sesión presentada y sus refresh tokens de forma idempotente.
+// RevokeSession idempotently revokes the presented session and its refresh tokens.
 func (r AccountLeagueRepository) RevokeSession(ctx context.Context, token string) error {
 	hash := sha256.Sum256([]byte("session:" + token))
 	_, err := r.queries.RevokeSession(ctx, hash[:])
 	return err
 }
 
-// GetAccessMethods devuelve los métodos de acceso configurados para una cuenta.
+// GetAccessMethods returns the access methods configured for an account.
 func (r AccountLeagueRepository) GetAccessMethods(ctx context.Context, accountID string) (leagues.AccessMethods, error) {
 	id, err := uuidValue(accountID)
 	if err != nil {
@@ -716,20 +716,20 @@ func (r AccountLeagueRepository) GetAccessMethods(ctx context.Context, accountID
 	return leagues.AccessMethods{Email: row.Email, Username: row.Username, HasPassword: row.HasPassword, HasGoogle: row.HasGoogle}, nil
 }
 
-// CurrentPasswordHash obtiene el verificador asociado a una sesión activa.
+// CurrentPasswordHash gets the verifier associated with an active session.
 func (r AccountLeagueRepository) CurrentPasswordHash(ctx context.Context, sessionToken string) (string, error) {
 	hash := sha256.Sum256([]byte("session:" + sessionToken))
 	return r.queries.GetCurrentPasswordHash(ctx, hash[:])
 }
 
-// CreateReauthenticationTicket guarda un ticket de reautenticación para una sesión.
+// CreateReauthenticationTicket stores a reauthentication ticket for a session.
 func (r AccountLeagueRepository) CreateReauthenticationTicket(ctx context.Context, sessionToken string, ticketHash []byte) error {
 	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
 	_, err := r.queries.CreateReauthenticationTicket(ctx, sqlc.CreateReauthenticationTicketParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash})
 	return err
 }
 
-// ConsumeReauthenticationTicketAndSetPassword consume el ticket y cambia la contraseña.
+// ConsumeReauthenticationTicketAndSetPassword consumes the ticket and changes the password.
 func (r AccountLeagueRepository) ConsumeReauthenticationTicketAndSetPassword(ctx context.Context, sessionToken string, ticketHash []byte, passwordHash string) error {
 	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
 	rows, err := r.queries.ConsumeReauthenticationTicketAndSetPassword(ctx, sqlc.ConsumeReauthenticationTicketAndSetPasswordParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash, PasswordHash: passwordHash})
@@ -742,7 +742,7 @@ func (r AccountLeagueRepository) ConsumeReauthenticationTicketAndSetPassword(ctx
 	return nil
 }
 
-// List devuelve la página solicitada de relaciones con ligas.
+// List returns the requested page of league relationships.
 func (r AccountLeagueRepository) List(ctx context.Context, accountID string, relationship leagues.Relationship, cursor string, limit int) ([]leagues.Item, error) {
 	accountUUID, err := uuidValue(accountID)
 	if err != nil {
@@ -765,7 +765,7 @@ func (r AccountLeagueRepository) List(ctx context.Context, accountID string, rel
 	return administeredItems(rows), err
 }
 
-// ListRecent devuelve el resumen fijo de relaciones con actividad reciente.
+// ListRecent returns the fixed summary of relationships with recent activity.
 func (r AccountLeagueRepository) ListRecent(ctx context.Context, accountID string) ([]leagues.Item, error) {
 	accountUUID, err := uuidValue(accountID)
 	if err != nil {
@@ -775,7 +775,7 @@ func (r AccountLeagueRepository) ListRecent(ctx context.Context, accountID strin
 	return recentItems(rows), err
 }
 
-// Follow crea la relación de seguimiento cuando la liga es visible.
+// Follow creates the follow relationship when the league is visible.
 func (r AccountLeagueRepository) Follow(ctx context.Context, accountID, leagueID string) (bool, error) {
 	accountUUID, err := uuidValue(accountID)
 	if err != nil {
@@ -792,7 +792,7 @@ func (r AccountLeagueRepository) Follow(ctx context.Context, accountID, leagueID
 	return visible, nil
 }
 
-// Unfollow elimina la relación de seguimiento de forma idempotente.
+// Unfollow idempotently removes the follow relationship.
 func (r AccountLeagueRepository) Unfollow(ctx context.Context, accountID, leagueID string) error {
 	accountUUID, err := uuidValue(accountID)
 	if err != nil {

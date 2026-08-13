@@ -30,7 +30,7 @@ func requireAllowedOrigin(origins []string, next http.Handler) http.Handler {
 			return
 		}
 		if _, allowed := allowedOrigins[origin]; !allowed {
-			writeProblem(writer, http.StatusForbidden, "Origen no permitido")
+			writeProblem(writer, http.StatusForbidden, "Origin is not allowed")
 			return
 		}
 
@@ -42,7 +42,7 @@ func requireAllowedOrigin(origins []string, next http.Handler) http.Handler {
 			return
 		}
 		if !validPreflight(request) {
-			writeProblem(writer, http.StatusForbidden, "Preflight no permitido")
+			writeProblem(writer, http.StatusForbidden, "Preflight request is not allowed")
 			return
 		}
 

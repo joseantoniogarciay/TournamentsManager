@@ -20,6 +20,11 @@ si no resuelve una necesidad actual.
 
 ## Go
 
+- Los comentarios de código y los textos técnicos expuestos por el backend,
+  incluidos los campos `title` de `application/problem+json`, se escriben en
+  inglés. Las localizaciones de producto y el harness de pruebas pueden usar el
+  idioma que necesiten.
+
 El baseline de toolchain está aceptado en
 [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md):
 

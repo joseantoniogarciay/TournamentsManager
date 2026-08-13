@@ -1,4 +1,4 @@
-// Package postgres implementa los detalles de infraestructura PostgreSQL.
+// Package postgres implements PostgreSQL infrastructure details.
 package postgres
 
 import (
@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// NewPool crea un pool y verifica que PostgreSQL acepta conexiones antes de
-// permitir que la API empiece a atender peticiones.
+// NewPool creates a pool and verifies that PostgreSQL accepts connections before
+// allowing the API to start serving requests.
 func NewPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 	poolConfig, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {

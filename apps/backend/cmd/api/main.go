@@ -1,4 +1,4 @@
-// Command api inicia el adaptador HTTP del backend.
+// Command api starts the backend HTTP adapter.
 package main
 
 import (

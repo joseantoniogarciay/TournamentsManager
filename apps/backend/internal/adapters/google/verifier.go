@@ -1,4 +1,4 @@
-// Package google adapta la validación de ID tokens de Google al puerto federado.
+// Package google adapts Google ID token validation to the federated port.
 package google
 
 import (
@@ -11,7 +11,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 )
 
-// Verifier valida ID tokens de Google para las audiencias configuradas.
+// Verifier validates Google ID tokens for the configured audiences.
 type Verifier struct {
 	audiences []string
 	validator tokenValidator
@@ -27,12 +27,12 @@ func (defaultTokenValidator) Validate(ctx context.Context, raw, audience string)
 	return idtoken.Validate(ctx, raw, audience)
 }
 
-// NewVerifier construye un verificador limitado a las audiencias permitidas.
+// NewVerifier builds a verifier limited to the allowed audiences.
 func NewVerifier(audiences []string) Verifier {
 	return Verifier{audiences: audiences, validator: defaultTokenValidator{}}
 }
 
-// Verify transforma un ID token Google validado en la identidad del dominio.
+// Verify transforms a validated Google ID token into the domain identity.
 func (v Verifier) Verify(ctx context.Context, raw string) (federated.Identity, error) {
 	var payload *idtoken.Payload
 	var err error

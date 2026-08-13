@@ -9,49 +9,49 @@ import (
 )
 
 var (
-	// ErrInvalidLeagueInput indica datos de creación o inicio inválidos.
+	// ErrInvalidLeagueInput indicates invalid creation or start data.
 	ErrInvalidLeagueInput = errors.New("liga inválida")
-	// ErrLeagueForbidden indica que la cuenta no organiza la liga.
+	// ErrLeagueForbidden indicates that the account does not organize the league.
 	ErrLeagueForbidden = errors.New("liga no autorizada")
-	// ErrLeagueConflict indica que la transición de inicio no es válida.
+	// ErrLeagueConflict indicates that the start transition is invalid.
 	ErrLeagueConflict = errors.New("liga no se puede iniciar")
-	// ErrLeagueCancellationConflict indica que la liga no puede cancelarse desde su estado actual.
+	// ErrLeagueCancellationConflict indicates that the league cannot be cancelled from its current state.
 	ErrLeagueCancellationConflict = errors.New("liga no se puede cancelar")
-	// ErrLeagueAdministratorConflict indica que no se puede asignar la administración solicitada.
+	// ErrLeagueAdministratorConflict indicates that the requested administrator assignment is invalid.
 	ErrLeagueAdministratorConflict = errors.New("administradora de liga inválida")
-	// ErrLeagueTeamConflict indica que la composición ya no admite el equipo solicitado.
+	// ErrLeagueTeamConflict indicates that the roster cannot accept the requested team.
 	ErrLeagueTeamConflict = errors.New("equipo de liga inválido")
-	// ErrMatchResultForbidden indica que la cuenta no administra resultados de la liga.
+	// ErrMatchResultForbidden indicates that the account does not administer league results.
 	ErrMatchResultForbidden = errors.New("resultado no autorizado")
-	// ErrMatchResultConflict indica que la liga no admite resultados en su estado actual.
+	// ErrMatchResultConflict indicates that the league cannot accept results in its current state.
 	ErrMatchResultConflict = errors.New("resultado no se puede registrar")
-	// ErrLeagueCompletionConflict indica que la liga no puede cerrarse todavía.
+	// ErrLeagueCompletionConflict indicates that the league cannot be completed yet.
 	ErrLeagueCompletionConflict = errors.New("liga no se puede finalizar")
 )
 
-// TeamInput representa un equipo enviado durante la creación.
+// TeamInput represents a team submitted during creation.
 type TeamInput struct{ Name string }
 
-// CreateInput reúne los datos mínimos de una liga publicada.
+// CreateInput contains the minimum data for a published league.
 type CreateInput struct {
 	Name  string
 	Teams []TeamInput
 }
 
-// StartInput fija las reglas que se congelan al iniciar.
+// StartInput defines the rules frozen when the league starts.
 type StartInput struct{ RoundRobinLegs int }
 
-// MatchResultInput representa el marcador simple de fútbol.
+// MatchResultInput represents a simple football score.
 type MatchResultInput struct{ HomeScore, AwayScore int }
 
-// Team representa un equipo persistido de una liga.
+// Team represents a persisted league team.
 type Team struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Position int    `json:"position"`
 }
 
-// Match representa un partido generado de una liga.
+// Match represents a generated league match.
 type Match struct {
 	ID          string `json:"id"`
 	RoundNumber int    `json:"round"`
@@ -63,7 +63,7 @@ type Match struct {
 	AwayScore   *int   `json:"awayScore,omitempty"`
 }
 
-// League es la proyección de una liga visible.
+// League is the projection of a visible league.
 type League struct {
 	ID              string     `json:"id"`
 	Name            string     `json:"name"`
@@ -77,7 +77,7 @@ type League struct {
 	ChampionTeamIDs []string   `json:"championTeamIds"`
 }
 
-// Standing es una fila calculada por el dominio, no un dato introducido por la clientela.
+// Standing is a domain-calculated row, not data entered by clients.
 type Standing struct {
 	Position       int    `json:"position"`
 	TeamID         string `json:"teamId"`
@@ -91,7 +91,7 @@ type Standing struct {
 	Points         int    `json:"points"`
 }
 
-// CreationRepository persiste y consulta el ciclo inicial de una liga.
+// CreationRepository persists and queries a league's initial lifecycle.
 type CreationRepository interface {
 	Create(context.Context, string, CreateInput) (League, error)
 	AddTeam(context.Context, string, string, TeamInput) (Team, error)
@@ -106,7 +106,7 @@ type CreationRepository interface {
 	GetPublic(context.Context, string) (League, error)
 }
 
-// AddTeam incorpora un equipo mientras la liga siga sin empezar.
+// AddTeam adds a team while the league remains unstarted.
 func (s CreationService) AddTeam(ctx context.Context, accountID, leagueID string, input TeamInput) (Team, error) {
 	name := strings.TrimSpace(input.Name)
 	if name == "" || len(name) > 100 {
@@ -115,20 +115,20 @@ func (s CreationService) AddTeam(ctx context.Context, accountID, leagueID string
 	return s.repository.AddTeam(ctx, accountID, leagueID, TeamInput{Name: name})
 }
 
-// RemoveTeam elimina un equipo solo mientras la composición conserve el mínimo válido.
+// RemoveTeam removes a team only while the roster retains the valid minimum.
 func (s CreationService) RemoveTeam(ctx context.Context, accountID, leagueID, teamID string) error {
 	return s.repository.RemoveTeam(ctx, accountID, leagueID, teamID)
 }
 
-// CreationService coordina creación, consulta e inicio de ligas.
+// CreationService coordinates league creation, retrieval, and start.
 type CreationService struct{ repository CreationRepository }
 
-// NewCreationService construye el caso de uso de creación de ligas.
+// NewCreationService builds the league-creation use case.
 func NewCreationService(repository CreationRepository) CreationService {
 	return CreationService{repository: repository}
 }
 
-// Create valida y persiste una liga publicada sin calendario.
+// Create validates and persists a published league without a schedule.
 func (s CreationService) Create(ctx context.Context, accountID string, input CreateInput) (League, error) {
 	if !validCreateInput(input) {
 		return League{}, ErrInvalidLeagueInput
@@ -137,7 +137,7 @@ func (s CreationService) Create(ctx context.Context, accountID string, input Cre
 	return s.withStandings(league), err
 }
 
-// Start valida la configuración final y genera el calendario de la liga.
+// Start validates the final configuration and generates the league schedule.
 func (s CreationService) Start(ctx context.Context, accountID, leagueID string, input StartInput) (League, error) {
 	if input.RoundRobinLegs != 1 && input.RoundRobinLegs != 2 {
 		return League{}, ErrInvalidLeagueInput
@@ -146,13 +146,13 @@ func (s CreationService) Start(ctx context.Context, accountID, leagueID string, 
 	return s.withStandings(league), err
 }
 
-// Cancel conserva una liga visible, pero impide que continúe su ciclo deportivo.
+// Cancel keeps a league visible but prevents its sporting lifecycle from continuing.
 func (s CreationService) Cancel(ctx context.Context, accountID, leagueID string) (League, error) {
 	league, err := s.repository.Cancel(ctx, accountID, leagueID)
 	return s.withStandings(league), err
 }
 
-// AssignAdministrator asigna directamente una cuenta verificada identificada por username.
+// AssignAdministrator directly assigns a verified account identified by username.
 func (s CreationService) AssignAdministrator(ctx context.Context, accountID, leagueID, username string) error {
 	if !usernamePattern.MatchString(username) {
 		return ErrInvalidLeagueInput
@@ -160,12 +160,12 @@ func (s CreationService) AssignAdministrator(ctx context.Context, accountID, lea
 	return s.repository.AssignAdministrator(ctx, accountID, leagueID, username)
 }
 
-// ListAdministrators devuelve las cuentas delegadas que la organizadora puede gestionar.
+// ListAdministrators returns the delegated accounts the league owner can manage.
 func (s CreationService) ListAdministrators(ctx context.Context, accountID, leagueID string) ([]string, error) {
 	return s.repository.ListAdministrators(ctx, accountID, leagueID)
 }
 
-// RemoveAdministrator retira una administración delegada identificada por username.
+// RemoveAdministrator removes a delegated administrator identified by username.
 func (s CreationService) RemoveAdministrator(ctx context.Context, accountID, leagueID, username string) error {
 	if !usernamePattern.MatchString(username) {
 		return ErrInvalidLeagueInput
@@ -173,7 +173,7 @@ func (s CreationService) RemoveAdministrator(ctx context.Context, accountID, lea
 	return s.repository.RemoveAdministrator(ctx, accountID, leagueID, username)
 }
 
-// RecordResult aplica o corrige inmediatamente un marcador de una cuenta autorizada.
+// RecordResult immediately applies or corrects a score from an authorized account.
 func (s CreationService) RecordResult(ctx context.Context, accountID, leagueID, matchID string, input MatchResultInput) (League, error) {
 	if input.HomeScore < 0 || input.AwayScore < 0 {
 		return League{}, ErrInvalidLeagueInput
@@ -182,7 +182,7 @@ func (s CreationService) RecordResult(ctx context.Context, accountID, leagueID, 
 	return s.withStandings(league), err
 }
 
-// Complete cierra explícitamente la liga y hace oficiales sus co-campeones.
+// Complete explicitly closes the league and makes its co-champions official.
 func (s CreationService) Complete(ctx context.Context, accountID, leagueID string) (League, error) {
 	league, err := s.repository.Complete(ctx, accountID, leagueID)
 	return s.withStandings(league), err
@@ -190,7 +190,7 @@ func (s CreationService) Complete(ctx context.Context, accountID, leagueID strin
 
 var usernamePattern = regexp.MustCompile(`^[a-z0-9_]{3,30}$`)
 
-// GetPublic devuelve la proyección pública de una liga visible.
+// GetPublic returns the public projection of a visible league.
 func (s CreationService) GetPublic(ctx context.Context, leagueID string) (League, error) {
 	league, err := s.repository.GetPublic(ctx, leagueID)
 	return s.withStandings(league), err
@@ -260,13 +260,12 @@ func calculateStandings(league League) []Standing {
 	return ordered
 }
 
-// CalculateStandings expone la proyección de dominio para operaciones atómicas de cierre.
+// CalculateStandings exposes the domain projection for atomic completion operations.
 func CalculateStandings(league League) []Standing { return calculateStandings(league) }
 
 func rankTiedStandings(group []Standing, league League) []Standing {
-	// La mini-clasificación considera a todo el grupo empatado, no solo a la
-	// pareja que el algoritmo esté comparando. Así el desempate es consistente
-	// también con tres o más equipos.
+	// The mini-table considers the whole tied group, not just the pair that the
+	// algorithm compares. This keeps tiebreaking consistent with three or more teams.
 	head := headToHead(group, league.Matches)
 	sort.SliceStable(group, func(i, j int) bool {
 		left, right := group[i], group[j]

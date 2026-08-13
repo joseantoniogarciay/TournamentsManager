@@ -35,16 +35,16 @@ func requireSession(authenticator sessionAuthenticator) func(http.Handler) http.
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			credential, ok := sessionToken(request)
 			if !ok {
-				writeProblem(writer, http.StatusUnauthorized, "Sesión no válida")
+				writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 				return
 			}
 			accountID, err := authenticator.Authenticate(request.Context(), credential.token)
 			if err != nil {
 				if errors.Is(err, leagues.ErrUnauthenticated) {
-					writeProblem(writer, http.StatusUnauthorized, "Sesión no válida")
+					writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 					return
 				}
-				writeProblem(writer, http.StatusInternalServerError, "No se pudo validar la sesión")
+				writeProblem(writer, http.StatusInternalServerError, "Could not validate session")
 				return
 			}
 			requestContext := context.WithValue(request.Context(), accountContextKey{}, accountID)

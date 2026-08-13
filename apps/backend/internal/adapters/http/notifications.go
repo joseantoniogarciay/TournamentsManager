@@ -15,12 +15,12 @@ func listNotifications(service notifications.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountNotificationID(r)
 		if !ok {
-			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		items, err := service.List(r.Context(), accountID)
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudieron consultar las notificaciones")
+			writeProblem(w, http.StatusInternalServerError, "Could not retrieve notifications")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -31,12 +31,12 @@ func unreadNotificationCount(service notifications.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountNotificationID(r)
 		if !ok {
-			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		count, err := service.UnreadCount(r.Context(), accountID)
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo consultar el contador")
+			writeProblem(w, http.StatusInternalServerError, "Could not retrieve unread count")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -47,11 +47,11 @@ func markAllNotificationsRead(service notifications.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountNotificationID(r)
 		if !ok {
-			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		if err := service.MarkAllRead(r.Context(), accountID); err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudieron marcar las notificaciones")
+			writeProblem(w, http.StatusInternalServerError, "Could not mark notifications as read")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -61,11 +61,11 @@ func deleteAllNotifications(service notifications.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountNotificationID(r)
 		if !ok {
-			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		if err := service.DeleteAll(r.Context(), accountID); err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudieron eliminar las notificaciones")
+			writeProblem(w, http.StatusInternalServerError, "Could not delete notifications")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -75,11 +75,11 @@ func deleteNotification(service notifications.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountNotificationID(r)
 		if !ok {
-			writeProblem(w, http.StatusUnauthorized, "Sesión no válida")
+			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
 		if err := service.Delete(r.Context(), accountID, r.PathValue("notificationId")); err != nil {
-			writeProblem(w, http.StatusInternalServerError, "No se pudo eliminar la notificación")
+			writeProblem(w, http.StatusInternalServerError, "Could not delete notification")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

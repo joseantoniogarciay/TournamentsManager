@@ -1,4 +1,4 @@
-// Package registration contiene el caso de uso de alta local.
+// Package registration contains the local registration use case.
 package registration
 
 import (
@@ -14,16 +14,16 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-// ErrVerificationInvalid indica un token vencido, usado o inválido.
+// ErrVerificationInvalid indicates an expired, used, or invalid token.
 var ErrVerificationInvalid = errors.New("verificación inválida")
 
-// ErrRefreshInvalid indica un refresh vencido, revocado, usado o inválido.
+// ErrRefreshInvalid indicates an expired, revoked, used, or invalid refresh token.
 var ErrRefreshInvalid = errors.New("refresh inválido")
 
-// ErrPasswordResetInvalid indica un token de restablecimiento inválido, vencido o consumido.
+// ErrPasswordResetInvalid indicates an invalid, expired, or consumed reset token.
 var ErrPasswordResetInvalid = errors.New("restablecimiento inválido")
 
-// ErrLoginInvalid no distingue email, contraseña ni estado para evitar enumerar cuentas.
+// ErrLoginInvalid does not distinguish email, password, or state to prevent account enumeration.
 var ErrLoginInvalid = errors.New("credenciales inválidas")
 
 const (
@@ -33,21 +33,21 @@ const (
 	passwordKeyLength   = 32
 )
 
-// Locale identifica una preferencia de idioma admitida para la cuenta.
+// Locale identifies an account's supported language preference.
 type Locale string
 
 const (
-	// LocaleSpanish representa español.
+	// LocaleSpanish represents Spanish.
 	LocaleSpanish Locale = "es"
-	// LocaleEnglish representa inglés.
+	// LocaleEnglish represents English.
 	LocaleEnglish Locale = "en"
-	// LocaleItalian representa italiano.
+	// LocaleItalian represents Italian.
 	LocaleItalian Locale = "it"
-	// LocaleFrench representa francés.
+	// LocaleFrench represents French.
 	LocaleFrench Locale = "fr"
 )
 
-// Input es la información validada que recibe el caso de uso.
+// Input is the validated information received by the use case.
 type Input struct {
 	Email    string
 	Locale   Locale
@@ -56,13 +56,13 @@ type Input struct {
 	Draft    *Draft
 }
 
-// Draft representa un borrador completo que cruza la frontera del alta.
+// Draft represents a complete draft crossing the registration boundary.
 type Draft struct {
 	Name  string
 	Teams []string
 }
 
-// Repository persiste la cuenta pendiente, su credencial y su verificación.
+// Repository persists the pending account, its credential, and its verification.
 type Repository interface {
 	CreatePending(context.Context, Input, string, []byte) (bool, error)
 	IsUsernameAvailable(context.Context, string) (bool, error)
@@ -77,14 +77,14 @@ type Repository interface {
 	RenewLoginVerification(context.Context, string, []byte) (string, Locale, error)
 }
 
-// LocalAccount reúne los datos de una cuenta necesarios para la autenticación local.
+// LocalAccount contains the account data required for local authentication.
 type LocalAccount struct {
 	ID, Email, Username, PasswordHash string
 	Locale                            Locale
 	Verified                          bool
 }
 
-// LoginResult comunica una sesión creada o la renovación de una verificación pendiente.
+// LoginResult communicates a created session or a pending verification renewal.
 type LoginResult struct {
 	Session Session
 	Pending bool
@@ -92,7 +92,7 @@ type LoginResult struct {
 	Refresh string
 }
 
-// Login verifica una credencial local y crea una sesión, o reenvía la verificación pendiente.
+// Login verifies a local credential and creates a session, or renews pending verification.
 func (s Service) Login(ctx context.Context, email, password string) (LoginResult, error) {
 	account, err := s.repository.FindLocalAccountForLogin(ctx, strings.TrimSpace(email))
 	if err != nil || !VerifyPassword(password, account.PasswordHash) {
@@ -129,7 +129,7 @@ func (s Service) Login(ctx context.Context, email, password string) (LoginResult
 	return LoginResult{Session: session, Access: accessToken, Refresh: refreshToken}, nil
 }
 
-// Refresh rota un refresh opaco y emite los siguientes tokens de la sesión.
+// Refresh rotates an opaque refresh token and issues the next session tokens.
 func (s Service) Refresh(ctx context.Context, token string) (Session, string, string, error) {
 	access, refresh := make([]byte, 32), make([]byte, 32)
 	if _, err := rand.Read(access); err != nil {
@@ -149,19 +149,19 @@ func (s Service) Refresh(ctx context.Context, token string) (Session, string, st
 	return session, accessToken, refreshToken, nil
 }
 
-// Session describe una sesión creada durante la verificación.
+// Session describes a session created during verification.
 type Session struct {
 	AccountID, Username             string
 	IdleExpiresAt, RefreshExpiresAt string
 }
 
-// Mailer entrega el enlace de verificación mediante el adaptador configurado.
+// Mailer delivers the verification link through the configured adapter.
 type Mailer interface {
 	SendVerification(context.Context, string, Locale, string) error
 	SendPasswordReset(context.Context, string, Locale, string) error
 }
 
-// Verify consume una verificación y crea una sesión opaca.
+// Verify consumes a verification and creates an opaque session.
 func (s Service) Verify(ctx context.Context, token, previousSessionToken string) (Session, string, string, error) {
 	verificationHash := sha256.Sum256([]byte("registration-verification:" + token))
 	secret := make([]byte, 32)
@@ -188,30 +188,30 @@ func (s Service) Verify(ctx context.Context, token, previousSessionToken string)
 	return session, sessionToken, refreshToken, nil
 }
 
-// Service coordina el alta sin revelar si un email ya está registrado.
+// Service coordinates registration without disclosing whether an email is already registered.
 type Service struct {
 	repository Repository
 	mailer     Mailer
 }
 
-// NewService construye el caso de uso con sus puertos explícitos.
+// NewService builds the use case with its explicit ports.
 func NewService(repository Repository, mailer Mailer) Service {
 	return Service{repository: repository, mailer: mailer}
 }
 
-// UsernameAvailable consulta la disponibilidad actual sin reservar el nombre.
-// El alta sigue siendo la autoridad para garantizar la unicidad bajo concurrencia.
+// UsernameAvailable checks current availability without reserving the username.
+// Registration remains the authority that guarantees uniqueness under concurrency.
 func (s Service) UsernameAvailable(ctx context.Context, username string) (bool, error) {
 	return s.repository.IsUsernameAvailable(ctx, username)
 }
 
-// SearchUsernames devuelve usernames públicos de cuentas verificadas.
+// SearchUsernames returns public usernames from verified accounts.
 func (s Service) SearchUsernames(ctx context.Context, query string) ([]string, error) {
 	return s.repository.SearchUsernames(ctx, query)
 }
 
-// Register crea una cuenta pendiente. La respuesta no diferencia un email ya
-// existente para no convertir el endpoint en un oráculo de cuentas.
+// Register creates a pending account. Its response does not distinguish an existing
+// email to prevent the endpoint from becoming an account oracle.
 func (s Service) Register(ctx context.Context, input Input) error {
 	passwordHash, err := HashPassword(input.Password)
 	if err != nil {
@@ -236,7 +236,7 @@ func (s Service) Register(ctx context.Context, input Input) error {
 	return nil
 }
 
-// RequestPasswordReset crea y entrega un enlace sin revelar si el email existe.
+// RequestPasswordReset creates and delivers a link without disclosing whether the email exists.
 func (s Service) RequestPasswordReset(ctx context.Context, email string) error {
 	token, hash, err := newPasswordResetToken()
 	if err != nil {
@@ -252,7 +252,7 @@ func (s Service) RequestPasswordReset(ctx context.Context, email string) error {
 	return s.mailer.SendPasswordReset(ctx, recipient, locale, token)
 }
 
-// InspectPasswordReset obtiene el email de un enlace válido sin consumirlo.
+// InspectPasswordReset gets the email from a valid link without consuming it.
 func (s Service) InspectPasswordReset(ctx context.Context, token string) (string, error) {
 	hash := sha256.Sum256([]byte("password-reset:" + token))
 	email, err := s.repository.InspectPasswordReset(ctx, hash[:])
@@ -262,7 +262,7 @@ func (s Service) InspectPasswordReset(ctx context.Context, token string) (string
 	return email, nil
 }
 
-// ResetPassword consume el enlace, cambia la credencial y emite una sesión nueva.
+// ResetPassword consumes the link, changes the credential, and issues a new session.
 func (s Service) ResetPassword(ctx context.Context, token, password string) (Session, string, string, error) {
 	passwordHash, err := HashPassword(password)
 	if err != nil {
@@ -285,7 +285,7 @@ func (s Service) ResetPassword(ctx context.Context, token, password string) (Ses
 	return session, accessToken, refreshToken, nil
 }
 
-// HashPassword crea un verificador Argon2id con los parámetros vigentes.
+// HashPassword creates an Argon2id verifier with the current parameters.
 func HashPassword(password string) (string, error) {
 	salt := make([]byte, 16)
 	if _, err := rand.Read(salt); err != nil {
@@ -295,8 +295,8 @@ func HashPassword(password string) (string, error) {
 	return fmt.Sprintf("$argon2id$v=19$m=%d,t=%d,p=%d$%s$%s", passwordMemory, passwordIterations, passwordParallelism, base64.RawStdEncoding.EncodeToString(salt), base64.RawStdEncoding.EncodeToString(hash)), nil
 }
 
-// VerifyPassword compara una contraseña con un verificador Argon2id vigente.
-// Un formato desconocido se considera una credencial inválida, no un error interno.
+// VerifyPassword compares a password with a current Argon2id verifier.
+// An unknown format is considered an invalid credential, not an internal error.
 func VerifyPassword(password, encoded string) bool {
 	parts := strings.Split(encoded, "$")
 	if len(parts) != 6 || parts[1] != "argon2id" || parts[2] != "v=19" {
@@ -340,7 +340,7 @@ func newPasswordResetToken() (string, []byte, error) {
 	return token, hash[:], nil
 }
 
-// NormalizeInput aplica las normalizaciones aceptadas antes de persistir.
+// NormalizeInput applies the accepted normalizations before persistence.
 func NormalizeInput(input Input) Input {
 	input.Email = strings.TrimSpace(input.Email)
 	input.Username = strings.TrimSpace(input.Username)
@@ -353,7 +353,7 @@ func NormalizeInput(input Input) Input {
 	return input
 }
 
-// IsSupportedLocale indica si el locale puede persistirse y seleccionar contenido localizado.
+// IsSupportedLocale reports whether a locale can be persisted and select localized content.
 func IsSupportedLocale(locale Locale) bool {
 	switch locale {
 	case LocaleSpanish, LocaleEnglish, LocaleItalian, LocaleFrench:

@@ -1,4 +1,4 @@
-// Package config carga y valida la configuración de ejecución de la API.
+// Package config loads and validates API runtime configuration.
 package config
 
 import (
@@ -22,7 +22,7 @@ const (
 	trustedProxyCIDRsEnv  = "TRUSTED_PROXY_CIDRS"
 )
 
-// Config contiene únicamente la configuración necesaria para arrancar la API.
+// Config contains only the configuration needed to start the API.
 type Config struct {
 	DatabaseURL        string
 	HTTPAddr           string
@@ -37,8 +37,8 @@ type Config struct {
 	TrustedProxyCIDRs  []netip.Prefix
 }
 
-// Load obtiene la configuración desde el entorno y falla antes de abrir puertos
-// o conexiones cuando falta un valor obligatorio.
+// Load gets configuration from the environment and fails before opening ports
+// or connections when a required value is missing.
 func Load() (Config, error) {
 	return load(os.Getenv)
 }

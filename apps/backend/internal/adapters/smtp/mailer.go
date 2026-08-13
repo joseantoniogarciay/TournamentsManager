@@ -1,4 +1,4 @@
-// Package smtp entrega correo mediante SMTP.
+// Package smtp delivers email through SMTP.
 package smtp
 
 import (
@@ -17,7 +17,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
-// Mailer es el adaptador SMTP del correo de verificación local.
+// Mailer is the SMTP adapter for local verification email.
 type Mailer struct {
 	address  string
 	from     string
@@ -27,8 +27,8 @@ type Mailer struct {
 	baseURL  *url.URL
 }
 
-// NewMailer construye un adaptador SMTP. Con credenciales exige STARTTLS antes
-// de autenticarse; sin ellas conserva el recorrido local de Mailpit.
+// NewMailer builds an SMTP adapter. With credentials, it requires STARTTLS before
+// authentication; without them, it preserves the local Mailpit flow.
 func NewMailer(address, from, username, password, baseURL string) (Mailer, error) {
 	parsedURL, err := url.Parse(baseURL)
 	if err != nil || parsedURL.Host == "" || !validPublicURL(parsedURL) {
@@ -44,8 +44,8 @@ func NewMailer(address, from, username, password, baseURL string) (Mailer, error
 	return Mailer{address: address, from: from, username: username, password: password, host: host, baseURL: parsedURL}, nil
 }
 
-// SendVerification entrega un enlace HTTPS que la persona confirma explícitamente
-// en el cliente. El GET nunca modifica el estado de la cuenta.
+// SendVerification delivers an HTTPS link that the person explicitly confirms in
+// the client. GET never changes account state.
 func (m Mailer) SendVerification(ctx context.Context, recipient string, locale registration.Locale, token string) error {
 	if err := ctx.Err(); err != nil {
 		return err
@@ -66,7 +66,7 @@ func (m Mailer) SendVerification(ctx context.Context, recipient string, locale r
 	return nil
 }
 
-// SendPasswordReset entrega un enlace de un solo uso para elegir una contraseña nueva.
+// SendPasswordReset delivers a single-use link to choose a new password.
 func (m Mailer) SendPasswordReset(ctx context.Context, recipient string, locale registration.Locale, token string) error {
 	if err := ctx.Err(); err != nil {
 		return err

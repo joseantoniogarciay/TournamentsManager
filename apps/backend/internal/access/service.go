@@ -1,4 +1,4 @@
-// Package access coordina la reautenticación y los cambios de credenciales locales.
+// Package access coordinates reauthentication and local credential changes.
 package access
 
 import (
@@ -12,23 +12,23 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
-// ErrReauthenticationInvalid indica que la credencial o el ticket no son válidos.
+// ErrReauthenticationInvalid indicates that the credential or ticket is invalid.
 var ErrReauthenticationInvalid = errors.New("reautenticación inválida")
 
-// Repository define la persistencia necesaria para reautenticar y cambiar contraseñas.
+// Repository defines the persistence required to reauthenticate and change passwords.
 type Repository interface {
 	CurrentPasswordHash(context.Context, string) (string, error)
 	CreateReauthenticationTicket(context.Context, string, []byte) error
 	ConsumeReauthenticationTicketAndSetPassword(context.Context, string, []byte, string) error
 }
 
-// Service coordina la reautenticación y los cambios de contraseña locales.
+// Service coordinates reauthentication and local password changes.
 type Service struct{ repository Repository }
 
-// NewService construye el servicio de acceso con la persistencia indicada.
+// NewService builds the access service with the given persistence.
 func NewService(repository Repository) Service { return Service{repository: repository} }
 
-// ReauthenticateWithPassword valida la contraseña y emite un ticket de corta duración.
+// ReauthenticateWithPassword validates the password and issues a short-lived ticket.
 func (s Service) ReauthenticateWithPassword(ctx context.Context, sessionToken, password string) (string, string, error) {
 	stored, err := s.repository.CurrentPasswordHash(ctx, sessionToken)
 	if err != nil || !registration.VerifyPassword(password, stored) {
@@ -44,7 +44,7 @@ func (s Service) ReauthenticateWithPassword(ctx context.Context, sessionToken, p
 	return ticket, time.Now().Add(5 * time.Minute).UTC().Format(time.RFC3339Nano), nil
 }
 
-// SetPassword consume un ticket de reautenticación y actualiza la contraseña.
+// SetPassword consumes a reauthentication ticket and updates the password.
 func (s Service) SetPassword(ctx context.Context, sessionToken, ticket, password string) error {
 	hash := sha256.Sum256([]byte("reauthentication-ticket:" + ticket))
 	passwordHash, err := registration.HashPassword(password)
