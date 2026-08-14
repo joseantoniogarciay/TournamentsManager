@@ -19,6 +19,8 @@ var (
 	ErrLeagueCancellationConflict = errors.New("liga no se puede cancelar")
 	// ErrLeagueAdministratorConflict indicates that the requested administrator assignment is invalid.
 	ErrLeagueAdministratorConflict = errors.New("administradora de liga inválida")
+	// ErrLeagueOwnershipTransferConflict indicates that the requested ownership transfer is invalid.
+	ErrLeagueOwnershipTransferConflict = errors.New("transferencia de propiedad inválida")
 	// ErrLeagueTeamConflict indicates that the roster cannot accept the requested team.
 	ErrLeagueTeamConflict = errors.New("equipo de liga inválido")
 	// ErrLeagueWithdrawalConflict indicates that a team cannot be withdrawn now.
@@ -105,6 +107,7 @@ type CreationRepository interface {
 	AssignAdministrator(context.Context, string, string, string) error
 	ListAdministrators(context.Context, string, string) ([]string, error)
 	RemoveAdministrator(context.Context, string, string, string) error
+	TransferOwnership(context.Context, string, string, string) error
 	RecordResult(context.Context, string, string, string, MatchResultInput) (League, error)
 	Complete(context.Context, string, string) (League, error)
 	GetPublic(context.Context, string) (League, error)
@@ -181,6 +184,14 @@ func (s CreationService) RemoveAdministrator(ctx context.Context, accountID, lea
 		return ErrInvalidLeagueInput
 	}
 	return s.repository.RemoveAdministrator(ctx, accountID, leagueID, username)
+}
+
+// TransferOwnership immediately changes the league organizer to another verified account.
+func (s CreationService) TransferOwnership(ctx context.Context, accountID, leagueID, username string) error {
+	if !usernamePattern.MatchString(username) {
+		return ErrInvalidLeagueInput
+	}
+	return s.repository.TransferOwnership(ctx, accountID, leagueID, username)
 }
 
 // RecordResult immediately applies or corrects a score from an authorized account.

@@ -2194,3 +2194,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** un parche crítico autorizado actualiza toolchain,
   imagen de compilación y documentación en el mismo cambio; `make verify` debe
   confirmar el parche antes de promoverlo.
+
+### 2026-08-14 — La transferencia conserva la competición, no la autoridad anterior
+
+- **Aprendido:** cambiar la propiedad de una competición compartida no exige
+  reconstruir partidos, resultados ni administraciones; exige serializar y
+  autorizar el cambio en la misma transacción que reemplaza a la organizadora.
+- **Regla reutilizable:** una transferencia inmediata elimina expresamente los
+  privilegios de la persona anterior y limpia la delegación de la destinataria
+  si ya existía. Cuando la acción cierra un modal, `showAfterNavigation()`
+  espera al host de la `Screen` destino antes de presentar su confirmación.

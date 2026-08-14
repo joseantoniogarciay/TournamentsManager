@@ -5,10 +5,8 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
+import type { Username } from "./username.js";
 
-export type NotificationKind = (typeof NotificationKind)[keyof typeof NotificationKind];
-
-export const NotificationKind = {
-  league_administrator_assigned: "league_administrator_assigned",
-  league_ownership_transferred: "league_ownership_transferred",
-} as const;
+export interface LeagueOwnershipTransferRequest {
+  username: Username;
+}

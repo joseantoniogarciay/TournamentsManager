@@ -23,6 +23,7 @@ export * from "./googleLoginChallenge.js";
 export * from "./inspectPasswordResetLinkBody.js";
 export * from "./leagueAdministrators.js";
 export * from "./leagueInput.js";
+export * from "./leagueOwnershipTransferRequest.js";
 export * from "./leagueRelationshipFilter.js";
 export * from "./leagueStanding.js";
 export * from "./leagueTeam.js";

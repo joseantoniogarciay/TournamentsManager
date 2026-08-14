@@ -859,6 +859,32 @@ paths:
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
         "403": { description: La sesión no pertenece a la organizadora. }
         "404": { description: La liga no existe. }
+  /leagues/{leagueId}/transfer:
+    post:
+      tags: [Leagues]
+      operationId: transferLeagueOwnership
+      summary: Transfiere la propiedad de una liga a otra cuenta
+      description: >-
+        Exige sesión de la organizadora. La transferencia es inmediata y
+        atómica; la destinataria debe ser una cuenta verificada distinta.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LeagueOwnershipTransferRequest" }
+      responses:
+        "204": { description: Propiedad transferida. }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga o la cuenta no existe. }
+        "409": { description: La organizadora no puede transferirse la liga a sí misma. }
 components:
   securitySchemes:
     sessionCookie:
@@ -940,7 +966,7 @@ components:
       required: [id, kind, leagueId, leagueName, createdAt, readAt]
       properties:
         id: { $ref: "#/components/schemas/UUID" }
-        kind: { type: string, enum: [league_administrator_assigned] }
+        kind: { type: string, enum: [league_administrator_assigned, league_ownership_transferred] }
         leagueId: { $ref: "#/components/schemas/UUID" }
         leagueName: { type: string }
         createdAt: { type: string, format: date-time }
@@ -1111,6 +1137,11 @@ components:
     LeagueRelationshipFilter:
       type: string
       enum: [administered, followed]
+    LeagueOwnershipTransferRequest:
+      type: object
+      required: [username]
+      properties:
+        username: { $ref: "#/components/schemas/Username" }
     AccountLeagueRelationship:
       type: string
       enum: [organizer, delegated, follower]

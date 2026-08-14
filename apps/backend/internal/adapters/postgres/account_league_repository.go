@@ -714,6 +714,47 @@ func (r AccountLeagueRepository) RemoveAdministrator(ctx context.Context, accoun
 	return tx.Commit(ctx)
 }
 
+// TransferOwnership atomically replaces the organizer while preserving the competition.
+func (r AccountLeagueRepository) TransferOwnership(ctx context.Context, accountID, leagueID, username string) error {
+	account, err := uuidValue(accountID)
+	if err != nil {
+		return err
+	}
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var organizer string
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer); errors.Is(err, pgx.ErrNoRows) {
+		return leagues.ErrLeagueNotFound
+	} else if err != nil {
+		return err
+	}
+	if organizer != account.String() {
+		return leagues.ErrLeagueForbidden
+	}
+	var recipient string
+	if err := tx.QueryRow(ctx, `SELECT id::text FROM accounts WHERE username = $1 AND state = 'verified'`, username).Scan(&recipient); errors.Is(err, pgx.ErrNoRows) {
+		return leagues.ErrLeagueNotFound
+	} else if err != nil {
+		return err
+	}
+	if recipient == organizer {
+		return leagues.ErrLeagueOwnershipTransferConflict
+	}
+	if _, err := tx.Exec(ctx, `UPDATE leagues SET organizer_account_id = $2, last_activity_at = now() WHERE id = $1`, leagueID, recipient); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM league_administrators WHERE league_id = $1 AND account_id = $2`, leagueID, recipient); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO account_notifications (account_id, kind, league_id) VALUES ($1, 'league_ownership_transferred', $2)`, recipient, leagueID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
 type fixture struct {
 	round, sequence int
 	home, away      string
