@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
 import {
+  LeagueUnavailableError,
   listLeagueAdministratorUsernames,
   removeLeagueAdministratorRequest,
 } from "@/features/league-creation/api";
@@ -37,6 +38,7 @@ export default function LeagueAdministratorsScreen() {
   const { loadLeague, refreshLeague } = useLeagueStore();
   const [administrators, setAdministrators] = useState<string[]>();
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
+  const [leagueUnavailable, setLeagueUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [removingUsername, setRemovingUsername] = useState<string>();
 
@@ -49,13 +51,18 @@ export default function LeagueAdministratorsScreen() {
       setAdministrators(undefined);
       setIsLoading(true);
       setLoadErrorMessage(undefined);
+      setLeagueUnavailable(false);
       void Promise.all([
         force ? refreshLeague(id) : loadLeague(id),
         listLeagueAdministratorUsernames(id),
       ])
         .then(([, nextAdministrators]) => setAdministrators(nextAdministrators))
         .catch((error) => {
-          setLoadErrorMessage(t(getRequestFailure(error).messageKey));
+          const unavailable = error instanceof LeagueUnavailableError;
+          setLeagueUnavailable(unavailable);
+          setLoadErrorMessage(
+            t(unavailable ? "league_unavailable" : getRequestFailure(error).messageKey),
+          );
         })
         .finally(() => setIsLoading(false));
     },
@@ -69,6 +76,13 @@ export default function LeagueAdministratorsScreen() {
       return;
     }
     router.replace(id ? `/league/${id}` : "/");
+  };
+  const closeUnavailable = () => {
+    if (router.canDismiss()) {
+      router.dismiss();
+      return;
+    }
+    router.replace("/");
   };
   const remove = async (username: string) => {
     if (!id || removingUsername) return;
@@ -164,10 +178,10 @@ export default function LeagueAdministratorsScreen() {
       <Screen bottomInset="none" topInset="navigation-bar">
         {loadErrorMessage ? (
           <RequestErrorCard
-            actionLabel={t("common_retry")}
-            loading={isLoading}
+            actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}
+            loading={leagueUnavailable ? false : isLoading}
             message={loadErrorMessage}
-            onRetry={() => load(true)}
+            onRetry={leagueUnavailable ? closeUnavailable : () => load(true)}
           />
         ) : administrators === undefined ? (
           <LoadingTransition active message={t("common_loading")} />

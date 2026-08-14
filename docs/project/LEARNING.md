@@ -2178,10 +2178,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Aprendido:** un banner no basta cuando el error impide montar todo el
   contenido: se desvanece mientras la pantalla permanece aparentemente cargando.
 - **Regla reutilizable:** `RequestErrorCard` presenta el mensaje seguro ya
-  clasificado y un reintento localizado para cargas terminales. Las rutas que
-  sí tienen contenido conservan el banner global para evitar crear dos patrones
-  de error equivalentes. Mientras esa carga está en curso, `LoadingTransition`
-  centra el progreso sobre la ruta; nunca se usa una card de «Cargando».
+  clasificado y un reintento localizado cuando este puede recuperar la carga.
+  Si la feature conoce un `404` terminal, ofrece cierre y conserva el contexto
+  de navegación: en móvil descarta el modal y en inicio en frío usa el fallback
+  seguro. Las rutas que sí tienen contenido conservan el banner global para
+  evitar crear dos patrones de error equivalentes. Mientras esa carga está en
+  curso, `LoadingTransition` centra el progreso sobre la ruta; nunca se usa una
+  card de «Cargando».
 
 ### 2026-08-14 — Un parche de seguridad alcanzable se promociona sin espera
 

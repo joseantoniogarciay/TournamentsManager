@@ -17,6 +17,7 @@ import { control, radius, space } from "@tournaments-manager/design-tokens";
 import {
   addLeagueTeamRequest,
   getLeagueRelationship,
+  LeagueUnavailableError,
   removeLeagueTeamRequest,
   withdrawLeagueTeamRequest,
 } from "@/features/league-creation/api";
@@ -52,6 +53,7 @@ export default function LeagueTeamsScreen() {
   const { loadLeague, refreshLeague, updateLeague } = useLeagueStore();
   const [relationship, setRelationship] = useState<string>();
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
+  const [leagueUnavailable, setLeagueUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
@@ -66,10 +68,15 @@ export default function LeagueTeamsScreen() {
       }
       setIsLoading(true);
       setLoadErrorMessage(undefined);
+      setLeagueUnavailable(false);
       try {
         await (force ? refreshLeague(id) : loadLeague(id));
       } catch (error) {
-        setLoadErrorMessage(t(getRequestFailure(error).messageKey));
+        const unavailable = error instanceof LeagueUnavailableError;
+        setLeagueUnavailable(unavailable);
+        setLoadErrorMessage(
+          t(unavailable ? "league_unavailable" : getRequestFailure(error).messageKey),
+        );
       } finally {
         setIsLoading(false);
       }
@@ -100,6 +107,13 @@ export default function LeagueTeamsScreen() {
       return;
     }
     router.replace(id ? `/league/${id}` : "/");
+  };
+  const closeUnavailable = () => {
+    if (router.canDismiss()) {
+      router.dismiss();
+      return;
+    }
+    router.replace("/");
   };
   const dismissDialog = () => {
     if (saving) return;
@@ -220,10 +234,10 @@ export default function LeagueTeamsScreen() {
         {!league ? (
           loadErrorMessage ? (
             <RequestErrorCard
-              actionLabel={t("common_retry")}
-              loading={isLoading}
+              actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}
+              loading={leagueUnavailable ? false : isLoading}
               message={loadErrorMessage}
-              onRetry={() => void load(true)}
+              onRetry={leagueUnavailable ? closeUnavailable : () => void load(true)}
             />
           ) : (
             <LoadingTransition active message={t("common_loading")} />

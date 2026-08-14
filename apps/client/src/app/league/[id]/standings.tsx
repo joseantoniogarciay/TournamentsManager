@@ -5,6 +5,7 @@ import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
 import type { PublicLeague } from "@/api/generated/models";
+import { LeagueUnavailableError } from "@/features/league-creation/api";
 import { useLeague, useLeagueStore } from "@/features/league-creation/league-store";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
@@ -27,6 +28,7 @@ export default function LeagueStandingsScreen() {
   const league = useLeague(id);
   const { loadLeague, refreshLeague } = useLeagueStore();
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
+  const [leagueUnavailable, setLeagueUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [informationVisible, setInformationVisible] = useState(false);
   const [statisticsContentWidth, setStatisticsContentWidth] = useState(0);
@@ -41,10 +43,15 @@ export default function LeagueStandingsScreen() {
       }
       setIsLoading(true);
       setLoadErrorMessage(undefined);
+      setLeagueUnavailable(false);
       try {
         await (force ? refreshLeague(id) : loadLeague(id));
       } catch (error) {
-        setLoadErrorMessage(t(getRequestFailure(error).messageKey));
+        const unavailable = error instanceof LeagueUnavailableError;
+        setLeagueUnavailable(unavailable);
+        setLoadErrorMessage(
+          t(unavailable ? "league_unavailable" : getRequestFailure(error).messageKey),
+        );
       } finally {
         setIsLoading(false);
       }
@@ -62,6 +69,13 @@ export default function LeagueStandingsScreen() {
       return;
     }
     router.replace(id ? `/league/${id}` : "/");
+  };
+  const closeUnavailable = () => {
+    if (router.canDismiss()) {
+      router.dismiss();
+      return;
+    }
+    router.replace("/");
   };
   const navigationButton = (
     <NavigationHeaderButton
@@ -118,10 +132,10 @@ export default function LeagueStandingsScreen() {
         {!league ? (
           loadErrorMessage ? (
             <RequestErrorCard
-              actionLabel={t("common_retry")}
-              loading={isLoading}
+              actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}
+              loading={leagueUnavailable ? false : isLoading}
               message={loadErrorMessage}
-              onRetry={() => void load(true)}
+              onRetry={leagueUnavailable ? closeUnavailable : () => void load(true)}
             />
           ) : (
             <LoadingTransition active message={t("common_loading")} />

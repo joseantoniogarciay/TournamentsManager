@@ -165,6 +165,7 @@
   "home_recent_leagues_empty": "Votre activité récente apparaîtra ici lorsque vous aurez créé ou suivi un tournoi.",
   "league_create_title": "Créer un championnat",
   "league_title": "Tournoi",
+  "league_unavailable": "Ce tournoi n’est plus disponible.",
   "league_name_label": "Nom du championnat",
   "league_team_label": "Équipe {number}",
   "league_add_team": "Ajouter une équipe",
