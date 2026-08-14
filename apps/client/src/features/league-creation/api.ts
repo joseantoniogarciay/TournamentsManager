@@ -14,7 +14,13 @@ import {
   startLeague,
   withdrawLeagueTeam,
 } from "@/api/generated/leagues/leagues";
-import type { LeagueInput, StartLeagueRequest, TeamInput, Username } from "@/api/generated/models";
+import type {
+  LeagueInput,
+  PublicLeague,
+  StartLeagueRequest,
+  TeamInput,
+  Username,
+} from "@/api/generated/models";
 import { searchUsers } from "@/api/generated/users/users";
 
 export class UserSearchRateLimitedError extends Error {
@@ -26,6 +32,13 @@ export class UserSearchRateLimitedError extends Error {
 export class LeagueAdministratorConflictError extends Error {
   constructor() {
     super("Conflicto al asignar administradora de liga");
+  }
+}
+
+/** La proyección pública ya no está disponible; reintentar no puede recuperarla. */
+export class LeagueUnavailableError extends Error {
+  constructor() {
+    super("Liga no disponible");
   }
 }
 
@@ -75,6 +88,7 @@ export async function assignLeagueAdministratorRequest(leagueID: string, usernam
 }
 export async function listLeagueAdministratorUsernames(leagueID: string) {
   const response = await listLeagueAdministrators(leagueID, undefined, authenticatedApiFetch);
+  if (response.status === 404) throw new LeagueUnavailableError();
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   return response.data.usernames;
 }
@@ -95,8 +109,10 @@ export async function searchPublicUsernames(query: string, signal: AbortSignal) 
 }
 export async function getLeague(leagueID: string) {
   const response = await getPublicLeague(leagueID, undefined, apiFetch);
-  if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  return response.data;
+  const status = (response as { status: number }).status;
+  if (status === 200) return response.data as PublicLeague;
+  if (status === 404) throw new LeagueUnavailableError();
+  throw new APIUnexpectedResponseError(status);
 }
 export async function getLeagueRelationship(leagueID: string) {
   const response = await listCurrentAccountLeagues(

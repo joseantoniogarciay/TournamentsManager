@@ -12,6 +12,7 @@ import {
   cancelLeagueRequest,
   completeLeagueRequest,
   getLeagueRelationship,
+  LeagueUnavailableError,
   startLeagueRequest,
 } from "@/features/league-creation/api";
 import { useLeague, useLeagueStore } from "@/features/league-creation/league-store";
@@ -49,6 +50,7 @@ export default function LeagueScreen() {
   const { loadLeague, putLeague, refreshLeague } = useLeagueStore();
   const [relationship, setRelationship] = useState<string>();
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
+  const [leagueUnavailable, setLeagueUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [roundRobinLegs, setRoundRobinLegs] = useState<1 | 2>(1);
@@ -68,10 +70,15 @@ export default function LeagueScreen() {
       }
       setIsLoading(true);
       setLoadErrorMessage(undefined);
+      setLeagueUnavailable(false);
       try {
         await (force ? refreshLeague(id) : loadLeague(id));
       } catch (error) {
-        setLoadErrorMessage(t(getRequestFailure(error).messageKey));
+        const unavailable = error instanceof LeagueUnavailableError;
+        setLeagueUnavailable(unavailable);
+        setLoadErrorMessage(
+          t(unavailable ? "league_unavailable" : getRequestFailure(error).messageKey),
+        );
       } finally {
         setIsLoading(false);
       }
@@ -231,10 +238,10 @@ export default function LeagueScreen() {
         <Screen topInset="navigation-bar">
           {loadErrorMessage ? (
             <RequestErrorCard
-              actionLabel={t("common_retry")}
-              loading={isLoading}
+              actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}
+              loading={leagueUnavailable ? false : isLoading}
               message={loadErrorMessage}
-              onRetry={() => void load(true)}
+              onRetry={leagueUnavailable ? returnToPreviousScreen : () => void load(true)}
             />
           ) : (
             <LoadingTransition active message={t("common_loading")} />

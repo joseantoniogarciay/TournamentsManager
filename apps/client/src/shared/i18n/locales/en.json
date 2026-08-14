@@ -165,6 +165,7 @@
   "home_recent_leagues_empty": "Your recent activity will appear here once you have created or followed a tournament.",
   "league_create_title": "Create league",
   "league_title": "Tournament",
+  "league_unavailable": "This tournament is no longer available.",
   "league_name_label": "League name",
   "league_team_label": "Team {number}",
   "league_add_team": "Add team",
