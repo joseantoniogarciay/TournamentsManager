@@ -96,6 +96,7 @@ type LeagueTeam struct {
 	Name           string
 	NameNormalized string
 	Position       int32
+	WithdrawnAt    pgtype.Timestamptz
 }
 
 type LocalCredential struct {

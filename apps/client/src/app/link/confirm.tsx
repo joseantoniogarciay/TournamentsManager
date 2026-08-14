@@ -12,7 +12,7 @@ import {
 import { usePendingVerification } from "@/features/registration/pending-verification";
 import { getTranslator } from "@/shared/i18n/locale";
 import { useSession } from "@/shared/session/session-provider";
-import { Button, Card, Screen, Text } from "@/shared/ui";
+import { Button, Card, LoadingTransition, Screen, Text } from "@/shared/ui";
 
 const minimumConfirmationTransitionDuration = 2_000;
 
@@ -128,11 +128,7 @@ export default function LinkConfirmationScreen() {
 function VerificationState({ message }: { message: string }) {
   return (
     <Screen>
-      <View style={styles.content}>
-        <Card>
-          <Text color="secondary">{message}</Text>
-        </Card>
-      </View>
+      <LoadingTransition active message={message} />
     </Screen>
   );
 }

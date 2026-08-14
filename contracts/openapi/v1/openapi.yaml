@@ -679,6 +679,35 @@ paths:
         "403": { description: La sesión no pertenece a la organizadora. }
         "404": { description: La liga o el equipo no existe. }
         "409": { description: "La liga ya se inició o solo conserva dos equipos." }
+  /leagues/{leagueId}/teams/{teamId}/withdraw:
+    post:
+      tags: [Leagues]
+      operationId: withdrawLeagueTeam
+      summary: Declara la baja de un equipo en una liga en curso
+      description: >-
+        Exige sesión de la organizadora y una liga en curso. Conserva el equipo
+        y todos los partidos como historial de la competición; cada uno pasa a
+        3-0 a favor de su rival y se registra el cambio.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: leagueId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: teamId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Baja aplicada y proyección pública actualizada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicLeague" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: La liga o el equipo no existe. }
+        "409": { description: La liga no está en curso o el equipo ya fue retirado. }
   /leagues/{leagueId}/cancel:
     post:
       tags: [Leagues]
@@ -1191,10 +1220,13 @@ components:
         points: { type: integer, minimum: 0 }
     LeagueTeam:
       type: object
-      required: [id, name]
+      required: [id, name, withdrawn]
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
+        withdrawn:
+          type: boolean
+          description: Indica que la organizadora declaró su baja durante la liga en curso.
     Match:
       type: object
       required: [id, round, sequence, homeTeamId, awayTeamId, state]

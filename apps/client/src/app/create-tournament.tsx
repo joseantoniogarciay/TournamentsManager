@@ -8,6 +8,7 @@ import { createLeagueRequest } from "@/features/league-creation/api";
 import {
   clearLocalLeagueDraft,
   getLocalLeagueDraft,
+  maximumLeagueNameLength,
   maximumLeagueTeams,
   saveLocalLeagueDraft,
 } from "@/features/league-creation/draft";
@@ -49,7 +50,11 @@ export default function CreateTournamentScreen() {
 
   const normalizedTeamValues = teams.map((team) => team.trim());
   const normalizedTeams = normalizedTeamValues.filter(Boolean);
-  const nameError = !name.trim() ? t("league_name_required") : undefined;
+  const nameError = !name.trim()
+    ? t("league_name_required")
+    : name.length > maximumLeagueNameLength
+      ? t("league_name_too_long")
+      : undefined;
   const teamsError =
     normalizedTeams.length < 2 ||
     new Set(normalizedTeams.map((team) => team.toLowerCase())).size !== normalizedTeams.length
@@ -147,6 +152,7 @@ export default function CreateTournamentScreen() {
               <TextField
                 error={nameError}
                 label={t("league_name_label")}
+                maxLength={maximumLeagueNameLength}
                 onChangeText={setName}
                 validationSubmitted={submitted}
                 validationTrigger="blur"

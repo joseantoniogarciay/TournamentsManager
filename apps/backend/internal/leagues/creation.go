@@ -21,6 +21,8 @@ var (
 	ErrLeagueAdministratorConflict = errors.New("administradora de liga inválida")
 	// ErrLeagueTeamConflict indicates that the roster cannot accept the requested team.
 	ErrLeagueTeamConflict = errors.New("equipo de liga inválido")
+	// ErrLeagueWithdrawalConflict indicates that a team cannot be withdrawn now.
+	ErrLeagueWithdrawalConflict = errors.New("equipo no se puede retirar")
 	// ErrMatchResultForbidden indicates that the account does not administer league results.
 	ErrMatchResultForbidden = errors.New("resultado no autorizado")
 	// ErrMatchResultConflict indicates that the league cannot accept results in its current state.
@@ -46,9 +48,10 @@ type MatchResultInput struct{ HomeScore, AwayScore int }
 
 // Team represents a persisted league team.
 type Team struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Position int    `json:"position"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Position  int    `json:"position"`
+	Withdrawn bool   `json:"withdrawn"`
 }
 
 // Match represents a generated league match.
@@ -96,6 +99,7 @@ type CreationRepository interface {
 	Create(context.Context, string, CreateInput) (League, error)
 	AddTeam(context.Context, string, string, TeamInput) (Team, error)
 	RemoveTeam(context.Context, string, string, string) error
+	WithdrawTeam(context.Context, string, string, string) (League, error)
 	Start(context.Context, string, string, StartInput) (League, error)
 	Cancel(context.Context, string, string) (League, error)
 	AssignAdministrator(context.Context, string, string, string) error
@@ -118,6 +122,12 @@ func (s CreationService) AddTeam(ctx context.Context, accountID, leagueID string
 // RemoveTeam removes a team only while the roster retains the valid minimum.
 func (s CreationService) RemoveTeam(ctx context.Context, accountID, leagueID, teamID string) error {
 	return s.repository.RemoveTeam(ctx, accountID, leagueID, teamID)
+}
+
+// WithdrawTeam applies the accepted 3-0 rule to every match of a withdrawn team.
+func (s CreationService) WithdrawTeam(ctx context.Context, accountID, leagueID, teamID string) (League, error) {
+	league, err := s.repository.WithdrawTeam(ctx, accountID, leagueID, teamID)
+	return s.withStandings(league), err
 }
 
 // CreationService coordinates league creation, retrieval, and start.

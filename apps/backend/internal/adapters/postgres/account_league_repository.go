@@ -225,14 +225,14 @@ func (r AccountLeagueRepository) GetPublic(ctx context.Context, leagueID string)
 	} else if err != nil {
 		return leagues.League{}, err
 	}
-	teams, err := r.pool.Query(ctx, `SELECT id::text, name, position FROM league_teams WHERE league_id = $1 ORDER BY position`, leagueID)
+	teams, err := r.pool.Query(ctx, `SELECT id::text, name, position, withdrawn_at IS NOT NULL FROM league_teams WHERE league_id = $1 ORDER BY position`, leagueID)
 	if err != nil {
 		return leagues.League{}, err
 	}
 	defer teams.Close()
 	for teams.Next() {
 		var team leagues.Team
-		if err := teams.Scan(&team.ID, &team.Name, &team.Position); err != nil {
+		if err := teams.Scan(&team.ID, &team.Name, &team.Position, &team.Withdrawn); err != nil {
 			return leagues.League{}, err
 		}
 		league.Teams = append(league.Teams, team)
@@ -268,6 +268,85 @@ func (r AccountLeagueRepository) GetPublic(ctx context.Context, leagueID string)
 		league.Matches = append(league.Matches, match)
 	}
 	return league, matches.Err()
+}
+
+// WithdrawTeam keeps the roster for historical standings and assigns each opponent a 3-0 win.
+func (r AccountLeagueRepository) WithdrawTeam(ctx context.Context, accountID, leagueID, teamID string) (leagues.League, error) {
+	account, err := uuidValue(accountID)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var organizer, state string
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
+		return leagues.League{}, leagues.ErrLeagueNotFound
+	} else if err != nil {
+		return leagues.League{}, err
+	}
+	if organizer != account.String() {
+		return leagues.League{}, leagues.ErrLeagueForbidden
+	}
+	if state != "in_progress" {
+		return leagues.League{}, leagues.ErrLeagueWithdrawalConflict
+	}
+	var withdrawn bool
+	if err := tx.QueryRow(ctx, `SELECT withdrawn_at IS NOT NULL FROM league_teams WHERE league_id = $1 AND id = $2 FOR UPDATE`, leagueID, teamID).Scan(&withdrawn); errors.Is(err, pgx.ErrNoRows) {
+		return leagues.League{}, leagues.ErrLeagueNotFound
+	} else if err != nil {
+		return leagues.League{}, err
+	}
+	if withdrawn {
+		return leagues.League{}, leagues.ErrLeagueWithdrawalConflict
+	}
+	rows, err := tx.Query(ctx, `SELECT id::text, home_team_id::text, home_score, away_score FROM matches WHERE league_id = $1 AND (home_team_id = $2 OR away_team_id = $2) FOR UPDATE`, leagueID, teamID)
+	if err != nil {
+		return leagues.League{}, err
+	}
+	defer rows.Close()
+	type scoreChange struct {
+		id                         string
+		homeID                     string
+		previousHome, previousAway *int
+	}
+	changes := []scoreChange{}
+	for rows.Next() {
+		var change scoreChange
+		if err := rows.Scan(&change.id, &change.homeID, &change.previousHome, &change.previousAway); err != nil {
+			return leagues.League{}, err
+		}
+		changes = append(changes, change)
+	}
+	if err := rows.Err(); err != nil {
+		return leagues.League{}, err
+	}
+	for _, change := range changes {
+		var homeScore, awayScore int
+		if change.homeID == teamID {
+			homeScore, awayScore = 0, 3
+		} else {
+			homeScore, awayScore = 3, 0
+		}
+		if _, err := tx.Exec(ctx, `UPDATE matches SET state = 'completed', home_score = $2, away_score = $3 WHERE id = $1`, change.id, homeScore, awayScore); err != nil {
+			return leagues.League{}, err
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO match_result_changes (match_id, changed_by_account_id, previous_home_score, previous_away_score, home_score, away_score) VALUES ($1, $2, $3, $4, $5, $6)`, change.id, account, change.previousHome, change.previousAway, homeScore, awayScore); err != nil {
+			return leagues.League{}, err
+		}
+	}
+	if _, err := tx.Exec(ctx, `UPDATE league_teams SET withdrawn_at = now() WHERE league_id = $1 AND id = $2`, leagueID, teamID); err != nil {
+		return leagues.League{}, err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE leagues SET last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
+		return leagues.League{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return leagues.League{}, err
+	}
+	return r.GetPublic(ctx, leagueID)
 }
 
 // RecordResult stores the score and a history entry in a single transaction.

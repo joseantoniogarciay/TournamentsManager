@@ -75,6 +75,8 @@ type testCreationRepository struct {
 	team              leagues.Team
 	teamErr           error
 	removeErr         error
+	withdrawn         leagues.League
+	withdrawErr       error
 	result            leagues.League
 	resultErr         error
 	completed         leagues.League
@@ -91,6 +93,10 @@ func (r testCreationRepository) AddTeam(context.Context, string, string, leagues
 
 func (r testCreationRepository) RemoveTeam(context.Context, string, string, string) error {
 	return r.removeErr
+}
+
+func (r testCreationRepository) WithdrawTeam(context.Context, string, string, string) (leagues.League, error) {
+	return r.withdrawn, r.withdrawErr
 }
 
 func (testCreationRepository) Start(context.Context, string, string, leagues.StartInput) (leagues.League, error) {
@@ -398,6 +404,32 @@ func TestRemoveLeagueTeamMapsBusinessErrors(t *testing.T) {
 
 			handler.ServeHTTP(recorder, request)
 
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
+	}
+}
+
+func TestWithdrawLeagueTeamMapsBusinessErrors(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	const teamID = "019abcde-3333-7333-8333-333333333333"
+	for name, test := range map[string]struct {
+		err    error
+		status int
+	}{
+		"not organizer": {err: leagues.ErrLeagueForbidden, status: http.StatusForbidden},
+		"wrong state":   {err: leagues.ErrLeagueWithdrawalConflict, status: http.StatusConflict},
+		"not found":     {err: leagues.ErrLeagueNotFound, status: http.StatusNotFound},
+	} {
+		t.Run(name, func(t *testing.T) {
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{withdrawErr: test.err}))
+			request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/teams/"+teamID+"/withdraw", nil)
+			request.Header.Set("Authorization", "Bearer session-token")
+			recorder := httptest.NewRecorder()
+			handler.ServeHTTP(recorder, request)
 			if recorder.Code != test.status {
 				t.Errorf("status = %d, want %d", recorder.Code, test.status)
 			}

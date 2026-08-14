@@ -9,7 +9,15 @@ import {
 } from "@/features/password-recovery/pending-link";
 import { getTranslator } from "@/shared/i18n/locale";
 import { useSession } from "@/shared/session/session-provider";
-import { Button, Card, KeyboardAwareScrollView, Screen, Text, TextField } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  KeyboardAwareScrollView,
+  LoadingTransition,
+  Screen,
+  Text,
+  TextField,
+} from "@/shared/ui";
 
 export default function PasswordResetScreen() {
   const t = getTranslator();
@@ -53,7 +61,12 @@ export default function PasswordResetScreen() {
       setFailed(true);
     }
   };
-  if (loading) return <Screen />;
+  if (loading)
+    return (
+      <Screen>
+        <LoadingTransition active message={t("common_loading")} />
+      </Screen>
+    );
   if (failed)
     return (
       <Screen>

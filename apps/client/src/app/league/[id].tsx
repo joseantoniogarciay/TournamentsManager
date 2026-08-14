@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Modal, Platform, Pressable, SectionList, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -28,6 +28,7 @@ import {
   LoadingTransition,
   ModalDialog,
   NavigationHeaderButton,
+  RequestErrorCard,
   Screen,
   Text,
   TextField,
@@ -47,6 +48,8 @@ export default function LeagueScreen() {
   const league = useLeague(id);
   const { loadLeague, putLeague, refreshLeague } = useLeagueStore();
   const [relationship, setRelationship] = useState<string>();
+  const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
+  const [isLoading, setIsLoading] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [roundRobinLegs, setRoundRobinLegs] = useState<1 | 2>(1);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,14 +60,31 @@ export default function LeagueScreen() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [completionConfirmationOpen, setCompletionConfirmationOpen] = useState(false);
   const [completionOpen, setCompletionOpen] = useState(false);
+  const load = useCallback(
+    async (force = false) => {
+      if (!id) {
+        setLoadErrorMessage(t("common_request_error"));
+        return;
+      }
+      setIsLoading(true);
+      setLoadErrorMessage(undefined);
+      try {
+        await (force ? refreshLeague(id) : loadLeague(id));
+      } catch (error) {
+        setLoadErrorMessage(t(getRequestFailure(error).messageKey));
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [id, loadLeague, refreshLeague, t],
+  );
   useEffect(() => {
-    if (!id) return;
-    void loadLeague(id).catch((error) => {
-      const failure = getRequestFailure(error);
-      show({ kind: failure.kind, message: t(failure.messageKey) });
-    });
-    if (user) void getLeagueRelationship(id).then(setRelationship);
-  }, [id, loadLeague, show, t, user]);
+    void load();
+    if (user)
+      void getLeagueRelationship(id)
+        .then(setRelationship)
+        .catch(() => setRelationship(undefined));
+  }, [id, load, user]);
   const isOrganizer = relationship === "organizer";
   const canManageResults = relationship === "organizer" || relationship === "delegated";
   const start = async () => {
@@ -170,14 +190,59 @@ export default function LeagueScreen() {
     }
     router.replace("/");
   };
-  if (!league)
+  if (!league) {
+    const loadingHeaderOptions = {
+      headerBackVisible: false,
+      headerShadowVisible: false,
+      headerStyle: { backgroundColor: colors.surface.canvas },
+      headerTintColor: colors.text.primary,
+      headerTitle: t("league_title"),
+      headerTitleAlign: "center" as const,
+    };
     return (
-      <Screen topInset="navigation-bar">
-        <Card>
-          <Text>{t("common_loading")}</Text>
-        </Card>
-      </Screen>
+      <>
+        <Stack.Screen
+          options={{
+            ...loadingHeaderOptions,
+            ...(Platform.OS !== "ios"
+              ? {
+                  headerLeft: () => (
+                    <NavigationHeaderButton
+                      accessibilityLabel={t("common_close")}
+                      icon="close"
+                      nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
+                      onPress={returnToPreviousScreen}
+                    />
+                  ),
+                }
+              : {}),
+          }}
+        >
+          {Platform.OS === "ios" ? (
+            <Stack.Toolbar placement="left">
+              <Stack.Toolbar.Button
+                accessibilityLabel={t("common_close")}
+                icon="xmark"
+                onPress={returnToPreviousScreen}
+              />
+            </Stack.Toolbar>
+          ) : null}
+        </Stack.Screen>
+        <Screen topInset="navigation-bar">
+          {loadErrorMessage ? (
+            <RequestErrorCard
+              actionLabel={t("common_retry")}
+              loading={isLoading}
+              message={loadErrorMessage}
+              onRetry={() => void load(true)}
+            />
+          ) : (
+            <LoadingTransition active message={t("common_loading")} />
+          )}
+        </Screen>
+      </>
     );
+  }
   const canCancel = league.state === "published" || league.state === "in_progress";
   const canComplete =
     isOrganizer &&
@@ -229,7 +294,7 @@ export default function LeagueScreen() {
     headerTintColor: colors.text.primary,
     headerTitleAlign: "center" as const,
     headerTitle: () => (
-      <Text numberOfLines={1} style={styles.navigationTitle} variant="title">
+      <Text numberOfLines={2} style={styles.navigationTitle} variant="bodyLarge">
         {league.name}
       </Text>
     ),
@@ -680,7 +745,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight,
   },
-  navigationTitle: { maxWidth: 220, textAlign: "center" },
+  navigationTitle: {
+    flexShrink: 1,
+    marginHorizontal: space[5],
+    textAlign: "center",
+  },
   menuActions: { gap: space[1] },
   matchSeparator: { height: space[5] },
   match: { gap: space[3] },

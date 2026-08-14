@@ -4,6 +4,7 @@ import type { LeagueInput } from "@/api/generated/models";
 
 const key = "tm-league-draft";
 export const maximumLeagueTeams = 64;
+export const maximumLeagueNameLength = 140;
 export type LocalLeagueDraft = { name: string; teams: string[] };
 
 export async function getLocalLeagueDraft(): Promise<LocalLeagueDraft | null> {
@@ -36,7 +37,7 @@ export function toLeagueInput(draft: LocalLeagueDraft | null): LeagueInput | und
   const teams = draft.teams.map((team) => team.trim()).filter(Boolean);
   if (
     !name ||
-    name.length > 140 ||
+    name.length > maximumLeagueNameLength ||
     teams.length < 2 ||
     teams.length > maximumLeagueTeams ||
     new Set(teams.map((team) => team.toLowerCase())).size !== teams.length ||

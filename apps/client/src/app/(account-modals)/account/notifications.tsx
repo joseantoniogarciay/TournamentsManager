@@ -1,6 +1,6 @@
 import { router, Stack } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { control, space } from "@tournaments-manager/design-tokens";
 import type { Notification } from "@/api/generated/models";
@@ -14,7 +14,15 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { NavigationHeaderButton, Card, Screen, Text, useConfirmationDialog } from "@/shared/ui";
+import {
+  NavigationHeaderButton,
+  Card,
+  LoadingTransition,
+  RequestErrorCard,
+  Screen,
+  Text,
+  useConfirmationDialog,
+} from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 import { useNotifications } from "@/features/notifications/notification-provider";
 
@@ -25,20 +33,26 @@ export default function NotificationsScreen() {
   const { confirm } = useConfirmationDialog();
   const { refresh } = useNotifications();
   const [items, setItems] = useState<Notification[]>();
+  const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
+  const [isLoading, setIsLoading] = useState(false);
   const [removingNotificationID, setRemovingNotificationID] = useState<string>();
   const [removingAll, setRemovingAll] = useState(false);
-  useEffect(() => {
+  const load = useCallback(() => {
+    setIsLoading(true);
+    setLoadErrorMessage(undefined);
     void Promise.all([markAllNotificationsRead(), listNotifications()])
       .then(([, next]) => {
         setItems(next);
         return refresh(true);
       })
       .catch((error) => {
-        setItems([]);
-        const failure = getRequestFailure(error);
-        show({ kind: failure.kind, message: t(failure.messageKey) });
-      });
-  }, [refresh, show, t]);
+        setLoadErrorMessage(t(getRequestFailure(error).messageKey));
+      })
+      .finally(() => setIsLoading(false));
+  }, [refresh, t]);
+  useEffect(() => {
+    load();
+  }, [load]);
   const remove = async (id: string) => {
     if (removingNotificationID !== undefined || removingAll) return;
     setRemovingNotificationID(id);
@@ -115,63 +129,76 @@ export default function NotificationsScreen() {
         </Stack.Toolbar>
       ) : null}
       <Screen topInset="navigation-bar">
-        <ScrollView contentContainerStyle={styles.content}>
-          {items === undefined ? (
-            <Text>{t("common_loading")}</Text>
-          ) : items.length === 0 ? (
-            <View style={styles.empty}>
-              <Text color="secondary">{t("notifications_empty")}</Text>
-            </View>
-          ) : (
-            <>
-              {items.map((item) => (
-                <Card density="compact" key={item.id}>
-                  <View style={styles.row}>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={t("notifications_open_league").replace(
-                        "{league}",
-                        item.leagueName,
-                      )}
-                      onPress={() => router.push(`/league/${item.leagueId}`)}
-                      style={styles.message}
-                    >
-                      <Text variant="body">
-                        {t("notifications_administrator_assigned").replace(
+        {loadErrorMessage ? (
+          <RequestErrorCard
+            actionLabel={t("common_retry")}
+            loading={isLoading}
+            message={loadErrorMessage}
+            onRetry={load}
+          />
+        ) : items === undefined ? (
+          <LoadingTransition active message={t("common_loading")} />
+        ) : (
+          <ScrollView contentContainerStyle={styles.content}>
+            {items.length === 0 ? (
+              <View style={styles.empty}>
+                <Text color="secondary">{t("notifications_empty")}</Text>
+              </View>
+            ) : (
+              <>
+                {items.map((item) => (
+                  <Card density="compact" key={item.id}>
+                    <View style={styles.row}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t("notifications_open_league").replace(
                           "{league}",
                           item.leagueName,
                         )}
-                      </Text>
-                      <Text color="secondary">
-                        {formatNotificationDate(item.createdAt, t("notifications_invalid_date"))}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={t("notifications_delete")}
-                      accessibilityState={{ busy: removingNotificationID === item.id }}
-                      disabled={removingNotificationID !== undefined || removingAll}
-                      onPress={() => confirmRemove(item.id)}
-                      style={styles.delete}
-                    >
-                      {removingNotificationID === item.id ? (
-                        <ActivityIndicator color={colors.text.primary} />
-                      ) : Platform.OS === "web" ? (
-                        <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
-                      ) : (
-                        <SymbolView
-                          name={{ android: "close", ios: "xmark", web: "close" }}
-                          size={control.iconSize}
-                          tintColor={colors.text.primary}
-                        />
-                      )}
-                    </Pressable>
-                  </View>
-                </Card>
-              ))}
-            </>
-          )}
-        </ScrollView>
+                        onPress={() => router.push(`/league/${item.leagueId}`)}
+                        style={styles.message}
+                      >
+                        <Text variant="body">
+                          {t("notifications_administrator_assigned").replace(
+                            "{league}",
+                            item.leagueName,
+                          )}
+                        </Text>
+                        <Text color="secondary">
+                          {formatNotificationDate(item.createdAt, t("notifications_invalid_date"))}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t("notifications_delete")}
+                        accessibilityState={{ busy: removingNotificationID === item.id }}
+                        disabled={removingNotificationID !== undefined || removingAll}
+                        onPress={() => confirmRemove(item.id)}
+                        style={styles.delete}
+                      >
+                        {removingNotificationID === item.id ? (
+                          <ActivityIndicator color={colors.text.primary} />
+                        ) : Platform.OS === "web" ? (
+                          <WebIcon
+                            color={colors.text.primary}
+                            name="close"
+                            size={control.iconSize}
+                          />
+                        ) : (
+                          <SymbolView
+                            name={{ android: "close", ios: "xmark", web: "close" }}
+                            size={control.iconSize}
+                            tintColor={colors.text.primary}
+                          />
+                        )}
+                      </Pressable>
+                    </View>
+                  </Card>
+                ))}
+              </>
+            )}
+          </ScrollView>
+        )}
       </Screen>
     </>
   );

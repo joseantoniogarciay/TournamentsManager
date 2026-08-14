@@ -15,7 +15,15 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Card, NavigationHeaderButton, Screen, Text, useConfirmationDialog } from "@/shared/ui";
+import {
+  Card,
+  LoadingTransition,
+  NavigationHeaderButton,
+  RequestErrorCard,
+  Screen,
+  Text,
+  useConfirmationDialog,
+} from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
 export default function LeagueAdministratorsScreen() {
@@ -26,28 +34,33 @@ export default function LeagueAdministratorsScreen() {
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
   const league = useLeague(id);
-  const { loadLeague } = useLeagueStore();
+  const { loadLeague, refreshLeague } = useLeagueStore();
   const [administrators, setAdministrators] = useState<string[]>();
-  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
+  const [isLoading, setIsLoading] = useState(false);
   const [removingUsername, setRemovingUsername] = useState<string>();
 
-  const load = useCallback(() => {
-    if (!id) return;
-    setAdministrators(undefined);
-    setLoadFailed(false);
-    void loadLeague(id).catch((error) => {
-      const failure = getRequestFailure(error);
-      show({ kind: failure.kind, message: t(failure.messageKey) });
-    });
-    void listLeagueAdministratorUsernames(id)
-      .then(setAdministrators)
-      .catch((error) => {
-        setAdministrators([]);
-        setLoadFailed(true);
-        const failure = getRequestFailure(error);
-        show({ kind: failure.kind, message: t(failure.messageKey) });
-      });
-  }, [id, loadLeague, show, t]);
+  const load = useCallback(
+    (force = false) => {
+      if (!id) {
+        setLoadErrorMessage(t("common_request_error"));
+        return;
+      }
+      setAdministrators(undefined);
+      setIsLoading(true);
+      setLoadErrorMessage(undefined);
+      void Promise.all([
+        force ? refreshLeague(id) : loadLeague(id),
+        listLeagueAdministratorUsernames(id),
+      ])
+        .then(([, nextAdministrators]) => setAdministrators(nextAdministrators))
+        .catch((error) => {
+          setLoadErrorMessage(t(getRequestFailure(error).messageKey));
+        })
+        .finally(() => setIsLoading(false));
+    },
+    [id, loadLeague, refreshLeague, t],
+  );
   useFocusEffect(load);
 
   const close = () => {
@@ -149,16 +162,21 @@ export default function LeagueAdministratorsScreen() {
         </>
       ) : null}
       <Screen bottomInset="none" topInset="navigation-bar">
-        {administrators === undefined ? (
-          <View style={styles.loader}>
-            <ActivityIndicator color={colors.text.primary} />
-          </View>
+        {loadErrorMessage ? (
+          <RequestErrorCard
+            actionLabel={t("common_retry")}
+            loading={isLoading}
+            message={loadErrorMessage}
+            onRetry={() => load(true)}
+          />
+        ) : administrators === undefined ? (
+          <LoadingTransition active message={t("common_loading")} />
         ) : (
           <ScrollView
             contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[5] }]}
             showsVerticalScrollIndicator={false}
           >
-            {!loadFailed && administrators.length === 0 ? (
+            {administrators.length === 0 ? (
               <View style={styles.emptyState}>
                 <Text color="secondary">{t("league_administrators_empty")}</Text>
               </View>
@@ -207,7 +225,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: space[5],
   },
-  loader: { alignItems: "center", flex: 1, justifyContent: "center" },
   navigationButton: {
     alignItems: "center",
     borderRadius: radius.pill,

@@ -30,7 +30,7 @@
 ## Toolchain Go
 
 - Versión mínima del módulo: Go 1.26.0.
-- Toolchain exacto inicial: Go 1.26.5.
+- Toolchain exacto: Go 1.26.6.
 - El backend usa `apps/backend/go.mod`.
 - Las herramientas usan `apps/backend/go.tool.mod` y
   `apps/backend/go.tool.sum`.

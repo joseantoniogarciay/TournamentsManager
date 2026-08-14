@@ -201,6 +201,7 @@ CREATE TABLE league_teams (
     name text NOT NULL CHECK (length(btrim(name)) > 0),
     name_normalized text NOT NULL CHECK (length(btrim(name_normalized)) > 0),
     position integer NOT NULL CHECK (position > 0),
+    withdrawn_at timestamptz,
     CONSTRAINT league_teams_name_unique UNIQUE (league_id, name_normalized),
     CONSTRAINT league_teams_position_unique UNIQUE (league_id, position),
     CONSTRAINT league_teams_league_id_id_unique UNIQUE (league_id, id)

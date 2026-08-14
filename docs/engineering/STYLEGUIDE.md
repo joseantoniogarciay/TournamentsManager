@@ -28,7 +28,7 @@ si no resuelve una necesidad actual.
 El baseline de toolchain está aceptado en
 [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md):
 
-- Go 1.26.5 como toolchain exacto inicial;
+- Go 1.26.6 como toolchain exacto;
 - `goimports` como formateador y organizador de imports;
 - golangci-lint v2 con lista explícita de reglas;
 - `govulncheck` para vulnerabilidades conocidas;
