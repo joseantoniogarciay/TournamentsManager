@@ -1,4 +1,4 @@
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useState } from "react";
 import { Modal, Platform, Pressable, SectionList, Share, StyleSheet, View } from "react-native";
@@ -87,11 +87,15 @@ export default function LeagueScreen() {
   );
   useEffect(() => {
     void load();
-    if (user)
+  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) return;
       void getLeagueRelationship(id)
         .then(setRelationship)
         .catch(() => setRelationship(undefined));
-  }, [id, load, user]);
+    }, [id, user]),
+  );
   const isOrganizer = relationship === "organizer";
   const canManageResults = relationship === "organizer" || relationship === "delegated";
   const start = async () => {
@@ -294,6 +298,7 @@ export default function LeagueScreen() {
     .map(([round, data]) => ({ data, round }));
   const closeWebMenu = () => setMenuOpen(false);
   const openAdministrators = () => router.push(`/league/${league.id}/administrators`);
+  const openTransfer = () => router.push(`/league/${league.id}/transfer`);
   const headerOptions = {
     headerBackVisible: false,
     headerShadowVisible: false,
@@ -348,6 +353,11 @@ export default function LeagueScreen() {
               {isOrganizer ? (
                 <Stack.Toolbar.MenuAction onPress={openAdministrators}>
                   {t("league_administrators")}
+                </Stack.Toolbar.MenuAction>
+              ) : null}
+              {isOrganizer ? (
+                <Stack.Toolbar.MenuAction destructive onPress={openTransfer}>
+                  {t("league_transfer")}
                 </Stack.Toolbar.MenuAction>
               ) : null}
               {isOrganizer && canCancel && !isCancelling ? (
@@ -548,6 +558,14 @@ export default function LeagueScreen() {
                     openAdministrators();
                   }}
                   variant="ghost"
+                />
+                <Button
+                  label={t("league_transfer")}
+                  onPress={() => {
+                    closeWebMenu();
+                    openTransfer();
+                  }}
+                  variant="destructive"
                 />
                 {canCancel && !isCancelling ? (
                   <Button

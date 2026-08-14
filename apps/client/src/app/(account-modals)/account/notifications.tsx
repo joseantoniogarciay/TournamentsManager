@@ -159,10 +159,11 @@ export default function NotificationsScreen() {
                         style={styles.message}
                       >
                         <Text variant="body">
-                          {t("notifications_administrator_assigned").replace(
-                            "{league}",
-                            item.leagueName,
-                          )}
+                          {t(
+                            item.kind === "league_ownership_transferred"
+                              ? "notifications_ownership_transferred"
+                              : "notifications_administrator_assigned",
+                          ).replace("{league}", item.leagueName)}
                         </Text>
                         <Text color="secondary">
                           {formatNotificationDate(item.createdAt, t("notifications_invalid_date"))}

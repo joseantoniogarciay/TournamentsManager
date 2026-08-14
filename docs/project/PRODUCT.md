@@ -93,7 +93,9 @@ del navegador. Véase [ADR-0057](../adr/0057-define-contextual-home-and-tourname
 
 Es inicialmente el usuario autenticado que creó el torneo, con permisos sobre él
 y capacidad de crear sus equipos y gestionar resultados. Conserva la propiedad y
-es el único que puede asignar o retirar administradores delegados.
+es el único que puede asignar o retirar administradores delegados. Puede
+transferir el torneo a otra cuenta verificada mediante su `username`; la
+transferencia es inmediata y le retira sus permisos administrativos.
 
 ### Administrador delegado
 
@@ -283,5 +285,5 @@ conserva al menos uno; no puede fusionar cuentas. Cerrar sesión elimina el esta
 inmediato e intenta la revocación remota sin bloquear la navegación. Puede
 solicitar una baja lógica de 30 días: se invalidan de inmediato sus sesiones y
 se retiran sus seguimientos y administraciones delegadas. Si organiza alguna
-liga, debe cancelarla o transferirla antes; esas operaciones se decidirán en un
-corte posterior. Véase ADR-0074.
+liga, debe cancelarla o transferirla antes. La transferencia directa se define
+en ADR-0095.

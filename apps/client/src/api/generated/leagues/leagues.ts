@@ -11,6 +11,7 @@ import type {
   AuthenticationProblemResponse,
   LeagueAdministrators,
   LeagueInput,
+  LeagueOwnershipTransferRequest,
   LeagueTeam,
   ListCurrentAccountLeaguesParams,
   MatchResultInput,
@@ -995,4 +996,77 @@ export const removeLeagueAdministrator = async (
 
   const data: removeLeagueAdministratorResponse["data"] = body ? JSON.parse(body) : undefined;
   return { data, status: res.status, headers: res.headers } as removeLeagueAdministratorResponse;
+};
+
+export type transferLeagueOwnershipResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type transferLeagueOwnershipResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type transferLeagueOwnershipResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type transferLeagueOwnershipResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type transferLeagueOwnershipResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type transferLeagueOwnershipResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type transferLeagueOwnershipResponseSuccess = transferLeagueOwnershipResponse204 & {
+  headers: Headers;
+};
+export type transferLeagueOwnershipResponseError = (
+  | transferLeagueOwnershipResponse400
+  | transferLeagueOwnershipResponse401
+  | transferLeagueOwnershipResponse403
+  | transferLeagueOwnershipResponse404
+  | transferLeagueOwnershipResponse409
+) & {
+  headers: Headers;
+};
+
+export type transferLeagueOwnershipResponse =
+  transferLeagueOwnershipResponseSuccess | transferLeagueOwnershipResponseError;
+
+export const getTransferLeagueOwnershipUrl = (leagueId: Uuid) => {
+  return `/leagues/${leagueId}/transfer`;
+};
+
+/**
+ * Exige sesión de la organizadora. La transferencia es inmediata y atómica; la destinataria debe ser una cuenta verificada distinta.
+ * @summary Transfiere la propiedad de una liga a otra cuenta
+ */
+export const transferLeagueOwnership = async (
+  leagueId: Uuid,
+  leagueOwnershipTransferRequest: LeagueOwnershipTransferRequest,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<transferLeagueOwnershipResponse> => {
+  const res = await (fetchFn ?? fetch)(getTransferLeagueOwnershipUrl(leagueId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(leagueOwnershipTransferRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: transferLeagueOwnershipResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as transferLeagueOwnershipResponse;
 };

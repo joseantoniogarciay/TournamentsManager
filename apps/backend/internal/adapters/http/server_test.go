@@ -75,6 +75,7 @@ type testCreationRepository struct {
 	team              leagues.Team
 	teamErr           error
 	removeErr         error
+	transferErr       error
 	withdrawn         leagues.League
 	withdrawErr       error
 	result            leagues.League
@@ -117,6 +118,10 @@ func (r testCreationRepository) ListAdministrators(context.Context, string, stri
 
 func (r testCreationRepository) RemoveAdministrator(context.Context, string, string, string) error {
 	return r.removeErr
+}
+
+func (r testCreationRepository) TransferOwnership(context.Context, string, string, string) error {
+	return r.transferErr
 }
 
 func (r testCreationRepository) RecordResult(context.Context, string, string, string, leagues.MatchResultInput) (leagues.League, error) {

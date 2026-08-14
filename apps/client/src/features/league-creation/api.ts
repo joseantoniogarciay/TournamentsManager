@@ -12,6 +12,7 @@ import {
   removeLeagueTeam,
   removeLeagueAdministrator,
   startLeague,
+  transferLeagueOwnership,
   withdrawLeagueTeam,
 } from "@/api/generated/leagues/leagues";
 import type {
@@ -96,6 +97,15 @@ export async function removeLeagueAdministratorRequest(leagueID: string, usernam
   const response = await removeLeagueAdministrator(
     leagueID,
     username as Username,
+    undefined,
+    authenticatedApiFetch,
+  );
+  if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
+}
+export async function transferLeagueOwnershipRequest(leagueID: string, username: string) {
+  const response = await transferLeagueOwnership(
+    leagueID,
+    { username: username as Username },
     undefined,
     authenticatedApiFetch,
   );

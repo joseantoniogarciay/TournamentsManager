@@ -116,6 +116,7 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 		mux.Handle("PUT /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(assignLeagueAdministrator(creationService)))))
 		mux.Handle("GET /v1/leagues/{leagueId}/administrators", requireSession(authenticator)(http.HandlerFunc(listLeagueAdministrators(creationService))))
 		mux.Handle("DELETE /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeLeagueAdministrator(creationService)))))
+		mux.Handle("POST /v1/leagues/{leagueId}/transfer", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(transferLeagueOwnership(creationService)))))
 		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
 	}
 	withCookieName := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -614,6 +615,42 @@ func removeLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 		}
 		if err != nil {
 			writeProblem(w, http.StatusInternalServerError, "Could not remove administrator")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func transferLeagueOwnership(service leagues.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		leagueID := r.PathValue("leagueId")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
+			return
+		}
+		var body struct {
+			Username string `json:"username"`
+		}
+		if !uuidPattern.MatchString(leagueID) || json.NewDecoder(r.Body).Decode(&body) != nil || !usernamePattern.MatchString(body.Username) {
+			writeValidationProblem(w)
+			return
+		}
+		err := service.TransferOwnership(r.Context(), accountID, leagueID, body.Username)
+		if errors.Is(err, leagues.ErrLeagueForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot transfer this league")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueNotFound) {
+			writeProblem(w, http.StatusNotFound, "League or account is unavailable")
+			return
+		}
+		if errors.Is(err, leagues.ErrLeagueOwnershipTransferConflict) {
+			writeProblem(w, http.StatusConflict, "League owner cannot receive the transfer")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "Could not transfer league")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

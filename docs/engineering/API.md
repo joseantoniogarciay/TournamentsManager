@@ -130,6 +130,13 @@ que el inicio usa una operación explícita y no una mutación implícita de la
 lectura pública. Exige sesión de la organizadora y CSRF cuando se entrega por
 cookie; no recibe cuerpo ni motivo. Devuelve la proyección pública conservada
 en estado `cancelled`. Solo `published` e `in_progress` admiten la transición;
+
+`POST /v1/leagues/{leagueId}/transfer` recibe el `username` de una cuenta
+verificada distinta y solo admite a la organizadora actual. Bloquea la liga y
+cambia su propiedad atómicamente, sin alterar equipos, partidos, resultados ni
+las demás administraciones. La destinataria deja de ser administradora delegada
+si ya lo era, recibe una notificación interna y la anterior organizadora pierde
+sus permisos. Véase ADR-0095.
 una repetición o cualquier otro estado devuelve `409`, sin exponer detalles
 internos.
 

@@ -28,10 +28,13 @@ import { Text } from "@/shared/ui/text";
 
 type Feedback = { message: string; kind: "network-error" | "generic-error" | "success" };
 type ActiveFeedback = Feedback & { id: number };
+const navigationFeedbackDelayMs = 400;
 type FeedbackContextValue = {
   banner: ReactElement | null;
   dismiss: () => void;
+  setFeedbackHostFocused: (isFocused: boolean) => void;
   show: (feedback: Feedback) => void;
+  showAfterNavigation: (feedback: Feedback) => void;
 };
 const FeedbackContext = createContext<FeedbackContextValue | null>(null);
 
@@ -45,6 +48,9 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   const activeFeedbackId = useRef<number | null>(null);
   const nextFeedbackId = useRef(0);
   const autoDismissTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigationFeedbackTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queuedFeedback = useRef<Feedback | null>(null);
+  const awaitingNextFocusedHost = useRef(false);
 
   useEffect(() => {
     void AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
@@ -136,8 +142,19 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     return clearAutoDismiss;
   }, [clearAutoDismiss]);
 
+  useEffect(
+    () => () => {
+      if (navigationFeedbackTimeout.current) clearTimeout(navigationFeedbackTimeout.current);
+    },
+    [],
+  );
+
   const show = useCallback(
     (next: Feedback) => {
+      if (navigationFeedbackTimeout.current) clearTimeout(navigationFeedbackTimeout.current);
+      navigationFeedbackTimeout.current = null;
+      queuedFeedback.current = null;
+      awaitingNextFocusedHost.current = false;
       clearAutoDismiss();
       visibility.stopAnimation();
       dragY.stopAnimation();
@@ -149,6 +166,20 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
       autoDismissTimeout.current = setTimeout(() => dismiss(id), banner.autoDismissMs);
     },
     [clearAutoDismiss, dismiss, dragY, visibility],
+  );
+  const showAfterNavigation = useCallback((next: Feedback) => {
+    queuedFeedback.current = next;
+    awaitingNextFocusedHost.current = true;
+  }, []);
+  const setFeedbackHostFocused = useCallback(
+    (isFocused: boolean) => {
+      if (!isFocused || !awaitingNextFocusedHost.current || !queuedFeedback.current) return;
+      const next = queuedFeedback.current;
+      queuedFeedback.current = null;
+      awaitingNextFocusedHost.current = false;
+      navigationFeedbackTimeout.current = setTimeout(() => show(next), navigationFeedbackDelayMs);
+    },
+    [show],
   );
   const bannerNode = feedback ? (
     <Animated.View
@@ -181,8 +212,8 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     </Animated.View>
   ) : null;
   const contextValue = useMemo(
-    () => ({ banner: bannerNode, dismiss, show }),
-    [bannerNode, dismiss, show],
+    () => ({ banner: bannerNode, dismiss, setFeedbackHostFocused, show, showAfterNavigation }),
+    [bannerNode, dismiss, setFeedbackHostFocused, show, showAfterNavigation],
   );
 
   return <FeedbackContext.Provider value={contextValue}>{children}</FeedbackContext.Provider>;
@@ -195,13 +226,17 @@ export function useFeedback() {
 }
 
 export function FeedbackBanner() {
-  const { banner: feedbackBanner, dismiss } = useFeedback();
+  const { banner: feedbackBanner, dismiss, setFeedbackHostFocused } = useFeedback();
   const [isFocused, setIsFocused] = useState(false);
   useFocusEffect(
     useCallback(() => {
       setIsFocused(true);
-      return () => setIsFocused(false);
-    }, []),
+      setFeedbackHostFocused(true);
+      return () => {
+        setIsFocused(false);
+        setFeedbackHostFocused(false);
+      };
+    }, [setFeedbackHostFocused]),
   );
   if (!feedbackBanner || !isFocused) return null;
 
