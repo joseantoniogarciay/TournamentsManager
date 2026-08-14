@@ -1,6 +1,6 @@
 # El contexto de build es apps/backend. La etapa modules se comparte entre el
 # entorno con recarga y la imagen final, evitando duplicar la resolución Go.
-FROM golang:1.26.5-bookworm AS modules
+FROM golang:1.26.6-bookworm AS modules
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download

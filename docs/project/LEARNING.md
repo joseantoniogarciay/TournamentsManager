@@ -2172,3 +2172,22 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** las mutaciones masivas que cambian resultados deben
   devolver la proyección canónica completa; así el cliente actualiza todas las
   vistas sin reconstruir una clasificación local.
+
+### 2026-08-14 — Una carga terminal necesita una recuperación dentro de la ruta
+
+- **Aprendido:** un banner no basta cuando el error impide montar todo el
+  contenido: se desvanece mientras la pantalla permanece aparentemente cargando.
+- **Regla reutilizable:** `RequestErrorCard` presenta el mensaje seguro ya
+  clasificado y un reintento localizado para cargas terminales. Las rutas que
+  sí tienen contenido conservan el banner global para evitar crear dos patrones
+  de error equivalentes. Mientras esa carga está en curso, `LoadingTransition`
+  centra el progreso sobre la ruta; nunca se usa una card de «Cargando».
+
+### 2026-08-14 — Un parche de seguridad alcanzable se promociona sin espera
+
+- **Aprendido:** una política de maduración protege frente a regresiones, pero
+  no debe retrasar una corrección de seguridad que el análisis alcanza desde el
+  código del producto.
+- **Regla reutilizable:** un parche crítico autorizado actualiza toolchain,
+  imagen de compilación y documentación en el mismo cambio; `make verify` debe
+  confirmar el parche antes de promoverlo.

@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -30,7 +30,9 @@ import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
   Card,
+  LoadingTransition,
   NavigationHeaderButton,
+  RequestErrorCard,
   Screen,
   Text,
   TextField,
@@ -47,21 +49,40 @@ export default function LeagueTeamsScreen() {
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
   const league = useLeague(id);
-  const { loadLeague, updateLeague } = useLeagueStore();
+  const { loadLeague, refreshLeague, updateLeague } = useLeagueStore();
   const [relationship, setRelationship] = useState<string>();
+  const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
+  const [isLoading, setIsLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [removingTeamID, setRemovingTeamID] = useState<string>();
 
+  const load = useCallback(
+    async (force = false) => {
+      if (!id) {
+        setLoadErrorMessage(t("common_request_error"));
+        return;
+      }
+      setIsLoading(true);
+      setLoadErrorMessage(undefined);
+      try {
+        await (force ? refreshLeague(id) : loadLeague(id));
+      } catch (error) {
+        setLoadErrorMessage(t(getRequestFailure(error).messageKey));
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [id, loadLeague, refreshLeague, t],
+  );
   useEffect(() => {
-    if (!id) return;
-    void loadLeague(id).catch((error) => {
-      const failure = getRequestFailure(error);
-      show({ kind: failure.kind, message: t(failure.messageKey) });
-    });
-    if (user) void getLeagueRelationship(id).then(setRelationship);
-  }, [id, loadLeague, show, t, user]);
+    void load();
+    if (user)
+      void getLeagueRelationship(id)
+        .then(setRelationship)
+        .catch(() => setRelationship(undefined));
+  }, [id, load, user]);
 
   const canAddTeam = relationship === "organizer" && league?.state === "published";
   const canRemoveTeam = canAddTeam && (league?.teams.length ?? 0) > 2;
@@ -197,9 +218,16 @@ export default function LeagueTeamsScreen() {
       ) : null}
       <Screen bottomInset="none" topInset="navigation-bar">
         {!league ? (
-          <View style={styles.loader}>
-            <ActivityIndicator color={colors.text.primary} />
-          </View>
+          loadErrorMessage ? (
+            <RequestErrorCard
+              actionLabel={t("common_retry")}
+              loading={isLoading}
+              message={loadErrorMessage}
+              onRetry={() => void load(true)}
+            />
+          ) : (
+            <LoadingTransition active message={t("common_loading")} />
+          )
         ) : (
           <ScrollView
             contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[5] }]}

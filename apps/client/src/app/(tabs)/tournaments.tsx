@@ -1,27 +1,18 @@
 import { router, type Href, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 import { color, control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
 import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
 import { listRelatedLeagues } from "@/features/league-creation/api";
-import { useLeagueState } from "@/features/league-creation/league-store";
-import { LeagueCreatorChip } from "@/features/league-creation/components/league-creator-chip";
+import { LeagueCard } from "@/features/league-creation/components/league-card";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
-import { getLeagueStateLabel } from "@/shared/i18n/league-state";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Card, DisclosureIndicator, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
+import { Card, LoadingTransition, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
 type LeagueRelationship = "administered" | "followed";
 const floatingActionButtonSize = control.minHeight + 12;
@@ -30,7 +21,6 @@ export default function TournamentsScreen() {
   const t = getTranslator();
   const { isRestoring, revision, user } = useSession();
   const { show } = useFeedback();
-  const { colors } = usePreferences();
   const tabContentBottomPadding = useTabContentBottomPadding();
   const [administered, setAdministered] = useState<Awaited<ReturnType<typeof listRelatedLeagues>>>(
     [],
@@ -122,15 +112,7 @@ export default function TournamentsScreen() {
           ) : null}
         </ScrollView>
       )}
-      {isInitialLoad ? (
-        <View
-          accessibilityLabel={t("common_loading")}
-          accessibilityRole="progressbar"
-          style={styles.loader}
-        >
-          <ActivityIndicator color={colors.text.primary} size="large" />
-        </View>
-      ) : null}
+      {isInitialLoad ? <LoadingTransition active message={t("common_loading")} /> : null}
       {showFloatingAction ? (
         <View style={[styles.floatingAction, { bottom: tabContentBottomPadding - space[4] }]}>
           <CreateTournamentButton />
@@ -201,39 +183,10 @@ function LeagueLibrary({
             <Text color="secondary">{empty}</Text>
           </View>
         ) : (
-          leagues.map((league) => <LeagueLibraryCard key={league.id} league={league} />)
+          leagues.map((league) => <LeagueCard key={league.id} league={league} />)
         )}
       </ScrollView>
     </View>
-  );
-}
-
-function LeagueLibraryCard({
-  league,
-}: {
-  league: Awaited<ReturnType<typeof listRelatedLeagues>>[number];
-}) {
-  const t = getTranslator();
-  const state = useLeagueState(league.id, league.state);
-
-  return (
-    <Card>
-      <Pressable
-        accessibilityLabel={t("tournaments_open_league").replace("{name}", league.name)}
-        accessibilityRole="button"
-        onPress={() => router.push(`/league/${league.id}` as never)}
-        style={styles.row}
-      >
-        <View style={styles.copy}>
-          <Text>{league.name}</Text>
-          <View style={styles.leagueState}>
-            {league.relationship === "organizer" ? <LeagueCreatorChip /> : null}
-            <Text color="secondary">{getLeagueStateLabel(t, state)}</Text>
-          </View>
-        </View>
-        <DisclosureIndicator />
-      </Pressable>
-    </Card>
   );
 }
 
@@ -285,7 +238,6 @@ const styles = StyleSheet.create({
   scroll: { flex: 1, minHeight: 0 },
   content: { flexGrow: 1 },
   copy: { gap: space[2] },
-  leagueState: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   empty: { alignItems: "center", flex: 1, justifyContent: "center", paddingHorizontal: space[5] },
   floatingAction: { position: "absolute", right: space[5] },
   floatingActionButton: {
@@ -298,21 +250,6 @@ const styles = StyleSheet.create({
   },
   library: { flex: 1, minHeight: 0, overflow: "hidden" },
   libraryContent: { flexGrow: 1, gap: space[5] },
-  loader: {
-    alignItems: "center",
-    bottom: 0,
-    justifyContent: "center",
-    left: 0,
-    position: "absolute",
-    right: 0,
-    top: 0,
-  },
-  row: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    minHeight: 44,
-  },
   segment: {
     alignItems: "center",
     borderRadius: radius.control - 2,

@@ -1,6 +1,6 @@
 import { router, type Href, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
@@ -8,22 +8,13 @@ import { radius, space } from "@tournaments-manager/design-tokens";
 import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
 import { listRecentRelatedLeagues } from "@/features/league-creation/api";
-import { LeagueCreatorChip } from "@/features/league-creation/components/league-creator-chip";
-import { useLeagueState } from "@/features/league-creation/league-store";
+import { LeagueCard } from "@/features/league-creation/components/league-card";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
-import { getLeagueStateLabel } from "@/shared/i18n/league-state";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
-import {
-  Button,
-  Card,
-  DisclosureIndicator,
-  Screen,
-  Text,
-  useTabContentBottomPadding,
-} from "@/shared/ui";
+import { Button, Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
 export default function HomeScreen() {
   const { colors, resolvedTheme } = usePreferences();
@@ -125,7 +116,7 @@ export default function HomeScreen() {
                 <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
               </View>
             ) : (
-              recentLeagues.map((league) => <RecentLeagueCard key={league.id} league={league} />)
+              recentLeagues.map((league) => <LeagueCard key={league.id} league={league} />)
             )}
           </View>
         ) : null}
@@ -133,35 +124,6 @@ export default function HomeScreen() {
         {!user && !isRestoring ? <GuestOnboarding t={t} /> : null}
       </ScrollView>
     </Screen>
-  );
-}
-
-function RecentLeagueCard({
-  league,
-}: {
-  league: Awaited<ReturnType<typeof listRecentRelatedLeagues>>[number];
-}) {
-  const t = getTranslator();
-  const state = useLeagueState(league.id, league.state);
-
-  return (
-    <Card>
-      <Pressable
-        accessibilityLabel={t("tournaments_open_league").replace("{name}", league.name)}
-        accessibilityRole="button"
-        onPress={() => router.push(`/league/${league.id}` as Href)}
-        style={styles.leagueRow}
-      >
-        <View style={styles.section}>
-          <Text>{league.name}</Text>
-          <View style={styles.leagueState}>
-            {league.relationship === "organizer" ? <LeagueCreatorChip /> : null}
-            <Text color="secondary">{getLeagueStateLabel(t, state)}</Text>
-          </View>
-        </View>
-        <DisclosureIndicator />
-      </Pressable>
-    </Card>
   );
 }
 
@@ -225,13 +187,6 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { gap: space[5] },
   hero: { gap: space[4] },
-  leagueState: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: space[2] },
-  leagueRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    minHeight: 44,
-  },
   recentEmpty: { alignItems: "center", paddingHorizontal: space[5], textAlign: "center" },
   recentSection: { gap: space[5] },
   recentTitle: { marginHorizontal: space[5] },

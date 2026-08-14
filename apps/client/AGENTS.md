@@ -46,6 +46,9 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   44 px circular, con superficie y borde en web/Android, y
   `Stack.Toolbar.Button` en iOS. Nunca se añade una `X` plana local; antes de
   crearla se compara con `create-tournament` o la ruta modal equivalente.
+- Un título largo de cabecera no usa un ancho fijo arbitrario: ocupa el espacio
+  disponible hasta conservar 20 px frente a los controles laterales, se centra
+  y puede usar dos líneas si la ruta necesita mostrar el nombre de una entidad.
 - Una card mantiene su padding interno definido por la primitiva y añade siempre
   20 px de margen exterior horizontal. El layout reserva además 20 px entre
   cards hermanas; no se corrige esa separación alterando el padding de la card.
@@ -84,10 +87,14 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   exige justificar por escrito que el destino no pertenece al contrato.
 - La interfaz no inventa sesión, permisos, colecciones ni resultados. Debe
   expresar el estado real disponible y sus estados de carga, vacío y error.
-- Un fallo de API que la feature no mapee a una recuperación concreta siempre
-  termina en el banner seguro `common_request_error` al terminar su loader. No
-  basta con invocar `show()` en un `catch`: el banner tiene que quedar visible
-  dentro de la ruta modal activa y se comprueba así antes de cerrar el cambio.
+- Un fallo de API que la feature no mapee a una recuperación concreta termina en
+  el feedback seguro `common_request_error`. Si la ruta ya tiene contenido,
+  usa el banner seguro; si el fallo impide cargar toda la pantalla, muestra
+  `RequestErrorCard` con reintento y no duplica el aviso en un banner.
+- Una carga que impide mostrar el contenido de una ruta usa siempre
+  `LoadingTransition` centrado sobre toda la pantalla. No se presenta como
+  texto, card o spinner local. Las cargas parciales dentro de contenido ya
+  visible pueden conservar un indicador contextual.
 - Un éxito que queda visible al volver a una lista no muestra además un banner:
   la ruta destino vuelve a leer la proyección y confirma el cambio con el dato
   persistido. Los banners se reservan para errores o resultados no visibles.

@@ -1,36 +1,59 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
 import type { PublicLeague } from "@/api/generated/models";
 import { useLeague, useLeagueStore } from "@/features/league-creation/league-store";
-import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Button, Card, ModalDialog, NavigationHeaderButton, Screen, Text } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  LoadingTransition,
+  ModalDialog,
+  NavigationHeaderButton,
+  RequestErrorCard,
+  Screen,
+  Text,
+} from "@/shared/ui";
 
 export default function LeagueStandingsScreen() {
   const t = getTranslator();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
-  const { show } = useFeedback();
   const league = useLeague(id);
-  const { loadLeague } = useLeagueStore();
+  const { loadLeague, refreshLeague } = useLeagueStore();
+  const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
+  const [isLoading, setIsLoading] = useState(false);
   const [informationVisible, setInformationVisible] = useState(false);
   const [statisticsContentWidth, setStatisticsContentWidth] = useState(0);
   const [statisticsViewportWidth, setStatisticsViewportWidth] = useState(0);
   const statisticsOverflow = statisticsContentWidth > statisticsViewportWidth + 1;
 
+  const load = useCallback(
+    async (force = false) => {
+      if (!id) {
+        setLoadErrorMessage(t("common_request_error"));
+        return;
+      }
+      setIsLoading(true);
+      setLoadErrorMessage(undefined);
+      try {
+        await (force ? refreshLeague(id) : loadLeague(id));
+      } catch (error) {
+        setLoadErrorMessage(t(getRequestFailure(error).messageKey));
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [id, loadLeague, refreshLeague, t],
+  );
   useEffect(() => {
-    if (!id) return;
-    void loadLeague(id).catch((error) => {
-      const failure = getRequestFailure(error);
-      show({ kind: failure.kind, message: t(failure.messageKey) });
-    });
-  }, [id, loadLeague, show, t]);
+    void load();
+  }, [load]);
 
   const teams = useMemo(() => new Map(league?.teams.map((team) => [team.id, team.name])), [league]);
   const close = () => {
@@ -93,9 +116,16 @@ export default function LeagueStandingsScreen() {
       ) : null}
       <Screen topInset="navigation-bar">
         {!league ? (
-          <View style={styles.loader}>
-            <ActivityIndicator color={colors.text.primary} />
-          </View>
+          loadErrorMessage ? (
+            <RequestErrorCard
+              actionLabel={t("common_retry")}
+              loading={isLoading}
+              message={loadErrorMessage}
+              onRetry={() => void load(true)}
+            />
+          ) : (
+            <LoadingTransition active message={t("common_loading")} />
+          )
         ) : (
           <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
             {league.standings.length === 0 ? (
@@ -274,7 +304,6 @@ const styles = StyleSheet.create({
     minHeight: control.minHeight,
   },
   leftColumn: { flexShrink: 0, width: 164 },
-  loader: { alignItems: "center", flex: 1, justifyContent: "center" },
   navigationButton: {
     alignItems: "center",
     borderRadius: radius.pill,

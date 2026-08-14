@@ -83,7 +83,7 @@ reproducibilidad.
 
 ## Recomendación
 
-**Opinión/recomendación:** alternativa B. Usar Go 1.26.5, un módulo de aplicación
+**Opinión/recomendación:** alternativa B. Usar Go 1.26.6, un módulo de aplicación
 en `apps/backend/go.mod`, herramientas declaradas en
 `apps/backend/go.tool.mod`, comandos de Make desde la raíz y un wrapper
 versionado para `goimports` en VS Code.
@@ -92,8 +92,8 @@ versionado para `goimports` en VS Code.
 
 **Aceptada:** establecer:
 
-- Go 1.26.5 como toolchain exacto inicial;
-- `go 1.26.0` como versión mínima del módulo y `toolchain go1.26.5`;
+- Go 1.26.6 como toolchain exacto;
+- `go 1.26.0` como versión mínima del módulo y `toolchain go1.26.6`;
 - Go modules para el backend, sin `go.work` mientras exista un solo módulo Go;
 - `goimports` como formateador;
 - golangci-lint v2 con lista explícita de linters;
@@ -107,7 +107,7 @@ Versiones iniciales:
 
 | Componente | Versión |
 |---|---|
-| Go | 1.26.5 |
+| Go | 1.26.6 |
 | `goimports` (`golang.org/x/tools`) | 0.48.0 |
 | golangci-lint | 2.12.2 |
 | `govulncheck` (`golang.org/x/vuln`) | 1.6.0 |
@@ -129,6 +129,11 @@ Versiones iniciales:
 - Las excepciones `//nolint` deben nombrar el linter y explicar el motivo.
 - Las actualizaciones de patch o minor requieren cambio revisado y verificación;
   una major o un cambio de política reabre este ADR.
+
+**Actualización de seguridad — 2026-08-14:** el usuario autorizó adelantar Go
+1.26.6 sin esperar una ventana de maduración, ya que `govulncheck` identificó
+vulnerabilidades alcanzables corregidas en ese parche. Mantiene la misma línea
+minor y la misma política; se verifica con `make verify` antes de promoción.
 
 ## Ruta canónica del módulo
 
@@ -185,7 +190,7 @@ no un linter configurable.
 
 ## Validación
 
-- `go version` devuelve Go 1.26.5.
+- `go version` devuelve Go 1.26.6.
 - El módulo principal y el de herramientas pasan sus respectivos `tidy -diff`.
 - `go tool -modfile=go.tool.mod` localiza las herramientas aceptadas.
 - `make check` falla ante código sin formato, lint inválido o tests fallidos.
