@@ -134,6 +134,10 @@ Versiones iniciales:
 1.26.6 sin esperar una ventana de maduración, ya que `govulncheck` identificó
 vulnerabilidades alcanzables corregidas en ese parche. Mantiene la misma línea
 minor y la misma política; se verifica con `make verify` antes de promoción.
+Mientras Docker Hub publique como último tag `golang:1.26.5-bookworm`, esa
+imagen se usa únicamente para arrancar el bootstrap: las directivas `toolchain
+go1.26.6`, con `GOTOOLCHAIN=auto`, descargan y seleccionan el compilador seguro
+antes del build.
 
 ## Ruta canónica del módulo
 

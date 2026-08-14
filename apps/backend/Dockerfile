@@ -1,9 +1,11 @@
-# El contexto de build es apps/backend. La etapa modules se comparte entre el
-# entorno con recarga y la imagen final, evitando duplicar la resolución Go.
-FROM golang:1.26.6-bookworm AS modules
+# El tag 1.26.6-bookworm no está publicado todavía. Esta imagen 1.26.5 solo
+# arranca el bootstrap: la directiva toolchain del módulo descarga y ejecuta
+# Go 1.26.6 antes de resolver o compilar el backend.
+FROM golang:1.26.5-bookworm AS modules
+ENV GOTOOLCHAIN=auto
 WORKDIR /app
 COPY go.mod go.sum ./
-RUN go mod download
+RUN go version && go mod download
 
 # Air vive únicamente en esta etapa. Se resuelve desde el módulo de herramientas
 # versionado; nunca se instala con @latest.
