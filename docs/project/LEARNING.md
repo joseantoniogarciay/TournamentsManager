@@ -1453,6 +1453,17 @@ Para cada capacidad se sigue el ciclo:
 - **Regla reutilizable:** no esperar red bajo la splash ni crear una falsa splash
   React salvo que un requisito de producto justifique explícitamente esa espera.
 
+### 2026-08-14 — La splash no reutiliza el recuadro del icono de aplicación
+
+- **Aprendido:** el icono de aplicación cuadrado funciona como identificador en
+  el sistema, pero repetido sobre la splash introduce un segundo fondo y hace la
+  marca más pesada.
+- **Evidencia:** `fast-tourney-splash-mark.png` conserva solo la marca interior
+  transparente con el degradado azul–violeta y se aplica sobre los canvases
+  claro y oscuro de `expo-splash-screen`.
+- **Regla reutilizable:** exportar una marca transparente específica para la
+  splash; verificarla en ambos temas antes de cambiar el recurso nativo.
+
 ### 2026-07-30 — El cliente generado necesita un transporte de ejecución
 
 - **Aprendido:** generar tipos y operaciones desde OpenAPI no elimina la
@@ -2204,3 +2215,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   privilegios de la persona anterior y limpia la delegación de la destinataria
   si ya existía. Cuando la acción cierra un modal, `showAfterNavigation()`
   espera al host de la `Screen` destino antes de presentar su confirmación.
+
+### 2026-08-14 — La identidad tipográfica requiere los pesos reales
+
+- **Aprendido:** un token que apunta a la fuente del sistema no garantiza la
+  misma familia entre web, iOS y Android. Además, aplicar `fontWeight` sobre un
+  archivo regular puede sintetizar un peso y cambiar métricas o legibilidad.
+- **Regla reutilizable:** una fuente compartida se carga localmente antes del
+  primer render y cada variante tipográfica selecciona su asset real mediante
+  tokens; cabeceras y navegación se revisan porque no necesariamente pasan por
+  la primitiva de texto.

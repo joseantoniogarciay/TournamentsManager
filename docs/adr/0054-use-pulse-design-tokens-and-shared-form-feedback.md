@@ -5,7 +5,8 @@
 - **Decisor:** Usuario
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** [ADR-0096](0096-use-figtree-as-the-universal-client-font.md), solo en la
+  elección de familia tipográfica.
 
 ## Problema
 

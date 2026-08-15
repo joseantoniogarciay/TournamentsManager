@@ -1,7 +1,7 @@
 import { router, Tabs, usePathname } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { color, control } from "@tournaments-manager/design-tokens";
+import { color, control, typography } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
@@ -20,6 +20,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: color.brand.primary,
         tabBarInactiveTintColor: colors.text.secondary,
+        tabBarLabelStyle: { fontFamily: typography.family.medium },
         tabBarStyle: {
           backgroundColor: colors.surface.default,
           borderTopColor: colors.border.default,

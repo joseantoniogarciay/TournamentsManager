@@ -105,10 +105,11 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0051](../adr/0051-use-single-use-google-login-challenges.md)                                 | Usar challenges de un solo uso para el login con Google              | Aceptado              | 2026-07-27 |
 | [0052](../adr/0052-make-registration-draft-optional.md)                                       | Hacer opcional el borrador en el alta                                | Aceptado              | 2026-07-27 |
 | [0053](../adr/0053-keep-a-single-resettable-local-initial-schema.md)                          | Mantener un único esquema inicial local reseteable                   | Aceptado              | 2026-07-27 |
-| [0054](../adr/0054-use-pulse-design-tokens-and-shared-form-feedback.md)                       | Usar Pulse, tokens y feedback compartido de formularios              | Aceptado              | 2026-07-28 |
+| [0054](../adr/0054-use-pulse-design-tokens-and-shared-form-feedback.md)                       | Usar Pulse, tokens y feedback compartido de formularios              | Superado parcialmente | 2026-07-28 |
 | [0055](../adr/0055-use-feature-first-client-architecture-and-platform-adaptive-navigation.md) | Usar cliente feature-first y navegación adaptativa                   | Aceptado              | 2026-07-28 |
 | [0056](../adr/0056-support-light-dark-system-theme-and-localized-clients.md)                  | Soportar tema y clientes localizados                                 | Aceptado              | 2026-07-28 |
 | [0057](../adr/0057-define-contextual-home-and-tournament-library.md)                          | Definir home contextual y biblioteca por relación                    | Aceptado              | 2026-07-28 |
+| [0096](../adr/0096-use-figtree-as-the-universal-client-font.md)                               | Usar Figtree como tipografía universal del cliente                   | Aceptado              | 2026-08-14 |
 | [0073](../adr/0073-show-recent-related-leagues-on-home.md)                                    | Mostrar ligas relacionadas recientes en Inicio                       | Aceptado              | 2026-08-02 |
 | [0074](../adr/0074-schedule-account-deletion-with-a-recovery-window.md)                       | Programar eliminación de cuenta con ventana de recuperación          | Aceptado              | 2026-08-04 |
 | [0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md)               | Listar ligas relacionadas con colección paginada                     | Aceptado              | 2026-07-28 |
@@ -134,16 +135,16 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0082](../adr/0082-persist-co-champions-on-league-completion.md)                              | Persistir co-campeones al finalizar una liga                         | Aceptado              | 2026-08-09 |
 | [0083](../adr/0083-materialize-official-account-league-outcomes-on-completion.md)             | Materializar resultados oficiales por cuenta al finalizar una liga   | Aceptado              | 2026-08-09 |
 | [0085](../adr/0085-share-canonical-league-state-in-the-client.md)                             | Compartir el estado canónico de cada liga en el cliente              | Aceptado              | 2026-08-10 |
-| [0086](../adr/0086-use-a-durable-internal-notification-inbox.md)                               | Usar un buzón interno de notificaciones duradero                     | Aceptado              | 2026-08-11 |
-| [0087](../adr/0087-use-caddy-for-home-beta-edge.md)                                             | Usar Caddy como borde HTTPS de la beta doméstica                     | Superado por ADR-0090 | 2026-08-11 |
-| [0088](../adr/0088-use-ephemeral-aws-learning-and-home-runtime.md)                             | Usar AWS efímero para aprendizaje y el Mac como runtime habitual     | Aceptado              | 2026-08-11 |
-| [0089](../adr/0089-use-fasttourney-domain-and-separated-app-link-hosts.md)                     | Usar `fasttourney.com` y separar hosts de enlaces por entorno        | Aceptado              | 2026-08-11 |
-| [0090](../adr/0090-use-cloudflare-tunnel-for-home-public-ingress.md)                            | Usar Cloudflare Tunnel como entrada pública doméstica                 | Aceptado              | 2026-08-11 |
-| [0091](../adr/0091-separate-local-and-public-development-compose-projects.md)                    | Separar Compose local y de desarrollo público                         | Aceptado              | 2026-08-11 |
-| [0092](../adr/0092-retain-two-recoverable-development-deployments.md)                            | Conservar dos despliegues recuperables de desarrollo                  | Aceptado              | 2026-08-12 |
-| [0093](../adr/0093-use-resend-smtp-for-public-development-email.md)                              | Usar Resend SMTP para el correo del desarrollo público                | Aceptado              | 2026-08-12 |
-| [0094](../adr/0094-manage-removable-account-access-methods.md)                                   | Gestionar métodos de acceso añadibles y eliminables                    | Aceptado              | 2026-08-13 |
-| [0095](../adr/0095-transfer-tournament-ownership-directly.md)                                    | Transferir directamente la propiedad de un torneo                      | Aceptado              | 2026-08-14 |
+| [0086](../adr/0086-use-a-durable-internal-notification-inbox.md)                              | Usar un buzón interno de notificaciones duradero                     | Aceptado              | 2026-08-11 |
+| [0087](../adr/0087-use-caddy-for-home-beta-edge.md)                                           | Usar Caddy como borde HTTPS de la beta doméstica                     | Superado por ADR-0090 | 2026-08-11 |
+| [0088](../adr/0088-use-ephemeral-aws-learning-and-home-runtime.md)                            | Usar AWS efímero para aprendizaje y el Mac como runtime habitual     | Aceptado              | 2026-08-11 |
+| [0089](../adr/0089-use-fasttourney-domain-and-separated-app-link-hosts.md)                    | Usar `fasttourney.com` y separar hosts de enlaces por entorno        | Aceptado              | 2026-08-11 |
+| [0090](../adr/0090-use-cloudflare-tunnel-for-home-public-ingress.md)                          | Usar Cloudflare Tunnel como entrada pública doméstica                | Aceptado              | 2026-08-11 |
+| [0091](../adr/0091-separate-local-and-public-development-compose-projects.md)                 | Separar Compose local y de desarrollo público                        | Aceptado              | 2026-08-11 |
+| [0092](../adr/0092-retain-two-recoverable-development-deployments.md)                         | Conservar dos despliegues recuperables de desarrollo                 | Aceptado              | 2026-08-12 |
+| [0093](../adr/0093-use-resend-smtp-for-public-development-email.md)                           | Usar Resend SMTP para el correo del desarrollo público               | Aceptado              | 2026-08-12 |
+| [0094](../adr/0094-manage-removable-account-access-methods.md)                                | Gestionar métodos de acceso añadibles y eliminables                  | Aceptado              | 2026-08-13 |
+| [0095](../adr/0095-transfer-tournament-ownership-directly.md)                                 | Transferir directamente la propiedad de un torneo                    | Aceptado              | 2026-08-14 |
 
 ## Trazabilidad de un cambio
 

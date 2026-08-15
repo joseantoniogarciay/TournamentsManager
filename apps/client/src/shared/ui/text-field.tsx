@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   textInput: {
     borderWidth: 0,
     flex: 1,
-    fontFamily: typography.family.system,
+    fontFamily: typography.family.regular,
     fontSize: typography.size.bodyLarge,
     minHeight: control.minHeight,
     outlineStyle: "solid",

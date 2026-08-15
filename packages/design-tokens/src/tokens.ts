@@ -38,9 +38,13 @@ export const space = {
 export const radius = { control: 12, card: 16, pill: 999 } as const;
 
 export const typography = {
-  family: { system: "system-ui" },
+  family: {
+    regular: "Figtree_400Regular",
+    medium: "Figtree_500Medium",
+    semibold: "Figtree_600SemiBold",
+    bold: "Figtree_700Bold",
+  },
   size: { caption: 12, body: 14, bodyLarge: 16, title: 20, display: 32 },
-  weight: { regular: "400", medium: "500", semibold: "600", bold: "700" },
   lineHeight: { compact: 1.2, default: 1.5 },
 } as const;
 
