@@ -39,7 +39,7 @@ export function Text({
 }
 
 const styles = StyleSheet.create({
-  base: { fontFamily: typography.family.system },
+  base: { fontFamily: typography.family.regular },
 });
 
 const variants: Record<NonNullable<Props["variant"]>, TextStyle> = {
@@ -56,13 +56,13 @@ const variants: Record<NonNullable<Props["variant"]>, TextStyle> = {
     lineHeight: typography.size.caption * typography.lineHeight.default,
   },
   title: {
+    fontFamily: typography.family.semibold,
     fontSize: typography.size.title,
-    fontWeight: typography.weight.semibold,
     lineHeight: typography.size.title * typography.lineHeight.compact,
   },
   display: {
+    fontFamily: typography.family.bold,
     fontSize: typography.size.display,
-    fontWeight: typography.weight.bold,
     lineHeight: typography.size.display * typography.lineHeight.compact,
   },
 };

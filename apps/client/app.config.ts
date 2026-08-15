@@ -1,11 +1,21 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
-type AppEnvironment = "development" | "production";
+type AppEnvironment = "local" | "development" | "production";
 
 const appEnvironment: AppEnvironment =
-  process.env.APP_ENV === "production" ? "production" : "development";
+  process.env.APP_ENV === "production"
+    ? "production"
+    : process.env.APP_ENV === "development"
+      ? "development"
+      : "local";
 
 const environmentConfig = {
+  local: {
+    bundleIdentifier: "com.fasttourney.app.local",
+    name: "Fast Tourney Local",
+    scheme: "fasttourney-local",
+    appLinkURL: "https://dev.fasttourney.com",
+  },
   development: {
     bundleIdentifier: "com.fasttourney.app.dev",
     name: "Fast Tourney Dev",
@@ -86,11 +96,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-splash-screen",
       {
         backgroundColor: "#F8FAFC",
-        image: "./assets/fast-tourney-icon.png",
+        image: "./assets/fast-tourney-splash-mark.png",
         imageWidth: 160,
         dark: {
           backgroundColor: "#101828",
-          image: "./assets/fast-tourney-icon.png",
+          image: "./assets/fast-tourney-splash-mark.png",
         },
       },
     ],

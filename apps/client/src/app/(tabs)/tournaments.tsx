@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: control.minHeight,
   },
-  segmentLabel: { fontWeight: typography.weight.bold },
+  segmentLabel: { fontFamily: typography.family.bold },
   segmentedBar: {
     borderRadius: radius.control,
     flexDirection: "row",

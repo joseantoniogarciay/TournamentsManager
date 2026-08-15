@@ -1,6 +1,8 @@
 import { router, Stack } from "expo-router";
 import { Platform } from "react-native";
 
+import { typography } from "@tournaments-manager/design-tokens";
+
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { NavigationHeaderButton } from "@/shared/ui";
@@ -17,7 +19,7 @@ export default function AccountModalLayout() {
         headerStyle: { backgroundColor: colors.surface.canvas },
         headerTintColor: colors.text.primary,
         headerTitleAlign: "center",
-        headerTitleStyle: { color: colors.text.primary },
+        headerTitleStyle: { color: colors.text.primary, fontFamily: typography.family.semibold },
         ...(Platform.OS !== "ios"
           ? {
               headerBackVisible: false,

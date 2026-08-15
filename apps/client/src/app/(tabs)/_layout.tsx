@@ -1,6 +1,6 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 
-import { color } from "@tournaments-manager/design-tokens";
+import { color, typography } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
@@ -16,6 +16,10 @@ export default function TabLayout() {
   return (
     <NativeTabs
       key={revision}
+      labelStyle={{
+        default: { fontFamily: typography.family.medium },
+        selected: { fontFamily: typography.family.semibold },
+      }}
       minimizeBehavior="never"
       tintColor={color.brand.primary}
       unstable_nativeProps={{ colorScheme: resolvedTheme }}

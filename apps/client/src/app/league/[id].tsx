@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
     gap: space[2],
     paddingTop: space[5],
   },
-  configurationTitle: { fontWeight: typography.weight.semibold },
+  configurationTitle: { fontFamily: typography.family.semibold },
   floatingAction: {
     left: space[5],
     position: "absolute",
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
   summaryAction: { flex: 1 },
   summaryActions: { flexDirection: "row", gap: space[3], marginHorizontal: space[5] },
   summaryItem: { alignItems: "flex-start", flexDirection: "row", gap: space[2] },
-  summaryLabel: { fontWeight: typography.weight.bold },
+  summaryLabel: { fontFamily: typography.family.bold },
   summaryList: { gap: space[2] },
   summaryText: { flex: 1 },
   navigationButton: {
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
   match: { gap: space[3] },
   matchSummary: { alignItems: "center", flexDirection: "row", gap: space[2] },
   matchScore: {
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     minWidth: 48,
     textAlign: "center",
   },

@@ -158,6 +158,12 @@ web usará rendering client-side inicialmente conforme a
 raíz de rutas; las primitivas compartidas viven en `src/shared` y los tokens en
 `packages/design-tokens`.
 
+Figtree se distribuye como asset local mediante `@expo-google-fonts/figtree` y
+`expo-font`. El layout raíz carga los pesos 400, 500, 600 y 700 antes de montar
+la interfaz; los nombres de familia viven únicamente en `typography.family`.
+Una pantalla no importa una fuente ni usa `fontWeight` para simular un peso.
+Véase ADR-0096.
+
 - Las pantallas futuras vivirán en `apps/client/src/app`; sus rutas derivarán de
   los archivos.
 - `apps/client/ios` y `apps/client/android` se generarán bajo demanda y están

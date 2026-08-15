@@ -1,9 +1,16 @@
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from "expo-router";
 import Head from "expo-router/head";
+import { Figtree_400Regular } from "@expo-google-fonts/figtree/400Regular";
+import { Figtree_500Medium } from "@expo-google-fonts/figtree/500Medium";
+import { Figtree_600SemiBold } from "@expo-google-fonts/figtree/600SemiBold";
+import { Figtree_700Bold } from "@expo-google-fonts/figtree/700Bold";
+import { useFonts } from "expo-font";
 import * as WebBrowser from "expo-web-browser";
 import * as SplashScreen from "expo-splash-screen";
 import { type PropsWithChildren, useEffect } from "react";
 import { Platform } from "react-native";
+
+import { typography } from "@tournaments-manager/design-tokens";
 
 import { FeedbackProvider } from "@/shared/feedback/feedback-provider";
 import { PendingVerificationProvider } from "@/features/registration/pending-verification";
@@ -28,6 +35,16 @@ if (Platform.OS !== "web") {
 if (Platform.OS === "web") WebBrowser.maybeCompleteAuthSession();
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Figtree_400Regular,
+    Figtree_500Medium,
+    Figtree_600SemiBold,
+    Figtree_700Bold,
+  });
+
+  if (fontError) throw fontError;
+  if (!fontsLoaded) return null;
+
   return (
     <PreferencesProvider>
       <NavigationTheme>
@@ -68,7 +85,13 @@ function RootNavigator() {
   }, [finishSessionReplacement, replacementDestination, revision, transition]);
 
   return (
-    <Stack key={revision} screenOptions={{ headerShown: false }}>
+    <Stack
+      key={revision}
+      screenOptions={{
+        headerShown: false,
+        headerTitleStyle: { fontFamily: typography.family.semibold },
+      }}
+    >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
         name="(account-modals)"

@@ -1,7 +1,7 @@
 import { Stack, router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { space } from "@tournaments-manager/design-tokens";
+import { space, typography } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
@@ -34,7 +34,7 @@ export default function AccountLayout() {
     headerStyle: { backgroundColor: colors.surface.canvas },
     headerTintColor: colors.text.primary,
     headerTitleAlign: "center" as const,
-    headerTitleStyle: { color: colors.text.primary },
+    headerTitleStyle: { color: colors.text.primary, fontFamily: typography.family.semibold },
   };
 
   return (
