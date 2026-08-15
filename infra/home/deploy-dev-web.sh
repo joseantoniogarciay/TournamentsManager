@@ -29,6 +29,7 @@ trap 'rm -rf "$staging_directory"' EXIT
 
 cd "$repository_root"
 EXPO_NO_DOTENV=1 \
+	APP_ENV=development \
 	EXPO_PUBLIC_API_BASE_URL=https://dev-api.fasttourney.com/v1 \
 	EXPO_PUBLIC_APP_LINK_URL=https://dev.fasttourney.com \
 	EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=267995166257-2favmuuhnu14p9na8le1rlmtpbgcb56g.apps.googleusercontent.com \
