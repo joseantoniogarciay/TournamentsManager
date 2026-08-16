@@ -116,6 +116,7 @@ dev-public-bootstrap: dev-public-config-check
 	sed '/^--/d' $(BACKEND_DIR)/db/schema/initial_schema.sql | \
 		$(PUBLIC_DEV_COMPOSE) exec -T postgres sh -ec 'PGPASSWORD="$$POSTGRES_MIGRATOR_PASSWORD" psql -h postgres -U "$$POSTGRES_MIGRATOR_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "SET ROLE \"$$POSTGRES_OWNER_ROLE\"" -f -'
 	$(PUBLIC_DEV_COMPOSE) exec -T postgres sh -ec 'PGPASSWORD="$$POSTGRES_MIGRATOR_PASSWORD" psql -h postgres -U "$$POSTGRES_MIGRATOR_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -v app_role="$$POSTGRES_APP_USER" -c "SET ROLE \"$$POSTGRES_OWNER_ROLE\"" -f -' < $(PUBLIC_DEV_DIR)/postgresql/grant-runtime.sql
+	$(MAKE) dev-public-runtime-verify
 
 # Comprueba que la identidad de la API conecta pero no puede cambiar el esquema.
 dev-public-runtime-verify: dev-public-config-check
