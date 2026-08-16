@@ -68,10 +68,12 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 - **Tipografía:** Figtree local en web, iOS y Android, con los pesos 400, 500,
   600 y 700 cargados antes de montar la interfaz. Los tokens seleccionan la
   familia real de cada peso, en vez de sintetizarlo con `fontWeight`. La escala
-  permanece entre 12 y 32 px. El marcador de un partido dentro de una fila usa
-  la escala `title` en negrita: mantiene jerarquía frente a los equipos sin
-  forzar el alto de la card ni recortar los glifos. `display` queda para títulos
-  y resultados destacados fuera de una fila compacta. Véase ADR-0096.
+  permanece entre 12 y 32 px. Las etiquetas de la primitiva `Button` usan
+  semibold (600) para reforzar su legibilidad sin cambiar tamaño ni altura. El
+  marcador de un partido dentro de una fila usa la escala `title` en negrita:
+  mantiene jerarquía frente a los equipos sin forzar el alto de la card ni
+  recortar los glifos. `display` queda para títulos y resultados destacados
+  fuera de una fila compacta. Véase ADR-0096.
 - **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base.
   Cada card reserva siempre 20 px de margen exterior horizontal y los layouts
   dejan 20 px entre cards, sin alterar su padding interno.

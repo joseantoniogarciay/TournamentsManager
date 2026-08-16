@@ -45,6 +45,17 @@ nombrado, salud basada en `pg_isready` y puerto expuesto exclusivamente en
 loopback. Expo y las migraciones se ejecutan desde el host. El procedimiento
 operativo está en el [runbook local](../runbooks/local-postgresql.md).
 
+## Identidades del entorno público de desarrollo
+
+[ADR-0097](../adr/0097-separate-postgresql-runtime-and-migration-identities.md)
+aplica mínimo privilegio a `tournaments-manager-dev`: el propietario del
+esquema no puede iniciar sesión, la migración usa una identidad distinta y la
+API usa una tercera con solo DML sobre las tablas y secuencias necesarias. El
+bootstrap completo sobre una base vacía es explícito
+(`make dev-public-bootstrap`), no forma parte del arranque ni del despliegue
+ordinario de la API. Cada cambio futuro de esquema debe conservar los `GRANT`
+de runtime y verificarlos antes de publicar.
+
 ## Principios
 
 - El modelo de datos deriva del dominio y sus invariantes.

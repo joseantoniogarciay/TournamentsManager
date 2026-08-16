@@ -3,6 +3,7 @@ name: tournaments-manager-dev
 services:
   postgres:
     image: postgres:18.4-bookworm
+    restart: unless-stopped
     env_file:
       - .env
     volumes:
@@ -16,6 +17,7 @@ services:
 
   api:
     image: ${DEV_API_IMAGE:-tournaments-manager-dev-api:latest}
+    restart: unless-stopped
     build:
       context: ../../apps/backend
       target: runtime

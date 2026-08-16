@@ -16,13 +16,34 @@ gateway `172.19.0.1` como el único proxy de confianza. Caddy traduce
 `CF-Connecting-IP` a `X-Client-IP`; la API usa esta última exclusivamente desde
 esa gateway para sus límites de abuso.
 
+Los servicios usan `restart: unless-stopped`. Cuando Docker Desktop se inicia
+al abrir sesión, recupera el proyecto que estuviera en marcha antes de apagar el
+Mac. Una parada explícita con `docker compose stop` conserva esa intención y no
+lo reinicia automáticamente.
+
 ## Primer arranque
 
 ```bash
 make dev-public-init
-# Edita infra/dev/.env y infra/dev/api.docker.env con la misma contraseña única.
+# Edita infra/dev/.env con tres contraseñas distintas. Copia exactamente
+# POSTGRES_APP_PASSWORD en DATABASE_URL de infra/dev/api.docker.env.
+make dev-public-bootstrap
+make dev-public-runtime-verify
 make dev-public-up
-make dev-public-schema-apply
+```
+
+`dev-public-bootstrap` se ejecuta solo sobre una base vacía. Crea el propietario
+sin login, migrador y runtime; aplica el esquema mediante el migrador después de
+que asuma temporalmente el propietario, y concede finalmente el acceso DML de
+la API. La API no puede crear ni alterar tablas. Un cambio futuro de esquema
+requiere su `GRANT` de runtime explícito; no se conceden permisos por defecto.
+
+Para reiniciar únicamente los datos de este entorno antes del bootstrap:
+
+```bash
+make dev-public-reset
+# confirma escribiendo DEV_RESET
+make dev-public-bootstrap
 ```
 
 ## Actualización y reversión de dev
@@ -33,6 +54,12 @@ es:
 ```bash
 make dev-public-deploy
 ```
+
+El primer despliegue tras adoptar ADR-0097 exige antes editar los dos contratos
+de entorno con las credenciales nuevas y ejecutar `make dev-public-reset`,
+`make dev-public-bootstrap` y `make dev-public-runtime-verify`. Después,
+`make dev-public-deploy` recrea la API con `POSTGRES_APP_USER`; no recibe ni la
+contraseña de migración ni la de propiedad.
 
 El comando exige un árbol limpio cuyo `HEAD` coincida exactamente con
 `origin/develop`. Construye una imagen `runtime` etiquetada con el SHA completo,

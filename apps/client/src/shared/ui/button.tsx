@@ -4,7 +4,14 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 
 import { LinearGradient } from "expo-linear-gradient";
 
-import { color, control, gradient, radius, space } from "@tournaments-manager/design-tokens";
+import {
+  color,
+  control,
+  gradient,
+  radius,
+  space,
+  typography,
+} from "@tournaments-manager/design-tokens";
 
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
@@ -41,6 +48,7 @@ export function Button({
         color={
           variant === "primary" ? "onBrand" : variant === "destructive" ? "inverse" : "primary"
         }
+        style={styles.label}
       >
         {label}
       </Text>
@@ -117,5 +125,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: control.minHeight - 2,
   },
+  label: { fontFamily: typography.family.semibold },
   disabled: { opacity: 0.55 },
 });

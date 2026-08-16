@@ -28,7 +28,9 @@ cambio del enlace es atómico mediante `mv -h`, para reemplazar el enlace y no e
 directorio al que apunta en macOS, y se retienen solamente la versión actual y
 su predecesora. Git conserva fuente y configuración, no artefactos, imágenes ni
 backups. `deploy-dev-web.sh` ignora el `.env` local y limpia la caché de Metro
-para que ambas URL públicas se incorporen al bundle. Caddy no ejecuta Expo
+para que ambas URL públicas se incorporen al bundle. También fija
+`APP_ENV=development`, de modo que la exportación usa la identidad **Fast
+Tourney Dev** en lugar de la variante local. Caddy no ejecuta Expo
 Metro.
 
 Cada release de dev también incorpora la referencia Scalar y la copia exacta de
