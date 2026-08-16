@@ -15,6 +15,10 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 - **Indicadores informativos:** un número de paso o un marcador no interactivo
   usa borde y texto primarios del tema; no emplea el color de acción para evitar
   que parezca un botón.
+- **Loaders:** los indicadores de progreso sobre una superficie normal usan el
+  azul principal en claro y blanco en oscuro. Los que van sobre una acción
+  primaria filled permanecen blancos en ambos temas para contrastar con el
+  degradado de marca.
 - **Degradado de marca:** una base azul `#155EEF` recibe una superposición violeta
   `#7F56D9` limitada a la esquina inferior derecha. Su eje es diagonal hacia esa
   esquina, como en el icono de la aplicación. El violeta entra desde el 35 % del
@@ -61,11 +65,14 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 - **Botonera web:** web usa la barra inferior estándar de `Tabs`, no el fallback
   de `NativeTabs`. Conserva las tres rutas, iconos y colores semánticos; Cuenta
   ofrece en su cabecera el mismo acceso localizado a Ajustes que las apps.
-- **Controles de cabecera:** en web y Android toda acción de navegación de una
-  cabecera usa un objetivo circular de 44 px, superficie por defecto y borde
-  semántico, separado 20 px del lateral correspondiente. La implementación vive
-  en `NavigationHeaderButton`; iOS conserva `Stack.Toolbar.Button` para respetar
-  la barra nativa. Cuando una ruta muestra en cabecera el nombre de una entidad,
+- **Controles de cabecera:** toda acción de navegación que no use Liquid Glass
+  —web, Android e iOS anterior a 26— usa un objetivo circular de 44 px,
+  superficie por defecto y borde semántico mediante `NavigationHeaderButton`.
+  Web y Android lo separan 20 px del lateral; en iOS anterior a 26 el botón no
+  añade margen porque la cabecera ya aplica su inset nativo, alineándolo con el
+  control de `Stack.Toolbar.Button` de iOS 26. iOS 26 o superior conserva
+  `Stack.Toolbar.Button` para respetar Liquid Glass. Cuando una ruta muestra en
+  cabecera el nombre de una entidad,
   este se centra, reserva 20 px frente a los controles laterales y puede ocupar
   dos líneas; no se impone un ancho fijo que lo trunque antes de agotar ese espacio.
 - **Tipografía:** Figtree local en web, iOS y Android, con los pesos 400, 500,

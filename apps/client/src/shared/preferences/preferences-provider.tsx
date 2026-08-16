@@ -16,6 +16,7 @@ export type ResolvedTheme = "light" | "dark";
 type ThemeColors = {
   surface: { canvas: string; default: string; subtle: string };
   text: { primary: string; secondary: string; placeholder: string; inverse: string };
+  indicator: { default: string };
   border: { default: string; focus: string; error: string };
   feedback: { success: string; error: string };
 };
@@ -32,6 +33,7 @@ const storageKey = "tournaments-manager.theme-preference";
 const lightColors: ThemeColors = {
   surface: { canvas: "#F8FAFC", default: "#FFFFFF", subtle: "#F1F5F9" },
   text: { primary: "#101828", secondary: "#475467", placeholder: "#98A2B3", inverse: "#FFFFFF" },
+  indicator: { default: color.brand.primary },
   border: { default: "#D0D5DD", focus: color.border.focus, error: "#D92D20" },
   feedback: { success: "#027A48", error: "#D92D20" },
 };
@@ -39,6 +41,7 @@ const lightColors: ThemeColors = {
 const darkColors: ThemeColors = {
   surface: { canvas: "#101828", default: "#182230", subtle: "#1D2939" },
   text: { primary: "#F9FAFB", secondary: "#D0D5DD", placeholder: "#98A2B3", inverse: "#101828" },
+  indicator: { default: color.text.inverse },
   border: { default: "#475467", focus: color.border.focus, error: "#FDA29B" },
   feedback: { success: "#6CE9A6", error: "#FDA29B" },
 };

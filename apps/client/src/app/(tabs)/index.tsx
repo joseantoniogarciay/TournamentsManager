@@ -82,7 +82,8 @@ export default function HomeScreen() {
             <RefreshControl
               onRefresh={() => void loadRecentLeagues(true)}
               refreshing={isRefreshing}
-              tintColor={colors.border.focus}
+              colors={[colors.indicator.default]}
+              tintColor={colors.indicator.default}
             />
           ) : undefined
         }

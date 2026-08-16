@@ -1,6 +1,6 @@
 import { router, Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -24,6 +24,7 @@ import {
   NavigationHeaderButton,
   Screen,
   TextField,
+  usesLiquidGlassNavigation,
 } from "@/shared/ui";
 
 export default function CreateTournamentScreen() {
@@ -118,7 +119,7 @@ export default function CreateTournamentScreen() {
           headerTitleAlign: "center",
         }}
       >
-        {Platform.OS === "ios" ? (
+        {usesLiquidGlassNavigation ? (
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
               accessibilityLabel={t("common_close")}
@@ -128,7 +129,7 @@ export default function CreateTournamentScreen() {
           </Stack.Toolbar>
         ) : null}
       </Stack.Screen>
-      {Platform.OS !== "ios" ? (
+      {!usesLiquidGlassNavigation ? (
         <Stack.Screen
           options={{
             headerLeft: () => (

@@ -1,11 +1,10 @@
 import { router, Stack } from "expo-router";
-import { Platform } from "react-native";
 
 import { typography } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { NavigationHeaderButton } from "@/shared/ui";
+import { NavigationHeaderButton, usesLiquidGlassNavigation } from "@/shared/ui";
 
 export default function AccountModalLayout() {
   const t = getTranslator();
@@ -20,7 +19,7 @@ export default function AccountModalLayout() {
         headerTintColor: colors.text.primary,
         headerTitleAlign: "center",
         headerTitleStyle: { color: colors.text.primary, fontFamily: typography.family.semibold },
-        ...(Platform.OS !== "ios"
+        ...(!usesLiquidGlassNavigation
           ? {
               headerBackVisible: false,
               headerLeft: () => (
@@ -36,22 +35,26 @@ export default function AccountModalLayout() {
       }}
     >
       <Stack.Screen name="account/settings" options={{ title: t("account_settings_title") }}>
-        <Stack.Toolbar placement="left">
-          <Stack.Toolbar.Button
-            accessibilityLabel={t("common_close")}
-            icon="xmark"
-            onPress={closeToAccount}
-          />
-        </Stack.Toolbar>
+        {usesLiquidGlassNavigation ? (
+          <Stack.Toolbar placement="left">
+            <Stack.Toolbar.Button
+              accessibilityLabel={t("common_close")}
+              icon="xmark"
+              onPress={closeToAccount}
+            />
+          </Stack.Toolbar>
+        ) : null}
       </Stack.Screen>
       <Stack.Screen name="account/notifications" options={{ title: t("notifications_title") }}>
-        <Stack.Toolbar placement="left">
-          <Stack.Toolbar.Button
-            accessibilityLabel={t("common_close")}
-            icon="xmark"
-            onPress={closeToAccount}
-          />
-        </Stack.Toolbar>
+        {usesLiquidGlassNavigation ? (
+          <Stack.Toolbar placement="left">
+            <Stack.Toolbar.Button
+              accessibilityLabel={t("common_close")}
+              icon="xmark"
+              onPress={closeToAccount}
+            />
+          </Stack.Toolbar>
+        ) : null}
       </Stack.Screen>
     </Stack>
   );

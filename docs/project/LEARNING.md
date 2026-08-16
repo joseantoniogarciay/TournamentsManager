@@ -2058,8 +2058,9 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   explícitamente el alto flexible y la reserva inferior de
   `useTabContentBottomPadding`. Una regla global que dependa de semántica ARIA
   debe acotarse a la estructura que pretende modificar; los indicadores de
-  navegación de filas se comparten como iconos de 24 px, no como glifos de texto
-  con tamaño accidental.
+  navegación de filas se comparten dentro de un contenedor de 24 px, con icono
+  al 80 % para que no domine el contenido, no como glifos de texto con tamaño
+  accidental.
 
 ### 2026-08-12 — Una exportación pública debe aislar configuración y caché locales
 
@@ -2263,3 +2264,21 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** Liquid Glass se conserva solo en iOS 26 o superior.
   En versiones anteriores la barra fija un fondo opaco con el token
   `surface.default`, igual que las implementaciones web y Android.
+
+### 2026-08-16 — El inset de la cabecera también forma parte del control
+
+- **Aprendido:** un botón circular compartido no debe sumar un margen propio en
+  iOS anterior a 26: React Navigation ya reserva el inset lateral de la barra.
+- **Regla reutilizable:** en iOS anterior a 26, `NavigationHeaderButton` usa el
+  mismo objetivo de 44 px, borde y superficie que web y Android, pero deja la
+  alineación lateral a la cabecera. Así coincide con los controles de toolbar
+  de iOS 26 y el patrón cubre también acciones como Notificaciones.
+
+### 2026-08-16 — El loader expresa contraste, no jerarquía de texto
+
+- **Aprendido:** reutilizar `text.primary` para un indicador de progreso lo
+  convierte en negro sobre claro y no garantiza su contraste en oscuro.
+- **Regla reutilizable:** el token semántico `indicator.default` usa el azul
+  principal sobre superficies claras y blanco sobre superficies oscuras; un
+  loader dentro de una acción primaria filled sigue usando blanco en ambos
+  temas porque su contexto es el degradado de marca.

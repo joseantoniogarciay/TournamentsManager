@@ -281,7 +281,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
               ]}
             >
               {isGooglePreparing || isGoogleAuthenticating ? (
-                <ActivityIndicator color={colors.text.primary} />
+                <ActivityIndicator color={colors.indicator.default} />
               ) : (
                 <Image source={googleLogo} style={styles.googleLogo} />
               )}

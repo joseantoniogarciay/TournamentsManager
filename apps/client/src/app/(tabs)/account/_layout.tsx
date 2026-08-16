@@ -1,12 +1,12 @@
 import { Stack, router } from "expo-router";
-import { Platform } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { typography } from "@tournaments-manager/design-tokens";
+import { space, typography } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { NavigationHeaderButton, Text } from "@/shared/ui";
+import { NavigationHeaderButton, Text, usesLiquidGlassNavigation } from "@/shared/ui";
 import { NativeNotificationHeaderButton } from "@/features/notifications/native-header-button";
 
 export default function AccountLayout() {
@@ -26,8 +26,8 @@ export default function AccountLayout() {
       screenOptions={{
         headerShadowVisible: false,
         headerBackButtonDisplayMode: "minimal",
-        headerBackVisible: Platform.OS === "ios",
-        ...(Platform.OS !== "ios"
+        headerBackVisible: usesLiquidGlassNavigation,
+        ...(!usesLiquidGlassNavigation
           ? {
               headerLeft: () => (
                 <NavigationHeaderButton
@@ -45,24 +45,54 @@ export default function AccountLayout() {
         headerTitleStyle: { color: colors.text.primary, fontFamily: typography.family.semibold },
       }}
     >
-      <Stack.Screen name="index" options={{ title: "" }}>
-        <Stack.Toolbar placement="left">
-          <Stack.Toolbar.View hidesSharedBackground>
-            <Text variant="title">{user?.username}</Text>
-          </Stack.Toolbar.View>
-        </Stack.Toolbar>
-        <Stack.Toolbar placement="right">
-          {user ? (
+      <Stack.Screen
+        name="index"
+        options={{
+          headerBackVisible: false,
+          headerLeft: usesLiquidGlassNavigation
+            ? undefined
+            : () => <Text variant="title">{user?.username}</Text>,
+          headerTitle: () => null,
+          title: "",
+          ...(!usesLiquidGlassNavigation
+            ? {
+                headerRight: () => (
+                  <View style={styles.headerActions}>
+                    {user ? <NativeNotificationHeaderButton /> : null}
+                    <NavigationHeaderButton
+                      accessibilityLabel={t("account_settings_accessibility_label")}
+                      icon="settings"
+                      nativeIcon={{ android: "settings", ios: "gearshape", web: "settings" }}
+                      onPress={() => router.push("/(account-modals)/account/settings")}
+                      side="right"
+                    />
+                  </View>
+                ),
+              }
+            : {}),
+        }}
+      >
+        {usesLiquidGlassNavigation ? (
+          <Stack.Toolbar placement="left">
             <Stack.Toolbar.View hidesSharedBackground>
-              <NativeNotificationHeaderButton />
+              <Text variant="title">{user?.username}</Text>
             </Stack.Toolbar.View>
-          ) : null}
-          <Stack.Toolbar.Button
-            accessibilityLabel={t("account_settings_accessibility_label")}
-            icon="gearshape"
-            onPress={() => router.push("/(account-modals)/account/settings")}
-          />
-        </Stack.Toolbar>
+          </Stack.Toolbar>
+        ) : null}
+        {usesLiquidGlassNavigation ? (
+          <Stack.Toolbar placement="right">
+            {user ? (
+              <Stack.Toolbar.View hidesSharedBackground>
+                <NativeNotificationHeaderButton />
+              </Stack.Toolbar.View>
+            ) : null}
+            <Stack.Toolbar.Button
+              accessibilityLabel={t("account_settings_accessibility_label")}
+              icon="gearshape"
+              onPress={() => router.push("/(account-modals)/account/settings")}
+            />
+          </Stack.Toolbar>
+        ) : null}
       </Stack.Screen>
       <Stack.Screen name="access" options={{ title: t("account_access_data_title") }} />
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
@@ -89,3 +119,7 @@ export default function AccountLayout() {
     </Stack>
   );
 }
+
+const styles = StyleSheet.create({
+  headerActions: { alignItems: "center", flexDirection: "row", gap: space[3] },
+});

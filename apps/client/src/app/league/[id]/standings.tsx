@@ -19,6 +19,7 @@ import {
   RequestErrorCard,
   Screen,
   Text,
+  usesLiquidGlassNavigation,
 } from "@/shared/ui";
 
 const leftColumnWidth = 144;
@@ -33,7 +34,6 @@ export default function LeagueStandingsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
   const league = useLeague(id);
-  const usesLiquidGlassControls = Platform.OS === "ios" && Number(Platform.Version) >= 26;
   const { loadLeague, refreshLeague } = useLeagueStore();
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
   const [leagueUnavailable, setLeagueUnavailable] = useState(false);
@@ -165,12 +165,12 @@ export default function LeagueStandingsScreen() {
           headerTintColor: colors.text.primary,
           headerTitleAlign: "center",
           title: t("league_standings"),
-          ...(!usesLiquidGlassControls
+          ...(!usesLiquidGlassNavigation
             ? { headerLeft: () => navigationButton, headerRight: () => informationButton }
             : {}),
         }}
       />
-      {usesLiquidGlassControls ? (
+      {usesLiquidGlassNavigation ? (
         <>
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
@@ -447,7 +447,7 @@ function StandingsRulesContent({ league }: { league: PublicLeague | null | undef
 }
 
 const styles = StyleSheet.create({
-  content: { gap: space[5], paddingBottom: space[5], paddingHorizontal: space[5] },
+  content: { paddingBottom: space[5], paddingHorizontal: space[5] },
   headerRow: {
     alignItems: "center",
     borderBottomWidth: 1,

@@ -1,7 +1,7 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useState } from "react";
-import { Modal, Platform, Pressable, SectionList, Share, StyleSheet, View } from "react-native";
+import { Modal, Pressable, SectionList, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { color, control, radius, space, typography } from "@tournaments-manager/design-tokens";
@@ -34,6 +34,7 @@ import {
   Text,
   TextField,
   useConfirmationDialog,
+  usesLiquidGlassNavigation,
 } from "@/shared/ui";
 
 const localAppLinkURL = "http://localhost:8082";
@@ -215,7 +216,7 @@ export default function LeagueScreen() {
         <Stack.Screen
           options={{
             ...loadingHeaderOptions,
-            ...(Platform.OS !== "ios"
+            ...(!usesLiquidGlassNavigation
               ? {
                   headerLeft: () => (
                     <NavigationHeaderButton
@@ -229,7 +230,7 @@ export default function LeagueScreen() {
               : {}),
           }}
         >
-          {Platform.OS === "ios" ? (
+          {usesLiquidGlassNavigation ? (
             <Stack.Toolbar placement="left">
               <Stack.Toolbar.Button
                 accessibilityLabel={t("common_close")}
@@ -314,7 +315,7 @@ export default function LeagueScreen() {
   return (
     <>
       <Stack.Screen options={headerOptions} />
-      {Platform.OS !== "ios" ? (
+      {!usesLiquidGlassNavigation ? (
         <Stack.Screen
           options={{
             headerLeft: () => (

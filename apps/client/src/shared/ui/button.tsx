@@ -42,14 +42,16 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           color={
-            variant === "destructive" ? colors.feedback.error : color.brand.primary
+            variant === "destructive"
+              ? colors.feedback.error
+              : variant === "primary"
+                ? colors.text.inverse
+                : colors.indicator.default
           }
         />
       ) : null}
       <Text
-        color={
-          variant === "destructive" ? "error" : variant === "primary" ? "onBrand" : "primary"
-        }
+        color={variant === "destructive" ? "error" : variant === "primary" ? "onBrand" : "primary"}
         style={styles.label}
       >
         {label}
@@ -80,24 +82,13 @@ export function Button({
       ) : null}
       {variant === "destructive" ? (
         <View
-          style={[
-            styles.base,
-            styles.destructiveOutline,
-            { borderColor: colors.feedback.error },
-          ]}
+          style={[styles.base, styles.destructiveOutline, { borderColor: colors.feedback.error }]}
         >
           {content}
         </View>
       ) : null}
       {variant === "ghost" ? (
-        <View
-          style={[
-            styles.base,
-            { backgroundColor: "transparent" },
-          ]}
-        >
-          {content}
-        </View>
+        <View style={[styles.base, { backgroundColor: "transparent" }]}>{content}</View>
       ) : null}
     </Pressable>
   );

@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet } from "react-native";
 
 import { control, space } from "@tournaments-manager/design-tokens";
 
@@ -14,7 +14,13 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { NavigationHeaderButton, Screen, Text, TextField } from "@/shared/ui";
+import {
+  NavigationHeaderButton,
+  Screen,
+  Text,
+  TextField,
+  usesLiquidGlassNavigation,
+} from "@/shared/ui";
 
 const minimumQueryLength = 3;
 const debounceMilliseconds = 400;
@@ -104,7 +110,7 @@ export default function TransferLeagueScreen() {
           title: t("league_transfer"),
         }}
       >
-        {Platform.OS === "ios" ? (
+        {usesLiquidGlassNavigation ? (
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
               accessibilityLabel={t("common_close")}
@@ -114,7 +120,9 @@ export default function TransferLeagueScreen() {
           </Stack.Toolbar>
         ) : null}
       </Stack.Screen>
-      {Platform.OS !== "ios" ? <Stack.Screen options={{ headerLeft: () => closeButton }} /> : null}
+      {!usesLiquidGlassNavigation ? (
+        <Stack.Screen options={{ headerLeft: () => closeButton }} />
+      ) : null}
       <Screen topInset="navigation-bar">
         <ScrollView
           contentContainerStyle={styles.content}
@@ -130,7 +138,7 @@ export default function TransferLeagueScreen() {
             placeholder={t("league_administrator_username_placeholder")}
             value={query}
           />
-          {searching ? <ActivityIndicator color={colors.text.primary} /> : null}
+          {searching ? <ActivityIndicator color={colors.indicator.default} /> : null}
           {helper ? <Text color="secondary">{helper}</Text> : null}
           {visibleResults.map((username) => (
             <Pressable
@@ -141,7 +149,9 @@ export default function TransferLeagueScreen() {
               style={[styles.row, { borderColor: colors.border.default }]}
             >
               <Text variant="bodyLarge">{username}</Text>
-              {transferring === username ? <ActivityIndicator color={colors.text.primary} /> : null}
+              {transferring === username ? (
+                <ActivityIndicator color={colors.indicator.default} />
+              ) : null}
             </Pressable>
           ))}
         </ScrollView>

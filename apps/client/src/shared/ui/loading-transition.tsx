@@ -69,7 +69,7 @@ export function LoadingTransition({ active, message }: LoadingTransitionProps) {
     >
       <View style={styles.content}>
         <Text variant="bodyLarge">{message}</Text>
-        <ActivityIndicator color={colors.text.primary} size="large" />
+        <ActivityIndicator color={colors.indicator.default} size="large" />
       </View>
     </Animated.View>
   );

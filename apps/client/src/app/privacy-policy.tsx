@@ -1,11 +1,11 @@
 import { router, Stack } from "expo-router";
-import { Platform, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 import { space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Card, NavigationHeaderButton, Screen, Text } from "@/shared/ui";
+import { Card, NavigationHeaderButton, Screen, Text, usesLiquidGlassNavigation } from "@/shared/ui";
 
 export default function PrivacyPolicyScreen() {
   const t = getTranslator();
@@ -35,7 +35,7 @@ export default function PrivacyPolicyScreen() {
       <Stack.Screen
         options={{
           headerBackVisible: false,
-          ...(Platform.OS !== "ios"
+          ...(!usesLiquidGlassNavigation
             ? {
                 headerLeft: () => (
                   <NavigationHeaderButton
@@ -54,7 +54,7 @@ export default function PrivacyPolicyScreen() {
           headerTitleAlign: "center",
         }}
       >
-        {Platform.OS === "ios" ? (
+        {usesLiquidGlassNavigation ? (
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
               accessibilityLabel={t("common_close")}
