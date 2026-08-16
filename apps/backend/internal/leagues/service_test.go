@@ -2,6 +2,7 @@ package leagues
 
 import (
 	"context"
+	"strings"
 	"testing"
 )
 
@@ -55,5 +56,19 @@ func TestListRecentReturnsRepositorySummary(t *testing.T) {
 	items, err := NewService(&repositoryStub{recentItems: []Item{{ID: "recent"}}}).ListRecent(context.Background(), "account")
 	if err != nil || len(items) != 1 || items[0].ID != "recent" {
 		t.Fatalf("ListRecent() = %#v, %v; want the repository summary", items, err)
+	}
+}
+
+func TestValidCreateInputEnforcesLeagueNameCharacterLimit(t *testing.T) {
+	t.Parallel()
+
+	input := CreateInput{Teams: []TeamInput{{Name: "Azules"}, {Name: "Rojos"}}}
+	input.Name = strings.Repeat("a", MaximumLeagueNameLength)
+	if !validCreateInput(input) {
+		t.Fatalf("validCreateInput() rejected %d characters", MaximumLeagueNameLength)
+	}
+	input.Name += "a"
+	if validCreateInput(input) {
+		t.Errorf("validCreateInput() accepted %d characters", MaximumLeagueNameLength+1)
 	}
 }

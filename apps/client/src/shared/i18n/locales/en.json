@@ -173,7 +173,7 @@
   "league_publish": "Create league",
   "league_sign_in_to_publish": "Sign in to create it",
   "league_name_required": "Enter a league name.",
-  "league_name_too_long": "The league name cannot exceed 140 characters.",
+  "league_name_too_long": "The league name cannot exceed 56 characters.",
   "league_teams_required": "Add at least two different teams.",
   "league_state_published": "League not started",
   "league_state_in_progress": "League in progress",

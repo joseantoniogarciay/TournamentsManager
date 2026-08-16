@@ -1023,7 +1023,7 @@ components:
       type: object
       required: [name, teams]
       properties:
-        name: { type: string, minLength: 1, maxLength: 140 }
+        name: { type: string, minLength: 1, maxLength: 56 }
         teams:
           type: array
           minItems: 2

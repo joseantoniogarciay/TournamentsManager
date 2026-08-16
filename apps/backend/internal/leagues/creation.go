@@ -6,7 +6,11 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode/utf8"
 )
+
+// MaximumLeagueNameLength is the contract limit measured in Unicode characters.
+const MaximumLeagueNameLength = 56
 
 var (
 	// ErrInvalidLeagueInput indicates invalid creation or start data.
@@ -367,7 +371,7 @@ func sameTiedStandingRank(left, right Standing, head map[string]Standing, legs i
 	return compareGeneralStanding(left, right) == 0 && compareStanding(head[left.TeamID], head[right.TeamID]) == 0
 }
 func validCreateInput(input CreateInput) bool {
-	if len(strings.TrimSpace(input.Name)) == 0 || len(input.Name) > 140 || len(input.Teams) < 2 || len(input.Teams) > 64 {
+	if len(strings.TrimSpace(input.Name)) == 0 || utf8.RuneCountInString(input.Name) > MaximumLeagueNameLength || len(input.Teams) < 2 || len(input.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}

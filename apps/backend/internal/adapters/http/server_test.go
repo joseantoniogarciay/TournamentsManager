@@ -721,6 +721,22 @@ func TestRegistrationRequiresSupportedLocale(t *testing.T) {
 	}
 }
 
+func TestValidRegistrationDraftEnforcesLeagueNameCharacterLimit(t *testing.T) {
+	t.Parallel()
+
+	draft := &registration.Draft{
+		Name:  strings.Repeat("a", leagues.MaximumLeagueNameLength),
+		Teams: []string{"Azules", "Rojos"},
+	}
+	if !validRegistrationDraft(draft) {
+		t.Fatalf("validRegistrationDraft() rejected %d characters", leagues.MaximumLeagueNameLength)
+	}
+	draft.Name += "a"
+	if validRegistrationDraft(draft) {
+		t.Errorf("validRegistrationDraft() accepted %d characters", leagues.MaximumLeagueNameLength+1)
+	}
+}
+
 func TestRegistrationRateLimitsByClientIP(t *testing.T) {
 	t.Parallel()
 

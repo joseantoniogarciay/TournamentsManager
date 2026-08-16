@@ -139,7 +139,7 @@ CREATE INDEX reauthentication_tickets_session_idx ON reauthentication_tickets (s
 CREATE TABLE leagues (
     id uuid PRIMARY KEY DEFAULT uuidv7(),
     organizer_account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE RESTRICT,
-    name text NOT NULL CHECK (length(btrim(name)) > 0),
+    name text NOT NULL CHECK (length(btrim(name)) > 0) CHECK (char_length(name) <= 56),
     sport text NOT NULL DEFAULT 'football' CHECK (sport = 'football'),
     format text NOT NULL DEFAULT 'league' CHECK (format = 'league'),
     state text NOT NULL DEFAULT 'published' CHECK (

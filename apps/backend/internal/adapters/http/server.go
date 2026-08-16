@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
@@ -1330,7 +1331,7 @@ func validRegistrationDraft(draft *registration.Draft) bool {
 	if draft == nil {
 		return true
 	}
-	if len(strings.TrimSpace(draft.Name)) == 0 || len(draft.Name) > 140 || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
+	if len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > leagues.MaximumLeagueNameLength || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}
