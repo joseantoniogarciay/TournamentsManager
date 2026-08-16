@@ -2290,3 +2290,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   principal sobre superficies claras y blanco sobre superficies oscuras; un
   loader dentro de una acción primaria filled sigue usando blanco en ambos
   temas porque su contexto es el degradado de marca.
+
+### 2026-08-16 — Rotar credenciales web exige distinguir persistencia y entrega
+
+- **Aprendido:** una sesión válida en el servidor no restaura una web si su
+  cookie era de sesión y Safari descartó el proceso. Access y refresh deben
+  persistir con sus vencimientos propios, permanecer `HttpOnly` y rotarse juntos.
+- **Regla reutilizable:** el cliente web comparte una sola renovación tras un
+  `401` de access y repite la petición una vez. No se refresca durante unload:
+  si se pierde la respuesta de una rotación estricta, se exige login antes que
+  aceptar una ventana de gracia que rebaje la detección de reuso.

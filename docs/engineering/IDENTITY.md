@@ -28,11 +28,11 @@
 propia en Go con credenciales locales y login federado inicial mediante Apple y
 Google.
 
-Para el primer incremento, [ADR-0044](../adr/0044-use-opaque-sessions-local-smtp-and-argon2id.md)
-fija sesiones opacas persistidas y revocables. La web usa cookie segura; móvil
-usa Bearer en almacenamiento seguro. [ADR-0050](../adr/0050-include-google-federated-login-in-first-increment.md)
-incorpora Google como único proveedor federado inicial. JWT, refresh tokens y
-Apple quedan fuera de este incremento.
+ADR-0044 fija sesiones opacas persistidas y revocables, y ADR-0062 las completa
+con access y refresh opacos rotatorios. La web conserva ambos secretos en cookies
+persistentes `HttpOnly`; móvil usa Bearer en almacenamiento seguro. [ADR-0050](../adr/0050-include-google-federated-login-in-first-increment.md)
+incorpora Google como único proveedor federado inicial. No se introducen JWT ni
+Apple en este incremento.
 
 ```text
 Email / password ──> local_credentials ─┐

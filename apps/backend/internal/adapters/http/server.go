@@ -84,7 +84,7 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 	mux.HandleFunc("POST /v1/password-reset-confirmations", confirmPasswordReset(registrationService, cookies))
 	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService, cookies))
 	mux.Handle("GET /v1/sessions", requireSession(authenticator)(http.HandlerFunc(getCurrentSession(authenticator))))
-	mux.HandleFunc("POST /v1/sessions/refresh", refreshSession(registrationService))
+	mux.Handle("POST /v1/sessions/refresh", refreshCookieCSRF(corsAllowedOrigins, cookies, refreshSession(registrationService, cookies)))
 	mux.Handle("DELETE /v1/sessions", cookieCSRF(http.HandlerFunc(revokeCurrentSession(authenticator, cookies))))
 	mux.Handle("GET /v1/me/access-methods", requireSession(authenticator)(http.HandlerFunc(getAccessMethods(authenticator))))
 	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createReauthenticationTicket(accessService, federatedService)))))
@@ -152,7 +152,7 @@ func scheduleAccountDeletion(authenticator sessionAuthenticator, cookies session
 			return
 		}
 		if transport, _ := currentSessionTransport(r.Context()); transport == cookieSession {
-			cookies.set(w, "", -1)
+			cookies.clear(w)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{"deletionEffectiveAt": effectiveAt})
@@ -160,20 +160,41 @@ func scheduleAccountDeletion(authenticator sessionAuthenticator, cookies session
 }
 
 type sessionCookieSettings struct {
-	name   string
-	secure bool
+	name        string
+	refreshName string
+	secure      bool
 }
 
 func sessionCookies(secure bool) sessionCookieSettings {
 	if !secure {
-		return sessionCookieSettings{name: "tm_session"}
+		return sessionCookieSettings{name: "tm_session", refreshName: "tm_refresh"}
 	}
-	return sessionCookieSettings{name: "__Host-tm_session", secure: true}
+	return sessionCookieSettings{name: "__Host-tm_session", refreshName: "__Host-tm_refresh", secure: true}
 }
 
-func (cookies sessionCookieSettings) set(w http.ResponseWriter, value string, maxAge int) {
+func (cookies sessionCookieSettings) set(w http.ResponseWriter, name, value, expiresAt string) {
+	expires, err := time.Parse(time.RFC3339Nano, expiresAt)
+	if err != nil {
+		return
+	}
+	maxAge := int(time.Until(expires).Seconds())
+	if maxAge < 1 {
+		maxAge = 1
+	}
 	// #nosec G124 -- cookieSecure is false only for a loopback HTTP PUBLIC_BASE_URL.
-	http.SetCookie(w, &http.Cookie{Name: cookies.name, Value: value, Path: "/", Secure: cookies.secure, HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: maxAge})
+	http.SetCookie(w, &http.Cookie{Name: name, Value: value, Path: "/", Secure: cookies.secure, HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: maxAge, Expires: expires})
+}
+
+func (cookies sessionCookieSettings) setSession(w http.ResponseWriter, access, refresh string, session registration.Session) {
+	cookies.set(w, cookies.name, access, session.IdleExpiresAt)
+	cookies.set(w, cookies.refreshName, refresh, session.RefreshExpiresAt)
+}
+
+func (cookies sessionCookieSettings) clear(w http.ResponseWriter) {
+	for _, name := range []string{cookies.name, cookies.refreshName} {
+		// #nosec G124 -- cookieSecure is false only for a loopback HTTP PUBLIC_BASE_URL.
+		http.SetCookie(w, &http.Cookie{Name: name, Value: "", Path: "/", Secure: cookies.secure, HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: -1})
+	}
 }
 
 func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
@@ -862,7 +883,7 @@ func revokeCurrentSession(authenticator sessionAuthenticator, cookies sessionCoo
 			return
 		}
 		if credential.transport == cookieSession {
-			cookies.set(writer, "", -1)
+			cookies.clear(writer)
 		}
 		writer.WriteHeader(http.StatusNoContent)
 	}
@@ -937,7 +958,7 @@ func toFederatedDraft(draft *registration.Draft) *federated.Draft {
 func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession, cookies sessionCookieSettings) {
 	response := map[string]any{"user": map[string]string{"id": established.AccountID, "username": established.Username}, "delivery": transport, "expiresAt": established.IdleExpiresAt, "refreshExpiresAt": established.RefreshExpiresAt}
 	if transport == "cookie" {
-		cookies.set(w, established.AccessToken, 0)
+		cookies.setSession(w, established.AccessToken, established.RefreshToken, registration.Session{AccountID: established.AccountID, Username: established.Username, IdleExpiresAt: established.IdleExpiresAt, RefreshExpiresAt: established.RefreshExpiresAt})
 	} else {
 		response["sessionToken"], response["refreshToken"] = established.AccessToken, established.RefreshToken
 	}
@@ -1015,7 +1036,7 @@ func confirmPasswordReset(service registration.Service, cookies sessionCookieSet
 		}
 		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
-			cookies.set(w, access, 0)
+			cookies.setSession(w, access, refresh, session)
 		} else {
 			response["sessionToken"], response["refreshToken"] = access, refresh
 		}
@@ -1036,14 +1057,28 @@ func decodeBody(r *http.Request, target any) error {
 	return nil
 }
 
-func refreshSession(service registration.Service) http.HandlerFunc {
+func refreshSession(service registration.Service, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		authorization := request.Header.Get("Authorization")
-		if !strings.HasPrefix(authorization, "Bearer ") || len(authorization) == len("Bearer ") {
+		refreshCookie, cookieErr := request.Cookie(cookies.refreshName)
+		if authorization != "" && cookieErr == nil {
 			writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 			return
 		}
-		session, accessToken, refreshToken, err := service.Refresh(request.Context(), strings.TrimPrefix(authorization, "Bearer "))
+		var token, transport string
+		if authorization != "" {
+			if !strings.HasPrefix(authorization, "Bearer ") || len(authorization) == len("Bearer ") {
+				writeProblem(writer, http.StatusUnauthorized, "Invalid session")
+				return
+			}
+			token, transport = strings.TrimPrefix(authorization, "Bearer "), "bearer"
+		} else if cookieErr == nil && refreshCookie.Value != "" {
+			token, transport = refreshCookie.Value, "cookie"
+		} else {
+			writeProblem(writer, http.StatusUnauthorized, "Invalid session")
+			return
+		}
+		session, accessToken, refreshToken, err := service.Refresh(request.Context(), token)
 		if errors.Is(err, registration.ErrRefreshInvalid) {
 			writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 			return
@@ -1052,8 +1087,15 @@ func refreshSession(service registration.Service) http.HandlerFunc {
 			writeProblem(writer, http.StatusInternalServerError, "Could not refresh session")
 			return
 		}
+		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": transport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
+		if transport == "cookie" {
+			cookies.setSession(writer, accessToken, refreshToken, session)
+		} else {
+			response["sessionToken"], response["refreshToken"] = accessToken, refreshToken
+		}
+		writer.Header().Set("Cache-Control", "no-store")
 		writer.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(writer).Encode(map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": "bearer", "sessionToken": accessToken, "refreshToken": refreshToken, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt})
+		_ = json.NewEncoder(writer).Encode(response)
 	}
 }
 
@@ -1139,7 +1181,7 @@ func verifyRegistration(service registration.Service, cookies sessionCookieSetti
 		}
 		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
-			cookies.set(writer, sessionToken, 0)
+			cookies.setSession(writer, sessionToken, refreshToken, session)
 		} else {
 			response["sessionToken"] = sessionToken
 			response["refreshToken"] = refreshToken
@@ -1279,7 +1321,7 @@ func createLocalSession(service registration.Service, limiter *loginLimiter, coo
 		}
 		response := map[string]any{"user": map[string]string{"id": result.Session.AccountID, "username": result.Session.Username}, "delivery": body.SessionTransport, "expiresAt": result.Session.IdleExpiresAt, "refreshExpiresAt": result.Session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
-			cookies.set(writer, result.Access, 0)
+			cookies.setSession(writer, result.Access, result.Refresh, result.Session)
 		} else {
 			response["sessionToken"], response["refreshToken"] = result.Access, result.Refresh
 		}

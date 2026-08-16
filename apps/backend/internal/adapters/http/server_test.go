@@ -803,8 +803,47 @@ func TestRevokeCurrentSessionExpiresCookie(t *testing.T) {
 	if recorder.Code != http.StatusNoContent {
 		t.Errorf("status = %d, want %d", recorder.Code, http.StatusNoContent)
 	}
-	if cookie := recorder.Result().Cookies(); len(cookie) != 1 || cookie[0].MaxAge >= 0 {
-		t.Errorf("logout cookie = %#v, want expired cookie", cookie)
+	cookies := recorder.Result().Cookies()
+	if len(cookies) != 2 || cookies[0].MaxAge >= 0 || cookies[1].MaxAge >= 0 {
+		t.Errorf("logout cookies = %#v, want expired access and refresh cookies", cookies)
+	}
+}
+
+func TestSessionCookiesPersistUntilTheirOwnExpirations(t *testing.T) {
+	t.Parallel()
+
+	accessExpiry := time.Now().Add(7 * 24 * time.Hour).UTC().Format(time.RFC3339Nano)
+	refreshExpiry := time.Now().Add(30 * 24 * time.Hour).UTC().Format(time.RFC3339Nano)
+	recorder := httptest.NewRecorder()
+	sessionCookies(true).setSession(recorder, "access", "refresh", registration.Session{IdleExpiresAt: accessExpiry, RefreshExpiresAt: refreshExpiry})
+
+	cookies := recorder.Result().Cookies()
+	if len(cookies) != 2 {
+		t.Fatalf("cookies = %#v, want access and refresh", cookies)
+	}
+	if cookies[0].Name != "__Host-tm_session" || cookies[0].MaxAge <= 0 || !cookies[0].HttpOnly || !cookies[0].Secure {
+		t.Errorf("access cookie = %#v, want persistent secure HttpOnly access cookie", cookies[0])
+	}
+	if cookies[1].Name != "__Host-tm_refresh" || cookies[1].MaxAge <= cookies[0].MaxAge || !cookies[1].HttpOnly || !cookies[1].Secure {
+		t.Errorf("refresh cookie = %#v, want longer persistent secure HttpOnly refresh cookie", cookies[1])
+	}
+}
+
+func TestRefreshCookieRejectsCrossSiteRequest(t *testing.T) {
+	t.Parallel()
+
+	handler := refreshCookieCSRF(testAllowedOrigins, sessionCookies(true), http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.WriteHeader(http.StatusNoContent)
+	}))
+	request := httptest.NewRequest(http.MethodPost, "/v1/sessions/refresh", nil)
+	request.Header.Set("Origin", "https://untrusted.example")
+	request.AddCookie(&http.Cookie{Name: "__Host-tm_refresh", Value: "refresh"})
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusForbidden {
+		t.Errorf("status = %d, want %d", recorder.Code, http.StatusForbidden)
 	}
 }
 
