@@ -20,7 +20,13 @@ export default function AccountLayout() {
     }
     router.replace("/account");
   };
-  const goBackToAccess = () => router.replace("/account/access");
+  const goBackToAccess = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/account/access");
+  };
   return (
     <Stack
       screenOptions={{
