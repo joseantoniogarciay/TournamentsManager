@@ -41,13 +41,17 @@ export function Button({
     <View style={styles.content}>
       {loading ? (
         <ActivityIndicator
-          color={variant === "primary" ? color.text.inverse : color.brand.primary}
+          color={
+            variant === "destructive"
+              ? colors.feedback.error
+              : variant === "primary"
+                ? colors.text.inverse
+                : colors.indicator.default
+          }
         />
       ) : null}
       <Text
-        color={
-          variant === "primary" ? "onBrand" : variant === "destructive" ? "inverse" : "primary"
-        }
+        color={variant === "destructive" ? "error" : variant === "primary" ? "onBrand" : "primary"}
         style={styles.label}
       >
         {label}
@@ -76,17 +80,15 @@ export function Button({
           </View>
         </BrandGradient>
       ) : null}
-      {variant === "ghost" || variant === "destructive" ? (
+      {variant === "destructive" ? (
         <View
-          style={[
-            styles.base,
-            variant === "destructive"
-              ? { backgroundColor: colors.feedback.error }
-              : { backgroundColor: "transparent" },
-          ]}
+          style={[styles.base, styles.destructiveOutline, { borderColor: colors.feedback.error }]}
         >
           {content}
         </View>
+      ) : null}
+      {variant === "ghost" ? (
+        <View style={[styles.base, { backgroundColor: "transparent" }]}>{content}</View>
       ) : null}
     </Pressable>
   );
@@ -120,6 +122,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: control.horizontalPadding,
   },
   outline: { padding: 1 },
+  destructiveOutline: { borderWidth: 1 },
   outlineContent: {
     borderRadius: radius.pill,
     justifyContent: "center",

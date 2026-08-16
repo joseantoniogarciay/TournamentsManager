@@ -17,6 +17,8 @@ type NavigationHeaderButtonProps = {
   side?: "left" | "right";
 };
 
+export const usesLiquidGlassNavigation = Platform.OS === "ios" && Number(Platform.Version) >= 26;
+
 export function NavigationHeaderButton({
   accessibilityLabel,
   badge,
@@ -34,7 +36,13 @@ export function NavigationHeaderButton({
       onPress={onPress}
       style={[
         styles.button,
-        side === "left" ? styles.left : styles.right,
+        side === "left"
+          ? Platform.OS === "ios" && !usesLiquidGlassNavigation
+            ? undefined
+            : styles.left
+          : Platform.OS === "ios" && !usesLiquidGlassNavigation
+            ? undefined
+            : styles.right,
         { backgroundColor: colors.surface.default, borderColor: colors.border.default },
       ]}
     >

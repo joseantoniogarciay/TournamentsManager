@@ -1,10 +1,9 @@
 import { router, Stack } from "expo-router";
-import { Platform } from "react-native";
 
 import { AccountScreen } from "@/app/(tabs)/account";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { NavigationHeaderButton } from "@/shared/ui";
+import { NavigationHeaderButton, usesLiquidGlassNavigation } from "@/shared/ui";
 
 export default function AccountAuthenticationScreen() {
   const t = getTranslator();
@@ -22,7 +21,7 @@ export default function AccountAuthenticationScreen() {
       <Stack.Screen
         options={{
           headerBackVisible: false,
-          ...(Platform.OS !== "ios"
+          ...(!usesLiquidGlassNavigation
             ? {
                 headerLeft: () => (
                   <NavigationHeaderButton
@@ -41,7 +40,7 @@ export default function AccountAuthenticationScreen() {
           headerTitleAlign: "center",
         }}
       >
-        {Platform.OS === "ios" ? (
+        {usesLiquidGlassNavigation ? (
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
               accessibilityLabel={t("common_close")}

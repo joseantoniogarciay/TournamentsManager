@@ -1,7 +1,7 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useState } from "react";
-import { Modal, Platform, Pressable, SectionList, Share, StyleSheet, View } from "react-native";
+import { Modal, Pressable, SectionList, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { color, control, radius, space, typography } from "@tournaments-manager/design-tokens";
@@ -34,6 +34,7 @@ import {
   Text,
   TextField,
   useConfirmationDialog,
+  usesLiquidGlassNavigation,
 } from "@/shared/ui";
 
 const localAppLinkURL = "http://localhost:8082";
@@ -215,7 +216,7 @@ export default function LeagueScreen() {
         <Stack.Screen
           options={{
             ...loadingHeaderOptions,
-            ...(Platform.OS !== "ios"
+            ...(!usesLiquidGlassNavigation
               ? {
                   headerLeft: () => (
                     <NavigationHeaderButton
@@ -229,7 +230,7 @@ export default function LeagueScreen() {
               : {}),
           }}
         >
-          {Platform.OS === "ios" ? (
+          {usesLiquidGlassNavigation ? (
             <Stack.Toolbar placement="left">
               <Stack.Toolbar.Button
                 accessibilityLabel={t("common_close")}
@@ -314,7 +315,7 @@ export default function LeagueScreen() {
   return (
     <>
       <Stack.Screen options={headerOptions} />
-      {Platform.OS !== "ios" ? (
+      {!usesLiquidGlassNavigation ? (
         <Stack.Screen
           options={{
             headerLeft: () => (
@@ -346,26 +347,11 @@ export default function LeagueScreen() {
             />
           </Stack.Toolbar>
           <Stack.Toolbar placement="right">
-            <Stack.Toolbar.Menu accessibilityLabel={t("league_actions")} icon="ellipsis">
-              <Stack.Toolbar.MenuAction onPress={() => void share()}>
-                {t("league_share")}
-              </Stack.Toolbar.MenuAction>
-              {isOrganizer ? (
-                <Stack.Toolbar.MenuAction onPress={openAdministrators}>
-                  {t("league_administrators")}
-                </Stack.Toolbar.MenuAction>
-              ) : null}
-              {isOrganizer ? (
-                <Stack.Toolbar.MenuAction destructive onPress={openTransfer}>
-                  {t("league_transfer")}
-                </Stack.Toolbar.MenuAction>
-              ) : null}
-              {isOrganizer && canCancel && !isCancelling ? (
-                <Stack.Toolbar.MenuAction destructive onPress={cancel}>
-                  {t("league_cancel")}
-                </Stack.Toolbar.MenuAction>
-              ) : null}
-            </Stack.Toolbar.Menu>
+            <Stack.Toolbar.Button
+              accessibilityLabel={t("league_actions")}
+              icon="ellipsis"
+              onPress={() => setMenuOpen((open) => !open)}
+            />
           </Stack.Toolbar>
         </>
       )}
@@ -538,7 +524,7 @@ export default function LeagueScreen() {
         <ModalDialog
           dismissAccessibilityLabel={t("common_close")}
           onDismiss={closeWebMenu}
-          visible={Platform.OS !== "ios" && menuOpen}
+          visible={menuOpen}
         >
           <View style={styles.menuActions}>
             <Button
@@ -547,7 +533,7 @@ export default function LeagueScreen() {
                 closeWebMenu();
                 void share();
               }}
-              variant="ghost"
+              variant="secondary"
             />
             {isOrganizer ? (
               <>
@@ -557,7 +543,7 @@ export default function LeagueScreen() {
                     closeWebMenu();
                     openAdministrators();
                   }}
-                  variant="ghost"
+                  variant="secondary"
                 />
                 <Button
                   label={t("league_transfer")}
@@ -775,7 +761,7 @@ const styles = StyleSheet.create({
     marginHorizontal: space[5],
     textAlign: "center",
   },
-  menuActions: { gap: space[1] },
+  menuActions: { gap: space[5] },
   matchSeparator: { height: space[5] },
   match: { gap: space[3] },
   matchSummary: { alignItems: "center", flexDirection: "row", gap: space[2] },

@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, ScrollView, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Platform, ScrollView, StyleSheet, View } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -19,7 +19,15 @@ import {
   RequestErrorCard,
   Screen,
   Text,
+  usesLiquidGlassNavigation,
 } from "@/shared/ui";
+
+const leftColumnWidth = 144;
+const pointsColumnWidth = 44;
+const statisticsColumnCount = 7;
+const statisticsColumnWidth = 36;
+const standingsTableMinimumWidth =
+  leftColumnWidth + pointsColumnWidth + statisticsColumnCount * statisticsColumnWidth;
 
 export default function LeagueStandingsScreen() {
   const t = getTranslator();
@@ -33,7 +41,59 @@ export default function LeagueStandingsScreen() {
   const [informationVisible, setInformationVisible] = useState(false);
   const [statisticsContentWidth, setStatisticsContentWidth] = useState(0);
   const [statisticsViewportWidth, setStatisticsViewportWidth] = useState(0);
+  const [tableViewportWidth, setTableViewportWidth] = useState(0);
+  const statisticsHeaderRef = useRef<View>(null);
+  const statisticsTimelineScopeRef = useRef<ScrollView>(null);
+  const statisticsWebScrollRef = useRef<ScrollView>(null);
+  const statisticsScrollOffset = useRef(new Animated.Value(0)).current;
   const statisticsOverflow = statisticsContentWidth > statisticsViewportWidth + 1;
+  const tableFitsViewport =
+    Platform.OS === "web" && tableViewportWidth - space[5] * 2 >= standingsTableMinimumWidth;
+  const statisticsHeaderTranslateX = statisticsScrollOffset.interpolate({
+    inputRange: [0, statisticsColumnCount * statisticsColumnWidth],
+    outputRange: [0, -statisticsColumnCount * statisticsColumnWidth],
+    extrapolate: "clamp",
+  });
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || !statisticsOverflow) {
+      return;
+    }
+
+    const scope = statisticsTimelineScopeRef.current?.getInnerViewNode() as HTMLElement | null;
+    const header = statisticsHeaderRef.current as unknown as HTMLElement | null;
+    const scrollSource = statisticsWebScrollRef.current?.getScrollableNode() as HTMLElement | null;
+    if (!scope || !header || !scrollSource) {
+      return;
+    }
+
+    const styleId = "standings-statistics-scroll-timeline";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `@keyframes standings-statistics-header-scroll { from { transform: translateX(0); } to { transform: translateX(calc(-1 * var(--standings-statistics-scroll-distance))); } }`;
+      document.head.append(style);
+    }
+
+    scope.style.setProperty("timeline-scope", "--standings-statistics-scroll");
+    scrollSource.style.setProperty("scroll-timeline-name", "--standings-statistics-scroll");
+    scrollSource.style.setProperty("scroll-timeline-axis", "inline");
+    header.style.setProperty(
+      "--standings-statistics-scroll-distance",
+      `${statisticsContentWidth - statisticsViewportWidth}px`,
+    );
+    header.style.setProperty("animation", "standings-statistics-header-scroll 1ms linear both");
+    header.style.setProperty("animation-timeline", "--standings-statistics-scroll");
+
+    return () => {
+      scope.style.removeProperty("timeline-scope");
+      scrollSource.style.removeProperty("scroll-timeline-name");
+      scrollSource.style.removeProperty("scroll-timeline-axis");
+      header.style.removeProperty("--standings-statistics-scroll-distance");
+      header.style.removeProperty("animation");
+      header.style.removeProperty("animation-timeline");
+    };
+  }, [statisticsContentWidth, statisticsOverflow, statisticsViewportWidth]);
 
   const load = useCallback(
     async (force = false) => {
@@ -105,12 +165,12 @@ export default function LeagueStandingsScreen() {
           headerTintColor: colors.text.primary,
           headerTitleAlign: "center",
           title: t("league_standings"),
-          ...(Platform.OS !== "ios"
+          ...(!usesLiquidGlassNavigation
             ? { headerLeft: () => navigationButton, headerRight: () => informationButton }
             : {}),
         }}
       />
-      {Platform.OS === "ios" ? (
+      {usesLiquidGlassNavigation ? (
         <>
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
@@ -141,84 +201,161 @@ export default function LeagueStandingsScreen() {
             <LoadingTransition active message={t("common_loading")} />
           )
         ) : (
-          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            onLayout={(event) => setTableViewportWidth(event.nativeEvent.layout.width)}
+            ref={statisticsTimelineScopeRef}
+            showsVerticalScrollIndicator={false}
+            stickyHeaderIndices={
+              Platform.OS === "web" || league.standings.length === 0 ? undefined : [0]
+            }
+          >
             {league.standings.length === 0 ? (
               <Card>
                 <Text color="secondary">{t("league_standings_unavailable")}</Text>
               </Card>
-            ) : (
-              <View style={styles.table}>
-                <View style={styles.tableColumns}>
-                  <View style={styles.leftColumn}>
-                    <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                      <Text color="secondary" style={styles.position}>
-                        {t("league_standings_position")}
-                      </Text>
-                      <Text color="secondary" numberOfLines={1} style={styles.team}>
-                        {t("league_standings_team")}
-                      </Text>
-                    </View>
-                    {league.standings.map((standing) => (
-                      <View
-                        key={standing.teamId}
-                        style={[styles.row, { borderColor: colors.border.default }]}
-                      >
-                        <Text style={styles.position}>{standing.position}</Text>
-                        <Text numberOfLines={1} style={styles.team}>
-                          {teams.get(standing.teamId) ?? ""}
+            ) : null}
+            {league.standings.length > 0 ? (
+              <View
+                style={[
+                  styles.stickyHeader,
+                  styles.tableViewport,
+                  { backgroundColor: colors.surface.canvas },
+                ]}
+              >
+                <View style={[styles.table, tableFitsViewport && styles.tableFitted]}>
+                  <View style={styles.tableColumns}>
+                    <View style={styles.leftColumn}>
+                      <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
+                        <Text color="secondary" style={styles.position}>
+                          {t("league_standings_position")}
+                        </Text>
+                        <Text color="secondary" numberOfLines={1} style={styles.team}>
+                          {t("league_standings_team")}
                         </Text>
                       </View>
-                    ))}
-                  </View>
-                  <View
-                    onLayout={(event) => setStatisticsViewportWidth(event.nativeEvent.layout.width)}
-                    style={styles.statisticsViewport}
-                  >
-                    <ScrollView
-                      horizontal
-                      onContentSizeChange={(width) => setStatisticsContentWidth(width)}
-                      showsHorizontalScrollIndicator={statisticsOverflow}
+                    </View>
+                    <View
+                      style={[
+                        styles.statisticsHeaderViewport,
+                        { borderColor: colors.border.default, width: statisticsViewportWidth },
+                      ]}
                     >
-                      <View>
-                        <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
+                      {Platform.OS === "web" ? (
+                        <View
+                          ref={statisticsHeaderRef}
+                          style={[
+                            styles.headerRow,
+                            { borderColor: colors.border.default },
+                            styles.statisticsHeaderContent,
+                          ]}
+                        >
                           <StatisticsHeader />
                         </View>
-                        {league.standings.map((standing) => (
-                          <View
-                            key={standing.teamId}
-                            style={[styles.row, { borderColor: colors.border.default }]}
-                          >
-                            <StatisticsValues standing={standing} />
-                          </View>
-                        ))}
-                      </View>
-                    </ScrollView>
-                  </View>
-                  <View style={styles.pointsColumn}>
-                    <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                      <Text color="secondary" style={styles.points}>
-                        {t("league_standings_points")}
-                      </Text>
+                      ) : (
+                        <Animated.View
+                          style={[
+                            styles.headerRow,
+                            { borderColor: colors.border.default },
+                            styles.statisticsHeaderContent,
+                            {
+                              transform: [{ translateX: statisticsHeaderTranslateX }],
+                            },
+                          ]}
+                        >
+                          <StatisticsHeader />
+                        </Animated.View>
+                      )}
                     </View>
-                    {league.standings.map((standing) => (
-                      <View
-                        key={standing.teamId}
-                        style={[styles.row, { borderColor: colors.border.default }]}
-                      >
-                        <Text style={styles.points} variant="title">
-                          {standing.points}
+                    <View style={styles.pointsColumn}>
+                      <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
+                        <Text color="secondary" style={styles.points}>
+                          {t("league_standings_points")}
                         </Text>
                       </View>
-                    ))}
+                    </View>
                   </View>
                 </View>
-                {statisticsOverflow ? (
-                  <Text color="secondary" style={styles.scrollHint}>
-                    {t("league_standings_scroll_hint")}
-                  </Text>
-                ) : null}
               </View>
-            )}
+            ) : null}
+            {league.standings.length > 0 ? (
+              <View style={styles.tableViewport}>
+                <View style={[styles.table, tableFitsViewport && styles.tableFitted]}>
+                  <View style={styles.tableColumns}>
+                    <View style={styles.leftColumn}>
+                      {league.standings.map((standing) => (
+                        <View
+                          key={standing.teamId}
+                          style={[styles.row, { borderColor: colors.border.default }]}
+                        >
+                          <Text style={styles.position}>{standing.position}</Text>
+                          <Text numberOfLines={1} style={styles.team}>
+                            {teams.get(standing.teamId) ?? ""}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                    <View
+                      onLayout={(event) =>
+                        setStatisticsViewportWidth(event.nativeEvent.layout.width)
+                      }
+                      style={styles.statisticsViewport}
+                    >
+                      <Animated.ScrollView
+                        bounces={false}
+                        horizontal
+                        onContentSizeChange={(width) => setStatisticsContentWidth(width)}
+                        onScroll={
+                          Platform.OS === "web"
+                            ? undefined
+                            : Animated.event(
+                                [{ nativeEvent: { contentOffset: { x: statisticsScrollOffset } } }],
+                                { useNativeDriver: true },
+                              )
+                        }
+                        overScrollMode="never"
+                        scrollEventThrottle={16}
+                        showsHorizontalScrollIndicator={statisticsOverflow}
+                        ref={statisticsWebScrollRef}
+                        style={
+                          Platform.OS === "web"
+                            ? ({ overscrollBehaviorX: "none" } as never)
+                            : undefined
+                        }
+                      >
+                        <View>
+                          {league.standings.map((standing) => (
+                            <View
+                              key={standing.teamId}
+                              style={[styles.row, { borderColor: colors.border.default }]}
+                            >
+                              <StatisticsValues standing={standing} />
+                            </View>
+                          ))}
+                        </View>
+                      </Animated.ScrollView>
+                    </View>
+                    <View style={styles.pointsColumn}>
+                      {league.standings.map((standing) => (
+                        <View
+                          key={standing.teamId}
+                          style={[styles.row, { borderColor: colors.border.default }]}
+                        >
+                          <Text style={styles.points} variant="title">
+                            {standing.points}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                  {statisticsOverflow ? (
+                    <Text color="secondary" style={styles.scrollHint}>
+                      {t("league_standings_scroll_hint")}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+            ) : null}
           </ScrollView>
         )}
       </Screen>
@@ -310,14 +447,14 @@ function StandingsRulesContent({ league }: { league: PublicLeague | null | undef
 }
 
 const styles = StyleSheet.create({
-  content: { gap: space[5], paddingBottom: space[5], paddingHorizontal: space[5] },
+  content: { paddingBottom: space[5], paddingHorizontal: space[5] },
   headerRow: {
     alignItems: "center",
     borderBottomWidth: 1,
     flexDirection: "row",
     minHeight: control.minHeight,
   },
-  leftColumn: { flexShrink: 0, width: 164 },
+  leftColumn: { flexShrink: 0, width: leftColumnWidth },
   navigationButton: {
     alignItems: "center",
     borderRadius: radius.pill,
@@ -326,8 +463,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight,
   },
-  points: { textAlign: "right", width: 44 },
-  pointsColumn: { flexShrink: 0, width: 44 },
+  points: { textAlign: "right", width: pointsColumnWidth },
+  pointsColumn: { flexShrink: 0, width: pointsColumnWidth },
   position: { textAlign: "center", width: 34 },
   row: {
     alignItems: "center",
@@ -336,11 +473,24 @@ const styles = StyleSheet.create({
     minHeight: control.minHeight,
   },
   stack: { gap: space[3] },
+  stickyHeader: Platform.select({
+    default: { zIndex: 1 },
+    web: { position: "sticky", top: 0, zIndex: 1 },
+  }),
   scrollHint: { paddingTop: space[2], textAlign: "right" },
-  stat: { textAlign: "center", width: 36 },
+  stat: { textAlign: "center", width: statisticsColumnWidth },
   statisticsRow: { flexDirection: "row" },
-  statisticsViewport: { flex: 1, minWidth: 0 },
+  statisticsHeaderContent: { borderBottomWidth: 0, minHeight: control.minHeight - 1 },
+  statisticsHeaderViewport: {
+    borderBottomWidth: 1,
+    flexShrink: 0,
+    minHeight: control.minHeight,
+    overflow: "hidden",
+  },
+  statisticsViewport: { flex: 1, minWidth: 0, overflow: "hidden" },
   table: { width: "100%" },
+  tableFitted: { width: standingsTableMinimumWidth },
   tableColumns: { flexDirection: "row" },
+  tableViewport: { alignItems: "center", width: "100%" },
   team: { flex: 1, minWidth: 0, paddingHorizontal: space[2] },
 });

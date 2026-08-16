@@ -38,6 +38,7 @@ import {
   Text,
   TextField,
   useConfirmationDialog,
+  usesLiquidGlassNavigation,
 } from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
@@ -200,7 +201,7 @@ export default function LeagueTeamsScreen() {
           headerTintColor: colors.text.primary,
           headerTitleAlign: "center",
           title: t("league_teams"),
-          ...(Platform.OS !== "ios"
+          ...(!usesLiquidGlassNavigation
             ? {
                 headerLeft: () => navigationButton(close, t("common_back"), "close", "left"),
                 headerRight: canAddTeam
@@ -210,7 +211,7 @@ export default function LeagueTeamsScreen() {
             : {}),
         }}
       />
-      {Platform.OS === "ios" ? (
+      {usesLiquidGlassNavigation ? (
         <>
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
@@ -254,7 +255,7 @@ export default function LeagueTeamsScreen() {
                     {team.name}
                   </Text>
                   {team.withdrawn ? (
-                    <Text style={styles.withdrawn} variant="caption">
+                    <Text style={styles.withdrawn} variant="bodyLarge">
                       {t("league_team_withdrawn")}
                     </Text>
                   ) : canRemoveTeam || canWithdrawTeam ? (
@@ -269,7 +270,7 @@ export default function LeagueTeamsScreen() {
                       style={styles.removeButton}
                     >
                       {removingTeamID === team.id ? (
-                        <ActivityIndicator color={colors.text.primary} />
+                        <ActivityIndicator color={colors.indicator.default} />
                       ) : Platform.OS === "web" ? (
                         <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
                       ) : (
@@ -284,6 +285,9 @@ export default function LeagueTeamsScreen() {
                 </View>
               </Card>
             ))}
+            {canAddTeam ? (
+              <Button label={t("league_add_team")} onPress={openAddTeam} variant="secondary" />
+            ) : null}
           </ScrollView>
         )}
         <Modal animationType="fade" onRequestClose={dismissDialog} transparent visible={adding}>
@@ -355,7 +359,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight,
   },
-  teamName: { flex: 1 },
-  withdrawn: { flex: 1 },
-  teamRow: { alignItems: "center", flexDirection: "row", gap: space[3] },
+  teamName: { flex: 1, minWidth: 0 },
+  withdrawn: { flexShrink: 0, textAlign: "right" },
+  teamRow: { alignItems: "center", flexDirection: "row", gap: space[5] },
 });

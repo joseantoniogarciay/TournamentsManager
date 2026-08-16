@@ -8,6 +8,19 @@ api_repository=tournaments-manager-dev-api
 
 cd "$repository_root"
 
+# La API debe recibir únicamente la identidad PostgreSQL restringida. Se
+# comprueba antes de construir o conmutar artefactos y sin imprimir secretos.
+set -a
+. infra/dev/.env
+. infra/dev/api.docker.env
+set +a
+
+expected_database_url="postgres://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+if [ "${DATABASE_URL:-}" != "$expected_database_url" ]; then
+  echo "DATABASE_URL de dev debe usar exactamente POSTGRES_APP_USER y POSTGRES_APP_PASSWORD." >&2
+  exit 1
+fi
+
 branch=$(git branch --show-current)
 if [ "$branch" != "develop" ]; then
   echo "El despliegue dev solo se ejecuta desde develop; rama actual: $branch." >&2

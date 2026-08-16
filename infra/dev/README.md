@@ -28,15 +28,15 @@ make dev-public-init
 # Edita infra/dev/.env con tres contraseñas distintas. Copia exactamente
 # POSTGRES_APP_PASSWORD en DATABASE_URL de infra/dev/api.docker.env.
 make dev-public-bootstrap
-make dev-public-runtime-verify
 make dev-public-up
 ```
 
 `dev-public-bootstrap` se ejecuta solo sobre una base vacía. Crea el propietario
 sin login, migrador y runtime; aplica el esquema mediante el migrador después de
 que asuma temporalmente el propietario, y concede finalmente el acceso DML de
-la API. La API no puede crear ni alterar tablas. Un cambio futuro de esquema
-requiere su `GRANT` de runtime explícito; no se conceden permisos por defecto.
+la API, comprobando además que esa identidad no puede crear tablas. Un cambio
+futuro de esquema requiere su `GRANT` de runtime explícito; no se conceden
+permisos por defecto.
 
 Para reiniciar únicamente los datos de este entorno antes del bootstrap:
 
@@ -57,9 +57,9 @@ make dev-public-deploy
 
 El primer despliegue tras adoptar ADR-0097 exige antes editar los dos contratos
 de entorno con las credenciales nuevas y ejecutar `make dev-public-reset`,
-`make dev-public-bootstrap` y `make dev-public-runtime-verify`. Después,
-`make dev-public-deploy` recrea la API con `POSTGRES_APP_USER`; no recibe ni la
-contraseña de migración ni la de propiedad.
+`make dev-public-bootstrap`. Después, `make dev-public-deploy` recrea la API
+con `POSTGRES_APP_USER`; no recibe ni la contraseña de migración ni la de
+propiedad.
 
 El comando exige un árbol limpio cuyo `HEAD` coincida exactamente con
 `origin/develop`. Construye una imagen `runtime` etiquetada con el SHA completo,
@@ -69,6 +69,11 @@ de dos exports. Se conservan el despliegue actual y el anterior bajo
 `/opt/homebrew/var/www/fasttourney/dev/releases/`; cada uno contiene un
 `deployment.json` con SHA, imagen y fecha. Git conserva el código, no estos
 artefactos locales.
+
+Antes de construir o conmutar un release, el script de despliegue compara sin
+mostrar secretos `DATABASE_URL` con la URL esperada para `POSTGRES_APP_USER`.
+Un usuario administrador o migrador en el contrato de la API aborta el
+despliegue.
 
 Para recuperar uno de los dos despliegues conservados:
 

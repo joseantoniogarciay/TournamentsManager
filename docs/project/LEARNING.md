@@ -1,5 +1,13 @@
 # Registro de aprendizaje
 
+## 2026-08-16 — Un control creado dinámicamente debe continuar la tarea
+
+Al añadir un campo repetible, el foco pasa al nuevo control una vez montado. La
+acción mantiene así la continuidad con el teclado en web, iOS y Android, y evita
+que una persona escriba por error en el campo anterior o deje el nuevo equipo
+vacío. `TextField` reenvía la referencia nativa en vez de que cada formulario
+recree su implementación.
+
 ## 2026-08-16 — Parametrizar reduce la probabilidad; el privilegio limita el impacto
 
 Una consulta parametrizada impide que una entrada se interprete como SQL, pero
@@ -160,6 +168,10 @@ desde el backdrop. `ModalDialog` conserva ese comportamiento para mensajes
 informativos de una sola acción y confirmaciones; cada pantalla aporta solo su
 contenido y sus botones. Así una corrección visual o de accesibilidad alcanza
 todas las variantes sin copiar un `Modal` ni sus capas.
+
+Los menús de acciones también usan esta superficie en web, iOS y Android. La
+cabecera puede conservar el control de apertura nativo de cada plataforma, pero
+no sustituye el contenido por un menú de sistema que diverja en estilo o acciones.
 
 ## 2026-08-10 — La ayuda contextual no compite con el estado de la pantalla
 
@@ -2054,8 +2066,9 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   explícitamente el alto flexible y la reserva inferior de
   `useTabContentBottomPadding`. Una regla global que dependa de semántica ARIA
   debe acotarse a la estructura que pretende modificar; los indicadores de
-  navegación de filas se comparten como iconos de 24 px, no como glifos de texto
-  con tamaño accidental.
+  navegación de filas se comparten dentro de un contenedor de 24 px, con icono
+  al 80 % para que no domine el contenido, no como glifos de texto con tamaño
+  accidental.
 
 ### 2026-08-12 — Una exportación pública debe aislar configuración y caché locales
 
@@ -2242,3 +2255,38 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   primer render y cada variante tipográfica selecciona su asset real mediante
   tokens; cabeceras y navegación se revisan porque no necesariamente pasan por
   la primitiva de texto.
+
+### 2026-08-16 — Un botón destructivo de contorno debe conservar contraste semántico
+
+- **Aprendido:** el texto blanco sobre una superficie transparente se pierde en
+  el tema claro, aunque el borde use un color de estado.
+- **Regla reutilizable:** `destructive` combina borde y texto de error sobre la
+  superficie existente, tanto en menús como en confirmaciones; no se mantiene
+  una variante destructiva rellena que compita visualmente con ella.
+
+### 2026-08-16 — El material nativo depende de la versión del sistema
+
+- **Aprendido:** una barra de navegación nativa puede aplicar transparencia o
+  material aunque el sistema no ofrezca el tratamiento visual para el que fue
+  diseñada, y entonces pierde contraste contra el contenido.
+- **Regla reutilizable:** Liquid Glass se conserva solo en iOS 26 o superior.
+  En versiones anteriores la barra fija un fondo opaco con el token
+  `surface.default`, igual que las implementaciones web y Android.
+
+### 2026-08-16 — El inset de la cabecera también forma parte del control
+
+- **Aprendido:** un botón circular compartido no debe sumar un margen propio en
+  iOS anterior a 26: React Navigation ya reserva el inset lateral de la barra.
+- **Regla reutilizable:** en iOS anterior a 26, `NavigationHeaderButton` usa el
+  mismo objetivo de 44 px, borde y superficie que web y Android, pero deja la
+  alineación lateral a la cabecera. Así coincide con los controles de toolbar
+  de iOS 26 y el patrón cubre también acciones como Notificaciones.
+
+### 2026-08-16 — El loader expresa contraste, no jerarquía de texto
+
+- **Aprendido:** reutilizar `text.primary` para un indicador de progreso lo
+  convierte en negro sobre claro y no garantiza su contraste en oscuro.
+- **Regla reutilizable:** el token semántico `indicator.default` usa el azul
+  principal sobre superficies claras y blanco sobre superficies oscuras; un
+  loader dentro de una acción primaria filled sigue usando blanco en ambos
+  temas porque su contexto es el degradado de marca.

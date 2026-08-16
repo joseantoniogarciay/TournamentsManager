@@ -22,6 +22,7 @@ import {
   Screen,
   Text,
   useConfirmationDialog,
+  usesLiquidGlassNavigation,
 } from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 import { useNotifications } from "@/features/notifications/notification-provider";
@@ -104,7 +105,7 @@ export default function NotificationsScreen() {
       <Stack.Screen
         options={{
           title: t("notifications_title"),
-          ...(Platform.OS !== "ios" && showDeleteAll
+          ...(!usesLiquidGlassNavigation && showDeleteAll
             ? {
                 headerRight: () => (
                   <NavigationHeaderButton
@@ -119,7 +120,7 @@ export default function NotificationsScreen() {
             : {}),
         }}
       />
-      {Platform.OS === "ios" && showDeleteAll ? (
+      {usesLiquidGlassNavigation && showDeleteAll ? (
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button
             accessibilityLabel={t("notifications_delete_all")}
@@ -178,7 +179,7 @@ export default function NotificationsScreen() {
                         style={styles.delete}
                       >
                         {removingNotificationID === item.id ? (
-                          <ActivityIndicator color={colors.text.primary} />
+                          <ActivityIndicator color={colors.indicator.default} />
                         ) : Platform.OS === "web" ? (
                           <WebIcon
                             color={colors.text.primary}

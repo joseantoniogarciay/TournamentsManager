@@ -11,7 +11,7 @@ export { DisclosureIndicator } from "./disclosure-indicator";
 export { InteractionBlocker } from "./interaction-blocker";
 export { KeyboardAwareScrollView } from "./keyboard-aware-scroll-view";
 export { LoadingTransition } from "./loading-transition";
-export { NavigationHeaderButton } from "./navigation-header-button";
+export { NavigationHeaderButton, usesLiquidGlassNavigation } from "./navigation-header-button";
 export { RequestErrorCard } from "./request-error-card";
 export { Screen } from "./screen";
 export { Text } from "./text";

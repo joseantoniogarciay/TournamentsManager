@@ -7,7 +7,8 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 import { WebIcon } from "./web-icon";
 
-const disclosureIconSize = space[6];
+const disclosureContainerSize = space[6];
+const disclosureIconSize = disclosureContainerSize * 0.8;
 
 /** Indicador visual de que toda la fila abre su siguiente nivel. */
 export function DisclosureIndicator() {
@@ -31,8 +32,8 @@ export function DisclosureIndicator() {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    height: disclosureIconSize,
+    height: disclosureContainerSize,
     justifyContent: "center",
-    width: disclosureIconSize,
+    width: disclosureContainerSize,
   },
 });

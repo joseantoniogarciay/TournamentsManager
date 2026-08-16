@@ -172,7 +172,8 @@ function LeagueLibrary({
           <RefreshControl
             onRefresh={onRefresh}
             refreshing={isRefreshing}
-            tintColor={colors.border.focus}
+            colors={[colors.indicator.default]}
+            tintColor={colors.indicator.default}
           />
         }
         showsVerticalScrollIndicator={false}

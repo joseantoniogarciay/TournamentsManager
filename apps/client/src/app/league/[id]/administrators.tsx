@@ -24,6 +24,7 @@ import {
   Screen,
   Text,
   useConfirmationDialog,
+  usesLiquidGlassNavigation,
 } from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
@@ -139,7 +140,7 @@ export default function LeagueAdministratorsScreen() {
           headerTintColor: colors.text.primary,
           headerTitleAlign: "center",
           title: t("league_administrators"),
-          ...(Platform.OS !== "ios"
+          ...(!usesLiquidGlassNavigation
             ? {
                 headerLeft: () => navigationButton(close, t("common_back"), "close", "left"),
                 headerRight: () =>
@@ -155,7 +156,7 @@ export default function LeagueAdministratorsScreen() {
             : {}),
         }}
       />
-      {Platform.OS === "ios" ? (
+      {usesLiquidGlassNavigation ? (
         <>
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
@@ -210,7 +211,7 @@ export default function LeagueAdministratorsScreen() {
                     style={styles.removeButton}
                   >
                     {removingUsername === username ? (
-                      <ActivityIndicator color={colors.text.primary} />
+                      <ActivityIndicator color={colors.indicator.default} />
                     ) : Platform.OS === "web" ? (
                       <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
                     ) : (

@@ -1,6 +1,6 @@
 import { router, Stack } from "expo-router";
-import { useEffect, useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, View, type TextInput } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -24,6 +24,7 @@ import {
   NavigationHeaderButton,
   Screen,
   TextField,
+  usesLiquidGlassNavigation,
 } from "@/shared/ui";
 
 export default function CreateTournamentScreen() {
@@ -35,6 +36,8 @@ export default function CreateTournamentScreen() {
   const [teams, setTeams] = useState(["", ""]);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const teamInputRefs = useRef<Record<number, TextInput | null>>({});
+  const [teamToFocus, setTeamToFocus] = useState<number>();
 
   useEffect(() => {
     void getLocalLeagueDraft().then((draft) => {
@@ -47,6 +50,11 @@ export default function CreateTournamentScreen() {
   useEffect(() => {
     void saveLocalLeagueDraft({ name, teams });
   }, [name, teams]);
+  useEffect(() => {
+    if (teamToFocus === undefined) return;
+    teamInputRefs.current[teamToFocus]?.focus();
+    setTeamToFocus(undefined);
+  }, [teamToFocus, teams.length]);
 
   const normalizedTeamValues = teams.map((team) => team.trim());
   const normalizedTeams = normalizedTeamValues.filter(Boolean);
@@ -95,6 +103,7 @@ export default function CreateTournamentScreen() {
       show({ kind: "generic-error", message: t("league_team_limit_reached") });
       return;
     }
+    setTeamToFocus(teams.length);
     setTeams((current) => [...current, ""]);
   };
   const close = async () => {
@@ -118,7 +127,7 @@ export default function CreateTournamentScreen() {
           headerTitleAlign: "center",
         }}
       >
-        {Platform.OS === "ios" ? (
+        {usesLiquidGlassNavigation ? (
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
               accessibilityLabel={t("common_close")}
@@ -128,7 +137,7 @@ export default function CreateTournamentScreen() {
           </Stack.Toolbar>
         ) : null}
       </Stack.Screen>
-      {Platform.OS !== "ios" ? (
+      {!usesLiquidGlassNavigation ? (
         <Stack.Screen
           options={{
             headerLeft: () => (
@@ -168,6 +177,9 @@ export default function CreateTournamentScreen() {
                       current.map((item, itemIndex) => (itemIndex === index ? value : item)),
                     )
                   }
+                  ref={(input) => {
+                    teamInputRefs.current[index] = input;
+                  }}
                   validationSubmitted={submitted}
                   validationTrigger="blur"
                   value={team}

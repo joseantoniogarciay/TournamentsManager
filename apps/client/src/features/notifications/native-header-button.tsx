@@ -1,12 +1,12 @@
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { color, control, space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { NavigationHeaderButton, Text } from "@/shared/ui";
+import { NavigationHeaderButton, Text, usesLiquidGlassNavigation } from "@/shared/ui";
 
 import { useNotifications } from "./notification-provider";
 
@@ -23,7 +23,7 @@ export function NativeNotificationHeaderButton() {
       </View>
     ) : null;
 
-  if (Platform.OS !== "ios") {
+  if (!usesLiquidGlassNavigation) {
     return (
       <NavigationHeaderButton
         accessibilityLabel={t("account_notifications_accessibility_label")}
