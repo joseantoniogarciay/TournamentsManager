@@ -1,5 +1,13 @@
 # Registro de aprendizaje
 
+## 2026-08-16 — Un control creado dinámicamente debe continuar la tarea
+
+Al añadir un campo repetible, el foco pasa al nuevo control una vez montado. La
+acción mantiene así la continuidad con el teclado en web, iOS y Android, y evita
+que una persona escriba por error en el campo anterior o deje el nuevo equipo
+vacío. `TextField` reenvía la referencia nativa en vez de que cada formulario
+recree su implementación.
+
 ## 2026-08-16 — Parametrizar reduce la probabilidad; el privilegio limita el impacto
 
 Una consulta parametrizada impide que una entrada se interprete como SQL, pero

@@ -1,5 +1,5 @@
 import { SymbolView } from "expo-symbols";
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 
 import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
@@ -17,20 +17,23 @@ type Props = TextInputProps & {
   validationTrigger?: "blur" | "change";
 };
 
-export function TextField({
-  label,
-  error,
-  feedback,
-  accessibilityLabel,
-  accessibilityHint,
-  passwordVisibility,
-  validationSubmitted = false,
-  validationTrigger,
-  onBlur,
-  onChangeText,
-  onFocus,
-  ...inputProps
-}: Props) {
+export const TextField = forwardRef<TextInput, Props>(function TextField(
+  {
+    label,
+    error,
+    feedback,
+    accessibilityLabel,
+    accessibilityHint,
+    passwordVisibility,
+    validationSubmitted = false,
+    validationTrigger,
+    onBlur,
+    onChangeText,
+    onFocus,
+    ...inputProps
+  },
+  ref,
+) {
   const { colors } = usePreferences();
   const [isFocused, setIsFocused] = useState(false);
   const [hasTriggeredValidation, setHasTriggeredValidation] = useState(false);
@@ -79,6 +82,7 @@ export function TextField({
             onFocus?.(event);
           }}
           placeholderTextColor={colors.text.placeholder}
+          ref={ref}
           style={[styles.textInput, { color: colors.text.primary }]}
           {...inputProps}
         />
@@ -108,7 +112,7 @@ export function TextField({
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrapper: { gap: space[1] },

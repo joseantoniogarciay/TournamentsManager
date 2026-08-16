@@ -285,6 +285,9 @@ export default function LeagueTeamsScreen() {
                 </View>
               </Card>
             ))}
+            {canAddTeam ? (
+              <Button label={t("league_add_team")} onPress={openAddTeam} variant="secondary" />
+            ) : null}
           </ScrollView>
         )}
         <Modal animationType="fade" onRequestClose={dismissDialog} transparent visible={adding}>
