@@ -161,6 +161,10 @@ informativos de una sola acción y confirmaciones; cada pantalla aporta solo su
 contenido y sus botones. Así una corrección visual o de accesibilidad alcanza
 todas las variantes sin copiar un `Modal` ni sus capas.
 
+Los menús de acciones también usan esta superficie en web, iOS y Android. La
+cabecera puede conservar el control de apertura nativo de cada plataforma, pero
+no sustituye el contenido por un menú de sistema que diverja en estilo o acciones.
+
 ## 2026-08-10 — La ayuda contextual no compite con el estado de la pantalla
 
 Las reglas de clasificación se consultan bajo demanda desde la acción de
@@ -2242,3 +2246,11 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   primer render y cada variante tipográfica selecciona su asset real mediante
   tokens; cabeceras y navegación se revisan porque no necesariamente pasan por
   la primitiva de texto.
+
+### 2026-08-16 — Un botón destructivo de contorno debe conservar contraste semántico
+
+- **Aprendido:** el texto blanco sobre una superficie transparente se pierde en
+  el tema claro, aunque el borde use un color de estado.
+- **Regla reutilizable:** `destructive` combina borde y texto de error sobre la
+  superficie existente, tanto en menús como en confirmaciones; no se mantiene
+  una variante destructiva rellena que compita visualmente con ella.
