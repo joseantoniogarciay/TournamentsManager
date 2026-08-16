@@ -1,4 +1,5 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { Platform } from "react-native";
 
 import { color, typography } from "@tournaments-manager/design-tokens";
 
@@ -9,9 +10,10 @@ import { useNotifications } from "@/features/notifications/notification-provider
 
 export default function TabLayout() {
   const t = getTranslator();
-  const { resolvedTheme } = usePreferences();
+  const { colors, resolvedTheme } = usePreferences();
   const { revision } = useSession();
   const { count } = useNotifications();
+  const usesLegacyIOSAppearance = Platform.OS === "ios" && Number(Platform.Version) < 26;
 
   return (
     <NativeTabs
@@ -20,6 +22,9 @@ export default function TabLayout() {
         default: { fontFamily: typography.family.medium },
         selected: { fontFamily: typography.family.semibold },
       }}
+      backgroundColor={usesLegacyIOSAppearance ? colors.surface.default : undefined}
+      blurEffect={usesLegacyIOSAppearance ? "none" : undefined}
+      disableTransparentOnScrollEdge={usesLegacyIOSAppearance}
       minimizeBehavior="never"
       tintColor={color.brand.primary}
       unstable_nativeProps={{ colorScheme: resolvedTheme }}

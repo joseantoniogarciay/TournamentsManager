@@ -2254,3 +2254,12 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** `destructive` combina borde y texto de error sobre la
   superficie existente, tanto en menús como en confirmaciones; no se mantiene
   una variante destructiva rellena que compita visualmente con ella.
+
+### 2026-08-16 — El material nativo depende de la versión del sistema
+
+- **Aprendido:** una barra de navegación nativa puede aplicar transparencia o
+  material aunque el sistema no ofrezca el tratamiento visual para el que fue
+  diseñada, y entonces pierde contraste contra el contenido.
+- **Regla reutilizable:** Liquid Glass se conserva solo en iOS 26 o superior.
+  En versiones anteriores la barra fija un fondo opaco con el token
+  `surface.default`, igual que las implementaciones web y Android.

@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, ScrollView, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Platform, ScrollView, StyleSheet, View } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -21,7 +21,7 @@ import {
   Text,
 } from "@/shared/ui";
 
-const leftColumnWidth = 164;
+const leftColumnWidth = 144;
 const pointsColumnWidth = 44;
 const statisticsColumnCount = 7;
 const statisticsColumnWidth = 36;
@@ -33,6 +33,7 @@ export default function LeagueStandingsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
   const league = useLeague(id);
+  const usesLiquidGlassControls = Platform.OS === "ios" && Number(Platform.Version) >= 26;
   const { loadLeague, refreshLeague } = useLeagueStore();
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
   const [leagueUnavailable, setLeagueUnavailable] = useState(false);
@@ -41,8 +42,15 @@ export default function LeagueStandingsScreen() {
   const [statisticsContentWidth, setStatisticsContentWidth] = useState(0);
   const [statisticsViewportWidth, setStatisticsViewportWidth] = useState(0);
   const [tableViewportWidth, setTableViewportWidth] = useState(0);
+  const statisticsScrollOffset = useRef(new Animated.Value(0)).current;
   const statisticsOverflow = statisticsContentWidth > statisticsViewportWidth + 1;
-  const tableFitsViewport = tableViewportWidth >= standingsTableMinimumWidth;
+  const tableFitsViewport =
+    Platform.OS === "web" && tableViewportWidth - space[5] * 2 >= standingsTableMinimumWidth;
+  const statisticsHeaderTranslateX = statisticsScrollOffset.interpolate({
+    inputRange: [0, statisticsColumnCount * statisticsColumnWidth],
+    outputRange: [0, -statisticsColumnCount * statisticsColumnWidth],
+    extrapolate: "clamp",
+  });
 
   const load = useCallback(
     async (force = false) => {
@@ -114,12 +122,12 @@ export default function LeagueStandingsScreen() {
           headerTintColor: colors.text.primary,
           headerTitleAlign: "center",
           title: t("league_standings"),
-          ...(Platform.OS !== "ios"
+          ...(!usesLiquidGlassControls
             ? { headerLeft: () => navigationButton, headerRight: () => informationButton }
             : {}),
         }}
       />
-      {Platform.OS === "ios" ? (
+      {usesLiquidGlassControls ? (
         <>
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
@@ -150,15 +158,26 @@ export default function LeagueStandingsScreen() {
             <LoadingTransition active message={t("common_loading")} />
           )
         ) : (
-          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            onLayout={(event) => setTableViewportWidth(event.nativeEvent.layout.width)}
+            showsVerticalScrollIndicator={false}
+            stickyHeaderIndices={
+              Platform.OS === "web" || league.standings.length === 0 ? undefined : [0]
+            }
+          >
             {league.standings.length === 0 ? (
               <Card>
                 <Text color="secondary">{t("league_standings_unavailable")}</Text>
               </Card>
-            ) : (
+            ) : null}
+            {league.standings.length > 0 ? (
               <View
-                onLayout={(event) => setTableViewportWidth(event.nativeEvent.layout.width)}
-                style={styles.tableViewport}
+                style={[
+                  styles.stickyHeader,
+                  styles.tableViewport,
+                  { backgroundColor: colors.surface.canvas },
+                ]}
               >
                 <View style={[styles.table, tableFitsViewport && styles.tableFitted]}>
                   <View style={styles.tableColumns}>
@@ -171,6 +190,46 @@ export default function LeagueStandingsScreen() {
                           {t("league_standings_team")}
                         </Text>
                       </View>
+                    </View>
+                    <View
+                      style={[
+                        styles.statisticsHeaderViewport,
+                        { borderColor: colors.border.default, width: statisticsViewportWidth },
+                      ]}
+                    >
+                      <Animated.View
+                        style={[
+                          styles.headerRow,
+                          { borderColor: colors.border.default },
+                          styles.statisticsHeaderContent,
+                          {
+                            transform: [
+                              {
+                                translateX: statisticsHeaderTranslateX,
+                              },
+                            ],
+                          },
+                        ]}
+                      >
+                        <StatisticsHeader />
+                      </Animated.View>
+                    </View>
+                    <View style={styles.pointsColumn}>
+                      <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
+                        <Text color="secondary" style={styles.points}>
+                          {t("league_standings_points")}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ) : null}
+            {league.standings.length > 0 ? (
+              <View style={styles.tableViewport}>
+                <View style={[styles.table, tableFitsViewport && styles.tableFitted]}>
+                  <View style={styles.tableColumns}>
+                    <View style={styles.leftColumn}>
                       {league.standings.map((standing) => (
                         <View
                           key={standing.teamId}
@@ -189,15 +248,29 @@ export default function LeagueStandingsScreen() {
                       }
                       style={styles.statisticsViewport}
                     >
-                      <ScrollView
+                      <Animated.ScrollView
+                        bounces={false}
                         horizontal
                         onContentSizeChange={(width) => setStatisticsContentWidth(width)}
+                        onScroll={
+                          Platform.OS === "web"
+                            ? (event) =>
+                                statisticsScrollOffset.setValue(event.nativeEvent.contentOffset.x)
+                            : Animated.event(
+                                [{ nativeEvent: { contentOffset: { x: statisticsScrollOffset } } }],
+                                { useNativeDriver: true },
+                              )
+                        }
+                        overScrollMode="never"
+                        scrollEventThrottle={16}
                         showsHorizontalScrollIndicator={statisticsOverflow}
+                        style={
+                          Platform.OS === "web"
+                            ? ({ overscrollBehaviorX: "none" } as never)
+                            : undefined
+                        }
                       >
                         <View>
-                          <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                            <StatisticsHeader />
-                          </View>
                           {league.standings.map((standing) => (
                             <View
                               key={standing.teamId}
@@ -207,14 +280,9 @@ export default function LeagueStandingsScreen() {
                             </View>
                           ))}
                         </View>
-                      </ScrollView>
+                      </Animated.ScrollView>
                     </View>
                     <View style={styles.pointsColumn}>
-                      <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                        <Text color="secondary" style={styles.points}>
-                          {t("league_standings_points")}
-                        </Text>
-                      </View>
                       {league.standings.map((standing) => (
                         <View
                           key={standing.teamId}
@@ -234,7 +302,7 @@ export default function LeagueStandingsScreen() {
                   ) : null}
                 </View>
               </View>
-            )}
+            ) : null}
           </ScrollView>
         )}
       </Screen>
@@ -352,10 +420,21 @@ const styles = StyleSheet.create({
     minHeight: control.minHeight,
   },
   stack: { gap: space[3] },
+  stickyHeader: Platform.select({
+    default: { zIndex: 1 },
+    web: { position: "sticky", top: 0, zIndex: 1 },
+  }),
   scrollHint: { paddingTop: space[2], textAlign: "right" },
   stat: { textAlign: "center", width: statisticsColumnWidth },
   statisticsRow: { flexDirection: "row" },
-  statisticsViewport: { flex: 1, minWidth: 0 },
+  statisticsHeaderContent: { borderBottomWidth: 0, minHeight: control.minHeight - 1 },
+  statisticsHeaderViewport: {
+    borderBottomWidth: 1,
+    flexShrink: 0,
+    minHeight: control.minHeight,
+    overflow: "hidden",
+  },
+  statisticsViewport: { flex: 1, minWidth: 0, overflow: "hidden" },
   table: { width: "100%" },
   tableFitted: { width: standingsTableMinimumWidth },
   tableColumns: { flexDirection: "row" },
