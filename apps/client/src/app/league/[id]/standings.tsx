@@ -21,6 +21,13 @@ import {
   Text,
 } from "@/shared/ui";
 
+const leftColumnWidth = 164;
+const pointsColumnWidth = 44;
+const statisticsColumnCount = 7;
+const statisticsColumnWidth = 36;
+const standingsTableMinimumWidth =
+  leftColumnWidth + pointsColumnWidth + statisticsColumnCount * statisticsColumnWidth;
+
 export default function LeagueStandingsScreen() {
   const t = getTranslator();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,7 +40,9 @@ export default function LeagueStandingsScreen() {
   const [informationVisible, setInformationVisible] = useState(false);
   const [statisticsContentWidth, setStatisticsContentWidth] = useState(0);
   const [statisticsViewportWidth, setStatisticsViewportWidth] = useState(0);
+  const [tableViewportWidth, setTableViewportWidth] = useState(0);
   const statisticsOverflow = statisticsContentWidth > statisticsViewportWidth + 1;
+  const tableFitsViewport = tableViewportWidth >= standingsTableMinimumWidth;
 
   const load = useCallback(
     async (force = false) => {
@@ -147,76 +156,83 @@ export default function LeagueStandingsScreen() {
                 <Text color="secondary">{t("league_standings_unavailable")}</Text>
               </Card>
             ) : (
-              <View style={styles.table}>
-                <View style={styles.tableColumns}>
-                  <View style={styles.leftColumn}>
-                    <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                      <Text color="secondary" style={styles.position}>
-                        {t("league_standings_position")}
-                      </Text>
-                      <Text color="secondary" numberOfLines={1} style={styles.team}>
-                        {t("league_standings_team")}
-                      </Text>
-                    </View>
-                    {league.standings.map((standing) => (
-                      <View
-                        key={standing.teamId}
-                        style={[styles.row, { borderColor: colors.border.default }]}
-                      >
-                        <Text style={styles.position}>{standing.position}</Text>
-                        <Text numberOfLines={1} style={styles.team}>
-                          {teams.get(standing.teamId) ?? ""}
+              <View
+                onLayout={(event) => setTableViewportWidth(event.nativeEvent.layout.width)}
+                style={styles.tableViewport}
+              >
+                <View style={[styles.table, tableFitsViewport && styles.tableFitted]}>
+                  <View style={styles.tableColumns}>
+                    <View style={styles.leftColumn}>
+                      <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
+                        <Text color="secondary" style={styles.position}>
+                          {t("league_standings_position")}
+                        </Text>
+                        <Text color="secondary" numberOfLines={1} style={styles.team}>
+                          {t("league_standings_team")}
                         </Text>
                       </View>
-                    ))}
-                  </View>
-                  <View
-                    onLayout={(event) => setStatisticsViewportWidth(event.nativeEvent.layout.width)}
-                    style={styles.statisticsViewport}
-                  >
-                    <ScrollView
-                      horizontal
-                      onContentSizeChange={(width) => setStatisticsContentWidth(width)}
-                      showsHorizontalScrollIndicator={statisticsOverflow}
-                    >
-                      <View>
-                        <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                          <StatisticsHeader />
+                      {league.standings.map((standing) => (
+                        <View
+                          key={standing.teamId}
+                          style={[styles.row, { borderColor: colors.border.default }]}
+                        >
+                          <Text style={styles.position}>{standing.position}</Text>
+                          <Text numberOfLines={1} style={styles.team}>
+                            {teams.get(standing.teamId) ?? ""}
+                          </Text>
                         </View>
-                        {league.standings.map((standing) => (
-                          <View
-                            key={standing.teamId}
-                            style={[styles.row, { borderColor: colors.border.default }]}
-                          >
-                            <StatisticsValues standing={standing} />
-                          </View>
-                        ))}
-                      </View>
-                    </ScrollView>
-                  </View>
-                  <View style={styles.pointsColumn}>
-                    <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                      <Text color="secondary" style={styles.points}>
-                        {t("league_standings_points")}
-                      </Text>
+                      ))}
                     </View>
-                    {league.standings.map((standing) => (
-                      <View
-                        key={standing.teamId}
-                        style={[styles.row, { borderColor: colors.border.default }]}
+                    <View
+                      onLayout={(event) =>
+                        setStatisticsViewportWidth(event.nativeEvent.layout.width)
+                      }
+                      style={styles.statisticsViewport}
+                    >
+                      <ScrollView
+                        horizontal
+                        onContentSizeChange={(width) => setStatisticsContentWidth(width)}
+                        showsHorizontalScrollIndicator={statisticsOverflow}
                       >
-                        <Text style={styles.points} variant="title">
-                          {standing.points}
+                        <View>
+                          <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
+                            <StatisticsHeader />
+                          </View>
+                          {league.standings.map((standing) => (
+                            <View
+                              key={standing.teamId}
+                              style={[styles.row, { borderColor: colors.border.default }]}
+                            >
+                              <StatisticsValues standing={standing} />
+                            </View>
+                          ))}
+                        </View>
+                      </ScrollView>
+                    </View>
+                    <View style={styles.pointsColumn}>
+                      <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
+                        <Text color="secondary" style={styles.points}>
+                          {t("league_standings_points")}
                         </Text>
                       </View>
-                    ))}
+                      {league.standings.map((standing) => (
+                        <View
+                          key={standing.teamId}
+                          style={[styles.row, { borderColor: colors.border.default }]}
+                        >
+                          <Text style={styles.points} variant="title">
+                            {standing.points}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
                   </View>
+                  {statisticsOverflow ? (
+                    <Text color="secondary" style={styles.scrollHint}>
+                      {t("league_standings_scroll_hint")}
+                    </Text>
+                  ) : null}
                 </View>
-                {statisticsOverflow ? (
-                  <Text color="secondary" style={styles.scrollHint}>
-                    {t("league_standings_scroll_hint")}
-                  </Text>
-                ) : null}
               </View>
             )}
           </ScrollView>
@@ -317,7 +333,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     minHeight: control.minHeight,
   },
-  leftColumn: { flexShrink: 0, width: 164 },
+  leftColumn: { flexShrink: 0, width: leftColumnWidth },
   navigationButton: {
     alignItems: "center",
     borderRadius: radius.pill,
@@ -326,8 +342,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight,
   },
-  points: { textAlign: "right", width: 44 },
-  pointsColumn: { flexShrink: 0, width: 44 },
+  points: { textAlign: "right", width: pointsColumnWidth },
+  pointsColumn: { flexShrink: 0, width: pointsColumnWidth },
   position: { textAlign: "center", width: 34 },
   row: {
     alignItems: "center",
@@ -337,10 +353,12 @@ const styles = StyleSheet.create({
   },
   stack: { gap: space[3] },
   scrollHint: { paddingTop: space[2], textAlign: "right" },
-  stat: { textAlign: "center", width: 36 },
+  stat: { textAlign: "center", width: statisticsColumnWidth },
   statisticsRow: { flexDirection: "row" },
   statisticsViewport: { flex: 1, minWidth: 0 },
   table: { width: "100%" },
+  tableFitted: { width: standingsTableMinimumWidth },
   tableColumns: { flexDirection: "row" },
+  tableViewport: { alignItems: "center", width: "100%" },
   team: { flex: 1, minWidth: 0, paddingHorizontal: space[2] },
 });
