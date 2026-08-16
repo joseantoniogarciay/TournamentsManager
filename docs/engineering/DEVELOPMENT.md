@@ -312,6 +312,9 @@ contratos `.env.example` separados y health checks, volúmenes y comandos
 automatización compartida; los comandos se separan por tecnología en
 [`mk/go.mk`](../../mk/go.mk), [`mk/typescript.mk`](../../mk/typescript.mk) y
 [`mk/postgres.mk`](../../mk/postgres.mk). Consulta el [runbook de PostgreSQL local](../runbooks/local-postgresql.md).
+Los servicios usan `restart: unless-stopped`: cuando Docker Desktop se inicia
+al abrir sesión, recupera los contenedores que estaban activos antes de apagar
+el Mac; una parada explícita se respeta.
 El esquema inicial se aplica separadamente con `make db-schema-apply`. Los
 datos semilla funcionales permanecen aplazados hasta cerrar el primer vertical
 slice de producto.
@@ -327,10 +330,18 @@ proyecto los separa del Compose local.
 
 ```bash
 make dev-public-init
-# Ajustar la misma contraseña única en infra/dev/.env y api.docker.env.
+# Configurar contraseñas distintas de administrador, migrador y API en
+# infra/dev/.env; POSTGRES_APP_PASSWORD coincide con DATABASE_URL de api.docker.env.
+make dev-public-bootstrap
+make dev-public-runtime-verify
 make dev-public-up
-make dev-public-schema-apply
 ```
+
+El bootstrap público crea primero los roles, aplica después el esquema como
+`migrator` bajo el propietario sin login, y concede al runtime acceso DML solo
+sobre los objetos creados. Antes de repetirlo se ejecuta
+`make dev-public-reset`, que pide confirmar y elimina exclusivamente el volumen
+de `tournaments-manager-dev`, nunca el entorno local.
 
 La web pública no ejecuta Expo Metro: se exporta estática con
 `infra/home/deploy-dev-web.sh` y Caddy la sirve en

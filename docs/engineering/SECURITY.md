@@ -54,6 +54,9 @@ lectura `GET` y el transporte Bearer móvil no la requieren.
 ## Reglas iniciales
 
 - mínimo privilegio para personas y workloads;
+- una API pública usa una identidad PostgreSQL de ejecución sin permisos de
+  esquema; migraciones y propiedad de objetos usan identidades separadas según
+  ADR-0097;
 - denegar por defecto;
 - secretos fuera del repositorio, logs e imágenes;
 - dependencias fijadas y revisables;

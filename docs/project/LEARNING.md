@@ -1,5 +1,22 @@
 # Registro de aprendizaje
 
+## 2026-08-16 — Parametrizar reduce la probabilidad; el privilegio limita el impacto
+
+Una consulta parametrizada impide que una entrada se interprete como SQL, pero
+no convierte en inocua una credencial comprometida. Separar propietario sin
+login, migrador y runtime deja a la API con el conjunto de operaciones que usa
+realmente y convierte los permisos de una tabla nueva en parte visible del
+cambio de esquema. No hace falta un rol por módulo mientras el backend siga
+siendo un único proceso; ese aislamiento sería coste sin límite de despliegue
+que lo aprovechase. Véase ADR-0097.
+
+## 2026-08-16 — El peso de una acción se define en su primitiva
+
+La legibilidad de una acción textual mejora al usar semibold sin aumentar su
+tamaño ni cambiar el objetivo táctil. Aplicarlo en `Button` propaga el peso real
+Figtree 600 a todas sus variantes y evita ajustes tipográficos repetidos en cada
+pantalla.
+
 ## 2026-08-13 — El marcador de una fila necesita jerarquía contenida
 
 La escala `display` (32 px) es adecuada para un título o un resultado aislado,

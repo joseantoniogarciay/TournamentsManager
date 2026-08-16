@@ -21,6 +21,11 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0097: `tournaments-manager-dev` separa propietario PostgreSQL sin login,
+  migrador y runtime con DML mínimo. El bootstrap y la comprobación de denegación
+  de DDL son explícitos antes del siguiente despliegue; la API no recibe la
+  credencial de migración.
+
 - ADR-0093: `tournaments-manager-dev` entrega correo por Resend SMTP con
   STARTTLS y credenciales de solo envío; Mailpit queda exclusivamente en local.
   La clave no se versiona y la activación externa requiere verificar SPF, DKIM y

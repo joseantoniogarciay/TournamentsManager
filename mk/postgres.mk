@@ -14,7 +14,7 @@ PUBLIC_DEV_COMPOSE := docker compose --env-file $(PUBLIC_DEV_ENV) -f $(PUBLIC_DE
 
 .PHONY: \
 	db-init dev-init db-env-check db-backend-env-check dev-api-env-check local-config-check dev-config-check \
-	dev-public-init dev-public-config-check dev-public-up dev-public-deploy dev-public-rollback dev-public-down dev-public-status dev-public-logs dev-public-schema-apply dev-public-purge \
+	dev-public-init dev-public-config-check dev-public-up dev-public-deploy dev-public-rollback dev-public-down dev-public-reset dev-public-status dev-public-logs dev-public-bootstrap dev-public-runtime-verify dev-public-purge \
 	db-up db-wait db-down db-status db-logs db-reset db-schema-apply
 
 # Crea los contratos locales sin sobrescribir una configuración ya existente.
@@ -35,7 +35,7 @@ dev-init:
 dev-public-init:
 	@if [ ! -e $(PUBLIC_DEV_ENV) ]; then cp $(PUBLIC_DEV_DIR)/.env.example $(PUBLIC_DEV_ENV); else echo "dev-public-init: $(PUBLIC_DEV_ENV) ya existe; se conserva"; fi
 	@if [ ! -e $(PUBLIC_DEV_API_ENV) ]; then cp $(PUBLIC_DEV_DIR)/api.docker.env.example $(PUBLIC_DEV_API_ENV); else echo "dev-public-init: $(PUBLIC_DEV_API_ENV) ya existe; se conserva"; fi
-	@echo "dev-public-init: contratos creados; usa una contraseña única e idéntica en ambos archivos"
+	@echo "dev-public-init: contratos creados; configura credenciales distintas para administrador, migrador y API"
 
 db-env-check:
 	@test -f $(POSTGRES_LOCAL_ENV) || { echo "Falta $(POSTGRES_LOCAL_ENV). Ejecuta: make db-init"; exit 1; }
@@ -70,7 +70,7 @@ dev-public-config-check:
 	@test -f $(PUBLIC_DEV_ENV) || { echo "Falta $(PUBLIC_DEV_ENV). Ejecuta: make dev-public-init"; exit 1; }
 	@test -f $(PUBLIC_DEV_API_ENV) || { echo "Falta $(PUBLIC_DEV_API_ENV). Ejecuta: make dev-public-init"; exit 1; }
 	@set -a; . $(PUBLIC_DEV_ENV); set +a; \
-	for name in POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD; do \
+	for name in POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD POSTGRES_OWNER_ROLE POSTGRES_MIGRATOR_USER POSTGRES_MIGRATOR_PASSWORD POSTGRES_APP_USER POSTGRES_APP_PASSWORD; do \
 		eval "value=\$${$$name}"; \
 		[ -n "$$value" ] || { echo "Falta $$name en $(PUBLIC_DEV_ENV)"; exit 1; }; \
 	done
@@ -94,15 +94,33 @@ dev-public-rollback: dev-public-config-check
 dev-public-down: dev-public-config-check
 	$(PUBLIC_DEV_COMPOSE) down --remove-orphans
 
+# Acción destructiva acotada al volumen PostgreSQL de tournaments-manager-dev.
+# No afecta a tournaments-manager-local ni a sus datos.
+dev-public-reset: dev-public-config-check
+	@printf "Esto eliminará todos los datos de PostgreSQL en tournaments-manager-dev. Escribe DEV_RESET para continuar: "; read answer; \
+	[ "$$answer" = "DEV_RESET" ] || { echo "dev-public-reset: cancelado"; exit 1; }
+	$(PUBLIC_DEV_COMPOSE) down --volumes --remove-orphans
+
 dev-public-status: dev-public-config-check
 	$(PUBLIC_DEV_COMPOSE) ps
 
 dev-public-logs: dev-public-config-check
 	$(PUBLIC_DEV_COMPOSE) logs --tail=200
 
-dev-public-schema-apply: dev-public-config-check
-	@sed '/^--/d' $(BACKEND_DIR)/db/schema/initial_schema.sql | \
-		$(PUBLIC_DEV_COMPOSE) exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1'
+# Inicializa una base vacía siguiendo ADR-0097: roles primero, esquema con el
+# migrador como owner, permisos de API al final. No se ejecuta en despliegues.
+dev-public-bootstrap: dev-public-config-check
+	$(PUBLIC_DEV_COMPOSE) up --detach --wait postgres
+	$(PUBLIC_DEV_COMPOSE) exec -T postgres sh -ec 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -v database_name="$$POSTGRES_DB" -v owner_role="$$POSTGRES_OWNER_ROLE" -v migrator_role="$$POSTGRES_MIGRATOR_USER" -v migrator_password="$$POSTGRES_MIGRATOR_PASSWORD" -v app_role="$$POSTGRES_APP_USER" -v app_password="$$POSTGRES_APP_PASSWORD"' < $(PUBLIC_DEV_DIR)/postgresql/bootstrap-roles.sql
+	@set -a; . $(PUBLIC_DEV_ENV); set +a; \
+	sed '/^--/d' $(BACKEND_DIR)/db/schema/initial_schema.sql | \
+		$(PUBLIC_DEV_COMPOSE) exec -T postgres sh -ec 'PGPASSWORD="$$POSTGRES_MIGRATOR_PASSWORD" psql -h postgres -U "$$POSTGRES_MIGRATOR_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "SET ROLE \"$$POSTGRES_OWNER_ROLE\"" -f -'
+	$(PUBLIC_DEV_COMPOSE) exec -T postgres sh -ec 'PGPASSWORD="$$POSTGRES_MIGRATOR_PASSWORD" psql -h postgres -U "$$POSTGRES_MIGRATOR_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -v app_role="$$POSTGRES_APP_USER" -c "SET ROLE \"$$POSTGRES_OWNER_ROLE\"" -f -' < $(PUBLIC_DEV_DIR)/postgresql/grant-runtime.sql
+
+# Comprueba que la identidad de la API conecta pero no puede cambiar el esquema.
+dev-public-runtime-verify: dev-public-config-check
+	$(PUBLIC_DEV_COMPOSE) exec -T postgres sh -ec 'PGPASSWORD="$$POSTGRES_APP_PASSWORD" psql -h postgres -U "$$POSTGRES_APP_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "SELECT current_user"'
+	@! $(PUBLIC_DEV_COMPOSE) exec -T postgres sh -ec 'PGPASSWORD="$$POSTGRES_APP_PASSWORD" psql -h postgres -U "$$POSTGRES_APP_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "CREATE TABLE permission_probe (id integer)"' || { echo "La identidad runtime no debe poder crear tablas"; exit 1; }
 
 # Purga exclusivamente cuentas de desarrollo cuya baja ya venció. El comando
 # interno no expone una ruta HTTP y reutiliza la API runtime ya en ejecución.
