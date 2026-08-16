@@ -42,6 +42,9 @@ export default function LeagueStandingsScreen() {
   const [statisticsContentWidth, setStatisticsContentWidth] = useState(0);
   const [statisticsViewportWidth, setStatisticsViewportWidth] = useState(0);
   const [tableViewportWidth, setTableViewportWidth] = useState(0);
+  const statisticsHeaderRef = useRef<View>(null);
+  const statisticsTimelineScopeRef = useRef<ScrollView>(null);
+  const statisticsWebScrollRef = useRef<ScrollView>(null);
   const statisticsScrollOffset = useRef(new Animated.Value(0)).current;
   const statisticsOverflow = statisticsContentWidth > statisticsViewportWidth + 1;
   const tableFitsViewport =
@@ -51,6 +54,46 @@ export default function LeagueStandingsScreen() {
     outputRange: [0, -statisticsColumnCount * statisticsColumnWidth],
     extrapolate: "clamp",
   });
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || !statisticsOverflow) {
+      return;
+    }
+
+    const scope = statisticsTimelineScopeRef.current?.getInnerViewNode() as HTMLElement | null;
+    const header = statisticsHeaderRef.current as unknown as HTMLElement | null;
+    const scrollSource = statisticsWebScrollRef.current?.getScrollableNode() as HTMLElement | null;
+    if (!scope || !header || !scrollSource) {
+      return;
+    }
+
+    const styleId = "standings-statistics-scroll-timeline";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `@keyframes standings-statistics-header-scroll { from { transform: translateX(0); } to { transform: translateX(calc(-1 * var(--standings-statistics-scroll-distance))); } }`;
+      document.head.append(style);
+    }
+
+    scope.style.setProperty("timeline-scope", "--standings-statistics-scroll");
+    scrollSource.style.setProperty("scroll-timeline-name", "--standings-statistics-scroll");
+    scrollSource.style.setProperty("scroll-timeline-axis", "inline");
+    header.style.setProperty(
+      "--standings-statistics-scroll-distance",
+      `${statisticsContentWidth - statisticsViewportWidth}px`,
+    );
+    header.style.setProperty("animation", "standings-statistics-header-scroll 1ms linear both");
+    header.style.setProperty("animation-timeline", "--standings-statistics-scroll");
+
+    return () => {
+      scope.style.removeProperty("timeline-scope");
+      scrollSource.style.removeProperty("scroll-timeline-name");
+      scrollSource.style.removeProperty("scroll-timeline-axis");
+      header.style.removeProperty("--standings-statistics-scroll-distance");
+      header.style.removeProperty("animation");
+      header.style.removeProperty("animation-timeline");
+    };
+  }, [statisticsContentWidth, statisticsOverflow, statisticsViewportWidth]);
 
   const load = useCallback(
     async (force = false) => {
@@ -161,6 +204,7 @@ export default function LeagueStandingsScreen() {
           <ScrollView
             contentContainerStyle={styles.content}
             onLayout={(event) => setTableViewportWidth(event.nativeEvent.layout.width)}
+            ref={statisticsTimelineScopeRef}
             showsVerticalScrollIndicator={false}
             stickyHeaderIndices={
               Platform.OS === "web" || league.standings.length === 0 ? undefined : [0]
@@ -197,22 +241,31 @@ export default function LeagueStandingsScreen() {
                         { borderColor: colors.border.default, width: statisticsViewportWidth },
                       ]}
                     >
-                      <Animated.View
-                        style={[
-                          styles.headerRow,
-                          { borderColor: colors.border.default },
-                          styles.statisticsHeaderContent,
-                          {
-                            transform: [
-                              {
-                                translateX: statisticsHeaderTranslateX,
-                              },
-                            ],
-                          },
-                        ]}
-                      >
-                        <StatisticsHeader />
-                      </Animated.View>
+                      {Platform.OS === "web" ? (
+                        <View
+                          ref={statisticsHeaderRef}
+                          style={[
+                            styles.headerRow,
+                            { borderColor: colors.border.default },
+                            styles.statisticsHeaderContent,
+                          ]}
+                        >
+                          <StatisticsHeader />
+                        </View>
+                      ) : (
+                        <Animated.View
+                          style={[
+                            styles.headerRow,
+                            { borderColor: colors.border.default },
+                            styles.statisticsHeaderContent,
+                            {
+                              transform: [{ translateX: statisticsHeaderTranslateX }],
+                            },
+                          ]}
+                        >
+                          <StatisticsHeader />
+                        </Animated.View>
+                      )}
                     </View>
                     <View style={styles.pointsColumn}>
                       <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
@@ -254,8 +307,7 @@ export default function LeagueStandingsScreen() {
                         onContentSizeChange={(width) => setStatisticsContentWidth(width)}
                         onScroll={
                           Platform.OS === "web"
-                            ? (event) =>
-                                statisticsScrollOffset.setValue(event.nativeEvent.contentOffset.x)
+                            ? undefined
                             : Animated.event(
                                 [{ nativeEvent: { contentOffset: { x: statisticsScrollOffset } } }],
                                 { useNativeDriver: true },
@@ -264,6 +316,7 @@ export default function LeagueStandingsScreen() {
                         overScrollMode="never"
                         scrollEventThrottle={16}
                         showsHorizontalScrollIndicator={statisticsOverflow}
+                        ref={statisticsWebScrollRef}
                         style={
                           Platform.OS === "web"
                             ? ({ overscrollBehaviorX: "none" } as never)
