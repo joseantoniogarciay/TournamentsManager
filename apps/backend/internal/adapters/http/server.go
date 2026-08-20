@@ -1181,12 +1181,14 @@ func verifyRegistration(service registration.Service, cookies sessionCookieSetti
 		decoder := json.NewDecoder(request.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil || decoder.Decode(&struct{}{}) != io.EOF || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || body.Token == "" {
+			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return
 		}
 		previousSession, _ := sessionToken(request)
 		session, sessionToken, refreshToken, err := service.Verify(request.Context(), body.Token, previousSession.token)
 		if errors.Is(err, registration.ErrVerificationInvalid) {
+			observability.RecordEndpointFailure(request.Context(), "credential.verification_link_invalid")
 			writeProblem(writer, http.StatusConflict, "Invalid verification")
 			return
 		}
