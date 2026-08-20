@@ -1008,11 +1008,13 @@ func inspectPasswordReset(service registration.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body passwordResetTokenRequest
 		if err := decodeBody(r, &body); err != nil || body.Token == "" {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		email, err := service.InspectPasswordReset(r.Context(), body.Token)
 		if errors.Is(err, registration.ErrPasswordResetInvalid) {
+			observability.RecordEndpointFailure(r.Context(), "credential.reset_link_invalid")
 			writeProblem(w, http.StatusConflict, "Invalid link")
 			return
 		}
