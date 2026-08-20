@@ -94,6 +94,7 @@ PostgreSQL están en el [runbook de refresh de sesión](../runbooks/session-refr
 | `POST /v1/password-resets` | `postgresql.CreatePasswordReset`, `smtp.send.password_reset` si existe una cuenta elegible | No revelar la existencia de la cuenta en los atributos ni crear un span cuando no se envía correo. |
 | `POST /v1/password-reset-confirmations` | `auth.password.hash`, `postgresql.ConsumePasswordReset` | La actualización de credencial, revocación y sesión es una sola consulta atómica. |
 | `POST /v1/registration-verifications` | `postgresql.VerifyRegistrationAndCreateSession` | No añadir spans para SHA-256, aleatoriedad o CTE internos: no son límites operativos independientes. |
+| `POST /v1/sessions/refresh` | `postgresql.RotateSessionTokens` | La rotación del token opaco y la sesión se diagnostican como una única transición atómica; el runbook conserva la investigación extremo a extremo. |
 
 ## Orden de diseño
 
