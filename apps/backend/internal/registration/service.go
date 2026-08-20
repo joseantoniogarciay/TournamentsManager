@@ -287,7 +287,7 @@ func (s Service) InspectPasswordReset(ctx context.Context, token string) (string
 
 // ResetPassword consumes the link, changes the credential, and issues a new session.
 func (s Service) ResetPassword(ctx context.Context, token, password string) (Session, string, string, error) {
-	passwordHash, err := HashPassword(password)
+	passwordHash, err := s.passwordProtector.Hash(ctx, password)
 	if err != nil {
 		return Session{}, "", "", err
 	}

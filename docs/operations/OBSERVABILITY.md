@@ -76,7 +76,8 @@ sqlc o anotada en una consulta manual—, por ejemplo
 `postgresql.FindLocalAccountForLogin`; y la entrega de correo se ve como
 `smtp.send.verification` o `smtp.send.password_reset`. Los decoradores técnicos
 no añaden destinatarios, tokens, contraseñas, hashes, SQL, argumentos SQL ni
-contenido del mensaje.
+contenido del mensaje. El mismo decorador Argon2id cubre la creación de cuenta
+y el cambio de contraseña tras consumir un enlace de restablecimiento.
 
 `OTEL_TRACES_ENDPOINT` es opcional. Cuando falta o Tempo deja de estar
 disponible, la API mantiene los logs JSON y las métricas y no deja de servir

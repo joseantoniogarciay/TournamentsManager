@@ -2333,4 +2333,5 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   adaptadores técnicos los decoran con spans sin atributos sensibles. Las
   consultas manuales reciben un identificador estático, igual que las
   generadas por sqlc. Una operación SMTP distingue solo el propósito técnico
-  —verificación o restablecimiento—, nunca la persona destinataria.
+  —verificación o restablecimiento—, nunca la persona destinataria. El puerto
+  de Argon2id cubre tanto el alta como cualquier cambio de credencial.
