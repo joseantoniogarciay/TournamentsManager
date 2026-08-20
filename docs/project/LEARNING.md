@@ -2335,3 +2335,12 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   generadas por sqlc. Una operación SMTP distingue solo el propósito técnico
   —verificación o restablecimiento—, nunca la persona destinataria. El puerto
   de Argon2id cubre tanto el alta como cualquier cambio de credencial.
+
+### 2026-08-20 — Una consulta atómica conserva un único límite observable
+
+- **Aprendido:** verificar un registro consume el token, confirma la cuenta y
+  crea la sesión dentro de `VerifyRegistrationAndCreateSession`. Aunque el SQL
+  use varios CTE, PostgreSQL lo ejecuta como una operación del adaptador.
+- **Regla reutilizable:** no se fragmenta una operación atómica en spans que no
+  existen en el proceso. SHA-256 y la generación de secretos son coste local
+  despreciable frente a los límites HTTP y PostgreSQL; medirlos añadiría ruido.
