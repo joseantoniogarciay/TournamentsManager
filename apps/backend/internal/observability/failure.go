@@ -13,6 +13,15 @@ import (
 
 const failureReasonAttribute = "tournaments_manager.failure.reason"
 
+// RecordEndpointFailure adds a safe, feature-owned reason to the HTTP root span.
+// Expected rejections retain their HTTP status and do not become trace errors.
+func RecordEndpointFailure(ctx context.Context, reason string) {
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		span.SetAttributes(attribute.String(failureReasonAttribute, reason))
+	}
+}
+
 func recordFailure(span trace.Span, reason, summary string) {
 	span.SetAttributes(attribute.String(failureReasonAttribute, reason))
 	span.SetStatus(codes.Error, summary)

@@ -174,6 +174,32 @@ func TestMailerRecordsSafeFailureReason(t *testing.T) {
 	}
 }
 
+func TestRecordEndpointFailureAddsReasonWithoutErrorEvent(t *testing.T) {
+	exporter := tracetest.NewInMemoryExporter()
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(provider)
+	t.Cleanup(func() {
+		otel.SetTracerProvider(previous)
+		_ = provider.Shutdown(context.Background())
+	})
+
+	ctx, span := provider.Tracer("test").Start(context.Background(), "POST /v1/registrations")
+	RecordEndpointFailure(ctx, "validation.rejected")
+	span.End()
+
+	spans := exporter.GetSpans()
+	if len(spans) != 1 {
+		t.Fatalf("span count = %d, want 1", len(spans))
+	}
+	if got := spanAttribute(spans[0].Attributes, failureReasonAttribute); got != "validation.rejected" {
+		t.Fatalf("failure reason = %q, want validation.rejected", got)
+	}
+	if len(spans[0].Events) != 0 {
+		t.Fatalf("events = %#v, want no error event", spans[0].Events)
+	}
+}
+
 func spanAttribute(attributes []attribute.KeyValue, key string) string {
 	for _, item := range attributes {
 		if string(item.Key) == key {

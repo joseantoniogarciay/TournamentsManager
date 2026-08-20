@@ -104,7 +104,7 @@ PostgreSQL están en el [runbook de refresh de sesión](../runbooks/session-refr
 
 | Ruta | Spans hijos relevantes | Decisión |
 | --- | --- | --- |
-| `POST /v1/registrations` | `auth.password.hash`, operaciones PostgreSQL de alta, `smtp.send.verification` | Instrumentar CPU costosa, transacción y dependencia SMTP. |
+| `POST /v1/registrations` | `auth.password.hash`, operaciones PostgreSQL de alta, `smtp.send.verification` | Instrumentar CPU costosa, transacción y dependencia SMTP; los rechazos usan `validation.rejected` o `rate_limit.exceeded`. |
 | `POST /v1/password-resets` | `postgresql.CreatePasswordReset`, `smtp.send.password_reset` si existe una cuenta elegible | No revelar la existencia de la cuenta en los atributos ni crear un span cuando no se envía correo. |
 | `POST /v1/password-reset-confirmations` | `auth.password.hash`, `postgresql.ConsumePasswordReset` | La actualización de credencial, revocación y sesión es una sola consulta atómica. |
 | `POST /v1/registration-verifications` | `postgresql.VerifyRegistrationAndCreateSession` | No añadir spans para SHA-256, aleatoriedad o CTE internos: no son límites operativos independientes. |

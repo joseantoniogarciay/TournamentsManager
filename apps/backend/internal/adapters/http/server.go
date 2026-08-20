@@ -22,6 +22,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
@@ -1338,6 +1339,7 @@ func register(service registration.Service, limiter *requestLimiter, resolveClie
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var body registerRequest
 		if err := decodeBody(request, &body); err != nil {
+			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return
 		}
@@ -1357,10 +1359,12 @@ func register(service registration.Service, limiter *requestLimiter, resolveClie
 		}
 		input = registration.NormalizeInput(input)
 		if !validRegistration(input) || !validRegistrationDraft(input.Draft) {
+			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(request)); !allowed {
+			observability.RecordEndpointFailure(request.Context(), "rate_limit.exceeded")
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(writer, http.StatusTooManyRequests, "Too many registrations")
 			return
