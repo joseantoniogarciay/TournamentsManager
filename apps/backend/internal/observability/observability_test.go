@@ -37,6 +37,20 @@ func TestQueryMetadataSkipsOrdinaryComments(t *testing.T) {
 	}
 }
 
+func TestQueryMetadataUsesManualQueryName(t *testing.T) {
+	t.Parallel()
+
+	name, operation := queryMetadata(`-- name: SearchPublicUsernames :many
+SELECT username FROM accounts WHERE username LIKE '%' || $1 || '%'`)
+
+	if name != "SearchPublicUsernames" {
+		t.Fatalf("name = %q, want SearchPublicUsernames", name)
+	}
+	if operation != "SELECT" {
+		t.Fatalf("operation = %q, want SELECT", operation)
+	}
+}
+
 func TestPasswordProtectorCreatesSafeSpans(t *testing.T) {
 	exporter := tracetest.NewInMemoryExporter()
 	provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))

@@ -53,7 +53,8 @@ func (r RegistrationRepository) IsUsernameAvailable(ctx context.Context, usernam
 
 // SearchUsernames searches public matches without exposing other account data.
 func (r RegistrationRepository) SearchUsernames(ctx context.Context, query string) ([]string, error) {
-	rows, err := r.pool.Query(ctx, `SELECT username FROM accounts WHERE state = 'verified' AND username LIKE '%' || $1 || '%' ORDER BY username LIMIT 20`, query)
+	rows, err := r.pool.Query(ctx, `-- name: SearchPublicUsernames :many
+		SELECT username FROM accounts WHERE state = 'verified' AND username LIKE '%' || $1 || '%' ORDER BY username LIMIT 20`, query)
 	if err != nil {
 		return nil, err
 	}

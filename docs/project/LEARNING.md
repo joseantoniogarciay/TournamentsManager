@@ -2344,3 +2344,11 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** no se fragmenta una operación atómica en spans que no
   existen en el proceso. SHA-256 y la generación de secretos son coste local
   despreciable frente a los límites HTTP y PostgreSQL; medirlos añadiría ruido.
+
+### 2026-08-20 — Las consultas manuales también necesitan un nombre estable
+
+- **Aprendido:** `sqlc` conserva su identificador estático en el SQL generado,
+  pero una consulta escrita directamente con `pgx` no lo adquiere por sí sola.
+- **Regla reutilizable:** la anotación `-- name:` precede a una consulta manual
+  y permite nombrar su span sin exportar SQL, argumentos ni términos de
+  búsqueda.
