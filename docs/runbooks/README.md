@@ -7,6 +7,7 @@ entorno local; su estado de prueba se declara dentro del propio runbook.
 ## Runbooks disponibles
 
 - [PostgreSQL local con Docker Compose](local-postgresql.md)
+- [Diagnóstico del refresh de sesión](session-refresh-observability.md)
 
 ## Requisitos
 

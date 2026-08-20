@@ -20,6 +20,7 @@ const (
 	corsAllowedOriginsEnv = "CORS_ALLOWED_ORIGINS"
 	googleClientIDsEnv    = "GOOGLE_CLIENT_IDS"
 	trustedProxyCIDRsEnv  = "TRUSTED_PROXY_CIDRS"
+	otelTracesEndpointEnv = "OTEL_TRACES_ENDPOINT"
 )
 
 // Config contains only the configuration needed to start the API.
@@ -35,6 +36,7 @@ type Config struct {
 	CORSAllowedOrigins []string
 	GoogleClientIDs    []string
 	TrustedProxyCIDRs  []netip.Prefix
+	OTELTracesEndpoint string
 }
 
 // Load gets configuration from the environment and fails before opening ports
@@ -88,6 +90,10 @@ func load(getenv func(string) string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	otelTracesEndpoint, err := parseOTELTracesEndpoint(getenv(otelTracesEndpointEnv))
+	if err != nil {
+		return Config{}, err
+	}
 
 	return Config{
 		DatabaseURL:        databaseURL,
@@ -101,7 +107,19 @@ func load(getenv func(string) string) (Config, error) {
 		CORSAllowedOrigins: corsAllowedOrigins,
 		GoogleClientIDs:    googleClientIDs,
 		TrustedProxyCIDRs:  trustedProxyCIDRs,
+		OTELTracesEndpoint: otelTracesEndpoint,
 	}, nil
+}
+
+func parseOTELTracesEndpoint(raw string) (string, error) {
+	if raw == "" {
+		return "", nil
+	}
+	parsed, err := url.Parse(raw)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return "", fmt.Errorf("%s debe ser una URL HTTP(S) absoluta sin credenciales ni query", otelTracesEndpointEnv)
+	}
+	return parsed.String(), nil
 }
 
 func parseTrustedProxyCIDRs(raw string) ([]netip.Prefix, error) {

@@ -21,6 +21,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Primer corte de observabilidad local: `POST /v1/sessions/refresh` emite logs
+  JSON correlacionados, métricas Prometheus y trazas OpenTelemetry HTTP y
+  PostgreSQL. El entorno Compose incorpora Grafana, Loki, Tempo, Prometheus y
+  Promtail; el runbook verifica el diagnóstico ante una caída controlada de
+  PostgreSQL.
+
 - ADR-0097: `tournaments-manager-dev` separa propietario PostgreSQL sin login,
   migrador y runtime con DML mínimo. El bootstrap y la comprobación de denegación
   de DDL son explícitos antes del siguiente despliegue; la API no recibe la

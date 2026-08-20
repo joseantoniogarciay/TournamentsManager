@@ -46,6 +46,35 @@ El servicio debe degradarse de forma segura si un backend de telemetría no est�
 configurado o no está disponible. El dominio no importa SDKs ni tipos de los
 backends.
 
+## Primer corte ejecutable — refresh de sesión
+
+La primera pregunta operativa es: **¿por qué falló o se degradó un refresh de
+sesión web?** La ruta observada es `POST /v1/sessions/refresh`; atraviesa HTTP,
+la protección CSRF y PostgreSQL sin incorporar todavía SMTP, Google ni lógica de
+ligas.
+
+`make dev-up` inicia, además de API, PostgreSQL y Mailpit, el stack local:
+
+- Grafana en `http://127.0.0.1:3000`;
+- Prometheus en `http://127.0.0.1:9090`;
+- Loki, accesible desde Grafana;
+- Tempo, que recibe OTLP/HTTP en `127.0.0.1:4318`;
+- Promtail, que recoge exclusivamente el `stdout` JSON del contenedor `api`.
+
+Grafana provisiona las tres fuentes de datos. La API expone métricas agregadas
+en `/metrics` y registra cada petición terminada con método, plantilla de ruta,
+estado, duración y, si existe, `trace_id` y `span_id`. No registra cuerpos,
+cookies, tokens, query strings, SQL ni argumentos SQL. El identificador de
+traza no se convierte en etiqueta de Loki o Prometheus, para no elevar la
+cardinalidad.
+
+`OTEL_TRACES_ENDPOINT` es opcional. Cuando falta o Tempo deja de estar
+disponible, la API mantiene los logs JSON y las métricas y no deja de servir
+peticiones por un error de exportación.
+
+El procedimiento de diagnóstico y la prueba de indisponibilidad controlada de
+PostgreSQL están en el [runbook de refresh de sesión](../runbooks/session-refresh-observability.md).
+
 ## Orden de diseño
 
 1. definir el flujo crítico y su resultado correcto;

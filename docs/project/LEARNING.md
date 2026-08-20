@@ -2300,3 +2300,15 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   `401` de access y repite la petición una vez. No se refresca durante unload:
   si se pierde la respuesta de una rotación estricta, se exige login antes que
   aceptar una ventana de gracia que rebaje la detección de reuso.
+
+### 2026-08-17 — Una señal solo es útil si permite seguir el mismo fallo
+
+- **Aprendido:** logs, métricas y trazas no sustituyen una investigación si
+  cada una usa identificadores y dimensiones distintos. Un primer flujo pequeño
+  —el refresh de sesión— permite demostrar la correlación HTTP → PostgreSQL
+  antes de diseñar paneles o alertas generales.
+- **Regla reutilizable:** los logs registran plantilla de ruta, estado y
+  `trace_id`; Prometheus usa solamente etiquetas acotadas; Tempo no almacena
+  SQL, argumentos, cookies, tokens ni query strings. La instrumentación usa una
+  copia saneada de la URL para telemetría y entrega la URL original al handler,
+  de modo que las consultas siguen funcionando sin exponer sus valores.

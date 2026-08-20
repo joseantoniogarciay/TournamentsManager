@@ -121,7 +121,11 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
 	}
 	withCookieName := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		mux.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), sessionCookieNameContextKey{}, cookies.name)))
+		routedRequest := r.WithContext(context.WithValue(r.Context(), sessionCookieNameContextKey{}, cookies.name))
+		mux.ServeHTTP(w, routedRequest)
+		// ServeMux writes the matched template on the request it serves. Preserve
+		// it for the outer observability middleware after adding request context.
+		r.Pattern = routedRequest.Pattern
 	})
 	return requireAllowedOrigin(corsAllowedOrigins, withCookieName)
 }
