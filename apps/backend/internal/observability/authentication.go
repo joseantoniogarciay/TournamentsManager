@@ -16,7 +16,11 @@ type PasswordProtector struct{}
 func (PasswordProtector) Hash(ctx context.Context, password string) (string, error) {
 	_, span := otel.Tracer(serviceName+"/authentication").Start(ctx, "auth.password.hash", trace.WithAttributes(attribute.String("auth.password.algorithm", "argon2id")))
 	defer span.End()
-	return registration.HashPassword(password)
+	hash, err := registration.HashPassword(password)
+	if err != nil {
+		recordFailure(span, "auth.password_hash_failed", "password hash failed")
+	}
+	return hash, err
 }
 
 func (PasswordProtector) Verify(ctx context.Context, password, encoded string) bool {

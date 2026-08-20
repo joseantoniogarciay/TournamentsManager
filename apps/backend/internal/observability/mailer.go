@@ -5,7 +5,6 @@ import (
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
 )
 
 // Mailer measures SMTP delivery without recording recipient, locale, token, or message content.
@@ -23,8 +22,7 @@ func (Mailer) send(ctx context.Context, name string, send func() error) error {
 	_, span := otel.Tracer(serviceName+"/smtp").Start(ctx, name)
 	defer span.End()
 	if err := send(); err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "SMTP delivery failed")
+		recordFailure(span, smtpFailureReason(err), "SMTP delivery failed")
 		return err
 	}
 	return nil

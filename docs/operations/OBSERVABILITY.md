@@ -79,6 +79,13 @@ no añaden destinatarios, tokens, contraseñas, hashes, SQL, argumentos SQL ni
 contenido del mensaje. El mismo decorador Argon2id cubre la creación de cuenta
 y el cambio de contraseña tras consumir un enlace de restablecimiento.
 
+Cuando un límite técnico falla, el span no exporta el error bruto. Registra
+solamente `tournaments_manager.failure.reason`, con valores cerrados como
+`database.unavailable`, `database.constraint_failed`,
+`database.query_failed`, `smtp.delivery_failed`, `request.cancelled` o
+`request.timeout`. Cada feature puede añadir una causa de negocio segura cuando
+aporte recuperación distinta; no se deduce centralmente del código HTTP.
+
 `OTEL_TRACES_ENDPOINT` es opcional. Cuando falta o Tempo deja de estar
 disponible, la API mantiene los logs JSON y las métricas y no deja de servir
 peticiones por un error de exportación.

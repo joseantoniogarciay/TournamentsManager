@@ -2352,3 +2352,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** la anotación `-- name:` precede a una consulta manual
   y permite nombrar su span sin exportar SQL, argumentos ni términos de
   búsqueda.
+
+### 2026-08-20 — El error operativo se clasifica; no se copia
+
+- **Aprendido:** un error de driver o SMTP puede contener detalle interno o
+  datos proporcionados por una persona. `RecordError` lo convertiría en un
+  evento de traza compartido con Grafana.
+- **Regla reutilizable:** los límites técnicos registran una causa cerrada y
+  segura en `tournaments_manager.failure.reason`, mantienen un resumen fijo y
+  no exportan el error bruto. La causa de negocio se añade solo en la feature
+  que puede usarla para diagnosticar o recuperar.

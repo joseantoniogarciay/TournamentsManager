@@ -2,10 +2,13 @@ package observability
 
 import (
 	"context"
+	"errors"
 	"testing"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
@@ -120,6 +123,66 @@ func TestMailerCreatesSafeSpans(t *testing.T) {
 	}
 }
 
+func TestQueryTracerRecordsSafeFailureReason(t *testing.T) {
+	exporter := tracetest.NewInMemoryExporter()
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(provider)
+	t.Cleanup(func() {
+		otel.SetTracerProvider(previous)
+		_ = provider.Shutdown(context.Background())
+	})
+
+	ctx, _ := provider.Tracer("test").Start(context.Background(), "postgresql.SearchPublicUsernames")
+	QueryTracer{}.TraceQueryEnd(ctx, nil, pgx.TraceQueryEndData{Err: errors.New("invalid username: person@example.test")})
+
+	spans := exporter.GetSpans()
+	if len(spans) != 1 {
+		t.Fatalf("span count = %d, want 1", len(spans))
+	}
+	if got := spanAttribute(spans[0].Attributes, failureReasonAttribute); got != "database.query_failed" {
+		t.Fatalf("failure reason = %q, want database.query_failed", got)
+	}
+	if len(spans[0].Events) != 0 {
+		t.Fatalf("events = %#v, want no raw error event", spans[0].Events)
+	}
+}
+
+func TestMailerRecordsSafeFailureReason(t *testing.T) {
+	exporter := tracetest.NewInMemoryExporter()
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(provider)
+	t.Cleanup(func() {
+		otel.SetTracerProvider(previous)
+		_ = provider.Shutdown(context.Background())
+	})
+
+	err := (Mailer{Next: failingMailerStub{}}).SendVerification(context.Background(), "person@example.test", registration.LocaleSpanish, "secret-token")
+	if err == nil {
+		t.Fatal("SendVerification() error = nil, want error")
+	}
+	spans := exporter.GetSpans()
+	if len(spans) != 1 {
+		t.Fatalf("span count = %d, want 1", len(spans))
+	}
+	if got := spanAttribute(spans[0].Attributes, failureReasonAttribute); got != "smtp.delivery_failed" {
+		t.Fatalf("failure reason = %q, want smtp.delivery_failed", got)
+	}
+	if len(spans[0].Events) != 0 {
+		t.Fatalf("events = %#v, want no raw error event", spans[0].Events)
+	}
+}
+
+func spanAttribute(attributes []attribute.KeyValue, key string) string {
+	for _, item := range attributes {
+		if string(item.Key) == key {
+			return item.Value.AsString()
+		}
+	}
+	return ""
+}
+
 type mailerStub struct{}
 
 func (mailerStub) SendVerification(context.Context, string, registration.Locale, string) error {
@@ -127,4 +190,10 @@ func (mailerStub) SendVerification(context.Context, string, registration.Locale,
 }
 func (mailerStub) SendPasswordReset(context.Context, string, registration.Locale, string) error {
 	return nil
+}
+
+type failingMailerStub struct{ mailerStub }
+
+func (failingMailerStub) SendVerification(context.Context, string, registration.Locale, string) error {
+	return errors.New("SMTP rejected person@example.test")
 }

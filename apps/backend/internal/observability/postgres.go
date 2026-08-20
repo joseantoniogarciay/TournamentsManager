@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
 	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -31,8 +30,7 @@ func (QueryTracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.Tr
 func (QueryTracer) TraceQueryEnd(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryEndData) {
 	span := trace.SpanFromContext(ctx)
 	if data.Err != nil {
-		span.RecordError(data.Err)
-		span.SetStatus(codes.Error, "database query failed")
+		recordFailure(span, databaseFailureReason(data.Err), "database query failed")
 	}
 	span.End()
 }
