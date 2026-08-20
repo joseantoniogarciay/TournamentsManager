@@ -95,6 +95,7 @@ PostgreSQL están en el [runbook de refresh de sesión](../runbooks/session-refr
 | `POST /v1/password-reset-confirmations` | `auth.password.hash`, `postgresql.ConsumePasswordReset` | La actualización de credencial, revocación y sesión es una sola consulta atómica. |
 | `POST /v1/registration-verifications` | `postgresql.VerifyRegistrationAndCreateSession` | No añadir spans para SHA-256, aleatoriedad o CTE internos: no son límites operativos independientes. |
 | `POST /v1/sessions/refresh` | `postgresql.RotateSessionTokens` | La rotación del token opaco y la sesión se diagnostican como una única transición atómica; el runbook conserva la investigación extremo a extremo. |
+| `GET /v1/usernames/{username}/availability` | `postgresql.IsUsernameAvailable` | La plantilla de ruta y el nombre de consulta son estáticos; username e IP quedan fuera de los atributos. |
 
 ## Orden de diseño
 
