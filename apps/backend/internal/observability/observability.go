@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -66,6 +67,12 @@ func HTTPHandler(next http.Handler) http.Handler {
 	application := otelhttp.NewHandler(
 		metrics.wrap(requestLogger(restoreRequestURL(next))),
 		"HTTP server",
+		otelhttp.WithSpanNameFormatter(func(fallback string, request *http.Request) string {
+			if request.Pattern == "" {
+				return fallback
+			}
+			return request.Pattern
+		}),
 	)
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		if request.URL.Path == "/metrics" {
@@ -181,8 +188,15 @@ type QueryTracer struct{}
 
 // TraceQueryStart starts a span without copying SQL text or arguments into it.
 func (QueryTracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
-	ctx, _ = otel.Tracer(serviceName+"/postgres").Start(ctx, "postgresql.query",
-		trace.WithAttributes(spanAttributes(queryOperation(data.SQL))...),
+	queryName, operation := queryMetadata(data.SQL)
+	spanName := "postgresql.query"
+	attributes := spanAttributes(operation)
+	if queryName != "" {
+		spanName = "postgresql." + queryName
+		attributes = append(attributes, attribute.String("db.query.name", queryName))
+	}
+	ctx, _ = otel.Tracer(serviceName+"/postgres").Start(ctx, spanName,
+		trace.WithAttributes(attributes...),
 	)
 	return ctx
 }
@@ -197,12 +211,28 @@ func (QueryTracer) TraceQueryEnd(ctx context.Context, _ *pgx.Conn, data pgx.Trac
 	span.End()
 }
 
-func queryOperation(sql string) string {
-	fields := strings.Fields(sql)
-	if len(fields) == 0 {
-		return "unknown"
+func queryMetadata(sql string) (name, operation string) {
+	for _, line := range strings.Split(sql, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "-- name:") {
+			fields := strings.Fields(line)
+			if len(fields) >= 3 {
+				name = fields[2]
+			}
+			continue
+		}
+		if strings.HasPrefix(line, "--") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) > 0 {
+			return name, strings.ToUpper(fields[0])
+		}
 	}
-	return strings.ToUpper(fields[0])
+	return name, "unknown"
 }
 
 func spanAttributes(operation string) []attribute.KeyValue {
@@ -210,4 +240,17 @@ func spanAttributes(operation string) []attribute.KeyValue {
 		semconv.DBSystemNamePostgreSQL,
 		semconv.DBOperationName(operation),
 	}
+}
+
+// PasswordVerifier adds a child span around Argon2id verification without
+// recording the password, its encoded verifier, or account identifiers.
+type PasswordVerifier struct{}
+
+// Verify measures the local Argon2id verification while retaining credential privacy.
+func (PasswordVerifier) Verify(ctx context.Context, password, encoded string) bool {
+	_, span := otel.Tracer(serviceName+"/authentication").Start(ctx, "auth.password.verify",
+		trace.WithAttributes(attribute.String("auth.password.algorithm", "argon2id")),
+	)
+	defer span.End()
+	return registration.VerifyPassword(password, encoded)
 }

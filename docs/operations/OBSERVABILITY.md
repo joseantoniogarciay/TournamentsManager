@@ -68,6 +68,13 @@ cookies, tokens, query strings, SQL ni argumentos SQL. El identificador de
 traza no se convierte en etiqueta de Loki o Prometheus, para no elevar la
 cardinalidad.
 
+Las trazas priorizan nombres operativos, no contenido sensible: el span HTTP se
+llama, por ejemplo, `POST /v1/sessions`; una verificación local de contraseña
+aparece como `auth.password.verify` y declara únicamente `argon2id`; y los
+spans PostgreSQL usan el nombre estático de la operación generada por sqlc, por
+ejemplo `postgresql.FindLocalAccountForLogin`. Nunca se exportan la contraseña,
+su hash, el texto SQL ni argumentos SQL.
+
 `OTEL_TRACES_ENDPOINT` es opcional. Cuando falta o Tempo deja de estar
 disponible, la API mantiene los logs JSON y las métricas y no deja de servir
 peticiones por un error de exportación.

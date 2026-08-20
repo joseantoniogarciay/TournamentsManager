@@ -2312,3 +2312,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   SQL, argumentos, cookies, tokens ni query strings. La instrumentación usa una
   copia saneada de la URL para telemetría y entrega la URL original al handler,
   de modo que las consultas siguen funcionando sin exponer sus valores.
+
+### 2026-08-20 — Un span debe nombrar el trabajo, no la librería
+
+- **Aprendido:** `HTTP server` y `postgresql.query` prueban que hubo actividad,
+  pero obligan a expandir atributos para entender una traza y ocultan el coste
+  de las operaciones de CPU entre llamadas a base de datos.
+- **Regla reutilizable:** el nombre visible se deriva de una ruta plantilla o
+  de un identificador estático de sqlc, nunca de datos de la petición o SQL. Un
+  decorador de infraestructura mide `auth.password.verify` sin introducir SDKs
+  de observabilidad en el caso de uso de registro.

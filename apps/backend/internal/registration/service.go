@@ -77,6 +77,19 @@ type Repository interface {
 	RenewLoginVerification(context.Context, string, []byte) (string, Locale, error)
 }
 
+// PasswordVerifier keeps password verification replaceable at the application
+// boundary. The default implementation remains local Argon2id verification;
+// infrastructure may decorate it with technical measurements.
+type PasswordVerifier interface {
+	Verify(context.Context, string, string) bool
+}
+
+type localPasswordVerifier struct{}
+
+func (localPasswordVerifier) Verify(_ context.Context, password, encoded string) bool {
+	return VerifyPassword(password, encoded)
+}
+
 // LocalAccount contains the account data required for local authentication.
 type LocalAccount struct {
 	ID, Email, Username, PasswordHash string
@@ -95,7 +108,7 @@ type LoginResult struct {
 // Login verifies a local credential and creates a session, or renews pending verification.
 func (s Service) Login(ctx context.Context, email, password string) (LoginResult, error) {
 	account, err := s.repository.FindLocalAccountForLogin(ctx, strings.TrimSpace(email))
-	if err != nil || !VerifyPassword(password, account.PasswordHash) {
+	if err != nil || !s.passwordVerifier.Verify(ctx, password, account.PasswordHash) {
 		return LoginResult{}, ErrLoginInvalid
 	}
 	if !account.Verified {
@@ -190,13 +203,18 @@ func (s Service) Verify(ctx context.Context, token, previousSessionToken string)
 
 // Service coordinates registration without disclosing whether an email is already registered.
 type Service struct {
-	repository Repository
-	mailer     Mailer
+	repository       Repository
+	mailer           Mailer
+	passwordVerifier PasswordVerifier
 }
 
 // NewService builds the use case with its explicit ports.
-func NewService(repository Repository, mailer Mailer) Service {
-	return Service{repository: repository, mailer: mailer}
+func NewService(repository Repository, mailer Mailer, passwordVerifier ...PasswordVerifier) Service {
+	verifier := PasswordVerifier(localPasswordVerifier{})
+	if len(passwordVerifier) > 0 && passwordVerifier[0] != nil {
+		verifier = passwordVerifier[0]
+	}
+	return Service{repository: repository, mailer: mailer, passwordVerifier: verifier}
 }
 
 // UsernameAvailable checks current availability without reserving the username.
