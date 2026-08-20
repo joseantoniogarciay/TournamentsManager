@@ -688,10 +688,12 @@ func searchUsers(service registration.Service, limiter *requestLimiter, resolveC
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query().Get("query")
 		if !usernamePattern.MatchString(query) {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(r)); !allowed {
+			observability.RecordEndpointFailure(r.Context(), "rate_limit.exceeded")
 			w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(w, http.StatusTooManyRequests, "Too many searches")
 			return
