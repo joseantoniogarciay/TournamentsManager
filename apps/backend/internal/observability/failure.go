@@ -22,6 +22,14 @@ func RecordEndpointFailure(ctx context.Context, reason string) {
 	}
 }
 
+// RecordDatabaseEndpointFailure records the safe category of a database failure
+// on the HTTP root span. QueryTracer records the same category on the child
+// PostgreSQL span; keeping it on the root makes the request diagnosable without
+// exporting the driver error or any query data.
+func RecordDatabaseEndpointFailure(ctx context.Context, err error) {
+	RecordEndpointFailure(ctx, databaseFailureReason(err))
+}
+
 func recordFailure(span trace.Span, reason, summary string) {
 	span.SetAttributes(attribute.String(failureReasonAttribute, reason))
 	span.SetStatus(codes.Error, summary)

@@ -181,7 +181,7 @@ func (r FederatedRepository) RemoveGoogleIdentityWithTicket(ctx context.Context,
 		return err
 	}
 	if rows != 1 {
-		return pgx.ErrNoRows
+		return federated.ErrChallengeInvalid
 	}
 	return nil
 }
