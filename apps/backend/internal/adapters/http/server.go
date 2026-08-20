@@ -1114,10 +1114,12 @@ func usernameAvailability(service registration.Service, limiter *requestLimiter,
 	return func(writer http.ResponseWriter, request *http.Request) {
 		username := request.PathValue("username")
 		if !usernamePattern.MatchString(username) {
+			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(request)); !allowed {
+			observability.RecordEndpointFailure(request.Context(), "rate_limit.exceeded")
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(writer, http.StatusTooManyRequests, "Too many username lookups")
 			return
