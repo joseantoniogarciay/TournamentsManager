@@ -10,10 +10,12 @@ import (
 // Mailer measures SMTP delivery without recording recipient, locale, token, or message content.
 type Mailer struct{ Next registration.Mailer }
 
+// SendVerification delivers a verification message with a safe SMTP span.
 func (m Mailer) SendVerification(ctx context.Context, recipient string, locale registration.Locale, token string) error {
 	return m.send(ctx, "smtp.send.verification", func() error { return m.Next.SendVerification(ctx, recipient, locale, token) })
 }
 
+// SendPasswordReset delivers a password-reset message with a safe SMTP span.
 func (m Mailer) SendPasswordReset(ctx context.Context, recipient string, locale registration.Locale, token string) error {
 	return m.send(ctx, "smtp.send.password_reset", func() error { return m.Next.SendPasswordReset(ctx, recipient, locale, token) })
 }

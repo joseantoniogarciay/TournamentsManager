@@ -15,6 +15,7 @@ import (
 // text or arguments, which can contain personal data and credentials.
 type QueryTracer struct{}
 
+// TraceQueryStart begins a safe PostgreSQL span for the named query.
 func (QueryTracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
 	queryName, operation := queryMetadata(data.SQL)
 	spanName := "postgresql.query"
@@ -27,6 +28,7 @@ func (QueryTracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.Tr
 	return ctx
 }
 
+// TraceQueryEnd classifies a query error safely and finishes its span.
 func (QueryTracer) TraceQueryEnd(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryEndData) {
 	span := trace.SpanFromContext(ctx)
 	if data.Err != nil {
