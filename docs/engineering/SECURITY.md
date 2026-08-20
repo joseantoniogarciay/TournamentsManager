@@ -41,10 +41,12 @@ coincidencia no autoriza vinculación automática. Véanse
 La recuperación de contraseña no revelará si existe una cuenta y nunca devolverá
 la contraseña anterior.
 
-ADR-0044 fija Argon2id para contraseñas locales, sesiones opacas revocables y
-rotadas, y Mailpit solo para capturar email en local; el desarrollo público usa
-Resend SMTP con STARTTLS y una clave de solo envío (ADR-0093). JWT y refresh tokens
-no se introducen sin un disparador de arquitectura distribuida.
+ADR-0044 fija Argon2id para contraseñas locales y sesiones opacas revocables;
+ADR-0062 añade access y refresh opacos rotatorios. En web ambos secretos viven
+solo en cookies persistentes `HttpOnly`, y en móvil se entregan como Bearer al
+almacenamiento seguro. Mailpit se usa solo para capturar email en local; el
+desarrollo público usa Resend SMTP con STARTTLS y una clave de solo envío
+(ADR-0093). JWT no se introduce sin un disparador de arquitectura distribuida.
 
 ADR-0059 centraliza la validación de cookie o Bearer en middleware para rutas
 protegidas. La autenticación no sustituye autorización por recurso. Antes de la

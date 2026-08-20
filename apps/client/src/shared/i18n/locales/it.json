@@ -173,7 +173,7 @@
   "league_publish": "Crea campionato",
   "league_sign_in_to_publish": "Accedi per crearlo",
   "league_name_required": "Inserisci il nome del campionato.",
-  "league_name_too_long": "Il nome del campionato non può superare 140 caratteri.",
+  "league_name_too_long": "Il nome del campionato non può superare 56 caratteri.",
   "league_teams_required": "Aggiungi almeno due squadre diverse.",
   "league_state_published": "Lega non iniziata",
   "league_state_in_progress": "Lega in corso",

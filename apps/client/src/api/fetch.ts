@@ -17,6 +17,7 @@ type MobileSession = {
 };
 
 let refreshingSession: Promise<MobileSession | null> | null = null;
+let refreshingWebSession: Promise<boolean> | null = null;
 let invalidateMobileSession: (() => Promise<void>) | null = null;
 let invalidatingSession: Promise<void> | null = null;
 
@@ -200,6 +201,19 @@ async function getMobileAccessToken() {
   return refreshedSession?.accessToken ?? null;
 }
 
+/** Rota cookies HttpOnly una sola vez y deja que el navegador almacene sus sucesoras. */
+async function refreshWebSession() {
+  if (!refreshingWebSession) {
+    refreshingWebSession = refreshSession(undefined, fetchWithAPIBase)
+      .then((response) => response.status === 200)
+      .catch(() => false)
+      .finally(() => {
+        refreshingWebSession = null;
+      });
+  }
+  return refreshingWebSession;
+}
+
 /**
  * Transporte común del cliente OpenAPI. Las operaciones generadas aportan paths
  * relativos; este borde añade el origen y la credencial móvil vigente.
@@ -209,7 +223,12 @@ export const apiFetch: typeof globalThis.fetch = async (input, init) => {
   if (Platform.OS !== "web") {
     const accessToken = await getMobileAccessToken();
     if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+    return fetchWithAPIBase(input, { ...init, headers });
   }
+
+  const response = await fetchWithAPIBase(input, { ...init, headers });
+  if (response.status !== 401) return response;
+  if (!(await refreshWebSession())) return response;
   return fetchWithAPIBase(input, { ...init, headers });
 };
 

@@ -421,10 +421,16 @@ paths:
       tags: [Session]
       operationId: refreshSession
       summary: Rota una sesión mediante su refresh token
-      security: [{ bearerRefresh: [] }]
+      security: [{ refreshCookie: [] }, { bearerRefresh: [] }]
       responses:
         "200":
           description: Access y refresh token rotados.
+          headers:
+            Set-Cookie:
+              description: >-
+                Para transporte cookie, actualiza las cookies persistentes access y refresh;
+                ambas son __Host-, Secure, HttpOnly, SameSite=Lax, Path=/ y sin Domain.
+              schema: { type: string }
           content:
             application/json:
               schema: { $ref: "#/components/schemas/SessionEstablishment" }
@@ -891,6 +897,10 @@ components:
       type: apiKey
       in: cookie
       name: __Host-tm_session
+    refreshCookie:
+      type: apiKey
+      in: cookie
+      name: __Host-tm_refresh
     bearerSession:
       type: http
       scheme: bearer
@@ -1023,7 +1033,7 @@ components:
       type: object
       required: [name, teams]
       properties:
-        name: { type: string, minLength: 1, maxLength: 140 }
+        name: { type: string, minLength: 1, maxLength: 56 }
         teams:
           type: array
           minItems: 2

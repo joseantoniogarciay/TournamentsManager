@@ -10,7 +10,7 @@ import type { TeamInput } from "./teamInput.js";
 export interface LeagueInput {
   /**
    * @minLength 1
-   * @maxLength 140
+   * @maxLength 56
    */
   name: string;
   /**

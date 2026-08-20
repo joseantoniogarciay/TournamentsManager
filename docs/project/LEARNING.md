@@ -2290,3 +2290,85 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   principal sobre superficies claras y blanco sobre superficies oscuras; un
   loader dentro de una acción primaria filled sigue usando blanco en ambos
   temas porque su contexto es el degradado de marca.
+
+### 2026-08-16 — Rotar credenciales web exige distinguir persistencia y entrega
+
+- **Aprendido:** una sesión válida en el servidor no restaura una web si su
+  cookie era de sesión y Safari descartó el proceso. Access y refresh deben
+  persistir con sus vencimientos propios, permanecer `HttpOnly` y rotarse juntos.
+- **Regla reutilizable:** el cliente web comparte una sola renovación tras un
+  `401` de access y repite la petición una vez. No se refresca durante unload:
+  si se pierde la respuesta de una rotación estricta, se exige login antes que
+  aceptar una ventana de gracia que rebaje la detección de reuso.
+
+### 2026-08-17 — Una señal solo es útil si permite seguir el mismo fallo
+
+- **Aprendido:** logs, métricas y trazas no sustituyen una investigación si
+  cada una usa identificadores y dimensiones distintos. Un primer flujo pequeño
+  —el refresh de sesión— permite demostrar la correlación HTTP → PostgreSQL
+  antes de diseñar paneles o alertas generales.
+- **Regla reutilizable:** los logs registran plantilla de ruta, estado y
+  `trace_id`; Prometheus usa solamente etiquetas acotadas; Tempo no almacena
+  SQL, argumentos, cookies, tokens ni query strings. La instrumentación usa una
+  copia saneada de la URL para telemetría y entrega la URL original al handler,
+  de modo que las consultas siguen funcionando sin exponer sus valores.
+
+### 2026-08-20 — Un span debe nombrar el trabajo, no la librería
+
+- **Aprendido:** `HTTP server` y `postgresql.query` prueban que hubo actividad,
+  pero obligan a expandir atributos para entender una traza y ocultan el coste
+  de las operaciones de CPU entre llamadas a base de datos.
+- **Regla reutilizable:** el nombre visible se deriva de una ruta plantilla o
+  de un identificador estático de sqlc, nunca de datos de la petición o SQL. Un
+  decorador de infraestructura mide `auth.password.verify` sin introducir SDKs
+  de observabilidad en el caso de uso de registro.
+
+### 2026-08-20 — Los límites locales y externos se decoran desde infraestructura
+
+- **Aprendido:** registrar una cuenta concentra trabajo Argon2id, una
+  transacción PostgreSQL y una entrega SMTP. Los tres son límites que pueden
+  explicar latencia o fallos; la validación y la generación local de tokens no
+  añaden una señal equivalente.
+- **Regla reutilizable:** el caso de uso conserva puertos de aplicación y los
+  adaptadores técnicos los decoran con spans sin atributos sensibles. Las
+  consultas manuales reciben un identificador estático, igual que las
+  generadas por sqlc. Una operación SMTP distingue solo el propósito técnico
+  —verificación o restablecimiento—, nunca la persona destinataria. El puerto
+  de Argon2id cubre tanto el alta como cualquier cambio de credencial.
+
+### 2026-08-20 — Una consulta atómica conserva un único límite observable
+
+- **Aprendido:** verificar un registro consume el token, confirma la cuenta y
+  crea la sesión dentro de `VerifyRegistrationAndCreateSession`. Aunque el SQL
+  use varios CTE, PostgreSQL lo ejecuta como una operación del adaptador.
+- **Regla reutilizable:** no se fragmenta una operación atómica en spans que no
+  existen en el proceso. SHA-256 y la generación de secretos son coste local
+  despreciable frente a los límites HTTP y PostgreSQL; medirlos añadiría ruido.
+
+### 2026-08-20 — Las consultas manuales también necesitan un nombre estable
+
+- **Aprendido:** `sqlc` conserva su identificador estático en el SQL generado,
+  pero una consulta escrita directamente con `pgx` no lo adquiere por sí sola.
+- **Regla reutilizable:** la anotación `-- name:` precede a una consulta manual
+  y permite nombrar su span sin exportar SQL, argumentos ni términos de
+  búsqueda.
+
+### 2026-08-20 — El error operativo se clasifica; no se copia
+
+- **Aprendido:** un error de driver o SMTP puede contener detalle interno o
+  datos proporcionados por una persona. `RecordError` lo convertiría en un
+  evento de traza compartido con Grafana.
+- **Regla reutilizable:** los límites técnicos registran una causa cerrada y
+  segura en `tournaments_manager.failure.reason`, mantienen un resumen fijo y
+  no exportan el error bruto. La causa de negocio se añade solo en la feature
+  que puede usarla para diagnosticar o recuperar.
+
+### 2026-08-20 — Una ruta se revisa por sus salidas, no solo por su recorrido feliz
+
+- **Aprendido:** una traza nombrada no explica por qué una persona recibió un
+  rechazo esperado. Validación, límite de tasa y reglas de negocio son salidas
+  distintas de un mismo endpoint, aunque no sean fallos de infraestructura.
+- **Regla reutilizable:** el span HTTP raíz recibe una causa cerrada y segura
+  cuando esa salida aporte diagnóstico; no se crea un span por rama ni se
+  registran valores introducidos. La feature mantiene la decisión de las
+  causas de negocio, igual que mantiene su feedback de recuperación.

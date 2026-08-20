@@ -1,0 +1,32 @@
+package observability
+
+import (
+	"context"
+
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+)
+
+// PasswordProtector measures local Argon2id operations without recording a
+// password, verifier, or account identifier.
+type PasswordProtector struct{}
+
+// Hash derives an Argon2id password verifier while recording only safe telemetry.
+func (PasswordProtector) Hash(ctx context.Context, password string) (string, error) {
+	_, span := otel.Tracer(serviceName+"/authentication").Start(ctx, "auth.password.hash", trace.WithAttributes(attribute.String("auth.password.algorithm", "argon2id")))
+	defer span.End()
+	hash, err := registration.HashPassword(password)
+	if err != nil {
+		recordFailure(span, "auth.password_hash_failed", "password hash failed")
+	}
+	return hash, err
+}
+
+// Verify compares an Argon2id password verifier without recording credential data.
+func (PasswordProtector) Verify(ctx context.Context, password, encoded string) bool {
+	_, span := otel.Tracer(serviceName+"/authentication").Start(ctx, "auth.password.verify", trace.WithAttributes(attribute.String("auth.password.algorithm", "argon2id")))
+	defer span.End()
+	return registration.VerifyPassword(password, encoded)
+}

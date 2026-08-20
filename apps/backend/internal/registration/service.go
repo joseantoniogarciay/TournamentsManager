@@ -77,6 +77,24 @@ type Repository interface {
 	RenewLoginVerification(context.Context, string, []byte) (string, Locale, error)
 }
 
+// PasswordProtector keeps Argon2id work replaceable at the application
+// boundary. The default implementation remains local; infrastructure may
+// decorate it with technical measurements.
+type PasswordProtector interface {
+	Hash(context.Context, string) (string, error)
+	Verify(context.Context, string, string) bool
+}
+
+type localPasswordProtector struct{}
+
+func (localPasswordProtector) Hash(_ context.Context, password string) (string, error) {
+	return HashPassword(password)
+}
+
+func (localPasswordProtector) Verify(_ context.Context, password, encoded string) bool {
+	return VerifyPassword(password, encoded)
+}
+
 // LocalAccount contains the account data required for local authentication.
 type LocalAccount struct {
 	ID, Email, Username, PasswordHash string
@@ -95,7 +113,7 @@ type LoginResult struct {
 // Login verifies a local credential and creates a session, or renews pending verification.
 func (s Service) Login(ctx context.Context, email, password string) (LoginResult, error) {
 	account, err := s.repository.FindLocalAccountForLogin(ctx, strings.TrimSpace(email))
-	if err != nil || !VerifyPassword(password, account.PasswordHash) {
+	if err != nil || !s.passwordProtector.Verify(ctx, password, account.PasswordHash) {
 		return LoginResult{}, ErrLoginInvalid
 	}
 	if !account.Verified {
@@ -190,13 +208,18 @@ func (s Service) Verify(ctx context.Context, token, previousSessionToken string)
 
 // Service coordinates registration without disclosing whether an email is already registered.
 type Service struct {
-	repository Repository
-	mailer     Mailer
+	repository        Repository
+	mailer            Mailer
+	passwordProtector PasswordProtector
 }
 
 // NewService builds the use case with its explicit ports.
-func NewService(repository Repository, mailer Mailer) Service {
-	return Service{repository: repository, mailer: mailer}
+func NewService(repository Repository, mailer Mailer, passwordProtector ...PasswordProtector) Service {
+	protector := PasswordProtector(localPasswordProtector{})
+	if len(passwordProtector) > 0 && passwordProtector[0] != nil {
+		protector = passwordProtector[0]
+	}
+	return Service{repository: repository, mailer: mailer, passwordProtector: protector}
 }
 
 // UsernameAvailable checks current availability without reserving the username.
@@ -213,7 +236,7 @@ func (s Service) SearchUsernames(ctx context.Context, query string) ([]string, e
 // Register creates a pending account. Its response does not distinguish an existing
 // email to prevent the endpoint from becoming an account oracle.
 func (s Service) Register(ctx context.Context, input Input) error {
-	passwordHash, err := HashPassword(input.Password)
+	passwordHash, err := s.passwordProtector.Hash(ctx, input.Password)
 	if err != nil {
 		return fmt.Errorf("generar hash de contraseña: %w", err)
 	}
@@ -264,7 +287,7 @@ func (s Service) InspectPasswordReset(ctx context.Context, token string) (string
 
 // ResetPassword consumes the link, changes the credential, and issues a new session.
 func (s Service) ResetPassword(ctx context.Context, token, password string) (Session, string, string, error) {
-	passwordHash, err := HashPassword(password)
+	passwordHash, err := s.passwordProtector.Hash(ctx, password)
 	if err != nil {
 		return Session{}, "", "", err
 	}

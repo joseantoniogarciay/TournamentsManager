@@ -20,6 +20,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/config"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
@@ -47,8 +48,19 @@ func run(args []string) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	shutdownTelemetry, err := observability.Configure(ctx, appConfig.OTELTracesEndpoint)
+	if err != nil {
+		return fmt.Errorf("configurar observabilidad: %w", err)
+	}
+	defer func() {
+		shutdownContext, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+		if err := shutdownTelemetry(shutdownContext); err != nil {
+			slog.Error("no se pudo cerrar la telemetría", "error", err)
+		}
+	}()
 
-	pool, err := postgres.NewPool(ctx, appConfig.DatabaseURL)
+	pool, err := postgres.NewPool(ctx, appConfig.DatabaseURL, observability.QueryTracer{})
 	if err != nil {
 		return err
 	}
@@ -57,7 +69,7 @@ func run(args []string) error {
 	if err != nil {
 		return fmt.Errorf("configurar correo: %w", err)
 	}
-	registrationService := registration.NewService(postgres.NewRegistrationRepository(pool), mailer)
+	registrationService := registration.NewService(postgres.NewRegistrationRepository(pool), observability.Mailer{Next: mailer}, observability.PasswordProtector{})
 	accountLeagues := postgres.NewAccountLeagueRepository(pool)
 	var federatedService *federated.Service
 	if len(appConfig.GoogleClientIDs) > 0 {
@@ -67,7 +79,7 @@ func run(args []string) error {
 
 	server := &http.Server{
 		Addr:              appConfig.HTTPAddr,
-		Handler:           httpadapter.NewHandlerWithCookieSecurityAndTrustedProxies(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, leagues.NewCreationService(accountLeagues)),
+		Handler:           observability.HTTPHandler(httpadapter.NewHandlerWithCookieSecurityAndTrustedProxies(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, leagues.NewCreationService(accountLeagues))),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -102,7 +114,7 @@ func purgeExpiredAccounts() error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	pool, err := postgres.NewPool(ctx, appConfig.DatabaseURL)
+	pool, err := postgres.NewPool(ctx, appConfig.DatabaseURL, observability.QueryTracer{})
 	if err != nil {
 		return err
 	}

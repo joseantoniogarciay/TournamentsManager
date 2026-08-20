@@ -1,10 +1,12 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 )
 
 func currentAccountNotificationID(r *http.Request) (string, bool) {
@@ -19,6 +21,7 @@ func listNotifications(service notifications.Service) http.HandlerFunc {
 			return
 		}
 		items, err := service.List(r.Context(), accountID)
+		recordNotificationFailure(r.Context(), err)
 		if err != nil {
 			writeProblem(w, http.StatusInternalServerError, "Could not retrieve notifications")
 			return
@@ -35,6 +38,7 @@ func unreadNotificationCount(service notifications.Service) http.HandlerFunc {
 			return
 		}
 		count, err := service.UnreadCount(r.Context(), accountID)
+		recordNotificationFailure(r.Context(), err)
 		if err != nil {
 			writeProblem(w, http.StatusInternalServerError, "Could not retrieve unread count")
 			return
@@ -50,7 +54,9 @@ func markAllNotificationsRead(service notifications.Service) http.HandlerFunc {
 			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
-		if err := service.MarkAllRead(r.Context(), accountID); err != nil {
+		err := service.MarkAllRead(r.Context(), accountID)
+		recordNotificationFailure(r.Context(), err)
+		if err != nil {
 			writeProblem(w, http.StatusInternalServerError, "Could not mark notifications as read")
 			return
 		}
@@ -64,7 +70,9 @@ func deleteAllNotifications(service notifications.Service) http.HandlerFunc {
 			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
-		if err := service.DeleteAll(r.Context(), accountID); err != nil {
+		err := service.DeleteAll(r.Context(), accountID)
+		recordNotificationFailure(r.Context(), err)
+		if err != nil {
 			writeProblem(w, http.StatusInternalServerError, "Could not delete notifications")
 			return
 		}
@@ -78,10 +86,21 @@ func deleteNotification(service notifications.Service) http.HandlerFunc {
 			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
-		if err := service.Delete(r.Context(), accountID, r.PathValue("notificationId")); err != nil {
+		err := service.Delete(r.Context(), accountID, r.PathValue("notificationId"))
+		recordNotificationFailure(r.Context(), err)
+		if err != nil {
 			writeProblem(w, http.StatusInternalServerError, "Could not delete notification")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// recordNotificationFailure keeps inbox failures on the HTTP root span without
+// exporting account or notification identifiers. Inbox mutations are idempotent,
+// so the module has no separate business-rejection vocabulary.
+func recordNotificationFailure(ctx context.Context, err error) {
+	if err != nil {
+		observability.RecordDatabaseEndpointFailure(ctx, err)
 	}
 }

@@ -4,7 +4,7 @@ import type { LeagueInput } from "@/api/generated/models";
 
 const key = "tm-league-draft";
 export const maximumLeagueTeams = 64;
-export const maximumLeagueNameLength = 140;
+export const maximumLeagueNameLength = 56;
 export type LocalLeagueDraft = { name: string; teams: string[] };
 
 export async function getLocalLeagueDraft(): Promise<LocalLeagueDraft | null> {

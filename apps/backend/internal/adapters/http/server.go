@@ -15,12 +15,14 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
@@ -83,7 +85,7 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 	mux.HandleFunc("POST /v1/password-reset-confirmations", confirmPasswordReset(registrationService, cookies))
 	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService, cookies))
 	mux.Handle("GET /v1/sessions", requireSession(authenticator)(http.HandlerFunc(getCurrentSession(authenticator))))
-	mux.HandleFunc("POST /v1/sessions/refresh", refreshSession(registrationService))
+	mux.Handle("POST /v1/sessions/refresh", refreshCookieCSRF(corsAllowedOrigins, cookies, refreshSession(registrationService, cookies)))
 	mux.Handle("DELETE /v1/sessions", cookieCSRF(http.HandlerFunc(revokeCurrentSession(authenticator, cookies))))
 	mux.Handle("GET /v1/me/access-methods", requireSession(authenticator)(http.HandlerFunc(getAccessMethods(authenticator))))
 	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createReauthenticationTicket(accessService, federatedService)))))
@@ -120,7 +122,11 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
 	}
 	withCookieName := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		mux.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), sessionCookieNameContextKey{}, cookies.name)))
+		routedRequest := r.WithContext(context.WithValue(r.Context(), sessionCookieNameContextKey{}, cookies.name))
+		mux.ServeHTTP(w, routedRequest)
+		// ServeMux writes the matched template on the request it serves. Preserve
+		// it for the outer observability middleware after adding request context.
+		r.Pattern = routedRequest.Pattern
 	})
 	return requireAllowedOrigin(corsAllowedOrigins, withCookieName)
 }
@@ -143,6 +149,7 @@ func scheduleAccountDeletion(authenticator sessionAuthenticator, cookies session
 		}
 		effectiveAt, err := scheduler.ScheduleAccountDeletion(r.Context(), accountID)
 		if errors.Is(err, postgres.ErrAccountHasOwnedLeagues) {
+			observability.RecordEndpointFailure(r.Context(), "account.deletion_owned_leagues")
 			writeProblem(w, http.StatusConflict, "Account cannot be deleted while it owns leagues")
 			return
 		}
@@ -151,7 +158,7 @@ func scheduleAccountDeletion(authenticator sessionAuthenticator, cookies session
 			return
 		}
 		if transport, _ := currentSessionTransport(r.Context()); transport == cookieSession {
-			cookies.set(w, "", -1)
+			cookies.clear(w)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{"deletionEffectiveAt": effectiveAt})
@@ -159,20 +166,41 @@ func scheduleAccountDeletion(authenticator sessionAuthenticator, cookies session
 }
 
 type sessionCookieSettings struct {
-	name   string
-	secure bool
+	name        string
+	refreshName string
+	secure      bool
 }
 
 func sessionCookies(secure bool) sessionCookieSettings {
 	if !secure {
-		return sessionCookieSettings{name: "tm_session"}
+		return sessionCookieSettings{name: "tm_session", refreshName: "tm_refresh"}
 	}
-	return sessionCookieSettings{name: "__Host-tm_session", secure: true}
+	return sessionCookieSettings{name: "__Host-tm_session", refreshName: "__Host-tm_refresh", secure: true}
 }
 
-func (cookies sessionCookieSettings) set(w http.ResponseWriter, value string, maxAge int) {
+func (cookies sessionCookieSettings) set(w http.ResponseWriter, name, value, expiresAt string) {
+	expires, err := time.Parse(time.RFC3339Nano, expiresAt)
+	if err != nil {
+		return
+	}
+	maxAge := int(time.Until(expires).Seconds())
+	if maxAge < 1 {
+		maxAge = 1
+	}
 	// #nosec G124 -- cookieSecure is false only for a loopback HTTP PUBLIC_BASE_URL.
-	http.SetCookie(w, &http.Cookie{Name: cookies.name, Value: value, Path: "/", Secure: cookies.secure, HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: maxAge})
+	http.SetCookie(w, &http.Cookie{Name: name, Value: value, Path: "/", Secure: cookies.secure, HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: maxAge, Expires: expires})
+}
+
+func (cookies sessionCookieSettings) setSession(w http.ResponseWriter, access, refresh string, session registration.Session) {
+	cookies.set(w, cookies.name, access, session.IdleExpiresAt)
+	cookies.set(w, cookies.refreshName, refresh, session.RefreshExpiresAt)
+}
+
+func (cookies sessionCookieSettings) clear(w http.ResponseWriter) {
+	for _, name := range []string{cookies.name, cookies.refreshName} {
+		// #nosec G124 -- cookieSecure is false only for a loopback HTTP PUBLIC_BASE_URL.
+		http.SetCookie(w, &http.Cookie{Name: name, Value: "", Path: "/", Secure: cookies.secure, HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: -1})
+	}
 }
 
 func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
@@ -192,6 +220,7 @@ func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
 		}
 		session, err := reader.GetCurrentSession(r.Context(), token)
 		if errors.Is(err, leagues.ErrUnauthenticated) {
+			observability.RecordEndpointFailure(r.Context(), "session.invalid")
 			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
 		}
@@ -235,7 +264,7 @@ func createLeague(service leagues.CreationService) http.HandlerFunc {
 		}
 		var body leagueInput
 		if err := decodeBody(r, &body); err != nil {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		teams := make([]leagues.TeamInput, len(body.Teams))
@@ -243,8 +272,9 @@ func createLeague(service leagues.CreationService) http.HandlerFunc {
 			teams[i] = leagues.TeamInput{Name: team.Name}
 		}
 		league, err := service.Create(r.Context(), accountID, leagues.CreateInput{Name: body.Name, Teams: teams})
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		if err != nil {
@@ -266,12 +296,13 @@ func addLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || decodeBody(r, &body) != nil {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		team, err := service.AddTeam(r.Context(), accountID, leagueID, leagues.TeamInput{Name: body.Name})
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
@@ -304,10 +335,11 @@ func removeLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(teamID) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		err := service.RemoveTeam(r.Context(), accountID, leagueID, teamID)
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
 			writeProblem(w, http.StatusForbidden, "You cannot modify this league's teams")
 			return
@@ -337,10 +369,11 @@ func withdrawLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(teamID) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		league, err := service.WithdrawTeam(r.Context(), accountID, leagueID, teamID)
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
 			writeProblem(w, http.StatusForbidden, "You cannot withdraw teams from this league")
 			return
@@ -365,10 +398,11 @@ func getPublicLeague(service leagues.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		leagueID := r.PathValue("leagueId")
 		if !uuidPattern.MatchString(leagueID) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		league, err := service.GetPublic(r.Context(), leagueID)
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
 			writeProblem(w, http.StatusNotFound, "League is unavailable")
 			return
@@ -391,12 +425,13 @@ func startLeague(service leagues.CreationService) http.HandlerFunc {
 		leagueID := r.PathValue("leagueId")
 		var body startLeagueInput
 		if !uuidPattern.MatchString(leagueID) || decodeBody(r, &body) != nil {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		league, err := service.Start(r.Context(), accountID, leagueID, leagues.StartInput{RoundRobinLegs: body.RoundRobinLegs})
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
@@ -429,10 +464,11 @@ func cancelLeague(service leagues.CreationService) http.HandlerFunc {
 		}
 		leagueID := r.PathValue("leagueId")
 		if !uuidPattern.MatchString(leagueID) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		league, err := service.Cancel(r.Context(), accountID, leagueID)
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
 			writeProblem(w, http.StatusForbidden, "You cannot cancel this league")
 			return
@@ -463,10 +499,11 @@ func completeLeague(service leagues.CreationService) http.HandlerFunc {
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		league, err := service.Complete(r.Context(), accountID, leagueID)
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
 			writeProblem(w, http.StatusForbidden, "You cannot complete this league")
 			return
@@ -498,12 +535,13 @@ func recordMatchResult(service leagues.CreationService) http.HandlerFunc {
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(matchID) || decodeBody(r, &body) != nil || body.HomeScore == nil || body.AwayScore == nil {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		league, err := service.RecordResult(r.Context(), accountID, leagueID, matchID, leagues.MatchResultInput{HomeScore: *body.HomeScore, AwayScore: *body.AwayScore})
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		if errors.Is(err, leagues.ErrMatchResultForbidden) {
@@ -536,10 +574,11 @@ func assignLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !usernamePattern.MatchString(username) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		err := service.AssignAdministrator(r.Context(), accountID, leagueID, username)
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
 			writeProblem(w, http.StatusForbidden, "You cannot assign administrators for this league")
 			return
@@ -569,10 +608,11 @@ func listLeagueAdministrators(service leagues.CreationService) http.HandlerFunc 
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		usernames, err := service.ListAdministrators(r.Context(), accountID, leagueID)
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
 			writeProblem(w, http.StatusForbidden, "You cannot view administrators for this league")
 			return
@@ -601,10 +641,11 @@ func removeLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !usernamePattern.MatchString(username) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		err := service.RemoveAdministrator(r.Context(), accountID, leagueID, username)
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
 			writeProblem(w, http.StatusForbidden, "You cannot remove administrators for this league")
 			return
@@ -633,10 +674,11 @@ func transferLeagueOwnership(service leagues.CreationService) http.HandlerFunc {
 			Username string `json:"username"`
 		}
 		if !uuidPattern.MatchString(leagueID) || json.NewDecoder(r.Body).Decode(&body) != nil || !usernamePattern.MatchString(body.Username) {
-			writeValidationProblem(w)
+			writeLeagueValidationProblem(w, r)
 			return
 		}
 		err := service.TransferOwnership(r.Context(), accountID, leagueID, body.Username)
+		recordLeagueFailure(r.Context(), err)
 		if errors.Is(err, leagues.ErrLeagueForbidden) {
 			writeProblem(w, http.StatusForbidden, "You cannot transfer this league")
 			return
@@ -657,14 +699,54 @@ func transferLeagueOwnership(service leagues.CreationService) http.HandlerFunc {
 	}
 }
 
+func writeLeagueValidationProblem(w http.ResponseWriter, r *http.Request) {
+	observability.RecordEndpointFailure(r.Context(), "validation.rejected")
+	writeValidationProblem(w)
+}
+
+// recordLeagueFailure preserves the feature's closed vocabulary on the HTTP
+// span. It intentionally carries neither resource identifiers nor usernames.
+func recordLeagueFailure(ctx context.Context, err error) {
+	switch {
+	case err == nil:
+		return
+	case errors.Is(err, leagues.ErrInvalidLeagueInput), errors.Is(err, leagues.ErrInvalidRelationship), errors.Is(err, leagues.ErrInvalidPage):
+		observability.RecordEndpointFailure(ctx, "validation.rejected")
+	case errors.Is(err, leagues.ErrLeagueNotFound):
+		observability.RecordEndpointFailure(ctx, "league.not_found")
+	case errors.Is(err, leagues.ErrLeagueForbidden), errors.Is(err, leagues.ErrMatchResultForbidden):
+		observability.RecordEndpointFailure(ctx, "league.forbidden")
+	case errors.Is(err, leagues.ErrLeagueConflict):
+		observability.RecordEndpointFailure(ctx, "league.start_conflict")
+	case errors.Is(err, leagues.ErrLeagueCancellationConflict):
+		observability.RecordEndpointFailure(ctx, "league.cancellation_conflict")
+	case errors.Is(err, leagues.ErrLeagueCompletionConflict):
+		observability.RecordEndpointFailure(ctx, "league.completion_conflict")
+	case errors.Is(err, leagues.ErrLeagueTeamConflict):
+		observability.RecordEndpointFailure(ctx, "league.team_conflict")
+	case errors.Is(err, leagues.ErrLeagueWithdrawalConflict):
+		observability.RecordEndpointFailure(ctx, "league.withdrawal_conflict")
+	case errors.Is(err, leagues.ErrMatchResultConflict):
+		observability.RecordEndpointFailure(ctx, "league.result_conflict")
+	case errors.Is(err, leagues.ErrLeagueAdministratorConflict):
+		observability.RecordEndpointFailure(ctx, "league.administrator_conflict")
+	case errors.Is(err, leagues.ErrLeagueOwnershipTransferConflict):
+		observability.RecordEndpointFailure(ctx, "league.ownership_transfer_conflict")
+	default:
+		observability.RecordDatabaseEndpointFailure(ctx, err)
+	}
+}
+
 func searchUsers(service registration.Service, limiter *requestLimiter, resolveClientIP clientIPResolver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query().Get("query")
 		if !usernamePattern.MatchString(query) {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(r)); !allowed {
+			observability.RecordEndpointFailure(r.Context(), "rate_limit.exceeded")
 			w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(w, http.StatusTooManyRequests, "Too many searches")
 			return
@@ -693,6 +775,7 @@ func createReauthenticationTicket(service access.Service, federatedService *fede
 		var body reauthenticationRequest
 		credential, ok := sessionToken(r)
 		if !ok || decodeBody(r, &body) != nil || !access.IsPurpose(body.Purpose) || (body.Password == "" && (body.ChallengeID == "" || body.IDToken == "")) || (body.Password != "" && (body.ChallengeID != "" || body.IDToken != "")) {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
@@ -700,30 +783,36 @@ func createReauthenticationTicket(service access.Service, federatedService *fede
 		var err error
 		if body.Password != "" {
 			if len(body.Password) < 8 || len(body.Password) > 1024 {
+				observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 				writeValidationProblem(w)
 				return
 			}
 			if body.Purpose == access.RemoveLocalPassword {
+				observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 				writeValidationProblem(w)
 				return
 			}
 			ticket, expiresAt, err = service.ReauthenticateWithPassword(r.Context(), credential.token, body.Password, body.Purpose)
 		} else if federatedService == nil || !uuidPattern.MatchString(body.ChallengeID) {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		} else {
 			accountID, _ := currentAccountID(r.Context())
 			if body.Purpose != access.SetLocalPassword && body.Purpose != access.RemoveLocalPassword {
+				observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 				writeValidationProblem(w)
 				return
 			}
 			ticket, expiresAt, err = federatedService.ReauthenticateGoogle(r.Context(), accountID, credential.token, body.ChallengeID, body.IDToken, string(body.Purpose))
 		}
 		if errors.Is(err, federated.ErrIdentityConflict) {
+			observability.RecordEndpointFailure(r.Context(), "reauthentication.identity_conflict")
 			writeProblem(w, http.StatusConflict, "Selected Google account is not linked to this account")
 			return
 		}
 		if errors.Is(err, access.ErrReauthenticationInvalid) || errors.Is(err, federated.ErrChallengeInvalid) {
+			observability.RecordEndpointFailure(r.Context(), "reauthentication.invalid")
 			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		}
@@ -745,13 +834,16 @@ func createGoogleIdentity(service federated.Service) http.HandlerFunc {
 		var body googleIdentityLinkRequest
 		credential, ok := sessionToken(r)
 		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" || body.IDToken == "" || !uuidPattern.MatchString(body.ChallengeID) {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		if err := service.AddGoogleWithTicket(r.Context(), credential.token, body.Ticket, body.ChallengeID, body.IDToken); errors.Is(err, federated.ErrIdentityConflict) {
+			observability.RecordEndpointFailure(r.Context(), "identity.google_conflict")
 			writeProblem(w, http.StatusConflict, "Could not link this access method")
 			return
 		} else if errors.Is(err, federated.ErrChallengeInvalid) {
+			observability.RecordEndpointFailure(r.Context(), "credential.reauthentication_invalid")
 			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		} else if err != nil {
@@ -769,11 +861,17 @@ func deleteGoogleIdentity(service federated.Service) http.HandlerFunc {
 		var body reauthenticationTicketRequest
 		credential, ok := sessionToken(r)
 		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
-		if err := service.RemoveGoogleWithTicket(r.Context(), credential.token, body.Ticket); err != nil {
+		if err := service.RemoveGoogleWithTicket(r.Context(), credential.token, body.Ticket); errors.Is(err, federated.ErrChallengeInvalid) {
+			observability.RecordEndpointFailure(r.Context(), "credential.reauthentication_invalid")
 			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
+			return
+		} else if err != nil {
+			observability.RecordDatabaseEndpointFailure(r.Context(), err)
+			writeProblem(w, http.StatusInternalServerError, "Could not unlink Google")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -785,10 +883,12 @@ func putLocalCredential(service access.Service) http.HandlerFunc {
 		var body localCredentialRequest
 		credential, ok := sessionToken(r)
 		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" || len(body.Password) < 8 || len(body.Password) > 1024 {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		if err := service.SetPassword(r.Context(), credential.token, body.Ticket, body.Password); errors.Is(err, access.ErrReauthenticationInvalid) {
+			observability.RecordEndpointFailure(r.Context(), "reauthentication.invalid")
 			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		} else if err != nil {
@@ -804,10 +904,16 @@ func deleteLocalCredential(service access.Service) http.HandlerFunc {
 		var body reauthenticationTicketRequest
 		credential, ok := sessionToken(r)
 		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
-		if err := service.RemovePassword(r.Context(), credential.token, body.Ticket); err != nil {
+		if err := service.RemovePassword(r.Context(), credential.token, body.Ticket); errors.Is(err, access.ErrLastAccessMethod) {
+			observability.RecordEndpointFailure(r.Context(), "access_method.last_remaining")
+			writeProblem(w, http.StatusConflict, "Cannot remove the last access method")
+			return
+		} else if err != nil {
+			observability.RecordEndpointFailure(r.Context(), "reauthentication.invalid")
 			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		}
@@ -861,13 +967,14 @@ func revokeCurrentSession(authenticator sessionAuthenticator, cookies sessionCoo
 			return
 		}
 		if credential.transport == cookieSession {
-			cookies.set(writer, "", -1)
+			cookies.clear(writer)
 		}
 		writer.WriteHeader(http.StatusNoContent)
 	}
 }
 
-func unavailableFederatedLogin(w http.ResponseWriter, _ *http.Request) {
+func unavailableFederatedLogin(w http.ResponseWriter, r *http.Request) {
+	observability.RecordEndpointFailure(r.Context(), "identity.google_unavailable")
 	writeProblem(w, http.StatusServiceUnavailable, "Google sign-in is unavailable")
 }
 
@@ -884,6 +991,7 @@ func createGoogleChallenge(service federated.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		challenge, err := service.CreateChallenge(r.Context())
 		if err != nil {
+			observability.RecordDatabaseEndpointFailure(r.Context(), err)
 			writeProblem(w, http.StatusInternalServerError, "Could not start Google sign-in")
 			return
 		}
@@ -898,6 +1006,7 @@ func createGoogleSession(service federated.Service, cookies sessionCookieSetting
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body googleSessionRequest
 		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") || (body.Draft != nil && (body.Username == "" || !validRegistrationDraft(body.Draft))) {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
@@ -911,10 +1020,12 @@ func createGoogleSession(service federated.Service, cookies sessionCookieSetting
 			return
 		}
 		if errors.Is(err, federated.ErrEmailConflict) {
+			observability.RecordEndpointFailure(r.Context(), "identity.email_conflict")
 			writeProblem(w, http.StatusConflict, "Could not sign in with this access method")
 			return
 		}
 		if errors.Is(err, federated.ErrChallengeInvalid) {
+			observability.RecordEndpointFailure(r.Context(), "credential.google_challenge_invalid")
 			writeValidationProblem(w)
 			return
 		}
@@ -936,7 +1047,7 @@ func toFederatedDraft(draft *registration.Draft) *federated.Draft {
 func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession, cookies sessionCookieSettings) {
 	response := map[string]any{"user": map[string]string{"id": established.AccountID, "username": established.Username}, "delivery": transport, "expiresAt": established.IdleExpiresAt, "refreshExpiresAt": established.RefreshExpiresAt}
 	if transport == "cookie" {
-		cookies.set(w, established.AccessToken, 0)
+		cookies.setSession(w, established.AccessToken, established.RefreshToken, registration.Session{AccountID: established.AccountID, Username: established.Username, IdleExpiresAt: established.IdleExpiresAt, RefreshExpiresAt: established.RefreshExpiresAt})
 	} else {
 		response["sessionToken"], response["refreshToken"] = established.AccessToken, established.RefreshToken
 	}
@@ -960,10 +1071,12 @@ func requestPasswordReset(service registration.Service, limiter *requestLimiter,
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body passwordResetRequest
 		if err := decodeBody(r, &body); err != nil || !validEmail(strings.TrimSpace(body.Email)) {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		if allowed, retry := limiter.allow(resolveClientIP(r)); !allowed {
+			observability.RecordEndpointFailure(r.Context(), "rate_limit.exceeded")
 			w.Header().Set("Retry-After", strconv.Itoa(retry))
 			writeProblem(w, http.StatusTooManyRequests, "Too many requests")
 			return
@@ -979,11 +1092,13 @@ func inspectPasswordReset(service registration.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body passwordResetTokenRequest
 		if err := decodeBody(r, &body); err != nil || body.Token == "" {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		email, err := service.InspectPasswordReset(r.Context(), body.Token)
 		if errors.Is(err, registration.ErrPasswordResetInvalid) {
+			observability.RecordEndpointFailure(r.Context(), "credential.reset_link_invalid")
 			writeProblem(w, http.StatusConflict, "Invalid link")
 			return
 		}
@@ -1000,11 +1115,13 @@ func confirmPasswordReset(service registration.Service, cookies sessionCookieSet
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body passwordResetConfirmationRequest
 		if err := decodeBody(r, &body); err != nil || body.Token == "" || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		session, access, refresh, err := service.ResetPassword(r.Context(), body.Token, body.Password)
 		if errors.Is(err, registration.ErrPasswordResetInvalid) {
+			observability.RecordEndpointFailure(r.Context(), "credential.reset_link_invalid")
 			writeProblem(w, http.StatusConflict, "Invalid link")
 			return
 		}
@@ -1014,7 +1131,7 @@ func confirmPasswordReset(service registration.Service, cookies sessionCookieSet
 		}
 		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
-			cookies.set(w, access, 0)
+			cookies.setSession(w, access, refresh, session)
 		} else {
 			response["sessionToken"], response["refreshToken"] = access, refresh
 		}
@@ -1035,15 +1152,33 @@ func decodeBody(r *http.Request, target any) error {
 	return nil
 }
 
-func refreshSession(service registration.Service) http.HandlerFunc {
+func refreshSession(service registration.Service, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		authorization := request.Header.Get("Authorization")
-		if !strings.HasPrefix(authorization, "Bearer ") || len(authorization) == len("Bearer ") {
+		refreshCookie, cookieErr := request.Cookie(cookies.refreshName)
+		if authorization != "" && cookieErr == nil {
+			observability.RecordEndpointFailure(request.Context(), "session.refresh_invalid")
 			writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 			return
 		}
-		session, accessToken, refreshToken, err := service.Refresh(request.Context(), strings.TrimPrefix(authorization, "Bearer "))
+		var token, transport string
+		if authorization != "" {
+			if !strings.HasPrefix(authorization, "Bearer ") || len(authorization) == len("Bearer ") {
+				observability.RecordEndpointFailure(request.Context(), "session.refresh_invalid")
+				writeProblem(writer, http.StatusUnauthorized, "Invalid session")
+				return
+			}
+			token, transport = strings.TrimPrefix(authorization, "Bearer "), "bearer"
+		} else if cookieErr == nil && refreshCookie.Value != "" {
+			token, transport = refreshCookie.Value, "cookie"
+		} else {
+			observability.RecordEndpointFailure(request.Context(), "session.refresh_invalid")
+			writeProblem(writer, http.StatusUnauthorized, "Invalid session")
+			return
+		}
+		session, accessToken, refreshToken, err := service.Refresh(request.Context(), token)
 		if errors.Is(err, registration.ErrRefreshInvalid) {
+			observability.RecordEndpointFailure(request.Context(), "session.refresh_invalid")
 			writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 			return
 		}
@@ -1051,8 +1186,15 @@ func refreshSession(service registration.Service) http.HandlerFunc {
 			writeProblem(writer, http.StatusInternalServerError, "Could not refresh session")
 			return
 		}
+		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": transport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
+		if transport == "cookie" {
+			cookies.setSession(writer, accessToken, refreshToken, session)
+		} else {
+			response["sessionToken"], response["refreshToken"] = accessToken, refreshToken
+		}
+		writer.Header().Set("Cache-Control", "no-store")
 		writer.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(writer).Encode(map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": "bearer", "sessionToken": accessToken, "refreshToken": refreshToken, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt})
+		_ = json.NewEncoder(writer).Encode(response)
 	}
 }
 
@@ -1060,10 +1202,12 @@ func usernameAvailability(service registration.Service, limiter *requestLimiter,
 	return func(writer http.ResponseWriter, request *http.Request) {
 		username := request.PathValue("username")
 		if !usernamePattern.MatchString(username) {
+			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(request)); !allowed {
+			observability.RecordEndpointFailure(request.Context(), "rate_limit.exceeded")
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(writer, http.StatusTooManyRequests, "Too many username lookups")
 			return
@@ -1123,12 +1267,14 @@ func verifyRegistration(service registration.Service, cookies sessionCookieSetti
 		decoder := json.NewDecoder(request.Body)
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&body); err != nil || decoder.Decode(&struct{}{}) != io.EOF || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || body.Token == "" {
+			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return
 		}
 		previousSession, _ := sessionToken(request)
 		session, sessionToken, refreshToken, err := service.Verify(request.Context(), body.Token, previousSession.token)
 		if errors.Is(err, registration.ErrVerificationInvalid) {
+			observability.RecordEndpointFailure(request.Context(), "credential.verification_link_invalid")
 			writeProblem(writer, http.StatusConflict, "Invalid verification")
 			return
 		}
@@ -1138,7 +1284,7 @@ func verifyRegistration(service registration.Service, cookies sessionCookieSetti
 		}
 		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
-			cookies.set(writer, sessionToken, 0)
+			cookies.setSession(writer, sessionToken, refreshToken, session)
 		} else {
 			response["sessionToken"] = sessionToken
 			response["refreshToken"] = refreshToken
@@ -1157,7 +1303,7 @@ func followLeague(service leagues.Service) http.HandlerFunc {
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) {
-			writeValidationProblem(writer)
+			writeLeagueValidationProblem(writer, request)
 			return
 		}
 		var err error
@@ -1166,6 +1312,7 @@ func followLeague(service leagues.Service) http.HandlerFunc {
 		} else {
 			err = service.Unfollow(request.Context(), accountID, leagueID)
 		}
+		recordLeagueFailure(request.Context(), err)
 		if errors.Is(err, leagues.ErrLeagueNotFound) {
 			writeProblem(writer, http.StatusNotFound, "League is unavailable")
 			return
@@ -1190,12 +1337,13 @@ func listAccountLeagues(service leagues.Service) http.HandlerFunc {
 		limit, valid := listLimit(request.URL.Query().Get("limit"))
 		cursor := request.URL.Query().Get("cursor")
 		if !valid || (cursor != "" && !uuidPattern.MatchString(cursor)) {
-			writeValidationProblem(writer)
+			writeLeagueValidationProblem(writer, request)
 			return
 		}
 		page, err := service.List(request.Context(), accountID, relationship, cursor, limit)
+		recordLeagueFailure(request.Context(), err)
 		if errors.Is(err, leagues.ErrInvalidRelationship) || errors.Is(err, leagues.ErrInvalidPage) {
-			writeValidationProblem(writer)
+			writeLeagueValidationProblem(writer, request)
 			return
 		}
 		if err != nil {
@@ -1215,6 +1363,7 @@ func listRecentAccountLeagues(service leagues.Service) http.HandlerFunc {
 			return
 		}
 		items, err := service.ListRecent(request.Context(), accountID)
+		recordLeagueFailure(request.Context(), err)
 		if err != nil {
 			writeProblem(writer, http.StatusInternalServerError, "Could not retrieve recent leagues")
 			return
@@ -1255,16 +1404,19 @@ func createLocalSession(service registration.Service, limiter *loginLimiter, coo
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var body loginRequest
 		if err := decodeBody(request, &body); err != nil || !validEmail(strings.TrimSpace(body.Email)) || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
+			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(request), strings.ToLower(strings.TrimSpace(body.Email))); !allowed {
+			observability.RecordEndpointFailure(request.Context(), "rate_limit.exceeded")
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(writer, http.StatusTooManyRequests, "Too many sign-in attempts")
 			return
 		}
 		result, err := service.Login(request.Context(), body.Email, body.Password)
 		if errors.Is(err, registration.ErrLoginInvalid) {
+			observability.RecordEndpointFailure(request.Context(), "authentication.credentials_rejected")
 			writeProblem(writer, http.StatusUnauthorized, "Invalid credentials")
 			return
 		}
@@ -1278,7 +1430,7 @@ func createLocalSession(service registration.Service, limiter *loginLimiter, coo
 		}
 		response := map[string]any{"user": map[string]string{"id": result.Session.AccountID, "username": result.Session.Username}, "delivery": body.SessionTransport, "expiresAt": result.Session.IdleExpiresAt, "refreshExpiresAt": result.Session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
-			cookies.set(writer, result.Access, 0)
+			cookies.setSession(writer, result.Access, result.Refresh, result.Session)
 		} else {
 			response["sessionToken"], response["refreshToken"] = result.Access, result.Refresh
 		}
@@ -1291,6 +1443,7 @@ func register(service registration.Service, limiter *requestLimiter, resolveClie
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var body registerRequest
 		if err := decodeBody(request, &body); err != nil {
+			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return
 		}
@@ -1310,10 +1463,12 @@ func register(service registration.Service, limiter *requestLimiter, resolveClie
 		}
 		input = registration.NormalizeInput(input)
 		if !validRegistration(input) || !validRegistrationDraft(input.Draft) {
+			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return
 		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(request)); !allowed {
+			observability.RecordEndpointFailure(request.Context(), "rate_limit.exceeded")
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(writer, http.StatusTooManyRequests, "Too many registrations")
 			return
@@ -1330,7 +1485,7 @@ func validRegistrationDraft(draft *registration.Draft) bool {
 	if draft == nil {
 		return true
 	}
-	if len(strings.TrimSpace(draft.Name)) == 0 || len(draft.Name) > 140 || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
+	if len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > leagues.MaximumLeagueNameLength || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}

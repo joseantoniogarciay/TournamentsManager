@@ -173,7 +173,7 @@
   "league_publish": "Créer le championnat",
   "league_sign_in_to_publish": "Connectez-vous pour le créer",
   "league_name_required": "Saisissez le nom du championnat.",
-  "league_name_too_long": "Le nom du championnat ne peut pas dépasser 140 caractères.",
+  "league_name_too_long": "Le nom du championnat ne peut pas dépasser 56 caractères.",
   "league_teams_required": "Ajoutez au moins deux équipes différentes.",
   "league_state_published": "Ligue non commencée",
   "league_state_in_progress": "Ligue en cours",
