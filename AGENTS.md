@@ -54,6 +54,26 @@ específico y localizado.
   únicamente los casos del contrato que aporten una acción o recuperación
   diferente; el resto conserva el fallback común.
 
+## Observabilidad de endpoints
+
+Al crear, modificar o revisar un endpoint, recorre explícitamente sus salidas:
+éxito, rechazo de validación, límite de tasa, rechazo de negocio, fallo de cada
+límite técnico y cancelación. La revisión no termina solo al nombrar sus spans.
+
+- El span HTTP raíz conserva la plantilla de ruta; no se crea un span por
+  validación, rama, CTE, hash rápido ni generación de secreto.
+- Un rechazo esperado que aporte diagnóstico recibe en el span raíz
+  `tournaments_manager.failure.reason` con un valor estable, cerrado y seguro,
+  como `validation.rejected` o `rate_limit.exceeded`. No incluye inputs,
+  longitudes, mínimos, IDs, emails, tokens ni PII.
+- Cada feature decide sus causas de negocio solo cuando distingan una
+  recuperación o una pregunta operativa útil. No se infieren de forma central
+  a partir del estado HTTP.
+- Los límites técnicos usan la misma clave con las categorías documentadas en
+  `docs/operations/OBSERVABILITY.md`; nunca exportan el error bruto.
+- La salida segura se valida con pruebas y se registra en el inventario de
+  recorridos de `OBSERVABILITY.md` junto con el aprendizaje reutilizable.
+
 ## Cliente
 
 Los cambios bajo `apps/client/` siguen además las reglas obligatorias de

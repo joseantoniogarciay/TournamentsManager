@@ -86,6 +86,13 @@ solamente `tournaments_manager.failure.reason`, con valores cerrados como
 `request.timeout`. Cada feature puede añadir una causa de negocio segura cuando
 aporte recuperación distinta; no se deduce centralmente del código HTTP.
 
+La revisión de un endpoint cubre sus salidas de éxito, validación, límite de
+tasa, negocio, límites técnicos y cancelación. Un rechazo esperado que necesite
+diagnóstico añade en el span HTTP la misma clave con una causa cerrada —por
+ejemplo `validation.rejected` o `rate_limit.exceeded`—, no un span adicional.
+La feature decide las causas de negocio: no se centralizan por estado HTTP ni
+se incluyen valores introducidos, longitudes, mínimos, identificadores o PII.
+
 `OTEL_TRACES_ENDPOINT` es opcional. Cuando falta o Tempo deja de estar
 disponible, la API mantiene los logs JSON y las métricas y no deja de servir
 peticiones por un error de exportación.

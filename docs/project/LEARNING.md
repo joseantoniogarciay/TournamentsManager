@@ -2362,3 +2362,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   segura en `tournaments_manager.failure.reason`, mantienen un resumen fijo y
   no exportan el error bruto. La causa de negocio se añade solo en la feature
   que puede usarla para diagnosticar o recuperar.
+
+### 2026-08-20 — Una ruta se revisa por sus salidas, no solo por su recorrido feliz
+
+- **Aprendido:** una traza nombrada no explica por qué una persona recibió un
+  rechazo esperado. Validación, límite de tasa y reglas de negocio son salidas
+  distintas de un mismo endpoint, aunque no sean fallos de infraestructura.
+- **Regla reutilizable:** el span HTTP raíz recibe una causa cerrada y segura
+  cuando esa salida aporte diagnóstico; no se crea un span por rama ni se
+  registran valores introducidos. La feature mantiene la decisión de las
+  causas de negocio, igual que mantiene su feedback de recuperación.
