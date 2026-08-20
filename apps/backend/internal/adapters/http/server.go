@@ -987,10 +987,12 @@ func requestPasswordReset(service registration.Service, limiter *requestLimiter,
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body passwordResetRequest
 		if err := decodeBody(r, &body); err != nil || !validEmail(strings.TrimSpace(body.Email)) {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		if allowed, retry := limiter.allow(resolveClientIP(r)); !allowed {
+			observability.RecordEndpointFailure(r.Context(), "rate_limit.exceeded")
 			w.Header().Set("Retry-After", strconv.Itoa(retry))
 			writeProblem(w, http.StatusTooManyRequests, "Too many requests")
 			return
