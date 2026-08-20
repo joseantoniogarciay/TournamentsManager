@@ -119,7 +119,8 @@ func (r RegistrationRepository) CreatePending(ctx context.Context, input registr
 	defer func() { _ = tx.Rollback(ctx) }()
 
 	var accountID string
-	err = tx.QueryRow(ctx, `INSERT INTO accounts (email, locale, state, username, expires_at)
+	err = tx.QueryRow(ctx, `-- name: CreatePendingAccount :one
+		INSERT INTO accounts (email, locale, state, username, expires_at)
 		VALUES ($1, $2, 'pending_verification', $3, now() + interval '7 days')
 		ON CONFLICT DO NOTHING
 		RETURNING id::text`, input.Email, string(input.Locale), input.Username).Scan(&accountID)
@@ -129,20 +130,24 @@ func (r RegistrationRepository) CreatePending(ctx context.Context, input registr
 	if err != nil {
 		return false, err
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO local_credentials (account_id, password_hash) VALUES ($1, $2)`, accountID, passwordHash); err != nil {
+	if _, err := tx.Exec(ctx, `-- name: CreatePendingCredential :exec
+		INSERT INTO local_credentials (account_id, password_hash) VALUES ($1, $2)`, accountID, passwordHash); err != nil {
 		return false, err
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO email_verification_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() + interval '24 hours')`, accountID, tokenHash); err != nil {
+	if _, err := tx.Exec(ctx, `-- name: CreatePendingVerification :exec
+		INSERT INTO email_verification_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() + interval '24 hours')`, accountID, tokenHash); err != nil {
 		return false, err
 	}
 	if input.Draft != nil {
 		var leagueID string
-		if err := tx.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, state, published_at)
+		if err := tx.QueryRow(ctx, `-- name: CreateRegistrationDraftLeague :one
+			INSERT INTO leagues (organizer_account_id, name, state, published_at)
 			VALUES ($1, $2, 'published', now()) RETURNING id::text`, accountID, input.Draft.Name).Scan(&leagueID); err != nil {
 			return false, err
 		}
 		for position, name := range input.Draft.Teams {
-			if _, err := tx.Exec(ctx, `INSERT INTO league_teams (league_id, name, name_normalized, position)
+			if _, err := tx.Exec(ctx, `-- name: CreateRegistrationDraftTeam :exec
+				INSERT INTO league_teams (league_id, name, name_normalized, position)
 				VALUES ($1, $2, lower($2), $3)`, leagueID, name, position+1); err != nil {
 				return false, err
 			}

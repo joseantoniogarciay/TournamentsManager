@@ -69,7 +69,7 @@ func run(args []string) error {
 	if err != nil {
 		return fmt.Errorf("configurar correo: %w", err)
 	}
-	registrationService := registration.NewService(postgres.NewRegistrationRepository(pool), mailer, observability.PasswordVerifier{})
+	registrationService := registration.NewService(postgres.NewRegistrationRepository(pool), observability.Mailer{Next: mailer}, observability.PasswordProtector{})
 	accountLeagues := postgres.NewAccountLeagueRepository(pool)
 	var federatedService *federated.Service
 	if len(appConfig.GoogleClientIDs) > 0 {

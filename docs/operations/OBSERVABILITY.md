@@ -69,11 +69,13 @@ traza no se convierte en etiqueta de Loki o Prometheus, para no elevar la
 cardinalidad.
 
 Las trazas priorizan nombres operativos, no contenido sensible: el span HTTP se
-llama, por ejemplo, `POST /v1/sessions`; una verificación local de contraseña
-aparece como `auth.password.verify` y declara únicamente `argon2id`; y los
-spans PostgreSQL usan el nombre estático de la operación generada por sqlc, por
-ejemplo `postgresql.FindLocalAccountForLogin`. Nunca se exportan la contraseña,
-su hash, el texto SQL ni argumentos SQL.
+llama, por ejemplo, `POST /v1/sessions`; las operaciones locales Argon2id se
+ven como `auth.password.hash` o `auth.password.verify` y declaran únicamente
+`argon2id`; PostgreSQL usa el nombre estático de la operación —generada por
+sqlc o anotada en una consulta manual—, por ejemplo
+`postgresql.FindLocalAccountForLogin`; y la entrega de correo se ve como
+`smtp.send.verification`. Los decoradores técnicos no añaden destinatarios,
+tokens, contraseñas, hashes, SQL, argumentos SQL ni contenido del mensaje.
 
 `OTEL_TRACES_ENDPOINT` es opcional. Cuando falta o Tempo deja de estar
 disponible, la API mantiene los logs JSON y las métricas y no deja de servir

@@ -2322,3 +2322,14 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   de un identificador estático de sqlc, nunca de datos de la petición o SQL. Un
   decorador de infraestructura mide `auth.password.verify` sin introducir SDKs
   de observabilidad en el caso de uso de registro.
+
+### 2026-08-20 — Los límites locales y externos se decoran desde infraestructura
+
+- **Aprendido:** registrar una cuenta concentra trabajo Argon2id, una
+  transacción PostgreSQL y una entrega SMTP. Los tres son límites que pueden
+  explicar latencia o fallos; la validación y la generación local de tokens no
+  añaden una señal equivalente.
+- **Regla reutilizable:** el caso de uso conserva puertos de aplicación y los
+  adaptadores técnicos los decoran con spans sin atributos sensibles. Las
+  consultas manuales reciben un identificador estático, igual que las
+  generadas por sqlc.
