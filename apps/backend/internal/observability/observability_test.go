@@ -67,26 +67,42 @@ func TestPasswordProtectorCreatesSafeSpans(t *testing.T) {
 	}
 }
 
-func TestMailerCreatesSafeSpan(t *testing.T) {
-	exporter := tracetest.NewInMemoryExporter()
-	provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
-	previous := otel.GetTracerProvider()
-	otel.SetTracerProvider(provider)
-	t.Cleanup(func() {
-		otel.SetTracerProvider(previous)
-		_ = provider.Shutdown(context.Background())
-	})
+func TestMailerCreatesSafeSpans(t *testing.T) {
+	t.Parallel()
 
-	err := (Mailer{Next: mailerStub{}}).SendVerification(context.Background(), "person@example.test", registration.LocaleSpanish, "secret-token")
-	if err != nil {
-		t.Fatalf("SendVerification() error = %v", err)
-	}
-	spans := exporter.GetSpans()
-	if len(spans) != 1 || spans[0].Name != "smtp.send.verification" {
-		t.Fatalf("spans = %#v, want one smtp.send.verification span", spans)
-	}
-	if len(spans[0].Attributes) != 0 {
-		t.Fatalf("attributes = %#v, want no potentially sensitive attributes", spans[0].Attributes)
+	for _, test := range []struct {
+		name string
+		send func(Mailer) error
+		span string
+	}{
+		{name: "verification", send: func(mailer Mailer) error {
+			return mailer.SendVerification(context.Background(), "person@example.test", registration.LocaleSpanish, "secret-token")
+		}, span: "smtp.send.verification"},
+		{name: "password reset", send: func(mailer Mailer) error {
+			return mailer.SendPasswordReset(context.Background(), "person@example.test", registration.LocaleSpanish, "secret-token")
+		}, span: "smtp.send.password_reset"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			exporter := tracetest.NewInMemoryExporter()
+			provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+			previous := otel.GetTracerProvider()
+			otel.SetTracerProvider(provider)
+			t.Cleanup(func() {
+				otel.SetTracerProvider(previous)
+				_ = provider.Shutdown(context.Background())
+			})
+
+			if err := test.send(Mailer{Next: mailerStub{}}); err != nil {
+				t.Fatalf("send() error = %v", err)
+			}
+			spans := exporter.GetSpans()
+			if len(spans) != 1 || spans[0].Name != test.span {
+				t.Fatalf("spans = %#v, want one %s span", spans, test.span)
+			}
+			if len(spans[0].Attributes) != 0 {
+				t.Fatalf("attributes = %#v, want no potentially sensitive attributes", spans[0].Attributes)
+			}
+		})
 	}
 }
 

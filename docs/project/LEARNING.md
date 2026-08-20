@@ -2332,4 +2332,5 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** el caso de uso conserva puertos de aplicación y los
   adaptadores técnicos los decoran con spans sin atributos sensibles. Las
   consultas manuales reciben un identificador estático, igual que las
-  generadas por sqlc.
+  generadas por sqlc. Una operación SMTP distingue solo el propósito técnico
+  —verificación o restablecimiento—, nunca la persona destinataria.
