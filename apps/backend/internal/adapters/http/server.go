@@ -1031,11 +1031,13 @@ func confirmPasswordReset(service registration.Service, cookies sessionCookieSet
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body passwordResetConfirmationRequest
 		if err := decodeBody(r, &body); err != nil || body.Token == "" || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		session, access, refresh, err := service.ResetPassword(r.Context(), body.Token, body.Password)
 		if errors.Is(err, registration.ErrPasswordResetInvalid) {
+			observability.RecordEndpointFailure(r.Context(), "credential.reset_link_invalid")
 			writeProblem(w, http.StatusConflict, "Invalid link")
 			return
 		}
