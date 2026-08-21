@@ -15,14 +15,16 @@ import {
   transferLeagueOwnership,
   withdrawLeagueTeam,
 } from "@/api/generated/leagues/leagues";
-import type {
-  LeagueInput,
-  PublicLeague,
-  StartLeagueRequest,
-  TeamInput,
-  Username,
-} from "@/api/generated/models";
+import type { LeagueInput, StartLeagueRequest, TeamInput, Username } from "@/api/generated/models";
 import { searchUsers } from "@/api/generated/users/users";
+import {
+  parseAccountLeaguePageItems,
+  parseLeagueTeam,
+  parsePublicLeague,
+  parsePublishedLeague,
+  parseRecentAccountLeagues,
+  parseUsernames,
+} from "./response-parser";
 
 export class UserSearchRateLimitedError extends Error {
   constructor() {
@@ -46,12 +48,16 @@ export class LeagueUnavailableError extends Error {
 export async function createLeagueRequest(input: LeagueInput) {
   const response = await createLeague(input, undefined, authenticatedApiFetch);
   if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
-  return response.data;
+  const league = parsePublishedLeague(response.data);
+  if (!league) throw new APIUnexpectedResponseError(response.status);
+  return league;
 }
 export async function addLeagueTeamRequest(leagueID: string, input: TeamInput) {
   const response = await addLeagueTeam(leagueID, input, undefined, authenticatedApiFetch);
   if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
-  return response.data;
+  const team = parseLeagueTeam(response.data);
+  if (!team) throw new APIUnexpectedResponseError(response.status);
+  return team;
 }
 export async function removeLeagueTeamRequest(leagueID: string, teamID: string) {
   const response = await removeLeagueTeam(leagueID, teamID, undefined, authenticatedApiFetch);
@@ -60,22 +66,30 @@ export async function removeLeagueTeamRequest(leagueID: string, teamID: string) 
 export async function withdrawLeagueTeamRequest(leagueID: string, teamID: string) {
   const response = await withdrawLeagueTeam(leagueID, teamID, undefined, authenticatedApiFetch);
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  return response.data;
+  const league = parsePublicLeague(response.data);
+  if (!league) throw new APIUnexpectedResponseError(response.status);
+  return league;
 }
 export async function startLeagueRequest(leagueID: string, input: StartLeagueRequest) {
   const response = await startLeague(leagueID, input, undefined, authenticatedApiFetch);
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  return response.data;
+  const league = parsePublicLeague(response.data);
+  if (!league) throw new APIUnexpectedResponseError(response.status);
+  return league;
 }
 export async function cancelLeagueRequest(leagueID: string) {
   const response = await cancelLeague(leagueID, undefined, authenticatedApiFetch);
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  return response.data;
+  const league = parsePublicLeague(response.data);
+  if (!league) throw new APIUnexpectedResponseError(response.status);
+  return league;
 }
 export async function completeLeagueRequest(leagueID: string) {
   const response = await completeLeague(leagueID, undefined, authenticatedApiFetch);
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  return response.data;
+  const league = parsePublicLeague(response.data);
+  if (!league) throw new APIUnexpectedResponseError(response.status);
+  return league;
 }
 export async function assignLeagueAdministratorRequest(leagueID: string, username: string) {
   const response = await assignLeagueAdministrator(
@@ -91,7 +105,9 @@ export async function listLeagueAdministratorUsernames(leagueID: string) {
   const response = await listLeagueAdministrators(leagueID, undefined, authenticatedApiFetch);
   if (response.status === 404) throw new LeagueUnavailableError();
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  return response.data.usernames;
+  const usernames = parseUsernames(response.data);
+  if (!usernames) throw new APIUnexpectedResponseError(response.status);
+  return usernames;
 }
 export async function removeLeagueAdministratorRequest(leagueID: string, username: string) {
   const response = await removeLeagueAdministrator(
@@ -113,14 +129,22 @@ export async function transferLeagueOwnershipRequest(leagueID: string, username:
 }
 export async function searchPublicUsernames(query: string, signal: AbortSignal) {
   const response = await searchUsers({ query: query as Username }, { signal }, apiFetch);
-  if (response.status === 200) return response.data.usernames;
+  if (response.status === 200) {
+    const usernames = parseUsernames(response.data);
+    if (!usernames) throw new APIUnexpectedResponseError(response.status);
+    return usernames;
+  }
   if (response.status === 429) throw new UserSearchRateLimitedError();
   throw new APIUnexpectedResponseError(response.status);
 }
 export async function getLeague(leagueID: string) {
   const response = await getPublicLeague(leagueID, undefined, apiFetch);
   const status = (response as { status: number }).status;
-  if (status === 200) return response.data as PublicLeague;
+  if (status === 200) {
+    const league = parsePublicLeague((response as { data: unknown }).data);
+    if (!league) throw new APIUnexpectedResponseError(status);
+    return league;
+  }
   if (status === 404) throw new LeagueUnavailableError();
   throw new APIUnexpectedResponseError(status);
 }
@@ -131,7 +155,9 @@ export async function getLeagueRelationship(leagueID: string) {
     authenticatedApiFetch,
   );
   if (response.status !== 200) return undefined;
-  return response.data.items.find((league) => league.id === leagueID)?.relationship;
+  const items = parseAccountLeaguePageItems(response.data);
+  if (!items) return undefined;
+  return items.find((league) => league.id === leagueID)?.relationship;
 }
 export async function listRelatedLeagues(relationship: "administered" | "followed") {
   const response = await listCurrentAccountLeagues(
@@ -140,11 +166,15 @@ export async function listRelatedLeagues(relationship: "administered" | "followe
     authenticatedApiFetch,
   );
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  return response.data.items;
+  const items = parseAccountLeaguePageItems(response.data);
+  if (!items) throw new APIUnexpectedResponseError(response.status);
+  return items;
 }
 
 export async function listRecentRelatedLeagues() {
   const response = await listRecentAccountLeagues(undefined, authenticatedApiFetch);
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  return response.data;
+  const leagues = parseRecentAccountLeagues(response.data);
+  if (!leagues) throw new APIUnexpectedResponseError(response.status);
+  return leagues;
 }

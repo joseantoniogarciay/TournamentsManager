@@ -6,11 +6,14 @@ import {
   listCurrentAccountNotifications,
   markAllCurrentAccountNotificationsRead,
 } from "@/api/generated/notifications/notifications";
+import { parseNotificationItems } from "./response-parser";
 
 export async function listNotifications() {
   const response = await listCurrentAccountNotifications(undefined, authenticatedApiFetch);
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  return response.data.items;
+  const items = parseNotificationItems(response.data);
+  if (!items) throw new APIUnexpectedResponseError(response.status);
+  return items;
 }
 export async function unreadNotificationCount() {
   const response = await getCurrentAccountUnreadNotificationCount(undefined, authenticatedApiFetch);

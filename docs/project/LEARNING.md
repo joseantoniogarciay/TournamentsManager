@@ -2391,3 +2391,14 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 
 - **Aprendido:** Prometheus determina si una condición está activa, pero no es el lugar para decidir agrupación, silencios o la frecuencia de recordatorios.
 - **Regla reutilizable:** Alertmanager recibe alertas evaluadas, las agrupa y entrega según la severidad. Grafana puede centralizar la consulta y los silencios sin convertirse en la autoridad de las reglas Prometheus.
+
+### 2026-08-21 — Una colección remota se valida elemento a elemento
+
+- **Aprendido:** los tipos generados desde OpenAPI desaparecen en runtime; un
+  miembro malformado de una respuesta JSON no debe inutilizar los elementos
+  válidos que la acompañan.
+- **Regla reutilizable:** el adaptador de cada feature valida el contenedor de
+  una colección y transforma individualmente sus miembros. Rechaza el
+  contenedor imposible como respuesta no esperada y descarta únicamente los
+  miembros inválidos antes de entregarlos a la interfaz. No se modifica el
+  cliente generado ni se introduce una validación global de reglas de negocio.
