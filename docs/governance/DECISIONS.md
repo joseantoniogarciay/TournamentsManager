@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                               | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------- | ---------- |
+| [0099](../adr/0099-route-local-alerts-through-alertmanager.md)                               | Enrutar alertas locales mediante Alertmanager                        | Aceptado              | 2026-08-21 |
 | [0098](../adr/0098-define-local-session-refresh-slo.md)                                      | Definir un SLO local para el refresh de sesión                       | Aceptado              | 2026-08-21 |
 | [0097](../adr/0097-separate-postgresql-runtime-and-migration-identities.md)                  | Separar las identidades PostgreSQL de ejecución y migración          | Aceptado              | 2026-08-16 |
 | [0000](../adr/0000-record-architecture-decisions.md)                                          | Registrar decisiones arquitectónicas                                 | Aceptado              | 2026-07-23 |

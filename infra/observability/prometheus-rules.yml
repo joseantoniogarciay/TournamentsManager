@@ -38,3 +38,23 @@ groups:
         annotations:
           summary: El p95 del refresh de sesión supera 500 ms.
           description: La latencia p95 de refresh ha superado el objetivo durante quince minutos.
+      - alert: SessionRefreshFailureRateCritical
+        expr: |
+          sum(rate(tournaments_manager_http_requests_total{route="POST /v1/sessions/refresh",status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(tournaments_manager_http_requests_total{route="POST /v1/sessions/refresh"}[5m])), 0.001)
+          > 0.20
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: El refresh de sesión falla para una proporción crítica de peticiones.
+          description: La tasa de respuestas 5xx de refresh supera el 20 % durante dos minutos.
+      - alert: TournamentsManagerAPIDown
+        expr: up{job="tournaments-manager-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: La API de Tournaments Manager no se puede monitorizar.
+          description: Prometheus no logra recopilar métricas de la API desde hace dos minutos.

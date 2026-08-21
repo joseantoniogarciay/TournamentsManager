@@ -112,11 +112,18 @@ El primer objetivo de servicio aceptado es `POST /v1/sessions/refresh`:
 - latencia **p95 inferior a 500 ms**, evaluada sobre una ventana de cinco minutos.
 
 Prometheus calcula la disponibilidad y el presupuesto consumido como series de
-grabación. Expone una alerta local cuando los `5xx` superan el 7,2 % durante
-cinco minutos y otra cuando el p95 supera 500 ms durante quince minutos.
-Grafana aprovisiona el dashboard **SLO — Refresh de sesión**. No hay
-Alertmanager, notificación remota, retención de producción ni SLOs generales:
-véase [ADR-0098](../adr/0098-define-local-session-refresh-slo.md).
+grabación. Expone alertas `warning` cuando los `5xx` superan el 7,2 % durante
+cinco minutos o el p95 supera 500 ms durante quince minutos. Dos alertas
+`critical` cubren una tasa de `5xx` superior al 20 % durante dos minutos y una
+API que Prometheus no puede monitorizar durante dos minutos.
+
+Alertmanager agrupa por `alertname`, espera 30 segundos antes del primer aviso y
+usa Mailpit solo en local. Repite `warning` cada cuatro horas y `critical` cada
+diez minutos mientras sigan activas. Grafana aprovisiona el dashboard **SLO —
+Refresh de sesión**, muestra las reglas de Prometheus y consulta Alertmanager
+para alertas y silencios. No hay notificación remota, retención de producción
+ni SLOs generales: véanse [ADR-0098](../adr/0098-define-local-session-refresh-slo.md)
+y [ADR-0099](../adr/0099-route-local-alerts-through-alertmanager.md).
 
 ## Recorridos revisados
 

@@ -63,6 +63,16 @@ services:
       - ../observability/prometheus-rules.yml:/etc/prometheus/rules.yml:ro
       - prometheus-data:/prometheus
 
+  alertmanager:
+    image: prom/alertmanager:v0.33.1
+    restart: unless-stopped
+    command: [--config.file=/etc/alertmanager/alertmanager.yml, --storage.path=/alertmanager]
+    ports:
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - ../observability/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+
   loki:
     image: grafana/loki:3.5.0
     restart: unless-stopped
@@ -106,6 +116,7 @@ services:
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
+      - alertmanager
       - loki
       - tempo
 
@@ -114,5 +125,6 @@ volumes:
   grafana-data:
   loki-data:
   prometheus-data:
+  alertmanager-data:
   promtail-data:
   tempo-data:

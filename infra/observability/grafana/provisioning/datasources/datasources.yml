@@ -6,7 +6,19 @@ datasources:
     type: prometheus
     access: proxy
     url: http://prometheus:9090
+    jsonData:
+      manageAlerts: true
+      alertmanagerUid: alertmanager
     isDefault: true
+
+  - name: Alertmanager
+    uid: alertmanager
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093
+    jsonData:
+      implementation: prometheus
+      handleGrafanaManagedAlerts: false
   - name: Loki
     uid: loki
     type: loki

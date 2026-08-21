@@ -1,0 +1,30 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: mailpit-warning
+  group_by: [alertname]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - receiver: mailpit-critical
+      matchers:
+        - severity="critical"
+      repeat_interval: 10m
+
+receivers:
+  - name: mailpit-warning
+    email_configs:
+      - to: alerts@fasttourney.test
+        from: alerts@fasttourney.test
+        smarthost: mailpit:1025
+        require_tls: false
+        send_resolved: true
+  - name: mailpit-critical
+    email_configs:
+      - to: alerts@fasttourney.test
+        from: alerts@fasttourney.test
+        smarthost: mailpit:1025
+        require_tls: false
+        send_resolved: true

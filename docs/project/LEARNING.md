@@ -2376,4 +2376,9 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 ### 2026-08-21 — Un SLO convierte señales en una decisión operativa
 
 - **Aprendido:** una métrica de latencia o errores no indica por sí sola cuándo actuar. Un objetivo separa la degradación tolerable del consumo de un margen acordado; por eso disponibilidad y p95 se expresan por separado.
-- **Regla reutilizable:** empezar por un flujo crítico y por métricas ya agregadas. Un dashboard local y alertas visibles en Prometheus bastan para aprender el ciclo; Alertmanager, notificaciones y SLOs globales requieren evidencia y una necesidad operativa posterior.
+- **Regla reutilizable:** empezar por un flujo crítico y por métricas ya agregadas. Un dashboard local y alertas visibles en Prometheus bastan para aprender el ciclo; Alertmanager y notificaciones se incorporan solo al aparecer una necesidad operativa explícita (ADR-0099). Los SLOs globales siguen requiriendo evidencia posterior.
+
+### 2026-08-21 — Evaluar una alerta no es entregarla
+
+- **Aprendido:** Prometheus determina si una condición está activa, pero no es el lugar para decidir agrupación, silencios o la frecuencia de recordatorios.
+- **Regla reutilizable:** Alertmanager recibe alertas evaluadas, las agrupa y entrega según la severidad. Grafana puede centralizar la consulta y los silencios sin convertirse en la autoridad de las reglas Prometheus.

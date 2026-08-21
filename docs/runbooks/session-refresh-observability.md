@@ -42,6 +42,26 @@ la operación tarda más de lo esperado.
 Los tres pasos muestran datos técnicos. No copies cookies, cabeceras
 `Authorization`, cuerpos ni tokens a búsquedas, tickets o logs.
 
+## Alertas y entrega
+
+Grafana concentra las dos partes de la operación:
+
+1. Abre **Alerting > Alert rules** para comprobar las seis reglas cargadas por
+   Prometheus: cuatro alertas evaluables y dos series de grabación. Son de solo
+   lectura porque su fuente es `infra/observability/prometheus-rules.yml`.
+2. Abre **Alerting > Active notifications** y, en **Choose Alertmanager**,
+   selecciona `Alertmanager`. Ahí se ven las alertas activas, su agrupación y el
+   receptor local (`mailpit-warning` o `mailpit-critical`).
+3. Para detener temporalmente un aviso conocido, usa **Alerting > Silences** y
+   el mismo selector `Alertmanager`. Crea un silencio con alcance y caducidad
+   explícitos; no modifiques las rutas ni los receptores desde Grafana.
+
+La configuración declarativa sigue siendo
+`infra/observability/alertmanager.yml`: espera 30 segundos antes del primer
+aviso, agrupa por `alertname` y repite los `warning` cada cuatro horas y los
+`critical` cada diez minutos. Mailpit permite inspeccionar el correo local en
+`http://127.0.0.1:8025`; no entrega correo externo.
+
 ## Prueba de fallo controlada
 
 1. Con una sesión web válida, abre el cliente y fuerza una renovación de sesión
