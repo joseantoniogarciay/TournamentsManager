@@ -110,8 +110,10 @@ experimento arriesgado, colaboración paralela o una necesidad real de aislamien
 - Tras integrar un bloque, `develop` debe contener el estado de `main` antes de
   continuar.
 - No se reescribe el historial compartido de `main` ni `develop`.
-- La estrategia exacta de merge, CI y protección de ramas se decidirá en el gate
-  de CI y política de calidad.
+- Cada promoción de `develop` a `main` se realiza con un commit de merge
+  explícito (`git merge --no-ff develop`), incluso cuando Git permitiría un
+  avance rápido. Conserva el hito de promoción en el historial.
+- CI y protección de ramas se rigen por ADR-0021.
 
 ## Validación
 

@@ -98,6 +98,8 @@ aceptado está registrado en
 - el trabajo ordinario se hace y se commitea en `develop`;
 - mientras el trabajo sea individual, no se crean ramas por feature como norma;
 - un bloque coherente y verificado se integra de `develop` a `main`;
+- toda promoción usa un commit de merge explícito (`git merge --no-ff develop`),
+  incluso si fuera posible un avance rápido;
 - después de la integración, el trabajo continúa en `develop`;
 - hotfixes, experimentos arriesgados o trabajo paralelo pueden usar ramas
   temporales cuando aporten aislamiento real;
