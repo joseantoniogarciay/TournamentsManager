@@ -97,6 +97,34 @@ es `resend` y el endpoint es `smtp.resend.com:587` con STARTTLS. No actives
 invitaciones si el dominio aún figura como pendiente o si la clave ha aparecido
 en una terminal, un log o Git: revócala y crea otra.
 
+## Observabilidad y alertas
+
+`dev` ejecuta el mismo stack correlacionado que local, pero con volúmenes propios.
+Antes del primer `make dev-public-deploy`, crea en Resend una segunda API key de
+tipo *Sending access*, restringida al dominio remitente y exclusiva para
+Alertmanager. No reutilices `SMTP_PASSWORD`, que sigue reservado al correo
+transaccional de la API.
+
+```bash
+cp infra/dev/alertmanager.smtp-password.example infra/dev/alertmanager.smtp-password
+# Edita el archivo y deja únicamente la nueva clave de Resend.
+make dev-public-deploy
+```
+
+El archivo real está ignorado por Git y se monta como secreto de Docker, no como
+variable de entorno. Alertmanager conecta a `smtp.resend.com:587` con STARTTLS
+antes de autenticar. El remitente visible es **FastTourney Dev Alerts** y el
+asunto empieza por `[DEV]`; el receptor inicial es `alerts@fasttourney.com`.
+Registro y restablecimiento usan **FastTourney Dev** y el mismo prefijo. Ambos
+buzones necesitan ser válidos en Resend y en tu correo. Si cambia el receptor,
+actualiza la configuración versionada
+`infra/observability/alertmanager.dev.yml` y la documentación asociada.
+
+Grafana, Prometheus y Alertmanager se consultan solo desde el Mac en
+`http://127.0.0.1:3001`, `http://127.0.0.1:9091` y `http://127.0.0.1:9094`.
+No los añadas a Caddy, Cloudflare Tunnel ni a la web pública. El procedimiento de
+diagnóstico y prueba controlada está en el runbook de observabilidad.
+
 ## Purga de cuentas con baja vencida
 
 `make dev-public-purge` ejecuta dentro del contenedor `api` el comando interno

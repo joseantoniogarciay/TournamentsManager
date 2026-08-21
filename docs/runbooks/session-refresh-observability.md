@@ -2,8 +2,8 @@
 
 > Estado: validado en entorno Compose local el 2026-08-21.
 >
-> Alcance: entorno Compose local; no autoriza cambios en datos ni en desarrollo
-> público.
+> Alcance: diagnóstico seguro del entorno Compose local y, cuando se indique,
+> de `tournaments-manager-dev`; no autoriza cambios de datos.
 
 ## Síntoma
 
@@ -61,6 +61,20 @@ La configuración declarativa sigue siendo
 aviso, agrupa por `alertname` y repite los `warning` cada cuatro horas y los
 `critical` cada diez minutos. Mailpit permite inspeccionar el correo local en
 `http://127.0.0.1:8025`; no entrega correo externo.
+
+## Desarrollo público
+
+Para `tournaments-manager-dev`, aplica el mismo diagnóstico desde Grafana en
+`http://127.0.0.1:3001`. Prometheus y Alertmanager están en loopback en los
+puertos `9091` y `9094`; no se consultan desde el túnel. El receptor de las
+alertas es Resend SMTP con STARTTLS y una clave separada en
+`infra/dev/alertmanager.smtp-password`.
+
+Antes de probar una alerta, confirma que el secreto existe, que no contiene el
+texto de ejemplo y que `make dev-public-deploy` ha terminado. Provoca la misma
+caída controlada de PostgreSQL solo si `dev` no tiene usuarios que puedan verse
+afectados; comprueba el aviso recibido y su resolución tras recuperar la base.
+No copies la clave SMTP ni contenido de correos a Grafana, tickets o logs.
 
 ## Prueba de fallo controlada
 

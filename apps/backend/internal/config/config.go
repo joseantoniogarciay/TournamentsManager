@@ -16,6 +16,7 @@ const (
 	smtpFromEnv           = "SMTP_FROM"
 	smtpUsernameEnv       = "SMTP_USERNAME"
 	smtpPasswordEnv       = "SMTP_PASSWORD"
+	emailSubjectPrefixEnv = "EMAIL_SUBJECT_PREFIX"
 	publicBaseURLEnv      = "PUBLIC_BASE_URL"
 	corsAllowedOriginsEnv = "CORS_ALLOWED_ORIGINS"
 	googleClientIDsEnv    = "GOOGLE_CLIENT_IDS"
@@ -31,6 +32,7 @@ type Config struct {
 	SMTPFrom           string
 	SMTPUsername       string
 	SMTPPassword       string
+	EmailSubjectPrefix string
 	PublicBaseURL      string
 	CookieSecure       bool
 	CORSAllowedOrigins []string
@@ -76,6 +78,10 @@ func load(getenv func(string) string) (Config, error) {
 	if (smtpUsername == "") != (smtpPassword == "") {
 		return Config{}, fmt.Errorf("%s y %s deben definirse juntos", smtpUsernameEnv, smtpPasswordEnv)
 	}
+	emailSubjectPrefix := getenv(emailSubjectPrefixEnv)
+	if strings.ContainsAny(emailSubjectPrefix, "\r\n") {
+		return Config{}, fmt.Errorf("%s no puede contener saltos de línea", emailSubjectPrefixEnv)
+	}
 	publicBaseURL := getenv(publicBaseURLEnv)
 	parsedPublicURL, err := url.Parse(publicBaseURL)
 	if err != nil || !validPublicBaseURL(parsedPublicURL) {
@@ -102,6 +108,7 @@ func load(getenv func(string) string) (Config, error) {
 		SMTPFrom:           smtpFrom,
 		SMTPUsername:       smtpUsername,
 		SMTPPassword:       smtpPassword,
+		EmailSubjectPrefix: emailSubjectPrefix,
 		PublicBaseURL:      publicBaseURL,
 		CookieSecure:       parsedPublicURL.Scheme == "https",
 		CORSAllowedOrigins: corsAllowedOrigins,

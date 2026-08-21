@@ -29,6 +29,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0100: `tournaments-manager-dev` incorpora Prometheus, Alertmanager, Loki,
+  Tempo, Promtail y Grafana con los mismos SLOs y dashboard que local. Alertmanager
+  entrega avisos por Resend SMTP con STARTTLS y una clave exclusiva, montada fuera
+  de Git; las interfaces operativas permanecen en loopback. Los avisos y correos
+  transaccionales de dev se identifican con nombre visible y prefijo `[DEV]`.
+
 - ADR-0099: Alertmanager recibe las alertas locales de Prometheus, entrega correo de prueba a Mailpit y se integra en Grafana. Los avisos `warning` se repiten cada cuatro horas y los `critical` cada diez minutos; se añaden ejemplos críticos para API no monitorizable y alta tasa de `5xx` de refresh.
 
 - ADR-0098 y el primer SLO local: refresh de sesión define disponibilidad de 99,5 % en 30 días y p95 inferior a 500 ms. Prometheus carga reglas y alertas locales; Grafana aprovisiona su dashboard de solo lectura.

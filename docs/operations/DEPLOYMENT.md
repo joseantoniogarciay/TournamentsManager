@@ -179,6 +179,12 @@ Mailpit pertenece solo al entorno local y no tiene hostname público. El entorno
 verifica `mail.fasttourney.com` y sus registros SPF, DKIM y DMARC. La clave de
 solo envío vive fuera de Git en `infra/dev/api.docker.env`; véase ADR-0093.
 
+El mismo proyecto `dev` mantiene Prometheus, Alertmanager, Loki, Tempo, Promtail
+y Grafana en red y volúmenes propios. Alertmanager usa una segunda clave Resend
+de solo envío, montada desde un secreto local, para no compartir el radio de
+revocación del correo transaccional. Las interfaces operativas se publican solo
+en loopback y no forman parte de Cloudflare Tunnel; véase ADR-0100.
+
 Antes de publicar el futuro artefacto web de producción, su script de exportación
 debe declarar, sin leer el `.env` local y limpiando la caché de Metro:
 

@@ -15,9 +15,24 @@ set -a
 . infra/dev/api.docker.env
 set +a
 
+if [ ! -s infra/dev/alertmanager.smtp-password ]; then
+  echo "Falta infra/dev/alertmanager.smtp-password con la clave SMTP exclusiva de Alertmanager." >&2
+  exit 1
+fi
+
+if grep -Fqx 'replace-with-resend-alerts-sending-access-key' infra/dev/alertmanager.smtp-password; then
+  echo "infra/dev/alertmanager.smtp-password conserva el valor de ejemplo." >&2
+  exit 1
+fi
+
 expected_database_url="postgres://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
 if [ "${DATABASE_URL:-}" != "$expected_database_url" ]; then
   echo "DATABASE_URL de dev debe usar exactamente POSTGRES_APP_USER y POSTGRES_APP_PASSWORD." >&2
+  exit 1
+fi
+
+if [ "${OTEL_TRACES_ENDPOINT:-}" != "http://tempo:4318/v1/traces" ]; then
+  echo "OTEL_TRACES_ENDPOINT de dev debe dirigir las trazas a Tempo interno." >&2
   exit 1
 fi
 

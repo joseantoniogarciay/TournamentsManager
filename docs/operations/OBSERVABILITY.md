@@ -122,8 +122,30 @@ usa Mailpit solo en local. Repite `warning` cada cuatro horas y `critical` cada
 diez minutos mientras sigan activas. Grafana aprovisiona el dashboard **SLO —
 Refresh de sesión**, muestra las reglas de Prometheus y consulta Alertmanager
 para alertas y silencios. No hay notificación remota, retención de producción
-ni SLOs generales: véanse [ADR-0098](../adr/0098-define-local-session-refresh-slo.md)
-y [ADR-0099](../adr/0099-route-local-alerts-through-alertmanager.md).
+ni SLOs generales **en local**: véanse
+[ADR-0098](../adr/0098-define-local-session-refresh-slo.md) y
+[ADR-0099](../adr/0099-route-local-alerts-through-alertmanager.md).
+
+## Desarrollo público
+
+`tournaments-manager-dev` replica el stack local —Prometheus, Alertmanager,
+Loki, Tempo, Promtail y Grafana— con volúmenes y red propios. Reutiliza reglas,
+dashboard y fuentes de datos versionadas; Promtail filtra explícitamente el
+proyecto Compose `tournaments-manager-dev` para no mezclar los logs de local.
+La API exporta OTLP/HTTP a `tempo:4318` por la red interna.
+
+Alertmanager entrega los mismos avisos mediante Resend SMTP en
+`smtp.resend.com:587`, con STARTTLS obligatorio. Usa una clave *Sending access*
+distinta de `SMTP_PASSWORD`, montada desde el secreto local
+`infra/dev/alertmanager.smtp-password`; el archivo no se versiona. El remitente
+visible es `FastTourney Dev Alerts <alerts@mail.fasttourney.com>` y el asunto
+empieza por `[DEV]`; el receptor inicial es `alerts@fasttourney.com`.
+
+Grafana (`127.0.0.1:3001`), Prometheus (`127.0.0.1:9091`) y Alertmanager
+(`127.0.0.1:9094`) no tienen ruta Caddy ni Cloudflare: una alerta se entrega por
+correo, pero la operación detallada conserva acceso solo en el Mac. La retención
+sigue siendo de 24 horas y no hay HA, on-call ni alertas nuevas por completitud.
+Véase [ADR-0100](../adr/0100-deliver-public-development-alerts-through-resend.md).
 
 ## Recorridos revisados
 

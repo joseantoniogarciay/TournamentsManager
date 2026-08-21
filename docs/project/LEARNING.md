@@ -1,5 +1,23 @@
 # Registro de aprendizaje
 
+## 2026-08-21 — La entrega de una alerta no debe compartir la credencial del producto
+
+Alertmanager y la API pueden usar el mismo SMTP de Resend, pero tienen radios de
+impacto distintos: uno comunica degradación operativa y el otro entrega enlaces
+de identidad. Una clave *Sending access* exclusiva permite revocar o rotar el
+canal de alertas sin impedir verificaciones ni recuperación de cuentas. STARTTLS
+en el puerto 587 cifra la conexión antes de enviar esa clave.
+
+La paridad útil entre local y `dev` es compartir reglas, dashboard y señales, no
+abrir Grafana al público ni mezclar volúmenes o logs. Los servicios conservan
+nombres internos iguales para reutilizar su configuración, mientras Promtail
+filtra el namespace Compose para que cada entorno observe solo su propia API.
+
+**Retrospectiva técnica:** duplicar el stack suma seis contenedores y operación,
+pero evita una abstracción o SaaS nuevo y conserva la práctica de diagnóstico
+correlacionado. La siguiente revisión debe basarse en ruido, cuota o necesidad de
+guardias, no en añadir alertas por cobertura aparente. Véase ADR-0100.
+
 ## 2026-08-21 — La excepción de Expo cubre el cierre exacto que el resolvedor necesita
 
 `expo install --check` identifica los paquetes directos desalineados, pero su
