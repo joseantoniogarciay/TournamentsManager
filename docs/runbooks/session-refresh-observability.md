@@ -1,6 +1,6 @@
 # Diagnóstico del refresh de sesión
 
-> Estado: pendiente de primera ejecución controlada.
+> Estado: validado en entorno Compose local el 2026-08-21.
 >
 > Alcance: entorno Compose local; no autoriza cambios en datos ni en desarrollo
 > público.
@@ -51,6 +51,8 @@ Los tres pasos muestran datos técnicos. No copies cookies, cabeceras
    cliente no debe exponer detalles de PostgreSQL.
 4. En Grafana confirma: incremento de errores HTTP, traza con fallo de
    `postgresql.query` y log correlacionado sin secretos ni datos personales.
+   El span raíz debe incluir una razón cerrada `database.*`; si el borde no
+   conoce el límite concreto, usa `request.failed`.
 5. Recupera PostgreSQL: `docker compose --env-file infra/local/.env -f infra/local/compose.dev.yaml start postgres`.
 6. Repite el refresh y confirma la recuperación mediante las tres señales.
 
@@ -72,4 +74,8 @@ sin mostrar detalles internos ni requerir un inicio de sesión nuevo.
 
 ## Última prueba
 
-Pendiente de la primera ejecución controlada del equipo.
+El 2026-08-21 se creó una cuenta de prueba exclusivamente local, se obtuvo una
+sesión bearer, se detuvo únicamente `postgres` y se renovó la sesión. La API
+respondió `500`, el log JSON correlacionado registró
+`failure_reason=database.query_failed` y Tempo confirmó la misma causa en el
+span HTTP raíz. PostgreSQL se inició de nuevo antes de cerrar la prueba.

@@ -1,0 +1,40 @@
+groups:
+  - name: session-refresh-slo
+    rules:
+      - record: tournaments_manager:session_refresh:availability_ratio_30d
+        expr: |
+          1 - (
+            sum(increase(tournaments_manager_http_requests_total{route="POST /v1/sessions/refresh",status=~"5.."}[30d]))
+            /
+            clamp_min(sum(increase(tournaments_manager_http_requests_total{route="POST /v1/sessions/refresh"}[30d])), 1)
+          )
+      - record: tournaments_manager:session_refresh:error_budget_consumed_ratio_30d
+        expr: |
+          (
+            sum(increase(tournaments_manager_http_requests_total{route="POST /v1/sessions/refresh",status=~"5.."}[30d]))
+            /
+            clamp_min(sum(increase(tournaments_manager_http_requests_total{route="POST /v1/sessions/refresh"}[30d])), 1)
+          ) / 0.005
+      - alert: SessionRefreshAvailabilityBurningFast
+        expr: |
+          sum(rate(tournaments_manager_http_requests_total{route="POST /v1/sessions/refresh",status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(tournaments_manager_http_requests_total{route="POST /v1/sessions/refresh"}[5m])), 0.001)
+          > 0.072
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: El refresh de sesión consume el presupuesto de error rápidamente.
+          description: La tasa de respuestas 5xx del refresh supera el 7,2 % durante cinco minutos.
+      - alert: SessionRefreshLatencyObjectiveMissed
+        expr: |
+          histogram_quantile(0.95, sum by (le) (
+            rate(tournaments_manager_http_request_duration_seconds_bucket{route="POST /v1/sessions/refresh"}[5m])
+          )) > 0.5
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: El p95 del refresh de sesión supera 500 ms.
+          description: La latencia p95 de refresh ha superado el objetivo durante quince minutos.

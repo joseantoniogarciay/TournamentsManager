@@ -31,7 +31,8 @@ func HTTPHandler(next http.Handler) http.Handler {
 			return
 		}
 		originalURL := *request.URL
-		observedRequest := request.Clone(context.WithValue(request.Context(), originalURLContextKey{}, &originalURL))
+		observedContext := context.WithValue(request.Context(), originalURLContextKey{}, &originalURL)
+		observedRequest := request.Clone(withEndpointFailureState(observedContext))
 		observedRequest.URL.RawQuery = ""
 		application.ServeHTTP(writer, observedRequest)
 	})
@@ -99,8 +100,17 @@ func requestLogger(next http.Handler) http.Handler {
 		started := time.Now()
 		recorder := &statusRecorder{ResponseWriter: writer, status: http.StatusOK}
 		next.ServeHTTP(recorder, request)
+		if recorder.status >= http.StatusInternalServerError && endpointFailureReason(request.Context()) == "" {
+			// The handler did not classify this unexpected server response. Keep
+			// the root span and its correlated log useful without guessing which
+			// dependency failed; a child span may provide that narrower category.
+			RecordEndpointFailure(request.Context(), "request.failed")
+		}
 		spanContext := trace.SpanFromContext(request.Context()).SpanContext()
 		attributes := []any{"method", request.Method, "route", routeName(request.Pattern), "status", recorder.status, "duration_ms", time.Since(started).Milliseconds()}
+		if reason := endpointFailureReason(request.Context()); reason != "" {
+			attributes = append(attributes, "failure_reason", reason)
+		}
 		if spanContext.IsValid() {
 			attributes = append(attributes, "trace_id", spanContext.TraceID().String(), "span_id", spanContext.SpanID().String())
 		}

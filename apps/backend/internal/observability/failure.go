@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"go.opentelemetry.io/otel/attribute"
@@ -13,12 +14,38 @@ import (
 
 const failureReasonAttribute = "tournaments_manager.failure.reason"
 
+type endpointFailureState struct {
+	mu     sync.RWMutex
+	reason string
+}
+
+type endpointFailureStateContextKey struct{}
+
+func withEndpointFailureState(ctx context.Context) context.Context {
+	return context.WithValue(ctx, endpointFailureStateContextKey{}, &endpointFailureState{})
+}
+
+func endpointFailureReason(ctx context.Context) string {
+	state, ok := ctx.Value(endpointFailureStateContextKey{}).(*endpointFailureState)
+	if !ok || state == nil {
+		return ""
+	}
+	state.mu.RLock()
+	defer state.mu.RUnlock()
+	return state.reason
+}
+
 // RecordEndpointFailure adds a safe, feature-owned reason to the HTTP root span.
 // Expected rejections retain their HTTP status and do not become trace errors.
 func RecordEndpointFailure(ctx context.Context, reason string) {
 	span := trace.SpanFromContext(ctx)
 	if span.IsRecording() {
 		span.SetAttributes(attribute.String(failureReasonAttribute, reason))
+	}
+	if state, ok := ctx.Value(endpointFailureStateContextKey{}).(*endpointFailureState); ok && state != nil {
+		state.mu.Lock()
+		state.reason = reason
+		state.mu.Unlock()
 	}
 }
 

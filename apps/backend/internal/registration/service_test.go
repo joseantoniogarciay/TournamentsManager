@@ -2,6 +2,7 @@ package registration
 
 import (
 	"context"
+	"errors"
 	"testing"
 )
 
@@ -27,6 +28,16 @@ func TestResetPasswordUsesPasswordProtector(t *testing.T) {
 	}
 }
 
+func TestRefreshPreservesTechnicalRepositoryFailures(t *testing.T) {
+	want := errors.New("database unavailable")
+	service := NewService(&refreshRepositoryStub{err: want}, nil)
+
+	_, _, _, err := service.Refresh(context.Background(), "refresh-token")
+	if !errors.Is(err, want) {
+		t.Fatalf("Refresh() error = %v, want wrapped %v", err, want)
+	}
+}
+
 type passwordProtectorStub struct{ hashed bool }
 
 func (p *passwordProtectorStub) Hash(context.Context, string) (string, error) {
@@ -39,6 +50,15 @@ func (*passwordProtectorStub) Verify(context.Context, string, string) bool { ret
 type passwordResetRepositoryStub struct {
 	Repository
 	consumed bool
+}
+
+type refreshRepositoryStub struct {
+	Repository
+	err error
+}
+
+func (r *refreshRepositoryStub) RotateSessionTokens(context.Context, []byte, []byte, []byte) (Session, error) {
+	return Session{}, r.err
 }
 
 func (r *passwordResetRepositoryStub) ConsumePasswordReset(context.Context, []byte, string, []byte, []byte) (Session, error) {

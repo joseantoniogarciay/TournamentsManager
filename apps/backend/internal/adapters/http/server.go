@@ -1183,6 +1183,7 @@ func refreshSession(service registration.Service, cookies sessionCookieSettings)
 			return
 		}
 		if err != nil {
+			observability.RecordDatabaseEndpointFailure(request.Context(), err)
 			writeProblem(writer, http.StatusInternalServerError, "Could not refresh session")
 			return
 		}

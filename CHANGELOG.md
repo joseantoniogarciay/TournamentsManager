@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- Todo `5xx` HTTP conserva ahora una razón cerrada en el span raíz y en su log correlacionado. Si la feature no conoce el límite que falló, usa `request.failed` sin exportar el error bruto; refresh preserva los fallos de PostgreSQL para diagnosticarlos como tales en vez de confundirlos con un token inválido.
+
+- La orden interna `purge-expired-accounts` configura `slog` JSON, igual que la API, antes de emitir su resultado operativo.
+
 - Al cerrar una ruta de Cuenta en web, la aplicación vuelve a `/account` incluso
   después de recargar una URL profunda; ya no depende del historial de otra tab.
 
@@ -20,6 +24,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   mantienen el modal nativo.
 
 ### Added
+
+- ADR-0098 y el primer SLO local: refresh de sesión define disponibilidad de 99,5 % en 30 días y p95 inferior a 500 ms. Prometheus carga reglas y alertas locales; Grafana aprovisiona su dashboard de solo lectura.
 
 - Primer corte de observabilidad local: `POST /v1/sessions/refresh` emite logs
   JSON correlacionados, métricas Prometheus y trazas OpenTelemetry HTTP y

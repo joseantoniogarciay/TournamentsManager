@@ -2372,3 +2372,8 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   cuando esa salida aporte diagnóstico; no se crea un span por rama ni se
   registran valores introducidos. La feature mantiene la decisión de las
   causas de negocio, igual que mantiene su feedback de recuperación.
+
+### 2026-08-21 — Un SLO convierte señales en una decisión operativa
+
+- **Aprendido:** una métrica de latencia o errores no indica por sí sola cuándo actuar. Un objetivo separa la degradación tolerable del consumo de un margen acordado; por eso disponibilidad y p95 se expresan por separado.
+- **Regla reutilizable:** empezar por un flujo crítico y por métricas ya agregadas. Un dashboard local y alertas visibles en Prometheus bastan para aprender el ciclo; Alertmanager, notificaciones y SLOs globales requieren evidencia y una necesidad operativa posterior.

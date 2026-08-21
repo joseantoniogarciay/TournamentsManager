@@ -162,7 +162,10 @@ func (s Service) Refresh(ctx context.Context, token string) (Session, string, st
 	refreshHash := sha256.Sum256([]byte("refresh:" + refreshToken))
 	session, err := s.repository.RotateSessionTokens(ctx, oldHash[:], accessHash[:], refreshHash[:])
 	if err != nil {
-		return Session{}, "", "", ErrRefreshInvalid
+		if errors.Is(err, ErrRefreshInvalid) {
+			return Session{}, "", "", ErrRefreshInvalid
+		}
+		return Session{}, "", "", err
 	}
 	return session, accessToken, refreshToken, nil
 }

@@ -83,8 +83,11 @@ Cuando un límite técnico falla, el span no exporta el error bruto. Registra
 solamente `tournaments_manager.failure.reason`, con valores cerrados como
 `database.unavailable`, `database.constraint_failed`,
 `database.query_failed`, `smtp.delivery_failed`, `request.cancelled` o
-`request.timeout`. Cada feature puede añadir una causa de negocio segura cuando
-aporte recuperación distinta; no se deduce centralmente del código HTTP.
+`request.timeout`. Si el borde HTTP recibe un `5xx` que la feature no pudo
+clasificar, registra `request.failed`: conserva una causa segura en el span raíz
+y en el log correlacionado sin inventar una dependencia concreta. Cada feature
+puede añadir una causa de negocio segura cuando aporte recuperación distinta; no
+se deduce centralmente del código HTTP.
 
 La revisión de un endpoint cubre sus salidas de éxito, validación, límite de
 tasa, negocio, límites técnicos y cancelación. Un rechazo esperado que necesite
@@ -99,6 +102,21 @@ peticiones por un error de exportación.
 
 El procedimiento de diagnóstico y la prueba de indisponibilidad controlada de
 PostgreSQL están en el [runbook de refresh de sesión](../runbooks/session-refresh-observability.md).
+
+## SLO local — refresh de sesión
+
+El primer objetivo de servicio aceptado es `POST /v1/sessions/refresh`:
+
+- disponibilidad de al menos **99,5 %** en ventana móvil de 30 días; una
+  respuesta `5xx` consume presupuesto y cualquier otra respuesta no;
+- latencia **p95 inferior a 500 ms**, evaluada sobre una ventana de cinco minutos.
+
+Prometheus calcula la disponibilidad y el presupuesto consumido como series de
+grabación. Expone una alerta local cuando los `5xx` superan el 7,2 % durante
+cinco minutos y otra cuando el p95 supera 500 ms durante quince minutos.
+Grafana aprovisiona el dashboard **SLO — Refresh de sesión**. No hay
+Alertmanager, notificación remota, retención de producción ni SLOs generales:
+véase [ADR-0098](../adr/0098-define-local-session-refresh-slo.md).
 
 ## Recorridos revisados
 
@@ -152,5 +170,6 @@ PostgreSQL están en el [runbook de refresh de sesión](../runbooks/session-refr
 - facilidad de backup, upgrade y diagnóstico.
 
 No se crearán paneles, alertas, SLO, retenciones de producción ni perfiles por
-completitud. La unidad mínima es una pregunta operativa respondida de extremo a
-extremo y validada provocando un fallo.
+completitud. La excepción aceptada es el SLO local de refresh, porque responde a
+una pregunta operativa concreta; la unidad mínima sigue siendo una pregunta
+respondida de extremo a extremo y validada provocando un fallo.

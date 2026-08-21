@@ -112,6 +112,7 @@ func purgeExpiredAccounts() error {
 	if err != nil {
 		return fmt.Errorf("cargar configuración: %w", err)
 	}
+	observability.ConfigureLogging()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	pool, err := postgres.NewPool(ctx, appConfig.DatabaseURL, observability.QueryTracer{})
