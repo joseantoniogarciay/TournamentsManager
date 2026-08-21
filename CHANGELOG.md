@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- Expo SDK 57 vuelve a tener su conjunto compatible: `expo` pasa a 57.0.15 y
+  sus paquetes directos relacionados a las revisiones solicitadas por Expo CLI.
+  React Native se mantiene en 0.86.2, la versión soportada por este SDK.
+
 - Todo `5xx` HTTP conserva ahora una razón cerrada en el span raíz y en su log correlacionado. Si la feature no conoce el límite que falló, usa `request.failed` sin exportar el error bruto; refresh preserva los fallos de PostgreSQL para diagnosticarlos como tales en vez de confundirlos con un token inválido.
 
 - La orden interna `purge-expired-accounts` configura `slog` JSON, igual que la API, antes de emitir su resultado operativo.

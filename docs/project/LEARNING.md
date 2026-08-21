@@ -1,5 +1,14 @@
 # Registro de aprendizaje
 
+## 2026-08-21 — La excepción de Expo cubre el cierre exacto que el resolvedor necesita
+
+`expo install --check` identifica los paquetes directos desalineados, pero su
+actualización puede requerir además parches transitivos jóvenes. La excepción de
+ADR-0077 se forma con las versiones exactas que pnpm rechaza durante esa misma
+resolución, no con prefijos de paquetes: así se recupera la matriz compatible sin
+abrir una vía permanente para futuras publicaciones. Los directos quedan fijados
+y React Native conserva la versión que corresponde al SDK de Expo.
+
 ## 2026-08-16 — Un control creado dinámicamente debe continuar la tarea
 
 Al añadir un campo repetible, el foco pasa al nuevo control una vez montado. La
