@@ -1,5 +1,14 @@
 # Registro de aprendizaje
 
+## 2026-08-21 — La excepción de Expo cubre el cierre exacto que el resolvedor necesita
+
+`expo install --check` identifica los paquetes directos desalineados, pero su
+actualización puede requerir además parches transitivos jóvenes. La excepción de
+ADR-0077 se forma con las versiones exactas que pnpm rechaza durante esa misma
+resolución, no con prefijos de paquetes: así se recupera la matriz compatible sin
+abrir una vía permanente para futuras publicaciones. Los directos quedan fijados
+y React Native conserva la versión que corresponde al SDK de Expo.
+
 ## 2026-08-16 — Un control creado dinámicamente debe continuar la tarea
 
 Al añadir un campo repetible, el foco pasa al nuevo control una vez montado. La
@@ -2382,3 +2391,14 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 
 - **Aprendido:** Prometheus determina si una condición está activa, pero no es el lugar para decidir agrupación, silencios o la frecuencia de recordatorios.
 - **Regla reutilizable:** Alertmanager recibe alertas evaluadas, las agrupa y entrega según la severidad. Grafana puede centralizar la consulta y los silencios sin convertirse en la autoridad de las reglas Prometheus.
+
+### 2026-08-21 — Una colección remota se valida elemento a elemento
+
+- **Aprendido:** los tipos generados desde OpenAPI desaparecen en runtime; un
+  miembro malformado de una respuesta JSON no debe inutilizar los elementos
+  válidos que la acompañan.
+- **Regla reutilizable:** el adaptador de cada feature valida el contenedor de
+  una colección y transforma individualmente sus miembros. Rechaza el
+  contenedor imposible como respuesta no esperada y descarta únicamente los
+  miembros inválidos antes de entregarlos a la interfaz. No se modifica el
+  cliente generado ni se introduce una validación global de reglas de negocio.
