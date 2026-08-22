@@ -102,6 +102,28 @@ producción se sustituye el contacto por un correo operativo del dominio propio
 (por ejemplo, `support@fasttourney.com`) y se verifican dominio, web y URLs
 públicas de producto y privacidad.
 
+## Observabilidad de producto
+
+PostHog Cloud se activa únicamente después de que la persona consienta la
+analítica opcional desde Inicio o Ajustes. La clave de proyecto pública se
+declara como `EXPO_PUBLIC_POSTHOG_API_KEY` en `.env`; no se versiona y no es una
+credencial de administración. Mientras el plan Free solo permita un proyecto,
+el cliente solo lo inicializa con `APP_ENV=development`, que corresponde a la
+beta pública; `local` y `production` quedan bloqueados aunque exista una clave.
+El cliente apunta siempre al endpoint de la región UE, no identifica cuentas ni
+emite eventos de negocio automáticos. Tras el consentimiento registra la vista
+con un nombre canónico y seguro, y el resultado técnico de cada petición API;
+nunca envía rutas, parámetros, cuerpos, credenciales ni IDs de entidades.
+Cada petición recibe un `interaction_id` UUID efímero que también viaja como
+`X-Interaction-ID`, para localizar su log junto al `trace_id` del backend.
+
+La primera integración captura excepciones no controladas y rechazos de promesa
+consentidos; replay, autocapture de interacción y breadcrumbs permanecen
+desactivados hasta que su configuración de privacidad y exclusiones se valide.
+Los símbolos y source maps necesarios para que los crashes nativos sean legibles
+requieren una clave personal de PostHog configurada fuera de Git durante builds
+nativas. Nunca se introduce esa clave en `.env.example`, el código o el chat.
+
 ## Estructura
 
 ```text

@@ -650,7 +650,7 @@ func TestCORSPreflightAllowsConfiguredOrigin(t *testing.T) {
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodOptions, "/v1/registrations", nil)
 	request.Header.Set("Origin", "http://localhost:8082")
 	request.Header.Set("Access-Control-Request-Method", http.MethodPost)
-	request.Header.Set("Access-Control-Request-Headers", "content-type")
+	request.Header.Set("Access-Control-Request-Headers", "content-type, x-interaction-id")
 	recorder := httptest.NewRecorder()
 
 	testHandler().ServeHTTP(recorder, request)
@@ -663,6 +663,9 @@ func TestCORSPreflightAllowsConfiguredOrigin(t *testing.T) {
 	}
 	if got := recorder.Header().Get("Access-Control-Allow-Credentials"); got != "true" {
 		t.Errorf("Access-Control-Allow-Credentials = %q, want true", got)
+	}
+	if got := recorder.Header().Get("Access-Control-Allow-Headers"); got != "Authorization, Content-Type, X-Interaction-ID" {
+		t.Errorf("Access-Control-Allow-Headers = %q, want interaction ID", got)
 	}
 }
 

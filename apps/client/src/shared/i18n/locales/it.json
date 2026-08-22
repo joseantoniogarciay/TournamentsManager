@@ -135,7 +135,7 @@
   "privacy_policy_purposes_title": "Finalità e base giuridica",
   "privacy_policy_purposes_body": "Usiamo i dati per creare e verificare l'account, consentire l'accesso, gestire leghe e risultati, mantenere la sicurezza e gestire richieste. La base principale è l'esecuzione del servizio richiesto; la sicurezza si basa sul legittimo interesse e sugli obblighi applicabili.",
   "privacy_policy_sharing_title": "Destinatari e trasferimenti",
-  "privacy_policy_sharing_body": "Non vendiamo dati né mostriamo pubblicità personalizzata. Google interviene solo se scegli quell'accesso. Cloudflare può trattare dati tecnici di connessione per proteggere la connessione pubblica. Non sono attivi analisi o campagne commerciali.",
+  "privacy_policy_sharing_body": "Non vendiamo dati né mostriamo pubblicità personalizzata. Google interviene solo se scegli quell'accesso. Cloudflare può trattare dati tecnici di connessione per proteggere la connessione pubblica. Con il tuo consenso esplicito, PostHog può trattare nella regione UE dati tecnici minimi sull'uso e sugli errori dell'app per migliorarla; non inviamo credenziali, token, moduli o corpi HTTP. Puoi revocare questa scelta dalle Impostazioni.",
   "privacy_policy_retention_title": "Conservazione ed eliminazione",
   "privacy_policy_retention_body": "L'account è conservato finché è attivo. Le richieste di eliminazione restano in attesa 30 giorni e poi sono eliminate automaticamente; i risultati conservati non mostrano più l'autore eliminato.",
   "privacy_policy_public_title": "Informazioni visibili",

@@ -135,7 +135,7 @@
   "privacy_policy_purposes_title": "Purposes and legal basis",
   "privacy_policy_purposes_body": "We use data to create and verify an account, provide access, manage leagues and results, keep the service secure and handle requests. The main basis is performance of the requested service; security relies on legitimate interests and applicable legal obligations.",
   "privacy_policy_sharing_title": "Recipients and transfers",
-  "privacy_policy_sharing_body": "We do not sell data or show personalised advertising. Google is involved only if you choose that sign-in method. Cloudflare may process technical connection data while protecting the public connection; international processing follows its safeguards and policies. No analytics or marketing campaigns are active.",
+  "privacy_policy_sharing_body": "We do not sell data or show personalised advertising. Google is involved only if you choose that sign-in method. Cloudflare may process technical connection data while protecting the public connection. With your explicit consent, PostHog may process minimal technical data about app use and errors in the EU region to improve the app; we do not send credentials, tokens, form values or HTTP bodies. You can withdraw it in Settings.",
   "privacy_policy_retention_title": "Retention and deletion",
   "privacy_policy_retention_body": "An account is kept while active. Unverified accounts are deleted under the service technical cycle. When deletion is requested, it remains pending for 30 days and is then deleted automatically; retained results no longer show the deleted author.",
   "privacy_policy_public_title": "Visible information",

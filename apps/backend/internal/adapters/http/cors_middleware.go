@@ -13,8 +13,9 @@ var corsAllowedMethods = map[string]struct{}{
 }
 
 var corsAllowedHeaders = map[string]struct{}{
-	"authorization": {},
-	"content-type":  {},
+	"authorization":    {},
+	"content-type":     {},
+	"x-interaction-id": {},
 }
 
 func requireAllowedOrigin(origins []string, next http.Handler) http.Handler {
@@ -47,7 +48,7 @@ func requireAllowedOrigin(origins []string, next http.Handler) http.Handler {
 		}
 
 		writer.Header().Set("Access-Control-Allow-Methods", "DELETE, GET, POST, PUT")
-		writer.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		writer.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Interaction-ID")
 		writer.Header().Set("Access-Control-Max-Age", "600")
 		writer.WriteHeader(http.StatusNoContent)
 	})

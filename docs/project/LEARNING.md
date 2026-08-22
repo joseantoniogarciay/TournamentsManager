@@ -2473,6 +2473,35 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   evidencia de consentimiento para un proveedor hasta que ese proveedor se
   integre y se revise su configuración efectiva.
 
+### 2026-08-22 — Priorizar la señal de cliente no cambia la autoridad del backend
+
+- **Aprendido:** el orden de iniciativas puede cambiar cuando una beta necesita
+  diagnosticar errores y comportamiento real. Activar PostHog antes de K3s no
+  convierte la analítica en una fuente de autorización ni sustituye logs,
+  métricas y trazas del backend.
+- **Regla reutilizable:** adelantar un SaaS de producto exige conservar sus
+  límites: región, gasto, consentimiento, minimización de datos y una prueba de
+  que las builds nativas simbolizan errores antes de declarar la integración
+  cerrada.
+
+### 2026-08-22 — Un proyecto de analítica no justifica mezclar entornos
+
+- **Aprendido:** la cuota de un SaaS no obliga a enviar el ruido local ni a
+  mezclar una beta pública con producción. Cada señal solo conserva valor si su
+  contexto permite actuar sobre ella con seguridad.
+- **Regla reutilizable:** con un único proyecto PostHog, el entorno local queda
+  desactivado por código y el proyecto representa la beta pública. Producción
+  espera una decisión explícita sobre su aislamiento.
+
+### 2026-08-22 — Una interacción de cliente no es una traza distribuida
+
+- **Aprendido:** PostHog y OpenTelemetry responden preguntas distintas. Un UUID
+  efímero por petición permite pasar de una interacción consentida a un log y
+  traza de backend sin tratar el SDK de producto como propagador de contexto.
+- **Regla reutilizable:** el identificador de interacción se mantiene de alta
+  cardinalidad fuera de métricas y atributos de span; se valida en el borde,
+  se registra solo en logs y nunca contiene URLs reales, IDs o PII.
+
 ### 2026-08-22 — Una preferencia persistente no puede bloquear el arranque web
 
 - **Aprendido:** Safari puede restringir el acceso a `localStorage` en una

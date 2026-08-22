@@ -49,6 +49,8 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                               | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------- | ---------- |
+| [0103](../adr/0103-correlate-consented-client-events-with-api-traces.md)                      | Correlacionar eventos del cliente con trazas de la API               | Aceptado              | 2026-08-22 |
+| [0102](../adr/0102-activate-posthog-before-k3s.md)                                            | Activar PostHog antes de iniciar K3s                                 | Aceptado              | 2026-08-22 |
 | [0101](../adr/0101-use-linux-vm-k3s-and-ephemeral-eks-labs.md)                               | Usar una VM Linux con K3s y laboratorios EKS efímeros               | Aceptado              | 2026-08-22 |
 | [0100](../adr/0100-deliver-public-development-alerts-through-resend.md)                       | Entregar las alertas de desarrollo público mediante Resend          | Aceptado              | 2026-08-21 |
 | [0099](../adr/0099-route-local-alerts-through-alertmanager.md)                               | Enrutar alertas locales mediante Alertmanager                        | Aceptado              | 2026-08-21 |
