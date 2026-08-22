@@ -13,6 +13,7 @@ const defaultAPIBaseURL = "http://127.0.0.1:8080/v1";
 const mobileSessionKey = "tm-mobile-session";
 const refreshThresholdMilliseconds = 60 * 60 * 1000;
 const interactionIDHeader = "X-Interaction-ID";
+const interactionIDsByResponseHeaders = new WeakMap<Headers, string>();
 
 type MobileSession = {
   accessToken: string;
@@ -94,6 +95,7 @@ async function fetchWithAPIBase(input: RequestInfo | URL, init?: RequestInit) {
       credentials: "include",
       headers,
     });
+    if (interaction) interactionIDsByResponseHeaders.set(response.headers, interaction.id);
     interaction?.completed(response.status);
     return response;
   } catch (error: unknown) {
@@ -104,6 +106,22 @@ async function fetchWithAPIBase(input: RequestInfo | URL, init?: RequestInit) {
     interaction?.failed("network_error");
     throw new APIConnectionError(error);
   }
+}
+
+/** Captura una intención ya validada localmente, antes de iniciar su petición. */
+export function captureProductIntent(event: string) {
+  captureProductAnalyticsEvent(event);
+}
+
+/** Captura un resultado de producto confirmado y lo enlaza con su respuesta API. */
+export function captureProductOutcome(
+  event: string,
+  headers: Headers,
+  properties?: { method: "google" | "password" },
+) {
+  const interactionID = interactionIDsByResponseHeaders.get(headers);
+  if (!interactionID) return;
+  captureProductAnalyticsEvent(event, { ...properties, interaction_id: interactionID });
 }
 
 function createAPIInteraction(method?: string) {

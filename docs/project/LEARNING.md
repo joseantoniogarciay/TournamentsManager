@@ -2502,6 +2502,17 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   cardinalidad fuera de métricas y atributos de span; se valida en el borde,
   se registra solo en logs y nunca contiene URLs reales, IDs o PII.
 
+### 2026-08-22 — La red técnica no sustituye los resultados de producto
+
+- **Aprendido:** un `201` o un `POST` no explica por sí mismo qué consiguió la
+  persona, y convertir cada endpoint o pulsación en un evento de producto
+  mezcla reintentos, cargas automáticas e intención.
+- **Regla reutilizable:** el transporte conserva eventos técnicos y el
+  `interaction_id`; una feature declara solo resultados confirmados que
+  respondan una pregunta concreta. El adaptador puede asociarlos a los headers
+  de la respuesta sin modificar el cliente OpenAPI generado ni importar el SDK
+  de analítica en cada feature.
+
 ### 2026-08-22 — Una preferencia persistente no puede bloquear el arranque web
 
 - **Aprendido:** Safari puede restringir el acceso a `localStorage` en una

@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                               | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------- | ---------- |
+| [0104](../adr/0104-capture-minimum-consented-product-outcomes.md)                             | Capturar resultados mínimos de producto con consentimiento           | Aceptado              | 2026-08-22 |
 | [0103](../adr/0103-correlate-consented-client-events-with-api-traces.md)                      | Correlacionar eventos del cliente con trazas de la API               | Aceptado              | 2026-08-22 |
 | [0102](../adr/0102-activate-posthog-before-k3s.md)                                            | Activar PostHog antes de iniciar K3s                                 | Aceptado              | 2026-08-22 |
 | [0101](../adr/0101-use-linux-vm-k3s-and-ephemeral-eks-labs.md)                               | Usar una VM Linux con K3s y laboratorios EKS efímeros               | Aceptado              | 2026-08-22 |

@@ -110,12 +110,17 @@ declara como `EXPO_PUBLIC_POSTHOG_API_KEY` en `.env`; no se versiona y no es una
 credencial de administración. Mientras el plan Free solo permita un proyecto,
 el cliente solo lo inicializa con `APP_ENV=development`, que corresponde a la
 beta pública; `local` y `production` quedan bloqueados aunque exista una clave.
-El cliente apunta siempre al endpoint de la región UE, no identifica cuentas ni
-emite eventos de negocio automáticos. Tras el consentimiento registra la vista
-con un nombre canónico y seguro, y el resultado técnico de cada petición API;
-nunca envía rutas, parámetros, cuerpos, credenciales ni IDs de entidades.
+El cliente apunta siempre al endpoint de la región UE y no identifica cuentas.
+Tras el consentimiento registra la vista con un nombre canónico y seguro, y el
+resultado técnico de cada petición API. Además, las features declaran un
+catálogo corto de resultados de producto confirmados (registro, acceso,
+recuperación, ciclo de liga, resultados y administración); nunca deriva esos
+eventos automáticamente desde rutas o endpoints. No envía rutas, parámetros,
+cuerpos, credenciales ni IDs de entidades.
 Cada petición recibe un `interaction_id` UUID efímero que también viaja como
 `X-Interaction-ID`, para localizar su log junto al `trace_id` del backend.
+Los resultados semánticos exitosos reutilizan el ID de su respuesta HTTP, sin
+pasar metadatos por el cliente OpenAPI generado.
 
 La primera integración captura excepciones no controladas y rechazos de promesa
 consentidos; replay, autocapture de interacción y breadcrumbs permanecen
