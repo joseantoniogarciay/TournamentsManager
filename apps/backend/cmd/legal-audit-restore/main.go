@@ -23,6 +23,7 @@ func run() error {
 	if source == "" || destination == "" || keyPath == "" {
 		return fmt.Errorf("LEGAL_AUDIT_BACKUP_SOURCE, LEGAL_AUDIT_BACKUP_RESTORE_DESTINATION y LEGAL_AUDIT_BACKUP_KEY_PATH son obligatorias")
 	}
+	// #nosec G304,G703 -- keyPath is an explicit operator-provided path to the mounted backup key.
 	keyText, err := os.ReadFile(keyPath)
 	if err != nil {
 		return err
@@ -31,6 +32,7 @@ func run() error {
 	if err != nil || len(key) != 32 {
 		return fmt.Errorf("clave de backup inválida")
 	}
+	// #nosec G304,G703 -- source is an explicit operator-selected encrypted backup file.
 	sealed, err := os.ReadFile(source)
 	if err != nil {
 		return err
@@ -50,8 +52,10 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("no se pudo descifrar el backup: %w", err)
 	}
+	// #nosec G703 -- destination is an explicit operator-selected isolated restore path.
 	if err := os.MkdirAll(filepath.Dir(destination), 0700); err != nil {
 		return err
 	}
+	// #nosec G703 -- destination is an explicit operator-selected isolated restore path.
 	return os.WriteFile(destination, plain, 0600)
 }

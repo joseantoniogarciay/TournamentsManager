@@ -54,6 +54,7 @@ func run() error {
 	if dbURL == "" || destination == "" || keyPath == "" || statePath == "" {
 		return fmt.Errorf("DATABASE_URL y las variables LEGAL_AUDIT_BACKUP_* son obligatorias")
 	}
+	// #nosec G304,G703 -- keyPath is an explicit operator-provided path to the mounted backup key.
 	keyText, err := os.ReadFile(keyPath)
 	if err != nil {
 		return err
@@ -63,6 +64,7 @@ func run() error {
 		return fmt.Errorf("clave de backup inválida")
 	}
 	var since checkpoint
+	// #nosec G304,G703 -- statePath is the explicit private checkpoint path for this backup job.
 	if raw, err := os.ReadFile(statePath); err == nil {
 		if err := json.Unmarshal(raw, &since); err != nil {
 			return err
@@ -120,10 +122,12 @@ func run() error {
 			return err
 		}
 		sealed := gcm.Seal(nonce, nonce, plain, nil)
+		// #nosec G703 -- destination is an explicit operator-provided backup mount.
 		if err := os.MkdirAll(destination, 0700); err != nil {
 			return err
 		}
 		name := fmt.Sprintf("legal-audit-%s.json.aes", time.Now().UTC().Format("20060102T150405Z"))
+		// #nosec G703 -- destination is the explicit operator-provided backup mount; name is generated locally.
 		if err := os.WriteFile(filepath.Join(destination, name), sealed, 0600); err != nil {
 			return err
 		}
@@ -149,9 +153,11 @@ func writeCheckpoint(path string, state checkpoint) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G703 -- path is the explicit private checkpoint path for this backup job.
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return err
 	}
+	// #nosec G703 -- path is the explicit private checkpoint path for this backup job.
 	return os.WriteFile(path, encoded, 0600)
 }
 
@@ -168,6 +174,7 @@ func pruneExpiredFiles(destination string, state *checkpoint, now time.Time) err
 		if !expired {
 			continue
 		}
+		// #nosec G703 -- destination is the explicit backup mount and name came from its private checkpoint.
 		if err := os.Remove(filepath.Join(destination, name)); err != nil && !os.IsNotExist(err) {
 			return err
 		}

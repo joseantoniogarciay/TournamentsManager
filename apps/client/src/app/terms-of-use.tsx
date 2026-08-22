@@ -45,7 +45,11 @@ export default function TermsOfUseScreen() {
       >
         {usesLiquidGlassNavigation ? (
           <Stack.Toolbar placement="left">
-            <Stack.Toolbar.Button accessibilityLabel={t("common_close")} icon="xmark" onPress={close} />
+            <Stack.Toolbar.Button
+              accessibilityLabel={t("common_close")}
+              icon="xmark"
+              onPress={close}
+            />
           </Stack.Toolbar>
         ) : null}
       </Stack.Screen>

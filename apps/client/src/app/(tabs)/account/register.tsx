@@ -148,13 +148,17 @@ export default function RegisterScreen() {
               onPress={() => setAcceptedTerms((value) => !value)}
               style={styles.terms}
             >
-              <View style={[styles.checkbox, acceptedTerms ? styles.checkboxSelected : undefined]} />
+              <View
+                style={[styles.checkbox, acceptedTerms ? styles.checkboxSelected : undefined]}
+              />
               <Text color="secondary">{t("account_terms_acceptance")}</Text>
             </Pressable>
             <TermsOfUseLink />
             <Button
               disabled={
-                !acceptedTerms || usernameAvailability === "checking" || usernameAvailability === "unavailable"
+                !acceptedTerms ||
+                usernameAvailability === "checking" ||
+                usernameAvailability === "unavailable"
               }
               label={t("account_register")}
               loading={isSubmitting}

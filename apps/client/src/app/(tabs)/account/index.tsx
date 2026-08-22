@@ -317,13 +317,16 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
               onPress={() => setGoogleTermsAccepted((value) => !value)}
               style={styles.terms}
             >
-              <View style={[styles.checkbox, googleTermsAccepted ? styles.checkboxSelected : undefined]} />
+              <View
+                style={[styles.checkbox, googleTermsAccepted ? styles.checkboxSelected : undefined]}
+              />
               <Text color="secondary">{t("account_terms_acceptance")}</Text>
             </Pressable>
             <TermsOfUseLink />
             <Button
               disabled={
-                !googleTermsAccepted || googleUsernameAvailability === "checking" ||
+                !googleTermsAccepted ||
+                googleUsernameAvailability === "checking" ||
                 googleUsernameAvailability === "unavailable"
               }
               label={t("account_google_create_account")}
