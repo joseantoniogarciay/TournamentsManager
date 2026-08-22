@@ -2557,3 +2557,12 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   accesible antes de aceptar, una huella comprobada frente a ese documento y un
   backend que rechaza cualquier versión distinta. La UI solo evita errores de
   uso; el servidor conserva la autoridad.
+
+### 2026-08-22 — La integración debe ejercer el esquema migrado completo
+
+- **Aprendido:** crear solo el esquema base en una base efímera puede ocultar
+  que una consulta depende de una migración posterior. Ese desfase aparece en
+  CI aunque las pruebas unitarias y el entorno ya migrado pasen.
+- **Regla reutilizable:** la integración parte del esquema base y aplica todos
+  los bloques `Up` versionados; en CI se separa el DDL funcional de los roles y
+  grants que pertenecen exclusivamente al despliegue.

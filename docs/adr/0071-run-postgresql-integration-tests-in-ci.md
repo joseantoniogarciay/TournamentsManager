@@ -42,13 +42,17 @@ que esa capa se ha omitido si no se proporciona una base aislada.
 
 ## Consecuencias
 
-- El job aplica el esquema inicial a una base vacía y ejecuta las pruebas que declaran esa URL.
+- El job aplica el esquema inicial y los bloques `Up` de las migraciones a una
+  base vacía antes de ejecutar las pruebas que declaran esa URL. La CI usa un
+  rol efímero, por lo que omite únicamente las instrucciones de roles y grants
+  propias del entorno de despliegue.
 - No se usan secretos, volúmenes persistentes ni infraestructura AWS.
 - Las pruebas de integración no apuntan a la base de desarrollo local.
 
 ## Validación
 
-- Un push a GitHub ejecuta la prueba PostgreSQL junto a `make verify`.
+- Un push a GitHub ejecuta la prueba PostgreSQL junto a `make verify`, con el
+  esquema resultante de la línea completa de migraciones.
 - Sin URL de integración, ninguna prueba usa la base local por accidente.
 
 ## Documentación afectada
