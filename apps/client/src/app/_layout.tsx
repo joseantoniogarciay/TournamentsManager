@@ -14,7 +14,7 @@ import { typography } from "@tournaments-manager/design-tokens";
 
 import { FeedbackProvider } from "@/shared/feedback/feedback-provider";
 import { PendingVerificationProvider } from "@/features/registration/pending-verification";
-import { ProductAnalyticsProvider } from "@/shared/analytics/posthog-provider";
+import { ClientTelemetryProvider } from "@/shared/analytics/posthog-provider";
 import { LeagueStoreProvider } from "@/features/league-creation/league-store";
 import { SessionProvider, useSession } from "@/shared/session/session-provider";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
@@ -63,7 +63,7 @@ export default function RootLayout() {
 
   return (
     <PreferencesProvider>
-      <ProductAnalyticsProvider>
+      <ClientTelemetryProvider>
         <NavigationTheme>
           <FeedbackProvider>
             <SessionProvider>
@@ -79,7 +79,7 @@ export default function RootLayout() {
             </SessionProvider>
           </FeedbackProvider>
         </NavigationTheme>
-      </ProductAnalyticsProvider>
+      </ClientTelemetryProvider>
     </PreferencesProvider>
   );
 }

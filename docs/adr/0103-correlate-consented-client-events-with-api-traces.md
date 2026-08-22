@@ -46,7 +46,8 @@ brutos quedan fuera de PostHog, logs adicionales, métricas y atributos de span.
 
 ## Validación
 
-1. Sin consentimiento, el SDK no se inicializa y no hay evento ni cabecera.
+1. Sin consentimiento, no hay evento de producto ni cabecera; la captura mínima
+   de fiabilidad se rige por ADR-0105.
 2. Una ruta dinámica genera solo un nombre de pantalla canónico, sin su ID.
 3. Una petición aceptada incluye un UUID nuevo en su evento y cabecera.
 4. La API registra un UUID válido solo en su log, junto al `trace_id`; uno

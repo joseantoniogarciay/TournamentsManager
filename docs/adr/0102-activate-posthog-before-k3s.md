@@ -1,11 +1,11 @@
 # ADR-0102: Activar PostHog antes de iniciar K3s
 
-- **Estado:** Aceptado
+- **Estado:** Superado parcialmente por ADR-0105
 - **Fecha:** 2026-08-22
 - **Decisor:** Usuario, mediante decisión explícita
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0060, solo en el momento de activación
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0105, solo para el consentimiento de excepciones y crashes mínimos del cliente
 
 ## Problema
 

@@ -112,7 +112,7 @@ La guía de recorrido y organización del backend está en
 | TypeScript y cliente API generado | Aceptada; toolchain fijado | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md), [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md) |
 | Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](docs/governance/DECISIONS_TO_REVISIT.md) |
 | Observabilidad mínima | OpenTelemetry, Prometheus, Grafana, Loki y Tempo aceptados; Collector aplazado | [ADR-0020](docs/adr/0020-use-minimal-correlated-observability.md) |
-| Observabilidad de producto del cliente | Activación de PostHog Cloud antes de K3s; región UE, límite de gasto 0 €, opt-in y sin autoridad sobre negocio | [ADR-0102](docs/adr/0102-activate-posthog-before-k3s.md), [ADR-0060](docs/adr/0060-use-posthog-for-deferred-client-product-observability.md) |
+| Fiabilidad y observabilidad de producto del cliente | PostHog Cloud en la beta `development`, región UE y gasto máximo 0 €: crashes/excepciones mínimos por defecto; uso, vistas y resultados solo por opt-in | [ADR-0105](docs/adr/0105-separate-essential-client-reliability-from-optional-product-analytics.md), [ADR-0104](docs/adr/0104-capture-minimum-consented-product-outcomes.md) |
 | Empaquetado de la API | Imagen OCI/Docker aceptada | [ADR-0022](docs/adr/0022-package-backend-as-oci-image.md) |
 | Runtime habitual y AWS | Mac para desarrollo y release doméstico; AWS efímero para aprendizaje y validación | [ADR-0088](docs/adr/0088-use-ephemeral-aws-learning-and-home-runtime.md) |
 | Dominio y deep links | `fasttourney.com` producción, `dev.fasttourney.com` desarrollo; API en `api` y `dev.api` | [ADR-0089](docs/adr/0089-use-fasttourney-domain-and-separated-app-link-hosts.md) |

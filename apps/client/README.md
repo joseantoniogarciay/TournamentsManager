@@ -104,8 +104,10 @@ públicas de producto y privacidad.
 
 ## Observabilidad de producto
 
-PostHog Cloud se activa únicamente después de que la persona consienta la
-analítica opcional desde Inicio o Ajustes. La clave de proyecto pública se
+En la beta pública `development`, PostHog Cloud se inicializa para capturar solo
+excepciones no controladas y crashes nativos mínimos, conforme a ADR-0105. La
+analítica de producto sigue activa únicamente después de que la persona la
+consienta desde Inicio o Ajustes. La clave de proyecto pública se
 declara como `EXPO_PUBLIC_POSTHOG_API_KEY` en `.env`; no se versiona y no es una
 credencial de administración. Mientras el plan Free solo permita un proyecto,
 el cliente solo lo inicializa con `APP_ENV=development`, que corresponde a la
@@ -122,9 +124,11 @@ Cada petición recibe un `interaction_id` UUID efímero que también viaja como
 Los resultados semánticos exitosos reutilizan el ID de su respuesta HTTP, sin
 pasar metadatos por el cliente OpenAPI generado.
 
-La primera integración captura excepciones no controladas y rechazos de promesa
-consentidos; replay, autocapture de interacción y breadcrumbs permanecen
-desactivados hasta que su configuración de privacidad y exclusiones se valide.
+La captura mínima recoge excepciones no controladas, rechazos de promesa y
+crashes nativos sin depender del switch de analítica. Vistas, resultados de
+producto, eventos de red y `X-Interaction-ID` requieren ese consentimiento.
+Replay, autocapture de interacción y breadcrumbs permanecen desactivados hasta
+que su configuración de privacidad y exclusiones se valide.
 Los símbolos y source maps necesarios para que los crashes nativos sean legibles
 requieren una clave personal de PostHog configurada fuera de Git durante builds
 nativas. Nunca se introduce esa clave en `.env.example`, el código o el chat.

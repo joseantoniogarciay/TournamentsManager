@@ -11,7 +11,7 @@ type ProductAnalyticsPreferenceCardProps = {
   onEnabled?: () => void;
 };
 
-/** Reusable consent control; it persists a preference but never initializes analytics itself. */
+/** Reusable consent control; it never controls essential reliability capture. */
 export function ProductAnalyticsPreferenceCard({ onEnabled }: ProductAnalyticsPreferenceCardProps) {
   const t = getTranslator();
   const { productAnalyticsEnabled, setProductAnalyticsEnabled } = usePreferences();

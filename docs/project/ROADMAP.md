@@ -111,9 +111,9 @@ se verificó mediante Alertmanager, Resend, Cloudflare y el buzón final. Véase
 **Objetivo:** aprender orquestación cuando el servicio ya sea operable.
 
 **Secuencia vigente:** antes de iniciar esta fase se activa y verifica PostHog
-Cloud para la observabilidad de producto del cliente conforme a ADR-0102. Esta
-integración no sustituye las señales OpenTelemetry del backend ni modifica la
-puerta de entrada técnica de Kubernetes.
+Cloud para la fiabilidad mínima del cliente y su analítica opcional conforme a
+ADR-0105. Esta integración no sustituye las señales OpenTelemetry del backend
+ni modifica la puerta de entrada técnica de Kubernetes.
 
 **Puerta de entrada:** las fases de backend y observabilidad están cerradas.
 Kubernetes sigue aplazado hasta comparar la pregunta de aprendizaje y el coste

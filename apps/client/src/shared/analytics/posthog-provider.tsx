@@ -13,34 +13,38 @@ import {
 const posthogAPIKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY;
 const posthogEUHost = "https://eu.i.posthog.com";
 const isPostHogBetaEnvironment = process.env.APP_ENV === "development";
+const sensitiveExceptionPattern =
+  /\b(?:bearer\s+[a-z0-9._-]+|(?:password|token|secret|authorization)\s*[:=]|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/i;
 
 /**
- * Keeps product telemetry outside the application domain and creates its SDK
- * only after the person explicitly enables optional analytics.
+ * Separates essential reliability capture from optional product analytics.
+ * The PostHog SDK starts only in the public beta, while the facade that emits
+ * product events remains unavailable until the person explicitly enables it.
  */
-export function ProductAnalyticsProvider({ children }: PropsWithChildren) {
-  const { productAnalyticsEnabled } = usePreferences();
-
-  if (!isPostHogBetaEnvironment || !productAnalyticsEnabled || !posthogAPIKey) return children;
+export function ClientTelemetryProvider({ children }: PropsWithChildren) {
+  if (!isPostHogBetaEnvironment || !posthogAPIKey) return children;
 
   return (
-    <EnabledProductAnalyticsProvider apiKey={posthogAPIKey}>
+    <EnabledClientTelemetryProvider apiKey={posthogAPIKey}>
       {children}
-    </EnabledProductAnalyticsProvider>
+    </EnabledClientTelemetryProvider>
   );
 }
 
-function EnabledProductAnalyticsProvider({
+function EnabledClientTelemetryProvider({
   apiKey,
   children,
 }: PropsWithChildren<{ apiKey: string }>) {
-  const [isReady, setIsReady] = useState(false);
+  const { productAnalyticsEnabled } = usePreferences();
+  const [isProductAnalyticsReady, setIsProductAnalyticsReady] = useState(false);
   const client = useMemo(
     () =>
       new PostHog(apiKey, {
-        defaultOptIn: false,
+        defaultOptIn: true,
         host: posthogEUHost,
         captureAppLifecycleEvents: false,
+        disableGeoip: true,
+        disableRemoteFeatureFlags: true,
         enableSessionReplay: false,
         errorTracking: {
           autocapture: {
@@ -51,27 +55,40 @@ function EnabledProductAnalyticsProvider({
           },
           exceptionSteps: { enabled: false },
         },
+        before_send: (event) => {
+          if (!event) return null;
+          const exceptions = JSON.stringify(event.properties?.["$exception_list"] ?? "");
+          return sensitiveExceptionPattern.test(exceptions) ? null : event;
+        },
       }),
     [],
   );
 
   useEffect(() => {
-    let isMounted = true;
-    void client.optIn().then(() => {
-      if (!isMounted) return;
-      activateProductAnalytics(client);
-      setIsReady(true);
-    });
-    return () => {
-      isMounted = false;
+    if (!productAnalyticsEnabled) {
       deactivateProductAnalytics(client);
-      void client.optOut().finally(() => client.shutdown());
+      setIsProductAnalyticsReady(false);
+      return;
+    }
+
+    activateProductAnalytics(client);
+    setIsProductAnalyticsReady(true);
+    return () => {
+      deactivateProductAnalytics(client);
+      setIsProductAnalyticsReady(false);
     };
-  }, [client]);
+  }, [client, productAnalyticsEnabled]);
+
+  useEffect(
+    () => () => {
+      void client.shutdown();
+    },
+    [client],
+  );
 
   return (
     <PostHogProvider autocapture={false} client={client}>
-      {isReady ? <ProductAnalyticsRouteObserver /> : null}
+      {isProductAnalyticsReady ? <ProductAnalyticsRouteObserver /> : null}
       {children}
     </PostHogProvider>
   );

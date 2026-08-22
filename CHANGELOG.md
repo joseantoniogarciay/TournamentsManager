@@ -8,17 +8,23 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- ADR-0105 separa la fiabilidad mínima de cliente de la analítica opcional:
+  PostHog en la beta pública conserva excepciones y crashes sin replay,
+  autocapture, GeoIP, flags remotos ni identificación; el switch revocable solo
+  habilita vistas, eventos de red y resultados de producto. La política de
+  privacidad localizada expresa ambas finalidades.
+
 - Inicio muestra una invitación de analítica opcional con switch apagado; al
   aceptarla, la preferencia persistente desaparece de Inicio y permanece en
   Ajustes. La preparación no inicializa PostHog ni recoge datos hasta el
   disparador aceptado de ADR-0060.
 
-- La decisión diferida de observabilidad de producto precisa su límite de
-  privacidad: PostHog, activado solo mediante opt-in revocable, conserva la
-  sesión de interfaz; un `interaction_id` efímero permite buscar una operación
-  concreta en Loki/Tempo, sin propagar una traza de sesión ni hacer que Grafana
-  reconstruya el recorrido de una persona. Se documentan también los gates de
-  App Tracking Transparency y las declaraciones de tiendas móviles.
+- La decisión de observabilidad de producto precisa su límite de privacidad: el
+  opt-in revocable controla sesiones de interfaz y un `interaction_id` efímero
+  permite buscar una operación concreta en Loki/Tempo, sin propagar una traza de
+  sesión ni hacer que Grafana reconstruya el recorrido de una persona. La
+  captura mínima de fiabilidad se rige por ADR-0105. Se documentan también los
+  gates de App Tracking Transparency y las declaraciones de tiendas móviles.
 
 ### Fixed
 

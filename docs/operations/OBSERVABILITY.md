@@ -35,7 +35,7 @@ Las señales deben compartir contexto de correlación y convenciones de nombres.
 - **Correlación:** cada log incluirá el identificador de traza y span cuando el
   contexto exista. No se registran secretos, tokens, credenciales ni PII.
 
-Cuando una persona haya consentido PostHog en la beta pública, cada petición de
+Cuando una persona haya consentido la analítica de producto de PostHog en la beta pública, cada petición de
 la API puede incluir un `X-Interaction-ID` UUID aleatorio. La API lo valida y
 lo escribe exclusivamente como `interaction_id` en el log HTTP, junto a su
 propio `trace_id` y `span_id`; no llega a atributos de span ni etiquetas de

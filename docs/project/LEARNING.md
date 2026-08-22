@@ -1,5 +1,18 @@
 # Registro de aprendizaje
 
+## 2026-08-22 — Fiabilidad y analítica son finalidades distintas
+
+Un crash nativo o una excepción no controlada impiden prestar el servicio y no
+deben desaparecer porque una persona rechace medir su navegación o uso. En
+cambio, pantallas, resultados de producto, interacción con la API y replay sí
+describen comportamiento y conservan el consentimiento revocable como límite.
+
+**Regla reutilizable:** separar estas finalidades en el código, la política de
+privacidad y la configuración del proveedor. La señal mínima no identifica la
+cuenta ni habilita autocapture, replay, GeoIP o flags; se filtran excepciones
+con apariencia de secretos o correos y se revisan DPA, retención y símbolos
+antes de distribuir. Véase ADR-0105.
+
 ## 2026-08-21 — Un vertical slice necesita una frontera de cierre
 
 Fase 2 demostró pronto el recorrido acordado de identidad, sesión, publicación y

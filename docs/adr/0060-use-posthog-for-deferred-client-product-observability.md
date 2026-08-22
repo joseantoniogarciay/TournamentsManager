@@ -1,11 +1,11 @@
 # ADR-0060: Usar PostHog de forma diferida para observabilidad de producto del cliente
 
-- **Estado:** Aceptado
+- **Estado:** Superado parcialmente por ADR-0105
 - **Fecha:** 2026-07-29
 - **Decisor:** Usuario, mediante confirmación explícita
 - **Propietario del análisis:** Asistente como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0105, solo para el consentimiento de excepciones y crashes mínimos del cliente
 
 ## Problema
 
