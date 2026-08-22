@@ -55,30 +55,35 @@ export function PreferencesProvider({ children }: PropsWithChildren) {
   const systemTheme = useColorScheme();
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>("system");
   const [productAnalyticsEnabled, setProductAnalyticsEnabledState] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    void Promise.all([
-      AsyncStorage.getItem(storageKey),
-      AsyncStorage.getItem(productAnalyticsStorageKey),
-    ])
+    // Safari puede restringir localStorage en una pestaña privada. Las
+    // preferencias mejoran la experiencia, pero nunca deben bloquear el
+    // arranque: el estado inicial ya es seguro (tema del sistema y opt-in falso).
+    void Promise.resolve()
+      .then(() =>
+        Promise.all([
+          AsyncStorage.getItem(storageKey),
+          AsyncStorage.getItem(productAnalyticsStorageKey),
+        ]),
+      )
       .then(([storedTheme, storedProductAnalytics]) => {
         if (storedTheme === "system" || storedTheme === "light" || storedTheme === "dark") {
           setThemePreferenceState(storedTheme);
         }
         setProductAnalyticsEnabledState(storedProductAnalytics === "true");
       })
-      .finally(() => setIsHydrated(true));
+      .catch(() => undefined);
   }, []);
 
   const setThemePreference = (theme: ThemePreference) => {
     setThemePreferenceState(theme);
-    void AsyncStorage.setItem(storageKey, theme);
+    void AsyncStorage.setItem(storageKey, theme).catch(() => undefined);
   };
 
   const setProductAnalyticsEnabled = (enabled: boolean) => {
     setProductAnalyticsEnabledState(enabled);
-    void AsyncStorage.setItem(productAnalyticsStorageKey, String(enabled));
+    void AsyncStorage.setItem(productAnalyticsStorageKey, String(enabled)).catch(() => undefined);
   };
 
   const resolvedTheme: ResolvedTheme =
@@ -96,9 +101,7 @@ export function PreferencesProvider({ children }: PropsWithChildren) {
     [productAnalyticsEnabled, resolvedTheme, themePreference],
   );
 
-  return isHydrated ? (
-    <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>
-  ) : null;
+  return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
 }
 
 export function usePreferences() {

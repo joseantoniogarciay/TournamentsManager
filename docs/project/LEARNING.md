@@ -2472,3 +2472,14 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   card y switch para cualquier cambio posterior. La preferencia local no es
   evidencia de consentimiento para un proveedor hasta que ese proveedor se
   integre y se revise su configuración efectiva.
+
+### 2026-08-22 — Una preferencia persistente no puede bloquear el arranque web
+
+- **Aprendido:** Safari puede restringir el acceso a `localStorage` en una
+  pestaña privada. Si el provider espera esa lectura antes de montar la app, una
+  preferencia no crítica convierte ese límite del navegador en una pantalla de
+  carga indefinida.
+- **Regla reutilizable:** el estado inicial seguro se renderiza de inmediato;
+  la hidratación y escritura persistentes se tratan como mejora opcional y sus
+  fallos no capturados conservan el valor en memoria. Para la analítica, ese
+  valor seguro es siempre opt-in desactivado.
