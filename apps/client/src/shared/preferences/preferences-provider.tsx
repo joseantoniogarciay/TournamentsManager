@@ -23,12 +23,15 @@ type ThemeColors = {
 
 type PreferencesContextValue = {
   themePreference: ThemePreference;
+  productAnalyticsEnabled: boolean;
   resolvedTheme: ResolvedTheme;
+  setProductAnalyticsEnabled: (enabled: boolean) => void;
   colors: ThemeColors;
   setThemePreference: (theme: ThemePreference) => void;
 };
 
 const storageKey = "tournaments-manager.theme-preference";
+const productAnalyticsStorageKey = "tournaments-manager.product-analytics-enabled";
 
 const lightColors: ThemeColors = {
   surface: { canvas: "#F8FAFC", default: "#FFFFFF", subtle: "#F1F5F9" },
@@ -51,21 +54,36 @@ const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 export function PreferencesProvider({ children }: PropsWithChildren) {
   const systemTheme = useColorScheme();
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>("system");
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [productAnalyticsEnabled, setProductAnalyticsEnabledState] = useState(false);
 
   useEffect(() => {
-    void AsyncStorage.getItem(storageKey)
-      .then((stored) => {
-        if (stored === "system" || stored === "light" || stored === "dark") {
-          setThemePreferenceState(stored);
+    // Safari puede restringir localStorage en una pestaña privada. Las
+    // preferencias mejoran la experiencia, pero nunca deben bloquear el
+    // arranque: el estado inicial ya es seguro (tema del sistema y opt-in falso).
+    void Promise.resolve()
+      .then(() =>
+        Promise.all([
+          AsyncStorage.getItem(storageKey),
+          AsyncStorage.getItem(productAnalyticsStorageKey),
+        ]),
+      )
+      .then(([storedTheme, storedProductAnalytics]) => {
+        if (storedTheme === "system" || storedTheme === "light" || storedTheme === "dark") {
+          setThemePreferenceState(storedTheme);
         }
+        setProductAnalyticsEnabledState(storedProductAnalytics === "true");
       })
-      .finally(() => setIsHydrated(true));
+      .catch(() => undefined);
   }, []);
 
   const setThemePreference = (theme: ThemePreference) => {
     setThemePreferenceState(theme);
-    void AsyncStorage.setItem(storageKey, theme);
+    void AsyncStorage.setItem(storageKey, theme).catch(() => undefined);
+  };
+
+  const setProductAnalyticsEnabled = (enabled: boolean) => {
+    setProductAnalyticsEnabledState(enabled);
+    void AsyncStorage.setItem(productAnalyticsStorageKey, String(enabled)).catch(() => undefined);
   };
 
   const resolvedTheme: ResolvedTheme =
@@ -74,16 +92,16 @@ export function PreferencesProvider({ children }: PropsWithChildren) {
   const value = useMemo(
     () => ({
       themePreference,
+      productAnalyticsEnabled,
       resolvedTheme,
+      setProductAnalyticsEnabled,
       colors: resolvedTheme === "dark" ? darkColors : lightColors,
       setThemePreference,
     }),
-    [resolvedTheme, themePreference],
+    [productAnalyticsEnabled, resolvedTheme, themePreference],
   );
 
-  return isHydrated ? (
-    <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>
-  ) : null;
+  return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
 }
 
 export function usePreferences() {

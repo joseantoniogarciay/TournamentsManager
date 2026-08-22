@@ -48,9 +48,9 @@
 | 18b   | Fundación AWS: cuentas e identidad                    | Aceptada  | [ADR-0026](../adr/0026-use-aws-organizations-and-temporary-identities.md)   |
 | 18c   | Estado local antes de infraestructura cloud            | Aceptada  | [ADR-0027](../adr/0027-keep-local-state-until-first-cloud-apply.md)         |
 | 18d   | Backend remoto y bootstrap de Terraform                | Aceptada | [ADR-0028](../adr/0028-use-hcp-terraform-free-for-remote-state.md)           |
-| 18e1  | Entrada y egress inicial de la red AWS                | Aceptada | [ADR-0029](../adr/0029-use-public-alb-restricted-fargate-and-no-nat-initially.md) |
+| 18e1  | Entrada y egress inicial de la red AWS                | A revisar para EKS | [ADR-0029](../adr/0029-use-public-alb-restricted-fargate-and-no-nat-initially.md), [ADR-0101](../adr/0101-use-linux-vm-k3s-and-ephemeral-eks-labs.md) |
 | 18e2  | Región, VPC, subredes y límites de coste              | Aceptada | [ADR-0030](../adr/0030-use-spain-region-and-two-az-cost-gated-network.md)   |
-| 19    | Kubernetes local/cloud                                | Aplazada  | Fase 4 del manifiesto                                                       |
+| 19    | Kubernetes local/cloud                                | Aceptada | [ADR-0101](../adr/0101-use-linux-vm-k3s-and-ephemeral-eks-labs.md)         |
 
 El gate técnico está cerrado: no quedan decisiones bloqueantes pendientes. Las
 direcciones del manifiesto continúan sin autorizar recursos ni despliegues por sí

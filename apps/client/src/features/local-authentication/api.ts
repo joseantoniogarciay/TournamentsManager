@@ -1,4 +1,9 @@
-import { APIUnexpectedResponseError, apiFetch, saveMobileSession } from "@/api/fetch";
+import {
+  captureProductOutcome,
+  APIUnexpectedResponseError,
+  apiFetch,
+  saveMobileSession,
+} from "@/api/fetch";
 import { createSession } from "@/api/generated/session/session";
 import type { Transport } from "@/api/generated/models";
 
@@ -24,5 +29,6 @@ export async function authenticateLocalAccount(input: {
   if (response.status === 401) throw new LocalAuthenticationError();
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   if (input.sessionTransport === "bearer") await saveMobileSession(response.data);
+  captureProductOutcome("account_signed_in", response.headers, { method: "password" });
   return { kind: "session", user: response.data.user };
 }

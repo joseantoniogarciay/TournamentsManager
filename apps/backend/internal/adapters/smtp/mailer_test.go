@@ -11,10 +11,10 @@ import (
 func TestNewMailerRequiresHTTPSOutsideLoopback(t *testing.T) {
 	t.Parallel()
 
-	if _, err := NewMailer("127.0.0.1:1025", "no-reply@example.test", "", "", "http://example.test"); err == nil {
+	if _, err := NewMailer("127.0.0.1:1025", "no-reply@example.test", "", "", "http://example.test", ""); err == nil {
 		t.Fatal("NewMailer() error = nil, want invalid non-HTTPS public URL")
 	}
-	if _, err := NewMailer("127.0.0.1:1025", "no-reply@example.test", "", "", "https://links.example.test"); err != nil {
+	if _, err := NewMailer("127.0.0.1:1025", "no-reply@example.test", "", "", "https://links.example.test", ""); err != nil {
 		t.Fatalf("NewMailer() error = %v", err)
 	}
 }
@@ -22,7 +22,7 @@ func TestNewMailerRequiresHTTPSOutsideLoopback(t *testing.T) {
 func TestNewMailerRejectsIncompleteCredentials(t *testing.T) {
 	t.Parallel()
 
-	if _, err := NewMailer("smtp.example.test:587", "no-reply@example.test", "resend", "", "https://links.example.test"); err == nil {
+	if _, err := NewMailer("smtp.example.test:587", "no-reply@example.test", "resend", "", "https://links.example.test", ""); err == nil {
 		t.Fatal("NewMailer() error = nil, want incomplete SMTP credentials rejected")
 	}
 }
@@ -30,7 +30,7 @@ func TestNewMailerRejectsIncompleteCredentials(t *testing.T) {
 func TestVerificationMessageUsesConfirmationRouteAndMultipartDesign(t *testing.T) {
 	t.Parallel()
 
-	message, err := verificationMessage(registration.LocaleSpanish, "person@example.test", "no-reply@example.test", "https://links.example.test/link/confirm?token=test-token")
+	message, err := verificationMessage(registration.LocaleSpanish, "person@example.test", "no-reply@example.test", "https://links.example.test/link/confirm?token=test-token", "")
 	if err != nil {
 		t.Fatalf("verificationMessage() error = %v", err)
 	}
@@ -71,7 +71,7 @@ func TestVerificationMessageLocalizesAllSupportedLocales(t *testing.T) {
 		t.Run(string(test.locale), func(t *testing.T) {
 			t.Parallel()
 
-			message, err := verificationMessage(test.locale, "person@example.test", "no-reply@example.test", "https://links.example.test/link/confirm?token=test-token")
+			message, err := verificationMessage(test.locale, "person@example.test", "no-reply@example.test", "https://links.example.test/link/confirm?token=test-token", "")
 			if err != nil {
 				t.Fatalf("verificationMessage() error = %v", err)
 			}
@@ -90,7 +90,35 @@ func TestVerificationMessageLocalizesAllSupportedLocales(t *testing.T) {
 func TestVerificationMessageRejectsUnsupportedLocale(t *testing.T) {
 	t.Parallel()
 
-	if _, err := verificationMessage("de", "person@example.test", "no-reply@example.test", "https://links.example.test/link/confirm?token=test-token"); err == nil {
+	if _, err := verificationMessage("de", "person@example.test", "no-reply@example.test", "https://links.example.test/link/confirm?token=test-token", ""); err == nil {
 		t.Fatal("verificationMessage() error = nil, want unsupported locale error")
+	}
+}
+
+func TestVerificationMessagePrefixesSubjectAndPreservesDisplayFrom(t *testing.T) {
+	t.Parallel()
+
+	message, err := verificationMessage(registration.LocaleSpanish, "person@example.test", "FastTourney Dev <no-reply@example.test>", "https://links.example.test/link/confirm?token=test-token", "[DEV]")
+	if err != nil {
+		t.Fatalf("verificationMessage() error = %v", err)
+	}
+	contents := string(message)
+	if !strings.Contains(contents, "From: FastTourney Dev <no-reply@example.test>") {
+		t.Error("message does not preserve the display sender")
+	}
+	if !strings.Contains(contents, mime.QEncoding.Encode("UTF-8", "[DEV] Verifica tu cuenta de Fast Tourney")) {
+		t.Error("message does not prefix the subject with the environment")
+	}
+}
+
+func TestNewMailerUsesAddressForSMTPEnvelopeWhenFromHasDisplayName(t *testing.T) {
+	t.Parallel()
+
+	mailer, err := NewMailer("smtp.example.test:587", "FastTourney Dev <no-reply@example.test>", "resend", "password", "https://links.example.test", "[DEV]")
+	if err != nil {
+		t.Fatalf("NewMailer() error = %v", err)
+	}
+	if mailer.fromAddress != "no-reply@example.test" {
+		t.Errorf("fromAddress = %q, want envelope address", mailer.fromAddress)
 	}
 }

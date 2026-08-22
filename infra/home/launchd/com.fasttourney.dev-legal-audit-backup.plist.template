@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.fasttourney.dev-legal-audit-backup</string>
+  <key>ProgramArguments</key><array><string>/usr/local/bin/docker</string><string>exec</string><string>--user</string><string>0</string><string>tournaments-manager-dev-api-1</string><string>/legal-audit-backup</string></array>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>30</integer></dict>
+  <key>StandardOutPath</key><string>__LOG_DIRECTORY__/legal-audit-backup.log</string>
+  <key>StandardErrorPath</key><string>__LOG_DIRECTORY__/legal-audit-backup-error.log</string>
+</dict></plist>

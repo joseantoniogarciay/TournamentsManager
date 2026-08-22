@@ -1,11 +1,11 @@
 # ADR-0060: Usar PostHog de forma diferida para observabilidad de producto del cliente
 
-- **Estado:** Aceptado
+- **Estado:** Superado parcialmente por ADR-0105
 - **Fecha:** 2026-07-29
 - **Decisor:** Usuario, mediante confirmación explícita
 - **Propietario del análisis:** Asistente como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0105, solo para el consentimiento de excepciones y crashes mínimos del cliente
 
 ## Problema
 
@@ -35,7 +35,9 @@ pregunta de producto que justifique integrar un SDK ahora.
   usuario, consentimiento cuando aplique, DPA, región, retención, enmascarado y
   exclusiones de pantalla.
 - Esta decisión no autoriza crear una cuenta, instalar dependencias, enviar
-  datos, activar replay ni cambiar el cliente antes del disparador definido.
+  datos ni activar replay antes del disparador definido. Sí autoriza una
+  preferencia local de consentimiento, desactivada por defecto y sin efecto de
+  telemetría hasta que ese disparador abra la integración.
 
 ## Criterios de decisión
 
@@ -147,6 +149,38 @@ verdad para logs, métricas y trazas. La correlación se hará mediante un
 `request_id` opaco y de alta cardinalidad solo en logs y trazas, nunca como
 etiqueta de métrica ni como sustituto de identidad.
 
+### Límite de correlación aceptado
+
+PostHog será la única fuente que reconstruya una sesión de producto: sus
+pantallas, interacciones y errores se conservan allí únicamente después de que
+la persona haya aceptado la analítica opcional. Grafana, Loki y Tempo no
+recibirán ni reconstruirán una sesión completa.
+
+Cada operación de cliente que necesite diagnóstico llevará un identificador
+aleatorio y efímero, denominado `interaction_id`, en una cabecera de la
+petición. La API lo escribirá exclusivamente como campo de log estructurado,
+junto a su propio `trace_id` técnico; nunca será una etiqueta de métrica, un
+atributo de identidad ni una cookie. PostHog asociará el mismo
+`interaction_id` al evento de producto. Así se puede pasar deliberadamente de
+una acción concreta de una sesión a su log y a la traza de backend, sin que
+Grafana pueda enumerar las acciones de una sesión ni que se propague una traza
+OpenTelemetry de larga duración desde el cliente.
+
+La implementación no inicializará PostHog ni emitirá eventos, replay,
+autocapture o cabeceras de correlación hasta que exista consentimiento
+revocable para la analítica opcional. Este opt-in será el baseline global de
+producto; antes de distribuir en un mercado se comprobarán además sus reglas
+locales aplicables. Las cookies de autenticación existentes siguen siendo
+técnicas y no participan en esta elección.
+
+Antes de integrar PostHog, el cliente conserva esta preferencia local en el
+almacenamiento disponible por plataforma, incluido `localStorage` en web. La
+home muestra una card con un switch apagado mientras la preferencia es
+falsa; al activarlo la card desaparece y un banner confirma que se puede cambiar
+desde Ajustes. Ajustes conserva siempre el mismo switch. Esta preparación no
+inicializa un SDK, no captura datos y no altera la política de privacidad que
+declara que aún no hay analítica activa.
+
 ## Consecuencias
 
 ### Positivas
@@ -182,10 +216,18 @@ Al abrir la primera beta distribuida se demostrará que:
 4. Los errores JavaScript y los crashes nativos de prueba se simbolizan contra
    la release o EAS Update correcta.
 5. Un fallo controlado puede seguirse desde el replay/error hasta el
-   `request_id` y la traza/log del backend en Grafana, sin propagar PII.
+   `interaction_id`, su log y la traza técnica del backend en Grafana, sin
+   propagar PII ni reconstruir la sesión desde Grafana.
 6. Un flag de interfaz puede desactivar una vista experimental, pero una llamada
    de backend sigue aplicando autorización y reglas aunque el cliente manipule
    el flag.
+7. En web, PostHog permanece sin inicializar antes del opt-in; en iOS y Android
+   se aplica el mismo control antes de capturar o persistir datos. ATT en iOS
+   solo se solicita si la configuración futura encaja en la definición de Apple
+   de tracking entre compañías o propiedades, o si se accede al IDFA; no se
+   solicita para la analítica propia aislada descrita aquí. La ficha de
+   privacidad de App Store y Data safety de Google Play declaran los datos que
+   efectivamente recoja el SDK en la versión distribuida.
 
 ## Disparadores de revisión
 
@@ -218,3 +260,7 @@ Al abrir la primera beta distribuida se demostrará que:
 - [Expo: usar Sentry](https://docs.expo.dev/guides/using-sentry/)
 - [Firebase Remote Config: seguridad](https://firebase.google.com/docs/remote-config)
 - [OpenTelemetry: propagación de contexto](https://opentelemetry.io/docs/concepts/context-propagation/)
+- [PostHog: React Native](https://posthog.com/docs/libraries/react-native)
+- [PostHog: JavaScript web](https://posthog.com/docs/libraries/js)
+- [Apple: User Privacy and Data Use](https://developer.apple.com/app-store/user-privacy-and-data-use/)
+- [Google Play: Data safety](https://support.google.com/googleplay/android-developer/answer/10787469)

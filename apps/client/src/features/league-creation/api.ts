@@ -1,4 +1,10 @@
-import { APIUnexpectedResponseError, apiFetch, authenticatedApiFetch } from "@/api/fetch";
+import {
+  captureProductIntent,
+  captureProductOutcome,
+  APIUnexpectedResponseError,
+  apiFetch,
+  authenticatedApiFetch,
+} from "@/api/fetch";
 import {
   addLeagueTeam,
   assignLeagueAdministrator,
@@ -46,10 +52,12 @@ export class LeagueUnavailableError extends Error {
 }
 
 export async function createLeagueRequest(input: LeagueInput) {
+  captureProductIntent("league_creation_submitted");
   const response = await createLeague(input, undefined, authenticatedApiFetch);
   if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
   const league = parsePublishedLeague(response.data);
   if (!league) throw new APIUnexpectedResponseError(response.status);
+  captureProductOutcome("league_created", response.headers);
   return league;
 }
 export async function addLeagueTeamRequest(leagueID: string, input: TeamInput) {
@@ -75,6 +83,7 @@ export async function startLeagueRequest(leagueID: string, input: StartLeagueReq
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   const league = parsePublicLeague(response.data);
   if (!league) throw new APIUnexpectedResponseError(response.status);
+  captureProductOutcome("league_started", response.headers);
   return league;
 }
 export async function cancelLeagueRequest(leagueID: string) {
@@ -89,6 +98,7 @@ export async function completeLeagueRequest(leagueID: string) {
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   const league = parsePublicLeague(response.data);
   if (!league) throw new APIUnexpectedResponseError(response.status);
+  captureProductOutcome("league_completed", response.headers);
   return league;
 }
 export async function assignLeagueAdministratorRequest(leagueID: string, username: string) {
@@ -100,6 +110,7 @@ export async function assignLeagueAdministratorRequest(leagueID: string, usernam
   );
   if (response.status === 409) throw new LeagueAdministratorConflictError();
   if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
+  captureProductOutcome("league_administrator_assigned", response.headers);
 }
 export async function listLeagueAdministratorUsernames(leagueID: string) {
   const response = await listLeagueAdministrators(leagueID, undefined, authenticatedApiFetch);
@@ -117,6 +128,7 @@ export async function removeLeagueAdministratorRequest(leagueID: string, usernam
     authenticatedApiFetch,
   );
   if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
+  captureProductOutcome("league_administrator_removed", response.headers);
 }
 export async function transferLeagueOwnershipRequest(leagueID: string, username: string) {
   const response = await transferLeagueOwnership(

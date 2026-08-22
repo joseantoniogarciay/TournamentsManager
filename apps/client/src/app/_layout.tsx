@@ -7,13 +7,14 @@ import { Figtree_700Bold } from "@expo-google-fonts/figtree/700Bold";
 import { useFonts } from "expo-font";
 import * as WebBrowser from "expo-web-browser";
 import * as SplashScreen from "expo-splash-screen";
-import { type PropsWithChildren, useEffect } from "react";
+import { type PropsWithChildren, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
 import { typography } from "@tournaments-manager/design-tokens";
 
 import { FeedbackProvider } from "@/shared/feedback/feedback-provider";
 import { PendingVerificationProvider } from "@/features/registration/pending-verification";
+import { ClientTelemetryProvider } from "@/shared/analytics/posthog-provider";
 import { LeagueStoreProvider } from "@/features/league-creation/league-store";
 import { SessionProvider, useSession } from "@/shared/session/session-provider";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
@@ -23,6 +24,8 @@ import { NotificationProvider } from "@/features/notifications/notification-prov
 export const unstable_settings = {
   anchor: "(tabs)",
 };
+
+const fontLoadFallbackDelayMilliseconds = 3000;
 
 if (Platform.OS !== "web") {
   SplashScreen.setOptions({ duration: 240, fade: true });
@@ -41,27 +44,42 @@ export default function RootLayout() {
     Figtree_600SemiBold,
     Figtree_700Bold,
   });
+  const [allowSystemFontFallback, setAllowSystemFontFallback] = useState(false);
+
+  useEffect(() => {
+    if (fontsLoaded) return;
+
+    // Una fuente mejora la apariencia, pero no puede dejar vacía la web si un
+    // perfil privado de Safari retrasa o restringe su carga.
+    const timeout = setTimeout(
+      () => setAllowSystemFontFallback(true),
+      fontLoadFallbackDelayMilliseconds,
+    );
+    return () => clearTimeout(timeout);
+  }, [fontsLoaded]);
 
   if (fontError) throw fontError;
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded && !allowSystemFontFallback) return null;
 
   return (
     <PreferencesProvider>
-      <NavigationTheme>
-        <FeedbackProvider>
-          <SessionProvider>
-            <NotificationProvider>
-              <LeagueStoreProvider>
-                <PendingVerificationProvider>
-                  <ConfirmationDialogProvider>
-                    <RootNavigator />
-                  </ConfirmationDialogProvider>
-                </PendingVerificationProvider>
-              </LeagueStoreProvider>
-            </NotificationProvider>
-          </SessionProvider>
-        </FeedbackProvider>
-      </NavigationTheme>
+      <ClientTelemetryProvider>
+        <NavigationTheme>
+          <FeedbackProvider>
+            <SessionProvider>
+              <NotificationProvider>
+                <LeagueStoreProvider>
+                  <PendingVerificationProvider>
+                    <ConfirmationDialogProvider>
+                      <RootNavigator />
+                    </ConfirmationDialogProvider>
+                  </PendingVerificationProvider>
+                </LeagueStoreProvider>
+              </NotificationProvider>
+            </SessionProvider>
+          </FeedbackProvider>
+        </NavigationTheme>
+      </ClientTelemetryProvider>
     </PreferencesProvider>
   );
 }
@@ -113,6 +131,13 @@ function RootNavigator() {
       />
       <Stack.Screen
         name="privacy-policy"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
+        name="terms-of-use"
         options={{
           headerShown: true,
           presentation: Platform.OS === "web" ? "card" : "fullScreenModal",

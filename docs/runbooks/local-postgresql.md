@@ -43,15 +43,27 @@ abre en `http://127.0.0.1:8025`. Para observar el arranque:
 make dev-logs
 ```
 
-## Esquema inicial
+## Esquema inicial y migraciones
 
-Durante la primera versión no hay migraciones activas. El único esquema
-reescribible vive en `apps/backend/db/schema/initial_schema.sql` y se aplica
-explícitamente:
+En una base vacía se aplica primero el esquema base de
+`apps/backend/db/schema/initial_schema.sql` y después las migraciones
+inmutables de `apps/backend/db/migrations/`. El esquema sigue siendo la entrada
+de `sqlc`; las migraciones no se reescriben tras aplicarse.
 
 ```bash
 make db-schema-apply
 ```
+
+En el entorno público de desarrollo, tras el bootstrap o ante una migración
+pendiente, ejecuta explícitamente:
+
+```bash
+make dev-public-migrate
+```
+
+El comando crea un contenedor efímero con Goose y la credencial de migración;
+la API no recibe esa credencial. Una contraseña de migración usada en la URL de
+PostgreSQL debe usar caracteres seguros para URL o estar codificada.
 
 El comando usa el PostgreSQL local de Compose; no inicia la API ni crea datos
 funcionales. Tras un cambio incompatible, elimina antes el volumen con

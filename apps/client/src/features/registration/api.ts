@@ -1,4 +1,10 @@
-import { APIUnexpectedResponseError, apiFetch, saveMobileSession } from "@/api/fetch";
+import {
+  captureProductIntent,
+  captureProductOutcome,
+  APIUnexpectedResponseError,
+  apiFetch,
+  saveMobileSession,
+} from "@/api/fetch";
 import {
   registerLocalAccount,
   verifyRegistration,
@@ -22,6 +28,7 @@ export function getRegistrationUsernameAvailability(username: string, signal: Ab
 }
 
 export async function registerLocalAccountRequest(input: RegisterRequest) {
+  captureProductIntent("registration_submitted");
   const response = await registerLocalAccount(input, undefined, apiFetch);
   if (response.status !== 202) throw new APIUnexpectedResponseError(response.status);
 }
@@ -38,5 +45,6 @@ export async function confirmRegistration(
   if (sessionTransport === "bearer") {
     await saveMobileSession(response.data);
   }
+  captureProductOutcome("account_registered", response.headers);
   return response.data;
 }

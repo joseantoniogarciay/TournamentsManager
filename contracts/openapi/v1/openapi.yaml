@@ -1041,12 +1041,15 @@ components:
           items: { $ref: "#/components/schemas/TeamInput" }
     RegisterRequest:
       type: object
-      required: [email, password, username, locale]
+      required: [email, password, username, locale, termsVersion]
       properties:
         email: { $ref: "#/components/schemas/Email" }
         password: { $ref: "#/components/schemas/Password" }
         username: { $ref: "#/components/schemas/Username" }
         locale: { $ref: "#/components/schemas/Locale" }
+        termsVersion:
+          type: string
+          enum: ["2026-08-22"]
         draft:
           description: Borrador local válido transferido junto al alta; es opcional.
           allOf: [{ $ref: "#/components/schemas/LeagueInput" }]
@@ -1195,6 +1198,10 @@ components:
         locale:
           description: Requerido junto a username para crear una cuenta Google nueva.
           allOf: [{ $ref: "#/components/schemas/Locale" }]
+        termsVersion:
+          description: Requerido junto a username al crear una cuenta Google nueva.
+          type: string
+          enum: ["2026-08-22"]
         draft:
           description: Torneo válido transferido únicamente al crear una cuenta Google nueva.
           allOf: [{ $ref: "#/components/schemas/LeagueInput" }]

@@ -1,5 +1,76 @@
 # Registro de aprendizaje
 
+## 2026-08-22 — Fiabilidad y analítica son finalidades distintas
+
+Un crash nativo o una excepción no controlada impiden prestar el servicio y no
+deben desaparecer porque una persona rechace medir su navegación o uso. En
+cambio, pantallas, resultados de producto, interacción con la API y replay sí
+describen comportamiento y conservan el consentimiento revocable como límite.
+
+**Regla reutilizable:** separar estas finalidades en el código, la política de
+privacidad y la configuración del proveedor. La señal mínima no identifica la
+cuenta ni habilita autocapture, replay, GeoIP o flags; se filtran excepciones
+con apariencia de secretos o correos y se revisan DPA, retención y símbolos
+antes de distribuir. Véase ADR-0105.
+
+## 2026-08-21 — Un vertical slice necesita una frontera de cierre
+
+Fase 2 demostró pronto el recorrido acordado de identidad, sesión, publicación y
+lectura de liga, pero el cierre formal se pospuso mientras el backend incorporaba
+el ciclo deportivo, administración y recuperación. El producto ganó capacidad,
+pero la documentación de estado perdió el punto exacto en el que ya existía
+evidencia suficiente.
+
+**Regla reutilizable:** cerrar la retrospectiva cuando se cumple el criterio de
+salida y registrar las ampliaciones como incrementos posteriores. Una fase
+cerrada no impide seguir construyendo; separa lo aprendido de lo que se decidió
+añadir después.
+
+## 2026-08-21 — Una alerta se valida por disparo, entrega y resolución
+
+Una alerta sintética demuestra que el canal de notificación funciona, pero no
+que la expresión de Prometheus alcance su umbral. La caída controlada de
+PostgreSQL demostró en local el recorrido completo de
+`SessionRefreshFailureRateCritical`: respuestas `5xx`, estado activo, correo en
+Mailpit y resolución tras recuperar la dependencia. En `dev`, una alerta marcada
+`test=true` aisló la entrega mediante Resend, Cloudflare y el buzón final sin
+interrumpir el servicio público.
+
+**Regla reutilizable:** verificar por separado la detección y el transporte, y
+cerrar siempre la prueba confirmando la recuperación. Una alerta activa sin
+entrega o una entrega sintética sin regla evaluada dejan preguntas diferentes
+sin responder.
+
+## 2026-08-21 — Un archivo de secreto no es un archivo de variables
+
+Docker monta el contenido literal de un secreto. Los comentarios conservados
+desde un archivo de ejemplo pasaron a formar parte de la contraseña SMTP de
+Alertmanager y Resend rechazó la autenticación, mientras la API funcionaba
+porque su archivo `.env` sí interpreta comentarios y asignaciones.
+
+**Regla reutilizable:** un secreto de archivo contiene solo el valor esperado
+por el proceso. Su preflight comprueba presencia, número de líneas y forma sin
+mostrarlo; la documentación distingue expresamente secreto literal de contrato
+`.env`.
+
+## 2026-08-21 — La entrega de una alerta no debe compartir la credencial del producto
+
+Alertmanager y la API pueden usar el mismo SMTP de Resend, pero tienen radios de
+impacto distintos: uno comunica degradación operativa y el otro entrega enlaces
+de identidad. Una clave *Sending access* exclusiva permite revocar o rotar el
+canal de alertas sin impedir verificaciones ni recuperación de cuentas. STARTTLS
+en el puerto 587 cifra la conexión antes de enviar esa clave.
+
+La paridad útil entre local y `dev` es compartir reglas, dashboard y señales, no
+abrir Grafana al público ni mezclar volúmenes o logs. Los servicios conservan
+nombres internos iguales para reutilizar su configuración, mientras Promtail
+filtra el namespace Compose para que cada entorno observe solo su propia API.
+
+**Retrospectiva técnica:** duplicar el stack suma seis contenedores y operación,
+pero evita una abstracción o SaaS nuevo y conserva la práctica de diagnóstico
+correlacionado. La siguiente revisión debe basarse en ruido, cuota o necesidad de
+guardias, no en añadir alertas por cobertura aparente. Véase ADR-0100.
+
 ## 2026-08-21 — La excepción de Expo cubre el cierre exacto que el resolvedor necesita
 
 `expo install --check` identifica los paquetes directos desalineados, pero su
@@ -2402,3 +2473,96 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   contenedor imposible como respuesta no esperada y descarta únicamente los
   miembros inválidos antes de entregarlos a la interfaz. No se modifica el
   cliente generado ni se introduce una validación global de reglas de negocio.
+
+### 2026-08-22 — El consentimiento puede prepararse sin adelantar la telemetría
+
+- **Aprendido:** una preferencia de analítica no necesita activar el proveedor
+  que regulará en el futuro. Un provider local compartido puede partir de
+  `false`, persistir la elección por plataforma y permitir que Inicio y Ajustes
+  expresen el mismo control sin empezar a capturar datos.
+- **Regla reutilizable:** la primera aceptación puede retirar una invitación
+  contextual de la home y confirmar dónde se revoca; Ajustes conserva la misma
+  card y switch para cualquier cambio posterior. La preferencia local no es
+  evidencia de consentimiento para un proveedor hasta que ese proveedor se
+  integre y se revise su configuración efectiva.
+
+### 2026-08-22 — Priorizar la señal de cliente no cambia la autoridad del backend
+
+- **Aprendido:** el orden de iniciativas puede cambiar cuando una beta necesita
+  diagnosticar errores y comportamiento real. Activar PostHog antes de K3s no
+  convierte la analítica en una fuente de autorización ni sustituye logs,
+  métricas y trazas del backend.
+- **Regla reutilizable:** adelantar un SaaS de producto exige conservar sus
+  límites: región, gasto, consentimiento, minimización de datos y una prueba de
+  que las builds nativas simbolizan errores antes de declarar la integración
+  cerrada.
+
+### 2026-08-22 — Un proyecto de analítica no justifica mezclar entornos
+
+- **Aprendido:** la cuota de un SaaS no obliga a enviar el ruido local ni a
+  mezclar una beta pública con producción. Cada señal solo conserva valor si su
+  contexto permite actuar sobre ella con seguridad.
+- **Regla reutilizable:** con un único proyecto PostHog, el entorno local queda
+  desactivado por código y el proyecto representa la beta pública. Producción
+  espera una decisión explícita sobre su aislamiento.
+
+### 2026-08-22 — Una interacción de cliente no es una traza distribuida
+
+- **Aprendido:** PostHog y OpenTelemetry responden preguntas distintas. Un UUID
+  efímero por petición permite pasar de una interacción consentida a un log y
+  traza de backend sin tratar el SDK de producto como propagador de contexto.
+- **Regla reutilizable:** el identificador de interacción se mantiene de alta
+  cardinalidad fuera de métricas y atributos de span; se valida en el borde,
+  se registra solo en logs y nunca contiene URLs reales, IDs o PII.
+
+### 2026-08-22 — La red técnica no sustituye los resultados de producto
+
+- **Aprendido:** un `201` o un `POST` no explica por sí mismo qué consiguió la
+  persona, y convertir cada endpoint o pulsación en un evento de producto
+  mezcla reintentos, cargas automáticas e intención.
+- **Regla reutilizable:** el transporte conserva eventos técnicos y el
+  `interaction_id`; una feature declara solo resultados confirmados que
+  respondan una pregunta concreta. El adaptador puede asociarlos a los headers
+  de la respuesta sin modificar el cliente OpenAPI generado ni importar el SDK
+  de analítica en cada feature.
+
+### 2026-08-22 — Una preferencia persistente no puede bloquear el arranque web
+
+- **Aprendido:** Safari puede restringir el acceso a `localStorage` en una
+  pestaña privada. Si el provider espera esa lectura antes de montar la app, una
+  preferencia no crítica convierte ese límite del navegador en una pantalla de
+  carga indefinida.
+- **Regla reutilizable:** el estado inicial seguro se renderiza de inmediato;
+  la hidratación y escritura persistentes se tratan como mejora opcional y sus
+  fallos no capturados conservan el valor en memoria. Para la analítica, ese
+  valor seguro es siempre opt-in desactivado.
+
+### 2026-08-22 — Las fuentes son mejora visual, no una puerta de arranque
+
+- **Aprendido:** un perfil privado puede retrasar recursos que una sesión
+  normal ya conserva en caché. Devolver una raíz vacía hasta que una fuente
+  termine de cargar convierte esa mejora visual en una pantalla aparentemente
+  bloqueada.
+- **Regla reutilizable:** el cliente puede esperar brevemente por su tipografía
+  propia, pero debe continuar con la fuente del sistema si no está disponible;
+  cuando la fuente cargue, React Native Web aplica la familia prevista sin
+  impedir que la persona use la aplicación.
+
+### 2026-08-22 — La aceptación contractual es evidencia, no solo una casilla
+
+- **Aprendido:** una casilla que habilita el botón no prueba por sí sola qué
+  texto aceptó una persona. La evidencia necesita versión, huella del contenido,
+  momento y canal persistidos atómicamente con el alta.
+- **Regla reutilizable:** una versión legal inmutable tiene un documento
+  accesible antes de aceptar, una huella comprobada frente a ese documento y un
+  backend que rechaza cualquier versión distinta. La UI solo evita errores de
+  uso; el servidor conserva la autoridad.
+
+### 2026-08-22 — La integración debe ejercer el esquema migrado completo
+
+- **Aprendido:** crear solo el esquema base en una base efímera puede ocultar
+  que una consulta depende de una migración posterior. Ese desfase aparece en
+  CI aunque las pruebas unitarias y el entorno ya migrado pasen.
+- **Regla reutilizable:** la integración parte del esquema base y aplica todos
+  los bloques `Up` versionados; en CI se separa el DDL funcional de los roles y
+  grants que pertenecen exclusivamente al despliegue.

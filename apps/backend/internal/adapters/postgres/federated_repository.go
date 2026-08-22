@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -12,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres/sqlc"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal"
 )
 
 // FederatedRepository uses sqlc queries and a transaction for each challenge,
@@ -65,6 +67,10 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 		return federated.Session{}, err
 	}
 	if err := queries.CreateGoogleExternalIdentity(ctx, sqlc.CreateGoogleExternalIdentityParams{AccountID: accountID, Issuer: identity.Issuer, Subject: identity.Subject}); err != nil {
+		return federated.Session{}, err
+	}
+	emailHash := sha256.Sum256([]byte("legal-account-email:" + strings.ToLower(identity.Email)))
+	if _, err := tx.Exec(ctx, `INSERT INTO legal_account_acceptances (account_id, email_hash, terms_version, terms_content_hash, source) VALUES ($1, $2, $3, $4, 'google_registration')`, accountID, emailHash[:], registration.TermsVersion, legal.CurrentTermsContentHash()); err != nil {
 		return federated.Session{}, err
 	}
 	if registration.Draft != nil {

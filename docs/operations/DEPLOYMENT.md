@@ -8,8 +8,8 @@
 2. builds independientes del cliente universal para web, iOS y Android;
 3. dependencias locales en Docker Compose;
 4. servicio instrumentado y recuperable;
-5. Kubernetes con k3d;
-6. AWS mediante Terraform.
+5. Kubernetes con K3s en una VM Linux local;
+6. laboratorio EKS efímero en AWS mediante Terraform.
 
 Cada salto debe justificar qué capacidad añade y qué coste introduce.
 
@@ -97,11 +97,12 @@ tags inmutables y despliegue por digest. El Mac no necesita imitar un `staging`
 permanente: desarrollo y release doméstico separan datos y configuración, y AWS
 se destruye al acabar cada práctica.
 
-AWS se usará de forma efímera para aprender y validar Terraform, ECS/Fargate,
-ALB, RDS, red, observabilidad y destrucción controlada, conforme a
-[ADR-0088](../adr/0088-use-ephemeral-aws-learning-and-home-runtime.md). El
-runtime habitual permanece en el Mac; AWS no se mantiene como producción
-permanente sin una nueva decisión basada en usuarios, disponibilidad o coste.
+AWS se usará de forma efímera para aprender y validar Terraform, EKS, red,
+observabilidad y destrucción controlada, conforme a
+[ADR-0088](../adr/0088-use-ephemeral-aws-learning-and-home-runtime.md) y
+[ADR-0101](../adr/0101-use-linux-vm-k3s-and-ephemeral-eks-labs.md). El runtime
+habitual permanece en el Mac; AWS no se mantiene como producción permanente sin
+una nueva decisión basada en usuarios, disponibilidad o coste.
 
 La infraestructura de esa fase se describirá con Terraform conforme a
 [ADR-0025](../adr/0025-use-terraform-for-infrastructure-as-code.md). Esta
@@ -120,11 +121,10 @@ será su backend remoto inicial. Los runs permanecerán inicialmente en la CLI
 local; no hay auto-apply ni recursos AWS autorizados hasta abrir la Fase 5 y
 verificar bloqueo, recuperación y acceso. Git no se usará para almacenar estado.
 
-La topología de entrada y egress inicial sigue ADR-0029: el ALB será público y
-terminará HTTPS; las tareas Fargate solo aceptarán tráfico desde él y PostgreSQL
-permanecerá privado. No se creará NAT Gateway inicialmente. Antes del primer
-`apply` se revisará y autorizará el coste completo del ALB, Fargate, base de
-datos, IPv4, logs y transferencia.
+La topología de entrada y egress de EKS se decidirá antes del primer
+laboratorio cloud. ADR-0029 queda superado parcialmente porque su diseño partía
+de tareas Fargate. Antes del primer `apply` se revisará y autorizará el coste
+completo de cómputo, red, datos, IPv4, logs y transferencia.
 
 ADR-0030 fija la región futura en España (`eu-south-2`), una VPC `/16` no
 solapada por cuenta y dos AZ con dos subredes públicas y dos privadas. Este mapa
@@ -179,6 +179,12 @@ Mailpit pertenece solo al entorno local y no tiene hostname público. El entorno
 verifica `mail.fasttourney.com` y sus registros SPF, DKIM y DMARC. La clave de
 solo envío vive fuera de Git en `infra/dev/api.docker.env`; véase ADR-0093.
 
+El mismo proyecto `dev` mantiene Prometheus, Alertmanager, Loki, Tempo, Promtail
+y Grafana en red y volúmenes propios. Alertmanager usa una segunda clave Resend
+de solo envío, montada desde un secreto local, para no compartir el radio de
+revocación del correo transaccional. Las interfaces operativas se publican solo
+en loopback y no forman parte de Cloudflare Tunnel; véase ADR-0100.
+
 Antes de publicar el futuro artefacto web de producción, su script de exportación
 debe declarar, sin leer el `.env` local y limpiando la caché de Metro:
 
@@ -194,10 +200,10 @@ permanecen deliberadamente en `503`.
 
 ### Fase 4
 
-Necesidad de Kubernetes, k3d, manifests o empaquetado, recursos, probes,
-configuración, secretos y rollout.
+VM Linux de un nodo con K3s, manifests, empaquetado, recursos, probes,
+configuración, secretos, rollout y recuperación, conforme a ADR-0101.
 
 ### Fase 5
 
-Terraform, cuenta AWS, identidad, bootstrap y estado remoto, red, cómputo,
+Terraform, cuenta AWS, identidad, bootstrap y estado remoto, topología EKS,
 datos, storage, observabilidad, CI/CD, coste y recuperación.

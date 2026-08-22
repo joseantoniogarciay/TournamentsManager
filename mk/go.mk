@@ -60,11 +60,18 @@ else
 endif
 
 # Ejecuta persistencia real solo contra una base aislada proporcionada de forma explícita.
+# La CI usa un rol PostgreSQL efímero, no los roles de despliegue. Conservamos
+# el DDL de cada Up y omitimos solo su configuración de privilegios.
 test-integration:
 	@if [ -z "$$TM_INTEGRATION_DATABASE_URL" ]; then \
 		echo "test-integration: omitido; TM_INTEGRATION_DATABASE_URL no está definido"; \
 	else \
 		psql "$$TM_INTEGRATION_DATABASE_URL" -v ON_ERROR_STOP=1 -f $(BACKEND_DIR)/db/schema/initial_schema.sql && \
+		for migration in $(BACKEND_DIR)/db/migrations/*.sql; do \
+			sed -n '/^-- +goose Up$$/,/^-- +goose Down$$/p' "$$migration" | \
+				sed '/^-- +goose /d; /^SET ROLE tournaments_manager_dev_schema_owner;$$/d; /^GRANT .* TO tournaments_manager_dev_app;$$/d' | \
+				psql "$$TM_INTEGRATION_DATABASE_URL" -v ON_ERROR_STOP=1 || exit $$?; \
+		done && \
 		TM_INTEGRATION_DATABASE_URL="$$TM_INTEGRATION_DATABASE_URL" TM_RUN_INTEGRATION=1 $(GO_BACKEND) test ./internal/adapters/postgres -run Integration -count=1; \
 	fi
 

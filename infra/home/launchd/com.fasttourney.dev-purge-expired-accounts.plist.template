@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.fasttourney.dev-purge-expired-accounts</string>
+  <key>ProgramArguments</key><array><string>/usr/local/bin/docker</string><string>exec</string><string>--user</string><string>0</string><string>tournaments-manager-dev-api-1</string><string>/api</string><string>purge-expired-accounts</string></array>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>15</integer></dict>
+  <key>StandardOutPath</key><string>__LOG_DIRECTORY__/purge-expired-accounts.log</string>
+  <key>StandardErrorPath</key><string>__LOG_DIRECTORY__/purge-expired-accounts-error.log</string>
+</dict></plist>

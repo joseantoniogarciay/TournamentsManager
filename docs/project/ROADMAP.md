@@ -72,7 +72,7 @@ y limpiar PostgreSQL local siguiendo el runbook; arranque saludable, persistenci
 y recuperación tras reset quedaron demostrados. Véase la
 [retrospectiva de Fase 1](PHASE_1_RETROSPECTIVE.md).
 
-## Fase 2 — Backend
+## Fase 2 — Backend — completada
 
 **Objetivo:** entregar un primer vertical slice de negocio en Go.
 
@@ -85,22 +85,40 @@ organizador o ID público; resultados, Apple y ciclo avanzado quedan para un
 incremento posterior. Véanse [ADR-0043](../adr/0043-deliver-publish-and-read-league-first-backend-increment.md)
 y [ADR-0050](../adr/0050-include-google-federated-login-in-first-increment.md).
 
-**Salida:** caso de uso funcional de extremo a extremo, reglas de dependencia
-verificadas, pruebas proporcionales al riesgo y documentación actualizada.
+**Salida:** completada. El primer vertical slice recorre identidad verificada,
+sesión, publicación y lectura de liga desde una base vacía; la autorización, la
+dirección de dependencias, el contrato OpenAPI y las transacciones PostgreSQL
+cuentan con pruebas proporcionales al riesgo. El backend continuó después con el
+ciclo deportivo, administración, recuperación y notificaciones sin convertir
+esas ampliaciones en requisitos retroactivos del slice inicial. Véase la
+[retrospectiva de Fase 2](PHASE_2_RETROSPECTIVE.md).
 
-## Fase 3 — Observabilidad
+## Fase 3 — Observabilidad — completada
 
 **Objetivo:** poder explicar el estado del sistema y diagnosticar fallos.
 
 **Decisiones previas:** señales y objetivos de servicio, instrumentación,
 retención, stack mínimo y coste.
 
-**Salida:** logs, métricas y trazas correlacionables para el vertical slice;
-dashboard y runbook de una ruta crítica.
+**Salida:** completada. El refresh de sesión dispone de logs, métricas y trazas
+correlacionables, dashboard, SLO y runbook. Una caída controlada de PostgreSQL
+activó y resolvió la alerta crítica real en local; la entrega externa de `dev`
+se verificó mediante Alertmanager, Resend, Cloudflare y el buzón final. Véase la
+[retrospectiva de Fase 3](PHASE_3_RETROSPECTIVE.md).
 
 ## Fase 4 — Kubernetes
 
 **Objetivo:** aprender orquestación cuando el servicio ya sea operable.
+
+**Secuencia vigente:** antes de iniciar esta fase se activa y verifica PostHog
+Cloud para la fiabilidad mínima del cliente y su analítica opcional conforme a
+ADR-0105. Esta integración no sustituye las señales OpenTelemetry del backend
+ni modifica la puerta de entrada técnica de Kubernetes.
+
+**Puerta de entrada:** las fases de backend y observabilidad están cerradas.
+Kubernetes sigue aplazado hasta comparar la pregunta de aprendizaje y el coste
+de k3d frente al Compose ya medido; no hay implementación autorizada sin
+decisión explícita y ADR aceptado.
 
 **Decisiones previas:** necesidad, k3d, empaquetado, health checks, recursos,
 configuración, secretos y estrategia de despliegue.

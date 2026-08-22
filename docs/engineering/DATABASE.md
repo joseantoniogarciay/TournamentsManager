@@ -74,15 +74,12 @@ de runtime y verificarlos antes de publicar.
 
 ## Política de migraciones
 
-- Mientras solo exista PostgreSQL local y los datos sean descartables,
-  [ADR-0053](../adr/0053-keep-a-single-resettable-local-initial-schema.md)
-  y [ADR-0072](../adr/0072-apply-a-resettable-initial-schema-without-migration-runner.md)
-  establecen una excepción temporal: `initial_schema.sql` es el único esquema
-  inicial y se reescribe tras un reset explícito. No se ejecutan migraciones
-  durante esta etapa.
+- [ADR-0107](../adr/0107-activate-immutable-schema-migrations.md) activa Goose:
+  `initial_schema.sql` se aplica solo a una base vacía y las migraciones SQL de
+  `apps/backend/db/migrations/` se aplican después, en orden.
 - Una migración aplicada en un entorno compartido es inmutable.
-- Cuando se active, Goose se ejecutará como paso explícito de despliegue, no como
-  efecto secundario de iniciar la API.
+- Goose se ejecuta como paso explícito de despliegue, nunca como efecto
+  secundario de iniciar la API.
 - Toda migración se prueba desde una base vacía y sobre la versión anterior
   relevante.
 - La presencia de una sección `Down` no garantiza un rollback seguro cuando hay

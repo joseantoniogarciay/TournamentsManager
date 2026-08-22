@@ -1,8 +1,8 @@
 # TournamentsManager — Engineering Handbook
 
-> Estado: Fase 2 — primer vertical slice de backend en curso
+> Estado: Fases 2 y 3 completadas; Fase 4 pendiente de análisis y decisión
 >
-> Última revisión: 2026-07-28
+> Última revisión: 2026-08-21
 
 Este repositorio empieza por el handbook porque el objetivo no es solo entregar una
 aplicación: es aprender a diseñar, construir, desplegar y operar un producto con
@@ -112,7 +112,7 @@ La guía de recorrido y organización del backend está en
 | TypeScript y cliente API generado | Aceptada; toolchain fijado | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md), [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md) |
 | Redis o Valkey | Pendiente de evaluación | [DECISIONS_TO_REVISIT.md](docs/governance/DECISIONS_TO_REVISIT.md) |
 | Observabilidad mínima | OpenTelemetry, Prometheus, Grafana, Loki y Tempo aceptados; Collector aplazado | [ADR-0020](docs/adr/0020-use-minimal-correlated-observability.md) |
-| Observabilidad de producto del cliente | PostHog Cloud diferido para beta distribuida; región UE, límite de gasto 0 € y sin autoridad sobre negocio | [ADR-0060](docs/adr/0060-use-posthog-for-deferred-client-product-observability.md) |
+| Fiabilidad y observabilidad de producto del cliente | PostHog Cloud en la beta `development`, región UE y gasto máximo 0 €: crashes/excepciones mínimos por defecto; uso, vistas y resultados solo por opt-in | [ADR-0105](docs/adr/0105-separate-essential-client-reliability-from-optional-product-analytics.md), [ADR-0104](docs/adr/0104-capture-minimum-consented-product-outcomes.md) |
 | Empaquetado de la API | Imagen OCI/Docker aceptada | [ADR-0022](docs/adr/0022-package-backend-as-oci-image.md) |
 | Runtime habitual y AWS | Mac para desarrollo y release doméstico; AWS efímero para aprendizaje y validación | [ADR-0088](docs/adr/0088-use-ephemeral-aws-learning-and-home-runtime.md) |
 | Dominio y deep links | `fasttourney.com` producción, `dev.fasttourney.com` desarrollo; API en `api` y `dev.api` | [ADR-0089](docs/adr/0089-use-fasttourney-domain-and-separated-app-link-hosts.md) |
@@ -128,13 +128,15 @@ La guía de recorrido y organización del backend está en
 | Región y red AWS | España (`eu-south-2`); VPC separada por cuenta en dos AZ; gasto solo tras autorización explícita | [ADR-0030](docs/adr/0030-use-spain-region-and-two-az-cost-gated-network.md) |
 | Framework y rendering del cliente | Aceptado | [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md), [ADR-0016](docs/adr/0016-use-client-side-web-rendering-initially.md) |
 
-La [base técnica](docs/governance/TECHNICAL_BASELINE.md), el gate 0B y la Fase 1
-están cerrados. El proyecto se encuentra en la [Fase 2: Backend](docs/project/ROADMAP.md):
-el primer vertical slice implementa identidad local, publicación y consulta de
-ligas de forma incremental. El corte activo es el registro local de una cuenta
-pendiente; la verificación, sesión y publicación se incorporarán en los cortes
-siguientes. Las decisiones nuevas que alcancen el umbral definido siguen
-requiriendo ADR aceptado.
+La [base técnica](docs/governance/TECHNICAL_BASELINE.md), el gate 0B y las fases
+1, [2](docs/project/PHASE_2_RETROSPECTIVE.md) y
+[3](docs/project/PHASE_3_RETROSPECTIVE.md) están cerrados. El backend entrega el
+vertical slice, conserva sus límites arquitectónicos y permite correlacionar
+logs, métricas y trazas, evaluar el SLO del refresh y entregar alertas en local
+y `dev`. El siguiente gate es analizar Kubernetes frente al Compose ya medido;
+la dirección del manifiesto no autoriza por sí sola una implementación de Fase
+4. Las decisiones nuevas que alcancen el umbral definido siguen requiriendo ADR
+aceptado.
 
 ## Cliente universal
 

@@ -65,7 +65,7 @@ func run(args []string) error {
 		return err
 	}
 	defer pool.Close()
-	mailer, err := smtpadapter.NewMailer(appConfig.SMTPAddr, appConfig.SMTPFrom, appConfig.SMTPUsername, appConfig.SMTPPassword, appConfig.PublicBaseURL)
+	mailer, err := smtpadapter.NewMailer(appConfig.SMTPAddr, appConfig.SMTPFrom, appConfig.SMTPUsername, appConfig.SMTPPassword, appConfig.PublicBaseURL, appConfig.EmailSubjectPrefix)
 	if err != nil {
 		return fmt.Errorf("configurar correo: %w", err)
 	}

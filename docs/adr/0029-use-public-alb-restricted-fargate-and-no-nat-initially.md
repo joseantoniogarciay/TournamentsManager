@@ -1,11 +1,11 @@
 # ADR-0029: Usar ALB público, Fargate restringido y sin NAT inicialmente
 
-- **Estado:** Aceptado
+- **Estado:** Superado parcialmente
 - **Fecha:** 2026-07-25
 - **Decisor:** Usuario, mediante aceptación explícita
 - **Propietario del análisis:** Asistente como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0101, en la selección de Fargate como cómputo cloud
 
 ## Problema
 

@@ -6,7 +6,31 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Changed
+
+- ADR-0105 separa la fiabilidad mínima de cliente de la analítica opcional:
+  PostHog en la beta pública conserva excepciones y crashes sin replay,
+  autocapture, GeoIP, flags remotos ni identificación; el switch revocable solo
+  habilita vistas, eventos de red y resultados de producto. La política de
+  privacidad localizada expresa ambas finalidades.
+
+- Inicio muestra una invitación de analítica opcional con switch apagado; al
+  aceptarla, la preferencia persistente desaparece de Inicio y permanece en
+  Ajustes. La preparación no inicializa PostHog ni recoge datos hasta el
+  disparador aceptado de ADR-0060.
+
+- La decisión de observabilidad de producto precisa su límite de privacidad: el
+  opt-in revocable controla sesiones de interfaz y un `interaction_id` efímero
+  permite buscar una operación concreta en Loki/Tempo, sin propagar una traza de
+  sesión ni hacer que Grafana reconstruya el recorrido de una persona. La
+  captura mínima de fiabilidad se rige por ADR-0105. Se documentan también los
+  gates de App Tracking Transparency y las declaraciones de tiendas móviles.
+
 ### Fixed
+
+- El preflight de `dev-public-deploy` rechaza ahora el secreto SMTP de
+  Alertmanager si contiene comentarios, varias líneas o un valor que no tenga
+  forma de clave Resend; la validación no imprime la credencial.
 
 - Expo SDK 57 vuelve a tener su conjunto compatible: `expo` pasa a 57.0.15 y
   sus paquetes directos relacionados a las revisiones solicitadas por Expo CLI.
@@ -28,6 +52,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   mantienen el modal nativo.
 
 ### Added
+
+- ADR-0100: `tournaments-manager-dev` incorpora Prometheus, Alertmanager, Loki,
+  Tempo, Promtail y Grafana con los mismos SLOs y dashboard que local. Alertmanager
+  entrega avisos por Resend SMTP con STARTTLS y una clave exclusiva, montada fuera
+  de Git; las interfaces operativas permanecen en loopback. Los avisos y correos
+  transaccionales de dev se identifican con nombre visible y prefijo `[DEV]`.
 
 - ADR-0099: Alertmanager recibe las alertas locales de Prometheus, entrega correo de prueba a Mailpit y se integra en Grafana. Los avisos `warning` se repiten cada cuatro horas y los `critical` cada diez minutos; se añaden ejemplos críticos para API no monitorizable y alta tasa de `5xx` de refresh.
 
@@ -159,6 +189,17 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   mientras los datos sean exclusivamente locales y descartables.
 
 ### Changed
+
+- Fase 2 cerrada formalmente: la retrospectiva distingue el vertical slice
+  original —identidad verificada, sesión, publicación y lectura de liga— de las
+  capacidades deportivas y de cuenta incorporadas después. Roadmap, estado del
+  handbook y pendientes de API quedan reconciliados con la implementación.
+
+- Fase 3 de observabilidad cerrada: una caída controlada de PostgreSQL activó
+  y resolvió la alerta real de tasa de fallos del refresh en local, y una alerta
+  sintética recorrió Alertmanager, Resend, Cloudflare y el buzón final en `dev`.
+  La retrospectiva conserva Collector, HA, retención larga y SLOs generales
+  como deuda deliberada con disparadores, no como cobertura pendiente.
 
 - Los deep links que arrancan iOS o Android se encolan en memoria hasta que
   Inicio se haya montado; las entregas sobre una aplicación ya viva continúan

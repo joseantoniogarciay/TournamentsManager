@@ -20,8 +20,9 @@ configuración DDNS. Los proxies y archivos reales se añaden solo junto con sus
 respectivos artefactos y configuración.
 
 `deploy-dev.sh` es el único despliegue manual de dev: exige `develop` limpio y
-alineado con `origin/develop`, construye la API runtime y llama a
-`deploy-dev-web.sh`. Cada export se guarda bajo
+alineado con `origin/develop`, construye la API runtime, aplica las migraciones
+SQL pendientes y llama a `deploy-dev-web.sh`. Las migraciones son solo hacia
+delante: un rollback de imagen no revierte el esquema. Cada export se guarda bajo
 `/opt/homebrew/var/www/fasttourney/dev/releases/<SHA>/` y contiene un manifiesto
 sin secretos con commit, imagen y fecha. Caddy sirve el enlace `current`; el
 cambio del enlace es atómico mediante `mv -h`, para reemplazar el enlace y no el

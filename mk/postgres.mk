@@ -14,7 +14,7 @@ PUBLIC_DEV_COMPOSE := docker compose --env-file $(PUBLIC_DEV_ENV) -f $(PUBLIC_DE
 
 .PHONY: \
 	db-init dev-init db-env-check db-backend-env-check dev-api-env-check local-config-check dev-config-check \
-	dev-public-init dev-public-config-check dev-public-up dev-public-deploy dev-public-rollback dev-public-down dev-public-reset dev-public-status dev-public-logs dev-public-bootstrap dev-public-runtime-verify dev-public-purge \
+	dev-public-init dev-public-config-check dev-public-up dev-public-deploy dev-public-rollback dev-public-down dev-public-reset dev-public-status dev-public-logs dev-public-bootstrap dev-public-migrate dev-public-runtime-verify dev-public-purge \
 	db-up db-wait db-down db-status db-logs db-reset db-schema-apply
 
 # Crea los contratos locales sin sobrescribir una configuración ya existente.
@@ -116,7 +116,15 @@ dev-public-bootstrap: dev-public-config-check
 	sed '/^--/d' $(BACKEND_DIR)/db/schema/initial_schema.sql | \
 		$(PUBLIC_DEV_COMPOSE) exec -T postgres sh -ec 'PGPASSWORD="$$POSTGRES_MIGRATOR_PASSWORD" psql -h postgres -U "$$POSTGRES_MIGRATOR_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "SET ROLE \"$$POSTGRES_OWNER_ROLE\"" -f -'
 	$(PUBLIC_DEV_COMPOSE) exec -T postgres sh -ec 'PGPASSWORD="$$POSTGRES_MIGRATOR_PASSWORD" psql -h postgres -U "$$POSTGRES_MIGRATOR_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -v app_role="$$POSTGRES_APP_USER" -c "SET ROLE \"$$POSTGRES_OWNER_ROLE\"" -f -' < $(PUBLIC_DEV_DIR)/postgresql/grant-runtime.sql
+	$(MAKE) dev-public-migrate
 	$(MAKE) dev-public-runtime-verify
+
+# Ejecuta las migraciones inmutables fuera del arranque de la API. La contraseña
+# de migración existe solo en el contenedor efímero `migrator`.
+dev-public-migrate: dev-public-config-check
+	$(PUBLIC_DEV_COMPOSE) --profile migration up --detach --wait postgres
+	$(PUBLIC_DEV_COMPOSE) --profile migration build migrator
+	$(PUBLIC_DEV_COMPOSE) --profile migration run --rm --no-deps migrator
 
 # Comprueba que la identidad de la API conecta pero no puede cambiar el esquema.
 dev-public-runtime-verify: dev-public-config-check

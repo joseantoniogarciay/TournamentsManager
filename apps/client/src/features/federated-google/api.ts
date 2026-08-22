@@ -1,4 +1,9 @@
-import { APIUnexpectedResponseError, apiFetch, saveMobileSession } from "@/api/fetch";
+import {
+  captureProductOutcome,
+  APIUnexpectedResponseError,
+  apiFetch,
+  saveMobileSession,
+} from "@/api/fetch";
 import {
   createGoogleLoginChallenge,
   createGoogleSession,
@@ -36,6 +41,7 @@ export async function finishGoogleAuthentication(input: {
   idToken: string;
   locale?: Locale;
   sessionTransport: Transport;
+  termsVersion?: "2026-08-22";
   username?: Username;
 }) {
   const response = await createGoogleSession(
@@ -45,6 +51,7 @@ export async function finishGoogleAuthentication(input: {
       idToken: input.idToken,
       locale: input.locale,
       sessionTransport: input.sessionTransport,
+      termsVersion: input.termsVersion,
       username: input.username,
     },
     undefined,
@@ -55,5 +62,6 @@ export async function finishGoogleAuthentication(input: {
   if (response.status === 409) throw new GoogleAuthenticationError("conflict");
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   if (input.sessionTransport === "bearer") await saveMobileSession(response.data);
+  captureProductOutcome("account_signed_in", response.headers, { method: "google" });
   return { kind: "session" as const, session: response.data };
 }

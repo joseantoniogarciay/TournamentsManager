@@ -102,6 +102,37 @@ producción se sustituye el contacto por un correo operativo del dominio propio
 (por ejemplo, `support@fasttourney.com`) y se verifican dominio, web y URLs
 públicas de producto y privacidad.
 
+## Observabilidad de producto
+
+En la beta pública `development`, PostHog Cloud se inicializa para capturar solo
+excepciones no controladas y crashes nativos mínimos, conforme a ADR-0105. La
+analítica de producto sigue activa únicamente después de que la persona la
+consienta desde Inicio o Ajustes. La clave de proyecto pública se
+declara como `EXPO_PUBLIC_POSTHOG_API_KEY` en `.env`; no se versiona y no es una
+credencial de administración. Mientras el plan Free solo permita un proyecto,
+el cliente solo lo inicializa con `APP_ENV=development`, que corresponde a la
+beta pública; `local` y `production` quedan bloqueados aunque exista una clave.
+El cliente apunta siempre al endpoint de la región UE y no identifica cuentas.
+Tras el consentimiento registra la vista con un nombre canónico y seguro, y el
+resultado técnico de cada petición API. Además, las features declaran un
+catálogo corto de resultados de producto confirmados (registro, acceso,
+recuperación, ciclo de liga, resultados y administración); nunca deriva esos
+eventos automáticamente desde rutas o endpoints. No envía rutas, parámetros,
+cuerpos, credenciales ni IDs de entidades.
+Cada petición recibe un `interaction_id` UUID efímero que también viaja como
+`X-Interaction-ID`, para localizar su log junto al `trace_id` del backend.
+Los resultados semánticos exitosos reutilizan el ID de su respuesta HTTP, sin
+pasar metadatos por el cliente OpenAPI generado.
+
+La captura mínima recoge excepciones no controladas, rechazos de promesa y
+crashes nativos sin depender del switch de analítica. Vistas, resultados de
+producto, eventos de red y `X-Interaction-ID` requieren ese consentimiento.
+Replay, autocapture de interacción y breadcrumbs permanecen desactivados hasta
+que su configuración de privacidad y exclusiones se valide.
+Los símbolos y source maps necesarios para que los crashes nativos sean legibles
+requieren una clave personal de PostHog configurada fuera de Git durante builds
+nativas. Nunca se introduce esa clave en `.env.example`, el código o el chat.
+
 ## Estructura
 
 ```text

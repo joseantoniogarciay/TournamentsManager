@@ -99,6 +99,7 @@ export function useGoogleAuthentication({
       const result = await finishGoogleAuthentication({
         ...input,
         locale: username ? locale : undefined,
+        termsVersion: username ? "2026-08-22" : undefined,
         draft: username ? draft : undefined,
         sessionTransport,
         username,

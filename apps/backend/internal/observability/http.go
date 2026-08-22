@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -13,6 +14,10 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 )
+
+const interactionIDHeader = "X-Interaction-ID"
+
+var interactionIDPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 
 // HTTPHandler adds OpenTelemetry spans, Prometheus metrics and one safe JSON
 // log per completed request. It intentionally records route templates, never
@@ -113,6 +118,9 @@ func requestLogger(next http.Handler) http.Handler {
 		}
 		if spanContext.IsValid() {
 			attributes = append(attributes, "trace_id", spanContext.TraceID().String(), "span_id", spanContext.SpanID().String())
+		}
+		if interactionID := request.Header.Get(interactionIDHeader); interactionIDPattern.MatchString(interactionID) {
+			attributes = append(attributes, "interaction_id", interactionID)
 		}
 		slog.Info("HTTP request completed", attributes...)
 	})

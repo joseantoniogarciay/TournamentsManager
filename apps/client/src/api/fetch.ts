@@ -1,12 +1,19 @@
 import * as SecureStore from "expo-secure-store";
+import { randomUUID } from "expo-crypto";
 import { Platform } from "react-native";
 
 import type { SessionEstablishment, User } from "./generated/models";
 import { refreshSession, revokeCurrentSession } from "./generated/session/session";
+import {
+  captureProductAnalyticsEvent,
+  isProductAnalyticsActive,
+} from "@/shared/analytics/posthog-client";
 
 const defaultAPIBaseURL = "http://127.0.0.1:8080/v1";
 const mobileSessionKey = "tm-mobile-session";
 const refreshThresholdMilliseconds = 60 * 60 * 1000;
+const interactionIDHeader = "X-Interaction-ID";
+const interactionIDsByResponseHeaders = new WeakMap<Headers, string>();
 
 type MobileSession = {
   accessToken: string;
@@ -78,12 +85,68 @@ function isMobileSession(value: unknown): value is MobileSession {
 }
 
 async function fetchWithAPIBase(input: RequestInfo | URL, init?: RequestInit) {
+  const headers = new Headers(init?.headers);
+  const interaction = createAPIInteraction(init?.method);
+  if (interaction) headers.set(interactionIDHeader, interaction.id);
+
   try {
-    return await globalThis.fetch(getRequestURL(input), { ...init, credentials: "include" });
+    const response = await globalThis.fetch(getRequestURL(input), {
+      ...init,
+      credentials: "include",
+      headers,
+    });
+    if (interaction) interactionIDsByResponseHeaders.set(response.headers, interaction.id);
+    interaction?.completed(response.status);
+    return response;
   } catch (error: unknown) {
-    if (error instanceof Error && error.name === "AbortError") throw error;
+    if (error instanceof Error && error.name === "AbortError") {
+      interaction?.failed("cancelled");
+      throw error;
+    }
+    interaction?.failed("network_error");
     throw new APIConnectionError(error);
   }
+}
+
+/** Captura una intención ya validada localmente, antes de iniciar su petición. */
+export function captureProductIntent(event: string) {
+  captureProductAnalyticsEvent(event);
+}
+
+/** Captura un resultado de producto confirmado y lo enlaza con su respuesta API. */
+export function captureProductOutcome(
+  event: string,
+  headers: Headers,
+  properties?: { method: "google" | "password" },
+) {
+  const interactionID = interactionIDsByResponseHeaders.get(headers);
+  if (!interactionID) return;
+  captureProductAnalyticsEvent(event, { ...properties, interaction_id: interactionID });
+}
+
+function createAPIInteraction(method?: string) {
+  if (!isProductAnalyticsActive()) return null;
+
+  const id = randomUUID();
+  const startedAt = Date.now();
+  const properties = { interaction_id: id, method: method ?? "GET" };
+  return {
+    id,
+    completed(status: number) {
+      captureProductAnalyticsEvent("api_request_completed", {
+        ...properties,
+        duration_ms: Date.now() - startedAt,
+        status,
+      });
+    },
+    failed(failure: "cancelled" | "network_error") {
+      captureProductAnalyticsEvent("api_request_failed", {
+        ...properties,
+        duration_ms: Date.now() - startedAt,
+        failure,
+      });
+    },
+  };
 }
 
 /** Lee la sesión local; el perfil y las fechas son solo estado de arranque. */

@@ -10,6 +10,7 @@ import (
 	"mime"
 	"mime/multipart"
 	"net"
+	"net/mail"
 	"net/smtp"
 	"net/url"
 	"strings"
@@ -19,17 +20,19 @@ import (
 
 // Mailer is the SMTP adapter for local verification email.
 type Mailer struct {
-	address  string
-	from     string
-	username string
-	password string
-	host     string
-	baseURL  *url.URL
+	address       string
+	from          string
+	fromAddress   string
+	username      string
+	password      string
+	host          string
+	baseURL       *url.URL
+	subjectPrefix string
 }
 
 // NewMailer builds an SMTP adapter. With credentials, it requires STARTTLS before
 // authentication; without them, it preserves the local Mailpit flow.
-func NewMailer(address, from, username, password, baseURL string) (Mailer, error) {
+func NewMailer(address, from, username, password, baseURL, subjectPrefix string) (Mailer, error) {
 	parsedURL, err := url.Parse(baseURL)
 	if err != nil || parsedURL.Host == "" || !validPublicURL(parsedURL) {
 		return Mailer{}, fmt.Errorf("URL pública inválida")
@@ -37,11 +40,18 @@ func NewMailer(address, from, username, password, baseURL string) (Mailer, error
 	if (username == "") != (password == "") {
 		return Mailer{}, fmt.Errorf("credenciales SMTP incompletas")
 	}
+	parsedFrom, err := mail.ParseAddress(from)
+	if err != nil || parsedFrom.Address == "" {
+		return Mailer{}, fmt.Errorf("remitente SMTP inválido")
+	}
+	if strings.ContainsAny(subjectPrefix, "\r\n") {
+		return Mailer{}, fmt.Errorf("prefijo de asunto inválido")
+	}
 	host, _, err := net.SplitHostPort(address)
 	if err != nil || host == "" {
 		return Mailer{}, fmt.Errorf("dirección SMTP inválida")
 	}
-	return Mailer{address: address, from: from, username: username, password: password, host: host, baseURL: parsedURL}, nil
+	return Mailer{address: address, from: from, fromAddress: parsedFrom.Address, username: username, password: password, host: host, baseURL: parsedURL, subjectPrefix: subjectPrefix}, nil
 }
 
 // SendVerification delivers an HTTPS link that the person explicitly confirms in
@@ -56,7 +66,7 @@ func (m Mailer) SendVerification(ctx context.Context, recipient string, locale r
 	query.Set("token", token)
 	verificationURL.RawQuery = query.Encode()
 
-	message, err := verificationMessage(locale, recipient, m.from, verificationURL.String())
+	message, err := verificationMessage(locale, recipient, m.from, verificationURL.String(), m.subjectPrefix)
 	if err != nil {
 		return err
 	}
@@ -80,7 +90,7 @@ func (m Mailer) SendPasswordReset(ctx context.Context, recipient string, locale 
 	if !ok {
 		return fmt.Errorf("locale de email no admitido: %q", locale)
 	}
-	message := []byte("To: " + recipient + "\r\nFrom: " + m.from + "\r\nSubject: " + mime.QEncoding.Encode("UTF-8", messageCopy.subject) + "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n" + messageCopy.body + "\r\n\r\n" + resetURL.String() + "\r\n\r\n" + messageCopy.ignore + "\r\n")
+	message := []byte("To: " + recipient + "\r\nFrom: " + m.from + "\r\nSubject: " + mime.QEncoding.Encode("UTF-8", prefixedSubject(m.subjectPrefix, messageCopy.subject)) + "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n" + messageCopy.body + "\r\n\r\n" + resetURL.String() + "\r\n\r\n" + messageCopy.ignore + "\r\n")
 	if err := m.send([]string{recipient}, message); err != nil {
 		return fmt.Errorf("SMTP: %w", err)
 	}
@@ -89,7 +99,7 @@ func (m Mailer) SendPasswordReset(ctx context.Context, recipient string, locale 
 
 func (m Mailer) send(recipients []string, message []byte) error {
 	if m.username == "" {
-		return smtp.SendMail(m.address, nil, m.from, recipients, message)
+		return smtp.SendMail(m.address, nil, m.fromAddress, recipients, message)
 	}
 
 	client, err := smtp.Dial(m.address)
@@ -108,7 +118,7 @@ func (m Mailer) send(recipients []string, message []byte) error {
 	if err := client.Auth(smtp.PlainAuth("", m.username, m.password, m.host)); err != nil {
 		return fmt.Errorf("autenticar SMTP: %w", err)
 	}
-	if err := client.Mail(m.from); err != nil {
+	if err := client.Mail(m.fromAddress); err != nil {
 		return err
 	}
 	for _, recipient := range recipients {
@@ -154,7 +164,7 @@ func validPublicURL(parsedURL *url.URL) bool {
 	return hostname == "localhost" || hostname == "127.0.0.1" || hostname == "::1"
 }
 
-func verificationMessage(locale registration.Locale, recipient, from, verificationURL string) ([]byte, error) {
+func verificationMessage(locale registration.Locale, recipient, from, verificationURL, subjectPrefix string) ([]byte, error) {
 	localizedCopy, ok := localizedVerificationCopy(locale)
 	if !ok {
 		return nil, fmt.Errorf("locale de email no admitido: %q", locale)
@@ -164,7 +174,7 @@ func verificationMessage(locale registration.Locale, recipient, from, verificati
 	boundary := "fasttourney-verification"
 	message.WriteString("To: " + recipient + "\r\n")
 	message.WriteString("From: " + from + "\r\n")
-	message.WriteString("Subject: " + mime.QEncoding.Encode("UTF-8", localizedCopy.Subject) + "\r\n")
+	message.WriteString("Subject: " + mime.QEncoding.Encode("UTF-8", prefixedSubject(subjectPrefix, localizedCopy.Subject)) + "\r\n")
 	message.WriteString("MIME-Version: 1.0\r\n")
 	message.WriteString("Content-Type: multipart/alternative; boundary=" + boundary + "\r\n\r\n")
 
@@ -195,6 +205,13 @@ func verificationMessage(locale registration.Locale, recipient, from, verificati
 		return nil, err
 	}
 	return message.Bytes(), nil
+}
+
+func prefixedSubject(prefix, subject string) string {
+	if prefix == "" {
+		return subject
+	}
+	return prefix + " " + subject
 }
 
 type verificationCopy struct {

@@ -12,6 +12,7 @@ import { LeagueCard } from "@/features/league-creation/components/league-card";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
+import { ProductAnalyticsPreferenceCard } from "@/shared/preferences/product-analytics-preference-card";
 import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
 import { Button, Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
@@ -123,8 +124,24 @@ export default function HomeScreen() {
         ) : null}
 
         {!user && !isRestoring ? <GuestOnboarding t={t} /> : null}
+
+        <ProductAnalyticsCard />
       </ScrollView>
     </Screen>
+  );
+}
+
+function ProductAnalyticsCard() {
+  const t = getTranslator();
+  const { productAnalyticsEnabled } = usePreferences();
+  const { show } = useFeedback();
+
+  if (productAnalyticsEnabled) return null;
+
+  return (
+    <ProductAnalyticsPreferenceCard
+      onEnabled={() => show({ kind: "success", message: t("product_analytics_enabled_feedback") })}
+    />
   );
 }
 

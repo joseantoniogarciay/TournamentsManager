@@ -35,6 +35,13 @@ Las señales deben compartir contexto de correlación y convenciones de nombres.
 - **Correlación:** cada log incluirá el identificador de traza y span cuando el
   contexto exista. No se registran secretos, tokens, credenciales ni PII.
 
+Cuando una persona haya consentido la analítica de producto de PostHog en la beta pública, cada petición de
+la API puede incluir un `X-Interaction-ID` UUID aleatorio. La API lo valida y
+lo escribe exclusivamente como `interaction_id` en el log HTTP, junto a su
+propio `trace_id` y `span_id`; no llega a atributos de span ni etiquetas de
+métricas. Así PostHog permite localizar una interacción concreta y Grafana/Loki
+la traza técnica correspondiente, sin aceptar un `trace_id` creado por cliente.
+
 La instrumentación automática cubre HTTP y PostgreSQL. Quien implementa el
 código decide los spans manuales solo cuando representen una operación
 operativamente significativa que no esté cubierta; no se añade un span por
@@ -122,8 +129,53 @@ usa Mailpit solo en local. Repite `warning` cada cuatro horas y `critical` cada
 diez minutos mientras sigan activas. Grafana aprovisiona el dashboard **SLO —
 Refresh de sesión**, muestra las reglas de Prometheus y consulta Alertmanager
 para alertas y silencios. No hay notificación remota, retención de producción
-ni SLOs generales: véanse [ADR-0098](../adr/0098-define-local-session-refresh-slo.md)
-y [ADR-0099](../adr/0099-route-local-alerts-through-alertmanager.md).
+ni SLOs generales **en local**: véanse
+[ADR-0098](../adr/0098-define-local-session-refresh-slo.md) y
+[ADR-0099](../adr/0099-route-local-alerts-through-alertmanager.md).
+
+## Desarrollo público
+
+`tournaments-manager-dev` replica el stack local —Prometheus, Alertmanager,
+Loki, Tempo, Promtail y Grafana— con volúmenes y red propios. Reutiliza reglas,
+dashboard y fuentes de datos versionadas; Promtail filtra explícitamente el
+proyecto Compose `tournaments-manager-dev` para no mezclar los logs de local.
+La API exporta OTLP/HTTP a `tempo:4318` por la red interna.
+
+Alertmanager entrega los mismos avisos mediante Resend SMTP en
+`smtp.resend.com:587`, con STARTTLS obligatorio. Usa una clave *Sending access*
+distinta de `SMTP_PASSWORD`, montada desde el secreto local
+`infra/dev/alertmanager.smtp-password`; el archivo no se versiona. El remitente
+visible es `FastTourney Dev Alerts <alerts@mail.fasttourney.com>` y el asunto
+empieza por `[DEV]`; el receptor inicial es `alerts@fasttourney.com`.
+
+Grafana (`127.0.0.1:3001`), Prometheus (`127.0.0.1:9091`) y Alertmanager
+(`127.0.0.1:9094`) no tienen ruta Caddy ni Cloudflare: una alerta se entrega por
+correo, pero la operación detallada conserva acceso solo en el Mac. La retención
+sigue siendo de 24 horas y no hay HA, on-call ni alertas nuevas por completitud.
+Véase [ADR-0100](../adr/0100-deliver-public-development-alerts-through-resend.md).
+
+## Validación y cierre de Fase 3
+
+El 2026-08-21 se completaron los dos recorridos que responden preguntas
+distintas:
+
+- **Regla real local:** al detener solo PostgreSQL y mantener peticiones de
+  refresh, la API respondió `500` con `database.query_failed` sin detalles
+  internos. Prometheus activó `SessionRefreshFailureRateCritical`, Alertmanager
+  entregó el aviso a Mailpit y envió su resolución tras recuperar PostgreSQL.
+- **Canal externo de `dev`:** una alerta sintética `critical`, marcada
+  `test=true`, fue aceptada por Alertmanager y Resend y llegó al buzón final a
+  través de `alerts@fasttourney.com` y Cloudflare Email Routing. La prueba se
+  resolvió sin detener API ni PostgreSQL de `dev`.
+
+El secreto `infra/dev/alertmanager.smtp-password` contiene exclusivamente la
+clave, en una sola línea. A diferencia de un archivo `.env`, sus comentarios no
+se interpretan: formarían parte literal de la contraseña SMTP. La comprobación
+operativa valida su presencia y forma sin imprimirlo.
+
+Con esta evidencia se cumple el criterio de salida documentado en
+[ROADMAP.md](../project/ROADMAP.md). Véase la
+[retrospectiva técnica de Fase 3](../project/PHASE_3_RETROSPECTIVE.md).
 
 ## Recorridos revisados
 

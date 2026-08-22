@@ -1,0 +1,38 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: resend-warning
+  group_by: [alertname]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - receiver: resend-critical
+      matchers:
+        - severity="critical"
+      repeat_interval: 10m
+
+receivers:
+  - name: resend-warning
+    email_configs:
+      - to: alerts@fasttourney.com
+        from: FastTourney Dev Alerts <alerts@mail.fasttourney.com>
+        smarthost: smtp.resend.com:587
+        auth_username: resend
+        auth_password_file: /run/secrets/resend_alerts_smtp_password
+        require_tls: true
+        headers:
+          Subject: "[DEV] {{ .CommonLabels.alertname }}"
+        send_resolved: true
+  - name: resend-critical
+    email_configs:
+      - to: alerts@fasttourney.com
+        from: FastTourney Dev Alerts <alerts@mail.fasttourney.com>
+        smarthost: smtp.resend.com:587
+        auth_username: resend
+        auth_password_file: /run/secrets/resend_alerts_smtp_password
+        require_tls: true
+        headers:
+          Subject: "[DEV] {{ .CommonLabels.alertname }}"
+        send_resolved: true

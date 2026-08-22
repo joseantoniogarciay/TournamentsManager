@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 
-import { control, radius, space } from "@tournaments-manager/design-tokens";
+import { color, control, radius, space } from "@tournaments-manager/design-tokens";
 
 import googleLogo from "../../../../assets/google-g.png";
 
@@ -26,6 +26,7 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { APIUnexpectedResponseError } from "@/api/fetch";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
 import { PrivacyPolicyLink } from "@/shared/legal/privacy-policy-link";
+import { TermsOfUseLink } from "@/shared/legal/terms-of-use-link";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
@@ -65,6 +66,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
   const [showPasswordError, setShowPasswordError] = useState(false);
   const [googleUsername, setGoogleUsername] = useState("");
   const [googleUsernameSubmitted, setGoogleUsernameSubmitted] = useState(false);
+  const [googleTermsAccepted, setGoogleTermsAccepted] = useState(false);
   const { isValid: googleUsernameIsValid, status: googleUsernameAvailability } =
     useUsernameAvailability(googleUsername);
   const {
@@ -156,6 +158,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
     ) {
       return;
     }
+    if (!googleTermsAccepted) return;
     void chooseUsername(googleUsername as never);
   };
 
@@ -164,6 +167,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
     dismissPendingAccount();
     setGoogleUsername("");
     setGoogleUsernameSubmitted(false);
+    setGoogleTermsAccepted(false);
   };
 
   const confirmSignOut = () => {
@@ -307,8 +311,21 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
               onChangeText={(value) => setGoogleUsername(value.toLowerCase())}
               value={googleUsername}
             />
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: googleTermsAccepted }}
+              onPress={() => setGoogleTermsAccepted((value) => !value)}
+              style={styles.terms}
+            >
+              <View
+                style={[styles.checkbox, googleTermsAccepted ? styles.checkboxSelected : undefined]}
+              />
+              <Text color="secondary">{t("account_terms_acceptance")}</Text>
+            </Pressable>
+            <TermsOfUseLink />
             <Button
               disabled={
+                !googleTermsAccepted ||
                 googleUsernameAvailability === "checking" ||
                 googleUsernameAvailability === "unavailable"
               }
@@ -344,6 +361,9 @@ const styles = StyleSheet.create({
   authenticatedContent: { gap: space[6], marginHorizontal: space[5] },
   content: { gap: space[5] },
   form: { gap: space[4] },
+  terms: { alignItems: "center", flexDirection: "row", gap: space[2], minHeight: 44 },
+  checkbox: { borderWidth: 1, height: 20, width: 20 },
+  checkboxSelected: { backgroundColor: color.brand.primary },
   forgotPassword: { alignSelf: "flex-end", marginBottom: space[2] },
   forgotPasswordText: { textDecorationLine: "underline" },
   googleButton: {
