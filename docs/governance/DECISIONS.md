@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                               | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------- | ---------- |
+| [0101](../adr/0101-use-linux-vm-k3s-and-ephemeral-eks-labs.md)                               | Usar una VM Linux con K3s y laboratorios EKS efímeros               | Aceptado              | 2026-08-22 |
 | [0100](../adr/0100-deliver-public-development-alerts-through-resend.md)                       | Entregar las alertas de desarrollo público mediante Resend          | Aceptado              | 2026-08-21 |
 | [0099](../adr/0099-route-local-alerts-through-alertmanager.md)                               | Enrutar alertas locales mediante Alertmanager                        | Aceptado              | 2026-08-21 |
 | [0098](../adr/0098-define-local-session-refresh-slo.md)                                      | Definir un SLO local para el refresh de sesión                       | Aceptado              | 2026-08-21 |
@@ -84,7 +85,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0026](../adr/0026-use-aws-organizations-and-temporary-identities.md)                         | Usar AWS Organizations e identidades temporales                      | Aceptado              | 2026-07-25 |
 | [0027](../adr/0027-keep-local-state-until-first-cloud-apply.md)                               | Mantener estado local hasta el primer apply cloud                    | Aceptado              | 2026-07-25 |
 | [0028](../adr/0028-use-hcp-terraform-free-for-remote-state.md)                                | Usar HCP Terraform Free para el estado remoto inicial                | Aceptado              | 2026-07-25 |
-| [0029](../adr/0029-use-public-alb-restricted-fargate-and-no-nat-initially.md)                 | Usar ALB público, Fargate restringido y sin NAT inicialmente         | Aceptado              | 2026-07-25 |
+| [0029](../adr/0029-use-public-alb-restricted-fargate-and-no-nat-initially.md)                 | Usar ALB público, Fargate restringido y sin NAT inicialmente         | Superado parcialmente | 2026-07-25 |
 | [0030](../adr/0030-use-spain-region-and-two-az-cost-gated-network.md)                         | Usar la región España y una red en dos AZ con gasto autorizado       | Aceptado              | 2026-07-25 |
 | [0031](../adr/0031-preserve-pre-auth-tournament-drafts-until-verified.md)                     | Conservar borradores previos al acceso hasta verificar la cuenta     | Aceptado              | 2026-07-26 |
 | [0032](../adr/0032-define-minimum-football-league-data-and-lifecycle.md)                      | Definir los datos mínimos y ciclo de vida de una liga de fútbol      | Superado parcialmente | 2026-07-26 |
@@ -141,7 +142,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0085](../adr/0085-share-canonical-league-state-in-the-client.md)                             | Compartir el estado canónico de cada liga en el cliente              | Aceptado              | 2026-08-10 |
 | [0086](../adr/0086-use-a-durable-internal-notification-inbox.md)                              | Usar un buzón interno de notificaciones duradero                     | Aceptado              | 2026-08-11 |
 | [0087](../adr/0087-use-caddy-for-home-beta-edge.md)                                           | Usar Caddy como borde HTTPS de la beta doméstica                     | Superado por ADR-0090 | 2026-08-11 |
-| [0088](../adr/0088-use-ephemeral-aws-learning-and-home-runtime.md)                            | Usar AWS efímero para aprendizaje y el Mac como runtime habitual     | Aceptado              | 2026-08-11 |
+| [0088](../adr/0088-use-ephemeral-aws-learning-and-home-runtime.md)                            | Usar AWS efímero para aprendizaje y el Mac como runtime habitual     | Superado parcialmente | 2026-08-11 |
 | [0089](../adr/0089-use-fasttourney-domain-and-separated-app-link-hosts.md)                    | Usar `fasttourney.com` y separar hosts de enlaces por entorno        | Aceptado              | 2026-08-11 |
 | [0090](../adr/0090-use-cloudflare-tunnel-for-home-public-ingress.md)                          | Usar Cloudflare Tunnel como entrada pública doméstica                | Aceptado              | 2026-08-11 |
 | [0091](../adr/0091-separate-local-and-public-development-compose-projects.md)                 | Separar Compose local y de desarrollo público                        | Aceptado              | 2026-08-11 |

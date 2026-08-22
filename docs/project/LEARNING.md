@@ -1,5 +1,45 @@
 # Registro de aprendizaje
 
+## 2026-08-21 — Un vertical slice necesita una frontera de cierre
+
+Fase 2 demostró pronto el recorrido acordado de identidad, sesión, publicación y
+lectura de liga, pero el cierre formal se pospuso mientras el backend incorporaba
+el ciclo deportivo, administración y recuperación. El producto ganó capacidad,
+pero la documentación de estado perdió el punto exacto en el que ya existía
+evidencia suficiente.
+
+**Regla reutilizable:** cerrar la retrospectiva cuando se cumple el criterio de
+salida y registrar las ampliaciones como incrementos posteriores. Una fase
+cerrada no impide seguir construyendo; separa lo aprendido de lo que se decidió
+añadir después.
+
+## 2026-08-21 — Una alerta se valida por disparo, entrega y resolución
+
+Una alerta sintética demuestra que el canal de notificación funciona, pero no
+que la expresión de Prometheus alcance su umbral. La caída controlada de
+PostgreSQL demostró en local el recorrido completo de
+`SessionRefreshFailureRateCritical`: respuestas `5xx`, estado activo, correo en
+Mailpit y resolución tras recuperar la dependencia. En `dev`, una alerta marcada
+`test=true` aisló la entrega mediante Resend, Cloudflare y el buzón final sin
+interrumpir el servicio público.
+
+**Regla reutilizable:** verificar por separado la detección y el transporte, y
+cerrar siempre la prueba confirmando la recuperación. Una alerta activa sin
+entrega o una entrega sintética sin regla evaluada dejan preguntas diferentes
+sin responder.
+
+## 2026-08-21 — Un archivo de secreto no es un archivo de variables
+
+Docker monta el contenido literal de un secreto. Los comentarios conservados
+desde un archivo de ejemplo pasaron a formar parte de la contraseña SMTP de
+Alertmanager y Resend rechazó la autenticación, mientras la API funcionaba
+porque su archivo `.env` sí interpreta comentarios y asignaciones.
+
+**Regla reutilizable:** un secreto de archivo contiene solo el valor esperado
+por el proceso. Su preflight comprueba presencia, número de líneas y forma sin
+mostrarlo; la documentación distingue expresamente secreto literal de contrato
+`.env`.
+
 ## 2026-08-21 — La entrega de una alerta no debe compartir la credencial del producto
 
 Alertmanager y la API pueden usar el mismo SMTP de Resend, pero tienen radios de
@@ -2420,3 +2460,15 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   contenedor imposible como respuesta no esperada y descarta únicamente los
   miembros inválidos antes de entregarlos a la interfaz. No se modifica el
   cliente generado ni se introduce una validación global de reglas de negocio.
+
+### 2026-08-22 — El consentimiento puede prepararse sin adelantar la telemetría
+
+- **Aprendido:** una preferencia de analítica no necesita activar el proveedor
+  que regulará en el futuro. Un provider local compartido puede partir de
+  `false`, persistir la elección por plataforma y permitir que Inicio y Ajustes
+  expresen el mismo control sin empezar a capturar datos.
+- **Regla reutilizable:** la primera aceptación puede retirar una invitación
+  contextual de la home y confirmar dónde se revoca; Ajustes conserva la misma
+  card y switch para cualquier cambio posterior. La preferencia local no es
+  evidencia de consentimiento para un proveedor hasta que ese proveedor se
+  integre y se revise su configuración efectiva.

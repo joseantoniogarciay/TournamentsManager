@@ -25,6 +25,15 @@ if grep -Fqx 'replace-with-resend-alerts-sending-access-key' infra/dev/alertmana
   exit 1
 fi
 
+if ! awk '
+  NR != 1 || $0 !~ /^re_[A-Za-z0-9_-]+$/ { valid = 0; next }
+  { valid = 1 }
+  END { exit !(valid && NR == 1) }
+' infra/dev/alertmanager.smtp-password; then
+  echo "infra/dev/alertmanager.smtp-password debe contener solo una clave Resend re_... en una unica linea." >&2
+  exit 1
+fi
+
 expected_database_url="postgres://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
 if [ "${DATABASE_URL:-}" != "$expected_database_url" ]; then
   echo "DATABASE_URL de dev debe usar exactamente POSTGRES_APP_USER y POSTGRES_APP_PASSWORD." >&2

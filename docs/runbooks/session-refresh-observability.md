@@ -70,11 +70,12 @@ puertos `9091` y `9094`; no se consultan desde el túnel. El receptor de las
 alertas es Resend SMTP con STARTTLS y una clave separada en
 `infra/dev/alertmanager.smtp-password`.
 
-Antes de probar una alerta, confirma que el secreto existe, que no contiene el
-texto de ejemplo y que `make dev-public-deploy` ha terminado. Provoca la misma
-caída controlada de PostgreSQL solo si `dev` no tiene usuarios que puedan verse
-afectados; comprueba el aviso recibido y su resolución tras recuperar la base.
-No copies la clave SMTP ni contenido de correos a Grafana, tickets o logs.
+Antes de probar una alerta, confirma que el secreto existe, contiene solo la
+clave `re_...` en una línea, no conserva comentarios ni el texto de ejemplo y que
+`make dev-public-deploy` ha terminado. Provoca la misma caída controlada de
+PostgreSQL solo si `dev` no tiene usuarios que puedan verse afectados; comprueba
+el aviso recibido y su resolución tras recuperar la base. No copies la clave SMTP
+ni contenido de correos a Grafana, tickets o logs.
 
 ## Prueba de fallo controlada
 

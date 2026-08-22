@@ -71,13 +71,13 @@ fallback web y evita que una previsualización del enlace vincule una cuenta.
 
 ## Decisiones pendientes
 
-- generación o escritura manual de tipos de transporte Go;
-- mecanismos de protección CSRF para el transporte cookie;
-- operaciones posteriores: edición, inicio, resultados, seguimiento y administración;
-- idempotencia y concurrencia;
-- paginación, filtros y ordenación;
-- compatibilidad y retirada de versiones;
-- límites, timeouts y protección de abuso.
+- estrategia de compatibilidad y retirada cuando exista una segunda versión;
+- presupuestos generales de timeout y protección de abuso para rutas que
+  adquieran tráfico representativo;
+- idempotencia explícita para futuras operaciones cuya repetición pueda causar
+  un efecto distinto del contrato actual;
+- generación de tipos de transporte Go si la duplicación manual deja de ser
+  mantenible.
 
 ## Baseline de calidad
 

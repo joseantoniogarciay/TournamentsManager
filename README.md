@@ -1,8 +1,8 @@
 # TournamentsManager — Engineering Handbook
 
-> Estado: Fase 2 — primer vertical slice de backend en curso
+> Estado: Fases 2 y 3 completadas; Fase 4 pendiente de análisis y decisión
 >
-> Última revisión: 2026-07-28
+> Última revisión: 2026-08-21
 
 Este repositorio empieza por el handbook porque el objetivo no es solo entregar una
 aplicación: es aprender a diseñar, construir, desplegar y operar un producto con
@@ -128,13 +128,15 @@ La guía de recorrido y organización del backend está en
 | Región y red AWS | España (`eu-south-2`); VPC separada por cuenta en dos AZ; gasto solo tras autorización explícita | [ADR-0030](docs/adr/0030-use-spain-region-and-two-az-cost-gated-network.md) |
 | Framework y rendering del cliente | Aceptado | [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md), [ADR-0016](docs/adr/0016-use-client-side-web-rendering-initially.md) |
 
-La [base técnica](docs/governance/TECHNICAL_BASELINE.md), el gate 0B y la Fase 1
-están cerrados. El proyecto se encuentra en la [Fase 2: Backend](docs/project/ROADMAP.md):
-el primer vertical slice implementa identidad local, publicación y consulta de
-ligas de forma incremental. El corte activo es el registro local de una cuenta
-pendiente; la verificación, sesión y publicación se incorporarán en los cortes
-siguientes. Las decisiones nuevas que alcancen el umbral definido siguen
-requiriendo ADR aceptado.
+La [base técnica](docs/governance/TECHNICAL_BASELINE.md), el gate 0B y las fases
+1, [2](docs/project/PHASE_2_RETROSPECTIVE.md) y
+[3](docs/project/PHASE_3_RETROSPECTIVE.md) están cerrados. El backend entrega el
+vertical slice, conserva sus límites arquitectónicos y permite correlacionar
+logs, métricas y trazas, evaluar el SLO del refresh y entregar alertas en local
+y `dev`. El siguiente gate es analizar Kubernetes frente al Compose ya medido;
+la dirección del manifiesto no autoriza por sí sola una implementación de Fase
+4. Las decisiones nuevas que alcancen el umbral definido siguen requiriendo ADR
+aceptado.
 
 ## Cliente universal
 

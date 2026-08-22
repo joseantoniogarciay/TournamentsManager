@@ -23,12 +23,15 @@ type ThemeColors = {
 
 type PreferencesContextValue = {
   themePreference: ThemePreference;
+  productAnalyticsEnabled: boolean;
   resolvedTheme: ResolvedTheme;
+  setProductAnalyticsEnabled: (enabled: boolean) => void;
   colors: ThemeColors;
   setThemePreference: (theme: ThemePreference) => void;
 };
 
 const storageKey = "tournaments-manager.theme-preference";
+const productAnalyticsStorageKey = "tournaments-manager.product-analytics-enabled";
 
 const lightColors: ThemeColors = {
   surface: { canvas: "#F8FAFC", default: "#FFFFFF", subtle: "#F1F5F9" },
@@ -51,14 +54,19 @@ const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 export function PreferencesProvider({ children }: PropsWithChildren) {
   const systemTheme = useColorScheme();
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>("system");
+  const [productAnalyticsEnabled, setProductAnalyticsEnabledState] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    void AsyncStorage.getItem(storageKey)
-      .then((stored) => {
-        if (stored === "system" || stored === "light" || stored === "dark") {
-          setThemePreferenceState(stored);
+    void Promise.all([
+      AsyncStorage.getItem(storageKey),
+      AsyncStorage.getItem(productAnalyticsStorageKey),
+    ])
+      .then(([storedTheme, storedProductAnalytics]) => {
+        if (storedTheme === "system" || storedTheme === "light" || storedTheme === "dark") {
+          setThemePreferenceState(storedTheme);
         }
+        setProductAnalyticsEnabledState(storedProductAnalytics === "true");
       })
       .finally(() => setIsHydrated(true));
   }, []);
@@ -68,17 +76,24 @@ export function PreferencesProvider({ children }: PropsWithChildren) {
     void AsyncStorage.setItem(storageKey, theme);
   };
 
+  const setProductAnalyticsEnabled = (enabled: boolean) => {
+    setProductAnalyticsEnabledState(enabled);
+    void AsyncStorage.setItem(productAnalyticsStorageKey, String(enabled));
+  };
+
   const resolvedTheme: ResolvedTheme =
     themePreference === "system" ? (systemTheme === "dark" ? "dark" : "light") : themePreference;
 
   const value = useMemo(
     () => ({
       themePreference,
+      productAnalyticsEnabled,
       resolvedTheme,
+      setProductAnalyticsEnabled,
       colors: resolvedTheme === "dark" ? darkColors : lightColors,
       setThemePreference,
     }),
-    [resolvedTheme, themePreference],
+    [productAnalyticsEnabled, resolvedTheme, themePreference],
   );
 
   return isHydrated ? (

@@ -147,6 +147,29 @@ correo, pero la operación detallada conserva acceso solo en el Mac. La retenci�
 sigue siendo de 24 horas y no hay HA, on-call ni alertas nuevas por completitud.
 Véase [ADR-0100](../adr/0100-deliver-public-development-alerts-through-resend.md).
 
+## Validación y cierre de Fase 3
+
+El 2026-08-21 se completaron los dos recorridos que responden preguntas
+distintas:
+
+- **Regla real local:** al detener solo PostgreSQL y mantener peticiones de
+  refresh, la API respondió `500` con `database.query_failed` sin detalles
+  internos. Prometheus activó `SessionRefreshFailureRateCritical`, Alertmanager
+  entregó el aviso a Mailpit y envió su resolución tras recuperar PostgreSQL.
+- **Canal externo de `dev`:** una alerta sintética `critical`, marcada
+  `test=true`, fue aceptada por Alertmanager y Resend y llegó al buzón final a
+  través de `alerts@fasttourney.com` y Cloudflare Email Routing. La prueba se
+  resolvió sin detener API ni PostgreSQL de `dev`.
+
+El secreto `infra/dev/alertmanager.smtp-password` contiene exclusivamente la
+clave, en una sola línea. A diferencia de un archivo `.env`, sus comentarios no
+se interpretan: formarían parte literal de la contraseña SMTP. La comprobación
+operativa valida su presencia y forma sin imprimirlo.
+
+Con esta evidencia se cumple el criterio de salida documentado en
+[ROADMAP.md](../project/ROADMAP.md). Véase la
+[retrospectiva técnica de Fase 3](../project/PHASE_3_RETROSPECTIVE.md).
+
 ## Recorridos revisados
 
 | Ruta | Spans hijos relevantes | Decisión |

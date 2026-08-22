@@ -1,11 +1,11 @@
 # ADR-0088: Usar AWS de forma efímera para aprendizaje y el Mac como runtime doméstico habitual
 
-- **Estado:** Aceptado
+- **Estado:** Superado parcialmente
 - **Fecha:** 2026-08-11
 - **Decisor:** Usuario, mediante aceptación explícita
 - **Propietario del análisis:** Asistente como mentor técnico
 - **Supera a:** ADR-0023
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0101, en la ruta de orquestación cloud
 
 ## Problema
 
@@ -16,7 +16,9 @@ El proyecto necesita aprender el ciclo real de AWS sin convertir su infraestruct
 - ADR-0022 mantiene una imagen OCI portable para la API.
 - ADR-0023 orientaba el runtime cloud futuro a ECS con Fargate, pero no creaba recursos ni autorizaba gasto.
 - El Mac dispone de capacidad suficiente para desarrollo y un servicio doméstico de alcance pequeño; su red y alimentación son un único punto de fallo.
-- AWS sigue siendo necesario como aprendizaje práctico de Terraform, ECS, Fargate, ALB, RDS, identidad, red, observabilidad y destrucción controlada.
+- AWS sigue siendo necesario como aprendizaje práctico de Terraform, EKS,
+  identidad, red, observabilidad y destrucción controlada. La topología de
+  datos, entrada y cómputo de EKS queda pendiente de decisión posterior.
 
 ## Criterios de decisión
 

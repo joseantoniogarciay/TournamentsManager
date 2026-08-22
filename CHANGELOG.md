@@ -6,7 +6,25 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Changed
+
+- Inicio muestra una invitación de analítica opcional con switch apagado; al
+  aceptarla, la preferencia persistente desaparece de Inicio y permanece en
+  Ajustes. La preparación no inicializa PostHog ni recoge datos hasta el
+  disparador aceptado de ADR-0060.
+
+- La decisión diferida de observabilidad de producto precisa su límite de
+  privacidad: PostHog, activado solo mediante opt-in revocable, conserva la
+  sesión de interfaz; un `interaction_id` efímero permite buscar una operación
+  concreta en Loki/Tempo, sin propagar una traza de sesión ni hacer que Grafana
+  reconstruya el recorrido de una persona. Se documentan también los gates de
+  App Tracking Transparency y las declaraciones de tiendas móviles.
+
 ### Fixed
+
+- El preflight de `dev-public-deploy` rechaza ahora el secreto SMTP de
+  Alertmanager si contiene comentarios, varias líneas o un valor que no tenga
+  forma de clave Resend; la validación no imprime la credencial.
 
 - Expo SDK 57 vuelve a tener su conjunto compatible: `expo` pasa a 57.0.15 y
   sus paquetes directos relacionados a las revisiones solicitadas por Expo CLI.
@@ -165,6 +183,17 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   mientras los datos sean exclusivamente locales y descartables.
 
 ### Changed
+
+- Fase 2 cerrada formalmente: la retrospectiva distingue el vertical slice
+  original —identidad verificada, sesión, publicación y lectura de liga— de las
+  capacidades deportivas y de cuenta incorporadas después. Roadmap, estado del
+  handbook y pendientes de API quedan reconciliados con la implementación.
+
+- Fase 3 de observabilidad cerrada: una caída controlada de PostgreSQL activó
+  y resolvió la alerta real de tasa de fallos del refresh en local, y una alerta
+  sintética recorrió Alertmanager, Resend, Cloudflare y el buzón final en `dev`.
+  La retrospectiva conserva Collector, HA, retención larga y SLOs generales
+  como deuda deliberada con disparadores, no como cobertura pendiente.
 
 - Los deep links que arrancan iOS o Android se encolan en memoria hasta que
   Inicio se haya montado; las entregas sobre una aplicación ya viva continúan
