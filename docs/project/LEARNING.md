@@ -2483,3 +2483,14 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   la hidratación y escritura persistentes se tratan como mejora opcional y sus
   fallos no capturados conservan el valor en memoria. Para la analítica, ese
   valor seguro es siempre opt-in desactivado.
+
+### 2026-08-22 — Las fuentes son mejora visual, no una puerta de arranque
+
+- **Aprendido:** un perfil privado puede retrasar recursos que una sesión
+  normal ya conserva en caché. Devolver una raíz vacía hasta que una fuente
+  termine de cargar convierte esa mejora visual en una pantalla aparentemente
+  bloqueada.
+- **Regla reutilizable:** el cliente puede esperar brevemente por su tipografía
+  propia, pero debe continuar con la fuente del sistema si no está disponible;
+  cuando la fuente cargue, React Native Web aplica la familia prevista sin
+  impedir que la persona use la aplicación.
