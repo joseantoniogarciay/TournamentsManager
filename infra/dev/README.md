@@ -57,9 +57,9 @@ make dev-public-deploy
 
 El primer despliegue tras adoptar ADR-0097 exige antes editar los dos contratos
 de entorno con las credenciales nuevas y ejecutar `make dev-public-reset`,
-`make dev-public-bootstrap`. Después, `make dev-public-deploy` recrea la API
-con `POSTGRES_APP_USER`; no recibe ni la contraseña de migración ni la de
-propiedad.
+`make dev-public-bootstrap`. Después, `make dev-public-deploy` aplica las
+migraciones pendientes y recrea la API con `POSTGRES_APP_USER`; no recibe ni la
+contraseña de migración ni la de propiedad.
 
 El comando exige un árbol limpio cuyo `HEAD` coincida exactamente con
 `origin/develop`. Construye una imagen `runtime` etiquetada con el SHA completo,

@@ -70,6 +70,11 @@ if docker image inspect "$api_image" >/dev/null 2>&1; then
 fi
 
 docker build --target runtime --tag "$api_image" apps/backend
+
+# Las migraciones son forward-only y ocurren antes de sustituir la API. El
+# despliegue no puede llegar a ejecutar código que espere un esquema inexistente.
+make dev-public-migrate
+
 ./infra/home/deploy-dev-web.sh "$release_sha"
 
 DEV_API_IMAGE="$api_image" \
