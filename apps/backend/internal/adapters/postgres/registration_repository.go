@@ -2,12 +2,15 @@ package postgres
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres/sqlc"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 )
 
@@ -137,6 +140,10 @@ func (r RegistrationRepository) CreatePending(ctx context.Context, input registr
 	}
 	if _, err := tx.Exec(ctx, `-- name: CreatePendingVerification :exec
 		INSERT INTO email_verification_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() + interval '24 hours')`, accountID, tokenHash); err != nil {
+		return false, err
+	}
+	emailHash := sha256.Sum256([]byte("legal-account-email:" + strings.ToLower(input.Email)))
+	if _, err := tx.Exec(ctx, `INSERT INTO legal_account_acceptances (account_id, email_hash, terms_version, terms_content_hash, source) VALUES ($1, $2, $3, $4, 'password_registration')`, accountID, emailHash[:], input.TermsVersion, legal.CurrentTermsContentHash()); err != nil {
 		return false, err
 	}
 	if input.Draft != nil {

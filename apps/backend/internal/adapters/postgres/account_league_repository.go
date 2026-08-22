@@ -54,6 +54,16 @@ func (r AccountLeagueRepository) PurgeExpired(ctx context.Context, limit int) (i
 			FOR UPDATE SKIP LOCKED
 			LIMIT $1
 		)
+		, blocked_legal_evidence AS (
+			UPDATE legal_account_acceptances
+			SET retention_until = now() + interval '5 years', updated_at = now()
+			WHERE account_id IN (SELECT id FROM candidates)
+		)
+		, expired_legal_evidence AS (
+			DELETE FROM legal_account_acceptances
+			WHERE retention_until IS NOT NULL
+				AND retention_until <= now()
+		)
 		DELETE FROM accounts
 		USING candidates
 		WHERE accounts.id = candidates.id`, limit)

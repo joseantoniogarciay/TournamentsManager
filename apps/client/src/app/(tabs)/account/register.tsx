@@ -1,8 +1,8 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { space } from "@tournaments-manager/design-tokens";
+import { color, space } from "@tournaments-manager/design-tokens";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
@@ -21,6 +21,7 @@ import { registerLocalAccountRequest } from "@/features/registration/api";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { APIUnexpectedResponseError } from "@/api/fetch";
 import { PrivacyPolicyLink } from "@/shared/legal/privacy-policy-link";
+import { TermsOfUseLink } from "@/shared/legal/terms-of-use-link";
 import {
   clearLocalLeagueDraft,
   getLocalLeagueDraft,
@@ -36,6 +37,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isValid: usernameIsValid, status: usernameAvailability } =
     useUsernameAvailability(username);
@@ -56,6 +58,7 @@ export default function RegisterScreen() {
       usernameError ||
       emailError ||
       passwordError ||
+      !acceptedTerms ||
       usernameAvailability === "checking" ||
       usernameAvailability === "unavailable"
     ) {
@@ -70,6 +73,7 @@ export default function RegisterScreen() {
         email: email.trim(),
         locale: getCurrentLanguage(),
         password,
+        termsVersion: "2026-08-22",
         username,
       });
       if (draft) await clearLocalLeagueDraft();
@@ -138,9 +142,19 @@ export default function RegisterScreen() {
                 {password.length < 15 ? t("password_strength_ok") : t("password_strength_strong")}
               </Text>
             ) : null}
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: acceptedTerms }}
+              onPress={() => setAcceptedTerms((value) => !value)}
+              style={styles.terms}
+            >
+              <View style={[styles.checkbox, acceptedTerms ? styles.checkboxSelected : undefined]} />
+              <Text color="secondary">{t("account_terms_acceptance")}</Text>
+            </Pressable>
+            <TermsOfUseLink />
             <Button
               disabled={
-                usernameAvailability === "checking" || usernameAvailability === "unavailable"
+                !acceptedTerms || usernameAvailability === "checking" || usernameAvailability === "unavailable"
               }
               label={t("account_register")}
               loading={isSubmitting}
@@ -162,6 +176,9 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   content: {},
   form: { gap: space[4] },
+  terms: { alignItems: "center", flexDirection: "row", gap: space[2], minHeight: 44 },
+  checkbox: { borderWidth: 1, height: 20, width: 20 },
+  checkboxSelected: { backgroundColor: color.brand.primary },
   privacyPolicyLink: {
     alignSelf: "flex-end",
     marginHorizontal: space[5],

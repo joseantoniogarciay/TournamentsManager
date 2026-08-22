@@ -21,6 +21,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
@@ -984,6 +985,7 @@ type googleSessionRequest struct {
 	SessionTransport string              `json:"sessionTransport"`
 	Username         string              `json:"username"`
 	Locale           string              `json:"locale"`
+	TermsVersion     string              `json:"termsVersion"`
 	Draft            *registration.Draft `json:"draft"`
 }
 
@@ -1005,14 +1007,14 @@ func createGoogleChallenge(service federated.Service) http.HandlerFunc {
 func createGoogleSession(service federated.Service, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body googleSessionRequest
-		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") || (body.Draft != nil && (body.Username == "" || !validRegistrationDraft(body.Draft))) {
+		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") || (body.Username != "" && body.TermsVersion != legal.CurrentTermsVersion) || (body.Draft != nil && (body.Username == "" || !validRegistrationDraft(body.Draft))) {
 			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		var registrationInput *federated.Registration
 		if body.Username != "" {
-			registrationInput = &federated.Registration{Username: body.Username, Locale: body.Locale, Draft: toFederatedDraft(body.Draft)}
+			registrationInput = &federated.Registration{Username: body.Username, Locale: body.Locale, TermsVersion: body.TermsVersion, Draft: toFederatedDraft(body.Draft)}
 		}
 		established, err := service.Authenticate(r.Context(), body.ChallengeID, body.IDToken, registrationInput)
 		if errors.Is(err, federated.ErrRegistration) {
@@ -1387,11 +1389,12 @@ func healthz(writer http.ResponseWriter, _ *http.Request) {
 }
 
 type registerRequest struct {
-	Email    string       `json:"email"`
-	Locale   string       `json:"locale"`
-	Password string       `json:"password"`
-	Username string       `json:"username"`
-	Draft    *leagueInput `json:"draft"`
+	Email        string       `json:"email"`
+	Locale       string       `json:"locale"`
+	Password     string       `json:"password"`
+	Username     string       `json:"username"`
+	TermsVersion string       `json:"termsVersion"`
+	Draft        *leagueInput `json:"draft"`
 }
 
 type loginRequest struct {
@@ -1450,10 +1453,11 @@ func register(service registration.Service, limiter *requestLimiter, resolveClie
 		}
 
 		input := registration.NormalizeInput(registration.Input{
-			Email:    body.Email,
-			Locale:   registration.Locale(body.Locale),
-			Password: body.Password,
-			Username: body.Username,
+			Email:        body.Email,
+			Locale:       registration.Locale(body.Locale),
+			Password:     body.Password,
+			TermsVersion: body.TermsVersion,
+			Username:     body.Username,
 		})
 		if body.Draft != nil {
 			teams := make([]string, len(body.Draft.Teams))
@@ -1463,7 +1467,7 @@ func register(service registration.Service, limiter *requestLimiter, resolveClie
 			input.Draft = &registration.Draft{Name: body.Draft.Name, Teams: teams}
 		}
 		input = registration.NormalizeInput(input)
-		if !validRegistration(input) || !validRegistrationDraft(input.Draft) {
+		if !validRegistration(input) || input.TermsVersion != legal.CurrentTermsVersion || !validRegistrationDraft(input.Draft) {
 			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return

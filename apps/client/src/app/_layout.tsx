@@ -137,6 +137,13 @@ function RootNavigator() {
         }}
       />
       <Stack.Screen
+        name="terms-of-use"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
         name="league/[id]"
         options={{
           headerShown: true,

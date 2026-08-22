@@ -17,12 +17,25 @@ CMD ["go", "tool", "-modfile=go.tool.mod", "air", "-c", ".air.toml"]
 FROM modules AS build
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/api ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/legal-audit-backup ./cmd/legal-audit-backup
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/legal-audit-restore ./cmd/legal-audit-restore
+RUN CGO_ENABLED=0 GOOS=linux go build -modfile=go.tool.mod -trimpath -ldflags="-s -w" -o /out/goose github.com/pressly/goose/v3/cmd/goose
 
 # scratch deja fuera compilador, fuentes y Air. El certificado permite las
 # verificaciones TLS salientes que requiera la API.
 FROM scratch AS runtime
 COPY --from=modules /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /out/api /api
+COPY --from=build /out/legal-audit-backup /legal-audit-backup
+COPY --from=build /out/legal-audit-restore /legal-audit-restore
 USER 65532:65532
 EXPOSE 8080
 ENTRYPOINT ["/api"]
+
+# El migrador es una imagen separada: no se distribuye con la API ni se ejecuta
+# en cada arranque. Solo recibe la credencial de migración en una ejecución
+# explícita de Compose.
+FROM scratch AS migrator
+COPY --from=build /out/goose /goose
+COPY db/migrations /migrations
+ENTRYPOINT ["/goose"]

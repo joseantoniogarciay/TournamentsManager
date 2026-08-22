@@ -41,6 +41,7 @@ export async function finishGoogleAuthentication(input: {
   idToken: string;
   locale?: Locale;
   sessionTransport: Transport;
+  termsVersion?: "2026-08-22";
   username?: Username;
 }) {
   const response = await createGoogleSession(
@@ -50,6 +51,7 @@ export async function finishGoogleAuthentication(input: {
       idToken: input.idToken,
       locale: input.locale,
       sessionTransport: input.sessionTransport,
+      termsVersion: input.termsVersion,
       username: input.username,
     },
     undefined,

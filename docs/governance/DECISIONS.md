@@ -49,6 +49,8 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                               | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------- | ---------- |
+| [0107](../adr/0107-activate-immutable-schema-migrations.md)                                  | Activar migraciones inmutables de esquema                            | Aceptado              | 2026-08-22 |
+| [0106](../adr/0106-version-terms-and-retain-minimum-legal-audit-evidence.md)                 | Versionar términos y conservar evidencia legal mínima                | Aceptado              | 2026-08-22 |
 | [0105](../adr/0105-separate-essential-client-reliability-from-optional-product-analytics.md) | Separar fiabilidad esencial de cliente y analítica opcional de producto | Aceptado           | 2026-08-22 |
 | [0104](../adr/0104-capture-minimum-consented-product-outcomes.md)                             | Capturar resultados mínimos de producto con consentimiento           | Aceptado              | 2026-08-22 |
 | [0103](../adr/0103-correlate-consented-client-events-with-api-traces.md)                      | Correlacionar eventos del cliente con trazas de la API               | Aceptado              | 2026-08-22 |

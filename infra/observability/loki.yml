@@ -1,5 +1,8 @@
 auth_enabled: false
 
+limits_config:
+  retention_period: 720h
+
 server:
   http_listen_port: 3100
 

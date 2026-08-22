@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal"
+
 	"golang.org/x/crypto/argon2"
 )
 
@@ -49,11 +51,12 @@ const (
 
 // Input is the validated information received by the use case.
 type Input struct {
-	Email    string
-	Locale   Locale
-	Username string
-	Password string
-	Draft    *Draft
+	Email        string
+	Locale       Locale
+	Username     string
+	Password     string
+	TermsVersion string
+	Draft        *Draft
 }
 
 // Draft represents a complete draft crossing the registration boundary.
@@ -239,6 +242,9 @@ func (s Service) SearchUsernames(ctx context.Context, query string) ([]string, e
 // Register creates a pending account. Its response does not distinguish an existing
 // email to prevent the endpoint from becoming an account oracle.
 func (s Service) Register(ctx context.Context, input Input) error {
+	if input.TermsVersion != legal.CurrentTermsVersion {
+		return fmt.Errorf("versión de términos no aceptada")
+	}
 	passwordHash, err := s.passwordProtector.Hash(ctx, input.Password)
 	if err != nil {
 		return fmt.Errorf("generar hash de contraseña: %w", err)

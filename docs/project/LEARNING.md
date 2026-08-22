@@ -2547,3 +2547,13 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
   propia, pero debe continuar con la fuente del sistema si no está disponible;
   cuando la fuente cargue, React Native Web aplica la familia prevista sin
   impedir que la persona use la aplicación.
+
+### 2026-08-22 — La aceptación contractual es evidencia, no solo una casilla
+
+- **Aprendido:** una casilla que habilita el botón no prueba por sí sola qué
+  texto aceptó una persona. La evidencia necesita versión, huella del contenido,
+  momento y canal persistidos atómicamente con el alta.
+- **Regla reutilizable:** una versión legal inmutable tiene un documento
+  accesible antes de aceptar, una huella comprobada frente a ese documento y un
+  backend que rechaza cualquier versión distinta. La UI solo evita errores de
+  uso; el servidor conserva la autoridad.

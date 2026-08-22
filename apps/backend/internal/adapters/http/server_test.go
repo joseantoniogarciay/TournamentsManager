@@ -803,7 +803,7 @@ func TestRegistrationRequiresSupportedLocale(t *testing.T) {
 		body   string
 		status int
 	}{
-		{"supported", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"fr"}`, http.StatusAccepted},
+		{"supported", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"fr","termsVersion":"2026-08-22"}`, http.StatusAccepted},
 		{"missing", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name"}`, http.StatusBadRequest},
 		{"unsupported", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"de"}`, http.StatusBadRequest},
 		{"non-canonical", `{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"FR"}`, http.StatusBadRequest},
@@ -843,7 +843,7 @@ func TestRegistrationRateLimitsByClientIP(t *testing.T) {
 
 	handler := NewHandler(registration.NewService(testRegistrationRepository{}, nil), nil, testAuthenticator{}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins)
 	for range registrationLimit {
-		request := httptest.NewRequest(http.MethodPost, "/v1/registrations", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"es"}`))
+		request := httptest.NewRequest(http.MethodPost, "/v1/registrations", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"es","termsVersion":"2026-08-22"}`))
 		request.RemoteAddr = "203.0.113.1:10000"
 		request.Header.Set("Content-Type", "application/json")
 		recorder := httptest.NewRecorder()
@@ -853,7 +853,7 @@ func TestRegistrationRateLimitsByClientIP(t *testing.T) {
 		}
 	}
 
-	request := httptest.NewRequest(http.MethodPost, "/v1/registrations", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"es"}`))
+	request := httptest.NewRequest(http.MethodPost, "/v1/registrations", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"es","termsVersion":"2026-08-22"}`))
 	request.RemoteAddr = "203.0.113.1:10000"
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()

@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal"
 )
 
 const (
@@ -45,8 +47,8 @@ type Challenge struct{ ID, Nonce, ExpiresAt string }
 
 // Registration contains the fields required to create a social account.
 type Registration struct {
-	Username, Locale string
-	Draft            *Draft
+	Username, Locale, TermsVersion string
+	Draft                          *Draft
 }
 
 // Draft is the complete tournament that can be created with a new account in the same transaction.
@@ -147,7 +149,7 @@ func (s Service) Authenticate(ctx context.Context, challengeID, idToken string, 
 	if err != nil {
 		return EstablishedSession{}, err
 	}
-	if registration != nil && (registration.Username == "" || registration.Locale == "") {
+	if registration != nil && (registration.Username == "" || registration.Locale == "" || registration.TermsVersion != legal.CurrentTermsVersion) {
 		return EstablishedSession{}, ErrRegistration
 	}
 	challengeHash := sha256.Sum256([]byte("google-login-nonce:" + identity.Nonce))

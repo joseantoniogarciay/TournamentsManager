@@ -99,6 +99,18 @@ type LeagueTeam struct {
 	WithdrawnAt    pgtype.Timestamptz
 }
 
+type LegalAccountAcceptance struct {
+	ID               pgtype.UUID
+	AccountID        pgtype.UUID
+	EmailHash        []byte
+	TermsVersion     string
+	TermsContentHash []byte
+	Source           string
+	AcceptedAt       pgtype.Timestamptz
+	RetentionUntil   pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
+}
+
 type LocalCredential struct {
 	AccountID    pgtype.UUID
 	PasswordHash string

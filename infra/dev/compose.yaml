@@ -23,8 +23,28 @@ services:
       target: runtime
     env_file:
       - api.docker.env
+    volumes:
+      - ${LEGAL_AUDIT_BACKUP_DESTINATION}:/legal-audit-backups
+      - ${LEGAL_AUDIT_BACKUP_STATE_DIRECTORY}:/legal-audit-state
+    secrets:
+      - legal_audit_backup_key
     ports:
       - "127.0.0.1:8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  migrator:
+    image: ${DEV_MIGRATOR_IMAGE:-tournaments-manager-dev-migrator:latest}
+    restart: "no"
+    profiles: ["migration"]
+    build:
+      context: ../../apps/backend
+      target: migrator
+    environment:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "postgresql://${POSTGRES_MIGRATOR_USER}:${POSTGRES_MIGRATOR_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable&search_path=public&options=-c%20role%3Dtournaments_manager_dev_schema_owner"
+    command: ["-dir", "/migrations", "up"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -114,6 +134,8 @@ volumes:
 secrets:
   resend_alerts_smtp_password:
     file: ./alertmanager.smtp-password
+  legal_audit_backup_key:
+    file: ${LEGAL_AUDIT_BACKUP_KEY_PATH}
 
 networks:
   default:
