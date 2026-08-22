@@ -104,8 +104,6 @@ export default function HomeScreen() {
           </View>
         </Card>
 
-        <ProductAnalyticsCard />
-
         {user ? (
           <View style={styles.recentSection}>
             <Text style={styles.recentTitle} variant="title">
@@ -126,6 +124,8 @@ export default function HomeScreen() {
         ) : null}
 
         {!user && !isRestoring ? <GuestOnboarding t={t} /> : null}
+
+        <ProductAnalyticsCard />
       </ScrollView>
     </Screen>
   );
