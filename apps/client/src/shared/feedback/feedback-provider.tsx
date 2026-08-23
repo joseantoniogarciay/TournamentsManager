@@ -14,6 +14,7 @@ import {
   Animated,
   Modal,
   PanResponder,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -240,6 +241,17 @@ export function FeedbackBanner() {
   );
   if (!feedbackBanner || !isFocused) return null;
 
+  // En web el Modal de react-native-web crea un portal de viewport completo.
+  // Aunque sea transparente, captura las pulsaciones fuera del banner y Safari
+  // iOS puede usar su superficie para colorear el área segura superior.
+  if (Platform.OS === "web") {
+    return (
+      <View pointerEvents="box-none" style={styles.webHost}>
+        {feedbackBanner}
+      </View>
+    );
+  }
+
   return (
     <Modal
       animationType="none"
@@ -258,6 +270,15 @@ export function FeedbackBanner() {
 
 const styles = StyleSheet.create({
   modalHost: { flex: 1 },
+  webHost: {
+    bottom: 0,
+    left: 0,
+    pointerEvents: "box-none",
+    position: "absolute",
+    right: 0,
+    top: 0,
+    zIndex: 1,
+  },
   banner: {
     borderRadius: radius.card,
     borderWidth: 1,

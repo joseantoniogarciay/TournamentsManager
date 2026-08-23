@@ -1,5 +1,16 @@
 # Registro de aprendizaje
 
+## 2026-08-23 — Un aviso no es un diálogo en la web
+
+Un banner debe superponerse al contenido sin bloquearlo: solo su propia card
+recibe toques para descartarla. `Modal` de React Native Web crea en cambio un
+portal de viewport completo; aun transparente, intercepta el resto de la página
+y Safari iOS puede resolver el color de su área segura desde esa superficie.
+
+**Regla reutilizable:** el host web de feedback se monta de forma absoluta en la
+`Screen` enfocada con `pointerEvents="box-none"`; las apps nativas conservan el
+modal, que sí es el mecanismo de presentación correcto en ese entorno.
+
 ## 2026-08-22 — Fiabilidad y analítica son finalidades distintas
 
 Un crash nativo o una excepción no controlada impiden prestar el servicio y no
