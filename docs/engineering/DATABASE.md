@@ -104,6 +104,11 @@ genérica de unit of work o repository antes de que proteja un límite real.
 - datos de desarrollo y pruebas;
 - backup, restore, retención y datos sensibles.
 
+El entorno público `dev` ya tiene una decisión operativa acotada: ADR-0108 usa
+pgBackRest con copia física, WAL archivado, cifrado y restauración aislada. El
+procedimiento está en el [runbook de backup de dev](../runbooks/postgresql-backup-dev.md);
+no decide todavía la recuperación de producción.
+
 ## Diseño del primer esquema
 
 El [modelo inicial de datos](INITIAL_DATA_MODEL.md), aceptado en ADR-0045,

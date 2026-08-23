@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                               | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------- | ---------- |
+| [0108](../adr/0108-back-up-development-postgresql-with-pgbackrest.md)                         | Respaldar PostgreSQL de desarrollo con pgBackRest                    | Aceptado              | 2026-08-23 |
 | [0107](../adr/0107-activate-immutable-schema-migrations.md)                                  | Activar migraciones inmutables de esquema                            | Aceptado              | 2026-08-22 |
 | [0106](../adr/0106-version-terms-and-retain-minimum-legal-audit-evidence.md)                 | Versionar términos y conservar evidencia legal mínima                | Aceptado              | 2026-08-22 |
 | [0105](../adr/0105-separate-essential-client-reliability-from-optional-product-analytics.md) | Separar fiabilidad esencial de cliente y analítica opcional de producto | Aceptado           | 2026-08-22 |

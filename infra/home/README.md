@@ -70,3 +70,10 @@ La subcarpeta `launchd/` conserva plantillas de tareas del Mac que son
 operativamente separadas de Caddy. La purga de cuentas usa un LaunchAgent porque
 Docker Desktop y el proyecto Compose de desarrollo pertenecen al usuario; no se
 instala ni se actualiza automáticamente desde Git.
+
+Los templates `com.fasttourney.dev-postgresql-backup-full.plist.template` y
+`com.fasttourney.dev-postgresql-backup-incremental.plist.template` programan,
+respectivamente, la copia completa semanal y los incrementales de lunes a
+sábado. Se instalan manualmente tras `make dev-public-backup-init`; el
+[runbook de backup](../../docs/runbooks/postgresql-backup-dev.md) define la
+restauración aislada.

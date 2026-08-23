@@ -171,8 +171,10 @@ lleva el SHA, una imagen runtime etiquetada y una exportación web estática. Ca
 sirve el enlace simbólico de la versión activa y el rollback selecciona el SHA
 anterior sin tocar PostgreSQL. GitHub Releases y tags no se crean por las
 integraciones ordinarias de `develop`; se reservan para producción o hitos
-distribuidos. Esto no equivale a backup: la base dev sigue sin dump ni
-restauración probada mientras sus datos sean descartables.
+distribuidos. Esto no equivale a backup. ADR-0108 añade para `dev` un repositorio
+pgBackRest cifrado, copia base, incrementales y WAL archivado con restauración
+aislada; véase el [runbook de backup PostgreSQL](../runbooks/postgresql-backup-dev.md).
+La política de producción sigue pendiente.
 
 Mailpit pertenece solo al entorno local y no tiene hostname público. El entorno
 `dev` usa Resend por SMTP autenticado con STARTTLS; antes de invitar personas se

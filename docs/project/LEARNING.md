@@ -158,6 +158,16 @@ y su cronología continúan disponibles, pero la persona eliminada deja de ser
 identificable. El job se ejecuta fuera de la API mediante `launchd`, por lo que
 un reinicio de servidor no borra ni duplica su planificación.
 
+## 2026-08-23 — Incremental de aplicación y recuperación PostgreSQL son límites distintos
+
+Exportar solo filas legales modificadas minimiza evidencia con una retención
+propia, pero no reconstruye una base PostgreSQL: no representa el clúster, WAL,
+ni todos los cambios físicos. Un backup recuperable de PostgreSQL combina una
+copia base con WAL continuo. pgBackRest concentra ese protocolo, cifrado y
+retención sin que el dominio conozca la infraestructura. La prueba solo cuenta
+cuando el clúster se arranca desde un destino aislado; que exista un archivo en
+iCloud no demuestra recuperación. Véase ADR-0108.
+
 ## 2026-08-12 — Descripción e indexación son controles independientes
 
 La meta description describe una página si un buscador decide mostrarla, pero no
