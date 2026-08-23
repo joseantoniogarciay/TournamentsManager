@@ -1,5 +1,16 @@
 # Registro de aprendizaje
 
+## 2026-08-23 — Una espera de salud fallida debe conservar su contexto
+
+Un despliegue recuperable no debe activar una release hasta que Compose confirme
+la salud de sus servicios, pero el simple código de salida no explica qué
+contenedor impidió la conmutación. Reintentar automáticamente podría ocultar un
+fallo transitorio o cambiar el estado sin diagnóstico.
+
+**Regla reutilizable:** si `docker compose up --wait` falla, el script conserva
+la release activa y muestra `ps` y los últimos logs de API y PostgreSQL antes de
+salir. La persona operadora decide el siguiente intento con esa evidencia.
+
 ## 2026-08-23 — Un aviso no es un diálogo en la web
 
 Un banner debe superponerse al contenido sin bloquearlo: solo su propia card

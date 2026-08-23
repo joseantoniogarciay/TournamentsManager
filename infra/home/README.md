@@ -34,6 +34,11 @@ para que ambas URL públicas se incorporen al bundle. También fija
 Tourney Dev** en lugar de la variante local. Caddy no ejecuta Expo
 Metro.
 
+Si la espera de salud de Compose falla, `deploy-dev.sh` no conmuta `current` ni
+escribe el manifiesto. Antes de salir muestra el estado de los servicios y los
+últimos logs de API y PostgreSQL, para diagnosticar el fallo sin imprimir los
+contratos `.env` ni secretos.
+
 Cada release de dev también incorpora la referencia Scalar y la copia exacta de
 OpenAPI con la que se construyó. Caddy la sirve públicamente, sin DNS ni Access
 adicionales, en `https://dev.fasttourney.com/api-docs/`; la interfaz llama a

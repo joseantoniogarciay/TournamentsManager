@@ -8,6 +8,14 @@ api_repository=tournaments-manager-dev-api
 
 cd "$repository_root"
 
+diagnose_compose_start_failure() {
+  echo "El arranque de Compose no completó la comprobación de salud." >&2
+  echo "Estado de los servicios de dev:" >&2
+  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml ps >&2 || true
+  echo "Últimos logs de API y PostgreSQL:" >&2
+  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml logs --tail=200 api postgres >&2 || true
+}
+
 # La API debe recibir únicamente la identidad PostgreSQL restringida. Se
 # comprueba antes de construir o conmutar artefactos y sin imprimir secretos.
 set -a
@@ -77,8 +85,11 @@ make dev-public-migrate
 
 ./infra/home/deploy-dev-web.sh "$release_sha"
 
-DEV_API_IMAGE="$api_image" \
-  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml up --detach --wait --remove-orphans
+if ! DEV_API_IMAGE="$api_image" \
+  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml up --detach --wait --remove-orphans; then
+  diagnose_compose_start_failure
+  exit 1
+fi
 
 next_link="$current_link.next"
 ln -s "releases/$release_sha" "$next_link"
