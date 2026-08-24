@@ -5,7 +5,7 @@
 - **Decisor:** Usuario, mediante decisión explícita
 - **Propietario del análisis:** Asistente como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0111, parcialmente en el futuro runtime de `prod`
 
 ## Problema
 
@@ -31,11 +31,15 @@ ser el mismo estado, código vivo ni base de datos que usan personas externas en
 
 ## Decisión del usuario
 
-**Aceptada:** mantener tres contextos: `tournaments-manager-local` para trabajo
-diario con Air, `tournaments-manager-dev` para desarrollo público, y un futuro
-`tournaments-manager-prod` para release doméstico. Los tres reutilizan los
-nombres de servicio internos `api` y `postgres`; el nombre del proyecto Compose
-aporta el namespace y aislamiento.
+**Aceptada originalmente:** mantener tres contextos: `tournaments-manager-local`
+para trabajo diario con Air, `tournaments-manager-dev` para desarrollo público,
+y un futuro `tournaments-manager-prod` para release doméstico. Los tres
+reutilizarían los nombres de servicio internos `api` y `postgres`; el nombre del
+proyecto Compose aportaría el namespace y aislamiento.
+
+**Actualización (ADR-0111):** `tournaments-manager-prod` no se implementará.
+El runtime doméstico de `prod` será la VM K3s, con namespace, datos,
+configuración y secretos aislados de los dos proyectos Compose.
 
 `tournaments-manager-dev` usa el target `runtime`, PostgreSQL y volumen propios,
 y publica solo la API en `127.0.0.1:8081` para Caddy. La web se exporta estática

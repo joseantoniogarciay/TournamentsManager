@@ -1,8 +1,8 @@
 # TournamentsManager — Engineering Handbook
 
-> Estado: Fases 2 y 3 completadas; Fase 4 pendiente de análisis y decisión
+> Estado: Fases 2 y 3 completadas; Fase 4 (VM Linux + K3s) autorizada
 >
-> Última revisión: 2026-08-21
+> Última revisión: 2026-08-23
 
 Este repositorio empieza por el handbook porque el objetivo no es solo entregar una
 aplicación: es aprender a diseñar, construir, desplegar y operar un producto con
@@ -114,10 +114,10 @@ La guía de recorrido y organización del backend está en
 | Observabilidad mínima | OpenTelemetry, Prometheus, Grafana, Loki y Tempo aceptados; Collector aplazado | [ADR-0020](docs/adr/0020-use-minimal-correlated-observability.md) |
 | Fiabilidad y observabilidad de producto del cliente | PostHog Cloud en la beta `development`, región UE y gasto máximo 0 €: crashes/excepciones mínimos por defecto; uso, vistas y resultados solo por opt-in | [ADR-0105](docs/adr/0105-separate-essential-client-reliability-from-optional-product-analytics.md), [ADR-0104](docs/adr/0104-capture-minimum-consented-product-outcomes.md) |
 | Empaquetado de la API | Imagen OCI/Docker aceptada | [ADR-0022](docs/adr/0022-package-backend-as-oci-image.md) |
-| Runtime habitual y AWS | Mac para desarrollo y release doméstico; AWS efímero para aprendizaje y validación | [ADR-0088](docs/adr/0088-use-ephemeral-aws-learning-and-home-runtime.md) |
+| Runtime habitual y AWS | Mac para desarrollo; `prod` doméstico en VM K3s; AWS efímero para aprendizaje y validación | [ADR-0111](docs/adr/0111-use-k3s-vm-for-home-production-runtime.md), [ADR-0088](docs/adr/0088-use-ephemeral-aws-learning-and-home-runtime.md) |
 | Dominio y deep links | `fasttourney.com` producción, `dev.fasttourney.com` desarrollo; API en `api` y `dev.api` | [ADR-0089](docs/adr/0089-use-fasttourney-domain-and-separated-app-link-hosts.md) |
 | Entrada pública doméstica | Cloudflare Tunnel; Caddy solo como router loopback | [ADR-0090](docs/adr/0090-use-cloudflare-tunnel-for-home-public-ingress.md) |
-| Entornos domésticos | Compose `local` con Air, `dev` público runtime y `prod` futuro aislado | [ADR-0091](docs/adr/0091-separate-local-and-public-development-compose-projects.md) |
+| Entornos domésticos | Compose `local` con Air y `dev` público runtime; `prod` aislado en VM K3s | [ADR-0091](docs/adr/0091-separate-local-and-public-development-compose-projects.md), [ADR-0111](docs/adr/0111-use-k3s-vm-for-home-production-runtime.md) |
 | Retención de dev | Dos despliegues locales recuperables; releases GitHub solo para producción o hitos distribuidos | [ADR-0092](docs/adr/0092-retain-two-recoverable-development-deployments.md) |
 | Registry y promoción de la API | ECR privado, digest inmutable y releases selectivas futuras; sin recursos AWS aún | [ADR-0024](docs/adr/0024-use-ecr-and-digest-based-image-promotion.md) |
 | Infraestructura como código | Terraform aceptado; cuenta, estado remoto y red AWS pendientes, sin recursos creados | [ADR-0025](docs/adr/0025-use-terraform-for-infrastructure-as-code.md) |
@@ -133,9 +133,13 @@ La [base técnica](docs/governance/TECHNICAL_BASELINE.md), el gate 0B y las fase
 [3](docs/project/PHASE_3_RETROSPECTIVE.md) están cerrados. El backend entrega el
 vertical slice, conserva sus límites arquitectónicos y permite correlacionar
 logs, métricas y trazas, evaluar el SLO del refresh y entregar alertas en local
-y `dev`. El siguiente gate es analizar Kubernetes frente al Compose ya medido;
-la dirección del manifiesto no autoriza por sí sola una implementación de Fase
-4. Las decisiones nuevas que alcancen el umbral definido siguen requiriendo ADR
+y `dev`. La siguiente fase implanta K3s en la VM Linux y prepara el runtime
+doméstico de `prod`, conforme a
+[ADR-0111](docs/adr/0111-use-k3s-vm-for-home-production-runtime.md).
+La validación distribuible de PostHog se retomará al disponer de cuentas
+móviles; no bloquea K3s, pero sí cualquier beta móvil distribuida
+([ADR-0109](docs/adr/0109-defer-distributed-posthog-validation-until-mobile-enrollment.md)).
+Las decisiones nuevas que alcancen el umbral definido siguen requiriendo ADR
 aceptado.
 
 ## Cliente universal

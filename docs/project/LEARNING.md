@@ -1,5 +1,65 @@
 # Registro de aprendizaje
 
+## 2026-08-23 — La carga baja permite aprender producción, no omitir su recuperación
+
+Cuatro vCPU y 6 GB de RAM son suficientes para inaugurar una producción doméstica
+de tráfico muy bajo, pero no sustituyen persistencia aislada, restauración
+probada, probes ni rollback. Un único Mac sigue agrupando host, energía y red;
+por eso el término producción describe datos y controles, no un SLA implícito.
+
+**Regla reutilizable:** un laboratorio K3s puede convertirse en runtime de
+producción de mejor esfuerzo cuando sus fronteras, backup y recuperación se
+cierran antes de exponer usuarios. La capacidad se mide después con métricas, y
+una necesidad de disponibilidad mueve la decisión hacia infraestructura dedicada
+o gestionada. Véase ADR-0111.
+
+## 2026-08-23 — El portapapeles no sustituye una ruta de administración Server
+
+UTM puede habilitar el portapapeles y el agente SPICE puede estar instalado,
+pero una Ubuntu Server usada como consola TTY no ofrece una sesión gráfica que
+lo convierta en un flujo de copia y pega fiable. Añadir un escritorio solo para
+ese fin aumentaría consumo y mantenimiento sin mejorar K3s.
+
+**Regla reutilizable:** una VM Server se administra por SSH con clave pública,
+no mediante dependencia del portapapeles de la consola. En UTM se conserva la
+red compartida privada, se evita una red puente y se desactivan contraseña,
+interactivo y root en SSH. Véase ADR-0110.
+
+## 2026-08-23 — Un disco virtual de 30 GB no implica una raíz de 30 GB
+
+El particionado guiado de Ubuntu con LVM creó correctamente un disco virtual de
+30 GB, pero asignó inicialmente cerca de la mitad al volumen raíz y dejó el
+resto libre en el grupo de volúmenes. K3s consume imágenes, capas y volúmenes
+en el sistema de archivos raíz, no en el espacio LVM sin asignar.
+
+**Regla reutilizable:** antes de instalar workloads, comprobar `df -h /` y
+ampliar el volumen raíz con el espacio libre de LVM. El límite virtual sigue
+siendo dinámico en el SSD del Mac; extender el volumen solo hace utilizable esa
+capacidad dentro del invitado. Véase ADR-0110.
+
+## 2026-08-23 — La paridad con EKS se mide por frontera, no por una distro idéntica
+
+EKS puede ejecutar nodos Ubuntu administrados o nodos Bottlerocket inmutables
+según el modelo de cómputo futuro. Una VM K3s no debe intentar copiar Auto Mode:
+su objetivo es aprender el host Linux y los recursos Kubernetes reutilizables.
+
+**Regla reutilizable:** elegir una distribución convencional compatible con el
+destino facilita la transferencia operativa; las integraciones gestionadas del
+cloud se validan después en su laboratorio real. UTM + Ubuntu Server ARM64 es
+la mínima elección local para ello (ADR-0110).
+
+## 2026-08-23 — Una cuenta de distribución no debe bloquear un laboratorio local
+
+La validación de crashes en builds distribuibles exige cuentas de iOS y Android,
+pero la VM Linux con K3s no depende de ellas. Esperar no reduce el riesgo de
+telemetría ni mejora el laboratorio; solo mezcla una dependencia comercial con
+una fase local independiente.
+
+**Regla reutilizable:** diferir una prueba externa es válido si su gate sigue
+explícito y no se rebajan sus controles. K3s puede avanzar con su propio
+criterio de salida; PostHog distribuible debe cerrarse antes de una beta móvil.
+Véase ADR-0109.
+
 ## 2026-08-23 — Una espera de salud fallida debe conservar su contexto
 
 Un despliegue recuperable no debe activar una release hasta que Compose confirme

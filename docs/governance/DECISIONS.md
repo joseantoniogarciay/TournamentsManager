@@ -49,13 +49,16 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                               | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------- | ---------- |
+| [0111](../adr/0111-use-k3s-vm-for-home-production-runtime.md)                                | Usar la VM K3s como runtime doméstico de producción                 | Aceptado              | 2026-08-23 |
+| [0110](../adr/0110-use-utm-and-ubuntu-for-local-k3s-vm.md)                                   | Usar UTM y Ubuntu Server para la VM local de K3s                     | Aceptado              | 2026-08-23 |
+| [0109](../adr/0109-defer-distributed-posthog-validation-until-mobile-enrollment.md)           | Diferir la validación distribuible de PostHog hasta disponer de cuentas móviles | Aceptado | 2026-08-23 |
 | [0108](../adr/0108-back-up-development-postgresql-with-pgbackrest.md)                         | Respaldar PostgreSQL de desarrollo con pgBackRest                    | Aceptado              | 2026-08-23 |
 | [0107](../adr/0107-activate-immutable-schema-migrations.md)                                  | Activar migraciones inmutables de esquema                            | Aceptado              | 2026-08-22 |
 | [0106](../adr/0106-version-terms-and-retain-minimum-legal-audit-evidence.md)                 | Versionar términos y conservar evidencia legal mínima                | Aceptado              | 2026-08-22 |
 | [0105](../adr/0105-separate-essential-client-reliability-from-optional-product-analytics.md) | Separar fiabilidad esencial de cliente y analítica opcional de producto | Aceptado           | 2026-08-22 |
 | [0104](../adr/0104-capture-minimum-consented-product-outcomes.md)                             | Capturar resultados mínimos de producto con consentimiento           | Aceptado              | 2026-08-22 |
 | [0103](../adr/0103-correlate-consented-client-events-with-api-traces.md)                      | Correlacionar eventos del cliente con trazas de la API               | Aceptado              | 2026-08-22 |
-| [0102](../adr/0102-activate-posthog-before-k3s.md)                                            | Activar PostHog antes de iniciar K3s                                 | Superado parcialmente | 2026-08-22 |
+| [0102](../adr/0102-activate-posthog-before-k3s.md)                                            | Activar PostHog antes de iniciar K3s                                 | Superado por ADR-0109 | 2026-08-22 |
 | [0101](../adr/0101-use-linux-vm-k3s-and-ephemeral-eks-labs.md)                               | Usar una VM Linux con K3s y laboratorios EKS efímeros               | Aceptado              | 2026-08-22 |
 | [0100](../adr/0100-deliver-public-development-alerts-through-resend.md)                       | Entregar las alertas de desarrollo público mediante Resend          | Aceptado              | 2026-08-21 |
 | [0099](../adr/0099-route-local-alerts-through-alertmanager.md)                               | Enrutar alertas locales mediante Alertmanager                        | Aceptado              | 2026-08-21 |

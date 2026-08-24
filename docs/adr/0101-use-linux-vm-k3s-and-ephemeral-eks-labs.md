@@ -5,7 +5,8 @@
 - **Decisor:** Usuario, mediante decisión explícita
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0029, solo en la selección de tareas Fargate como cómputo cloud
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0111, parcialmente en la ubicación del runtime doméstico
+  de `prod`
 
 ## Problema
 
@@ -111,9 +112,13 @@ AWS, sin asumir que un único Mac o nodo ofrece alta disponibilidad.
 
 **Aceptada:** la Fase 4 usará una VM Linux ligera de un único nodo con K3s.
 Compose conserva desarrollo y el runtime público `dev`. En Fase 5, EKS se
-usará solo para pruebas temporales y autorizadas; al activarlo se detendrá la VM
-K3s del laboratorio. Cada entorno tendrá datos, configuración y secretos
-propios; no se replica ni se comparte estado entre ambos.
+usará solo para pruebas temporales y autorizadas. Antes de publicar `prod`, el
+laboratorio puede detener la VM K3s; después, ADR-0111 exige una ventana de
+mantenimiento autorizada o capacidad de laboratorio separada. Cada entorno
+tendrá datos, configuración y secretos propios; no se replica ni se comparte
+estado entre ellos. ADR-0111 decide posteriormente que la misma VM K3s será
+además el runtime doméstico de `prod`, sujeto a sus gates de publicación y
+recuperación.
 
 La distribución Linux, el virtualizador, el aprovisionamiento de la VM, la
 topología EKS, cómputo, red, ingress, persistencia, secretos y coste siguen

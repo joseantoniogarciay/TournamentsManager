@@ -40,12 +40,14 @@ topología completa.
 
 ## Continuidad futura de producción
 
-**Pendiente de ADR antes de implementar.** Para evitar que un cambio de versión
-interrumpa las peticiones, producción evaluará un despliegue blue/green detrás de
-Caddy: la instancia nueva arranca separada, supera health checks y una validación
-funcional mínima, Caddy conmuta el tráfico y la instancia anterior permanece
-disponible durante un periodo breve de observación. Un rollback posterior vuelve
-a arrancar y validar el SHA anterior antes de conmutar otra vez.
+**Pendiente de diseño concreto antes de implementar.** Para evitar que un cambio
+de versión interrumpa las peticiones, producción evaluará un despliegue
+blue/green detrás del ingress K3s y Caddy: la instancia nueva arranca separada,
+supera health checks y una validación funcional mínima, se conmuta el tráfico y
+la instancia anterior permanece disponible durante un periodo breve de
+observación. Un rollback posterior vuelve a arrancar y validar el SHA anterior
+antes de conmutar otra vez. ADR-0111 fija la VM K3s como runtime, pero no decide
+todavía este mecanismo.
 
 Durante la conmutación ambas versiones deben ser compatibles con el mismo
 esquema PostgreSQL. Los cambios destructivos o incompatibles exigirán una
@@ -100,9 +102,9 @@ se destruye al acabar cada práctica.
 AWS se usará de forma efímera para aprender y validar Terraform, EKS, red,
 observabilidad y destrucción controlada, conforme a
 [ADR-0088](../adr/0088-use-ephemeral-aws-learning-and-home-runtime.md) y
-[ADR-0101](../adr/0101-use-linux-vm-k3s-and-ephemeral-eks-labs.md). El runtime
-habitual permanece en el Mac; AWS no se mantiene como producción permanente sin
-una nueva decisión basada en usuarios, disponibilidad o coste.
+[ADR-0111](../adr/0111-use-k3s-vm-for-home-production-runtime.md). El runtime
+doméstico de `prod` será K3s en la VM del Mac; AWS no se mantiene como producción
+permanente sin una nueva decisión basada en usuarios, disponibilidad o coste.
 
 La infraestructura de esa fase se describirá con Terraform conforme a
 [ADR-0025](../adr/0025-use-terraform-for-infrastructure-as-code.md). Esta
@@ -139,8 +141,8 @@ Conforme a [ADR-0076](../adr/0076-run-the-local-api-in-compose-with-air.md),
 Compose ejecuta API, PostgreSQL y Mailpit. La API selecciona el target `dev` del
 Dockerfile y usa Air con el código montado; el target `runtime` queda reservado
 para validar el artefacto sin compilador ni Air. Expo se ejecuta en host por sus
-simuladores y herramientas nativas. Para el runtime doméstico habitual se
-validará el target `runtime` con configuración, red y datos separados de `dev`.
+simuladores y herramientas nativas. La imagen `runtime` se desplegará en K3s
+para `prod`, con configuración, red y datos separados de `dev`.
 
 Una beta doméstica usa Cloudflare Tunnel como entrada HTTPS pública (ADR-0090).
 El conector del Mac inicia una conexión saliente y alcanza Caddy solo por
@@ -157,8 +159,8 @@ El borde versionado vive en [`infra/home/Caddyfile`](../../infra/home/Caddyfile)
 `tournaments-manager-dev` publica la API runtime solo por `127.0.0.1:8081` y
 la web exportada de Expo se sirve estática en `dev.fasttourney.com`; Caddy
 conserva `503` para los hosts de producción no publicados. La configuración,
-volumen PostgreSQL y proyecto Compose de dev no se comparten con el entorno
-local ni con el futuro prod, conforme a ADR-0091.
+volumen PostgreSQL y proyecto Compose de dev no se comparten con `local` ni con
+el namespace `prod` de K3s, conforme a ADR-0091 y ADR-0111.
 
 El mismo release contiene la referencia pública de desarrollo en
 `https://dev.fasttourney.com/api-docs/`. El script de despliegue copia la UI
@@ -174,7 +176,11 @@ integraciones ordinarias de `develop`; se reservan para producción o hitos
 distribuidos. Esto no equivale a backup. ADR-0108 añade para `dev` un repositorio
 pgBackRest cifrado, copia base, incrementales y WAL archivado con restauración
 aislada; véase el [runbook de backup PostgreSQL](../runbooks/postgresql-backup-dev.md).
-La política de producción sigue pendiente.
+`prod` reutilizará el patrón probado de `dev` (ADR-0108): pgBackRest cifrado,
+WAL archivado, completa semanal, incrementales diarios, dos conjuntos completos
+y restauración aislada. Volumen, repositorio y clave serán propios de `prod`; el
+repositorio doméstico sincronizado queda fuera del Mac, aunque comparte cuenta y
+proveedor, una limitación aceptada hasta que exista una capacidad distinta.
 
 Mailpit pertenece solo al entorno local y no tiene hostname público. El entorno
 `dev` usa Resend por SMTP autenticado con STARTTLS; antes de invitar personas se
@@ -202,8 +208,9 @@ permanecen deliberadamente en `503`.
 
 ### Fase 4
 
-VM Linux de un nodo con K3s, manifests, empaquetado, recursos, probes,
-configuración, secretos, rollout y recuperación, conforme a ADR-0101.
+VM Linux de un nodo con K3s como runtime doméstico de `prod`: manifests,
+empaquetado, recursos, probes, configuración, secretos, persistencia, backup,
+ingress, rollout y recuperación, conforme a ADR-0111.
 
 ### Fase 5
 
