@@ -5,6 +5,7 @@ infra/local/api.docker.env
 infra/dev/.env
 infra/dev/api.docker.env
 infra/dev/alertmanager.smtp-password
+infra/k3s/.env
 !.env.example
 *.pem
 *.key

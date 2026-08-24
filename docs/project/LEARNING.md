@@ -1,5 +1,23 @@
 # Registro de aprendizaje
 
+## 2026-08-24 — Un servicio K3s activo no sustituye una comprobación de recuperación
+
+Que `systemctl` informe K3s activo solo confirma el proceso del host. Tras un
+reinicio, la evidencia útil incluye que SSH vuelva a responder, que el único
+nodo esté `Ready` y que siga disponible la `StorageClass` que atenderá los PVC.
+El kubeconfig administrativo permanece restringido a `root`; consultarlo con
+`sudo` es normal y no un fallo del control plane.
+
+`local-path` es el nombre de la política de almacenamiento predeterminada, no
+una ruta del sistema de archivos. Su provisionador creará un directorio local
+por PVC cuando un Pod lo consuma. Al tener política `Delete`, eliminar un PVC
+puede eliminar su volumen: PostgreSQL exigirá un plan explícito de backup y
+restauración antes de confiarle datos.
+
+**Regla reutilizable:** cerrar un módulo de host solo tras un reinicio
+controlado y una verificación administrativa de nodo y almacenamiento; separar
+el nombre de una `StorageClass` de la ubicación física que asignará a cada PV.
+
 ## 2026-08-24 — Helm empaqueta recursos; no reemplaza Kubernetes
 
 Helm renderiza e instala recursos Kubernetes de un chart, pero los controllers y

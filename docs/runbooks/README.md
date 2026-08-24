@@ -9,6 +9,7 @@ entorno local; su estado de prueba se declara dentro del propio runbook.
 - [PostgreSQL local con Docker Compose](local-postgresql.md)
 - [Backup y restauración PostgreSQL de dev](postgresql-backup-dev.md)
 - [Diagnóstico del refresh de sesión](session-refresh-observability.md)
+- [Host y control plane K3s](k3s-host-and-control-plane.md)
 
 ## Requisitos
 
