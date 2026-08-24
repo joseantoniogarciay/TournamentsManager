@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- ADR-0112 fija una entrega K3s mixta: el core de `prod` se aprende primero con
+  manifiestos propios y `kubectl`; Helm se reserva para la observabilidad de
+  terceros, sin operador ni chart propio inicialmente.
+
 - ADR-0111 establece la VM K3s de un nodo como runtime doméstico de `prod`.
   Compose conserva `local` y `dev`; producción no se publicará hasta completar
   persistencia aislada, el patrón pgBackRest ya validado en `dev` con repositorio

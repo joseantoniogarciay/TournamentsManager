@@ -1,5 +1,18 @@
 # Registro de aprendizaje
 
+## 2026-08-24 — Helm empaqueta recursos; no reemplaza Kubernetes
+
+Helm renderiza e instala recursos Kubernetes de un chart, pero los controllers y
+el kubelet de K3s siguen siendo quienes reconcilian y ejecutan los Pods. Usarlo
+antes de haber aplicado un `Deployment`, un `Service` o un PVC propios oculta el
+modelo que la Fase 4 busca aprender; mantener a mano todo el software de
+observabilidad, en cambio, duplica mantenimiento ajeno.
+
+**Regla reutilizable:** aprender primero el core con manifiestos explícitos y
+usar Helm para empaquetar componentes de terceros cuando su complejidad lo
+justifique. Los valores Helm se revisan como código, las versiones se fijan y
+los secretos no entran en Git. Véase ADR-0112.
+
 ## 2026-08-23 — La carga baja permite aprender producción, no omitir su recuperación
 
 Cuatro vCPU y 6 GB de RAM son suficientes para inaugurar una producción doméstica

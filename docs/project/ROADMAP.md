@@ -123,9 +123,10 @@ Fase 4 sin su diseño concreto, plan de verificación y rollback.
 
 **Decisiones previas:** UTM, Ubuntu Server 24.04 LTS ARM64 y recursos de la VM
 están aceptados en ADR-0110; el destino doméstico de `prod`, en ADR-0111.
-Quedan aprovisionamiento reproducible de la VM,
-empaquetado y manifests, health checks, recursos de los workloads,
-configuración, secretos y estrategia de despliegue.
+ADR-0112 fija el orden de entrega: manifiestos propios para aprender el core y
+Helm para la observabilidad de terceros una vez ese core esté verificado. Quedan
+aprovisionamiento reproducible de la VM, health checks, recursos de los
+workloads, configuración, secretos y estrategia de despliegue.
 
 **Salida:** despliegue local reproducible, recuperación demostrada y comparación
 documentada frente a Docker Compose.
@@ -139,7 +140,7 @@ No autoriza a publicar `prod` hasta completar los gates de ADR-0111.
 
 1. **Host y control plane:** verificar VM, servicio K3s, `kubectl`, nodo y
    almacenamiento local; distinguir host, runtime de contenedores y control
-   plane de los procesos Docker Compose.
+   plane de los procesos Docker Compose. Este núcleo inicial no usa Helm.
 2. **Aislamiento:** crear el namespace `prod` y el mínimo RBAC necesario;
    separar sus recursos de `local` y `dev`.
 3. **Configuración:** aplicar `ConfigMap` y `Secret`; comparar objetos de
@@ -154,8 +155,10 @@ No autoriza a publicar `prod` hasta completar los gates de ADR-0111.
 7. **Entrada pública:** enrutar Cloudflare Tunnel → Caddy → ingress K3s;
    diferenciar exposición interna por `Service` del enrutamiento HTTP por
    `Ingress` y conservar la ausencia de puertos LAN/WAN.
-8. **Observabilidad y operación:** recorrer logs, eventos, métricas, alertas,
-   rollouts y rollbacks; provocar fallos controlados de API y dependencia.
+8. **Observabilidad y operación:** usar Helm con charts upstream y valores
+   versionados para los componentes de terceros; recorrer logs, eventos,
+   métricas, alertas, rollouts y rollbacks; provocar fallos controlados de API
+   y dependencia. No se introduce un operador inicialmente.
 9. **Gate de publicación:** comprobar persistencia, restauración, secretos,
    recursos/probes, ingress, rollback y alertas antes de retirar el `503` de
    los hosts de producción.

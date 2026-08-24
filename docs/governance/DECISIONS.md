@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                               | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------- | ---------- |
+| [0112](../adr/0112-use-helm-for-third-party-kubernetes-observability.md)                     | Usar Helm para la observabilidad de terceros en K3s                  | Aceptado              | 2026-08-24 |
 | [0111](../adr/0111-use-k3s-vm-for-home-production-runtime.md)                                | Usar la VM K3s como runtime doméstico de producción                 | Aceptado              | 2026-08-23 |
 | [0110](../adr/0110-use-utm-and-ubuntu-for-local-k3s-vm.md)                                   | Usar UTM y Ubuntu Server para la VM local de K3s                     | Aceptado              | 2026-08-23 |
 | [0109](../adr/0109-defer-distributed-posthog-validation-until-mobile-enrollment.md)           | Diferir la validación distribuible de PostHog hasta disponer de cuentas móviles | Aceptado | 2026-08-23 |

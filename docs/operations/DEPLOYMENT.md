@@ -212,6 +212,12 @@ VM Linux de un nodo con K3s como runtime doméstico de `prod`: manifests,
 empaquetado, recursos, probes, configuración, secretos, persistencia, backup,
 ingress, rollout y recuperación, conforme a ADR-0111.
 
+ADR-0112 concreta el orden de empaquetado: API, PostgreSQL y los recursos de
+core se definen primero como manifiestos YAML propios aplicados con `kubectl`.
+La observabilidad de terceros se añade después mediante Helm, con charts y
+valores versionados; no se instala inicialmente un operador ni un chart propio
+de toda la plataforma.
+
 ### Fase 5
 
 Terraform, cuenta AWS, identidad, bootstrap y estado remoto, topología EKS,
