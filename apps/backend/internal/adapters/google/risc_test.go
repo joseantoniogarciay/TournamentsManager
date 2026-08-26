@@ -87,6 +87,21 @@ func TestRISCVerifierAcceptsAudienceArray(t *testing.T) {
 	}
 }
 
+func TestRISCVerifierRejectsMissingJTI(t *testing.T) {
+	privateKey, verifier := localRISCVerifier(t)
+	token := signedRISC(t, privateKey, map[string]any{
+		"iss": "https://accounts.google.com/",
+		"aud": testAudience,
+		"events": map[string]any{
+			federated.RISCVerification: map[string]any{"state": "verification-state"},
+		},
+	})
+
+	if _, err := verifier.Verify(context.Background(), token); err == nil || err.Error() != "SET RISC sin jti" {
+		t.Fatalf("Verify() error = %v", err)
+	}
+}
+
 func TestRISCVerifierRejectsUnexpectedAudienceAndSubjectIssuer(t *testing.T) {
 	privateKey, verifier := localRISCVerifier(t)
 	for _, test := range []struct {

@@ -103,8 +103,20 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 	if err := decodeJWTPart(parts[1], &claims); err != nil {
 		return federated.RISCEvent{}, errors.New("claims SET inválidos")
 	}
-	if header.Algorithm != "RS256" || header.KeyID == "" || claims.ID == "" || claims.Issuer == "" || len(claims.Audience) == 0 || len(claims.Events) != 1 {
-		return federated.RISCEvent{}, errors.New("SET RISC inválido")
+	if header.Algorithm != "RS256" || header.KeyID == "" {
+		return federated.RISCEvent{}, errors.New("cabecera SET no permitida")
+	}
+	if claims.ID == "" {
+		return federated.RISCEvent{}, errors.New("SET RISC sin jti")
+	}
+	if claims.Issuer == "" {
+		return federated.RISCEvent{}, errors.New("SET RISC sin emisor")
+	}
+	if len(claims.Audience) == 0 {
+		return federated.RISCEvent{}, errors.New("SET RISC sin audiencia")
+	}
+	if len(claims.Events) != 1 {
+		return federated.RISCEvent{}, errors.New("SET RISC con número de eventos no admitido")
 	}
 	if !v.acceptsAudience(claims.Audience) {
 		return federated.RISCEvent{}, errors.New("audiencia SET no permitida")

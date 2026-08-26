@@ -24,6 +24,13 @@
   (cadena o lista) y exigir siempre la intersección con los clientes OAuth
   propios, sin registrar los IDs ni el token.
 
+## 2026-08-26 — Un rechazo de SET necesita una causa operacional cerrada
+
+- **Aprendido:** responder `400` sin detalles al emisor es correcto, pero una
+  única causa interna no permite distinguir un claim ausente de varios eventos.
+- **Regla reutilizable:** registrar solo categorías cerradas por estructura de
+  JWT o SET; nunca el token, claims, `jti` ni sujetos.
+
 ## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
 
 - **Aprendido:** `expo-dev-launcher` puede compilar categorías de depuración

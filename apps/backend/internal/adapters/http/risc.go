@@ -70,10 +70,18 @@ func riscValidationReason(err error) string {
 		return "jwt.malformed"
 	case "cabecera SET inválida":
 		return "jwt.header_invalid"
+	case "cabecera SET no permitida":
+		return "jwt.header_rejected"
 	case "claims SET inválidos":
 		return "jwt.claims_invalid"
-	case "SET RISC inválido":
-		return "jwt.required_claim_invalid"
+	case "SET RISC sin jti":
+		return "jwt.jti_missing"
+	case "SET RISC sin emisor":
+		return "jwt.issuer_missing"
+	case "SET RISC sin audiencia":
+		return "jwt.audience_missing"
+	case "SET RISC con número de eventos no admitido":
+		return "event.count_rejected"
 	case "audiencia SET no permitida":
 		return "jwt.audience_rejected"
 	case "emisor SET no permitido":
