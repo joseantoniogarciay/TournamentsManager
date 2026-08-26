@@ -88,7 +88,11 @@ export default function AccountLayout() {
         {usesLiquidGlassNavigation ? (
           <Stack.Toolbar placement="right">
             {user ? (
-              <NativeNotificationHeaderButton />
+              <Stack.Toolbar.Button
+                accessibilityLabel={t("account_notifications_accessibility_label")}
+                icon="bell"
+                onPress={() => router.push("/(account-modals)/account/notifications")}
+              />
             ) : null}
             <Stack.Toolbar.Button
               accessibilityLabel={t("account_settings_accessibility_label")}
