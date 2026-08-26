@@ -71,6 +71,22 @@ func TestRISCVerifierAcceptsGoogleDefaultJWTHeaderType(t *testing.T) {
 	}
 }
 
+func TestRISCVerifierAcceptsAudienceArray(t *testing.T) {
+	privateKey, verifier := localRISCVerifier(t)
+	token := signedRISC(t, privateKey, map[string]any{
+		"iss": "https://accounts.google.com/",
+		"aud": []string{"other-client.apps.googleusercontent.com", testAudience},
+		"jti": "risc-audience-array",
+		"events": map[string]any{
+			federated.RISCVerification: map[string]any{"state": "verification-state"},
+		},
+	})
+
+	if _, err := verifier.Verify(context.Background(), token); err != nil {
+		t.Fatalf("Verify() error = %v", err)
+	}
+}
+
 func TestRISCVerifierRejectsUnexpectedAudienceAndSubjectIssuer(t *testing.T) {
 	privateKey, verifier := localRISCVerifier(t)
 	for _, test := range []struct {

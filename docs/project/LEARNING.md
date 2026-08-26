@@ -16,6 +16,14 @@
   estructura del SET; no rechazar una entrega válida por un valor opcional de
   `typ` en la cabecera JWT.
 
+## 2026-08-26 — La audiencia de un SET puede ser una lista JWT
+
+- **Aprendido:** la entrega RISC de Google usa `aud` como lista JSON de IDs de
+  cliente; modelarlo solo como cadena impide siquiera validar los claims.
+- **Regla reutilizable:** aceptar las dos representaciones válidas de `aud`
+  (cadena o lista) y exigir siempre la intersección con los clientes OAuth
+  propios, sin registrar los IDs ni el token.
+
 ## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
 
 - **Aprendido:** `expo-dev-launcher` puede compilar categorías de depuración

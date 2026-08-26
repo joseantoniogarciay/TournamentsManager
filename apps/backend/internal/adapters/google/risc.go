@@ -61,7 +61,7 @@ type riscHeader struct {
 }
 
 type riscClaims struct {
-	Audience string                     `json:"aud"`
+	Audience json.RawMessage            `json:"aud"`
 	Events   map[string]json.RawMessage `json:"events"`
 	ID       string                     `json:"jti"`
 	Issuer   string                     `json:"iss"`
@@ -103,10 +103,10 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 	if err := decodeJWTPart(parts[1], &claims); err != nil {
 		return federated.RISCEvent{}, errors.New("claims SET inválidos")
 	}
-	if header.Algorithm != "RS256" || header.KeyID == "" || claims.ID == "" || claims.Issuer == "" || claims.Audience == "" || len(claims.Events) != 1 {
+	if header.Algorithm != "RS256" || header.KeyID == "" || claims.ID == "" || claims.Issuer == "" || len(claims.Audience) == 0 || len(claims.Events) != 1 {
 		return federated.RISCEvent{}, errors.New("SET RISC inválido")
 	}
-	if _, ok := v.audiences[claims.Audience]; !ok {
+	if !v.acceptsAudience(claims.Audience) {
 		return federated.RISCEvent{}, errors.New("audiencia SET no permitida")
 	}
 	configuration, key, err := v.keyFor(ctx, header.KeyID)
@@ -142,6 +142,24 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 		return federated.RISCEvent{ID: claims.ID, Issuer: federated.GoogleIssuer, Subject: body.Subject.Subject, Type: eventType, Reason: body.Reason}, nil
 	}
 	return federated.RISCEvent{}, errors.New("SET RISC sin evento")
+}
+
+func (v *RISCVerifier) acceptsAudience(raw json.RawMessage) bool {
+	var audience string
+	if err := json.Unmarshal(raw, &audience); err == nil {
+		_, ok := v.audiences[audience]
+		return ok
+	}
+	var audiences []string
+	if err := json.Unmarshal(raw, &audiences); err != nil {
+		return false
+	}
+	for _, audience := range audiences {
+		if _, ok := v.audiences[audience]; ok {
+			return true
+		}
+	}
+	return false
 }
 
 func (v *RISCVerifier) keyFor(ctx context.Context, keyID string) (riscConfiguration, rsa.PublicKey, error) {

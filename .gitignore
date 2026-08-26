@@ -1,4 +1,5 @@
 # Local configuration and secrets
+/.config/
 .env
 .env.*
 infra/local/api.docker.env
