@@ -18,6 +18,12 @@ const (
 	// GoogleIssuer is the accepted canonical issuer for Google ID tokens.
 	GoogleIssuer      = "https://accounts.google.com"
 	challengeLifetime = 5 * time.Minute
+	// RISCSessionsRevoked requires the product session to be re-secured.
+	RISCSessionsRevoked = "https://schemas.openid.net/secevent/risc/event-type/sessions-revoked"
+	// RISCTokensRevoked is a public RISC event-type URI, not a credential.
+	RISCTokensRevoked = "https://schemas.openid.net/secevent/oauth/event-type/tokens-revoked" // #nosec G101 -- protocol identifier, not a secret
+	// RISCAccountDisabled requires re-securing a compromised account session.
+	RISCAccountDisabled = "https://schemas.openid.net/secevent/risc/event-type/account-disabled"
 )
 
 var (
@@ -29,6 +35,9 @@ var (
 	ErrEmailConflict = errors.New("email ya pertenece a una cuenta")
 	// ErrRegistration indicates that a new account requires registration data.
 	ErrRegistration = errors.New("alta Google requiere username")
+	// ErrRISCUnavailable marks a temporary failure to obtain Google RISC trust
+	// material. The HTTP adapter must return 503 so Google can retry delivery.
+	ErrRISCUnavailable = errors.New("RISC no disponible")
 )
 
 // Identity is the verified external identity received from an OIDC provider.
@@ -64,6 +73,19 @@ type Session struct{ AccountID, Username, IdleExpiresAt, RefreshExpiresAt string
 type EstablishedSession struct {
 	Session
 	AccessToken, RefreshToken string
+}
+
+// RISCEvent is a verified Google Cross-Account Protection security event.
+// It deliberately contains only the stable external subject required to find
+// the affected account, never an email or the raw security event token.
+type RISCEvent struct {
+	ID, Issuer, Subject, Type, Reason string
+}
+
+// RISCRepository records a security event and revokes the account's own
+// sessions atomically. Repeated event IDs are safe no-ops.
+type RISCRepository interface {
+	RevokeSessionsForGoogleIdentity(context.Context, RISCEvent) error
 }
 
 // Repository preserves atomic invariants across challenge, identity, and session.
@@ -172,6 +194,23 @@ func (s Service) AddGoogle(ctx context.Context, accountID, challengeID, idToken 
 	}
 	challengeHash := sha256.Sum256([]byte("google-login-nonce:" + identity.Nonce))
 	return s.repository.AddGoogleIdentity(ctx, accountID, challengeID, challengeHash[:], identity)
+}
+
+// HandleRISCEvent applies the session-security effect of a verified Google
+// Cross-Account Protection event. Events without a required action are safely
+// ignored; subscriptions only request the event types supported here.
+func (s Service) HandleRISCEvent(ctx context.Context, event RISCEvent) error {
+	if event.ID == "" || event.Issuer != GoogleIssuer || event.Subject == "" {
+		return ErrChallengeInvalid
+	}
+	if event.Type == RISCSessionsRevoked || event.Type == RISCTokensRevoked || (event.Type == RISCAccountDisabled && event.Reason == "hijacking") {
+		repository, ok := s.repository.(RISCRepository)
+		if !ok {
+			return errors.New("repositorio RISC no configurado")
+		}
+		return repository.RevokeSessionsForGoogleIdentity(ctx, event)
+	}
+	return nil
 }
 
 func (s Service) verify(ctx context.Context, idToken string) (Identity, error) {

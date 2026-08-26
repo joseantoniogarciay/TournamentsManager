@@ -48,6 +48,14 @@ almacenamiento seguro. Mailpit se usa solo para capturar email en local; el
 desarrollo público usa Resend SMTP con STARTTLS y una clave de solo envío
 (ADR-0093). JWT no se introduce sin un disparador de arquitectura distribuida.
 
+ADR-0113 conecta esas sesiones revocables con Google Cross-Account Protection
+(RISC). El receptor HTTPS acepta únicamente SET criptográficamente válidos para
+una audiencia OAuth configurada; los eventos de revocación de sesión o token y
+de cuenta comprometida revocan las sesiones locales de la identidad Google
+afectada. El token recibido, `sub`, `jti` y cuerpos de webhook no se exponen en
+telemetría. La deduplicación conserva solo el `jti` durante 35 días y evita que
+un reintento cierre un login creado después del primer procesamiento.
+
 ADR-0059 centraliza la validación de cookie o Bearer en middleware para rutas
 protegidas. La autenticación no sustituye autorización por recurso. Antes de la
 primera mutación autenticada desde web se añadirá una defensa CSRF separada; una

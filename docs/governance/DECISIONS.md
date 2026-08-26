@@ -161,6 +161,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0093](../adr/0093-use-resend-smtp-for-public-development-email.md)                           | Usar Resend SMTP para el correo del desarrollo público               | Aceptado              | 2026-08-12 |
 | [0094](../adr/0094-manage-removable-account-access-methods.md)                                | Gestionar métodos de acceso añadibles y eliminables                  | Aceptado              | 2026-08-13 |
 | [0095](../adr/0095-transfer-tournament-ownership-directly.md)                                 | Transferir directamente la propiedad de un torneo                    | Aceptado              | 2026-08-14 |
+| [0113](../adr/0113-revoke-local-sessions-from-google-risc-events.md)                          | Revocar sesiones propias ante eventos RISC de Google                 | Aceptado              | 2026-08-26 |
 
 ## Trazabilidad de un cambio
 

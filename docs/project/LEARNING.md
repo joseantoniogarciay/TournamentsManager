@@ -1,5 +1,40 @@
 # Registro de aprendizaje
 
+## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
+
+- **Aprendido:** `expo-dev-launcher` puede compilar categorías de depuración
+  sobre `RCTPackagerConnection` mientras `React-Core-prebuilt` no exporta ese
+  símbolo. Las cabeceras presentes no demuestran que el binario pueda enlazar.
+- **Regla reutilizable:** si una development build de iOS falla con símbolos de
+  `RCTPackagerConnection` o `facebook::react::*`, habilitar
+  `ios.buildReactNativeFromSource` junto a `ios.usePrecompiledModules: false` y
+  regenerar Pods antes de cambiar versiones o parchear dependencias. El coste es
+  una build limpia más lenta, aceptable para conservar una ruta local
+  reproducible.
+
+## 2026-08-26 — La sesión propia necesita señales de revocación del proveedor
+
+- **Aprendido:** validar un ID token al iniciar sesión demuestra una identidad en
+  ese instante, pero no informa de una revocación o compromiso posterior en
+  Google. Cross-Account Protection entrega esa señal como un SET RISC firmado.
+- **Regla reutilizable:** un receptor de eventos de seguridad valida primero
+  firma, emisor y audiencia; aplica después una transición idempotente de la
+  sesión propia y no registra el token ni sus identificadores. El `jti` evita
+  que una repetición afecte a una sesión creada después.
+
+## 2026-08-24 — Formato YAML y validez Kubernetes son comprobaciones distintas
+
+Prettier confirma que un manifiesto YAML tiene formato consistente, pero no que
+su `apiVersion`, `kind` o campos sean aceptados por el API server. En el primer
+manifiesto K3s, `kubectl apply --dry-run=server` validó el objeto contra el
+clúster real sin persistirlo. No se añade todavía esa dependencia al `make
+verify` ni a CI: exigir VM, SSH y `sudo` rompería su reproducibilidad.
+
+**Regla reutilizable:** al crecer los manifiestos, separar una validación de
+esquema offline apta para CI de una validación opcional contra K3s real; añadir
+la herramienta y el objetivo `make k3s-validate` solo cuando exista más de un
+workload que justifique su mantenimiento.
+
 ## 2026-08-24 — Un servicio K3s activo no sustituye una comprobación de recuperación
 
 Que `systemctl` informe K3s activo solo confirma el proceso del host. Tras un

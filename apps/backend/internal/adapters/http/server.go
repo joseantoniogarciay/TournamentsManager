@@ -50,6 +50,12 @@ func NewHandlerWithCookieSecurity(registrationService registration.Service, fede
 // NewHandlerWithCookieSecurityAndTrustedProxies accepts the IP forwarded by Caddy
 // only when the immediate connection originates from a configured proxy network.
 func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, creationServices ...leagues.CreationService) http.Handler {
+	return NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, cookieSecure, trustedProxyCIDRs, nil, creationServices...)
+}
+
+// NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver additionally
+// registers the Google Cross-Account Protection receiver when configured.
+func NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, riscReceiver http.Handler, creationServices ...leagues.CreationService) http.Handler {
 	mux := http.NewServeMux()
 	resolveClientIP := newClientIPResolver(trustedProxyCIDRs)
 	cookies := sessionCookies(cookieSecure)
@@ -65,6 +71,9 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 		return requireCookieCSRF(corsAllowedOrigins, next)
 	}
 	mux.HandleFunc("GET /healthz", healthz)
+	if riscReceiver != nil {
+		mux.Handle("POST /v1/risc/events", riscReceiver)
+	}
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter, resolveClientIP))
 	mux.HandleFunc("GET /v1/users", searchUsers(registrationService, userSearchLimiter, resolveClientIP))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService, registrationLimiter, resolveClientIP))

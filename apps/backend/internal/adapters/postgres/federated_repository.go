@@ -192,6 +192,38 @@ func (r FederatedRepository) RemoveGoogleIdentityWithTicket(ctx context.Context,
 	return nil
 }
 
+// RevokeSessionsForGoogleIdentity applies a verified RISC security event once.
+// Claiming the event and revoking sessions share one transaction so a crash
+// cannot acknowledge a SET before its local security effect is durable.
+func (r FederatedRepository) RevokeSessionsForGoogleIdentity(ctx context.Context, event federated.RISCEvent) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	command, err := tx.Exec(ctx, `
+		INSERT INTO google_risc_events (id, expires_at)
+		VALUES ($1, now() + interval '35 days')
+		ON CONFLICT (id) DO NOTHING`, event.ID)
+	if err != nil {
+		return err
+	}
+	if command.RowsAffected() == 0 {
+		return tx.Commit(ctx)
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE sessions AS session
+		SET revoked_at = now()
+		FROM external_identities AS identity
+		WHERE identity.issuer = $1
+		  AND identity.subject = $2
+		  AND session.account_id = identity.account_id
+		  AND session.revoked_at IS NULL`, event.Issuer, event.Subject); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
 func consumeChallenge(ctx context.Context, queries *sqlc.Queries, challengeID string, nonceHash []byte) error {
 	id, err := parseUUID(challengeID)
 	if err != nil {

@@ -39,6 +39,9 @@ func (r AccountLeagueRepository) PurgeExpired(ctx context.Context, limit int) (i
 	if limit < 1 {
 		return 0, fmt.Errorf("límite de purga debe ser positivo")
 	}
+	if _, err := r.pool.Exec(ctx, `DELETE FROM google_risc_events WHERE expires_at <= now()`); err != nil {
+		return 0, err
+	}
 	command, err := r.pool.Exec(ctx, `
 		WITH candidates AS (
 			SELECT id

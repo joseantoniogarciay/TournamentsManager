@@ -90,6 +90,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: "automatic",
   plugins: [
     "expo-router",
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          buildReactNativeFromSource: true,
+          usePrecompiledModules: false,
+        },
+      },
+    ],
     "expo-secure-store",
     "expo-web-browser",
     [
