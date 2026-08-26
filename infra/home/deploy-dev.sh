@@ -20,8 +20,14 @@ diagnose_compose_start_failure() {
 # comprueba antes de construir o conmutar artefactos y sin imprimir secretos.
 set -a
 . infra/dev/.env
+host_legal_audit_backup_key_path=$LEGAL_AUDIT_BACKUP_KEY_PATH
 . infra/dev/api.docker.env
 set +a
+
+# api.docker.env describes the path seen inside the container. Compose needs
+# the distinct host path from .env when it resolves the file-backed secret.
+LEGAL_AUDIT_BACKUP_KEY_PATH=$host_legal_audit_backup_key_path
+export LEGAL_AUDIT_BACKUP_KEY_PATH
 
 if [ ! -s infra/dev/alertmanager.smtp-password ]; then
   echo "Falta infra/dev/alertmanager.smtp-password con la clave SMTP exclusiva de Alertmanager." >&2
