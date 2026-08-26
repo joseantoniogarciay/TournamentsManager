@@ -19,7 +19,6 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { banner, motion, radius, space } from "@tournaments-manager/design-tokens";
@@ -33,7 +32,6 @@ const navigationFeedbackDelayMs = 400;
 type FeedbackContextValue = {
   banner: ReactElement | null;
   dismiss: () => void;
-  setFeedbackHostFocused: (isFocused: boolean) => void;
   show: (feedback: Feedback) => void;
   showAfterNavigation: (feedback: Feedback) => void;
 };
@@ -50,9 +48,6 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   const nextFeedbackId = useRef(0);
   const autoDismissTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigationFeedbackTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const queuedFeedback = useRef<Feedback | null>(null);
-  const awaitingNextFocusedHost = useRef(false);
-  const feedbackHostFocused = useRef(false);
 
   useEffect(() => {
     void AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
@@ -155,8 +150,6 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     (next: Feedback) => {
       if (navigationFeedbackTimeout.current) clearTimeout(navigationFeedbackTimeout.current);
       navigationFeedbackTimeout.current = null;
-      queuedFeedback.current = null;
-      awaitingNextFocusedHost.current = false;
       clearAutoDismiss();
       visibility.stopAnimation();
       dragY.stopAnimation();
@@ -169,28 +162,12 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     },
     [clearAutoDismiss, dismiss, dragY, visibility],
   );
-  const revealQueuedFeedback = useCallback(() => {
-    if (!feedbackHostFocused.current || !awaitingNextFocusedHost.current || !queuedFeedback.current) return;
-    const next = queuedFeedback.current;
-    queuedFeedback.current = null;
-    awaitingNextFocusedHost.current = false;
-    navigationFeedbackTimeout.current = setTimeout(() => show(next), navigationFeedbackDelayMs);
-  }, [show]);
   const showAfterNavigation = useCallback(
     (next: Feedback) => {
       if (navigationFeedbackTimeout.current) clearTimeout(navigationFeedbackTimeout.current);
-      queuedFeedback.current = next;
-      awaitingNextFocusedHost.current = true;
-      revealQueuedFeedback();
+      navigationFeedbackTimeout.current = setTimeout(() => show(next), navigationFeedbackDelayMs);
     },
-    [revealQueuedFeedback],
-  );
-  const setFeedbackHostFocused = useCallback(
-    (isFocused: boolean) => {
-      feedbackHostFocused.current = isFocused;
-      if (isFocused) revealQueuedFeedback();
-    },
-    [revealQueuedFeedback],
+    [show],
   );
   const bannerNode = feedback ? (
     <Animated.View
@@ -223,11 +200,16 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     </Animated.View>
   ) : null;
   const contextValue = useMemo(
-    () => ({ banner: bannerNode, dismiss, setFeedbackHostFocused, show, showAfterNavigation }),
-    [bannerNode, dismiss, setFeedbackHostFocused, show, showAfterNavigation],
+    () => ({ banner: bannerNode, dismiss, show, showAfterNavigation }),
+    [bannerNode, dismiss, show, showAfterNavigation],
   );
 
-  return <FeedbackContext.Provider value={contextValue}>{children}</FeedbackContext.Provider>;
+  return (
+    <FeedbackContext.Provider value={contextValue}>
+      {children}
+      <FeedbackBanner />
+    </FeedbackContext.Provider>
+  );
 }
 
 export function useFeedback() {
@@ -237,19 +219,8 @@ export function useFeedback() {
 }
 
 export function FeedbackBanner() {
-  const { banner: feedbackBanner, dismiss, setFeedbackHostFocused } = useFeedback();
-  const [isFocused, setIsFocused] = useState(false);
-  useFocusEffect(
-    useCallback(() => {
-      setIsFocused(true);
-      setFeedbackHostFocused(true);
-      return () => {
-        setIsFocused(false);
-        setFeedbackHostFocused(false);
-      };
-    }, [setFeedbackHostFocused]),
-  );
-  if (!feedbackBanner || !isFocused) return null;
+  const { banner: feedbackBanner, dismiss } = useFeedback();
+  if (!feedbackBanner) return null;
 
   // En web el Modal de react-native-web crea un portal de viewport completo.
   // Aunque sea transparente, captura las pulsaciones fuera del banner y Safari

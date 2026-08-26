@@ -40,10 +40,11 @@
 
 ## 2026-08-26 — El feedback de una sesión invalidada debe sobrevivir a navegar
 
-- **Aprendido:** un banner publicado antes de sustituir la ruta puede perder su
-  host de pantalla en la misma actualización de React.
-- **Regla reutilizable:** al invalidar una sesión, guardar el feedback hasta que
-  termine el reset de navegación y entregarlo al host enfocado entonces.
+- **Aprendido:** un banner publicado antes de sustituir la ruta puede perder un
+  host ligado a la pantalla que React desmonta durante el mismo reset.
+- **Regla reutilizable:** el host de feedback global vive por encima de las
+  rutas. Al invalidar una sesión, se guarda el aviso hasta acabar el reset de
+  navegación y entonces se publica desde ese host persistente.
 
 ## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
 

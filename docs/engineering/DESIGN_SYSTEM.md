@@ -124,9 +124,10 @@ para no bajar innecesariamente desde el notch. Entra y sale con
 descarta sin transición. El gestor mantiene un único aviso: al llegar uno nuevo,
 cancela el temporizador y la salida del anterior y muestra únicamente el último.
 Tocar la card o arrastrarla hacia arriba la descarta; un arrastre corto vuelve a
-su posición para no cerrar el aviso por accidente. En web se monta como overlay
-de la `Screen` activa con `pointerEvents="box-none"`: solo la card recibe la
-interacción y el resto de controles visibles sigue siendo operable. No usa
+su posición para no cerrar el aviso por accidente. El host es global y vive por
+encima de las rutas; en web monta la card como overlay con
+`pointerEvents="box-none"`: solo la card recibe la interacción y el resto de
+controles visibles sigue siendo operable. No usa
 `Modal` web, porque su portal de viewport interfiere con las pulsaciones y puede
 hacer que Safari iOS cambie el color de la zona segura superior. iOS y Android
 mantienen el `Modal` nativo para presentar el aviso por encima de su ruta.
