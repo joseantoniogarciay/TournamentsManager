@@ -38,6 +38,13 @@
 - **Regla reutilizable:** validar todos los eventos, exigir un único sujeto y
   condensar su efecto más protector en una transición idempotente de sesión.
 
+## 2026-08-26 — El feedback de una sesión invalidada debe sobrevivir a navegar
+
+- **Aprendido:** un banner publicado antes de sustituir la ruta puede perder su
+  host de pantalla en la misma actualización de React.
+- **Regla reutilizable:** al invalidar una sesión, encolar el feedback para el
+  siguiente host enfocado antes de reemplazar la navegación.
+
 ## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
 
 - **Aprendido:** `expo-dev-launcher` puede compilar categorías de depuración

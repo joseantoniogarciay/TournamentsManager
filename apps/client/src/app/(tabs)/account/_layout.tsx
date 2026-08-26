@@ -88,9 +88,7 @@ export default function AccountLayout() {
         {usesLiquidGlassNavigation ? (
           <Stack.Toolbar placement="right">
             {user ? (
-              <Stack.Toolbar.View hidesSharedBackground>
-                <NativeNotificationHeaderButton />
-              </Stack.Toolbar.View>
+              <NativeNotificationHeaderButton />
             ) : null}
             <Stack.Toolbar.Button
               accessibilityLabel={t("account_settings_accessibility_label")}

@@ -45,7 +45,7 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 /** Estado de sesión mínimo mientras se implementan lectura y cierre de sesión. */
 export function SessionProvider({ children }: PropsWithChildren) {
   const t = getTranslator();
-  const { show } = useFeedback();
+  const { showAfterNavigation } = useFeedback();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isRestoring, setIsRestoring] = useState(true);
   const [revision, setRevision] = useState(0);
@@ -88,8 +88,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
     setUser(null);
     setRevision((current) => current + 1);
     setTransition("resetting");
-    show({ kind: "generic-error", message: t("session_expired") });
-  }, [show, t]);
+    showAfterNavigation({ kind: "generic-error", message: t("session_expired") });
+  }, [showAfterNavigation, t]);
 
   useEffect(() => {
     if (Platform.OS === "web") {
