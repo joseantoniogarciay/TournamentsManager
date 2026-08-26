@@ -54,6 +54,25 @@ func TestRISCVerifierCombinesSecurityEventsForSameSubject(t *testing.T) {
 	}
 }
 
+func TestRISCVerifierIgnoresUnsupportedTokenEventAlongsideSessionRevocation(t *testing.T) {
+	privateKey, verifier := localRISCVerifier(t)
+	token := signedRISC(t, privateKey, map[string]any{
+		"iss": "https://accounts.google.com/", "aud": testAudience, "jti": "risc-token-and-session",
+		"events": map[string]any{
+			"https://schemas.openid.net/secevent/oauth/event-type/token-revoked": map[string]any{"subject": map[string]any{"subject_type": "token", "token": "opaque"}},
+			federated.RISCSessionsRevoked:                                        map[string]any{"subject": map[string]any{"subject_type": "iss-sub", "iss": "https://accounts.google.com/", "sub": "google-subject"}},
+		},
+	})
+
+	event, err := verifier.Verify(context.Background(), token)
+	if err != nil {
+		t.Fatalf("Verify() error = %v", err)
+	}
+	if event.Subject != "google-subject" || event.Type != federated.RISCSessionsRevoked {
+		t.Fatalf("Verify() event = %#v", event)
+	}
+}
+
 func TestRISCVerifierAcceptsVerificationWithoutSubject(t *testing.T) {
 	privateKey, verifier := localRISCVerifier(t)
 	token := signedRISC(t, privateKey, map[string]any{

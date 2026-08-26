@@ -151,6 +151,9 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 
 	var event federated.RISCEvent
 	for eventType, rawEvent := range claims.Events {
+		if eventType != federated.RISCSessionsRevoked && eventType != federated.RISCTokensRevoked && eventType != federated.RISCAccountDisabled {
+			continue
+		}
 		var body riscEventBody
 		if err := json.Unmarshal(rawEvent, &body); err != nil || body.Subject.Type != "iss-sub" || body.Subject.Issuer != claims.Issuer || body.Subject.Subject == "" {
 			return federated.RISCEvent{}, errors.New("evento RISC inválido")
@@ -162,6 +165,9 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 		if event.Subject == "" || riscEventPriority(candidate) > riscEventPriority(event) {
 			event = candidate
 		}
+	}
+	if event.Subject == "" {
+		return federated.RISCEvent{}, errors.New("SET RISC sin evento admitido")
 	}
 	return event, nil
 }
