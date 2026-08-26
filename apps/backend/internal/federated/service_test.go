@@ -115,3 +115,16 @@ func TestHandleRISCEventRevokesOnlyRequiredSecurityEvents(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleRISCEventIgnoresVerificationWithoutSubject(t *testing.T) {
+	service := Service{}
+
+	err := service.HandleRISCEvent(context.Background(), RISCEvent{
+		ID:     "verification-event",
+		Issuer: GoogleIssuer,
+		Type:   RISCVerification,
+	})
+	if err != nil {
+		t.Fatalf("HandleRISCEvent() error = %v", err)
+	}
+}

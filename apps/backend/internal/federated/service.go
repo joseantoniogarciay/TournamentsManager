@@ -24,6 +24,8 @@ const (
 	RISCTokensRevoked = "https://schemas.openid.net/secevent/oauth/event-type/tokens-revoked" // #nosec G101 -- protocol identifier, not a secret
 	// RISCAccountDisabled requires re-securing a compromised account session.
 	RISCAccountDisabled = "https://schemas.openid.net/secevent/risc/event-type/account-disabled"
+	// RISCVerification confirms receiver delivery and never changes a session.
+	RISCVerification = "https://schemas.openid.net/secevent/risc/event-type/verification"
 )
 
 var (
@@ -200,7 +202,13 @@ func (s Service) AddGoogle(ctx context.Context, accountID, challengeID, idToken 
 // Cross-Account Protection event. Events without a required action are safely
 // ignored; subscriptions only request the event types supported here.
 func (s Service) HandleRISCEvent(ctx context.Context, event RISCEvent) error {
-	if event.ID == "" || event.Issuer != GoogleIssuer || event.Subject == "" {
+	if event.ID == "" || event.Issuer != GoogleIssuer {
+		return ErrChallengeInvalid
+	}
+	if event.Type == RISCVerification {
+		return nil
+	}
+	if event.Subject == "" {
 		return ErrChallengeInvalid
 	}
 	if event.Type == RISCSessionsRevoked || event.Type == RISCTokensRevoked || (event.Type == RISCAccountDisabled && event.Reason == "hijacking") {

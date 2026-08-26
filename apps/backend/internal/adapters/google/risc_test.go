@@ -35,6 +35,26 @@ func TestRISCVerifierAcceptsSignedGoogleSessionRevocation(t *testing.T) {
 	}
 }
 
+func TestRISCVerifierAcceptsVerificationWithoutSubject(t *testing.T) {
+	privateKey, verifier := localRISCVerifier(t)
+	token := signedRISC(t, privateKey, map[string]any{
+		"iss": "https://accounts.google.com/",
+		"aud": testAudience,
+		"jti": "risc-verification-1",
+		"events": map[string]any{
+			federated.RISCVerification: map[string]any{"state": "verification-state"},
+		},
+	})
+
+	event, err := verifier.Verify(context.Background(), token)
+	if err != nil {
+		t.Fatalf("Verify() error = %v", err)
+	}
+	if event.ID != "risc-verification-1" || event.Issuer != federated.GoogleIssuer || event.Type != federated.RISCVerification || event.Subject != "" {
+		t.Fatalf("Verify() event = %#v", event)
+	}
+}
+
 func TestRISCVerifierRejectsUnexpectedAudienceAndSubjectIssuer(t *testing.T) {
 	privateKey, verifier := localRISCVerifier(t)
 	for _, test := range []struct {

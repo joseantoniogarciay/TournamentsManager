@@ -125,6 +125,16 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 		return federated.RISCEvent{}, errors.New("firma SET inválida")
 	}
 	for eventType, rawEvent := range claims.Events {
+		if eventType == federated.RISCVerification {
+			var verification struct {
+				State string `json:"state"`
+			}
+			if err := json.Unmarshal(rawEvent, &verification); err != nil || verification.State == "" {
+				return federated.RISCEvent{}, errors.New("evento RISC de verificación inválido")
+			}
+			return federated.RISCEvent{ID: claims.ID, Issuer: federated.GoogleIssuer, Type: eventType}, nil
+		}
+
 		var body riscEventBody
 		if err := json.Unmarshal(rawEvent, &body); err != nil || body.Subject.Type != "iss-sub" || body.Subject.Issuer != claims.Issuer || body.Subject.Subject == "" {
 			return federated.RISCEvent{}, errors.New("evento RISC inválido")

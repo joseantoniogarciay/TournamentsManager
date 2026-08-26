@@ -1,5 +1,12 @@
 # Registro de aprendizaje
 
+## 2026-08-26 — La verificación RISC no identifica a una persona
+
+- **Aprendido:** el SET enviado por `stream:verify` solo incluye un `state`; no
+  tiene sujeto y, por diseño, no representa una revocación.
+- **Regla reutilizable:** validar la firma del SET de verificación y contestar
+  con éxito sin modificar sesiones, persistir el evento ni registrar `state`.
+
 ## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
 
 - **Aprendido:** `expo-dev-launcher` puede compilar categorías de depuración

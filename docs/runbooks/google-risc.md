@@ -39,6 +39,10 @@ Google Cross-Account Protection y verifica `POST /v1/risc/events`.
 
 ## Verificación desde la persona usuaria
 
+El evento técnico de `stream:verify` no identifica a una persona ni revoca
+sesiones. El receptor valida su firma y responde `202 Accepted`, pero no
+persiste ni registra su campo operativo `state`.
+
 1. Iniciar sesión en el artefacto público con Google y confirmar una sesión.
 2. Revocar el acceso de FastTourney desde la cuenta Google de prueba.
 3. Comprobar que la siguiente solicitud autenticada exige iniciar sesión otra vez.
