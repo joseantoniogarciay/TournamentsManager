@@ -31,6 +31,13 @@
 - **Regla reutilizable:** registrar solo categorías cerradas por estructura de
   JWT o SET; nunca el token, claims, `jti` ni sujetos.
 
+## 2026-08-26 — Una revocación puede agrupar varios eventos RISC
+
+- **Aprendido:** una sola entrega puede combinar `tokens-revoked` y
+  `sessions-revoked` para el mismo sujeto.
+- **Regla reutilizable:** validar todos los eventos, exigir un único sujeto y
+  condensar su efecto más protector en una transición idempotente de sesión.
+
 ## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
 
 - **Aprendido:** `expo-dev-launcher` puede compilar categorías de depuración

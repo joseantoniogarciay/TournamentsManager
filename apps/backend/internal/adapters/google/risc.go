@@ -115,8 +115,8 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 	if len(claims.Audience) == 0 {
 		return federated.RISCEvent{}, errors.New("SET RISC sin audiencia")
 	}
-	if len(claims.Events) != 1 {
-		return federated.RISCEvent{}, errors.New("SET RISC con número de eventos no admitido")
+	if len(claims.Events) == 0 {
+		return federated.RISCEvent{}, errors.New("SET RISC sin evento")
 	}
 	if !v.acceptsAudience(claims.Audience) {
 		return federated.RISCEvent{}, errors.New("audiencia SET no permitida")
@@ -136,24 +136,47 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 	if err := rsa.VerifyPKCS1v15(&key, crypto.SHA256, digest[:], signature); err != nil {
 		return federated.RISCEvent{}, errors.New("firma SET inválida")
 	}
-	for eventType, rawEvent := range claims.Events {
-		if eventType == federated.RISCVerification {
-			var verification struct {
-				State string `json:"state"`
-			}
-			if err := json.Unmarshal(rawEvent, &verification); err != nil || verification.State == "" {
-				return federated.RISCEvent{}, errors.New("evento RISC de verificación inválido")
-			}
-			return federated.RISCEvent{ID: claims.ID, Issuer: federated.GoogleIssuer, Type: eventType}, nil
+	if rawEvent, ok := claims.Events[federated.RISCVerification]; ok {
+		if len(claims.Events) != 1 {
+			return federated.RISCEvent{}, errors.New("SET RISC de verificación combinado")
 		}
+		var verification struct {
+			State string `json:"state"`
+		}
+		if err := json.Unmarshal(rawEvent, &verification); err != nil || verification.State == "" {
+			return federated.RISCEvent{}, errors.New("evento RISC de verificación inválido")
+		}
+		return federated.RISCEvent{ID: claims.ID, Issuer: federated.GoogleIssuer, Type: federated.RISCVerification}, nil
+	}
 
+	var event federated.RISCEvent
+	for eventType, rawEvent := range claims.Events {
 		var body riscEventBody
 		if err := json.Unmarshal(rawEvent, &body); err != nil || body.Subject.Type != "iss-sub" || body.Subject.Issuer != claims.Issuer || body.Subject.Subject == "" {
 			return federated.RISCEvent{}, errors.New("evento RISC inválido")
 		}
-		return federated.RISCEvent{ID: claims.ID, Issuer: federated.GoogleIssuer, Subject: body.Subject.Subject, Type: eventType, Reason: body.Reason}, nil
+		if event.Subject != "" && event.Subject != body.Subject.Subject {
+			return federated.RISCEvent{}, errors.New("SET RISC con sujetos distintos")
+		}
+		candidate := federated.RISCEvent{ID: claims.ID, Issuer: federated.GoogleIssuer, Subject: body.Subject.Subject, Type: eventType, Reason: body.Reason}
+		if event.Subject == "" || riscEventPriority(candidate) > riscEventPriority(event) {
+			event = candidate
+		}
 	}
-	return federated.RISCEvent{}, errors.New("SET RISC sin evento")
+	return event, nil
+}
+
+func riscEventPriority(event federated.RISCEvent) int {
+	switch {
+	case event.Type == federated.RISCSessionsRevoked:
+		return 3
+	case event.Type == federated.RISCTokensRevoked:
+		return 2
+	case event.Type == federated.RISCAccountDisabled && event.Reason == "hijacking":
+		return 1
+	default:
+		return 0
+	}
 }
 
 func (v *RISCVerifier) acceptsAudience(raw json.RawMessage) bool {
