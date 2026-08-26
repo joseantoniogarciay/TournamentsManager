@@ -35,6 +35,24 @@ func TestRISCVerifierAcceptsSignedGoogleSessionRevocation(t *testing.T) {
 	}
 }
 
+func TestRISCVerifierAcceptsIDTokenClaimsSubject(t *testing.T) {
+	privateKey, verifier := localRISCVerifier(t)
+	token := signedRISC(t, privateKey, map[string]any{
+		"iss": "https://accounts.google.com/", "aud": testAudience, "jti": "risc-id-token-subject",
+		"events": map[string]any{
+			federated.RISCSessionsRevoked: map[string]any{"subject": map[string]any{"subject_type": "id_token_claims", "iss": "https://accounts.google.com/", "sub": "google-subject", "email": "ignored@example.test"}},
+		},
+	})
+
+	event, err := verifier.Verify(context.Background(), token)
+	if err != nil {
+		t.Fatalf("Verify() error = %v", err)
+	}
+	if event.Subject != "google-subject" || event.Type != federated.RISCSessionsRevoked {
+		t.Fatalf("Verify() event = %#v", event)
+	}
+}
+
 func TestRISCVerifierCombinesSecurityEventsForSameSubject(t *testing.T) {
 	privateKey, verifier := localRISCVerifier(t)
 	token := signedRISC(t, privateKey, map[string]any{

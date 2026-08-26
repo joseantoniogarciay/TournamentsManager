@@ -155,7 +155,7 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 			continue
 		}
 		var body riscEventBody
-		if err := json.Unmarshal(rawEvent, &body); err != nil || body.Subject.Type != "iss-sub" || body.Subject.Issuer != claims.Issuer || body.Subject.Subject == "" {
+		if err := json.Unmarshal(rawEvent, &body); err != nil || !isGoogleAccountSubject(body.Subject, claims.Issuer) {
 			return federated.RISCEvent{}, errors.New("evento RISC inválido")
 		}
 		if event.Subject != "" && event.Subject != body.Subject.Subject {
@@ -170,6 +170,10 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 		return federated.RISCEvent{}, errors.New("SET RISC sin evento admitido")
 	}
 	return event, nil
+}
+
+func isGoogleAccountSubject(subject riscSubject, issuer string) bool {
+	return (subject.Type == "iss-sub" || subject.Type == "id_token_claims") && subject.Issuer == issuer && subject.Subject != ""
 }
 
 func riscEventPriority(event federated.RISCEvent) int {
