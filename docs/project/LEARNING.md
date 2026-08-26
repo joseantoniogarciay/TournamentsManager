@@ -42,8 +42,8 @@
 
 - **Aprendido:** un banner publicado antes de sustituir la ruta puede perder su
   host de pantalla en la misma actualización de React.
-- **Regla reutilizable:** al invalidar una sesión, encolar el feedback para el
-  siguiente host enfocado antes de reemplazar la navegación.
+- **Regla reutilizable:** al invalidar una sesión, guardar el feedback hasta que
+  termine el reset de navegación y entregarlo al host enfocado entonces.
 
 ## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
 

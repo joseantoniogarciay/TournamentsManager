@@ -52,6 +52,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   const navigationFeedbackTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queuedFeedback = useRef<Feedback | null>(null);
   const awaitingNextFocusedHost = useRef(false);
+  const feedbackHostFocused = useRef(false);
 
   useEffect(() => {
     void AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
@@ -168,19 +169,28 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     },
     [clearAutoDismiss, dismiss, dragY, visibility],
   );
-  const showAfterNavigation = useCallback((next: Feedback) => {
-    queuedFeedback.current = next;
-    awaitingNextFocusedHost.current = true;
-  }, []);
+  const revealQueuedFeedback = useCallback(() => {
+    if (!feedbackHostFocused.current || !awaitingNextFocusedHost.current || !queuedFeedback.current) return;
+    const next = queuedFeedback.current;
+    queuedFeedback.current = null;
+    awaitingNextFocusedHost.current = false;
+    navigationFeedbackTimeout.current = setTimeout(() => show(next), navigationFeedbackDelayMs);
+  }, [show]);
+  const showAfterNavigation = useCallback(
+    (next: Feedback) => {
+      if (navigationFeedbackTimeout.current) clearTimeout(navigationFeedbackTimeout.current);
+      queuedFeedback.current = next;
+      awaitingNextFocusedHost.current = true;
+      revealQueuedFeedback();
+    },
+    [revealQueuedFeedback],
+  );
   const setFeedbackHostFocused = useCallback(
     (isFocused: boolean) => {
-      if (!isFocused || !awaitingNextFocusedHost.current || !queuedFeedback.current) return;
-      const next = queuedFeedback.current;
-      queuedFeedback.current = null;
-      awaitingNextFocusedHost.current = false;
-      navigationFeedbackTimeout.current = setTimeout(() => show(next), navigationFeedbackDelayMs);
+      feedbackHostFocused.current = isFocused;
+      if (isFocused) revealQueuedFeedback();
     },
-    [show],
+    [revealQueuedFeedback],
   );
   const bannerNode = feedback ? (
     <Animated.View
