@@ -42,9 +42,10 @@
 
 - **Aprendido:** un banner publicado antes de sustituir la ruta puede perder un
   host ligado a la pantalla que React desmonta durante el mismo reset.
-- **Regla reutilizable:** el host de feedback global vive por encima de las
-  rutas. Al invalidar una sesión, se guarda el aviso hasta acabar el reset de
-  navegación y entonces se publica desde ese host persistente.
+- **Regla reutilizable:** en iOS y Android el host global vive por encima de
+  las rutas; en web conserva el overlay de la `Screen` activa. Al invalidar una
+  sesión, se guarda el aviso hasta acabar el reset de navegación y entonces se
+  publica desde el host apropiado para la plataforma.
 
 ## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
 

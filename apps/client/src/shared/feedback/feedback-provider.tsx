@@ -207,7 +207,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   return (
     <FeedbackContext.Provider value={contextValue}>
       {children}
-      <FeedbackBanner />
+      {Platform.OS !== "web" ? <FeedbackBanner /> : null}
     </FeedbackContext.Provider>
   );
 }
