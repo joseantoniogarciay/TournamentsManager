@@ -77,3 +77,12 @@ func TestRISCEventReceiverAllowsRetryWhenGoogleTrustMaterialIsUnavailable(t *tes
 		t.Fatalf("status = %d, processed = %t", recorder.Code, processor.called)
 	}
 }
+
+func TestRISCValidationReasonIsClosedAndSafe(t *testing.T) {
+	if got := riscValidationReason(errors.New("audiencia SET no permitida")); got != "jwt.audience_rejected" {
+		t.Fatalf("riscValidationReason() = %q", got)
+	}
+	if got := riscValidationReason(errors.New("untrusted detail")); got != "jwt.invalid" {
+		t.Fatalf("riscValidationReason() = %q", got)
+	}
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -44,6 +45,7 @@ func NewRISCEventReceiver(verifier riscVerifier, processor riscProcessor) http.H
 				writeProblem(w, http.StatusServiceUnavailable, "Security event unavailable")
 				return
 			}
+			slog.InfoContext(r.Context(), "RISC security event rejected", "reason", riscValidationReason(err))
 			observability.RecordEndpointFailure(r.Context(), "credential.risc_invalid")
 			writeProblem(w, http.StatusBadRequest, "Invalid security event")
 			return
@@ -60,4 +62,27 @@ func NewRISCEventReceiver(verifier riscVerifier, processor riscProcessor) http.H
 		}
 		w.WriteHeader(http.StatusAccepted)
 	})
+}
+
+func riscValidationReason(err error) string {
+	switch err.Error() {
+	case "SET RISC mal formado":
+		return "jwt.malformed"
+	case "cabecera SET inválida":
+		return "jwt.header_invalid"
+	case "claims SET inválidos":
+		return "jwt.claims_invalid"
+	case "SET RISC inválido":
+		return "jwt.required_claim_invalid"
+	case "audiencia SET no permitida":
+		return "jwt.audience_rejected"
+	case "emisor SET no permitido":
+		return "jwt.issuer_rejected"
+	case "firma SET inválida":
+		return "jwt.signature_invalid"
+	case "evento RISC de verificación inválido", "evento RISC inválido", "SET RISC sin evento":
+		return "event.invalid"
+	default:
+		return "jwt.invalid"
+	}
 }

@@ -112,6 +112,14 @@ PostgreSQL están en el [runbook de refresh de sesión](../runbooks/session-refr
 
 ## SLO local — refresh de sesión
 
+El receptor `POST /v1/risc/events` mantiene `credential.risc_invalid` como
+causa de su span HTTP. Añade al log correlacionado, solo para diagnóstico,
+`reason` con uno de `jwt.malformed`, `jwt.header_invalid`,
+`jwt.claims_invalid`, `jwt.required_claim_invalid`, `jwt.audience_rejected`,
+`jwt.issuer_rejected`, `jwt.signature_invalid`, `event.invalid` o
+`jwt.invalid`. Son categorías cerradas y no contienen el SET, su `jti`, el
+estado de prueba ni identificadores de personas.
+
 El primer objetivo de servicio aceptado es `POST /v1/sessions/refresh`:
 
 - disponibilidad de al menos **99,5 %** en ventana móvil de 30 días; una
