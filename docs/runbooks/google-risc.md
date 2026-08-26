@@ -36,6 +36,8 @@ Google Cross-Account Protection y verifica `POST /v1/risc/events`.
    `sessions-revoked`, `tokens-revoked` y `account-disabled`.
 4. Ejecutar `stream:verify` con un estado aleatorio no sensible. Google debe
    recibir `202`; comprobar solo código y traza correlacionada, nunca el SET.
+   El SET puede llevar `typ: JWT`; el tipo de entrega se valida desde
+   `Content-Type: application/secevent+jwt`.
 
 ## Verificación desde la persona usuaria
 

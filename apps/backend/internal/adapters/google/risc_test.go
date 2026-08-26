@@ -55,6 +55,22 @@ func TestRISCVerifierAcceptsVerificationWithoutSubject(t *testing.T) {
 	}
 }
 
+func TestRISCVerifierAcceptsGoogleDefaultJWTHeaderType(t *testing.T) {
+	privateKey, verifier := localRISCVerifier(t)
+	token := signedRISCWithHeaderType(t, privateKey, "JWT", map[string]any{
+		"iss": "https://accounts.google.com/",
+		"aud": testAudience,
+		"jti": "risc-default-jwt-header",
+		"events": map[string]any{
+			federated.RISCVerification: map[string]any{"state": "verification-state"},
+		},
+	})
+
+	if _, err := verifier.Verify(context.Background(), token); err != nil {
+		t.Fatalf("Verify() error = %v", err)
+	}
+}
+
 func TestRISCVerifierRejectsUnexpectedAudienceAndSubjectIssuer(t *testing.T) {
 	privateKey, verifier := localRISCVerifier(t)
 	for _, test := range []struct {
@@ -101,8 +117,12 @@ func localRISCVerifier(t *testing.T) (*rsa.PrivateKey, *RISCVerifier) {
 }
 
 func signedRISC(t *testing.T, privateKey *rsa.PrivateKey, claims map[string]any) string {
+	return signedRISCWithHeaderType(t, privateKey, "secevent+jwt", claims)
+}
+
+func signedRISCWithHeaderType(t *testing.T, privateKey *rsa.PrivateKey, headerType string, claims map[string]any) string {
 	t.Helper()
-	header, err := json.Marshal(map[string]string{"alg": "RS256", "kid": "risc-test-key", "typ": "secevent+jwt"})
+	header, err := json.Marshal(map[string]string{"alg": "RS256", "kid": "risc-test-key", "typ": headerType})
 	if err != nil {
 		t.Fatal(err)
 	}

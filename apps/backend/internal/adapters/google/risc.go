@@ -103,7 +103,7 @@ func (v *RISCVerifier) Verify(ctx context.Context, raw string) (federated.RISCEv
 	if err := decodeJWTPart(parts[1], &claims); err != nil {
 		return federated.RISCEvent{}, errors.New("claims SET inválidos")
 	}
-	if header.Algorithm != "RS256" || header.KeyID == "" || header.Type != "secevent+jwt" || claims.ID == "" || claims.Issuer == "" || claims.Audience == "" || len(claims.Events) != 1 {
+	if header.Algorithm != "RS256" || header.KeyID == "" || claims.ID == "" || claims.Issuer == "" || claims.Audience == "" || len(claims.Events) != 1 {
 		return federated.RISCEvent{}, errors.New("SET RISC inválido")
 	}
 	if _, ok := v.audiences[claims.Audience]; !ok {

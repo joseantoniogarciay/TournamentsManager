@@ -7,6 +7,15 @@
 - **Regla reutilizable:** validar la firma del SET de verificación y contestar
   con éxito sin modificar sesiones, persistir el evento ni registrar `state`.
 
+## 2026-08-26 — El tipo RISC está en HTTP, no exige una cabecera JWT concreta
+
+- **Aprendido:** Google puede emitir el SET con el tipo de cabecera JWT por
+  defecto (`JWT`). La clasificación RISC se declara en el `Content-Type`
+  `application/secevent+jwt` de la entrega.
+- **Regla reutilizable:** exigir algoritmo, clave, firma, emisor, audiencia y
+  estructura del SET; no rechazar una entrega válida por un valor opcional de
+  `typ` en la cabecera JWT.
+
 ## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
 
 - **Aprendido:** `expo-dev-launcher` puede compilar categorías de depuración
