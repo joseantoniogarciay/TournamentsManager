@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.fasttourney.dev-postgresql-backup-full</string>
+  <key>ProgramArguments</key><array><string>/usr/local/bin/docker</string><string>exec</string><string>--user</string><string>postgres</string><string>tournaments-manager-dev-postgres-1</string><string>pgbackrest</string><string>--stanza=fasttourney-dev</string><string>--type=full</string><string>backup</string></array>
+  <key>StartCalendarInterval</key><dict><key>Weekday</key><integer>0</integer><key>Hour</key><integer>3</integer><key>Minute</key><integer>45</integer></dict>
+  <key>StandardOutPath</key><string>__LOG_DIRECTORY__/postgresql-backup-full.log</string>
+  <key>StandardErrorPath</key><string>__LOG_DIRECTORY__/postgresql-backup-full-error.log</string>
+</dict></plist>

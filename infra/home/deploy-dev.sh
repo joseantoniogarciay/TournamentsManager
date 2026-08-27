@@ -8,12 +8,28 @@ api_repository=tournaments-manager-dev-api
 
 cd "$repository_root"
 
+diagnose_compose_start_failure() {
+  echo "El arranque de Compose no completó la comprobación de salud." >&2
+  echo "Estado de los servicios de dev:" >&2
+  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml ps >&2 || true
+  echo "Últimos logs de API y PostgreSQL:" >&2
+  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml logs --tail=200 api postgres >&2 || true
+}
+
 # La API debe recibir únicamente la identidad PostgreSQL restringida. Se
 # comprueba antes de construir o conmutar artefactos y sin imprimir secretos.
 set -a
 . infra/dev/.env
+host_legal_audit_backup_destination=$LEGAL_AUDIT_BACKUP_DESTINATION
+host_legal_audit_backup_key_path=$LEGAL_AUDIT_BACKUP_KEY_PATH
 . infra/dev/api.docker.env
 set +a
+
+# api.docker.env describes paths seen inside the container. Compose needs the
+# distinct host paths from .env when it resolves its bind mount and secret.
+LEGAL_AUDIT_BACKUP_DESTINATION=$host_legal_audit_backup_destination
+LEGAL_AUDIT_BACKUP_KEY_PATH=$host_legal_audit_backup_key_path
+export LEGAL_AUDIT_BACKUP_DESTINATION LEGAL_AUDIT_BACKUP_KEY_PATH
 
 if [ ! -s infra/dev/alertmanager.smtp-password ]; then
   echo "Falta infra/dev/alertmanager.smtp-password con la clave SMTP exclusiva de Alertmanager." >&2
@@ -77,8 +93,11 @@ make dev-public-migrate
 
 ./infra/home/deploy-dev-web.sh "$release_sha"
 
-DEV_API_IMAGE="$api_image" \
-  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml up --detach --wait --remove-orphans
+if ! DEV_API_IMAGE="$api_image" \
+  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml up --detach --wait --remove-orphans; then
+  diagnose_compose_start_failure
+  exit 1
+fi
 
 next_link="$current_link.next"
 ln -s "releases/$release_sha" "$next_link"

@@ -1,5 +1,200 @@
 # Registro de aprendizaje
 
+## 2026-08-26 — La verificación RISC no identifica a una persona
+
+- **Aprendido:** el SET enviado por `stream:verify` solo incluye un `state`; no
+  tiene sujeto y, por diseño, no representa una revocación.
+- **Regla reutilizable:** validar la firma del SET de verificación y contestar
+  con éxito sin modificar sesiones, persistir el evento ni registrar `state`.
+
+## 2026-08-26 — El tipo RISC está en HTTP, no exige una cabecera JWT concreta
+
+- **Aprendido:** Google puede emitir el SET con el tipo de cabecera JWT por
+  defecto (`JWT`). La clasificación RISC se declara en el `Content-Type`
+  `application/secevent+jwt` de la entrega.
+- **Regla reutilizable:** exigir algoritmo, clave, firma, emisor, audiencia y
+  estructura del SET; no rechazar una entrega válida por un valor opcional de
+  `typ` en la cabecera JWT.
+
+## 2026-08-26 — La audiencia de un SET puede ser una lista JWT
+
+- **Aprendido:** la entrega RISC de Google usa `aud` como lista JSON de IDs de
+  cliente; modelarlo solo como cadena impide siquiera validar los claims.
+- **Regla reutilizable:** aceptar las dos representaciones válidas de `aud`
+  (cadena o lista) y exigir siempre la intersección con los clientes OAuth
+  propios, sin registrar los IDs ni el token.
+
+## 2026-08-26 — Un rechazo de SET necesita una causa operacional cerrada
+
+- **Aprendido:** responder `400` sin detalles al emisor es correcto, pero una
+  única causa interna no permite distinguir un claim ausente de varios eventos.
+- **Regla reutilizable:** registrar solo categorías cerradas por estructura de
+  JWT o SET; nunca el token, claims, `jti` ni sujetos.
+
+## 2026-08-26 — Una revocación puede agrupar varios eventos RISC
+
+- **Aprendido:** una sola entrega puede combinar `tokens-revoked` y
+  `sessions-revoked` para el mismo sujeto.
+- **Regla reutilizable:** validar todos los eventos, exigir un único sujeto y
+  condensar su efecto más protector en una transición idempotente de sesión.
+
+## 2026-08-26 — El feedback de una sesión invalidada debe sobrevivir a navegar
+
+- **Aprendido:** un banner publicado antes de sustituir la ruta puede perder un
+  host ligado a la pantalla que React desmonta durante el mismo reset.
+- **Regla reutilizable:** en iOS y Android el host global vive por encima de
+  las rutas; en web conserva el overlay de la `Screen` activa. Al invalidar una
+  sesión, se guarda el aviso hasta acabar el reset de navegación y entonces se
+  publica desde el host apropiado para la plataforma.
+
+## 2026-08-26 — La development build de iOS no siempre es compatible con React Native precompilado
+
+- **Aprendido:** `expo-dev-launcher` puede compilar categorías de depuración
+  sobre `RCTPackagerConnection` mientras `React-Core-prebuilt` no exporta ese
+  símbolo. Las cabeceras presentes no demuestran que el binario pueda enlazar.
+- **Regla reutilizable:** si una development build de iOS falla con símbolos de
+  `RCTPackagerConnection` o `facebook::react::*`, habilitar
+  `ios.buildReactNativeFromSource` junto a `ios.usePrecompiledModules: false` y
+  regenerar Pods antes de cambiar versiones o parchear dependencias. El coste es
+  una build limpia más lenta, aceptable para conservar una ruta local
+  reproducible.
+
+## 2026-08-26 — La sesión propia necesita señales de revocación del proveedor
+
+- **Aprendido:** validar un ID token al iniciar sesión demuestra una identidad en
+  ese instante, pero no informa de una revocación o compromiso posterior en
+  Google. Cross-Account Protection entrega esa señal como un SET RISC firmado.
+- **Regla reutilizable:** un receptor de eventos de seguridad valida primero
+  firma, emisor y audiencia; aplica después una transición idempotente de la
+  sesión propia y no registra el token ni sus identificadores. El `jti` evita
+  que una repetición afecte a una sesión creada después.
+
+## 2026-08-24 — Formato YAML y validez Kubernetes son comprobaciones distintas
+
+Prettier confirma que un manifiesto YAML tiene formato consistente, pero no que
+su `apiVersion`, `kind` o campos sean aceptados por el API server. En el primer
+manifiesto K3s, `kubectl apply --dry-run=server` validó el objeto contra el
+clúster real sin persistirlo. No se añade todavía esa dependencia al `make
+verify` ni a CI: exigir VM, SSH y `sudo` rompería su reproducibilidad.
+
+**Regla reutilizable:** al crecer los manifiestos, separar una validación de
+esquema offline apta para CI de una validación opcional contra K3s real; añadir
+la herramienta y el objetivo `make k3s-validate` solo cuando exista más de un
+workload que justifique su mantenimiento.
+
+## 2026-08-24 — Un servicio K3s activo no sustituye una comprobación de recuperación
+
+Que `systemctl` informe K3s activo solo confirma el proceso del host. Tras un
+reinicio, la evidencia útil incluye que SSH vuelva a responder, que el único
+nodo esté `Ready` y que siga disponible la `StorageClass` que atenderá los PVC.
+El kubeconfig administrativo permanece restringido a `root`; consultarlo con
+`sudo` es normal y no un fallo del control plane.
+
+`local-path` es el nombre de la política de almacenamiento predeterminada, no
+una ruta del sistema de archivos. Su provisionador creará un directorio local
+por PVC cuando un Pod lo consuma. Al tener política `Delete`, eliminar un PVC
+puede eliminar su volumen: PostgreSQL exigirá un plan explícito de backup y
+restauración antes de confiarle datos.
+
+**Regla reutilizable:** cerrar un módulo de host solo tras un reinicio
+controlado y una verificación administrativa de nodo y almacenamiento; separar
+el nombre de una `StorageClass` de la ubicación física que asignará a cada PV.
+
+## 2026-08-24 — Helm empaqueta recursos; no reemplaza Kubernetes
+
+Helm renderiza e instala recursos Kubernetes de un chart, pero los controllers y
+el kubelet de K3s siguen siendo quienes reconcilian y ejecutan los Pods. Usarlo
+antes de haber aplicado un `Deployment`, un `Service` o un PVC propios oculta el
+modelo que la Fase 4 busca aprender; mantener a mano todo el software de
+observabilidad, en cambio, duplica mantenimiento ajeno.
+
+**Regla reutilizable:** aprender primero el core con manifiestos explícitos y
+usar Helm para empaquetar componentes de terceros cuando su complejidad lo
+justifique. Los valores Helm se revisan como código, las versiones se fijan y
+los secretos no entran en Git. Véase ADR-0112.
+
+## 2026-08-23 — La carga baja permite aprender producción, no omitir su recuperación
+
+Cuatro vCPU y 6 GB de RAM son suficientes para inaugurar una producción doméstica
+de tráfico muy bajo, pero no sustituyen persistencia aislada, restauración
+probada, probes ni rollback. Un único Mac sigue agrupando host, energía y red;
+por eso el término producción describe datos y controles, no un SLA implícito.
+
+**Regla reutilizable:** un laboratorio K3s puede convertirse en runtime de
+producción de mejor esfuerzo cuando sus fronteras, backup y recuperación se
+cierran antes de exponer usuarios. La capacidad se mide después con métricas, y
+una necesidad de disponibilidad mueve la decisión hacia infraestructura dedicada
+o gestionada. Véase ADR-0111.
+
+## 2026-08-23 — El portapapeles no sustituye una ruta de administración Server
+
+UTM puede habilitar el portapapeles y el agente SPICE puede estar instalado,
+pero una Ubuntu Server usada como consola TTY no ofrece una sesión gráfica que
+lo convierta en un flujo de copia y pega fiable. Añadir un escritorio solo para
+ese fin aumentaría consumo y mantenimiento sin mejorar K3s.
+
+**Regla reutilizable:** una VM Server se administra por SSH con clave pública,
+no mediante dependencia del portapapeles de la consola. En UTM se conserva la
+red compartida privada, se evita una red puente y se desactivan contraseña,
+interactivo y root en SSH. Véase ADR-0110.
+
+## 2026-08-23 — Un disco virtual de 30 GB no implica una raíz de 30 GB
+
+El particionado guiado de Ubuntu con LVM creó correctamente un disco virtual de
+30 GB, pero asignó inicialmente cerca de la mitad al volumen raíz y dejó el
+resto libre en el grupo de volúmenes. K3s consume imágenes, capas y volúmenes
+en el sistema de archivos raíz, no en el espacio LVM sin asignar.
+
+**Regla reutilizable:** antes de instalar workloads, comprobar `df -h /` y
+ampliar el volumen raíz con el espacio libre de LVM. El límite virtual sigue
+siendo dinámico en el SSD del Mac; extender el volumen solo hace utilizable esa
+capacidad dentro del invitado. Véase ADR-0110.
+
+## 2026-08-23 — La paridad con EKS se mide por frontera, no por una distro idéntica
+
+EKS puede ejecutar nodos Ubuntu administrados o nodos Bottlerocket inmutables
+según el modelo de cómputo futuro. Una VM K3s no debe intentar copiar Auto Mode:
+su objetivo es aprender el host Linux y los recursos Kubernetes reutilizables.
+
+**Regla reutilizable:** elegir una distribución convencional compatible con el
+destino facilita la transferencia operativa; las integraciones gestionadas del
+cloud se validan después en su laboratorio real. UTM + Ubuntu Server ARM64 es
+la mínima elección local para ello (ADR-0110).
+
+## 2026-08-23 — Una cuenta de distribución no debe bloquear un laboratorio local
+
+La validación de crashes en builds distribuibles exige cuentas de iOS y Android,
+pero la VM Linux con K3s no depende de ellas. Esperar no reduce el riesgo de
+telemetría ni mejora el laboratorio; solo mezcla una dependencia comercial con
+una fase local independiente.
+
+**Regla reutilizable:** diferir una prueba externa es válido si su gate sigue
+explícito y no se rebajan sus controles. K3s puede avanzar con su propio
+criterio de salida; PostHog distribuible debe cerrarse antes de una beta móvil.
+Véase ADR-0109.
+
+## 2026-08-23 — Una espera de salud fallida debe conservar su contexto
+
+Un despliegue recuperable no debe activar una release hasta que Compose confirme
+la salud de sus servicios, pero el simple código de salida no explica qué
+contenedor impidió la conmutación. Reintentar automáticamente podría ocultar un
+fallo transitorio o cambiar el estado sin diagnóstico.
+
+**Regla reutilizable:** si `docker compose up --wait` falla, el script conserva
+la release activa y muestra `ps` y los últimos logs de API y PostgreSQL antes de
+salir. La persona operadora decide el siguiente intento con esa evidencia.
+
+## 2026-08-23 — Un aviso no es un diálogo en la web
+
+Un banner debe superponerse al contenido sin bloquearlo: solo su propia card
+recibe toques para descartarla. `Modal` de React Native Web crea en cambio un
+portal de viewport completo; aun transparente, intercepta el resto de la página
+y Safari iOS puede resolver el color de su área segura desde esa superficie.
+
+**Regla reutilizable:** el host web de feedback se monta de forma absoluta en la
+`Screen` enfocada con `pointerEvents="box-none"`; las apps nativas conservan el
+modal, que sí es el mecanismo de presentación correcto en ese entorno.
+
 ## 2026-08-22 — Fiabilidad y analítica son finalidades distintas
 
 Un crash nativo o una excepción no controlada impiden prestar el servicio y no
@@ -146,6 +341,16 @@ clave foránea de los cambios de resultado usa `ON DELETE SET NULL`: el resultad
 y su cronología continúan disponibles, pero la persona eliminada deja de ser
 identificable. El job se ejecuta fuera de la API mediante `launchd`, por lo que
 un reinicio de servidor no borra ni duplica su planificación.
+
+## 2026-08-23 — Incremental de aplicación y recuperación PostgreSQL son límites distintos
+
+Exportar solo filas legales modificadas minimiza evidencia con una retención
+propia, pero no reconstruye una base PostgreSQL: no representa el clúster, WAL,
+ni todos los cambios físicos. Un backup recuperable de PostgreSQL combina una
+copia base con WAL continuo. pgBackRest concentra ese protocolo, cifrado y
+retención sin que el dominio conozca la infraestructura. La prueba solo cuenta
+cuando el clúster se arranca desde un destino aislado; que exista un archivo en
+iCloud no demuestra recuperación. Véase ADR-0108.
 
 ## 2026-08-12 — Descripción e indexación son controles independientes
 

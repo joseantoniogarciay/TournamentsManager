@@ -112,6 +112,15 @@ PostgreSQL están en el [runbook de refresh de sesión](../runbooks/session-refr
 
 ## SLO local — refresh de sesión
 
+El receptor `POST /v1/risc/events` mantiene `credential.risc_invalid` como
+causa de su span HTTP. Añade al log correlacionado, solo para diagnóstico,
+`reason` con uno de `jwt.malformed`, `jwt.header_invalid`,
+`jwt.claims_invalid`, `jwt.header_rejected`, `jwt.jti_missing`,
+`jwt.issuer_missing`, `jwt.audience_missing`, `event.count_rejected`,
+`jwt.audience_rejected`, `jwt.issuer_rejected`, `jwt.signature_invalid`,
+`event.invalid` o `jwt.invalid`. Son categorías cerradas y no contienen el
+SET, su `jti`, el estado de prueba ni identificadores de personas.
+
 El primer objetivo de servicio aceptado es `POST /v1/sessions/refresh`:
 
 - disponibilidad de al menos **99,5 %** en ventana móvil de 30 días; una
@@ -190,6 +199,7 @@ Con esta evidencia se cumple el criterio de salida documentado en
 | `POST /v1/google-sessions` | Operaciones PostgreSQL de challenge, identidad y sesión | La prueba OIDC, token, nonce, email, subject y sesión quedan fuera de atributos; `validation.rejected`, `credential.google_challenge_invalid` e `identity.email_conflict` distinguen recuperaciones útiles. El alta pendiente (`202`) no es un fallo; Google no configurado usa `identity.google_unavailable`. |
 | `POST /v1/me/google-identities` | Operaciones PostgreSQL de ticket, challenge e identidad | La sesión, ticket, prueba Google e identidad no se exportan; rechazos: `validation.rejected`, `credential.reauthentication_invalid` e `identity.google_conflict`. La autenticación y CSRF se resuelven en middleware sin spans adicionales; `503` por Google no configurado es `identity.google_unavailable`. |
 | `DELETE /v1/me/google-identities` | `postgresql.ConsumeReauthenticationTicketAndRemoveGoogle` | La eliminación es una transición atómica que conserva la credencial local; el ticket no se registra. Rechazos: `validation.rejected` o `credential.reauthentication_invalid`; errores de PostgreSQL usan la categoría técnica cerrada. Google no configurado usa `identity.google_unavailable`. |
+| `POST /v1/risc/events` | Configuración RISC/JWKS de Google y transacción de deduplicación + revocación | El SET, `sub`, `jti`, audiencia y cuerpo no salen del proceso. Un SET inválido usa `credential.risc_invalid`; RISC/JWKS no disponible usa `identity.google_unavailable` y PostgreSQL `database.query_failed`. El `202` se entrega solo al validar y aplicar o reconocer la revocación idempotente, sin spans hijos por JWT o consulta de claves. |
 | `POST /v1/sessions` | `postgresql.FindLocalAccountForLogin`, `auth.password.verify`, `postgresql.CreateLocalLoginSession` | Rechazos: `validation.rejected`, `rate_limit.exceeded` o `authentication.credentials_rejected`, sin distinguir cuenta, contraseña o estado. |
 | `GET /v1/sessions` | `postgresql.GetCurrentSession` | Una sesión que deja de ser válida después de autenticarse se marca como `session.invalid`; la autenticación previa no añade un span ni atributos de token. |
 | `POST /v1/sessions/refresh` | `postgresql.RotateSessionTokens` | La rotación del token opaco y la sesión se diagnostican como una única transición atómica. Un refresh ausente, duplicado o ya consumido se marca como `session.refresh_invalid`, sin exportar el token. |

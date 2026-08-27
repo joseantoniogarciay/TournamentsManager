@@ -45,7 +45,7 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 /** Estado de sesión mínimo mientras se implementan lectura y cierre de sesión. */
 export function SessionProvider({ children }: PropsWithChildren) {
   const t = getTranslator();
-  const { show } = useFeedback();
+  const { showAfterNavigation } = useFeedback();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isRestoring, setIsRestoring] = useState(true);
   const [revision, setRevision] = useState(0);
@@ -53,6 +53,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     useState<SessionReplacementDestination>("/");
   const [transition, setTransition] = useState<SessionContextValue["transition"]>("idle");
   const hasInvalidatedSession = useRef(false);
+  const pendingSessionExpiryFeedback = useRef<string | null>(null);
 
   const beginSessionReplacement = useCallback(() => setTransition("confirming"), []);
   const completeSessionReplacement = useCallback(
@@ -66,7 +67,12 @@ export function SessionProvider({ children }: PropsWithChildren) {
     [],
   );
   const cancelSessionReplacement = useCallback(() => setTransition("idle"), []);
-  const finishSessionReplacement = useCallback(() => setTransition("idle"), []);
+  const finishSessionReplacement = useCallback(() => {
+    setTransition("idle");
+    const message = pendingSessionExpiryFeedback.current;
+    pendingSessionExpiryFeedback.current = null;
+    if (message) showAfterNavigation({ kind: "generic-error", message });
+  }, [showAfterNavigation]);
   const signOut = useCallback(async () => {
     const session = await getMobileSession();
     void revokeCurrentSessionSilently(session);
@@ -87,9 +93,9 @@ export function SessionProvider({ children }: PropsWithChildren) {
     await clearMobileSession();
     setUser(null);
     setRevision((current) => current + 1);
+    pendingSessionExpiryFeedback.current = t("session_expired");
     setTransition("resetting");
-    show({ kind: "generic-error", message: t("session_expired") });
-  }, [show, t]);
+  }, [t]);
 
   useEffect(() => {
     if (Platform.OS === "web") {

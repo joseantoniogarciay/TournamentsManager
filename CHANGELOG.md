@@ -8,6 +8,27 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- ADR-0112 fija una entrega K3s mixta: el core de `prod` se aprende primero con
+  manifiestos propios y `kubectl`; Helm se reserva para la observabilidad de
+  terceros, sin operador ni chart propio inicialmente.
+
+- ADR-0111 establece la VM K3s de un nodo como runtime doméstico de `prod`.
+  Compose conserva `local` y `dev`; producción no se publicará hasta completar
+  persistencia aislada, el patrón pgBackRest ya validado en `dev` con repositorio
+  y clave propios, secretos, recursos/probes, ingress Tunnel/Caddy, rollback y
+  observabilidad accionable.
+
+- ADR-0110 concreta el laboratorio K3s: UTM ejecutará Ubuntu Server 24.04 LTS
+  ARM64 con 4 vCPU, 6 GB de RAM y un disco dinámico de 30 GB. La VM se
+  administra desde el Mac mediante SSH por clave en su red privada compartida;
+  la contraseña, el mecanismo interactivo y `root` están desactivados. El
+  volumen raíz LVM se amplía antes de K3s para usar la capacidad lógica
+  disponible del disco.
+
+- ADR-0109 permite iniciar la Fase 4 con VM Linux + K3s. La validación de
+  PostHog en builds distribuidas de iOS y Android se difiere hasta disponer de
+  sus cuentas; sigue siendo obligatoria antes de distribuir la beta móvil.
+
 - ADR-0105 separa la fiabilidad mínima de cliente de la analítica opcional:
   PostHog en la beta pública conserva excepciones y crashes sin replay,
   autocapture, GeoIP, flags remotos ni identificación; el switch revocable solo

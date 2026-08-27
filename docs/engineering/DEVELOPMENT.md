@@ -170,6 +170,12 @@ Véase ADR-0096.
   ignorados por Git.
 - Una development build se compila con `expo run:ios` o `expo run:android`; los
   cambios exclusivos de TypeScript se recargan con `expo start`.
+- En iOS, `ios.buildReactNativeFromSource` permanece activado junto con
+  `ios.usePrecompiledModules: false` en la configuración fuente de Expo.
+  `expo-dev-launcher` usa símbolos de depuración que no exporta
+  `React-Core-prebuilt` con React Native 0.86; los módulos Expo precompilados
+  tampoco se mezclan con ese modo. Compilar ambos desde fuente evita los fallos
+  de enlazado y modulemaps. Una build limpia es más lenta, pero reproducible.
 - No se edita a mano un directorio generado. Las necesidades nativas se declaran
   en configuración o config plugins.
 - Las diferencias web/native se aíslan en componentes, adaptadores o archivos

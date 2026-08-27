@@ -14,7 +14,7 @@ PUBLIC_DEV_COMPOSE := docker compose --env-file $(PUBLIC_DEV_ENV) -f $(PUBLIC_DE
 
 .PHONY: \
 	db-init dev-init db-env-check db-backend-env-check dev-api-env-check local-config-check dev-config-check \
-	dev-public-init dev-public-config-check dev-public-up dev-public-deploy dev-public-rollback dev-public-down dev-public-reset dev-public-status dev-public-logs dev-public-bootstrap dev-public-migrate dev-public-runtime-verify dev-public-purge \
+	dev-public-init dev-public-config-check dev-public-up dev-public-deploy dev-public-rollback dev-public-down dev-public-reset dev-public-status dev-public-logs dev-public-bootstrap dev-public-migrate dev-public-runtime-verify dev-public-purge dev-public-backup-init dev-public-backup-full dev-public-backup-incremental dev-public-backup-status dev-public-backup-restore-verify \
 	db-up db-wait db-down db-status db-logs db-reset db-schema-apply
 
 # Crea los contratos locales sin sobrescribir una configuración ya existente.
@@ -70,7 +70,7 @@ dev-public-config-check:
 	@test -f $(PUBLIC_DEV_ENV) || { echo "Falta $(PUBLIC_DEV_ENV). Ejecuta: make dev-public-init"; exit 1; }
 	@test -f $(PUBLIC_DEV_API_ENV) || { echo "Falta $(PUBLIC_DEV_API_ENV). Ejecuta: make dev-public-init"; exit 1; }
 	@set -a; . $(PUBLIC_DEV_ENV); set +a; \
-	for name in POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD POSTGRES_OWNER_ROLE POSTGRES_MIGRATOR_USER POSTGRES_MIGRATOR_PASSWORD POSTGRES_APP_USER POSTGRES_APP_PASSWORD; do \
+	for name in POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD POSTGRES_OWNER_ROLE POSTGRES_MIGRATOR_USER POSTGRES_MIGRATOR_PASSWORD POSTGRES_APP_USER POSTGRES_APP_PASSWORD POSTGRES_BACKUP_DESTINATION PGBACKREST_REPO1_CIPHER_PASS; do \
 		eval "value=\$${$$name}"; \
 		[ -n "$$value" ] || { echo "Falta $$name en $(PUBLIC_DEV_ENV)"; exit 1; }; \
 	done
@@ -135,6 +135,34 @@ dev-public-runtime-verify: dev-public-config-check
 # interno no expone una ruta HTTP y reutiliza la API runtime ya en ejecución.
 dev-public-purge: dev-public-config-check
 	$(PUBLIC_DEV_COMPOSE) exec -T api /api purge-expired-accounts
+
+# Inicializa una vez el repositorio cifrado, prueba el archivado WAL y toma la
+# base completa. No se ejecuta durante el arranque ni durante un despliegue.
+dev-public-backup-init: dev-public-config-check
+	$(PUBLIC_DEV_COMPOSE) up --build --detach --wait postgres
+	$(PUBLIC_DEV_COMPOSE) exec -T --user postgres postgres pgbackrest --stanza=fasttourney-dev stanza-create
+	$(PUBLIC_DEV_COMPOSE) exec -T --user postgres postgres pgbackrest --stanza=fasttourney-dev check
+	$(PUBLIC_DEV_COMPOSE) exec -T --user postgres postgres pgbackrest --stanza=fasttourney-dev --type=full backup
+
+# Copia completa semanal: domingo a las 03:45 mediante launchd.
+dev-public-backup-full: dev-public-config-check
+	$(PUBLIC_DEV_COMPOSE) exec -T --user postgres postgres pgbackrest --stanza=fasttourney-dev --type=full backup
+
+# Incremental diario: lunes a sábado a las 03:45 mediante launchd.
+dev-public-backup-incremental: dev-public-config-check
+	$(PUBLIC_DEV_COMPOSE) exec -T --user postgres postgres pgbackrest --stanza=fasttourney-dev --type=incr backup
+
+dev-public-backup-status: dev-public-config-check
+	$(PUBLIC_DEV_COMPOSE) exec -T --user postgres postgres pgbackrest --stanza=fasttourney-dev info
+
+# BACKUP es una etiqueta devuelta por `dev-public-backup-status`. La operación
+# restaura solo en postgres-restore-data y no toca postgres-data.
+dev-public-backup-restore-verify: dev-public-config-check
+	@test -n "$(BACKUP)" || { echo "Uso: make dev-public-backup-restore-verify BACKUP=<etiqueta>"; exit 1; }
+	$(PUBLIC_DEV_COMPOSE) run --rm --no-deps --entrypoint sh postgres -ec 'mkdir -p /restore; chown postgres:postgres /restore; exec gosu postgres pgbackrest --stanza=fasttourney-dev --pg1-path=/restore --set="$(BACKUP)" --delta restore'
+	$(PUBLIC_DEV_COMPOSE) --profile backup-restore up --detach --wait postgres-restore
+	$(PUBLIC_DEV_COMPOSE) exec -T postgres-restore sh -ec 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "SELECT current_database(), pg_is_in_recovery()"'
+	$(PUBLIC_DEV_COMPOSE) --profile backup-restore rm --force --stop postgres-restore
 
 # Arranca PostgreSQL y espera a que el health check confirme que acepta conexiones.
 db-up: db-env-check

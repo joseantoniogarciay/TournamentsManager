@@ -36,7 +36,7 @@ export function Screen({
       ]}
     >
       {children}
-      <FeedbackBanner />
+      {Platform.OS === "web" ? <FeedbackBanner /> : null}
       <ConfirmationDialogHost />
     </View>
   );

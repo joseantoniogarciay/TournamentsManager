@@ -55,6 +55,15 @@ artefacto público de desarrollo los incorpora al exportarse y el backend admite
 sus audiencias mediante `GOOGLE_CLIENT_IDS`.
 ```
 
+ADR-0113 añade Google Cross-Account Protection (RISC) sin cambiar este modelo:
+Google envía un SET firmado al receptor HTTPS `POST /v1/risc/events`; tras
+validar firma, emisor y audiencia, el backend resuelve el `sub` contra la
+identidad externa y revoca todas las sesiones opacas de esa cuenta cuando el
+evento exige reasegurarla. El SET no se almacena ni se convierte en una sesión;
+solo su `jti` se conserva temporalmente para que una repetición no afecte a un
+login posterior. La configuración del stream se opera siguiendo el
+[runbook RISC](../runbooks/google-risc.md).
+
 El cliente transporta credenciales y usa la sesión resultante. No decide la
 identidad ni la autorización.
 

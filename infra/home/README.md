@@ -34,6 +34,11 @@ para que ambas URL públicas se incorporen al bundle. También fija
 Tourney Dev** en lugar de la variante local. Caddy no ejecuta Expo
 Metro.
 
+Si la espera de salud de Compose falla, `deploy-dev.sh` no conmuta `current` ni
+escribe el manifiesto. Antes de salir muestra el estado de los servicios y los
+últimos logs de API y PostgreSQL, para diagnosticar el fallo sin imprimir los
+contratos `.env` ni secretos.
+
 Cada release de dev también incorpora la referencia Scalar y la copia exacta de
 OpenAPI con la que se construyó. Caddy la sirve públicamente, sin DNS ni Access
 adicionales, en `https://dev.fasttourney.com/api-docs/`; la interfaz llama a
@@ -70,3 +75,10 @@ La subcarpeta `launchd/` conserva plantillas de tareas del Mac que son
 operativamente separadas de Caddy. La purga de cuentas usa un LaunchAgent porque
 Docker Desktop y el proyecto Compose de desarrollo pertenecen al usuario; no se
 instala ni se actualiza automáticamente desde Git.
+
+Los templates `com.fasttourney.dev-postgresql-backup-full.plist.template` y
+`com.fasttourney.dev-postgresql-backup-incremental.plist.template` programan,
+respectivamente, la copia completa semanal y los incrementales de lunes a
+sábado. Se instalan manualmente tras `make dev-public-backup-init`; el
+[runbook de backup](../../docs/runbooks/postgresql-backup-dev.md) define la
+restauración aislada.

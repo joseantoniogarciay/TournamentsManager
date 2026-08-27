@@ -72,14 +72,16 @@ func run(args []string) error {
 	registrationService := registration.NewService(postgres.NewRegistrationRepository(pool), observability.Mailer{Next: mailer}, observability.PasswordProtector{})
 	accountLeagues := postgres.NewAccountLeagueRepository(pool)
 	var federatedService *federated.Service
+	var riscReceiver http.Handler
 	if len(appConfig.GoogleClientIDs) > 0 {
 		service := federated.NewService(postgres.NewFederatedRepository(pool), googleadapter.NewVerifier(appConfig.GoogleClientIDs))
 		federatedService = &service
+		riscReceiver = httpadapter.NewRISCEventReceiver(googleadapter.NewRISCVerifier(appConfig.GoogleClientIDs), service)
 	}
 
 	server := &http.Server{
 		Addr:              appConfig.HTTPAddr,
-		Handler:           observability.HTTPHandler(httpadapter.NewHandlerWithCookieSecurityAndTrustedProxies(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, leagues.NewCreationService(accountLeagues))),
+		Handler:           observability.HTTPHandler(httpadapter.NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, riscReceiver, leagues.NewCreationService(accountLeagues))),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

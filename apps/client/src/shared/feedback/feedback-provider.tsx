@@ -14,11 +14,11 @@ import {
   Animated,
   Modal,
   PanResponder,
+  Platform,
   Pressable,
   StyleSheet,
   View,
 } from "react-native";
-import { useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { banner, motion, radius, space } from "@tournaments-manager/design-tokens";
@@ -32,7 +32,6 @@ const navigationFeedbackDelayMs = 400;
 type FeedbackContextValue = {
   banner: ReactElement | null;
   dismiss: () => void;
-  setFeedbackHostFocused: (isFocused: boolean) => void;
   show: (feedback: Feedback) => void;
   showAfterNavigation: (feedback: Feedback) => void;
 };
@@ -49,8 +48,6 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   const nextFeedbackId = useRef(0);
   const autoDismissTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigationFeedbackTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const queuedFeedback = useRef<Feedback | null>(null);
-  const awaitingNextFocusedHost = useRef(false);
 
   useEffect(() => {
     void AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
@@ -153,8 +150,6 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     (next: Feedback) => {
       if (navigationFeedbackTimeout.current) clearTimeout(navigationFeedbackTimeout.current);
       navigationFeedbackTimeout.current = null;
-      queuedFeedback.current = null;
-      awaitingNextFocusedHost.current = false;
       clearAutoDismiss();
       visibility.stopAnimation();
       dragY.stopAnimation();
@@ -167,16 +162,9 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     },
     [clearAutoDismiss, dismiss, dragY, visibility],
   );
-  const showAfterNavigation = useCallback((next: Feedback) => {
-    queuedFeedback.current = next;
-    awaitingNextFocusedHost.current = true;
-  }, []);
-  const setFeedbackHostFocused = useCallback(
-    (isFocused: boolean) => {
-      if (!isFocused || !awaitingNextFocusedHost.current || !queuedFeedback.current) return;
-      const next = queuedFeedback.current;
-      queuedFeedback.current = null;
-      awaitingNextFocusedHost.current = false;
+  const showAfterNavigation = useCallback(
+    (next: Feedback) => {
+      if (navigationFeedbackTimeout.current) clearTimeout(navigationFeedbackTimeout.current);
       navigationFeedbackTimeout.current = setTimeout(() => show(next), navigationFeedbackDelayMs);
     },
     [show],
@@ -212,11 +200,16 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     </Animated.View>
   ) : null;
   const contextValue = useMemo(
-    () => ({ banner: bannerNode, dismiss, setFeedbackHostFocused, show, showAfterNavigation }),
-    [bannerNode, dismiss, setFeedbackHostFocused, show, showAfterNavigation],
+    () => ({ banner: bannerNode, dismiss, show, showAfterNavigation }),
+    [bannerNode, dismiss, show, showAfterNavigation],
   );
 
-  return <FeedbackContext.Provider value={contextValue}>{children}</FeedbackContext.Provider>;
+  return (
+    <FeedbackContext.Provider value={contextValue}>
+      {children}
+      {Platform.OS !== "web" ? <FeedbackBanner /> : null}
+    </FeedbackContext.Provider>
+  );
 }
 
 export function useFeedback() {
@@ -226,19 +219,19 @@ export function useFeedback() {
 }
 
 export function FeedbackBanner() {
-  const { banner: feedbackBanner, dismiss, setFeedbackHostFocused } = useFeedback();
-  const [isFocused, setIsFocused] = useState(false);
-  useFocusEffect(
-    useCallback(() => {
-      setIsFocused(true);
-      setFeedbackHostFocused(true);
-      return () => {
-        setIsFocused(false);
-        setFeedbackHostFocused(false);
-      };
-    }, [setFeedbackHostFocused]),
-  );
-  if (!feedbackBanner || !isFocused) return null;
+  const { banner: feedbackBanner, dismiss } = useFeedback();
+  if (!feedbackBanner) return null;
+
+  // En web el Modal de react-native-web crea un portal de viewport completo.
+  // Aunque sea transparente, captura las pulsaciones fuera del banner y Safari
+  // iOS puede usar su superficie para colorear el área segura superior.
+  if (Platform.OS === "web") {
+    return (
+      <View pointerEvents="box-none" style={styles.webHost}>
+        {feedbackBanner}
+      </View>
+    );
+  }
 
   return (
     <Modal
@@ -258,6 +251,15 @@ export function FeedbackBanner() {
 
 const styles = StyleSheet.create({
   modalHost: { flex: 1 },
+  webHost: {
+    bottom: 0,
+    left: 0,
+    pointerEvents: "box-none",
+    position: "absolute",
+    right: 0,
+    top: 0,
+    zIndex: 1,
+  },
   banner: {
     borderRadius: radius.card,
     borderWidth: 1,

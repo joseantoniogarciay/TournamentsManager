@@ -110,21 +110,58 @@ se verificó mediante Alertmanager, Resend, Cloudflare y el buzón final. Véase
 
 **Objetivo:** aprender orquestación cuando el servicio ya sea operable.
 
-**Secuencia vigente:** antes de iniciar esta fase se activa y verifica PostHog
-Cloud para la fiabilidad mínima del cliente y su analítica opcional conforme a
-ADR-0105. Esta integración no sustituye las señales OpenTelemetry del backend
-ni modifica la puerta de entrada técnica de Kubernetes.
+**Secuencia vigente:** la Fase 4 comienza con una VM Linux ligera de un nodo y
+K3s, que será el runtime doméstico de `prod` conforme a ADR-0111. Compose
+conserva desarrollo y el runtime público `dev`. La validación distribuible de
+PostHog para iOS y Android se difiere hasta disponer de sus cuentas de
+distribución, conforme a ADR-0109; sigue siendo un gate antes de distribuir la
+beta móvil, no de Kubernetes.
 
-**Puerta de entrada:** las fases de backend y observabilidad están cerradas.
-Kubernetes sigue aplazado hasta comparar la pregunta de aprendizaje y el coste
-de k3d frente al Compose ya medido; no hay implementación autorizada sin
-decisión explícita y ADR aceptado.
+**Puerta de entrada:** las fases de backend y observabilidad están cerradas y
+la selección VM Linux + K3s está aceptada. No se implementa una capacidad de
+Fase 4 sin su diseño concreto, plan de verificación y rollback.
 
-**Decisiones previas:** necesidad, k3d, empaquetado, health checks, recursos,
-configuración, secretos y estrategia de despliegue.
+**Decisiones previas:** UTM, Ubuntu Server 24.04 LTS ARM64 y recursos de la VM
+están aceptados en ADR-0110; el destino doméstico de `prod`, en ADR-0111.
+ADR-0112 fija el orden de entrega: manifiestos propios para aprender el core y
+Helm para la observabilidad de terceros una vez ese core esté verificado. Quedan
+aprovisionamiento reproducible de la VM, health checks, recursos de los
+workloads, configuración, secretos y estrategia de despliegue.
 
 **Salida:** despliegue local reproducible, recuperación demostrada y comparación
 documentada frente a Docker Compose.
+
+### Itinerario de aprendizaje y entrega de K3s
+
+Este itinerario permanece vigente entre sesiones. Cada módulo se cierra con:
+problema operativo, concepto Kubernetes, comparación con Compose, manifiestos
+explicados, verificación, fallo controlado cuando proceda y retrospectiva breve.
+No autoriza a publicar `prod` hasta completar los gates de ADR-0111.
+
+1. **Host y control plane:** verificar VM, servicio K3s, `kubectl`, nodo y
+   almacenamiento local; distinguir host, runtime de contenedores y control
+   plane de los procesos Docker Compose. Este núcleo inicial no usa Helm.
+2. **Aislamiento:** crear el namespace `prod` y el mínimo RBAC necesario;
+   separar sus recursos de `local` y `dev`.
+3. **Configuración:** aplicar `ConfigMap` y `Secret`; comparar objetos de
+   configuración con los archivos `.env` y secretos montados por Compose.
+4. **API sin estado:** desplegar la imagen runtime mediante `Deployment`,
+   `Service`, requests/limits y probes; observar reconciliación, rollout y
+   recuperación de pods frente al arranque de contenedores de Compose.
+5. **PostgreSQL con estado:** usar `StatefulSet` y `PersistentVolumeClaim`;
+   estudiar identidad, orden y persistencia, y por qué difiere de la API.
+6. **Recuperación de datos:** aplicar a `prod` el patrón pgBackRest de ADR-0108
+   con volumen, repositorio y clave propios; demostrar una restauración aislada.
+7. **Entrada pública:** enrutar Cloudflare Tunnel → Caddy → ingress K3s;
+   diferenciar exposición interna por `Service` del enrutamiento HTTP por
+   `Ingress` y conservar la ausencia de puertos LAN/WAN.
+8. **Observabilidad y operación:** usar Helm con charts upstream y valores
+   versionados para los componentes de terceros; recorrer logs, eventos,
+   métricas, alertas, rollouts y rollbacks; provocar fallos controlados de API
+   y dependencia. No se introduce un operador inicialmente.
+9. **Gate de publicación:** comprobar persistencia, restauración, secretos,
+   recursos/probes, ingress, rollback y alertas antes de retirar el `503` de
+   los hosts de producción.
 
 ## Fase 5 — Cloud
 

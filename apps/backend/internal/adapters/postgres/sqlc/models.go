@@ -57,6 +57,12 @@ type FederatedLoginChallenge struct {
 	ConsumedAt pgtype.Timestamptz
 }
 
+type GoogleRiscEvent struct {
+	ID         string
+	ReceivedAt pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+}
+
 type League struct {
 	ID                 pgtype.UUID
 	OrganizerAccountID pgtype.UUID

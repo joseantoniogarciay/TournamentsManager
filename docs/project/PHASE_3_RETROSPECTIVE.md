@@ -89,7 +89,7 @@ sola API y los datos de observabilidad sean cortos y desechables.
 
 | Acción | Propietario | Disparador | Destino |
 | --- | --- | --- | --- |
-| Comparar Compose con k3d y definir la pregunta de aprendizaje | Usuario/Codex | Inicio autorizado de Fase 4 | ADR nuevo y [DEPLOYMENT.md](../operations/DEPLOYMENT.md) |
+| Definir el laboratorio local de Kubernetes | Usuario/Codex | Resuelto: ADR-0101 acepta VM Linux + K3s; ADR-0109 autoriza iniciar Fase 4 | [ADR-0101](../adr/0101-use-linux-vm-k3s-and-ephemeral-eks-labs.md) y [ROADMAP.md](ROADMAP.md) |
 | Revisar ruido, rebotes y cuota de alertas externas | Usuario/Codex | Primera alerta no accionable o problema de entrega | [DECISIONS_TO_REVISIT.md](../governance/DECISIONS_TO_REVISIT.md) |
 | Revisar Collector, retención o backend gestionado | Usuario/Codex | Disparadores de ADR-0020 | ADR sucesor y [OBSERVABILITY.md](../operations/OBSERVABILITY.md) |
 
@@ -97,6 +97,5 @@ sola API y los datos de observabilidad sean cortos y desechables.
 
 La Fase 3 queda cerrada. La observabilidad del backend permite detectar,
 diagnosticar, entregar y resolver una degradación real sin exponer datos
-sensibles. Kubernetes continúa como dirección de aprendizaje: antes de iniciar
-su implementación se comparará k3d con el Compose ya medido, y cualquier decisión
-requerirá aceptación y ADR.
+sensibles. Su acción de Kubernetes se resolvió después mediante ADR-0101 (VM
+Linux con K3s) y ADR-0109 (inicio sin bloquear por PostHog distribuible).

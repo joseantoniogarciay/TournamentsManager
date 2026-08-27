@@ -17,6 +17,7 @@ func (v stubVerifier) Verify(context.Context, string) (Identity, error) { return
 type stubRepository struct {
 	addErr                        error
 	authenticateCalled, addCalled bool
+	riscCalled                    bool
 }
 
 func (r *stubRepository) CreateChallenge(context.Context, []byte, time.Time) (string, error) {
@@ -37,6 +38,10 @@ func (*stubRepository) AddGoogleIdentityWithTicket(context.Context, string, stri
 	return nil
 }
 func (*stubRepository) RemoveGoogleIdentityWithTicket(context.Context, string, []byte) error {
+	return nil
+}
+func (r *stubRepository) RevokeSessionsForGoogleIdentity(context.Context, RISCEvent) error {
+	r.riscCalled = true
 	return nil
 }
 
@@ -87,5 +92,39 @@ func TestAddGooglePreservesForeignSubjectConflict(t *testing.T) {
 	}
 	if !repository.addCalled {
 		t.Fatal("repository was not called")
+	}
+}
+
+func TestHandleRISCEventRevokesOnlyRequiredSecurityEvents(t *testing.T) {
+	for _, test := range []struct {
+		name, eventType, reason string
+		want                    bool
+	}{
+		{"sessions revoked", RISCSessionsRevoked, "", true},
+		{"tokens revoked", RISCTokensRevoked, "", true},
+		{"hijacked account", RISCAccountDisabled, "hijacking", true},
+		{"bulk account", RISCAccountDisabled, "bulk-account", false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			repository := &stubRepository{}
+			service := NewService(repository, stubVerifier{})
+			err := service.HandleRISCEvent(context.Background(), RISCEvent{ID: "event", Issuer: GoogleIssuer, Subject: "subject", Type: test.eventType, Reason: test.reason})
+			if err != nil || repository.riscCalled != test.want {
+				t.Fatalf("HandleRISCEvent() = %v, called = %t", err, repository.riscCalled)
+			}
+		})
+	}
+}
+
+func TestHandleRISCEventIgnoresVerificationWithoutSubject(t *testing.T) {
+	service := Service{}
+
+	err := service.HandleRISCEvent(context.Background(), RISCEvent{
+		ID:     "verification-event",
+		Issuer: GoogleIssuer,
+		Type:   RISCVerification,
+	})
+	if err != nil {
+		t.Fatalf("HandleRISCEvent() error = %v", err)
 	}
 }
