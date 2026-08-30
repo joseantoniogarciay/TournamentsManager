@@ -123,7 +123,30 @@ La salida esperada acaba con `fasttourney_prod|f`: la base recuperada no está
 en modo recuperación. Conserva el Job terminado como evidencia hasta registrar
 el resultado; borrarlo solo elimina el Pod temporal y su `emptyDir`.
 
-El siguiente gate es aplicar ADR-0114: automatizar las copias y la réplica
-atómica hacia `FastTourney/postgresql-backups/prod`, y repetir esta verificación
-desde la réplica recibida. Roles separados, esquema y Goose siguen siendo un
-paso explícito.
+## Réplica en iCloud iniciada desde el Mac
+
+ADR-0114 separa el privilegio remoto en tres wrappers de `root`: una completa,
+un incremental y una exportación tar del repositorio. No aceptan argumentos ni
+rutas del usuario SSH. Instálalos en la VM con propietario `root`, modo `0755`
+y una regla `sudoers` limitada al operador; valida siempre el fichero con
+`visudo -cf` antes de activarlo. El template sustituye `__K3S_OPERATOR__` por la
+cuenta SSH real y no contiene secretos.
+
+En el Mac, `infra/k3s/.env` conserva host, usuario y la ruta privada
+`FastTourney/postgresql-backups/prod`; esa ruta no comparte archivos con `dev`.
+`infra/k3s/scripts/backup-prod.sh full` o `incremental` inicia el backup por
+SSH, recibe el repositorio en un directorio temporal hermano, comprueba sus
+metadatos `backup.info` y `archive.info`, y solo entonces publica el directorio
+`prod`. Un fallo previo conserva el destino publicado. La copia queda cifrada,
+pero su restauración desde la réplica requiere recuperar la frase de cifrado del
+gestor de contraseñas.
+
+Las plantillas `launchd` de `infra/home/launchd/` programan la completa el
+domingo a las 04:15 e incrementales de lunes a sábado a las 04:15, después del
+calendario de `dev`. Antes de cargarlas, ejecuta manualmente una incremental y
+confirma tanto `pgbackrest info` en la VM como la ruta publicada en iCloud. Los
+logs deben vivir en una ruta local privada, no sincronizada. La instalación del
+LaunchAgent es manual y debe comprobar que su sesión dispone de `ssh-agent`.
+
+El último gate de backup será restaurar desde la réplica ya recibida, no desde
+el PVC local. Roles separados, esquema y Goose siguen siendo un paso explícito.

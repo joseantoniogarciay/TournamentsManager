@@ -1,0 +1,5 @@
+# Replace __K3S_OPERATOR__ with the dedicated non-root SSH account on the VM.
+# These commands intentionally accept no arguments.
+__K3S_OPERATOR__ ALL=(root) NOPASSWD: /usr/local/sbin/fasttourney-prod-pgbackrest-backup-full
+__K3S_OPERATOR__ ALL=(root) NOPASSWD: /usr/local/sbin/fasttourney-prod-pgbackrest-backup-incremental
+__K3S_OPERATOR__ ALL=(root) NOPASSWD: /usr/local/sbin/fasttourney-prod-pgbackrest-export

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.fasttourney.prod-postgresql-backup-full</string>
+  <key>ProgramArguments</key><array><string>/bin/bash</string><string>__REPOSITORY_ROOT__/infra/k3s/scripts/backup-prod.sh</string><string>full</string></array>
+  <key>StartCalendarInterval</key><dict><key>Weekday</key><integer>0</integer><key>Hour</key><integer>4</integer><key>Minute</key><integer>15</integer></dict>
+  <key>StandardOutPath</key><string>__LOG_DIRECTORY__/postgresql-prod-backup-full.log</string>
+  <key>StandardErrorPath</key><string>__LOG_DIRECTORY__/postgresql-prod-backup-full-error.log</string>
+</dict></plist>
