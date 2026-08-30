@@ -16,6 +16,10 @@ personal autorizado y se purgan con una retención que nunca sea menor a la del
 registro original. El backup no sustituye el futuro plan de recuperación de
 PostgreSQL.
 
+Los contenedores de Loki usan el controlador `json-file` de Docker con rotación
+de tres archivos de hasta 10 MB. Es un límite de seguridad para su salida
+operativa, independiente de los logs de diagnóstico indexados en Loki.
+
 ## Copia legal incremental
 
 La purga de cuentas y evidencia vencida se ejecuta diariamente a las 03:15. El

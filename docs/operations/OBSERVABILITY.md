@@ -159,8 +159,9 @@ empieza por `[DEV]`; el receptor inicial es `alerts@fasttourney.com`.
 
 Grafana (`127.0.0.1:3001`), Prometheus (`127.0.0.1:9091`) y Alertmanager
 (`127.0.0.1:9094`) no tienen ruta Caddy ni Cloudflare: una alerta se entrega por
-correo, pero la operación detallada conserva acceso solo en el Mac. La retención
-sigue siendo de 24 horas y no hay HA, on-call ni alertas nuevas por completitud.
+correo, pero la operación detallada conserva acceso solo en el Mac. Prometheus
+y Tempo retienen, respectivamente, 24 horas y 7 días; no hay HA, on-call ni
+alertas nuevas por completitud.
 Véase [ADR-0100](../adr/0100-deliver-public-development-alerts-through-resend.md).
 
 ## Validación y cierre de Fase 3

@@ -115,9 +115,14 @@ services:
       - resend_alerts_smtp_password
 
   loki:
-    image: grafana/loki:3.5.0
+    image: grafana/loki:3.5.1
     restart: unless-stopped
     command: -config.file=/etc/loki/config.yml
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     volumes:
       - ../observability/loki.yml:/etc/loki/config.yml:ro
       - loki-data:/loki
