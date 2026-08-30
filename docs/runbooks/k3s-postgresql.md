@@ -66,6 +66,12 @@ sudo /usr/local/bin/k3s kubectl create secret generic postgresql-runtime \
 La API recibirá solo su URL de runtime; la credencial de migración nunca entra
 en el Secret de la API.
 
+Antes de aplicar recursos persistentes, confirma que los cuatro campos del
+Secret no conservan los placeholders del ejemplo. Una clave de cifrado
+placeholder permite leer cualquier copia que se cree con ella; si se detecta
+antes de datos reales, rota el Secret y recrea solo el PVC de repositorio, nunca
+el PVC de datos por comodidad.
+
 ## Validación antes de persistir recursos
 
 En la VM, este comando consulta al API server y no conserva objetos:
@@ -149,4 +155,19 @@ logs deben vivir en una ruta local privada, no sincronizada. La instalación del
 LaunchAgent es manual y debe comprobar que su sesión dispone de `ssh-agent`.
 
 El último gate de backup será restaurar desde la réplica ya recibida, no desde
-el PVC local. Roles separados, esquema y Goose siguen siendo un paso explícito.
+el PVC local. En un terminal del Mac, lee la frase desde Contraseñas sin pegarla
+en la conversación ni guardarla en un fichero y ejecuta:
+
+```sh
+read -rs PGBACKREST_REPO1_CIPHER_PASS
+export PGBACKREST_REPO1_CIPHER_PASS
+bash infra/k3s/scripts/restore-prod-replica-verify.sh
+unset PGBACKREST_REPO1_CIPHER_PASS
+```
+
+Antes de restaurar, el verificador compara la frase enviada por SSH con el
+Secret activo sin imprimir ninguno de ambos valores. Después monta
+`FastTourney/postgresql-backups/prod` como solo lectura en un contenedor
+temporal, restaura en un volumen temporal de Docker y comprueba
+`fasttourney_prod|f`. No monta la VM, ningún PVC ni publica un puerto. Roles
+separados, esquema y Goose siguen siendo un paso explícito.

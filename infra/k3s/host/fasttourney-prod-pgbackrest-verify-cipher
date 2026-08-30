@@ -1,0 +1,8 @@
+#!/bin/sh
+# Fixed sudo entry point: compares a candidate received on stdin without output.
+set -eu
+
+IFS= read -r candidate_cipher_pass
+printf '%s\n' "$candidate_cipher_pass" | \
+  /usr/local/bin/k3s kubectl -n prod exec -i postgresql-0 -- \
+  sh -ec 'IFS= read -r candidate; test "$candidate" = "$PGBACKREST_REPO1_CIPHER_PASS"'

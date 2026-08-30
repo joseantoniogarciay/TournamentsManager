@@ -3,3 +3,4 @@
 __K3S_OPERATOR__ ALL=(root) NOPASSWD: /usr/local/sbin/fasttourney-prod-pgbackrest-backup-full
 __K3S_OPERATOR__ ALL=(root) NOPASSWD: /usr/local/sbin/fasttourney-prod-pgbackrest-backup-incremental
 __K3S_OPERATOR__ ALL=(root) NOPASSWD: /usr/local/sbin/fasttourney-prod-pgbackrest-export
+__K3S_OPERATOR__ ALL=(root) NOPASSWD: /usr/local/sbin/fasttourney-prod-pgbackrest-verify-cipher

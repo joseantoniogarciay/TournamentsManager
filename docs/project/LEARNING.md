@@ -111,6 +111,14 @@ que ese destino pertenezca al usuario de PostgreSQL; preparar explícitamente la
 propiedad del volumen temporal evita que una verificación falle por permisos y
 mantiene el proceso de recuperación sin privilegios.
 
+Un fichero `.env.example` no es una configuración válida. Antes de inicializar
+persistencia, hay que comprobar que ningún campo del Secret coincide con un
+placeholder. Si una clave de cifrado insegura llega a crear una copia, no basta
+con cambiarla: se rota el Secret, se conserva el volumen de datos y se recrea
+el repositorio y su réplica. La restauración desde la réplica del Mac debe usar
+un volumen Docker temporal, no un bind mount, porque pgBackRest exige propiedad
+POSIX real sobre su destino.
+
 ## 2026-08-24 — Un servicio K3s activo no sustituye una comprobación de recuperación
 
 Que `systemctl` informe K3s activo solo confirma el proceso del host. Tras un
