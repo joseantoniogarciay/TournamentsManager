@@ -178,9 +178,12 @@ pgBackRest cifrado, copia base, incrementales y WAL archivado con restauración
 aislada; véase el [runbook de backup PostgreSQL](../runbooks/postgresql-backup-dev.md).
 `prod` reutilizará el patrón probado de `dev` (ADR-0108): pgBackRest cifrado,
 WAL archivado, completa semanal, incrementales diarios, dos conjuntos completos
-y restauración aislada. Volumen, repositorio y clave serán propios de `prod`; el
-repositorio doméstico sincronizado queda fuera del Mac, aunque comparte cuenta y
-proveedor, una limitación aceptada hasta que exista una capacidad distinta.
+y restauración aislada. Volumen, repositorio y clave serán propios de `prod`.
+Conforme a ADR-0114, el Mac inicia por SSH una copia del repositorio cifrado de
+la VM hacia su ubicación doméstica sincronizada; no se comparte una carpeta UTM
+ni se entrega una clave privada del Mac a Kubernetes. Esa ubicación sigue
+compartiendo Mac, cuenta y proveedor: no equivale a independencia ante su
+pérdida.
 
 Mailpit pertenece solo al entorno local y no tiene hostname público. El entorno
 `dev` usa Resend por SMTP autenticado con STARTTLS; antes de invitar personas se

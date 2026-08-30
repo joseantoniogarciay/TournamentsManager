@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- ADR-0114 fija que el Mac inicia por SSH los backups pgBackRest de `prod` y la
+  réplica del repositorio cifrado de la VM a su ubicación doméstica sincronizada,
+  sin carpeta compartida UTM ni clave privada del Mac dentro de Kubernetes.
+
 - ADR-0112 fija una entrega K3s mixta: el core de `prod` se aprende primero con
   manifiestos propios y `kubectl`; Helm se reserva para la observabilidad de
   terceros, sin operador ni chart propio inicialmente.
@@ -355,6 +359,7 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - Guías de arquitectura, desarrollo, datos, API, seguridad, observabilidad,
   despliegue, estilo y pruebas.
 - Plantillas de knowledge base, playbooks, runbooks, diagramas y retrospectivas.
+
 # Cambios no publicados
 
 - Aceptado ADR-0092: dev conserva dos despliegues locales recuperables por SHA;

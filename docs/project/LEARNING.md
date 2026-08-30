@@ -82,6 +82,29 @@ esquema offline apta para CI de una validación opcional contra K3s real; añadi
 la herramienta y el objetivo `make k3s-validate` solo cuando exista más de un
 workload que justifique su mantenimiento.
 
+## 2026-08-30 — Un PVC separado no equivale a una copia fuera de la VM
+
+`local-path` puede separar el volumen de datos PostgreSQL del repositorio de
+pgBackRest, pero ambos siguen en el mismo host. Montar una carpeta compartida
+del Mac simplificaría el camino hacia iCloud Drive, aunque rompería la frontera
+operativa de la VM y haría que el archivado WAL dependiera de ese montaje.
+
+La réplica iniciada desde el Mac conserva pgBackRest junto al `PGDATA`, no deja
+una clave privada del Mac dentro de Kubernetes y permite publicar el destino
+solo tras completar la transferencia. No convierte la copia en independiente:
+Mac, cuenta y proveedor continúan siendo un riesgo común que debe declararse.
+
+**Regla reutilizable:** separar PVC y repositorio protege de una pérdida del
+volumen de datos, pero no del host. Una copia recuperable exige una transferencia
+completa, un destino publicado de forma atómica y una restauración aislada desde
+ese destino. Véase ADR-0114.
+
+La carpeta sincronizada también requiere un límite por entorno. `dev` conserva
+su repositorio bajo `FastTourney/postgresql-backups/dev` y `prod` recibe el suyo
+bajo `FastTourney/postgresql-backups/prod`; usar el mismo directorio podría
+mezclar stanzas, claves y retención de dos clústeres que deben recuperarse de
+forma independiente.
+
 ## 2026-08-24 — Un servicio K3s activo no sustituye una comprobación de recuperación
 
 Que `systemctl` informe K3s activo solo confirma el proceso del host. Tras un
@@ -252,7 +275,7 @@ mostrarlo; la documentación distingue expresamente secreto literal de contrato
 
 Alertmanager y la API pueden usar el mismo SMTP de Resend, pero tienen radios de
 impacto distintos: uno comunica degradación operativa y el otro entrega enlaces
-de identidad. Una clave *Sending access* exclusiva permite revocar o rotar el
+de identidad. Una clave _Sending access_ exclusiva permite revocar o rotar el
 canal de alertas sin impedir verificaciones ni recuperación de cuentas. STARTTLS
 en el puerto 587 cifra la conexión antes de enviar esa clave.
 

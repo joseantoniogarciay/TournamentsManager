@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-config
+  namespace: prod
+  labels:
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/part-of: tournaments-manager
+data:
+  POSTGRES_DB: fasttourney_prod
+  POSTGRES_USER: postgres
+  POSTGRES_OWNER_ROLE: tournaments_manager_prod_schema_owner
+  POSTGRES_MIGRATOR_USER: tournaments_manager_prod_migrator
+  POSTGRES_APP_USER: tournaments_manager_prod_app
+  PGBACKREST_PG1_USER: postgres
