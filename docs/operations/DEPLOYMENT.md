@@ -176,10 +176,11 @@ integraciones ordinarias de `develop`; se reservan para producción o hitos
 distribuidos. Esto no equivale a backup. ADR-0108 añade para `dev` un repositorio
 pgBackRest cifrado, copia base, incrementales y WAL archivado con restauración
 aislada; véase el [runbook de backup PostgreSQL](../runbooks/postgresql-backup-dev.md).
-`prod` reutilizará el patrón probado de `dev` (ADR-0108): pgBackRest cifrado,
-WAL archivado, completa semanal, incrementales diarios, dos conjuntos completos
-y restauración aislada. Volumen, repositorio y clave serán propios de `prod`.
-Conforme a ADR-0114, el Mac inicia por SSH una copia del repositorio cifrado de
+`prod` ya tiene PostgreSQL con volumen y repositorio propios, pgBackRest cifrado,
+WAL archivado, una primera completa y restauración aislada local verificada.
+Quedan por automatizar la completa semanal, los incrementales diarios y la
+réplica verificable fuera de la VM. Conforme a ADR-0114, el Mac inicia por SSH
+una copia del repositorio cifrado de
 la VM hacia su ubicación doméstica sincronizada; no se comparte una carpeta UTM
 ni se entrega una clave privada del Mac a Kubernetes. Esa ubicación sigue
 compartiendo Mac, cuenta y proveedor: no equivale a independencia ante su

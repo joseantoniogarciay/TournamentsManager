@@ -6,6 +6,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Added
+
+- El PostgreSQL inicial de `prod` en K3s tiene dos PVC propios, pgBackRest
+  cifrado, una copia completa y un Job de restauración aislada que recupera en
+  almacenamiento efímero sin montar el volumen de datos activo.
+
 ### Changed
 
 - ADR-0114 fija que el Mac inicia por SSH los backups pgBackRest de `prod` y la

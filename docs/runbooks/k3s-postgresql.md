@@ -1,8 +1,8 @@
 # Runbook: PostgreSQL de `prod` en K3s
 
-> Estado: preparado; no aplicado todavía. La validación de servidor, creación de
-> secretos, importación de imagen y StatefulSet requieren una sesión SSH
-> interactiva del operador.
+> Estado: aplicación inicial completada el 2026-08-30. La operación requiere
+> una sesión SSH interactiva del operador para introducir la contraseña de
+> `sudo`; los secretos no se imprimen ni se guardan en Git.
 
 ## Alcance
 
@@ -94,8 +94,36 @@ Si el Pod no llega a `Ready`, inspecciona primero `kubectl -n prod describe pod
 postgresql-0` y sus logs. No borres el StatefulSet ni los PVC para “probar de
 nuevo”: conserva el diagnóstico y decide el rollback antes de tocar datos.
 
-## Siguiente gate
+## Backup y restauración aislada local
 
-La imagen inicializa solo PostgreSQL. Roles separados, esquema y Goose siguen
-siendo un paso explícito; después se validarán pgBackRest y la restauración desde
-`FastTourney/postgresql-backups/prod` conforme a ADR-0114.
+Inicializa una vez la stanza, valida el archivo WAL y crea una primera completa:
+
+```sh
+sudo /usr/local/bin/k3s kubectl -n prod exec postgresql-0 -- \
+  pgbackrest --stanza=fasttourney-prod stanza-create
+sudo /usr/local/bin/k3s kubectl -n prod exec postgresql-0 -- \
+  pgbackrest --stanza=fasttourney-prod check
+sudo /usr/local/bin/k3s kubectl -n prod exec postgresql-0 -- \
+  pgbackrest --stanza=fasttourney-prod --type=full backup
+```
+
+La prueba aislada usa el manifiesto `postgresql-restore-verify.yaml`. Monta el
+PVC del repositorio en solo lectura y restaura en `emptyDir`; no monta ni altera
+`data-postgresql-0`, no escucha en la red y termina al comprobar que la base
+restaurada no está en recuperación.
+
+```sh
+sudo /usr/local/bin/k3s kubectl -n prod delete job postgresql-restore-verify --ignore-not-found
+sudo /usr/local/bin/k3s kubectl apply -f /ruta/al/repositorio/infra/k3s/core/postgresql-restore-verify.yaml
+sudo /usr/local/bin/k3s kubectl -n prod wait --for=condition=complete job/postgresql-restore-verify --timeout=180s
+sudo /usr/local/bin/k3s kubectl -n prod logs job/postgresql-restore-verify
+```
+
+La salida esperada acaba con `fasttourney_prod|f`: la base recuperada no está
+en modo recuperación. Conserva el Job terminado como evidencia hasta registrar
+el resultado; borrarlo solo elimina el Pod temporal y su `emptyDir`.
+
+El siguiente gate es aplicar ADR-0114: automatizar las copias y la réplica
+atómica hacia `FastTourney/postgresql-backups/prod`, y repetir esta verificación
+desde la réplica recibida. Roles separados, esquema y Goose siguen siendo un
+paso explícito.
