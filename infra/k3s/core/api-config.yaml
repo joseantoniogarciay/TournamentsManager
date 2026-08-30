@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: prod
+  labels:
+    app.kubernetes.io/part-of: tournaments-manager
+data:
+  HTTP_ADDR: "0.0.0.0:8080"
+  SMTP_ADDR: "smtp.resend.com:587"
+  SMTP_FROM: "FastTourney <no-reply@mail.fasttourney.com>"
+  SMTP_USERNAME: resend
+  EMAIL_SUBJECT_PREFIX: ""
+  PUBLIC_BASE_URL: "https://fasttourney.com"
+  CORS_ALLOWED_ORIGINS: "https://fasttourney.com"
+  GOOGLE_CLIENT_IDS: ""
+  TRUSTED_PROXY_CIDRS: ""
+  OTEL_TRACES_ENDPOINT: ""
