@@ -21,7 +21,7 @@ spec:
       terminationGracePeriodSeconds: 15
       containers:
         - name: api
-          image: tournaments-manager-api:git-b66c838f97c86cab8281517e69a1921393ec8f11
+          image: tournaments-manager-api:git-7d7a42c289da957c0a3ae624f5b0a919f0810591
           imagePullPolicy: Never
           ports:
             - name: http
