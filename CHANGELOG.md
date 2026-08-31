@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- `prod` inicializa roles PostgreSQL separados, el esquema y las versiones
+  históricas de Goose con un Job de un solo uso; runtime queda validado sin
+  permiso para alterar el esquema.
+
 - El PostgreSQL inicial de `prod` en K3s tiene dos PVC propios, pgBackRest
   cifrado, una copia completa y un Job de restauración aislada que recupera en
   almacenamiento efímero sin montar el volumen de datos activo.

@@ -100,6 +100,22 @@ Si el Pod no llega a `Ready`, inspecciona primero `kubectl -n prod describe pod
 postgresql-0` y sus logs. No borres el StatefulSet ni los PVC para “probar de
 nuevo”: conserva el diagnóstico y decide el rollback antes de tocar datos.
 
+## Bootstrap de roles, esquema y Goose
+
+ADR-0097 exige tres identidades: owner sin `LOGIN`, migrador y runtime. El Job
+`postgresql-bootstrap.yaml` se usa una única vez sobre una base vacía. Sus SQL
+entran mediante el ConfigMap `postgresql-bootstrap-sql`; crea roles, aplica el
+esquema inicial y el grant base. Las migraciones históricas contienen los roles
+de `dev` ya aplicados y son inmutables: el Job las renderiza exclusivamente en
+`emptyDir` con los dos nombres `prod`, aplica esa copia temporal y registra las
+versiones `0`, `2`, `3` y `4` en Goose.
+
+Si el Job falla después del esquema inicial, no se relanza: usa
+`postgresql-bootstrap-migrations.yaml`, que solo completa migraciones y el
+registro de Goose. Verifica al final que runtime conecta, no puede crear tablas
+y que las cuatro versiones aparecen aplicadas. Toma después una copia pgBackRest
+incremental antes de desplegar la API.
+
 ## Backup y restauración aislada local
 
 Inicializa una vez la stanza, valida el archivo WAL y crea una primera completa:
@@ -169,5 +185,6 @@ Antes de restaurar, el verificador compara la frase enviada por SSH con el
 Secret activo sin imprimir ninguno de ambos valores. Después monta
 `FastTourney/postgresql-backups/prod` como solo lectura en un contenedor
 temporal, restaura en un volumen temporal de Docker y comprueba
-`fasttourney_prod|f`. No monta la VM, ningún PVC ni publica un puerto. Roles
-separados, esquema y Goose siguen siendo un paso explícito.
+`fasttourney_prod|f`. No monta la VM, ningún PVC ni publica un puerto. Roles,
+esquema y Goose ya están inicializados; la API y sus migraciones futuras siguen
+siendo pasos explícitos.
