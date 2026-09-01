@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- El Ingress privado de `prod` enruta `api.fasttourney.com` mediante el Traefik
+  incluido en K3s; su prueba desde el Mac llega a `/healthz` con `HTTP 200` sin
+  publicar el hostname en Cloudflare o Caddy.
+
 - ADR-0115 mantiene la réplica PostgreSQL de `prod` en iCloud Drive mediante un
   helper sandboxed y bookmarks de seguridad por carpeta, sin Full Disk Access
   para Bash o `launchd`.
