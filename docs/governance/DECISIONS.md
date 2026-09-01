@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0115](../adr/0115-use-security-scoped-bookmarks-for-icloud-backup-publication.md)           | Usar bookmarks de seguridad para publicar backups en iCloud                    | Aceptado              | 2026-09-01 |
 | [0114](../adr/0114-replicate-k3s-postgresql-backups-to-the-mac.md)                            | Replicar los backups PostgreSQL de K3s al Mac                                   | Aceptado              | 2026-08-30 |
 | [0112](../adr/0112-use-helm-for-third-party-kubernetes-observability.md)                      | Usar Helm para la observabilidad de terceros en K3s                             | Aceptado              | 2026-08-24 |
 | [0111](../adr/0111-use-k3s-vm-for-home-production-runtime.md)                                 | Usar la VM K3s como runtime doméstico de producción                             | Aceptado              | 2026-08-23 |

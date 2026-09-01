@@ -82,3 +82,12 @@ respectivamente, la copia completa semanal y los incrementales de lunes a
 sábado. Se instalan manualmente tras `make dev-public-backup-init`; el
 [runbook de backup](../../docs/runbooks/postgresql-backup-dev.md) define la
 restauración aislada.
+
+Los templates equivalentes de `prod` se instalan con
+`infra/k3s/scripts/install-backup-launch-agents.sh`. El instalador deja una
+copia ejecutable y su configuración privada fuera de `Desktop`, y un helper
+sandboxed publica en iCloud mediante permisos explícitos de carpeta conforme a
+ADR-0115; la fuente y el procedimiento siguen versionados en el repositorio.
+Consulta el
+[runbook PostgreSQL de K3s](../../docs/runbooks/k3s-postgresql.md) para la
+verificación posterior.

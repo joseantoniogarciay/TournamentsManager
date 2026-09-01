@@ -166,9 +166,43 @@ gestor de contraseñas.
 Las plantillas `launchd` de `infra/home/launchd/` programan la completa el
 domingo a las 04:15 e incrementales de lunes a sábado a las 04:15, después del
 calendario de `dev`. Antes de cargarlas, ejecuta manualmente una incremental y
-confirma tanto `pgbackrest info` en la VM como la ruta publicada en iCloud. Los
-logs deben vivir en una ruta local privada, no sincronizada. La instalación del
-LaunchAgent es manual y debe comprobar que su sesión dispone de `ssh-agent`.
+confirma tanto `pgbackrest info` en la VM como la ruta publicada en iCloud.
+
+`launchd` no puede ejecutar con seguridad artefactos desde `Desktop`, que macOS
+protege mediante TCC. ADR-0115 usa un helper sandboxed que conserva bookmarks
+de seguridad para el staging local y el directorio `postgresql-backups` elegido
+en iCloud. El instalador conserva en Git la fuente, las plantillas y el
+procedimiento, pero escribe el runtime en
+`~/Library/Application Support/FastTourney/k3s`, y los logs privados no
+sincronizados en `~/Library/Logs/FastTourney`:
+
+```sh
+bash infra/k3s/scripts/install-backup-launch-agents.sh
+```
+
+Después, una vez por Mac y sin pegar rutas ni secretos en la terminal, ejecuta
+el helper y selecciona primero
+`~/Library/Application Support/FastTourney/k3s/staging` y después
+`FastTourney/postgresql-backups` de iCloud Drive:
+
+Abre con doble clic `~/Library/Application Support/FastTourney/k3s/BackupPublisher.app`.
+Si prefieres Terminal:
+
+```sh
+open ~/Library/Application\ Support/FastTourney/k3s/BackupPublisher.app --args configure
+```
+
+Los bookmarks viven dentro del contenedor privado del helper. Si se revocan,
+caducan o cambia el directorio, el backup falla antes de sustituir la réplica y
+se repite esta configuración. La sesión debe tener disponible `ssh-agent`.
+Comprueba después que `launchd` los reconoce y ejecuta una incremental bajo el
+agente antes de depender del calendario:
+
+```sh
+launchctl print "gui/$(id -u)/com.fasttourney.prod-postgresql-backup-incremental"
+launchctl kickstart -k "gui/$(id -u)/com.fasttourney.prod-postgresql-backup-incremental"
+tail -n 40 ~/Library/Logs/FastTourney/postgresql-prod-backup-incremental.log
+```
 
 El último gate de backup será restaurar desde la réplica ya recibida, no desde
 el PVC local. En un terminal del Mac, lee la frase desde Contraseñas sin pegarla

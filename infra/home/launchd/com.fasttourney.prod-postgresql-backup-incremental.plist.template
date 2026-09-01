@@ -2,7 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>Label</key><string>com.fasttourney.prod-postgresql-backup-incremental</string>
-  <key>ProgramArguments</key><array><string>/bin/bash</string><string>__REPOSITORY_ROOT__/infra/k3s/scripts/backup-prod.sh</string><string>incremental</string></array>
+  <key>ProgramArguments</key><array><string>/bin/bash</string><string>__K3S_RUNTIME_ROOT__/backup-prod.sh</string><string>incremental</string></array>
+  <key>EnvironmentVariables</key><dict><key>K3S_OPERATOR_ENVIRONMENT</key><string>__K3S_RUNTIME_ROOT__/k3s.env</string></dict>
   <key>StartCalendarInterval</key><array>
     <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>4</integer><key>Minute</key><integer>15</integer></dict>
     <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>4</integer><key>Minute</key><integer>15</integer></dict>

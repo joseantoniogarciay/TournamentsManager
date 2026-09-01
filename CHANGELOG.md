@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0115 mantiene la réplica PostgreSQL de `prod` en iCloud Drive mediante un
+  helper sandboxed y bookmarks de seguridad por carpeta, sin Full Disk Access
+  para Bash o `launchd`.
+
 - `prod` inicializa roles PostgreSQL separados, el esquema y las versiones
   históricas de Goose con un Job de un solo uso; runtime queda validado sin
   permiso para alterar el esquema.
