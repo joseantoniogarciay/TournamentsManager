@@ -41,7 +41,7 @@ http://www.fasttourney.com {
 http://fasttourney.com {
 	bind 127.0.0.1
 	import security_headers
-	respond "FastTourney todavía no está publicado.\n" 503
+	import production_web
 }
 
 http://dev.fasttourney.com {
