@@ -164,7 +164,7 @@ y Tempo retienen, respectivamente, 24 horas y 7 días; no hay HA, on-call ni
 alertas nuevas por completitud.
 Véase [ADR-0100](../adr/0100-deliver-public-development-alerts-through-resend.md).
 
-## K3s de producción — preparado, no publicado
+## K3s de producción — desplegado privado, no publicado
 
 El perfil aceptado para `prod` usa Helm solo para software de terceros, según
 ADR-0112: Prometheus y Alertmanager, Loki monolítico, Tempo monolítico, Grafana
@@ -173,10 +173,15 @@ Kubernetes y los entrega a Loki; no monta logs de host ni sustituye al Collector
 de OpenTelemetry, que sigue aplazado. Los charts, versiones fijadas, PVC,
 retención y límites están en [`infra/k3s/observability`](../../infra/k3s/observability/).
 
-La configuración está renderizada localmente, pero todavía no se ha instalado
-ni validado en la VM. Caddy, Cloudflare y el `503` de `api.fasttourney.com`
-permanecen fuera de este módulo. El runbook define la instalación interactiva,
-la alerta controlada y el rollback por release.
+El 2026-09-05 se instaló y validó el perfil en la VM. Prometheus hace scrape
+estático de `api.prod.svc.cluster.local:8080` y no recibe token ni RBAC para
+descubrimiento de Kubernetes: el coste es añadir manualmente cada target nuevo;
+el beneficio aceptado es menor privilegio y carga en esta VM de un nodo.
+
+Grafana, Prometheus, Loki, Tempo y Alertmanager siguen siendo privados. Caddy,
+Cloudflare y el `503` de `api.fasttourney.com` permanecen fuera de este módulo.
+El runbook registra el acceso por túnel SSH, la prueba de alerta y el rollback
+por release.
 
 ## Validación y cierre de Fase 3
 

@@ -90,9 +90,55 @@ sudo /usr/local/bin/k3s kubectl -n prod get events --sort-by=.lastTimestamp
 
 Comprobar que Prometheus obtiene el target `tournaments-manager-api`, que una
 petición de refresh deja logs correlacionados en Loki y una traza en Tempo, y
-que Grafana muestra el dashboard SLO. Antes del gate público, provocar una
-caída controlada de PostgreSQL, confirmar alerta `critical` y comprobar su
-resolución al recuperar la dependencia.
+que Grafana muestra el dashboard SLO.
+
+### Acceso privado a Grafana
+
+Grafana es un `Service` `ClusterIP`: solo existe dentro de la red de K3s. Un
+túnel SSH crea un puerto temporal en el Mac sin crear un Ingress, abrir un
+puerto de la VM ni tocar Caddy o Cloudflare. Primero consultar el `clusterIP`
+actual, porque no se debe fijar en la documentación:
+
+```sh
+ssh -o BatchMode=yes fasttourney-k3s \
+  'sudo /usr/local/bin/k3s kubectl -n prod get service observability-grafana \
+   -o jsonpath="{.spec.clusterIP}"; echo'
+
+ssh -N -L 127.0.0.1:13000:<cluster-ip-de-grafana>:80 fasttourney-k3s
+```
+
+Con el segundo proceso abierto, acceder a `http://127.0.0.1:13000/login` y
+autenticarse con el usuario `admin` y la contraseña del llavero local. Cerrar
+el proceso SSH elimina el acceso. Nunca exponer esa contraseña ni recuperarla
+desde Kubernetes para copiarla a la terminal.
+
+### Prueba controlada de Alertmanager y Resend
+
+Antes del gate público, enviar una alerta sintética, de duración corta, a la
+API v2 privada de Alertmanager. Es la prueba mínima para el canal de correo:
+no detiene PostgreSQL ni genera fallos reales de refresh. Las etiquetas deben
+incluir `test="true"`, un `alertname` inequívoco y un identificador de ejecución
+no sensible. La alerta debe llevar `endsAt` cercano para que su rollback sea
+automático.
+
+La confirmación no termina al aceptar el `POST`: comprobar que la alerta pasa
+de activa a resuelta y que `alertmanager_notifications_total{integration="email"}`
+aumenta dos veces —alerta y resolución— sin aumento de
+`alertmanager_notifications_failed_total`. La resolución puede aparecer hasta
+el `group_interval` configurado después de que cese la alerta. Los contadores
+prueban que Resend aceptó SMTP; la entrega final en el buzón requiere una
+comprobación independiente desde ese buzón.
+
+**Evidencia 2026-09-05:** el dashboard provisionado `session-refresh-slo`
+(`SLO — Refresh de sesión`) cargó con cinco paneles. Grafana confirmó
+Prometheus, Loki y Tempo; su proxy obtuvo `200` de Alertmanager `/api/v2/status`.
+El endpoint opcional de salud del plugin de Alertmanager devolvió
+`Plugin unavailable`, por lo que no se usa como prueba de conectividad. La
+alerta sintética `FastTourneyAlertDeliveryTest` fue aceptada, se resolvió por
+`endsAt` sin tocar API ni PostgreSQL y produjo dos notificaciones SMTP sin
+fallos: alerta y resolución. La persona operadora confirmó la llegada de ambos
+correos al buzón receptor; así queda validado también el salto posterior a
+Resend.
 
 ## Rollback
 

@@ -2823,3 +2823,15 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 La comprobación efectiva debe incluir `sudo -n` y una lectura de `kube-system`,
 no solo que SSH acepte la clave: así demuestra que la identidad puede operar
 K3s y también que sus componentes base siguen sanos.
+
+### 2026-09-05 — Una alerta resuelta no equivale a una resolución ya entregada
+
+- **Aprendido:** Alertmanager puede cerrar una alerta en su API antes de emitir
+  el correo de resolución porque agrupa notificaciones según `group_interval`.
+  Un Pod sano o un `POST` aceptado tampoco prueban el relay SMTP.
+- **Regla reutilizable:** una prueba de entrega reversible usa una alerta
+  sintética con `test="true"` y `endsAt` corto, comprueba que deja de estar
+  activa y verifica dos notificaciones de email sin fallos: activación y
+  resolución. Eso prueba aceptación por Resend; la llegada al buzón es un salto
+  distinto que se confirma desde el receptor. La evidencia del 2026-09-05
+  incluyó esa confirmación final.
