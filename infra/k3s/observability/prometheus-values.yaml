@@ -1,0 +1,80 @@
+rbac:
+  create: false
+serviceAccounts:
+  server:
+    create: true
+    automountServiceAccountToken: false
+server:
+  automountServiceAccountToken: false
+  configMapOverrideName: custom-config
+  persistentVolume:
+    enabled: true
+    size: 5Gi
+  retention: 24h
+  retentionSize: 4GB
+  resources:
+    requests:
+      cpu: 200m
+      memory: 384Mi
+    limits:
+      cpu: 600m
+      memory: 768Mi
+alertmanager:
+  persistence:
+    enabled: true
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 96Mi
+    limits:
+      cpu: 200m
+      memory: 192Mi
+  extraSecretMounts:
+    - name: smtp-password
+      mountPath: /etc/alertmanager-secrets
+      secretName: alertmanager-resend
+      readOnly: true
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: resend-warning
+      group_by: [alertname]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      routes:
+        - receiver: resend-critical
+          matchers:
+            - severity="critical"
+          repeat_interval: 10m
+    receivers:
+      - name: resend-warning
+        email_configs:
+          - to: alerts@fasttourney.com
+            from: FastTourney Alerts <alerts@mail.fasttourney.com>
+            smarthost: smtp.resend.com:587
+            auth_username: resend
+            auth_password_file: /etc/alertmanager-secrets/resend_alerts_sending_key
+            require_tls: true
+            headers:
+              Subject: "[PROD] {{ .CommonLabels.alertname }}"
+            send_resolved: true
+      - name: resend-critical
+        email_configs:
+          - to: alerts@fasttourney.com
+            from: FastTourney Alerts <alerts@mail.fasttourney.com>
+            smarthost: smtp.resend.com:587
+            auth_username: resend
+            auth_password_file: /etc/alertmanager-secrets/resend_alerts_sending_key
+            require_tls: true
+            headers:
+              Subject: "[PROD] {{ .CommonLabels.alertname }}"
+            send_resolved: true
+kube-state-metrics:
+  enabled: false
+prometheus-node-exporter:
+  enabled: false
+prometheus-pushgateway:
+  enabled: false

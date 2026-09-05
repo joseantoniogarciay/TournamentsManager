@@ -8,6 +8,15 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- ADR-0117 y su bootstrap crean una cuenta SSH dedicada con clave en el
+  Llavero/`ssh-agent` del Mac y `sudo` no interactivo para administrar la VM
+  K3s privada, incluido `kube-system`, sin guardar la contraseña de Ubuntu.
+
+- `prod` dispone de valores Helm versionados y renderizados localmente para
+  Prometheus/Alertmanager, Loki, Tempo, Grafana y Alloy; incluye límites, PVC,
+  retención, alertas SLO y secretos externos. Su instalación y prueba en K3s
+  siguen pendientes; no modifica Caddy, Cloudflare ni el `503` público.
+
 - El Ingress privado de `prod` enruta `api.fasttourney.com` mediante el Traefik
   incluido en K3s; su prueba desde el Mac llega a `/healthz` con `HTTP 200` sin
   publicar el hostname en Cloudflare o Caddy.

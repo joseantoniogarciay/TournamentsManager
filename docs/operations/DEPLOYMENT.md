@@ -216,6 +216,13 @@ VM Linux de un nodo con K3s como runtime doméstico de `prod`: manifests,
 empaquetado, recursos, probes, configuración, secretos, persistencia, backup,
 ingress, rollout y recuperación, conforme a ADR-0111.
 
+ADR-0117 separa la administración de la VM de la identidad humana inicial:
+`fasttourney-operator` entra por clave SSH dedicada en la red privada y recibe
+`sudo` no interactivo para operar host, K3s y `kube-system`. La contraseña de
+Ubuntu no se almacena en el Mac ni en Git; el bootstrap único permanece
+interactivo. Véase el runbook de administración remota antes de depender de
+operaciones no asistidas.
+
 ADR-0112 concreta el orden de empaquetado: API, PostgreSQL y los recursos de
 core se definen primero como manifiestos YAML propios aplicados con `kubectl`.
 La observabilidad de terceros se añade después mediante Helm, con charts y

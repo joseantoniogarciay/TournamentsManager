@@ -8,6 +8,7 @@ infra/dev/api.docker.env
 infra/dev/alertmanager.smtp-password
 infra/k3s/.env
 infra/k3s/secrets/*.env
+infra/k3s/secrets/alertmanager-resend-sending-key
 !.env.example
 *.pem
 *.key

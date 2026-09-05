@@ -2808,3 +2808,18 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** la integración parte del esquema base y aplica todos
   los bloques `Up` versionados; en CI se separa el DDL funcional de los roles y
   grants que pertenecen exclusivamente al despliegue.
+
+### 2026-09-05 — La autenticación SSH y el privilegio del host son fronteras distintas
+
+- **Aprendido:** una clave SSH disponible en `ssh-agent` resuelve la entrada
+  remota, pero no el `sudo` que protege el kubeconfig K3s. Guardar la contraseña
+  de Ubuntu en el Llavero no reduce el privilegio ni mejora la auditoría.
+- **Regla reutilizable:** para una VM privada de un único operador, separar una
+  cuenta SSH dedicada y su clave de la identidad humana inicial permite declarar
+  explícitamente el control administrativo. Si esa cuenta recibe control
+  completo, la clave se trata como credencial de host y clúster: fuera de Git,
+  revocable y sin exponer SSH públicamente. Véase ADR-0117.
+
+La comprobación efectiva debe incluir `sudo -n` y una lectura de `kube-system`,
+no solo que SSH acepte la clave: así demuestra que la identidad puede operar
+K3s y también que sus componentes base siguen sanos.

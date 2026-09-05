@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0117](../adr/0117-use-dedicated-ssh-operator-for-k3s-administration.md)                      | Usar una identidad SSH dedicada para administrar la VM K3s                      | Aceptado              | 2026-09-05 |
 | [0116](../adr/0116-use-k3s-traefik-loadbalancer-for-private-ingress.md)                       | Usar Traefik y LoadBalancer K3s para el Ingress privado                         | Aceptado              | 2026-09-01 |
 | [0115](../adr/0115-use-security-scoped-bookmarks-for-icloud-backup-publication.md)            | Usar bookmarks de seguridad para publicar backups en iCloud                     | Aceptado              | 2026-09-01 |
 | [0114](../adr/0114-replicate-k3s-postgresql-backups-to-the-mac.md)                            | Replicar los backups PostgreSQL de K3s al Mac                                   | Aceptado              | 2026-08-30 |

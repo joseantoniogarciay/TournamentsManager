@@ -1,0 +1,76 @@
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+persistence:
+  enabled: true
+  size: 2Gi
+admin:
+  existingSecret: grafana-admin
+  userKey: admin-user
+  passwordKey: admin-password
+rbac:
+  create: false
+serviceAccount:
+  automountServiceAccountToken: false
+grafana.ini:
+  analytics:
+    check_for_updates: false
+  auth.anonymous:
+    enabled: false
+  auth:
+    disable_login_form: false
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://observability-prometheus-server.prod.svc.cluster.local
+        jsonData:
+          manageAlerts: true
+          alertmanagerUid: alertmanager
+        isDefault: true
+      - name: Alertmanager
+        uid: alertmanager
+        type: alertmanager
+        access: proxy
+        url: http://observability-prometheus-alertmanager.prod.svc.cluster.local:9093
+        jsonData:
+          implementation: prometheus
+          handleGrafanaManagedAlerts: false
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        url: http://observability-loki.prod.svc.cluster.local:3100
+        jsonData:
+          derivedFields:
+            - name: TraceID
+              matcherRegex: '"trace_id":"([0-9a-f]+)"'
+              datasourceUid: tempo
+              url: "$${__value.raw}"
+      - name: Tempo
+        uid: tempo
+        type: tempo
+        access: proxy
+        url: http://observability-tempo.prod.svc.cluster.local:3200
+dashboardProviders:
+  dashboards.yaml:
+    apiVersion: 1
+    providers:
+      - name: tournaments-manager
+        orgId: 1
+        folder: Tournaments Manager
+        type: file
+        disableDeletion: true
+        editable: false
+        options:
+          path: /var/lib/grafana/dashboards/tournaments-manager
+dashboardsConfigMaps:
+  tournaments-manager: observability-grafana-dashboards

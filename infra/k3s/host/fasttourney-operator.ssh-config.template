@@ -1,0 +1,9 @@
+# Copiar este bloque en ~/.ssh/config del Mac y reemplazar la ruta de la clave.
+Host fasttourney-k3s
+  HostName 192.168.64.2
+  User fasttourney-operator
+  IdentityFile ~/.ssh/fasttourney_k3s_operator
+  IdentitiesOnly yes
+  AddKeysToAgent yes
+  UseKeychain yes
+  StrictHostKeyChecking accept-new

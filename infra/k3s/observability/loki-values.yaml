@@ -1,0 +1,64 @@
+deploymentMode: SingleBinary
+loki:
+  auth_enabled: false
+  analytics:
+    reporting_enabled: false
+  commonConfig:
+    replication_factor: 1
+  limits_config:
+    retention_period: 24h
+  schemaConfig:
+    configs:
+      - from: "2024-01-01"
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  storage:
+    type: filesystem
+gateway:
+  enabled: false
+rbac:
+  namespaced: true
+serviceAccount:
+  automountServiceAccountToken: false
+lokiCanary:
+  enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 50m
+      memory: 64Mi
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false
+singleBinary:
+  replicas: 1
+  sidecar: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 5Gi
+    whenScaled: Retain
+    whenDeleted: Retain
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  enabled: false
+  replicas: 0
+  sidecar: false
+minio:
+  enabled: false
