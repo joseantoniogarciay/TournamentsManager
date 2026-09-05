@@ -54,7 +54,11 @@ http://dev.fasttourney.com {
 http://api.fasttourney.com {
 	bind 127.0.0.1
 	import security_headers
-	respond "La API de FastTourney todavía no está publicada.\n" 503
+	reverse_proxy 192.168.64.2:80 {
+		# Cloudflare Tunnel normaliza esta cabecera con la IP del visitante.
+		header_up X-Client-IP {http.request.header.CF-Connecting-IP}
+		import api_edge_token
+	}
 }
 
 http://dev-api.fasttourney.com {

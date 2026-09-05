@@ -52,3 +52,10 @@ y `X-Client-IP` al activar su `reverse_proxy`. Si falta o difiere el token, la
 API usa la IP inmediata y no acepta una cabecera falsificada. La rotación crea
 el Secret nuevo, reinicia la API, recarga Caddy y prueba dos IP de ejemplo; el
 rollback restaura ambos valores de la misma versión. No cambiar solo un lado.
+
+**Evidencia de publicación, 2026-09-05:** Caddy se validó antes de recargarse;
+el primer intento devolvió `502` mientras el servicio reiniciaba y se restauró
+el `503`. El gate definitivo espera a que el listener loopback esté disponible.
+Después, `api.fasttourney.com/healthz` devolvió `200` tanto por loopback como a
+través de Cloudflare; las dos réplicas de API estaban `Running` y Prometheus
+conservó `up{job="tournaments-manager-api"}=1`.
