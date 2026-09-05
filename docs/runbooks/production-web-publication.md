@@ -96,6 +96,24 @@ Conservar SHA, hora, respuestas HTTP saneadas, estado del túnel y de alertas.
 Actualizar este runbook, `docs/operations/DEPLOYMENT.md` y
 `docs/project/LEARNING.md` con la evidencia real de la primera prueba.
 
+## Evidencia de publicación — 2026-09-05
+
+Con la autorización explícita para la apertura, se publicó el release
+`22b98367e32b9c165a636e5dcccf5b7bdba90e5c` y se instaló el Caddyfile
+versionado que importa `production_web`. La comprobación externa posterior
+confirmó `https://fasttourney.com/` en `200` con TLS válido,
+`https://www.fasttourney.com/` en `308` al host canónico, y las rutas legales
+en `200`. La API conservó `200` en `/healthz`; el preflight de registro devolvió
+`204`, el origen exacto `https://fasttourney.com` y credenciales permitidas.
+La inspección anónima del cliente cargó inicio y la pantalla de cuenta, incluido
+el acceso local, recuperación, alta y la acción Google. Quedan como gate
+posterior los recorridos que envían correo y el login real con una cuenta de
+prueba controlada, además de los clientes y asociaciones móviles.
+
+Rollback explícito: restaurar el `respond ... 503` en el bloque
+`http://fasttourney.com`, validar y recargar Caddy; si el borde está sano y el
+problema es solo el artefacto, usar `rollback-prod-web.sh` con un SHA conservado.
+
 ## Evidencia de recuperación TLS — 2026-09-05
 
 La tabla de certificados de borde estaba vacía pese a que DNS, las cinco rutas

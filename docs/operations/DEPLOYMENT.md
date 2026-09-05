@@ -157,8 +157,10 @@ en Universal Links ni App Links.
 
 El borde versionado vive en [`infra/home/Caddyfile`](../../infra/home/Caddyfile).
 `tournaments-manager-dev` publica la API runtime solo por `127.0.0.1:8081` y
-la web exportada de Expo se sirve estática en `dev.fasttourney.com`; Caddy
-conserva `503` para los hosts de producción no publicados. La configuración,
+la web exportada de Expo se sirve estática en `dev.fasttourney.com`. Desde el
+2026-09-05, `fasttourney.com` sirve el release web de producción; el cambio
+revisable entre apertura y cierre sigue siendo importar `production_web` o
+restaurar el `503` en Caddy. La configuración,
 volumen PostgreSQL y proyecto Compose de dev no se comparten con `local` ni con
 el namespace `prod` de K3s, conforme a ADR-0091 y ADR-0111.
 
@@ -206,9 +208,9 @@ EXPO_PUBLIC_APP_LINK_URL=https://fasttourney.com
 ```
 
 La primera URL evita que la web pública contacte servicios locales; la segunda
-hace que los enlaces de liga compartidos apunten al dominio público. La
-publicación aún no está autorizada: `fasttourney.com` y `api.fasttourney.com`
-permanecen deliberadamente en `503`.
+hace que los enlaces de liga compartidos apunten al dominio público. La API y
+la web de producción se abrieron el 2026-09-05 tras validar TLS, CORS y el
+release; no supone autorizar los clientes ni asociaciones móviles pendientes.
 
 La preparación concreta de la web separa construir de activar:
 `infra/home/stage-prod-web.sh` crea un release estático inmutable con SHA,

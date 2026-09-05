@@ -2858,6 +2858,20 @@ el host sin tocar datos ni el runtime de la API.
   `/.well-known` reales. La ausencia de credenciales nativas deshabilita esa
   federación en nativo, nunca se sustituye por identificadores inventados.
 
+### 2026-09-05 — Publicar la web necesita una frontera reversible
+
+- **Aprendido:** el mismo artefacto estático puede estar preparado y activo sin
+  ser público mientras Caddy devuelve `503`; importar el bloque de producción
+  es una frontera operativa distinta y auditable.
+- **Evidencia:** tras abrir `fasttourney.com`, TLS devolvió validación correcta,
+  el host canónico `200`, `www` un `308`, las rutas legales `200`, y el
+  preflight de API `204` para el origen exacto. El cliente cargó de forma
+  anónima sus pantallas de inicio y acceso sin enviar correos.
+- **Regla reutilizable:** la primera validación pública no sustituye los
+  recorridos con efectos externos: registro, verificación, recuperación y
+  Google se prueban después con una cuenta y buzón de prueba controlados. El
+  rollback debe poder volver primero a `503` sin tocar API, datos ni Secrets.
+
 ### 2026-09-05 — Un cambio de Secret no exige una nueva imagen
 
 - **Aprendido:** reconstruir e importar una imagen inmutable para variar SMTP
