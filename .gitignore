@@ -9,6 +9,7 @@ infra/dev/alertmanager.smtp-password
 infra/k3s/.env
 infra/k3s/secrets/*.env
 infra/k3s/secrets/alertmanager-resend-sending-key
+infra/home/fasttourney-api-edge-token.caddy
 !.env.example
 *.pem
 *.key

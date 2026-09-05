@@ -38,8 +38,15 @@ en `/healthz`, sin pasar por Caddy ni Cloudflare.
 ADR-0118 exige crear el Secret independiente `api-edge-proxy` desde una copia
 privada de `infra/k3s/secrets/api-edge-proxy.env.example`. Generar un valor con
 `openssl rand -hex 32`, guardarlo también en el gestor de secretos del Mac y
-cargarlo como `FASTTOURNEY_API_EDGE_TOKEN` para el proceso Caddy. Crear el
-Secret sin imprimirlo:
+crear `/opt/homebrew/etc/fasttourney-api-edge-token.caddy` con modo `0600`:
+
+```caddyfile
+header_up X-FastTourney-Edge-Token "<token-privado>"
+```
+
+El fichero se importa dentro del `reverse_proxy`; no depende de una variable
+temporal de `launchctl` y Caddy no puede publicar la ruta si el fragmento falta.
+Crear el Secret sin imprimirlo:
 
 ```sh
 sudo /usr/local/bin/k3s kubectl -n prod create secret generic api-edge-proxy \
@@ -59,3 +66,17 @@ el `503`. El gate definitivo espera a que el listener loopback esté disponible.
 Después, `api.fasttourney.com/healthz` devolvió `200` tanto por loopback como a
 través de Cloudflare; las dos réplicas de API estaban `Running` y Prometheus
 conservó `up{job="tournaments-manager-api"}=1`.
+
+**Evidencia de frontera, 2026-09-05:** se agotó el límite de login para una IP
+sintética A. Una segunda IP y correo sintéticos recibieron el rechazo normal de
+credenciales (`401`), no `429`; esto prueba que la API distingue ambas IPs tras
+validar la credencial privada de Caddy. La observación posterior confirmó salud
+pública `200`, `up=1` y cero alertas activas.
+
+## Rollback público
+
+Ante `5xx`, alertas o una frontera de IP no verificable, restaurar en el bloque
+`api.fasttourney.com` el `respond "La API de FastTourney todavía no está
+publicada.\n" 503`, validar Caddy y recargar el servicio. Confirmar primero
+`503` por loopback con el `Host` de la API y después por HTTPS público. Este
+rollback no modifica K3s, PVC, PostgreSQL ni los Secrets.
