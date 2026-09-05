@@ -29,6 +29,8 @@ despliega API, PostgreSQL ni Secrets. Hasta completar cada verificación,
   o federación web. Su fuente local ignorada es
   `infra/k3s/secrets/api-integrations.env`, creada a partir de
   `infra/k3s/secrets/api-integrations.env.example`.
+  Se aplica sin reconstruir la imagen con
+  `infra/k3s/scripts/apply-api-integrations.sh`.
 - No imprimir archivos de configuración ni Secret; los IDs de cliente son
   públicos una vez exportados, pero la clave SMTP no lo es.
 

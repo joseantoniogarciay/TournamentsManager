@@ -42,10 +42,11 @@ pero no reemplaza la identidad inmutable por digest que se adoptará con ECR.
 
 ## Secret y despliegue de la API
 
-La configuración actual mantiene la autenticación SMTP desactivada: el
-`ConfigMap` deja `SMTP_USERNAME` vacío, por lo que `api-runtime` contiene solo
-`DATABASE_URL`. Esto evita entregar a la API la credencial de migración o una
-segunda credencial todavía no configurada para producción.
+La API recibe dos Secrets de mínimos privilegios: `api-runtime`, con su única
+`DATABASE_URL`, y `api-integrations`, con SMTP autenticado y las audiencias
+OAuth. La fuente local de este último es
+`infra/k3s/secrets/api-integrations.env`, ignorada por Git; nunca se imprime ni
+se conserva en la VM tras el despliegue.
 
 En una terminal SSH interactiva de la VM, el operador crea el fichero privado
 sin mostrar su contenido y aplica el Secret y los manifiestos:
@@ -99,6 +100,11 @@ raíz del repositorio en el Mac el wrapper
 por sí mismo, reserva el TTY para la contraseña de `sudo` y ejecuta un fichero
 Bash no interactivo sin el perfil de la VM. No debe ejecutarse desde una sesión
 SSH de la VM.
+
+Cuando solo cambian SMTP u OAuth y la imagen actual ya está en K3s, se usa
+`bash infra/k3s/scripts/apply-api-integrations.sh`. Este wrapper actualiza el
+Secret y los manifests, espera el rollout y evita reconstruir o importar una
+imagen que no ha cambiado.
 
 ## Evolución prevista
 

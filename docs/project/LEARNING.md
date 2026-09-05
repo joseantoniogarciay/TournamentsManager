@@ -2858,6 +2858,15 @@ el host sin tocar datos ni el runtime de la API.
   `/.well-known` reales. La ausencia de credenciales nativas deshabilita esa
   federación en nativo, nunca se sustituye por identificadores inventados.
 
+### 2026-09-05 — Un cambio de Secret no exige una nueva imagen
+
+- **Aprendido:** reconstruir e importar una imagen inmutable para variar SMTP
+  u OAuth mezcla dos superficies de despliegue y alarga la recuperación.
+- **Regla reutilizable:** si el runtime de API ya está presente y solo cambia
+  configuración, aplicar el Secret de mínimos privilegios y el manifiesto,
+  esperar su rollout y conservar las imágenes intactas. La construcción e
+  importación se reservan para cambios de código o de tag.
+
 ### 2026-09-05 — Un Tunnel sano no demuestra que TLS de borde sea utilizable
 
 - **Aprendido:** DNS apuntaba al Tunnel y todas sus rutas llegaban a Caddy, pero
