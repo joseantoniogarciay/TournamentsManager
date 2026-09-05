@@ -210,6 +210,17 @@ hace que los enlaces de liga compartidos apunten al dominio público. La
 publicación aún no está autorizada: `fasttourney.com` y `api.fasttourney.com`
 permanecen deliberadamente en `503`.
 
+La preparación concreta de la web separa construir de activar:
+`infra/home/stage-prod-web.sh` crea un release estático inmutable con SHA,
+asociaciones móviles reales y configuración OAuth de producción externa a Git;
+`activate-prod-web.sh` conmuta solo su enlace simbólico y
+`rollback-prod-web.sh` vuelve a un SHA existente. El bloque Caddy
+`production_web` conserva CSP, SPA y `/.well-known`, pero el host no lo importa
+hasta recibir autorización explícita. El
+[runbook de publicación](../runbooks/production-web-publication.md) exige TLS
+válido, Tunnel sano, CORS, correo, Google y recorridos controlados antes de esa
+conmutación.
+
 ### Fase 4
 
 VM Linux de un nodo con K3s como runtime doméstico de `prod`: manifests,

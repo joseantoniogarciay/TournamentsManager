@@ -15,6 +15,7 @@ entorno local; su estado de prueba se declara dentro del propio runbook.
 - [Activación y comprobación de Google RISC](google-risc.md)
 - [Host y control plane K3s](k3s-host-and-control-plane.md)
 - [Administración remota de la VM K3s](k3s-remote-administration.md)
+- [Publicación de la web de producción](production-web-publication.md)
 
 ## Requisitos
 

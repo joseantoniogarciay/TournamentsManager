@@ -92,9 +92,10 @@ no requiere sesión. Las notificaciones no se solicitan todavía: siguen fuera d
 alcance aceptado y el control lo comunica sin simular un permiso del sistema.
 
 El login Google se deshabilita deliberadamente en local: no se declaran clientes
-ni audiencias allí. Los artefactos públicos `dev` y `prod` reciben IDs OAuth
-públicos del mismo proyecto Google que las audiencias `GOOGLE_CLIENT_IDS` de su
-API. El export de desarrollo los inyecta desde
+ni audiencias allí. La primera publicación web de `prod` recibe solo el ID OAuth
+web, que coincide con la audiencia `GOOGLE_CLIENT_IDS` de su API. Los IDs iOS y
+Android se añaden al publicar sus builds firmadas; hasta entonces el botón se
+deshabilita de forma natural en esas plataformas. El export de desarrollo los inyecta desde
 `infra/home/deploy-dev-web.sh`; para una prueba nativa contra `dev` usa
 `pnpm --filter @tournaments-manager/client ios:public-dev` o
 `pnpm --filter @tournaments-manager/client android:public-dev`. Antes de

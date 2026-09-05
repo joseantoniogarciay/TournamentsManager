@@ -2835,3 +2835,37 @@ K3s y también que sus componentes base siguen sanos.
   resolución. Eso prueba aceptación por Resend; la llegada al buzón es un salto
   distinto que se confirma desde el receptor. La evidencia del 2026-09-05
   incluyó esa confirmación final.
+
+### 2026-09-05 — Preparar un artefacto no equivale a abrir tráfico
+
+- **Aprendido:** una exportación estática puede ser correcta y aun así no estar
+  lista para usuarios si no se han validado TLS, asociaciones móviles, correo,
+  CORS y rollback. Conmutar el contenido como parte de la build mezcla esos
+  riesgos y hace más difícil detenerse.
+- **Regla reutilizable:** producción separa un release inmutable y trazable de
+  su activación atómica. El borde conserva su respuesta segura hasta que una
+  decisión explícita importe la ruta pública; el rollback puede volver a cerrar
+el host sin tocar datos ni el runtime de la API.
+
+### 2026-09-05 — El gate web no debe esperar credenciales de distribución nativa
+
+- **Aprendido:** el cliente universal comparte código, pero las credenciales
+  OAuth y asociaciones de dominio son específicas de cada plataforma. Esperar
+  Apple Developer o una firma Android para validar correo, contraseña y Google
+  web retrasaba la primera publicación sin aumentar su seguridad.
+- **Regla reutilizable:** el gate web exige SMTP y la audiencia OAuth web; el
+  gate móvil posterior exige sus clientes OAuth, firma y ficheros
+  `/.well-known` reales. La ausencia de credenciales nativas deshabilita esa
+  federación en nativo, nunca se sustituye por identificadores inventados.
+
+### 2026-09-05 — Un Tunnel sano no demuestra que TLS de borde sea utilizable
+
+- **Aprendido:** DNS apuntaba al Tunnel y todas sus rutas llegaban a Caddy, pero
+  la ausencia de un certificado Universal SSL activo provocaba un certificado
+  inválido y después fallos de handshake. Son fronteras independientes:
+  conector, ruta de aplicación y certificado de borde.
+- **Regla reutilizable:** ante una discrepancia TLS, comprobar primero DNS,
+  rutas del Tunnel, respuesta Caddy local y certificados de borde. Si se fuerza
+  una reemisión desactivando y reactivando Universal SSL, se mantiene el host
+  funcional cerrado, se anticipa una ventana sin TLS y se valida la recuperación
+  completa desde fuera —web, redirección canónica y API— antes de continuar.

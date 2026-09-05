@@ -19,6 +19,32 @@ validar cada hostname por el túnel, se eliminan los forwards TCP 80/443 y la
 configuración DDNS. Los proxies y archivos reales se añaden solo junto con sus
 respectivos artefactos y configuración.
 
+## Web de producción preparada, aún cerrada
+
+`stage-prod-web.sh` exporta un SHA de producción hacia
+`/opt/homebrew/var/www/fasttourney/prod/releases/<SHA>/`, incorpora los dos
+ficheros reales de `/.well-known/` y escribe un manifiesto sin secretos. No
+modifica el enlace `current` ni Caddy. `activate-prod-web.sh` conmuta después
+ese enlace de forma atómica; `rollback-prod-web.sh` vuelve a un SHA ya preparado
+sin afectar K3s ni PostgreSQL.
+
+La exportación carga únicamente su contrato local ignorado
+`infra/home/secrets/production-web.env`, con el ID OAuth web público de
+producción, y nunca el `.env` genérico del repositorio. Los ficheros de
+asociación móvil reales viven, cuando exista el lanzamiento nativo, junto a él en
+`infra/home/secrets/app-links/`; las plantillas de referencia están en
+`infra/app-links/`. Sin esos ficheros el script prepara un release web válido
+sin `/.well-known`; si se aporta solo uno o sus valores no son reales, lo
+rechaza. En todos los casos rechaza marcadores de ejemplo, árbol Git sucio o un
+SHA que no sea el `HEAD` actual.
+
+El fragmento `production_web` ya está versionado en `Caddyfile`, con CSP mínima
+para la SPA, API y Google, pero no se importa desde `fasttourney.com`: el host
+sigue respondiendo `503`. Solo una decisión explícita de apertura sustituye ese
+`respond` por `import production_web`, después de validar TLS, túnel, CORS y el
+release. El procedimiento completo y el rollback están en el
+[runbook de publicación](../../docs/runbooks/production-web-publication.md).
+
 `deploy-dev.sh` es el único despliegue manual de dev: exige `develop` limpio y
 alineado con `origin/develop`, construye la API runtime, aplica las migraciones
 SQL pendientes y llama a `deploy-dev-web.sh`. Las migraciones son solo hacia
