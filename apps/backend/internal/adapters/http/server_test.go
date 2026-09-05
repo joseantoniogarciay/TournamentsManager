@@ -772,7 +772,7 @@ func TestUsernameAvailabilityRateLimitsByClientIP(t *testing.T) {
 func TestClientIPUsesForwardedAddressOnlyFromTrustedProxy(t *testing.T) {
 	t.Parallel()
 
-	trusted := newClientIPResolver([]netip.Prefix{netip.MustParsePrefix("192.168.65.0/24")})
+	trusted := newClientIPResolver([]netip.Prefix{netip.MustParsePrefix("192.168.65.0/24")}, "")
 	for _, test := range []struct {
 		name       string
 		remoteAddr string
@@ -788,6 +788,35 @@ func TestClientIPUsesForwardedAddressOnlyFromTrustedProxy(t *testing.T) {
 			request.RemoteAddr = test.remoteAddr
 			request.Header.Set("X-Client-IP", test.forwarded)
 			if got := trusted(request); got != test.want {
+				t.Errorf("client IP = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
+func TestClientIPUsesForwardedAddressWithValidEdgeToken(t *testing.T) {
+	t.Parallel()
+
+	resolver := newClientIPResolver(nil, "edge-token-for-test")
+	for _, test := range []struct {
+		name      string
+		forwarded string
+		token     string
+		want      string
+	}{
+		{"valid token", "203.0.113.8", "edge-token-for-test", "203.0.113.8"},
+		{"missing token", "203.0.113.8", "", "10.42.0.9"},
+		{"invalid token", "203.0.113.8", "wrong-token", "10.42.0.9"},
+		{"invalid forwarded address", "not-an-ip", "edge-token-for-test", "10.42.0.9"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, "/", nil)
+			request.RemoteAddr = "10.42.0.9:54321"
+			request.Header.Set("X-Client-IP", test.forwarded)
+			if test.token != "" {
+				request.Header.Set("X-FastTourney-Edge-Token", test.token)
+			}
+			if got := resolver(request); got != test.want {
 				t.Errorf("client IP = %q, want %q", got, test.want)
 			}
 		})

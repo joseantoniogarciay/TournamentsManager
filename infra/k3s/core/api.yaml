@@ -32,6 +32,8 @@ spec:
                 name: api-config
             - secretRef:
                 name: api-runtime
+            - secretRef:
+                name: api-edge-proxy
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

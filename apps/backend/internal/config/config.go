@@ -21,6 +21,7 @@ const (
 	corsAllowedOriginsEnv = "CORS_ALLOWED_ORIGINS"
 	googleClientIDsEnv    = "GOOGLE_CLIENT_IDS"
 	trustedProxyCIDRsEnv  = "TRUSTED_PROXY_CIDRS"
+	edgeProxyAuthTokenEnv = "EDGE_PROXY_AUTH_TOKEN"
 	otelTracesEndpointEnv = "OTEL_TRACES_ENDPOINT"
 )
 
@@ -38,6 +39,7 @@ type Config struct {
 	CORSAllowedOrigins []string
 	GoogleClientIDs    []string
 	TrustedProxyCIDRs  []netip.Prefix
+	EdgeProxyAuthToken string
 	OTELTracesEndpoint string
 }
 
@@ -96,6 +98,10 @@ func load(getenv func(string) string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	edgeProxyAuthToken := getenv(edgeProxyAuthTokenEnv)
+	if strings.ContainsAny(edgeProxyAuthToken, "\r\n") {
+		return Config{}, fmt.Errorf("%s no puede contener saltos de línea", edgeProxyAuthTokenEnv)
+	}
 	otelTracesEndpoint, err := parseOTELTracesEndpoint(getenv(otelTracesEndpointEnv))
 	if err != nil {
 		return Config{}, err
@@ -114,6 +120,7 @@ func load(getenv func(string) string) (Config, error) {
 		CORSAllowedOrigins: corsAllowedOrigins,
 		GoogleClientIDs:    googleClientIDs,
 		TrustedProxyCIDRs:  trustedProxyCIDRs,
+		EdgeProxyAuthToken: edgeProxyAuthToken,
 		OTELTracesEndpoint: otelTracesEndpoint,
 	}, nil
 }

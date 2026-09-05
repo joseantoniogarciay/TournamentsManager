@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0118](../adr/0118-authenticate-caddy-client-ip-forwarding-to-k3s-api.md)                    | Autenticar el reenvío de IP de cliente de Caddy hacia la API K3s                | Aceptado              | 2026-09-05 |
 | [0117](../adr/0117-use-dedicated-ssh-operator-for-k3s-administration.md)                      | Usar una identidad SSH dedicada para administrar la VM K3s                      | Aceptado              | 2026-09-05 |
 | [0116](../adr/0116-use-k3s-traefik-loadbalancer-for-private-ingress.md)                       | Usar Traefik y LoadBalancer K3s para el Ingress privado                         | Aceptado              | 2026-09-01 |
 | [0115](../adr/0115-use-security-scoped-bookmarks-for-icloud-backup-publication.md)            | Usar bookmarks de seguridad para publicar backups en iCloud                     | Aceptado              | 2026-09-01 |

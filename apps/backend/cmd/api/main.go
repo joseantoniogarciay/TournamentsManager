@@ -81,7 +81,7 @@ func run(args []string) error {
 
 	server := &http.Server{
 		Addr:              appConfig.HTTPAddr,
-		Handler:           observability.HTTPHandler(httpadapter.NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, riscReceiver, leagues.NewCreationService(accountLeagues))),
+		Handler:           observability.HTTPHandler(httpadapter.NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, appConfig.EdgeProxyAuthToken, riscReceiver, leagues.NewCreationService(accountLeagues))),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

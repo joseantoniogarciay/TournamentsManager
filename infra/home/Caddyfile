@@ -16,6 +16,12 @@
 	header Permissions-Policy "camera=(), geolocation=(), microphone=(), payment=(), usb=()"
 }
 
+# Se importa dentro del proxy de prod en el gate de publicación. La variable se
+# mantiene fuera de Git; si falta, la API ignora X-Client-IP de forma segura.
+(api_edge_token) {
+	header_up X-FastTourney-Edge-Token "{$FASTTOURNEY_API_EDGE_TOKEN}"
+}
+
 http://www.fasttourney.com {
 	bind 127.0.0.1
 	import security_headers
