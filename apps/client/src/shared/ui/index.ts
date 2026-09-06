@@ -4,6 +4,7 @@ export {
   ConfirmationDialog,
   ConfirmationDialogHost,
   ConfirmationDialogProvider,
+  DialogCloseButton,
   ModalDialog,
   useConfirmationDialog,
 } from "./confirmation-dialog";

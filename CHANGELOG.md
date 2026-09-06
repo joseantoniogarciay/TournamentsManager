@@ -6,6 +6,21 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-06
+
+### Added
+
+- El consentimiento del registro local y social integra los enlaces de Términos
+  de uso y Política de privacidad dentro del texto del checkbox. En el alta con
+  Google, ambos documentos se consultan en un diálogo desplazable sobre el
+  formulario, con cierre visible.
+
+### Fixed
+
+- El icono de contraseña expresa ahora el estado real de visibilidad.
+- El checkbox de aceptación usa el mismo contraste de borde que los campos de
+  texto y los diálogos legales de móvil no rebasan el área visible.
+
 ## [1.0.0] - 2026-09-06
 
 ### Added
