@@ -60,8 +60,7 @@ func NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver(registrationSe
 	return NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, cookieSecure, trustedProxyCIDRs, "", riscReceiver, creationServices...)
 }
 
-// NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver
-// also accepts X-Client-IP when the edge token supplied by Caddy matches.
+// NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver also accepts X-Client-IP when the edge token supplied by Caddy matches.
 func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, edgeProxyAuthToken string, riscReceiver http.Handler, creationServices ...leagues.CreationService) http.Handler {
 	mux := http.NewServeMux()
 	resolveClientIP := newClientIPResolver(trustedProxyCIDRs, edgeProxyAuthToken)

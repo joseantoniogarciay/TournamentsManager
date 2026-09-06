@@ -21,7 +21,7 @@ const (
 	corsAllowedOriginsEnv = "CORS_ALLOWED_ORIGINS"
 	googleClientIDsEnv    = "GOOGLE_CLIENT_IDS"
 	trustedProxyCIDRsEnv  = "TRUSTED_PROXY_CIDRS"
-	edgeProxyAuthTokenEnv = "EDGE_PROXY_AUTH_TOKEN"
+	edgeProxyAuthTokenEnv = "EDGE_PROXY_AUTH_TOKEN" // #nosec G101 -- runtime environment variable name, not a credential.
 	otelTracesEndpointEnv = "OTEL_TRACES_ENDPOINT"
 )
 
