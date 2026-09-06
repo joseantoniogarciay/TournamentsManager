@@ -2878,17 +2878,6 @@ K3s y también que sus componentes base siguen sanos.
   distinto que se confirma desde el receptor. La evidencia del 2026-09-05
   incluyó esa confirmación final.
 
-### 2026-09-06 — Una fuente web no puede bloquear el montaje estático
-
-- **Aprendido:** el HTML de un export estático puede estar presente inicialmente
-  y desaparecer al hidratar si el layout devuelve `null` mientras `expo-font`
-  espera una fuente. La protección avanzada de Safari puede bloquear o rechazar
-  esa carga, incluso cuando el asset se sirve desde el mismo origen.
-- **Regla reutilizable:** en web, las fuentes son una mejora progresiva: se
-  monta la interfaz con la fuente del sistema y se permite que el navegador
-  aplique la fuente local cuando esté disponible. iOS y Android conservan su
-  gate de fuentes durante el arranque nativo.
-
 ### 2026-09-05 — Preparar un artefacto no equivale a abrir tráfico
 
 - **Aprendido:** una exportación estática puede ser correcta y aun así no estar

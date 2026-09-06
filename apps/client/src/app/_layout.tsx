@@ -7,7 +7,7 @@ import { Figtree_700Bold } from "@expo-google-fonts/figtree/700Bold";
 import { useFonts } from "expo-font";
 import * as WebBrowser from "expo-web-browser";
 import * as SplashScreen from "expo-splash-screen";
-import { type PropsWithChildren, useEffect } from "react";
+import { type PropsWithChildren, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
 import { typography } from "@tournaments-manager/design-tokens";
@@ -26,6 +26,8 @@ export const unstable_settings = {
   anchor: "(tabs)",
 };
 
+const fontLoadFallbackDelayMilliseconds = 3000;
+
 if (Platform.OS !== "web") {
   SplashScreen.setOptions({ duration: 240, fade: true });
   void SplashScreen.preventAutoHideAsync();
@@ -43,13 +45,22 @@ export default function RootLayout() {
     Figtree_600SemiBold,
     Figtree_700Bold,
   });
-  // La fuente es una mejora visual en web. Safari puede bloquear incluso un
-  // asset local bajo su protección avanzada; no debe desmontar el HTML estático
-  // ni dejar la aplicación vacía en ese caso.
-  if (Platform.OS !== "web") {
-    if (fontError) throw fontError;
-    if (!fontsLoaded) return null;
-  }
+  const [allowSystemFontFallback, setAllowSystemFontFallback] = useState(false);
+
+  useEffect(() => {
+    if (fontsLoaded) return;
+
+    // Una fuente mejora la apariencia, pero no puede dejar vacía la web si un
+    // perfil privado de Safari retrasa o restringe su carga.
+    const timeout = setTimeout(
+      () => setAllowSystemFontFallback(true),
+      fontLoadFallbackDelayMilliseconds,
+    );
+    return () => clearTimeout(timeout);
+  }, [fontsLoaded]);
+
+  if (fontError) throw fontError;
+  if (!fontsLoaded && !allowSystemFontFallback) return null;
 
   return (
     <PreferencesProvider>

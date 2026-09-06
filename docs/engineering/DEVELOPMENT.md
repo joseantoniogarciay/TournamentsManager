@@ -160,12 +160,10 @@ raíz de rutas; las primitivas compartidas viven en `src/shared` y los tokens en
 `packages/design-tokens`.
 
 Figtree se distribuye como asset local mediante `@expo-google-fonts/figtree` y
-`expo-font`. En iOS y Android el layout raíz carga los pesos 400, 500, 600 y
-700 antes de montar la interfaz; en web la interfaz se monta también si la
-fuente falla o queda bloqueada y el navegador usa su fuente de sistema hasta
-que Figtree esté disponible. Los nombres de familia viven únicamente en
-`typography.family`. Una pantalla no importa una fuente ni usa `fontWeight` para
-simular un peso. Véase ADR-0096.
+`expo-font`. El layout raíz carga los pesos 400, 500, 600 y 700 antes de montar
+la interfaz; los nombres de familia viven únicamente en `typography.family`.
+Una pantalla no importa una fuente ni usa `fontWeight` para simular un peso.
+Véase ADR-0096.
 
 - Las pantallas futuras vivirán en `apps/client/src/app`; sus rutas derivarán de
   los archivos.
