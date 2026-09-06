@@ -1,8 +1,8 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { color, space } from "@tournaments-manager/design-tokens";
+import { space } from "@tournaments-manager/design-tokens";
 
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
@@ -20,8 +20,7 @@ import { useUsernameAvailability } from "@/features/registration/username-availa
 import { registerLocalAccountRequest } from "@/features/registration/api";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { APIUnexpectedResponseError } from "@/api/fetch";
-import { PrivacyPolicyLink } from "@/shared/legal/privacy-policy-link";
-import { TermsOfUseLink } from "@/shared/legal/terms-of-use-link";
+import { TermsAcceptance } from "@/shared/legal/terms-acceptance";
 import {
   clearLocalLeagueDraft,
   getLocalLeagueDraft,
@@ -142,18 +141,7 @@ export default function RegisterScreen() {
                 {password.length < 15 ? t("password_strength_ok") : t("password_strength_strong")}
               </Text>
             ) : null}
-            <Pressable
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: acceptedTerms }}
-              onPress={() => setAcceptedTerms((value) => !value)}
-              style={styles.terms}
-            >
-              <View
-                style={[styles.checkbox, acceptedTerms ? styles.checkboxSelected : undefined]}
-              />
-              <Text color="secondary">{t("account_terms_acceptance")}</Text>
-            </Pressable>
-            <TermsOfUseLink />
+            <TermsAcceptance checked={acceptedTerms} onChange={setAcceptedTerms} />
             <Button
               disabled={
                 !acceptedTerms ||
@@ -166,9 +154,6 @@ export default function RegisterScreen() {
             />
           </View>
         </Card>
-        <View style={styles.privacyPolicyLink}>
-          <PrivacyPolicyLink />
-        </View>
       </KeyboardAwareScrollView>
       {isSubmitting ? (
         <InteractionBlocker accessibilityLabel={t("account_registration_submitting")} />
@@ -180,14 +165,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   content: {},
   form: { gap: space[4] },
-  terms: { alignItems: "center", flexDirection: "row", gap: space[2], minHeight: 44 },
-  checkbox: { borderWidth: 1, height: 20, width: 20 },
-  checkboxSelected: { backgroundColor: color.brand.primary },
-  privacyPolicyLink: {
-    alignSelf: "flex-end",
-    marginHorizontal: space[5],
-    marginTop: space[12] + space[5],
-  },
 });
 
 function isEmail(value: string) {

@@ -1,22 +1,34 @@
 import { type PropsWithChildren } from "react";
-import { StyleSheet, Text as NativeText, type StyleProp, type TextStyle } from "react-native";
+import {
+  StyleSheet,
+  Text as NativeText,
+  type StyleProp,
+  type TextProps as NativeTextProps,
+  type TextStyle,
+} from "react-native";
 
 import { color, typography } from "@tournaments-manager/design-tokens";
 
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 type Props = PropsWithChildren<{
+  accessibilityLabel?: NativeTextProps["accessibilityLabel"];
+  accessibilityRole?: NativeTextProps["accessibilityRole"];
   variant?: "body" | "bodyLarge" | "caption" | "title" | "display";
   color?: "primary" | "secondary" | "inverse" | "onBrand" | "error" | "success";
   numberOfLines?: number;
+  onPress?: NativeTextProps["onPress"];
   style?: StyleProp<TextStyle>;
 }>;
 
 export function Text({
+  accessibilityLabel,
+  accessibilityRole,
   children,
   variant = "body",
   color: textColor = "primary",
   numberOfLines,
+  onPress,
   style,
 }: Props) {
   const { colors } = usePreferences();
@@ -30,7 +42,10 @@ export function Text({
   };
   return (
     <NativeText
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole={accessibilityRole}
       numberOfLines={numberOfLines}
+      onPress={onPress}
       style={[styles.base, variants[variant], textColors[textColor], style]}
     >
       {children}

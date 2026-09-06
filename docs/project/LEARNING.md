@@ -2954,3 +2954,12 @@ K3s y también que sus componentes base siguen sanos.
   una reemisión desactivando y reactivando Universal SSL, se mantiene el host
   funcional cerrado, se anticipa una ventana sin TLS y se valida la recuperación
   completa desde fuera —web, redirección canónica y API— antes de continuar.
+
+### 2026-09-06 — El enlace legal forma parte del consentimiento, no de una acción paralela
+
+- **Aprendido:** separar los Términos del texto de aceptación oculta el documento
+  que se está aceptando y permite que el alta local y la federada diverjan.
+- **Regla reutilizable:** una misma casilla contractual reutilizable conserva el
+  estado de aceptación en cada flujo y presenta el enlace de los Términos dentro
+  de su copy. El enlace abre la ruta legal canónica sin cambiar la casilla; en
+  móvil esa ruta conserva su presentación modal y cierre de navegación.

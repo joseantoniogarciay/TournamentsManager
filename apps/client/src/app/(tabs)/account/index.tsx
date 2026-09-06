@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 
-import { color, control, radius, space } from "@tournaments-manager/design-tokens";
+import { control, radius, space } from "@tournaments-manager/design-tokens";
 
 import googleLogo from "../../../../assets/google-g.png";
 
@@ -25,8 +25,7 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { APIUnexpectedResponseError } from "@/api/fetch";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
-import { PrivacyPolicyLink } from "@/shared/legal/privacy-policy-link";
-import { TermsOfUseLink } from "@/shared/legal/terms-of-use-link";
+import { TermsAcceptance } from "@/shared/legal/terms-acceptance";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
@@ -311,18 +310,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
               onChangeText={(value) => setGoogleUsername(value.toLowerCase())}
               value={googleUsername}
             />
-            <Pressable
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: googleTermsAccepted }}
-              onPress={() => setGoogleTermsAccepted((value) => !value)}
-              style={styles.terms}
-            >
-              <View
-                style={[styles.checkbox, googleTermsAccepted ? styles.checkboxSelected : undefined]}
-              />
-              <Text color="secondary">{t("account_terms_acceptance")}</Text>
-            </Pressable>
-            <TermsOfUseLink />
+            <TermsAcceptance checked={googleTermsAccepted} onChange={setGoogleTermsAccepted} />
             <Button
               disabled={
                 !googleTermsAccepted ||
@@ -344,9 +332,6 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
             secondarySurfaceColor={colors.surface.canvas}
             variant="secondary"
           />
-          <View style={styles.privacyPolicyLink}>
-            <PrivacyPolicyLink />
-          </View>
         </View>
       </KeyboardAwareScrollView>
     </Screen>
@@ -361,9 +346,6 @@ const styles = StyleSheet.create({
   authenticatedContent: { gap: space[6], marginHorizontal: space[5] },
   content: { gap: space[5] },
   form: { gap: space[4] },
-  terms: { alignItems: "center", flexDirection: "row", gap: space[2], minHeight: 44 },
-  checkbox: { borderWidth: 1, height: 20, width: 20 },
-  checkboxSelected: { backgroundColor: color.brand.primary },
   forgotPassword: { alignSelf: "flex-end", marginBottom: space[2] },
   forgotPasswordText: { textDecorationLine: "underline" },
   googleButton: {
@@ -377,7 +359,6 @@ const styles = StyleSheet.create({
   },
   googleButtonDisabled: { opacity: 0.55 },
   googleLogo: { height: 22, width: 22 },
-  privacyPolicyLink: { alignSelf: "flex-end", marginTop: space[12] + space[5] - space[3] },
   register: { gap: space[3], marginHorizontal: space[5] },
   navigationRow: {
     alignItems: "center",
