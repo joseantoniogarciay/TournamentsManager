@@ -89,8 +89,9 @@ las rutas no públicas aunque otro sitio las enlace.
 
 **Aceptada el 2026-09-06:** `https://fasttourney.com/` es la única superficie
 web indexable inicial de FastTourney. La propia home explica el producto y ofrece
-explorar sin cuenta, registrarse o iniciar sesión; explorar reutiliza el borrador
-local ya aceptado.
+crear un torneo mediante el borrador local ya aceptado. Por ajuste explícito del
+usuario el mismo día, la caja principal recupera «Crear torneo» y retira las
+acciones añadidas de explorar, registro y acceso; estos últimos siguen en Cuenta.
 
 Las rutas de cuenta, creación, recuperación, biblioteca, enlaces y ligas no se
 indexan. El release web publica `robots.txt`, un sitemap con solo la home y sus
@@ -123,8 +124,9 @@ metadatos canónicos y sociales mediante exportación estática. No se añade
    sí lo devuelve.
 4. `www` redirige a la URL canónica y Search Console verifica el dominio,
    inspecciona `/` y recibe el sitemap.
-5. Una persona sin sesión puede explorar, registrarse o iniciar sesión desde la
-   home; las apps nativas mantienen la misma intención funcional.
+5. Una persona sin sesión puede empezar un torneo desde la caja principal y
+   acceder al registro o inicio de sesión desde Cuenta; las apps nativas
+   mantienen la misma intención funcional.
 
 ## Disparadores de revisión
 

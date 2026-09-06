@@ -2878,6 +2878,14 @@ K3s y también que sus componentes base siguen sanos.
   distinto que se confirma desde el receptor. La evidencia del 2026-09-05
   incluyó esa confirmación final.
 
+### 2026-09-06 — Indexar la home no exige cambiar su acción principal
+
+- **Decisión del usuario:** recuperar la caja original con «Crear torneo» y
+  retirar las acciones añadidas de explorar, registro y acceso de esa caja.
+- **Regla reutilizable:** el HTML indexable y los metadatos se pueden conservar
+  sin alterar la acción de producto ya aceptada; el acceso a cuenta permanece
+  en su tab y crear sigue abriendo el borrador local.
+
 ### 2026-09-06 — El documento SEO debe conservar el reset de layout de Expo
 
 - **Evidencia:** el release estático omitía `ScrollViewStyleReset` en `+html.tsx`.

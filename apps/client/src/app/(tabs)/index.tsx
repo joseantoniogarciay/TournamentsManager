@@ -103,10 +103,9 @@ export default function HomeScreen() {
                 {t("home_introduction")}
               </Text>
               <Button
-                label={t("home_explore_without_account")}
+                label={t("home_create_tournament")}
                 onPress={() => router.push("/create-tournament" as Href)}
               />
-              {showGuestHome ? <GuestAccountActions t={t} /> : null}
             </View>
           </Card>
 
@@ -168,19 +167,6 @@ function HomeMetadata() {
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={previewImageURL} />
     </Head>
-  );
-}
-
-function GuestAccountActions({ t }: { t: ReturnType<typeof getTranslator> }) {
-  return (
-    <View style={styles.guestActions}>
-      <Button
-        label={t("home_register")}
-        onPress={() => router.push("/account/register")}
-        variant="secondary"
-      />
-      <Button label={t("home_sign_in")} onPress={() => router.push("/account")} variant="ghost" />
-    </View>
   );
 }
 
@@ -258,7 +244,6 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { gap: space[5] },
   hero: { gap: space[4] },
-  guestActions: { gap: space[2] },
   recentEmpty: { alignItems: "center", paddingHorizontal: space[5], textAlign: "center" },
   recentSection: { gap: space[5] },
   recentTitle: { marginHorizontal: space[5] },
