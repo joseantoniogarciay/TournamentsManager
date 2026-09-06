@@ -24,10 +24,13 @@ demanda los proyectos nativos; `ios/` y `android/` no serán fuente versionada d
 verdad. Véase
 [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md).
 
-La web del cliente universal se renderizará inicialmente en el navegador, sin
-SSR ni generación estática. La adaptación por plataforma será explícita y
-aislada cuando mejore una capacidad concreta. Véase
-[ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md).
+La web del cliente universal se exporta estáticamente, sin SSR. La home `/` es
+la única superficie pública indexable y declara sus metadatos; las rutas de
+aplicación se excluyen desde el borde y las ligas dinámicas conservan el fallback
+de la SPA. La adaptación por plataforma será explícita y aislada cuando mejore
+una capacidad concreta. Véanse
+[ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md) y
+[ADR-0120](../adr/0120-index-public-home-without-indexing-app-routes.md).
 
 El cliente se comunicará con el backend Go mediante una API REST descrita
 contract-first con OpenAPI. El cliente TypeScript se generará desde ese contrato;

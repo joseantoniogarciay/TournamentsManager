@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.fasttourney.prod-league-preview-renderer</string>
+  <key>ProgramArguments</key><array><string>__LEAGUE_PREVIEW_BINARY__</string></array>
+  <key>EnvironmentVariables</key><dict>
+    <key>LEAGUE_PREVIEW_LISTEN_ADDRESS</key><string>127.0.0.1:8091</string>
+    <key>LEAGUE_PREVIEW_WEB_ROOT</key><string>/opt/homebrew/var/www/fasttourney/prod/current</string>
+    <key>LEAGUE_PREVIEW_PUBLIC_BASE_URL</key><string>https://fasttourney.com</string>
+    <key>LEAGUE_PREVIEW_PUBLIC_HOST</key><string>fasttourney.com</string>
+    <key>LEAGUE_PREVIEW_API_BASE_URL</key><string>http://127.0.0.1:9080/v1</string>
+    <key>LEAGUE_PREVIEW_API_HOST</key><string>api.fasttourney.com</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>__LOG_DIRECTORY__/league-preview-renderer.log</string>
+  <key>StandardErrorPath</key><string>__LOG_DIRECTORY__/league-preview-renderer-error.log</string>
+</dict></plist>

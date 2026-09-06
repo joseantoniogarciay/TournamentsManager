@@ -49,8 +49,10 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
-| [0119](../adr/0119-version-production-milestones-with-semver-tags-and-github-releases.md)    | Versionar hitos de producción con tags SemVer y GitHub Releases                 | Aceptado              | 2026-09-06 |
-| [0118](../adr/0118-authenticate-caddy-client-ip-forwarding-to-k3s-api.md)                    | Autenticar el reenvío de IP de cliente de Caddy hacia la API K3s                | Aceptado              | 2026-09-05 |
+| [0121](../adr/0121-render-social-previews-at-canonical-league-url.md)                         | Renderizar previews sociales en la URL canónica de liga                         | Aceptado              | 2026-09-06 |
+| [0120](../adr/0120-index-public-home-without-indexing-app-routes.md)                          | Indexar la home pública sin indexar las rutas de aplicación                     | Aceptado              | 2026-09-06 |
+| [0119](../adr/0119-version-production-milestones-with-semver-tags-and-github-releases.md)     | Versionar hitos de producción con tags SemVer y GitHub Releases                 | Aceptado              | 2026-09-06 |
+| [0118](../adr/0118-authenticate-caddy-client-ip-forwarding-to-k3s-api.md)                     | Autenticar el reenvío de IP de cliente de Caddy hacia la API K3s                | Aceptado              | 2026-09-05 |
 | [0117](../adr/0117-use-dedicated-ssh-operator-for-k3s-administration.md)                      | Usar una identidad SSH dedicada para administrar la VM K3s                      | Aceptado              | 2026-09-05 |
 | [0116](../adr/0116-use-k3s-traefik-loadbalancer-for-private-ingress.md)                       | Usar Traefik y LoadBalancer K3s para el Ingress privado                         | Aceptado              | 2026-09-01 |
 | [0115](../adr/0115-use-security-scoped-bookmarks-for-icloud-backup-publication.md)            | Usar bookmarks de seguridad para publicar backups en iCloud                     | Aceptado              | 2026-09-01 |
@@ -89,7 +91,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0075](../adr/0075-freeze-local-lockfiles-and-delay-dependency-releases.md)                   | Congelar el lockfile local y retrasar versiones nuevas                          | Aceptado              | 2026-08-04 |
 | [0077](../adr/0077-allow-immediate-expo-compatibility-updates.md)                             | Permitir actualizaciones inmediatas del conjunto compatible de Expo             | Aceptado              | 2026-08-09 |
 | [0015](../adr/0015-use-expo-router-and-continuous-native-generation.md)                       | Usar Expo, Expo Router y CNG                                                    | Aceptado              | 2026-07-24 |
-| [0016](../adr/0016-use-client-side-web-rendering-initially.md)                                | Usar rendering web client-side inicialmente                                     | Aceptado              | 2026-07-24 |
+| [0016](../adr/0016-use-client-side-web-rendering-initially.md)                                | Usar rendering web client-side inicialmente                                     | Superado por ADR-0120 | 2026-07-24 |
 | [0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md)                         | Usar contratos de entorno, GitHub Environments y OIDC                           | Aceptado              | 2026-07-24 |
 | [0018](../adr/0018-use-compose-for-local-service-dependencies.md)                             | Usar Docker Compose para dependencias locales de servicio                       | Superado por ADR-0076 | 2026-07-25 |
 | [0019](../adr/0019-use-risk-based-layered-testing.md)                                         | Usar pruebas por riesgo y capas                                                 | Aceptado              | 2026-07-25 |

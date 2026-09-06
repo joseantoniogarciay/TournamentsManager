@@ -33,7 +33,8 @@ incorporar otros deportes sin reescribir su núcleo.
 - Las acciones detalladas de creación y gestión de un torneo se definirán de forma
   incremental.
 - Se ha aceptado un cliente universal con React Native, Expo, Expo Router, CNG y
-  rendering web client-side inicial.
+  rendering web client-side inicial; la home propia es la única superficie web
+  indexable, sin convertir las rutas de aplicación en catálogo (ADR-0120).
 
 ## Actores y capacidades iniciales
 
@@ -67,8 +68,11 @@ La ruta `/` es la home. La botonera tiene «Inicio» como primera posición,
 «Torneos» como segunda y «Cuenta» como tercera; Cuenta conserva su propio flujo.
 En iOS 26 la barra usa el componente nativo con efecto Liquid Glass y se
 superpone al contenido, que conserva margen inferior para permanecer accesible.
-Sin sesión, crear inicia o retoma el borrador local; con
-sesión verificada, la home también ofrece accesos rápidos a «Administro» y
+Sin sesión, la home explica el producto y ofrece explorar sin cuenta,
+registrarse o iniciar sesión; explorar inicia o retoma el borrador local. La
+misma ruta `/` es la única superficie indexable inicial en web, mientras rutas
+de aplicación y ligas quedan fuera de buscadores (ADR-0120). Con sesión
+verificada, la home también ofrece accesos rápidos a «Administro» y
 «Guardados». Las ligas creadas por la cuenta y aquellas donde es administrador
 delegado se consideran administradas. Las ligas seguidas se consideran
 guardadas; cuando una liga cumple ambas relaciones, se muestra solo como

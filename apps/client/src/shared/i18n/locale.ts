@@ -4,6 +4,7 @@ import en from "./locales/en.json";
 import es from "./locales/es.json";
 import fr from "./locales/fr.json";
 import it from "./locales/it.json";
+import { isStaticWebRender } from "./is-static-web-render";
 
 const supportedLanguages = ["es", "en", "it", "fr"] as const;
 
@@ -21,6 +22,8 @@ const translators: Record<SupportedLanguage, (key: TranslationKey) => string> = 
 };
 
 export function getCurrentLanguage(): SupportedLanguage {
+  if (isStaticWebRender()) return "en";
+
   const languageCode = getLocales()[0]?.languageCode;
   return isSupportedLanguage(languageCode) ? languageCode : "en";
 }

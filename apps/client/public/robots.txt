@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /account
+Disallow: /create-tournament
+Disallow: /league/
+Disallow: /link/
+Disallow: /tournaments
+
+Sitemap: https://fasttourney.com/sitemap.xml

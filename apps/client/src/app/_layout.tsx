@@ -20,6 +20,7 @@ import { SessionProvider, useSession } from "@/shared/session/session-provider";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
 import { ConfirmationDialogProvider } from "@/shared/ui";
 import { NotificationProvider } from "@/features/notifications/notification-provider";
+import { getCurrentLanguage } from "@/shared/i18n/locale";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -211,6 +212,7 @@ function WebPageAppearance({ backgroundColor }: { backgroundColor: string }) {
 
     document.documentElement.style.backgroundColor = backgroundColor;
     document.body.style.backgroundColor = backgroundColor;
+    document.documentElement.lang = getCurrentLanguage();
   }, [backgroundColor]);
 
   useEffect(() => {
