@@ -39,6 +39,7 @@ export default function TransferLeagueScreen() {
   useEffect(() => {
     if (query.length < minimumQueryLength) {
       setResults([]);
+      setSearching(false);
       return;
     }
     const controller = new AbortController();
@@ -57,7 +58,9 @@ export default function TransferLeagueScreen() {
                 : t(getRequestFailure(error).messageKey),
           });
         })
-        .finally(() => setSearching(false));
+        .finally(() => {
+          if (!controller.signal.aborted) setSearching(false);
+        });
     }, debounceMilliseconds);
     return () => {
       clearTimeout(timer);
@@ -108,20 +111,17 @@ export default function TransferLeagueScreen() {
           headerTintColor: colors.text.primary,
           headerTitleAlign: "center",
           title: t("league_transfer"),
+          ...(!usesLiquidGlassNavigation ? { headerLeft: () => closeButton } : {}),
         }}
-      >
-        {usesLiquidGlassNavigation ? (
-          <Stack.Toolbar placement="left">
-            <Stack.Toolbar.Button
-              accessibilityLabel={t("common_close")}
-              icon="xmark"
-              onPress={close}
-            />
-          </Stack.Toolbar>
-        ) : null}
-      </Stack.Screen>
-      {!usesLiquidGlassNavigation ? (
-        <Stack.Screen options={{ headerLeft: () => closeButton }} />
+      />
+      {usesLiquidGlassNavigation ? (
+        <Stack.Toolbar placement="left">
+          <Stack.Toolbar.Button
+            accessibilityLabel={t("common_close")}
+            icon="xmark"
+            onPress={close}
+          />
+        </Stack.Toolbar>
       ) : null}
       <Screen topInset="navigation-bar">
         <ScrollView

@@ -545,14 +545,16 @@ export default function LeagueScreen() {
                   }}
                   variant="secondary"
                 />
-                <Button
-                  label={t("league_transfer")}
-                  onPress={() => {
-                    closeWebMenu();
-                    openTransfer();
-                  }}
-                  variant="destructive"
-                />
+                {league.state !== "cancelled" ? (
+                  <Button
+                    label={t("league_transfer")}
+                    onPress={() => {
+                      closeWebMenu();
+                      openTransfer();
+                    }}
+                    variant="destructive"
+                  />
+                ) : null}
                 {canCancel && !isCancelling ? (
                   <Button
                     label={t("league_cancel")}
