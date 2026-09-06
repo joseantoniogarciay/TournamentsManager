@@ -143,24 +143,30 @@ function HomeMetadata() {
   const title = t("home_web_title");
   const description = t("home_web_description");
   const imageAlt = t("home_web_image_alt");
+  const publicBaseURL = (process.env.EXPO_PUBLIC_APP_LINK_URL ?? "https://fasttourney.com").replace(
+    /\/$/,
+    "",
+  );
+  const homeURL = `${publicBaseURL}/`;
+  const previewImageURL = `${publicBaseURL}/fasttourney-league-preview.png`;
 
   return (
     <Head>
       <title>{title}</title>
       <meta name="description" content={description} />
-      <link rel="canonical" href="https://fasttourney.com/" />
+      <link rel="canonical" href={homeURL} />
       <meta property="og:type" content="website" />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
-      <meta property="og:url" content="https://fasttourney.com/" />
-      <meta property="og:image" content="https://fasttourney.com/fasttourney-league-preview.png" />
+      <meta property="og:url" content={homeURL} />
+      <meta property="og:image" content={previewImageURL} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={imageAlt} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content="https://fasttourney.com/fasttourney-league-preview.png" />
+      <meta name="twitter:image" content={previewImageURL} />
     </Head>
   );
 }
