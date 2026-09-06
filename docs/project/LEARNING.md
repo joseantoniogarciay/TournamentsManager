@@ -2878,6 +2878,18 @@ K3s y también que sus componentes base siguen sanos.
   distinto que se confirma desde el receptor. La evidencia del 2026-09-05
   incluyó esa confirmación final.
 
+### 2026-09-06 — El documento SEO debe conservar el reset de layout de Expo
+
+- **Evidencia:** el release estático omitía `ScrollViewStyleReset` en `+html.tsx`.
+  En el navegador, `html`, `body`, `#root` y su primer hijo medían cero de alto.
+  La captura mostraba únicamente la botonera fija aunque accesibilidad devolvía
+  los textos de la home. Esto invalida la anterior comprobación visual basada
+  solo en accesibilidad y la atribución del incidente a las fuentes.
+- **Corrección:** recuperar el reset oficial de Expo y conservar Figtree y su
+  carga original. El parche especulativo de fuentes se revirtió.
+- **Regla reutilizable:** verificar dimensiones y captura después de hidratar,
+  además del HTML, metadatos, consola y respuestas HTTP.
+
 ### 2026-09-05 — Preparar un artefacto no equivale a abrir tráfico
 
 - **Aprendido:** una exportación estática puede ser correcta y aun así no estar

@@ -155,6 +155,11 @@ El cliente usará Expo, Expo Router y CNG conforme a
 web se exporta con `web.output: "static"`: la home pública queda disponible como
 HTML para indexación, mientras las rutas dinámicas conservan el fallback de la
 SPA y se excluyen del índice conforme a ADR-0120.
+El documento personalizado `+html.tsx` conserva `ScrollViewStyleReset` de Expo:
+`html`, `body` y `#root` necesitan altura completa para que las pantallas flex
+y sus `ScrollView` sean visibles. La validación web comprueba también captura
+y dimensiones del contenido; encontrar textos en accesibilidad no prueba que
+el layout tenga altura visible.
 `apps/client` existe como proyecto Expo SDK 57. Expo Router usa `src/app` como
 raíz de rutas; las primitivas compartidas viven en `src/shared` y los tokens en
 `packages/design-tokens`.

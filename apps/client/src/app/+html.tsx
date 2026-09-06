@@ -1,4 +1,4 @@
-import { useServerDocumentContext } from "expo-router/html";
+import { ScrollViewStyleReset, useServerDocumentContext } from "expo-router/html";
 import type { PropsWithChildren } from "react";
 
 export default function RootHtml({ children }: PropsWithChildren) {
@@ -6,7 +6,11 @@ export default function RootHtml({ children }: PropsWithChildren) {
 
   return (
     <html {...htmlAttributes} lang="en">
-      <head>{headNodes}</head>
+      <head>
+        <meta charSet="utf-8" />
+        <ScrollViewStyleReset />
+        {headNodes}
+      </head>
       <body {...bodyAttributes}>
         {children}
         {bodyNodes}
