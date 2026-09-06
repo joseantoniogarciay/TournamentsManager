@@ -1,4 +1,5 @@
 import { router, type Href, useFocusEffect } from "expo-router";
+import Head from "expo-router/head";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
@@ -7,6 +8,7 @@ import { radius, space } from "@tournaments-manager/design-tokens";
 
 import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
+import { isStaticWebRender } from "@/shared/i18n/is-static-web-render";
 import { listRecentRelatedLeagues } from "@/features/league-creation/api";
 import { LeagueCard } from "@/features/league-creation/components/league-card";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -29,6 +31,7 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const loadedAccountID = useRef<string | null>(null);
+  const showGuestHome = !user && (!isRestoring || isStaticWebRender());
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -73,61 +76,111 @@ export default function HomeScreen() {
   );
 
   return (
-    <Screen bottomInset="none">
-      <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
-      <ScrollView
-        key={revision}
-        contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
-        refreshControl={
-          user ? (
-            <RefreshControl
-              onRefresh={() => void loadRecentLeagues(true)}
-              refreshing={isRefreshing}
-              colors={[colors.indicator.default]}
-              tintColor={colors.indicator.default}
-            />
-          ) : undefined
-        }
-        showsVerticalScrollIndicator={false}
-        style={styles.scroll}
-      >
-        <Card>
-          <View style={styles.hero}>
-            <Text variant="display">{t("home_hero")}</Text>
-            <Text color="secondary" variant="bodyLarge">
-              {t("home_introduction")}
-            </Text>
-            <Button
-              label={t("home_create_tournament")}
-              onPress={() => router.push("/create-tournament" as Href)}
-            />
-          </View>
-        </Card>
-
-        {user ? (
-          <View style={styles.recentSection}>
-            <Text style={styles.recentTitle} variant="title">
-              {t("home_recent_leagues_title")}
-            </Text>
-            {isLoading ? (
-              <Text color="secondary" style={styles.recentEmpty}>
-                {t("common_loading")}
+    <>
+      <HomeMetadata />
+      <Screen bottomInset="none">
+        <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
+        <ScrollView
+          key={revision}
+          contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
+          refreshControl={
+            user ? (
+              <RefreshControl
+                onRefresh={() => void loadRecentLeagues(true)}
+                refreshing={isRefreshing}
+                colors={[colors.indicator.default]}
+                tintColor={colors.indicator.default}
+              />
+            ) : undefined
+          }
+          showsVerticalScrollIndicator={false}
+          style={styles.scroll}
+        >
+          <Card>
+            <View style={styles.hero}>
+              <Text variant="display">{t("home_hero")}</Text>
+              <Text color="secondary" variant="bodyLarge">
+                {t("home_introduction")}
               </Text>
-            ) : recentLeagues.length === 0 ? (
-              <View style={styles.recentEmpty}>
-                <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
-              </View>
-            ) : (
-              recentLeagues.map((league) => <LeagueCard key={league.id} league={league} />)
-            )}
-          </View>
-        ) : null}
+              <Button
+                label={t("home_explore_without_account")}
+                onPress={() => router.push("/create-tournament" as Href)}
+              />
+              {showGuestHome ? <GuestAccountActions t={t} /> : null}
+            </View>
+          </Card>
 
-        {!user && !isRestoring ? <GuestOnboarding t={t} /> : null}
+          {user ? (
+            <View style={styles.recentSection}>
+              <Text style={styles.recentTitle} variant="title">
+                {t("home_recent_leagues_title")}
+              </Text>
+              {isLoading ? (
+                <Text color="secondary" style={styles.recentEmpty}>
+                  {t("common_loading")}
+                </Text>
+              ) : recentLeagues.length === 0 ? (
+                <View style={styles.recentEmpty}>
+                  <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
+                </View>
+              ) : (
+                recentLeagues.map((league) => <LeagueCard key={league.id} league={league} />)
+              )}
+            </View>
+          ) : null}
 
-        <ProductAnalyticsCard />
-      </ScrollView>
-    </Screen>
+          {showGuestHome ? <GuestOnboarding t={t} /> : null}
+
+          <ProductAnalyticsCard />
+        </ScrollView>
+      </Screen>
+    </>
+  );
+}
+
+function HomeMetadata() {
+  const t = getTranslator();
+  const title = t("home_web_title");
+  const description = t("home_web_description");
+  const imageAlt = t("home_web_image_alt");
+  const publicBaseURL = (process.env.EXPO_PUBLIC_APP_LINK_URL ?? "https://fasttourney.com").replace(
+    /\/$/,
+    "",
+  );
+  const homeURL = `${publicBaseURL}/`;
+  const previewImageURL = `${publicBaseURL}/fasttourney-league-preview.png`;
+
+  return (
+    <Head>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <link rel="canonical" href={homeURL} />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:url" content={homeURL} />
+      <meta property="og:image" content={previewImageURL} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={imageAlt} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={previewImageURL} />
+    </Head>
+  );
+}
+
+function GuestAccountActions({ t }: { t: ReturnType<typeof getTranslator> }) {
+  return (
+    <View style={styles.guestActions}>
+      <Button
+        label={t("home_register")}
+        onPress={() => router.push("/account/register")}
+        variant="secondary"
+      />
+      <Button label={t("home_sign_in")} onPress={() => router.push("/account")} variant="ghost" />
+    </View>
   );
 }
 
@@ -205,6 +258,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { gap: space[5] },
   hero: { gap: space[4] },
+  guestActions: { gap: space[2] },
   recentEmpty: { alignItems: "center", paddingHorizontal: space[5], textAlign: "center" },
   recentSection: { gap: space[5] },
   recentTitle: { marginHorizontal: space[5] },

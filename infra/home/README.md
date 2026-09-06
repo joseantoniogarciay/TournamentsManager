@@ -45,6 +45,20 @@ seguro vuelve explícitamente ese bloque a `respond ... 503`, valida y recarga
 Caddy; el procedimiento completo está en el
 [runbook de publicación](../../docs/runbooks/production-web-publication.md).
 
+El documento exacto `/league/{uuid}` se desvía antes del fallback estático al
+renderer externo `league-preview-renderer`; no hay una ruta `/share` ni un
+redirect. El binario se compila con `build-league-preview-renderer.sh` fuera del
+artefacto Expo. Los templates `dev` y `prod` aíslan puerto, enlace `current`,
+host público y API: `dev` usa `127.0.0.1:8092` y `dev-api.fasttourney.com`,
+mientras producción usa `127.0.0.1:8091` y `api.fasttourney.com`. No contiene
+secretos: en producción la lectura viaja por Caddy local, que ya aplica el token
+privado de borde. Se instala manualmente como los demás agentes del Mac,
+sustituyendo `__LEAGUE_PREVIEW_BINARY__` y `__LOG_DIRECTORY__`; después se
+valida el plist, se carga con `launchctl bootstrap`, se comprueba el puerto y
+solo entonces se recarga Caddy. El renderer se reinicia ante fallo, sigue el
+enlace atómico `current` y no necesita reiniciarse al activar o revertir un
+release web.
+
 `deploy-dev.sh` es el único despliegue manual de dev: exige `develop` limpio y
 alineado con `origin/develop`, construye la API runtime, aplica las migraciones
 SQL pendientes y llama a `deploy-dev-web.sh`. Las migraciones son solo hacia

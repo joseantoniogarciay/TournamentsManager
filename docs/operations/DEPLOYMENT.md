@@ -83,10 +83,13 @@ acoplada:
 - la compatibilidad con el contrato API debe verificarse antes de publicar,
   teniendo en cuenta que una aplicación instalada no se actualiza de inmediato.
 
-La web inicial se entregará como aplicación client-side conforme a
-[ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md). Static
-rendering, SSR o una superficie web pública especializada se decidirán solo si
-aparecen requisitos públicos de indexación, previews o rendimiento.
+La web se entrega con exportación estática de Expo, sin SSR general. La home `/`
+es indexable y el artefacto contiene su HTML, `robots.txt`, sitemap y metadatos;
+el borde añade `X-Robots-Tag: noindex, nofollow, noarchive` a las rutas de
+aplicación. Solo `/league/{uuid}` se deriva a un proceso Go local que inyecta
+metadatos sociales desde la API pública en el mismo shell estático. Más
+superficies dinámicas o SSR completo se decidirán solo si Search Console,
+previews o rendimiento aportan evidencia (ADR-0121 y ADR-0120).
 
 La API se empaquetará como imagen OCI conforme a
 [ADR-0022](../adr/0022-package-backend-as-oci-image.md). Esta imagen solo

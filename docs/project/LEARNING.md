@@ -1,5 +1,36 @@
 # Registro de aprendizaje
 
+## 2026-09-06 — Indexar la marca no implica indexar la aplicación
+
+- **Aprendido:** una home pública puede explicar el producto y ser la única URL
+  indexable aunque la misma SPA contenga rutas autenticadas y ligas leíbles por
+  ID. Un sitemap enumera únicamente URLs canónicas deseadas; no debe revelar ni
+  promocionar recursos compartidos que no son un catálogo público.
+- **Regla reutilizable:** combinar `robots.txt` con `X-Robots-Tag` en las rutas
+  de aplicación, porque el primero orienta el rastreo pero no sustituye una
+  directiva de no indexación. En Expo Router, la salida `single` no aporta HTML
+  indexable; usar `web.output: "static"` para la home y conservar el fallback
+  SPA para rutas dinámicas. Mantener la ruta pública y sus metadatos junto al
+  producto real; no crear una landing duplicada sin una necesidad demostrada.
+  Véase ADR-0120.
+
+## 2026-09-06 — Una tarjeta social dinámica no obliga a hacer SSR toda la app
+
+- **Aprendido:** los crawlers de mensajería suelen leer solo el HTML inicial,
+  pero eso no exige que cada ruta de una SPA se convierta en servidor. Un proceso
+  pequeño puede enriquecer el `<head>` de un documento exacto y devolver el
+  mismo shell que luego hidrata el cliente.
+- **Regla reutilizable:** conservar la URL canónica, consultar una proyección
+  pública ya existente y servir igual a navegador y crawler. No crear `/share`,
+  no detectar User-Agent y no usar acceso directo a datos. Para recursos no
+  descubribles, conservar `noindex`, devolver 404 real si no son visibles y
+  recordar que la caché de la plataforma social no está bajo control del origen.
+  Véase ADR-0121.
+
+- **Práctica operativa:** validar primero el renderer en el host público de
+  desarrollo con un proceso y puerto propios. No se apunta el host de pruebas a
+  los releases o la API de producción, aunque ambos vivan tras el mismo Caddy.
+
 ## 2026-09-06 — Un hito de producto no depende de que todas las plataformas estén distribuidas
 
 - **Aprendido:** la primera web de producción puede necesitar una referencia
@@ -2856,7 +2887,7 @@ K3s y también que sus componentes base siguen sanos.
 - **Regla reutilizable:** producción separa un release inmutable y trazable de
   su activación atómica. El borde conserva su respuesta segura hasta que una
   decisión explícita importe la ruta pública; el rollback puede volver a cerrar
-el host sin tocar datos ni el runtime de la API.
+  el host sin tocar datos ni el runtime de la API.
 
 ### 2026-09-05 — El gate web no debe esperar credenciales de distribución nativa
 

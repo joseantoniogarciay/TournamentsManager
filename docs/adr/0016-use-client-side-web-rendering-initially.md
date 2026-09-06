@@ -5,7 +5,7 @@
 - **Decisor:** Usuario, mediante confirmación explícita
 - **Propietario del análisis:** Asistente como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0120, en la estrategia de salida web inicial
 
 ## Problema
 

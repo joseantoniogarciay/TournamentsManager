@@ -1,7 +1,7 @@
 # Contexto inicial del sistema
 
 > Estado: conceptual; refleja la estrategia de cliente de ADR-0008, ADR-0015 y
-> ADR-0016, pero no define despliegue.
+> ADR-0016 y ADR-0120, pero no define despliegue.
 >
 > Fuente funcional: [PRODUCT.md](../project/PRODUCT.md)
 

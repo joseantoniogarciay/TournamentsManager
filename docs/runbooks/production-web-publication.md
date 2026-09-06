@@ -55,9 +55,11 @@ despliega API, PostgreSQL ni Secrets. Hasta completar cada verificación,
    infra/home/stage-prod-web.sh <SHA-completo>
    ```
 
-2. Inspeccionar `deployment.json` e `index.html`; confirmar que el bundle solo
-   apunta a la API y al dominio de producción. Si el release incluye
-   asociaciones móviles, inspeccionar también ambos ficheros `.well-known`.
+2. Inspeccionar `deployment.json`, `index.html`, `robots.txt` y `sitemap.xml`;
+   confirmar que el bundle solo apunta a la API y al dominio de producción, que
+   la home declara `https://fasttourney.com/` como canonical y que el sitemap
+   solo enumera esa URL. Si el release incluye asociaciones móviles, inspeccionar
+   también ambos ficheros `.well-known`.
 3. Tras la autorización final, sustituir el `respond` del bloque
    `http://fasttourney.com` por `import production_web`, validar Caddy y
    recargarlo. Esto es el instante de publicación; no conmutar antes el DNS ni
@@ -68,11 +70,28 @@ despliega API, PostgreSQL ni Secrets. Hasta completar cada verificación,
    infra/home/activate-prod-web.sh <SHA-completo>
    ```
 
-5. Recorrer en navegador un registro con buzón de prueba controlado,
+5. Si no está instalado aún o si cambió el renderer, compilarlo y cargar su
+   LaunchAgent desde
+   `infra/home/launchd/com.fasttourney.prod-league-preview-renderer.plist.template`.
+   Sustituir exclusivamente `__LEAGUE_PREVIEW_BINARY__` y `__LOG_DIRECTORY__`,
+   validar el plist y confirmar que escucha solo en `127.0.0.1:8091`. El binario
+   usa `prod/current`, por lo que no se reinicia en cada activación del release.
+   Validar y recargar Caddy después de que el proceso esté sano.
+6. Con una liga pública controlada, comprobar por HTTPS el HTML de
+   `/league/<uuid>`: debe devolver `200`, el mismo canonical, `og:title` con el
+   nombre, `og:image` de 1200×630 y `X-Robots-Tag: noindex, nofollow, noarchive`.
+   Una liga inexistente debe devolver `404`; `/league/<uuid>/standings` debe
+   seguir llegando al fallback de la aplicación. Probar la primera URL real en
+   un inspector social y conservar solo la evidencia saneada.
+7. Recorrer en navegador un registro con buzón de prueba controlado,
    confirmación por enlace, login local, recuperación de contraseña y login
    Google web. El gate móvil posterior verificará además que ambos recursos
    `/.well-known` devuelven `200`, JSON válido y sin redirección.
-6. Observar Grafana y Alertmanager durante la ventana inicial. Cualquier `5xx`,
+8. Confirmar por HTTPS que `/` no entrega `X-Robots-Tag: noindex` y que una
+   ruta de aplicación, por ejemplo `/account`, sí lo entrega. Verificar el
+   dominio en Search Console, inspeccionar `/` y enviar el sitemap tras activar
+   el release.
+9. Observar Grafana y Alertmanager durante la ventana inicial. Cualquier `5xx`,
    fallo SMTP, error de CORS, violación CSP o límite por IP incoherente detiene
    el gate.
 

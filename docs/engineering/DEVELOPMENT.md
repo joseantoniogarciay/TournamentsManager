@@ -152,8 +152,9 @@ El Makefile raíz incorpora estas comprobaciones en `make format`, `make check` 
 
 El cliente usará Expo, Expo Router y CNG conforme a
 [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md). La
-web usará rendering client-side inicialmente conforme a
-[ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md).
+web se exporta con `web.output: "static"`: la home pública queda disponible como
+HTML para indexación, mientras las rutas dinámicas conservan el fallback de la
+SPA y se excluyen del índice conforme a ADR-0120.
 `apps/client` existe como proyecto Expo SDK 57. Expo Router usa `src/app` como
 raíz de rutas; las primitivas compartidas viven en `src/shared` y los tokens en
 `packages/design-tokens`.
