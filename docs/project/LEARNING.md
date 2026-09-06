@@ -2963,3 +2963,12 @@ K3s y también que sus componentes base siguen sanos.
   estado de aceptación en cada flujo y presenta el enlace de los Términos dentro
   de su copy. El enlace abre la ruta legal canónica sin cambiar la casilla; en
   móvil esa ruta conserva su presentación modal y cierre de navegación.
+
+### 2026-09-06 — Una ruta no puede cubrir un diálogo nativo ya abierto
+
+- **Aprendido:** al abrir una ruta legal desde un `ModalDialog` nativo, la nueva
+  ruta pertenece al navegador que queda visualmente detrás del diálogo y no se
+  puede leer ni cerrar desde ese flujo.
+- **Regla reutilizable:** una acción que debe permanecer sobre un diálogo nativo
+  abre un segundo `ModalDialog` anidado y desplazable; la ruta canónica se
+  conserva para entradas directas y pantallas sin un diálogo activo.

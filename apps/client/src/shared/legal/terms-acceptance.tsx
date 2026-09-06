@@ -10,10 +10,17 @@ import { Text } from "@/shared/ui";
 type TermsAcceptanceProps = {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  onOpenPrivacy?: () => void;
+  onOpenTerms?: () => void;
 };
 
 /** Casilla contractual común para el alta local y la primera alta con Google. */
-export function TermsAcceptance({ checked, onChange }: TermsAcceptanceProps) {
+export function TermsAcceptance({
+  checked,
+  onChange,
+  onOpenPrivacy,
+  onOpenTerms,
+}: TermsAcceptanceProps) {
   const t = getTranslator();
   const { colors } = usePreferences();
 
@@ -40,7 +47,7 @@ export function TermsAcceptance({ checked, onChange }: TermsAcceptanceProps) {
           accessibilityLabel={t("terms_of_use_link")}
           accessibilityRole="link"
           color="secondary"
-          onPress={() => router.push("/terms-of-use" as never)}
+          onPress={onOpenTerms ?? (() => router.push("/terms-of-use" as never))}
           style={styles.termsLink}
         >
           {t("terms_of_use_link")}
@@ -50,7 +57,7 @@ export function TermsAcceptance({ checked, onChange }: TermsAcceptanceProps) {
           accessibilityLabel={t("privacy_policy_link")}
           accessibilityRole="link"
           color="secondary"
-          onPress={() => router.push("/privacy-policy" as never)}
+          onPress={onOpenPrivacy ?? (() => router.push("/privacy-policy" as never))}
           style={styles.termsLink}
         >
           {t("privacy_policy_link")}

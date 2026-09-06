@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
@@ -45,10 +46,13 @@ type AccountScreenProps = {
   sessionReplacementDestination?: "/account" | "/create-tournament";
 };
 
+type SocialLegalDocument = "privacy" | "terms";
+
 export function AccountScreen({ sessionReplacementDestination = "/account" }: AccountScreenProps) {
   const t = getTranslator();
   const { show } = useFeedback();
   const { colors } = usePreferences();
+  const { height: viewportHeight } = useWindowDimensions();
   const { completeSessionReplacement, signOut, user } = useSession();
   const { confirm } = useConfirmationDialog();
   const completeAccountSessionReplacement = useCallback(
@@ -66,6 +70,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
   const [googleUsername, setGoogleUsername] = useState("");
   const [googleUsernameSubmitted, setGoogleUsernameSubmitted] = useState(false);
   const [googleTermsAccepted, setGoogleTermsAccepted] = useState(false);
+  const [socialLegalDocument, setSocialLegalDocument] = useState<SocialLegalDocument | null>(null);
   const { isValid: googleUsernameIsValid, status: googleUsernameAvailability } =
     useUsernameAvailability(googleUsername);
   const {
@@ -167,6 +172,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
     setGoogleUsername("");
     setGoogleUsernameSubmitted(false);
     setGoogleTermsAccepted(false);
+    setSocialLegalDocument(null);
   };
 
   const confirmSignOut = () => {
@@ -310,7 +316,12 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
               onChangeText={(value) => setGoogleUsername(value.toLowerCase())}
               value={googleUsername}
             />
-            <TermsAcceptance checked={googleTermsAccepted} onChange={setGoogleTermsAccepted} />
+            <TermsAcceptance
+              checked={googleTermsAccepted}
+              onChange={setGoogleTermsAccepted}
+              onOpenPrivacy={() => setSocialLegalDocument("privacy")}
+              onOpenTerms={() => setSocialLegalDocument("terms")}
+            />
             <Button
               disabled={
                 !googleTermsAccepted ||
@@ -320,6 +331,11 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
               label={t("account_google_create_account")}
               loading={isGoogleSubmitting}
               onPress={createGoogleAccount}
+            />
+            <SocialLegalDocumentDialog
+              document={socialLegalDocument}
+              maxHeight={viewportHeight - space[10]}
+              onDismiss={() => setSocialLegalDocument(null)}
             />
           </View>
         </ModalDialog>
@@ -359,6 +375,9 @@ const styles = StyleSheet.create({
   },
   googleButtonDisabled: { opacity: 0.55 },
   googleLogo: { height: 22, width: 22 },
+  legalDocument: { gap: space[3] },
+  legalDocumentContent: { gap: space[4] },
+  legalDocumentSection: { gap: space[1] },
   register: { gap: space[3], marginHorizontal: space[5] },
   navigationRow: {
     alignItems: "center",
@@ -369,6 +388,70 @@ const styles = StyleSheet.create({
     minHeight: control.minHeight + space[5],
   },
 });
+
+type SocialLegalDocumentDialogProps = {
+  document: SocialLegalDocument | null;
+  maxHeight: number;
+  onDismiss: () => void;
+};
+
+function SocialLegalDocumentDialog({
+  document,
+  maxHeight,
+  onDismiss,
+}: SocialLegalDocumentDialogProps) {
+  const t = getTranslator();
+  const isTerms = document === "terms";
+  const sections = isTerms ? termsSections : privacySections;
+
+  return (
+    <ModalDialog
+      dismissAccessibilityLabel={t("common_close")}
+      onDismiss={onDismiss}
+      visible={document !== null}
+    >
+      <View style={styles.legalDocument}>
+        <Text variant="title">{t(isTerms ? "terms_of_use_title" : "privacy_policy_title")}</Text>
+        <ScrollView
+          contentContainerStyle={styles.legalDocumentContent}
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight }}
+        >
+          <Text color="secondary">
+            {t(isTerms ? "terms_of_use_updated" : "privacy_policy_updated")}
+          </Text>
+          {isTerms ? null : <Text>{t("privacy_policy_intro")}</Text>}
+          {sections.map(([title, body]) => (
+            <View key={title} style={styles.legalDocumentSection}>
+              <Text variant="bodyLarge">{t(title)}</Text>
+              <Text color="secondary">{t(body)}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    </ModalDialog>
+  );
+}
+
+const termsSections = [
+  ["terms_of_use_service_title", "terms_of_use_service_body"],
+  ["terms_of_use_account_title", "terms_of_use_account_body"],
+  ["terms_of_use_content_title", "terms_of_use_content_body"],
+  ["terms_of_use_changes_title", "terms_of_use_changes_body"],
+  ["terms_of_use_law_title", "terms_of_use_law_body"],
+] as const;
+
+const privacySections = [
+  ["privacy_policy_controller_title", "privacy_policy_controller_body"],
+  ["privacy_policy_data_title", "privacy_policy_data_body"],
+  ["privacy_policy_purposes_title", "privacy_policy_purposes_body"],
+  ["privacy_policy_sharing_title", "privacy_policy_sharing_body"],
+  ["privacy_policy_retention_title", "privacy_policy_retention_body"],
+  ["privacy_policy_public_title", "privacy_policy_public_body"],
+  ["privacy_policy_minors_title", "privacy_policy_minors_body"],
+  ["privacy_policy_rights_title", "privacy_policy_rights_body"],
+  ["privacy_policy_changes_title", "privacy_policy_changes_body"],
+] as const;
 
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
