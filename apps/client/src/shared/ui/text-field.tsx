@@ -96,8 +96,8 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
             <SymbolView
               name={
                 passwordVisibility.isVisible
-                  ? { android: "visibility_off", ios: "eye.slash", web: "visibility_off" }
-                  : { android: "visibility", ios: "eye", web: "visibility" }
+                  ? { android: "visibility", ios: "eye", web: "visibility" }
+                  : { android: "visibility_off", ios: "eye.slash", web: "visibility_off" }
               }
               size={control.iconSize}
               tintColor={colors.text.secondary}
