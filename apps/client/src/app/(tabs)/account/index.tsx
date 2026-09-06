@@ -32,6 +32,7 @@ import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
   Card,
+  DialogCloseButton,
   DisclosureIndicator,
   KeyboardAwareScrollView,
   ModalDialog,
@@ -375,9 +376,12 @@ const styles = StyleSheet.create({
   },
   googleButtonDisabled: { opacity: 0.55 },
   googleLogo: { height: 22, width: 22 },
-  legalDocument: { gap: space[3] },
+  legalDocument: { flexShrink: 1, gap: space[3] },
   legalDocumentContent: { gap: space[4] },
+  legalDocumentHeader: { alignItems: "center", flexDirection: "row", gap: space[2] },
   legalDocumentSection: { gap: space[1] },
+  legalDocumentScroll: { flexShrink: 1 },
+  legalDocumentTitle: { flex: 1, flexShrink: 1 },
   register: { gap: space[3], marginHorizontal: space[5] },
   navigationRow: {
     alignItems: "center",
@@ -407,15 +411,21 @@ function SocialLegalDocumentDialog({
   return (
     <ModalDialog
       dismissAccessibilityLabel={t("common_close")}
+      dialogStyle={{ maxHeight }}
       onDismiss={onDismiss}
       visible={document !== null}
     >
       <View style={styles.legalDocument}>
-        <Text variant="title">{t(isTerms ? "terms_of_use_title" : "privacy_policy_title")}</Text>
+        <View style={styles.legalDocumentHeader}>
+          <Text style={styles.legalDocumentTitle} variant="title">
+            {t(isTerms ? "terms_of_use_title" : "privacy_policy_title")}
+          </Text>
+          <DialogCloseButton accessibilityLabel={t("common_close")} onPress={onDismiss} />
+        </View>
         <ScrollView
           contentContainerStyle={styles.legalDocumentContent}
           showsVerticalScrollIndicator={false}
-          style={{ maxHeight }}
+          style={styles.legalDocumentScroll}
         >
           <Text color="secondary">
             {t(isTerms ? "terms_of_use_updated" : "privacy_policy_updated")}

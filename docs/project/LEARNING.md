@@ -1,5 +1,10 @@
 # Registro de aprendizaje
 
+## 2026-09-06 — Un diálogo desplazable se limita por su caja completa
+
+- **Aprendido:** limitar solo el `ScrollView` permite que título, padding y separaciones empujen un diálogo fuera del viewport en pantallas pequeñas.
+- **Regla reutilizable:** el límite de alto pertenece a la superficie del diálogo; el contenido interior usa `flexShrink` para conservarse desplazable. Cuando cerrar por backdrop no es evidente, la cabecera incorpora el control circular compartido de 44 px con una X visible.
+
 ## 2026-09-06 — Indexar la marca no implica indexar la aplicación
 
 - **Aprendido:** una home pública puede explicar el producto y ser la única URL

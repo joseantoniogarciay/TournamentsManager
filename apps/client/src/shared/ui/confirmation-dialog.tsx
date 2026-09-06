@@ -10,14 +10,25 @@ import {
   type ReactNode,
 } from "react";
 import { useFocusEffect } from "expo-router";
-import { BackHandler, Modal, Platform, Pressable, StyleSheet, View } from "react-native";
+import { SymbolView } from "expo-symbols";
+import {
+  BackHandler,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 
-import { radius, space } from "@tournaments-manager/design-tokens";
+import { control, radius, space } from "@tournaments-manager/design-tokens";
 
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 import { Button } from "./button";
 import { Text } from "./text";
+import { WebIcon } from "./web-icon";
 
 type Props = {
   visible: boolean;
@@ -35,6 +46,7 @@ type ModalDialogProps = {
   dismissAccessibilityLabel: string;
   onDismiss: () => void;
   children: ReactNode;
+  dialogStyle?: StyleProp<ViewStyle>;
 };
 
 type ConfirmationDialogContextValue = {
@@ -136,6 +148,7 @@ export function ModalDialog({
   dismissAccessibilityLabel,
   onDismiss,
   children,
+  dialogStyle,
 }: ModalDialogProps) {
   const { colors } = usePreferences();
   const [webScrimVisible, setWebScrimVisible] = useState(false);
@@ -199,12 +212,40 @@ export function ModalDialog({
           style={[
             styles.dialog,
             { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+            dialogStyle,
           ]}
         >
           {children}
         </View>
       </View>
     </Modal>
+  );
+}
+
+type DialogCloseButtonProps = {
+  accessibilityLabel: string;
+  onPress: () => void;
+};
+
+export function DialogCloseButton({ accessibilityLabel, onPress }: DialogCloseButtonProps) {
+  const { colors } = usePreferences();
+
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[
+        styles.closeButton,
+        { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+      ]}
+    >
+      {Platform.OS === "web" ? (
+        <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
+      ) : (
+        <SymbolView name="xmark" size={control.iconSize} tintColor={colors.text.primary} />
+      )}
+    </Pressable>
   );
 }
 
@@ -219,6 +260,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   copy: { gap: space[2] },
+  closeButton: {
+    alignItems: "center",
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    height: control.minHeight,
+    justifyContent: "center",
+    width: control.minHeight,
+  },
   dialog: {
     borderWidth: 1,
     borderRadius: radius.card,
