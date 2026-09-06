@@ -6,6 +6,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-06
+
 ### Added
 
 - ADR-0117 y su bootstrap crean una cuenta SSH dedicada con clave en el

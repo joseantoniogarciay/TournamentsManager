@@ -1,5 +1,16 @@
 # Registro de aprendizaje
 
+## 2026-09-06 — Un hito de producto no depende de que todas las plataformas estén distribuidas
+
+- **Aprendido:** la primera web de producción puede necesitar una referencia
+  inmutable antes de que existan builds móviles. Un tag de repositorio versiona
+  el estado completo del código y su alcance declarado; no afirma que iOS y
+  Android se hayan publicado.
+- **Regla reutilizable:** para un hito de producción, promover el bloque verde a
+  `main`, crear un tag SemVer anotado sobre el merge, vincular una GitHub Release
+  con alcance y límites verificables y activar el artefacto del mismo SHA. Las
+  versiones y build numbers de las tiendas se gestionan aparte. Véase ADR-0119.
+
 ## 2026-08-26 — La verificación RISC no identifica a una persona
 
 - **Aprendido:** el SET enviado por `stream:verify` solo incluye un `state`; no

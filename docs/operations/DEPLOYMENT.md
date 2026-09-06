@@ -175,7 +175,9 @@ lleva el SHA, una imagen runtime etiquetada y una exportación web estática. Ca
 sirve el enlace simbólico de la versión activa y el rollback selecciona el SHA
 anterior sin tocar PostgreSQL. GitHub Releases y tags no se crean por las
 integraciones ordinarias de `develop`; se reservan para producción o hitos
-distribuidos. Esto no equivale a backup. ADR-0108 añade para `dev` un repositorio
+distribuidos. ADR-0119 concreta que un hito usa un tag SemVer anotado sobre el
+merge de `main`, una GitHub Release y un artefacto activo del mismo SHA. Esto no
+equivale a backup. ADR-0108 añade para `dev` un repositorio
 pgBackRest cifrado, copia base, incrementales y WAL archivado con restauración
 aislada; véase el [runbook de backup PostgreSQL](../runbooks/postgresql-backup-dev.md).
 `prod` ya tiene PostgreSQL con volumen y repositorio propios, pgBackRest cifrado,
