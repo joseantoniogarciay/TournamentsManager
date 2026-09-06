@@ -1,0 +1,100 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgresql-restore-verify
+  namespace: prod
+  labels:
+    app.kubernetes.io/name: postgresql-restore-verify
+    app.kubernetes.io/part-of: tournaments-manager
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgresql-restore-verify
+        app.kubernetes.io/part-of: tournaments-manager
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      securityContext:
+        fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 999
+        runAsNonRoot: true
+        runAsUser: 999
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: prepare-restore-directory
+          image: tournaments-manager-postgresql:18.4-pgbackrest-2.59.1
+          imagePullPolicy: Never
+          command:
+            - sh
+            - -ec
+            - chmod 0700 /restore && chown 999:999 /restore
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - CHOWN
+              drop:
+                - ALL
+            runAsGroup: 999
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - name: restore
+              mountPath: /restore
+      containers:
+        - name: restore-verify
+          image: tournaments-manager-postgresql:18.4-pgbackrest-2.59.1
+          imagePullPolicy: Never
+          command:
+            - sh
+            - -ec
+            - |
+              pgbackrest --stanza=fasttourney-prod --pg1-path=/restore restore
+              postgres -D /restore \
+                -c archive_mode=off \
+                -c listen_addresses='' \
+                -c unix_socket_directories=/tmp \
+                -c port=55432 &
+              postgres_pid=$!
+              trap 'kill "$postgres_pid" 2>/dev/null || true; wait "$postgres_pid" 2>/dev/null || true' EXIT
+              attempt=0
+              until pg_isready -h /tmp -p 55432 -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do
+                attempt=$((attempt + 1))
+                test "$attempt" -lt 60 || exit 1
+                sleep 1
+              done
+              psql -h /tmp -p 55432 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
+                'select current_database(), pg_is_in_recovery();'
+          envFrom:
+            - configMapRef:
+                name: postgresql-config
+            - secretRef:
+                name: postgresql-runtime
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: restore
+              mountPath: /restore
+            - name: repository
+              mountPath: /var/lib/pgbackrest
+              readOnly: true
+      volumes:
+        - name: restore
+          emptyDir: {}
+        - name: repository
+          persistentVolumeClaim:
+            claimName: repository-postgresql-0

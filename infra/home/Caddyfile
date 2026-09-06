@@ -16,6 +16,22 @@
 	header Permissions-Policy "camera=(), geolocation=(), microphone=(), payment=(), usb=()"
 }
 
+# La publicación real importa este fragmento solo después de validar el release
+# preparado. Mantenerlo separado permite que el Caddyfile versionado conserve
+# el 503 de producción hasta una decisión explícita de apertura.
+(production_web) {
+	header Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data: https://fonts.scalar.com; connect-src 'self' https://api.fasttourney.com https://accounts.google.com https://www.googleapis.com"
+	handle /.well-known/* {
+		root * /opt/homebrew/var/www/fasttourney/prod/current
+		file_server
+	}
+	handle {
+		root * /opt/homebrew/var/www/fasttourney/prod/current
+		try_files {path} /index.html
+		file_server
+	}
+}
+
 http://www.fasttourney.com {
 	bind 127.0.0.1
 	import security_headers
@@ -25,7 +41,7 @@ http://www.fasttourney.com {
 http://fasttourney.com {
 	bind 127.0.0.1
 	import security_headers
-	respond "FastTourney todavía no está publicado.\n" 503
+	import production_web
 }
 
 http://dev.fasttourney.com {
@@ -48,7 +64,12 @@ http://dev.fasttourney.com {
 http://api.fasttourney.com {
 	bind 127.0.0.1
 	import security_headers
-	respond "La API de FastTourney todavía no está publicada.\n" 503
+	reverse_proxy 192.168.64.2:80 {
+		# Cloudflare Tunnel normaliza esta cabecera con la IP del visitante.
+		header_up X-Client-IP {http.request.header.CF-Connecting-IP}
+		# Fragmento privado, no versionado y requerido para publicar esta ruta.
+		import /opt/homebrew/etc/fasttourney-api-edge-token.caddy
+	}
 }
 
 http://dev-api.fasttourney.com {

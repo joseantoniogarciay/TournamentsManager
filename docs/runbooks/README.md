@@ -8,9 +8,14 @@ entorno local; su estado de prueba se declara dentro del propio runbook.
 
 - [PostgreSQL local con Docker Compose](local-postgresql.md)
 - [Backup y restauración PostgreSQL de dev](postgresql-backup-dev.md)
+- [PostgreSQL de prod en K3s](k3s-postgresql.md)
+- [Ingress privado de la API en K3s](k3s-private-ingress.md)
+- [Observabilidad de prod en K3s](k3s-observability.md)
 - [Diagnóstico del refresh de sesión](session-refresh-observability.md)
 - [Activación y comprobación de Google RISC](google-risc.md)
 - [Host y control plane K3s](k3s-host-and-control-plane.md)
+- [Administración remota de la VM K3s](k3s-remote-administration.md)
+- [Publicación de la web de producción](production-web-publication.md)
 
 ## Requisitos
 

@@ -157,8 +157,10 @@ en Universal Links ni App Links.
 
 El borde versionado vive en [`infra/home/Caddyfile`](../../infra/home/Caddyfile).
 `tournaments-manager-dev` publica la API runtime solo por `127.0.0.1:8081` y
-la web exportada de Expo se sirve estática en `dev.fasttourney.com`; Caddy
-conserva `503` para los hosts de producción no publicados. La configuración,
+la web exportada de Expo se sirve estática en `dev.fasttourney.com`. Desde el
+2026-09-05, `fasttourney.com` sirve el release web de producción; el cambio
+revisable entre apertura y cierre sigue siendo importar `production_web` o
+restaurar el `503` en Caddy. La configuración,
 volumen PostgreSQL y proyecto Compose de dev no se comparten con `local` ni con
 el namespace `prod` de K3s, conforme a ADR-0091 y ADR-0111.
 
@@ -173,14 +175,20 @@ lleva el SHA, una imagen runtime etiquetada y una exportación web estática. Ca
 sirve el enlace simbólico de la versión activa y el rollback selecciona el SHA
 anterior sin tocar PostgreSQL. GitHub Releases y tags no se crean por las
 integraciones ordinarias de `develop`; se reservan para producción o hitos
-distribuidos. Esto no equivale a backup. ADR-0108 añade para `dev` un repositorio
+distribuidos. ADR-0119 concreta que un hito usa un tag SemVer anotado sobre el
+merge de `main`, una GitHub Release y un artefacto activo del mismo SHA. Esto no
+equivale a backup. ADR-0108 añade para `dev` un repositorio
 pgBackRest cifrado, copia base, incrementales y WAL archivado con restauración
 aislada; véase el [runbook de backup PostgreSQL](../runbooks/postgresql-backup-dev.md).
-`prod` reutilizará el patrón probado de `dev` (ADR-0108): pgBackRest cifrado,
-WAL archivado, completa semanal, incrementales diarios, dos conjuntos completos
-y restauración aislada. Volumen, repositorio y clave serán propios de `prod`; el
-repositorio doméstico sincronizado queda fuera del Mac, aunque comparte cuenta y
-proveedor, una limitación aceptada hasta que exista una capacidad distinta.
+`prod` ya tiene PostgreSQL con volumen y repositorio propios, pgBackRest cifrado,
+WAL archivado, una primera completa y restauración aislada local verificada.
+Quedan por automatizar la completa semanal, los incrementales diarios y la
+réplica verificable fuera de la VM. Conforme a ADR-0114, el Mac inicia por SSH
+una copia del repositorio cifrado de
+la VM hacia su ubicación doméstica sincronizada; no se comparte una carpeta UTM
+ni se entrega una clave privada del Mac a Kubernetes. Esa ubicación sigue
+compartiendo Mac, cuenta y proveedor: no equivale a independencia ante su
+pérdida.
 
 Mailpit pertenece solo al entorno local y no tiene hostname público. El entorno
 `dev` usa Resend por SMTP autenticado con STARTTLS; antes de invitar personas se
@@ -202,15 +210,33 @@ EXPO_PUBLIC_APP_LINK_URL=https://fasttourney.com
 ```
 
 La primera URL evita que la web pública contacte servicios locales; la segunda
-hace que los enlaces de liga compartidos apunten al dominio público. La
-publicación aún no está autorizada: `fasttourney.com` y `api.fasttourney.com`
-permanecen deliberadamente en `503`.
+hace que los enlaces de liga compartidos apunten al dominio público. La API y
+la web de producción se abrieron el 2026-09-05 tras validar TLS, CORS y el
+release; no supone autorizar los clientes ni asociaciones móviles pendientes.
+
+La preparación concreta de la web separa construir de activar:
+`infra/home/stage-prod-web.sh` crea un release estático inmutable con SHA,
+asociaciones móviles reales y configuración OAuth de producción externa a Git;
+`activate-prod-web.sh` conmuta solo su enlace simbólico y
+`rollback-prod-web.sh` vuelve a un SHA existente. El bloque Caddy
+`production_web` conserva CSP, SPA y `/.well-known`, pero el host no lo importa
+hasta recibir autorización explícita. El
+[runbook de publicación](../runbooks/production-web-publication.md) exige TLS
+válido, Tunnel sano, CORS, correo, Google y recorridos controlados antes de esa
+conmutación.
 
 ### Fase 4
 
 VM Linux de un nodo con K3s como runtime doméstico de `prod`: manifests,
 empaquetado, recursos, probes, configuración, secretos, persistencia, backup,
 ingress, rollout y recuperación, conforme a ADR-0111.
+
+ADR-0117 separa la administración de la VM de la identidad humana inicial:
+`fasttourney-operator` entra por clave SSH dedicada en la red privada y recibe
+`sudo` no interactivo para operar host, K3s y `kube-system`. La contraseña de
+Ubuntu no se almacena en el Mac ni en Git; el bootstrap único permanece
+interactivo. Véase el runbook de administración remota antes de depender de
+operaciones no asistidas.
 
 ADR-0112 concreta el orden de empaquetado: API, PostgreSQL y los recursos de
 core se definen primero como manifiestos YAML propios aplicados con `kubectl`.

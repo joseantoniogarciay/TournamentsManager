@@ -1,0 +1,17 @@
+tempo:
+  reportingEnabled: false
+  retention: 168h
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 400m
+      memory: 512Mi
+persistence:
+  enabled: true
+  size: 5Gi
+serviceMonitor:
+  enabled: false
+serviceAccount:
+  automountServiceAccountToken: false

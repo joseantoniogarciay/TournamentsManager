@@ -1,0 +1,6 @@
+#!/bin/sh
+# Fixed sudo entry point: no caller-controlled arguments or shell evaluation.
+set -eu
+
+exec /usr/local/bin/k3s kubectl -n prod exec postgresql-0 -- \
+  pgbackrest --stanza=fasttourney-prod --type=incr backup

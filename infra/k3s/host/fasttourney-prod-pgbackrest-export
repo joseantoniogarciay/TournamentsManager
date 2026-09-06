@@ -1,0 +1,6 @@
+#!/bin/sh
+# Fixed sudo entry point: exports only the pgBackRest repository as a tar stream.
+set -eu
+
+exec /usr/local/bin/k3s kubectl -n prod exec postgresql-0 -- \
+  tar -C /var/lib/pgbackrest --create --file=- .

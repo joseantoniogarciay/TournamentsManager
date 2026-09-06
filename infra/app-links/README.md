@@ -19,6 +19,12 @@ Los archivos se sirven como `/.well-known/apple-app-site-association` y
 `/.well-known/assetlinks.json`. Sustituye `APPLE_TEAM_ID` y las huellas SHA-256
 solo después de obtener los valores reales de firma; nunca se inventan.
 
+Para producción, las copias ya materializadas permanecen dentro del árbol de
+trabajo pero ignoradas por Git en `infra/home/secrets/app-links/`, con los
+nombres finales de esos dos recursos. `infra/home/stage-prod-web.sh` las valida
+y las incluye cuando se prepare un release destinado también a móvil; un release
+web puede existir sin ellas.
+
 Después de publicar, configura el mismo origen HTTPS en `PUBLIC_BASE_URL` del
 backend de cada entorno: `https://fasttourney.com` en producción y
 `https://dev.fasttourney.com` en desarrollo. El correo enlaza a

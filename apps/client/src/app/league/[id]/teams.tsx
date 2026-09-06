@@ -285,9 +285,6 @@ export default function LeagueTeamsScreen() {
                 </View>
               </Card>
             ))}
-            {canAddTeam ? (
-              <Button label={t("league_add_team")} onPress={openAddTeam} variant="secondary" />
-            ) : null}
           </ScrollView>
         )}
         <Modal animationType="fade" onRequestClose={dismissDialog} transparent visible={adding}>
@@ -361,5 +358,10 @@ const styles = StyleSheet.create({
   },
   teamName: { flex: 1, minWidth: 0 },
   withdrawn: { flexShrink: 0, textAlign: "right" },
-  teamRow: { alignItems: "center", flexDirection: "row", gap: space[5] },
+  teamRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space[5],
+    minHeight: control.minHeight,
+  },
 });

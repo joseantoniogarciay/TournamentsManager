@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api
+  namespace: prod
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: tournaments-manager
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: api.fasttourney.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  name: http

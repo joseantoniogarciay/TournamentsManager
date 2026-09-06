@@ -16,11 +16,11 @@ para reproducir WAL.
 
 ## Preparación única
 
-1. Añade a `infra/dev/.env` una carpeta privada de iCloud Drive distinta de
-   `legal-audit-backups`:
+1. Usa una carpeta privada de iCloud Drive distinta de `legal-audit-backups` y
+   separada del futuro repositorio de `prod`:
 
    ```sh
-   POSTGRES_BACKUP_DESTINATION="$HOME/Library/Mobile Documents/com~apple~CloudDocs/FastTourney/postgresql-backups"
+   POSTGRES_BACKUP_DESTINATION="$HOME/Library/Mobile Documents/com~apple~CloudDocs/FastTourney/postgresql-backups/dev"
    PGBACKREST_REPO1_CIPHER_PASS=<frase-aleatoria-larga-y-exclusiva>
    ```
 
@@ -29,10 +29,18 @@ para reproducir WAL.
    secretos elegido para el Mac. No la cambies después de crear el repositorio:
    perderla impide restaurar.
 
-2. Asegúrate de que iCloud Drive ha sincronizado la carpeta y de que Docker
+2. Si el repositorio de `dev` ya existe en el nivel antiguo
+   `postgresql-backups`, no cambies la variable mientras PostgreSQL está activo.
+   Detén `dev`, mueve ese directorio completo a `postgresql-backups/dev`, cambia
+   la variable y arranca `dev`. Comprueba después `make dev-public-backup-status`
+   antes de retirar cualquier copia anterior. El nuevo sibling
+   `postgresql-backups/prod` queda reservado para la réplica de K3s y nunca
+   comparte clave ni archivos con `dev`.
+
+3. Asegúrate de que iCloud Drive ha sincronizado la carpeta y de que Docker
    Desktop puede escribir en ella.
 
-3. Inicializa y verifica. El comando crea la stanza, fuerza y comprueba el
+4. Inicializa y verifica. El comando crea la stanza, fuerza y comprueba el
    archivado de WAL, y toma la primera copia completa:
 
    ```sh

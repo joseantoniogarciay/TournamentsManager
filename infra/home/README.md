@@ -19,6 +19,32 @@ validar cada hostname por el túnel, se eliminan los forwards TCP 80/443 y la
 configuración DDNS. Los proxies y archivos reales se añaden solo junto con sus
 respectivos artefactos y configuración.
 
+## Web de producción preparada, aún cerrada
+
+`stage-prod-web.sh` exporta un SHA de producción hacia
+`/opt/homebrew/var/www/fasttourney/prod/releases/<SHA>/`, incorpora los dos
+ficheros reales de `/.well-known/` y escribe un manifiesto sin secretos. No
+modifica el enlace `current` ni Caddy. `activate-prod-web.sh` conmuta después
+ese enlace de forma atómica; `rollback-prod-web.sh` vuelve a un SHA ya preparado
+sin afectar K3s ni PostgreSQL.
+
+La exportación carga únicamente su contrato local ignorado
+`infra/home/secrets/production-web.env`, con el ID OAuth web público de
+producción, y nunca el `.env` genérico del repositorio. Los ficheros de
+asociación móvil reales viven, cuando exista el lanzamiento nativo, junto a él en
+`infra/home/secrets/app-links/`; las plantillas de referencia están en
+`infra/app-links/`. Sin esos ficheros el script prepara un release web válido
+sin `/.well-known`; si se aporta solo uno o sus valores no son reales, lo
+rechaza. En todos los casos rechaza marcadores de ejemplo, árbol Git sucio o un
+SHA que no sea el `HEAD` actual.
+
+El fragmento `production_web` está versionado en `Caddyfile`, con CSP mínima
+para la SPA, API y Google. Desde el 2026-09-05 lo importa
+`fasttourney.com`, tras validar TLS, túnel, CORS y el release. El rollback
+seguro vuelve explícitamente ese bloque a `respond ... 503`, valida y recarga
+Caddy; el procedimiento completo está en el
+[runbook de publicación](../../docs/runbooks/production-web-publication.md).
+
 `deploy-dev.sh` es el único despliegue manual de dev: exige `develop` limpio y
 alineado con `origin/develop`, construye la API runtime, aplica las migraciones
 SQL pendientes y llama a `deploy-dev-web.sh`. Las migraciones son solo hacia
@@ -82,3 +108,12 @@ respectivamente, la copia completa semanal y los incrementales de lunes a
 sábado. Se instalan manualmente tras `make dev-public-backup-init`; el
 [runbook de backup](../../docs/runbooks/postgresql-backup-dev.md) define la
 restauración aislada.
+
+Los templates equivalentes de `prod` se instalan con
+`infra/k3s/scripts/install-backup-launch-agents.sh`. El instalador deja una
+copia ejecutable y su configuración privada fuera de `Desktop`, y un helper
+sandboxed publica en iCloud mediante permisos explícitos de carpeta conforme a
+ADR-0115; la fuente y el procedimiento siguen versionados en el repositorio.
+Consulta el
+[runbook PostgreSQL de K3s](../../docs/runbooks/k3s-postgresql.md) para la
+verificación posterior.

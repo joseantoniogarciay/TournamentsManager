@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.fasttourney.prod-postgresql-backup-incremental</string>
+  <key>ProgramArguments</key><array><string>/bin/bash</string><string>__K3S_RUNTIME_ROOT__/backup-prod.sh</string><string>incremental</string></array>
+  <key>EnvironmentVariables</key><dict><key>K3S_OPERATOR_ENVIRONMENT</key><string>__K3S_RUNTIME_ROOT__/k3s.env</string></dict>
+  <key>StartCalendarInterval</key><array>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>4</integer><key>Minute</key><integer>15</integer></dict>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>4</integer><key>Minute</key><integer>15</integer></dict>
+    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>4</integer><key>Minute</key><integer>15</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>4</integer><key>Minute</key><integer>15</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>4</integer><key>Minute</key><integer>15</integer></dict>
+    <dict><key>Weekday</key><integer>6</integer><key>Hour</key><integer>4</integer><key>Minute</key><integer>15</integer></dict>
+  </array>
+  <key>StandardOutPath</key><string>__LOG_DIRECTORY__/postgresql-prod-backup-incremental.log</string>
+  <key>StandardErrorPath</key><string>__LOG_DIRECTORY__/postgresql-prod-backup-incremental-error.log</string>
+</dict></plist>

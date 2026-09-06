@@ -1,5 +1,16 @@
 # Registro de aprendizaje
 
+## 2026-09-06 — Un hito de producto no depende de que todas las plataformas estén distribuidas
+
+- **Aprendido:** la primera web de producción puede necesitar una referencia
+  inmutable antes de que existan builds móviles. Un tag de repositorio versiona
+  el estado completo del código y su alcance declarado; no afirma que iOS y
+  Android se hayan publicado.
+- **Regla reutilizable:** para un hito de producción, promover el bloque verde a
+  `main`, crear un tag SemVer anotado sobre el merge, vincular una GitHub Release
+  con alcance y límites verificables y activar el artefacto del mismo SHA. Las
+  versiones y build numbers de las tiendas se gestionan aparte. Véase ADR-0119.
+
 ## 2026-08-26 — La verificación RISC no identifica a una persona
 
 - **Aprendido:** el SET enviado por `stream:verify` solo incluye un `state`; no
@@ -81,6 +92,43 @@ verify` ni a CI: exigir VM, SSH y `sudo` rompería su reproducibilidad.
 esquema offline apta para CI de una validación opcional contra K3s real; añadir
 la herramienta y el objetivo `make k3s-validate` solo cuando exista más de un
 workload que justifique su mantenimiento.
+
+## 2026-08-30 — Un PVC separado no equivale a una copia fuera de la VM
+
+`local-path` puede separar el volumen de datos PostgreSQL del repositorio de
+pgBackRest, pero ambos siguen en el mismo host. Montar una carpeta compartida
+del Mac simplificaría el camino hacia iCloud Drive, aunque rompería la frontera
+operativa de la VM y haría que el archivado WAL dependiera de ese montaje.
+
+La réplica iniciada desde el Mac conserva pgBackRest junto al `PGDATA`, no deja
+una clave privada del Mac dentro de Kubernetes y permite publicar el destino
+solo tras completar la transferencia. No convierte la copia en independiente:
+Mac, cuenta y proveedor continúan siendo un riesgo común que debe declararse.
+
+**Regla reutilizable:** separar PVC y repositorio protege de una pérdida del
+volumen de datos, pero no del host. Una copia recuperable exige una transferencia
+completa, un destino publicado de forma atómica y una restauración aislada desde
+ese destino. Véase ADR-0114.
+
+La carpeta sincronizada también requiere un límite por entorno. `dev` conserva
+su repositorio bajo `FastTourney/postgresql-backups/dev` y `prod` recibe el suyo
+bajo `FastTourney/postgresql-backups/prod`; usar el mismo directorio podría
+mezclar stanzas, claves y retención de dos clústeres que deben recuperarse de
+forma independiente.
+
+Una restauración aislada no debe montarse sobre el PVC activo: el Job de `prod`
+monta el repositorio como solo lectura y restaura en `emptyDir`. pgBackRest exige
+que ese destino pertenezca al usuario de PostgreSQL; preparar explícitamente la
+propiedad del volumen temporal evita que una verificación falle por permisos y
+mantiene el proceso de recuperación sin privilegios.
+
+Un fichero `.env.example` no es una configuración válida. Antes de inicializar
+persistencia, hay que comprobar que ningún campo del Secret coincide con un
+placeholder. Si una clave de cifrado insegura llega a crear una copia, no basta
+con cambiarla: se rota el Secret, se conserva el volumen de datos y se recrea
+el repositorio y su réplica. La restauración desde la réplica del Mac debe usar
+un volumen Docker temporal, no un bind mount, porque pgBackRest exige propiedad
+POSIX real sobre su destino.
 
 ## 2026-08-24 — Un servicio K3s activo no sustituye una comprobación de recuperación
 
@@ -252,7 +300,7 @@ mostrarlo; la documentación distingue expresamente secreto literal de contrato
 
 Alertmanager y la API pueden usar el mismo SMTP de Resend, pero tienen radios de
 impacto distintos: uno comunica degradación operativa y el otro entrega enlaces
-de identidad. Una clave *Sending access* exclusiva permite revocar o rotar el
+de identidad. Una clave _Sending access_ exclusiva permite revocar o rotar el
 canal de alertas sin impedir verificaciones ni recuperación de cuentas. STARTTLS
 en el puerto 587 cifra la conexión antes de enviar esa clave.
 
@@ -2771,3 +2819,87 @@ UPDATE`, comprueba la organizadora y el estado dentro de la misma transacción,
 - **Regla reutilizable:** la integración parte del esquema base y aplica todos
   los bloques `Up` versionados; en CI se separa el DDL funcional de los roles y
   grants que pertenecen exclusivamente al despliegue.
+
+### 2026-09-05 — La autenticación SSH y el privilegio del host son fronteras distintas
+
+- **Aprendido:** una clave SSH disponible en `ssh-agent` resuelve la entrada
+  remota, pero no el `sudo` que protege el kubeconfig K3s. Guardar la contraseña
+  de Ubuntu en el Llavero no reduce el privilegio ni mejora la auditoría.
+- **Regla reutilizable:** para una VM privada de un único operador, separar una
+  cuenta SSH dedicada y su clave de la identidad humana inicial permite declarar
+  explícitamente el control administrativo. Si esa cuenta recibe control
+  completo, la clave se trata como credencial de host y clúster: fuera de Git,
+  revocable y sin exponer SSH públicamente. Véase ADR-0117.
+
+La comprobación efectiva debe incluir `sudo -n` y una lectura de `kube-system`,
+no solo que SSH acepte la clave: así demuestra que la identidad puede operar
+K3s y también que sus componentes base siguen sanos.
+
+### 2026-09-05 — Una alerta resuelta no equivale a una resolución ya entregada
+
+- **Aprendido:** Alertmanager puede cerrar una alerta en su API antes de emitir
+  el correo de resolución porque agrupa notificaciones según `group_interval`.
+  Un Pod sano o un `POST` aceptado tampoco prueban el relay SMTP.
+- **Regla reutilizable:** una prueba de entrega reversible usa una alerta
+  sintética con `test="true"` y `endsAt` corto, comprueba que deja de estar
+  activa y verifica dos notificaciones de email sin fallos: activación y
+  resolución. Eso prueba aceptación por Resend; la llegada al buzón es un salto
+  distinto que se confirma desde el receptor. La evidencia del 2026-09-05
+  incluyó esa confirmación final.
+
+### 2026-09-05 — Preparar un artefacto no equivale a abrir tráfico
+
+- **Aprendido:** una exportación estática puede ser correcta y aun así no estar
+  lista para usuarios si no se han validado TLS, asociaciones móviles, correo,
+  CORS y rollback. Conmutar el contenido como parte de la build mezcla esos
+  riesgos y hace más difícil detenerse.
+- **Regla reutilizable:** producción separa un release inmutable y trazable de
+  su activación atómica. El borde conserva su respuesta segura hasta que una
+  decisión explícita importe la ruta pública; el rollback puede volver a cerrar
+el host sin tocar datos ni el runtime de la API.
+
+### 2026-09-05 — El gate web no debe esperar credenciales de distribución nativa
+
+- **Aprendido:** el cliente universal comparte código, pero las credenciales
+  OAuth y asociaciones de dominio son específicas de cada plataforma. Esperar
+  Apple Developer o una firma Android para validar correo, contraseña y Google
+  web retrasaba la primera publicación sin aumentar su seguridad.
+- **Regla reutilizable:** el gate web exige SMTP y la audiencia OAuth web; el
+  gate móvil posterior exige sus clientes OAuth, firma y ficheros
+  `/.well-known` reales. La ausencia de credenciales nativas deshabilita esa
+  federación en nativo, nunca se sustituye por identificadores inventados.
+
+### 2026-09-05 — Publicar la web necesita una frontera reversible
+
+- **Aprendido:** el mismo artefacto estático puede estar preparado y activo sin
+  ser público mientras Caddy devuelve `503`; importar el bloque de producción
+  es una frontera operativa distinta y auditable.
+- **Evidencia:** tras abrir `fasttourney.com`, TLS devolvió validación correcta,
+  el host canónico `200`, `www` un `308`, las rutas legales `200`, y el
+  preflight de API `204` para el origen exacto. El cliente cargó de forma
+  anónima sus pantallas de inicio y acceso sin enviar correos.
+- **Regla reutilizable:** la primera validación pública no sustituye los
+  recorridos con efectos externos: registro, verificación, recuperación y
+  Google se prueban después con una cuenta y buzón de prueba controlados. El
+  rollback debe poder volver primero a `503` sin tocar API, datos ni Secrets.
+
+### 2026-09-05 — Un cambio de Secret no exige una nueva imagen
+
+- **Aprendido:** reconstruir e importar una imagen inmutable para variar SMTP
+  u OAuth mezcla dos superficies de despliegue y alarga la recuperación.
+- **Regla reutilizable:** si el runtime de API ya está presente y solo cambia
+  configuración, aplicar el Secret de mínimos privilegios y el manifiesto,
+  esperar su rollout y conservar las imágenes intactas. La construcción e
+  importación se reservan para cambios de código o de tag.
+
+### 2026-09-05 — Un Tunnel sano no demuestra que TLS de borde sea utilizable
+
+- **Aprendido:** DNS apuntaba al Tunnel y todas sus rutas llegaban a Caddy, pero
+  la ausencia de un certificado Universal SSL activo provocaba un certificado
+  inválido y después fallos de handshake. Son fronteras independientes:
+  conector, ruta de aplicación y certificado de borde.
+- **Regla reutilizable:** ante una discrepancia TLS, comprobar primero DNS,
+  rutas del Tunnel, respuesta Caddy local y certificados de borde. Si se fuerza
+  una reemisión desactivando y reactivando Universal SSL, se mantiene el host
+  funcional cerrado, se anticipa una ventana sin TLS y se valida la recuperación
+  completa desde fuera —web, redirección canónica y API— antes de continuar.

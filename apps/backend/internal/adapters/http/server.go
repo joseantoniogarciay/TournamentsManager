@@ -3,6 +3,7 @@ package http
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"io"
@@ -56,8 +57,13 @@ func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registrat
 // NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver additionally
 // registers the Google Cross-Account Protection receiver when configured.
 func NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, riscReceiver http.Handler, creationServices ...leagues.CreationService) http.Handler {
+	return NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, cookieSecure, trustedProxyCIDRs, "", riscReceiver, creationServices...)
+}
+
+// NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver also accepts X-Client-IP when the edge token supplied by Caddy matches.
+func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, edgeProxyAuthToken string, riscReceiver http.Handler, creationServices ...leagues.CreationService) http.Handler {
 	mux := http.NewServeMux()
-	resolveClientIP := newClientIPResolver(trustedProxyCIDRs)
+	resolveClientIP := newClientIPResolver(trustedProxyCIDRs, edgeProxyAuthToken)
 	cookies := sessionCookies(cookieSecure)
 	var accessService access.Service
 	if repository, ok := authenticator.(access.Repository); ok {
@@ -1238,10 +1244,15 @@ func usernameAvailability(service registration.Service, limiter *requestLimiter,
 
 type clientIPResolver func(*http.Request) string
 
-func newClientIPResolver(trustedProxyCIDRs []netip.Prefix) clientIPResolver {
+func newClientIPResolver(trustedProxyCIDRs []netip.Prefix, edgeProxyAuthToken string) clientIPResolver {
 	return func(request *http.Request) string {
 		peer := remoteAddrIP(request.RemoteAddr)
 		if peer.IsValid() {
+			if edgeProxyTokenMatches(request.Header.Get("X-FastTourney-Edge-Token"), edgeProxyAuthToken) {
+				if forwarded, err := netip.ParseAddr(strings.TrimSpace(request.Header.Get("X-Client-IP"))); err == nil {
+					return forwarded.Unmap().String()
+				}
+			}
 			for _, trustedProxyCIDR := range trustedProxyCIDRs {
 				if trustedProxyCIDR.Contains(peer) {
 					if forwarded, err := netip.ParseAddr(strings.TrimSpace(request.Header.Get("X-Client-IP"))); err == nil {
@@ -1254,6 +1265,13 @@ func newClientIPResolver(trustedProxyCIDRs []netip.Prefix) clientIPResolver {
 		}
 		return request.RemoteAddr
 	}
+}
+
+func edgeProxyTokenMatches(provided, expected string) bool {
+	if expected == "" || len(provided) != len(expected) {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(provided), []byte(expected)) == 1
 }
 
 func remoteAddrIP(remoteAddr string) netip.Addr {

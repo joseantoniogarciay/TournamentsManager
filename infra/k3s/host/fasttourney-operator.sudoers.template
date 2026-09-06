@@ -1,0 +1,4 @@
+# Administrador completo de la VM K3s doméstica (ADR-0117).
+# Sustituir __K3S_OPERATOR__ por una cuenta dedicada no root y validar con
+# visudo -cf antes de instalar en /etc/sudoers.d/fasttourney-operator.
+__K3S_OPERATOR__ ALL=(ALL:ALL) NOPASSWD: ALL

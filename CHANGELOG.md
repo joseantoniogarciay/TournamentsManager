@@ -6,7 +6,40 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-06
+
+### Added
+
+- ADR-0117 y su bootstrap crean una cuenta SSH dedicada con clave en el
+  Llavero/`ssh-agent` del Mac y `sudo` no interactivo para administrar la VM
+  K3s privada, incluido `kube-system`, sin guardar la contraseña de Ubuntu.
+
+- `prod` dispone de valores Helm versionados y renderizados localmente para
+  Prometheus/Alertmanager, Loki, Tempo, Grafana y Alloy; incluye límites, PVC,
+  retención, alertas SLO y secretos externos. Su instalación y prueba en K3s
+  siguen pendientes; no modifica Caddy, Cloudflare ni el `503` público.
+
+- El Ingress privado de `prod` enruta `api.fasttourney.com` mediante el Traefik
+  incluido en K3s; su prueba desde el Mac llega a `/healthz` con `HTTP 200` sin
+  publicar el hostname en Cloudflare o Caddy.
+
+- ADR-0115 mantiene la réplica PostgreSQL de `prod` en iCloud Drive mediante un
+  helper sandboxed y bookmarks de seguridad por carpeta, sin Full Disk Access
+  para Bash o `launchd`.
+
+- `prod` inicializa roles PostgreSQL separados, el esquema y las versiones
+  históricas de Goose con un Job de un solo uso; runtime queda validado sin
+  permiso para alterar el esquema.
+
+- El PostgreSQL inicial de `prod` en K3s tiene dos PVC propios, pgBackRest
+  cifrado, una copia completa y un Job de restauración aislada que recupera en
+  almacenamiento efímero sin montar el volumen de datos activo.
+
 ### Changed
+
+- ADR-0114 fija que el Mac inicia por SSH los backups pgBackRest de `prod` y la
+  réplica del repositorio cifrado de la VM a su ubicación doméstica sincronizada,
+  sin carpeta compartida UTM ni clave privada del Mac dentro de Kubernetes.
 
 - ADR-0112 fija una entrega K3s mixta: el core de `prod` se aprende primero con
   manifiestos propios y `kubectl`; Helm se reserva para la observabilidad de
@@ -355,6 +388,7 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - Guías de arquitectura, desarrollo, datos, API, seguridad, observabilidad,
   despliegue, estilo y pruebas.
 - Plantillas de knowledge base, playbooks, runbooks, diagramas y retrospectivas.
+
 # Cambios no publicados
 
 - Aceptado ADR-0092: dev conserva dos despliegues locales recuperables por SHA;

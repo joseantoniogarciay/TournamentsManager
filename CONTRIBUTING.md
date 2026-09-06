@@ -126,3 +126,13 @@ resultado remoto disponible. No se permiten force-pushes ni borrado de `main` o
 Al ser un repositorio público, ninguna contribución externa se ejecuta con
 secretos o acceso de despliegue. Los cambios en `.github/workflows`, permisos y
 rutas de producción requieren revisión específica.
+
+## Hitos de producción
+
+Los pushes ordinarios de `develop` no crean tags ni GitHub Releases. Para un
+hito de producción o distribución se sigue ADR-0119: tras `make verify` y la
+revisión de CI, se promociona `develop` a `main` con merge explícito, se crea un
+tag anotado SemVer sobre ese merge y se publica una GitHub Release que identifica
+su SHA, alcance, validaciones, limitaciones y rollback. El artefacto de
+producción se prepara y activa desde el SHA etiquetado; finalmente `develop` se
+avanza hasta `main` antes de continuar el trabajo diario.

@@ -124,7 +124,9 @@ Fase 4 sin su diseño concreto, plan de verificación y rollback.
 **Decisiones previas:** UTM, Ubuntu Server 24.04 LTS ARM64 y recursos de la VM
 están aceptados en ADR-0110; el destino doméstico de `prod`, en ADR-0111.
 ADR-0112 fija el orden de entrega: manifiestos propios para aprender el core y
-Helm para la observabilidad de terceros una vez ese core esté verificado. Quedan
+Helm para la observabilidad de terceros una vez ese core esté verificado.
+ADR-0114 fija que el repositorio pgBackRest propio de `prod` se replica desde la
+VM al Mac por SSH, sin carpeta compartida ni clave del Mac en Kubernetes. Quedan
 aprovisionamiento reproducible de la VM, health checks, recursos de los
 workloads, configuración, secretos y estrategia de despliegue.
 
@@ -151,7 +153,8 @@ No autoriza a publicar `prod` hasta completar los gates de ADR-0111.
 5. **PostgreSQL con estado:** usar `StatefulSet` y `PersistentVolumeClaim`;
    estudiar identidad, orden y persistencia, y por qué difiere de la API.
 6. **Recuperación de datos:** aplicar a `prod` el patrón pgBackRest de ADR-0108
-   con volumen, repositorio y clave propios; demostrar una restauración aislada.
+   con volumen, repositorio y clave propios; replicarlo por SSH conforme a
+   ADR-0114 y demostrar una restauración aislada desde la réplica recibida.
 7. **Entrada pública:** enrutar Cloudflare Tunnel → Caddy → ingress K3s;
    diferenciar exposición interna por `Service` del enrutamiento HTTP por
    `Ingress` y conservar la ausencia de puertos LAN/WAN.
