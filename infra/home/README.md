@@ -45,7 +45,7 @@ seguro vuelve explícitamente ese bloque a `respond ... 503`, valida y recarga
 Caddy; el procedimiento completo está en el
 [runbook de publicación](../../docs/runbooks/production-web-publication.md).
 
-El documento exacto `/league/{uuid}` se desvía antes del fallback estático al
+El documento exacto `/tournament/{uuid}` se desvía antes del fallback estático al
 renderer externo `league-preview-renderer`; no hay una ruta `/share` ni un
 redirect. El binario se compila con `build-league-preview-renderer.sh` fuera del
 artefacto Expo. Los templates `dev` y `prod` aíslan puerto, enlace `current`,

@@ -6,9 +6,16 @@
  * OpenAPI spec version: 1.0.0-design
  */
 
+/**
+ * En liga solo se admiten goles. En eliminatoria, los goles iguales exigen ambos marcadores de penaltis distintos; con goles distintos no se envían penaltis. Los penaltis no se suman a los goles del partido.
+ */
 export interface MatchResultInput {
   /** @minimum 0 */
   homeScore: number;
   /** @minimum 0 */
   awayScore: number;
+  /** @minimum 0 */
+  homePenalties?: number;
+  /** @minimum 0 */
+  awayPenalties?: number;
 }

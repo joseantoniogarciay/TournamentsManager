@@ -1,14 +1,16 @@
 # Modelo inicial de datos
 
-> Estado: diseño aceptado en ADR-0045 y ajustado por ADR-0048. No es una
+> Estado: diseño aceptado y ajustado por ADR-0122 y ADR-0123. No es una
 > migración ni un modelo Go.
 
 ## Alcance
 
 Este modelo cubre alta local y con Google, verificación, sesión,
-publicación/lectura de una liga, sus relaciones de seguimiento o administración
-delegada, resultados simples, bajas de equipo, clasificación calculada y cierre
-explícito con co-campeones. No incorpora Apple ni resultados oficiales por
+publicación/lectura de torneos, sus relaciones de seguimiento o administración
+delegada, fases ordenadas y los orígenes de plaza de un bracket. El primer corte
+admite una única fase de liga o eliminatoria directa; liga por grupos y la
+composición de varias fases quedan preparadas, pero no implementadas. No
+incorpora Apple ni resultados oficiales por
 cuenta: estos últimos siguen esperando la decisión de vinculación de cuentas a
 equipos.
 
@@ -20,13 +22,13 @@ accounts 1 ── 0..1 local_credentials
     ├──── * external_identities
     ├──── * email_verification_tokens
     ├──── * sessions
-    └──── * leagues (organizer)
+    └──── * tournaments (organizer)
 
-leagues 1 ── * league_administrators ── 1 accounts
-leagues 1 ── * league_followers ── 1 accounts
+tournaments 1 ── * tournament_administrators ── 1 accounts
+tournaments 1 ── * tournament_followers ── 1 accounts
 
-leagues 1 ── * league_teams
-leagues 1 ── * matches
+tournaments 1 ── * tournament_teams
+tournaments 1 ── * tournament_stages 1 ── * matches
 ```
 
 Todos los IDs son UUIDv7. Los secretos son aleatorios opacos de al menos 128
@@ -41,13 +43,14 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | `federated_login_challenges` | `id`, `provider`, `nonce_hash`, `expires_at`, `consumed_at`, `created_at`                                              | Google únicamente; nonce de 5 min, de un solo uso y sin sesión asociada.                                                                                                                                                            |
 | `email_verification_tokens`  | `id`, `account_id`, `token_hash`, `expires_at`, `consumed_at`, `invalidated_at`, `created_at`                          | hash único por contexto; expira a 24 h; activo, consumido e invalidado son excluyentes; solo hay un token activo por cuenta.                                                                                                        |
 | `sessions`                   | `id`, `account_id`, `token_hash`, `created_at`, `last_seen_at`, `idle_expires_at`, `absolute_expires_at`, `revoked_at` | hash único; válida solo si la cuenta está verificada, no revocada y ambos vencimientos son futuros.                                                                                                                                 |
-| `leagues`                    | `id`, `organizer_account_id`, `name`, `sport`, `format`, `state`, `created_at`, `published_at`, `last_activity_at`     | `sport=football`, `format=league`, puntuación 3-1-0; un borrador completo transferido al alta crea una liga `published` sin partidos. La propiedad puede transferirse atómicamente a otra cuenta verificada; la actividad se actualiza ante cambios relevantes de contenido o estado, no al seguir o dejar de seguir. |
-| `league_administrators`      | `league_id`, `account_id`, `assigned_at`                                                                               | PK compuesta; concede exclusivamente la administración delegada que el dominio autorice. El creador se conserva en `leagues.organizer_account_id`, no se duplica.                                                                   |
-| `league_followers`           | `league_id`, `account_id`, `followed_at`                                                                               | PK compuesta; guardar una liga no concede permisos. Una cuenta puede seguir una liga que también administra, aunque la colección de seguimiento la oculta para evitar duplicación.                                                  |
-| `league_teams`               | `id`, `league_id`, `name`, `position`, `withdrawn_at`                                                                   | nombre normalizado único por liga; se crean junto al borrador transferido o con una liga publicada. `withdrawn_at` conserva una baja declarada durante el curso, sin borrar el equipo ni sus relaciones históricas.                       |
-| `matches`                    | `id`, `league_id`, `round_number`, `sequence`, `home_team_id`, `away_team_id`, `state`                                 | un partido por pareja no ordenada de equipos; sin marcador o fecha; estado inicial `pending`.                                                                                                                                       |
+| `tournaments`                | `id`, `organizer_account_id`, `name`, `sport`, `state`, `created_at`, `published_at`, `last_activity_at`                | raíz de identidad, equipos, permisos y visibilidad; no decide por sí misma reglas de liga o eliminatoria. |
+| `tournament_stages`          | `id`, `tournament_id`, `position`, `type`, `state`                                                                     | orden único dentro del torneo; `league` y `single_elimination` son tipos distintos. |
+| `tournament_administrators`  | `tournament_id`, `account_id`, `assigned_at`                                                                           | PK compuesta; el creador se conserva en `tournaments.organizer_account_id`, no se duplica. |
+| `tournament_followers`       | `tournament_id`, `account_id`, `followed_at`                                                                           | guardar un torneo no concede permisos. |
+| `tournament_teams`           | `id`, `tournament_id`, `name`, `position`, `withdrawn_at`                                                              | nombre y posición únicos por torneo; el orden es la siembra congelada si la fase lo requiere. |
+| `matches`                    | `id`, `tournament_id`, `stage_id`, `round_number`, `sequence`, fuentes de local y visitante, `winner_team_id`, `state` | cada partido pertenece a una fase. Una plaza procede de equipo sembrado, ganadora, *bye* o, en el futuro, clasificación de grupo; un bracket puede tener equipos aún desconocidos. |
 | `match_result_changes`        | `id`, `match_id`, `changed_by_account_id` opcional, marcador anterior y nuevo, `changed_at`                            | cada registro o corrección conserva la administradora y el marcador previo mientras exista su cuenta; al purgarla, la autora pasa a `NULL` y el marcador se conserva.                                                                  |
-| `league_champions`            | `league_id`, `team_id`                                                                                                  | PK compuesta; conserva todos los equipos de posición 1 cuando la liga se finaliza, incluidos los co-campeones.                                                                                                                       |
+| `tournament_champions`        | `tournament_id`, `team_id`                                                                                              | conserva una única campeona de eliminatoria o todas las co-campeonas de una liga al cerrar el torneo. |
 
 El email conserva el valor aportado para entrega; `lower(email)` es solo la clave
 de comparación del producto. El locale de cuenta es una preferencia validada
@@ -69,27 +72,32 @@ minúsculo antes de guardar.
    crea la misma clase de sesión. Una identidad nueva crea una cuenta Google
    solo si su email no pertenece ya a otra cuenta; no hay vinculación ni fusión
    basada en coincidencia de email.
-4. **Publicación desde el alta:** el borrador válido crea una liga `published`
+4. **Publicación desde el alta:** el borrador válido crea un torneo `published`
    junto a la cuenta pendiente; los partidos se generan después, al iniciar la
-   liga tras verificar.
-5. **Lectura pública:** busca por ID de liga, exige liga visible y devuelve solo
+   torneo tras verificar.
+5. **Lectura pública:** busca por ID de torneo, exige que sea visible y devuelve solo
    proyección pública. No crea relaciones ni actualiza permisos.
-6. **Baja programada:** una cuenta verificada sin ligas propias pasa a
+6. **Baja programada:** una cuenta verificada sin torneos propios pasa a
    `deletion_pending` y conserva la fecha de solicitud. En una transacción se
    invalidan sesiones y tokens, y se eliminan seguimientos y administraciones
    delegadas. Un comando interno diario purga en lotes de hasta 100 las cuentas
    con 30 días vencidos; los `match_result_changes` conservan el resultado y
    quedan sin autora. La recuperación se define después.
-7. **Resultado:** bloquea liga y partido, exige que la liga esté `in_progress` y
-   que la cuenta figure en `league_administrators`; actualiza el marcador simple,
-   guarda un cambio y actualiza `last_activity_at` atómicamente.
-8. **Finalización:** bloquea la liga, exige organizadora, estado `in_progress` y
-   ningún partido pendiente; recalcula la clasificación desde los marcadores que
-   están dentro de la misma transacción, persiste todas las posiciones 1 en
-   `league_champions` y cambia el estado a `completed` como una única unidad.
-9. **Baja de equipo:** bloquea la liga y el equipo, exige organizadora y estado
+7. **Inicio:** bloquea el torneo, congela una fase `league` a una o dos vueltas
+   o `single_elimination` a partido único y genera sus partidos. Cada partido
+   referencia esa fase; cada plaza del cuadro conserva equipo, ganadora previa
+   o *bye* como fuente.
+8. **Resultado:** bloquea torneo y partido, exige `in_progress` y administración;
+   en liga admite el marcador, y en eliminatoria exige una ganadora, propaga su
+   identidad solo a las plazas dependientes y rechaza corregirla si ya existe un
+   resultado posterior. Conserva marcador anterior y nuevo, incluidos penaltis.
+9. **Finalización:** bloquea el torneo, exige organizadora, estado `in_progress`
+   y ningún partido pendiente. En liga persiste las posiciones 1; en
+   eliminatoria, la ganadora final. Torneo y fase pasan a `completed` en la misma
+   transacción.
+10. **Baja de equipo:** bloquea el torneo y el equipo, exige una fase de liga y estado
    `in_progress`; marca la baja y completa todos los partidos de ese equipo con
-   `3-0` para el rival. Cada cambio conserva el marcador anterior y la autora
+   `3-0` para el rival. No se aplica a eliminatorias. Cada cambio conserva el marcador anterior y la autora
    en `match_result_changes`, todo en la misma transacción.
 
 La purga es un proceso operativo explícito, idempotente y auditable por conteos,

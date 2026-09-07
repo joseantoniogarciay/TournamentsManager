@@ -9,8 +9,8 @@ import { radius, space } from "@tournaments-manager/design-tokens";
 import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
 import { isStaticWebRender } from "@/shared/i18n/is-static-web-render";
-import { listRecentRelatedLeagues } from "@/features/league-creation/api";
-import { LeagueCard } from "@/features/league-creation/components/league-card";
+import { listRecentRelatedTournaments } from "@/features/league-creation/api";
+import { TournamentCard } from "@/features/league-creation/components/league-card";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
@@ -25,8 +25,8 @@ export default function HomeScreen() {
   const { show } = useFeedback();
   const tabContentBottomPadding = useTabContentBottomPadding();
   const t = getTranslator();
-  const [recentLeagues, setRecentLeagues] = useState<
-    Awaited<ReturnType<typeof listRecentRelatedLeagues>>
+  const [recentTournaments, setRecentTournaments] = useState<
+    Awaited<ReturnType<typeof listRecentRelatedTournaments>>
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -41,13 +41,13 @@ export default function HomeScreen() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const loadRecentLeagues = useCallback(
+  const loadRecentTournaments = useCallback(
     async (isManualRefresh = false) => {
       if (!user) return;
       if (isManualRefresh) setIsRefreshing(true);
       else setIsLoading(true);
       try {
-        setRecentLeagues(await listRecentRelatedLeagues());
+        setRecentTournaments(await listRecentRelatedTournaments());
       } catch (error) {
         if (error instanceof APISessionInvalidatedError) return;
         const failure = getRequestFailure(error);
@@ -64,15 +64,15 @@ export default function HomeScreen() {
     useCallback(() => {
       if (!user) {
         loadedAccountID.current = null;
-        setRecentLeagues([]);
+        setRecentTournaments([]);
         setIsLoading(false);
         setIsRefreshing(false);
         return;
       }
       if (loadedAccountID.current === user.id) return;
       loadedAccountID.current = user.id;
-      void loadRecentLeagues();
-    }, [loadRecentLeagues, user]),
+      void loadRecentTournaments();
+    }, [loadRecentTournaments, user]),
   );
 
   return (
@@ -86,7 +86,7 @@ export default function HomeScreen() {
           refreshControl={
             user ? (
               <RefreshControl
-                onRefresh={() => void loadRecentLeagues(true)}
+                onRefresh={() => void loadRecentTournaments(true)}
                 refreshing={isRefreshing}
                 colors={[colors.indicator.default]}
                 tintColor={colors.indicator.default}
@@ -118,12 +118,14 @@ export default function HomeScreen() {
                 <Text color="secondary" style={styles.recentEmpty}>
                   {t("common_loading")}
                 </Text>
-              ) : recentLeagues.length === 0 ? (
+              ) : recentTournaments.length === 0 ? (
                 <View style={styles.recentEmpty}>
                   <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
                 </View>
               ) : (
-                recentLeagues.map((league) => <LeagueCard key={league.id} league={league} />)
+                recentTournaments.map((league) => (
+                  <TournamentCard key={league.id} league={league} />
+                ))
               )}
             </View>
           ) : null}

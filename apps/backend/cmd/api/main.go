@@ -19,9 +19,9 @@ import (
 	smtpadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/smtp"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/config"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
-	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
 const shutdownTimeout = 10 * time.Second
@@ -70,7 +70,7 @@ func run(args []string) error {
 		return fmt.Errorf("configurar correo: %w", err)
 	}
 	registrationService := registration.NewService(postgres.NewRegistrationRepository(pool), observability.Mailer{Next: mailer}, observability.PasswordProtector{})
-	accountLeagues := postgres.NewAccountLeagueRepository(pool)
+	accountTournaments := postgres.NewAccountTournamentRepository(pool)
 	var federatedService *federated.Service
 	var riscReceiver http.Handler
 	if len(appConfig.GoogleClientIDs) > 0 {
@@ -81,7 +81,7 @@ func run(args []string) error {
 
 	server := &http.Server{
 		Addr:              appConfig.HTTPAddr,
-		Handler:           observability.HTTPHandler(httpadapter.NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService, federatedService, accountLeagues, leagues.NewService(accountLeagues), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, appConfig.EdgeProxyAuthToken, riscReceiver, leagues.NewCreationService(accountLeagues))),
+		Handler:           observability.HTTPHandler(httpadapter.NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService, federatedService, accountTournaments, tournaments.NewService(accountTournaments), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, appConfig.EdgeProxyAuthToken, riscReceiver, tournaments.NewCreationService(accountTournaments))),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -122,7 +122,7 @@ func purgeExpiredAccounts() error {
 		return err
 	}
 	defer pool.Close()
-	deleted, err := accounts.NewService(postgres.NewAccountLeagueRepository(pool)).PurgeExpired(ctx)
+	deleted, err := accounts.NewService(postgres.NewAccountTournamentRepository(pool)).PurgeExpired(ctx)
 	if err != nil {
 		return fmt.Errorf("purgar cuentas con baja vencida: %w", err)
 	}

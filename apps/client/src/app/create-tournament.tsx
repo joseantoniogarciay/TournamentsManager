@@ -4,13 +4,13 @@ import { StyleSheet, View, type TextInput } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
-import { createLeagueRequest } from "@/features/league-creation/api";
+import { createTournamentRequest } from "@/features/league-creation/api";
 import {
-  clearLocalLeagueDraft,
-  getLocalLeagueDraft,
-  maximumLeagueNameLength,
-  maximumLeagueTeams,
-  saveLocalLeagueDraft,
+  clearLocalTournamentDraft,
+  getLocalTournamentDraft,
+  maximumTournamentNameLength,
+  maximumTournamentTeams,
+  saveLocalTournamentDraft,
 } from "@/features/league-creation/draft";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -40,7 +40,7 @@ export default function CreateTournamentScreen() {
   const [teamToFocus, setTeamToFocus] = useState<number>();
 
   useEffect(() => {
-    void getLocalLeagueDraft().then((draft) => {
+    void getLocalTournamentDraft().then((draft) => {
       if (draft) {
         setName(draft.name);
         setTeams(draft.teams.length >= 2 ? draft.teams : ["", ""]);
@@ -48,7 +48,7 @@ export default function CreateTournamentScreen() {
     });
   }, []);
   useEffect(() => {
-    void saveLocalLeagueDraft({ name, teams });
+    void saveLocalTournamentDraft({ name, teams });
   }, [name, teams]);
   useEffect(() => {
     if (teamToFocus === undefined) return;
@@ -60,7 +60,7 @@ export default function CreateTournamentScreen() {
   const normalizedTeams = normalizedTeamValues.filter(Boolean);
   const nameError = !name.trim()
     ? t("league_name_required")
-    : name.length > maximumLeagueNameLength
+    : name.length > maximumTournamentNameLength
       ? t("league_name_too_long")
       : undefined;
   const teamsError =
@@ -85,12 +85,12 @@ export default function CreateTournamentScreen() {
     }
     setIsSubmitting(true);
     try {
-      const league = await createLeagueRequest({
+      const league = await createTournamentRequest({
         name: name.trim(),
         teams: normalizedTeams.map((team) => ({ name: team })),
       });
-      await clearLocalLeagueDraft();
-      router.replace(`/league/${league.id}` as never);
+      await clearLocalTournamentDraft();
+      router.replace(`/tournament/${league.id}` as never);
     } catch (error) {
       const failure = getRequestFailure(error);
       show({ kind: failure.kind, message: t(failure.messageKey) });
@@ -99,7 +99,7 @@ export default function CreateTournamentScreen() {
     }
   };
   const addTeam = () => {
-    if (teams.length >= maximumLeagueTeams) {
+    if (teams.length >= maximumTournamentTeams) {
       show({ kind: "generic-error", message: t("league_team_limit_reached") });
       return;
     }
@@ -107,7 +107,7 @@ export default function CreateTournamentScreen() {
     setTeams((current) => [...current, ""]);
   };
   const close = async () => {
-    await clearLocalLeagueDraft();
+    await clearLocalTournamentDraft();
     if (router.canDismiss()) {
       router.dismiss();
       return;
@@ -161,7 +161,7 @@ export default function CreateTournamentScreen() {
               <TextField
                 error={nameError}
                 label={t("league_name_label")}
-                maxLength={maximumLeagueNameLength}
+                maxLength={maximumTournamentNameLength}
                 onChangeText={setName}
                 validationSubmitted={submitted}
                 validationTrigger="blur"

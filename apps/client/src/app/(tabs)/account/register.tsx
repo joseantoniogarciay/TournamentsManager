@@ -22,9 +22,9 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { APIUnexpectedResponseError } from "@/api/fetch";
 import { TermsAcceptance } from "@/shared/legal/terms-acceptance";
 import {
-  clearLocalLeagueDraft,
-  getLocalLeagueDraft,
-  toLeagueInput,
+  clearLocalTournamentDraft,
+  getLocalTournamentDraft,
+  toTournamentInput,
 } from "@/features/league-creation/draft";
 
 export default function RegisterScreen() {
@@ -66,7 +66,7 @@ export default function RegisterScreen() {
 
     setIsSubmitting(true);
     try {
-      const draft = toLeagueInput(await getLocalLeagueDraft());
+      const draft = toTournamentInput(await getLocalTournamentDraft());
       await registerLocalAccountRequest({
         ...(draft ? { draft } : {}),
         email: email.trim(),
@@ -75,7 +75,7 @@ export default function RegisterScreen() {
         termsVersion: "2026-08-22",
         username,
       });
-      if (draft) await clearLocalLeagueDraft();
+      if (draft) await clearLocalTournamentDraft();
       show({ kind: "success", message: t("account_registration_email_sent") });
       router.replace("/account");
     } catch (error) {

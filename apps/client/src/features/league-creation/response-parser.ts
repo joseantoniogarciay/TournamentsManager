@@ -1,16 +1,16 @@
-import type { AccountLeague } from "@/api/generated/models/accountLeague";
-import { AccountLeagueRelationship } from "@/api/generated/models/accountLeagueRelationship";
-import { AccountLeagueState } from "@/api/generated/models/accountLeagueState";
-import type { LeagueStanding } from "@/api/generated/models/leagueStanding";
-import type { LeagueTeam } from "@/api/generated/models/leagueTeam";
+import type { AccountTournament } from "@/api/generated/models/accountTournament";
+import { AccountTournamentRelationship } from "@/api/generated/models/accountTournamentRelationship";
+import { AccountTournamentState } from "@/api/generated/models/accountTournamentState";
+import type { TournamentStanding } from "@/api/generated/models/tournamentStanding";
+import type { TournamentTeam } from "@/api/generated/models/tournamentTeam";
 import type { Match } from "@/api/generated/models/match";
 import { MatchState } from "@/api/generated/models/matchState";
-import type { PublicLeague } from "@/api/generated/models/publicLeague";
-import { PublicLeagueFormat } from "@/api/generated/models/publicLeagueFormat";
-import { PublicLeagueSport } from "@/api/generated/models/publicLeagueSport";
-import { PublicLeagueState } from "@/api/generated/models/publicLeagueState";
-import type { PublishedLeague } from "@/api/generated/models/publishedLeague";
-import { PublishedLeagueState } from "@/api/generated/models/publishedLeagueState";
+import type { PublicTournament } from "@/api/generated/models/publicTournament";
+import { PublicTournamentFormat } from "@/api/generated/models/publicTournamentFormat";
+import { PublicTournamentSport } from "@/api/generated/models/publicTournamentSport";
+import { PublicTournamentState } from "@/api/generated/models/publicTournamentState";
+import type { PublishedTournament } from "@/api/generated/models/publishedTournament";
+import { PublishedTournamentState } from "@/api/generated/models/publishedTournamentState";
 import type { Username } from "@/api/generated/models/username";
 
 type RecordValue = Record<string, unknown>;
@@ -30,23 +30,27 @@ function isDateTime(value: unknown): value is string {
   return typeof value === "string" && Number.isFinite(Date.parse(value));
 }
 
-function isAccountLeagueState(value: unknown): value is AccountLeague["state"] {
-  return Object.values(AccountLeagueState).includes(value as AccountLeague["state"]);
+function isAccountTournamentState(value: unknown): value is AccountTournament["state"] {
+  return Object.values(AccountTournamentState).includes(value as AccountTournament["state"]);
 }
 
-function isAccountLeagueRelationship(value: unknown): value is AccountLeague["relationship"] {
-  return Object.values(AccountLeagueRelationship).includes(value as AccountLeague["relationship"]);
+function isAccountTournamentRelationship(
+  value: unknown,
+): value is AccountTournament["relationship"] {
+  return Object.values(AccountTournamentRelationship).includes(
+    value as AccountTournament["relationship"],
+  );
 }
 
-function parseAccountLeague(value: unknown): AccountLeague | null {
+function parseAccountTournament(value: unknown): AccountTournament | null {
   if (!isRecord(value)) return null;
   if (
     !isUUID(value.id) ||
     typeof value.name !== "string" ||
-    !isAccountLeagueState(value.state) ||
+    !isAccountTournamentState(value.state) ||
     !isDateTime(value.createdAt) ||
     !isDateTime(value.lastActivityAt) ||
-    !isAccountLeagueRelationship(value.relationship)
+    !isAccountTournamentRelationship(value.relationship)
   ) {
     return null;
   }
@@ -61,23 +65,23 @@ function parseAccountLeague(value: unknown): AccountLeague | null {
   };
 }
 
-function parseAccountLeagues(value: unknown): AccountLeague[] | null {
+function parseAccountTournaments(value: unknown): AccountTournament[] | null {
   if (!Array.isArray(value)) return null;
   return value.flatMap((item) => {
-    const league = parseAccountLeague(item);
+    const league = parseAccountTournament(item);
     return league ? [league] : [];
   });
 }
 
 /** Devuelve `null` cuando el contenedor paginado no cumple el contrato. */
-export function parseAccountLeaguePageItems(value: unknown): AccountLeague[] | null {
+export function parseAccountTournamentPageItems(value: unknown): AccountTournament[] | null {
   if (!isRecord(value)) return null;
-  return parseAccountLeagues(value.items);
+  return parseAccountTournaments(value.items);
 }
 
 /** Devuelve `null` cuando la respuesta de lista no cumple el contrato. */
-export function parseRecentAccountLeagues(value: unknown): AccountLeague[] | null {
-  return parseAccountLeagues(value);
+export function parseRecentAccountTournaments(value: unknown): AccountTournament[] | null {
+  return parseAccountTournaments(value);
 }
 
 function isUsername(value: unknown): value is Username {
@@ -94,7 +98,7 @@ function isIntegerAtLeast(value: unknown, minimum: number): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= minimum;
 }
 
-export function parseLeagueTeam(value: unknown): LeagueTeam | null {
+export function parseTournamentTeam(value: unknown): TournamentTeam | null {
   if (!isRecord(value)) return null;
   if (!isUUID(value.id) || typeof value.name !== "string" || typeof value.withdrawn !== "boolean") {
     return null;
@@ -102,54 +106,79 @@ export function parseLeagueTeam(value: unknown): LeagueTeam | null {
   return { id: value.id, name: value.name, withdrawn: value.withdrawn };
 }
 
-function parseLeagueTeams(value: unknown): LeagueTeam[] | null {
+function parseTournamentTeams(value: unknown): TournamentTeam[] | null {
   if (!Array.isArray(value)) return null;
   return value.flatMap((item) => {
-    const team = parseLeagueTeam(item);
+    const team = parseTournamentTeam(item);
     return team ? [team] : [];
   });
 }
 
 function parseMatch(value: unknown): Match | null {
-  if (!isRecord(value)) return null;
   if (
+    !isRecord(value) ||
     !isUUID(value.id) ||
+    !isUUID(value.stageId) ||
     !isIntegerAtLeast(value.round, 1) ||
     !isIntegerAtLeast(value.sequence, 1) ||
-    !isUUID(value.homeTeamId) ||
-    !isUUID(value.awayTeamId) ||
+    !(value.homeTeamId === "" || isUUID(value.homeTeamId)) ||
+    !(value.awayTeamId === "" || isUUID(value.awayTeamId)) ||
     !Object.values(MatchState).includes(value.state as Match["state"])
-  ) {
+  )
     return null;
+  for (const side of ["home", "away"] as const) {
+    const kind = value[side + "SourceKind"];
+    const source = value[side + "SourceMatchId"];
+    const team = value[side + "TeamId"];
+    if (!["seeded_team", "winner", "bye"].includes(String(kind))) return null;
+    if (kind === "winner" ? !isUUID(source) : source !== undefined) return null;
+    if (kind === "seeded_team" && !isUUID(team)) return null;
+    if (kind === "bye" && team !== "") return null;
   }
+  for (const key of ["homeScore", "awayScore", "homePenalties", "awayPenalties"]) {
+    if (key in value && !isIntegerAtLeast(value[key], 0)) return null;
+  }
+  if ("winnerTeamId" in value && !isUUID(value.winnerTeamId)) return null;
   if (
-    ("homeScore" in value && !isIntegerAtLeast(value.homeScore, 0)) ||
-    ("awayScore" in value && !isIntegerAtLeast(value.awayScore, 0))
-  ) {
+    value.state === "completed" &&
+    (!isIntegerAtLeast(value.homeScore, 0) ||
+      !isIntegerAtLeast(value.awayScore, 0) ||
+      !value.homeTeamId ||
+      !value.awayTeamId)
+  )
     return null;
-  }
-
-  return {
-    id: value.id,
-    round: value.round,
-    sequence: value.sequence,
-    homeTeamId: value.homeTeamId,
-    awayTeamId: value.awayTeamId,
-    state: value.state as Match["state"],
-    ...(isIntegerAtLeast(value.homeScore, 0) ? { homeScore: value.homeScore } : {}),
-    ...(isIntegerAtLeast(value.awayScore, 0) ? { awayScore: value.awayScore } : {}),
-  };
+  if (value.state === "bye" && !isUUID(value.winnerTeamId)) return null;
+  return value as unknown as Match;
 }
 
 function parseMatches(value: unknown): Match[] | null {
   if (!Array.isArray(value)) return null;
-  return value.flatMap((item) => {
-    const match = parseMatch(item);
-    return match ? [match] : [];
-  });
+  const matches = value.map(parseMatch);
+  return matches.every((match): match is Match => match !== null) ? matches : null;
 }
 
-function parseLeagueStanding(value: unknown): LeagueStanding | null {
+function parseStages(value: unknown): PublicTournament["stages"] | null {
+  if (!Array.isArray(value)) return null;
+  for (const stage of value) {
+    if (
+      !isRecord(stage) ||
+      !isUUID(stage.id) ||
+      !isIntegerAtLeast(stage.position, 1) ||
+      !["league", "single_elimination"].includes(String(stage.type)) ||
+      !["pending", "in_progress", "completed", "cancelled"].includes(String(stage.state))
+    )
+      return null;
+    if (
+      stage.type === "league"
+        ? stage.roundRobinLegs !== 1 && stage.roundRobinLegs !== 2
+        : stage.roundRobinLegs !== undefined
+    )
+      return null;
+  }
+  return value as PublicTournament["stages"];
+}
+
+function parseTournamentStanding(value: unknown): TournamentStanding | null {
   if (!isRecord(value)) return null;
   if (
     !isIntegerAtLeast(value.position, 1) ||
@@ -180,10 +209,10 @@ function parseLeagueStanding(value: unknown): LeagueStanding | null {
   };
 }
 
-function parseLeagueStandings(value: unknown): LeagueStanding[] | null {
+function parseTournamentStandings(value: unknown): TournamentStanding[] | null {
   if (!Array.isArray(value)) return null;
   return value.flatMap((item) => {
-    const standing = parseLeagueStanding(item);
+    const standing = parseTournamentStanding(item);
     return standing ? [standing] : [];
   });
 }
@@ -193,49 +222,54 @@ function parseUUIDs(value: unknown): string[] | null {
 }
 
 /** Valida el contenedor y filtra de forma independiente sus colecciones internas. */
-export function parsePublicLeague(value: unknown): PublicLeague | null {
+export function parsePublicTournament(value: unknown): PublicTournament | null {
   if (!isRecord(value)) return null;
-  const teams = parseLeagueTeams(value.teams);
+  const stages = parseStages(value.stages);
+  const teams = parseTournamentTeams(value.teams);
   const matches = parseMatches(value.matches);
-  const standings = parseLeagueStandings(value.standings);
+  const standings = parseTournamentStandings(value.standings);
   const championTeamIds = parseUUIDs(value.championTeamIds);
   if (
     !isUUID(value.id) ||
     typeof value.name !== "string" ||
-    !Object.values(PublicLeagueSport).includes(value.sport as PublicLeague["sport"]) ||
-    !Object.values(PublicLeagueFormat).includes(value.format as PublicLeague["format"]) ||
-    !Object.values(PublicLeagueState).includes(value.state as PublicLeague["state"]) ||
+    !Object.values(PublicTournamentSport).includes(value.sport as PublicTournament["sport"]) ||
+    !Object.values(PublicTournamentFormat).includes(value.format as PublicTournament["format"]) ||
+    !Object.values(PublicTournamentState).includes(value.state as PublicTournament["state"]) ||
     (value.roundRobinLegs !== 1 && value.roundRobinLegs !== 2) ||
     !teams ||
     !matches ||
     !standings ||
-    !championTeamIds
+    !championTeamIds ||
+    !stages
   ) {
     return null;
   }
   return {
     id: value.id,
     name: value.name,
-    sport: value.sport as PublicLeague["sport"],
-    format: value.format as PublicLeague["format"],
-    state: value.state as PublicLeague["state"],
+    sport: value.sport as PublicTournament["sport"],
+    format: value.format as PublicTournament["format"],
+    state: value.state as PublicTournament["state"],
     roundRobinLegs: value.roundRobinLegs,
     teams,
     matches,
     standings,
     championTeamIds,
+    stages,
   };
 }
 
 /** Valida el contenedor y filtra de forma independiente equipos y partidos. */
-export function parsePublishedLeague(value: unknown): PublishedLeague | null {
+export function parsePublishedTournament(value: unknown): PublishedTournament | null {
   if (!isRecord(value)) return null;
-  const teams = parseLeagueTeams(value.teams);
+  const teams = parseTournamentTeams(value.teams);
   const matches = parseMatches(value.matches);
   if (
     !isUUID(value.id) ||
     typeof value.name !== "string" ||
-    !Object.values(PublishedLeagueState).includes(value.state as PublishedLeague["state"]) ||
+    !Object.values(PublishedTournamentState).includes(
+      value.state as PublishedTournament["state"],
+    ) ||
     !teams ||
     !matches
   ) {
@@ -244,7 +278,7 @@ export function parsePublishedLeague(value: unknown): PublishedLeague | null {
   return {
     id: value.id,
     name: value.name,
-    state: value.state as PublishedLeague["state"],
+    state: value.state as PublishedTournament["state"],
     teams,
     matches,
   };

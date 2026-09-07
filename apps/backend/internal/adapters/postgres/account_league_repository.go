@@ -14,28 +14,28 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/accounts"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres/sqlc"
-	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
-// ErrAccountHasOwnedLeagues indicates that the account still owns one or more leagues.
-var ErrAccountHasOwnedLeagues = errors.New("account has owned leagues")
+// ErrAccountHasOwnedTournaments indicates that the account still owns one or more tournaments.
+var ErrAccountHasOwnedTournaments = errors.New("account has owned tournaments")
 
-// AccountLeagueRepository persists sessions and league relationships.
-type AccountLeagueRepository struct {
+// AccountTournamentRepository persists sessions and league relationships.
+type AccountTournamentRepository struct {
 	pool    *pgxpool.Pool
 	queries *sqlc.Queries
 }
 
-// NewAccountLeagueRepository builds the account-relationship adapter.
-func NewAccountLeagueRepository(pool *pgxpool.Pool) AccountLeagueRepository {
-	return AccountLeagueRepository{pool: pool, queries: sqlc.New(pool)}
+// NewAccountTournamentRepository builds the account-relationship adapter.
+func NewAccountTournamentRepository(pool *pgxpool.Pool) AccountTournamentRepository {
+	return AccountTournamentRepository{pool: pool, queries: sqlc.New(pool)}
 }
 
 // PurgeExpired removes a batch of accounts whose deletion window has expired.
 // The CTE locks only selected accounts, and SKIP LOCKED avoids waiting for a
 // concurrent transaction on one of them.
-func (r AccountLeagueRepository) PurgeExpired(ctx context.Context, limit int) (int64, error) {
+func (r AccountTournamentRepository) PurgeExpired(ctx context.Context, limit int) (int64, error) {
 	if limit < 1 {
 		return 0, fmt.Errorf("límite de purga debe ser positivo")
 	}
@@ -50,7 +50,7 @@ func (r AccountLeagueRepository) PurgeExpired(ctx context.Context, limit int) (i
 				AND deletion_requested_at <= now() - interval '30 days'
 				AND NOT EXISTS (
 					SELECT 1
-					FROM leagues
+					FROM tournaments
 					WHERE organizer_account_id = accounts.id
 				)
 			ORDER BY deletion_requested_at, id
@@ -76,30 +76,30 @@ func (r AccountLeagueRepository) PurgeExpired(ctx context.Context, limit int) (i
 	return command.RowsAffected(), nil
 }
 
-var _ accounts.PurgeRepository = AccountLeagueRepository{}
+var _ accounts.PurgeRepository = AccountTournamentRepository{}
 
 // ScheduleAccountDeletion revokes access and personal relationships without deleting the account.
-func (r AccountLeagueRepository) ScheduleAccountDeletion(ctx context.Context, accountID string) (time.Time, error) {
+func (r AccountTournamentRepository) ScheduleAccountDeletion(ctx context.Context, accountID string) (time.Time, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return time.Time{}, err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var hasOwned bool
-	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM leagues WHERE organizer_account_id = $1)`, accountID).Scan(&hasOwned); err != nil {
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM tournaments WHERE organizer_account_id = $1)`, accountID).Scan(&hasOwned); err != nil {
 		return time.Time{}, err
 	}
 	if hasOwned {
-		return time.Time{}, ErrAccountHasOwnedLeagues
+		return time.Time{}, ErrAccountHasOwnedTournaments
 	}
 	var requested time.Time
 	if err := tx.QueryRow(ctx, `UPDATE accounts SET state = 'deletion_pending', deletion_requested_at = now() WHERE id = $1 AND state = 'verified' RETURNING deletion_requested_at`, accountID).Scan(&requested); err != nil {
 		return time.Time{}, err
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM league_followers WHERE account_id = $1`, accountID); err != nil {
+	if _, err := tx.Exec(ctx, `DELETE FROM tournament_followers WHERE account_id = $1`, accountID); err != nil {
 		return time.Time{}, err
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM league_administrators WHERE account_id = $1`, accountID); err != nil {
+	if _, err := tx.Exec(ctx, `DELETE FROM tournament_administrators WHERE account_id = $1`, accountID); err != nil {
 		return time.Time{}, err
 	}
 	if _, err := tx.Exec(ctx, `DELETE FROM sessions WHERE account_id = $1`, accountID); err != nil {
@@ -112,79 +112,79 @@ func (r AccountLeagueRepository) ScheduleAccountDeletion(ctx context.Context, ac
 }
 
 // Create creates a published league without a schedule yet.
-func (r AccountLeagueRepository) Create(ctx context.Context, accountID string, input leagues.CreateInput) (leagues.League, error) {
+func (r AccountTournamentRepository) Create(ctx context.Context, accountID string, input tournaments.CreateInput) (tournaments.Tournament, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
-	var league leagues.League
-	if err := tx.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, state, published_at) VALUES ($1, $2, 'published', now()) RETURNING id::text, name, sport, format, state`, account, input.Name).Scan(&league.ID, &league.Name, &league.Sport, &league.Format, &league.State); err != nil {
-		return leagues.League{}, err
+	var league tournaments.Tournament
+	if err := tx.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, name, state, published_at) VALUES ($1, $2, 'published', now()) RETURNING id::text, name, sport, format, state`, account, input.Name).Scan(&league.ID, &league.Name, &league.Sport, &league.Format, &league.State); err != nil {
+		return tournaments.Tournament{}, err
 	}
-	league.Teams = make([]leagues.Team, len(input.Teams))
+	league.Teams = make([]tournaments.Team, len(input.Teams))
 	for i, team := range input.Teams {
-		if err := tx.QueryRow(ctx, `INSERT INTO league_teams (league_id, name, name_normalized, position) VALUES ($1, $2, lower($2), $3) RETURNING id::text, name, position`, league.ID, team.Name, i+1).Scan(&league.Teams[i].ID, &league.Teams[i].Name, &league.Teams[i].Position); err != nil {
-			return leagues.League{}, err
+		if err := tx.QueryRow(ctx, `INSERT INTO tournament_teams (tournament_id, name, name_normalized, position) VALUES ($1, $2, lower($2), $3) RETURNING id::text, name, position`, league.ID, team.Name, i+1).Scan(&league.Teams[i].ID, &league.Teams[i].Name, &league.Teams[i].Position); err != nil {
+			return tournaments.Tournament{}, err
 		}
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
-	league.Matches = []leagues.Match{}
+	league.Matches = []tournaments.Match{}
 	return league, nil
 }
 
-// AddTeam adds a team to one of its owner's published leagues.
-func (r AccountLeagueRepository) AddTeam(ctx context.Context, accountID, leagueID string, input leagues.TeamInput) (leagues.Team, error) {
+// AddTeam adds a team to one of its owner's published tournaments.
+func (r AccountTournamentRepository) AddTeam(ctx context.Context, accountID, leagueID string, input tournaments.TeamInput) (tournaments.Team, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
-		return leagues.Team{}, err
+		return tournaments.Team{}, err
 	}
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return leagues.Team{}, err
+		return tournaments.Team{}, err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer, state string
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.Team{}, leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.Team{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
-		return leagues.Team{}, err
+		return tournaments.Team{}, err
 	}
 	if organizer != account.String() {
-		return leagues.Team{}, leagues.ErrLeagueForbidden
+		return tournaments.Team{}, tournaments.ErrTournamentForbidden
 	}
 	if state != "published" {
-		return leagues.Team{}, leagues.ErrLeagueTeamConflict
+		return tournaments.Team{}, tournaments.ErrTournamentTeamConflict
 	}
 	var position, count int
-	if err := tx.QueryRow(ctx, `SELECT COALESCE(MAX(position), 0), COUNT(*) FROM league_teams WHERE league_id = $1`, leagueID).Scan(&position, &count); err != nil {
-		return leagues.Team{}, err
+	if err := tx.QueryRow(ctx, `SELECT COALESCE(MAX(position), 0), COUNT(*) FROM tournament_teams WHERE tournament_id = $1`, leagueID).Scan(&position, &count); err != nil {
+		return tournaments.Team{}, err
 	}
 	if count >= 64 {
-		return leagues.Team{}, leagues.ErrLeagueTeamConflict
+		return tournaments.Team{}, tournaments.ErrTournamentTeamConflict
 	}
-	var team leagues.Team
-	if err := tx.QueryRow(ctx, `INSERT INTO league_teams (league_id, name, name_normalized, position) VALUES ($1, $2, lower($2), $3) RETURNING id::text, name, position`, leagueID, input.Name, position+1).Scan(&team.ID, &team.Name, &team.Position); err != nil {
+	var team tournaments.Team
+	if err := tx.QueryRow(ctx, `INSERT INTO tournament_teams (tournament_id, name, name_normalized, position) VALUES ($1, $2, lower($2), $3) RETURNING id::text, name, position`, leagueID, input.Name, position+1).Scan(&team.ID, &team.Name, &team.Position); err != nil {
 		var databaseError *pgconn.PgError
 		if errors.As(err, &databaseError) && databaseError.Code == "23505" {
-			return leagues.Team{}, leagues.ErrLeagueTeamConflict
+			return tournaments.Team{}, tournaments.ErrTournamentTeamConflict
 		}
-		return leagues.Team{}, err
+		return tournaments.Team{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return leagues.Team{}, err
+		return tournaments.Team{}, err
 	}
 	return team, nil
 }
 
 // RemoveTeam removes a team from a published league without reducing it below two entrants.
-func (r AccountLeagueRepository) RemoveTeam(ctx context.Context, accountID, leagueID, teamID string) error {
+func (r AccountTournamentRepository) RemoveTeam(ctx context.Context, accountID, leagueID, teamID string) error {
 	account, err := uuidValue(accountID)
 	if err != nil {
 		return err
@@ -195,129 +195,97 @@ func (r AccountLeagueRepository) RemoveTeam(ctx context.Context, accountID, leag
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer, state string
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.ErrTournamentNotFound
 	} else if err != nil {
 		return err
 	}
 	if organizer != account.String() {
-		return leagues.ErrLeagueForbidden
+		return tournaments.ErrTournamentForbidden
 	}
 	if state != "published" {
-		return leagues.ErrLeagueTeamConflict
+		return tournaments.ErrTournamentTeamConflict
 	}
 	var exists bool
-	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM league_teams WHERE league_id = $1 AND id = $2)`, leagueID, teamID).Scan(&exists); err != nil {
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM tournament_teams WHERE tournament_id = $1 AND id = $2)`, leagueID, teamID).Scan(&exists); err != nil {
 		return err
 	}
 	if !exists {
-		return leagues.ErrLeagueNotFound
+		return tournaments.ErrTournamentNotFound
 	}
 	var count int
-	if err := tx.QueryRow(ctx, `SELECT COUNT(*) FROM league_teams WHERE league_id = $1`, leagueID).Scan(&count); err != nil {
+	if err := tx.QueryRow(ctx, `SELECT COUNT(*) FROM tournament_teams WHERE tournament_id = $1`, leagueID).Scan(&count); err != nil {
 		return err
 	}
 	if count <= 2 {
-		return leagues.ErrLeagueTeamConflict
+		return tournaments.ErrTournamentTeamConflict
 	}
-	command, err := tx.Exec(ctx, `DELETE FROM league_teams WHERE league_id = $1 AND id = $2`, leagueID, teamID)
+	command, err := tx.Exec(ctx, `DELETE FROM tournament_teams WHERE tournament_id = $1 AND id = $2`, leagueID, teamID)
 	if err != nil {
 		return err
 	}
 	if command.RowsAffected() != 1 {
-		return leagues.ErrLeagueNotFound
+		return tournaments.ErrTournamentNotFound
 	}
 	return tx.Commit(ctx)
 }
 
 // GetPublic returns the visible projection of an existing league.
-func (r AccountLeagueRepository) GetPublic(ctx context.Context, leagueID string) (leagues.League, error) {
-	league := leagues.League{Teams: []leagues.Team{}, Matches: []leagues.Match{}, ChampionTeamIDs: []string{}}
-	if err := r.pool.QueryRow(ctx, `SELECT id::text, name, sport, format, state, round_robin_legs FROM leagues WHERE id = $1 AND state <> 'draft'`, leagueID).Scan(&league.ID, &league.Name, &league.Sport, &league.Format, &league.State, &league.RoundRobinLegs); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.League{}, leagues.ErrLeagueNotFound
-	} else if err != nil {
-		return leagues.League{}, err
-	}
-	teams, err := r.pool.Query(ctx, `SELECT id::text, name, position, withdrawn_at IS NOT NULL FROM league_teams WHERE league_id = $1 ORDER BY position`, leagueID)
+func (r AccountTournamentRepository) GetPublic(ctx context.Context, leagueID string) (tournaments.Tournament, error) {
+	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
-	defer teams.Close()
-	for teams.Next() {
-		var team leagues.Team
-		if err := teams.Scan(&team.ID, &team.Name, &team.Position, &team.Withdrawn); err != nil {
-			return leagues.League{}, err
-		}
-		league.Teams = append(league.Teams, team)
-	}
-	if err := teams.Err(); err != nil {
-		return leagues.League{}, err
-	}
-	champions, err := r.pool.Query(ctx, `SELECT team_id::text FROM league_champions WHERE league_id = $1 ORDER BY team_id`, leagueID)
+	defer func() { _ = tx.Rollback(ctx) }()
+	value, err := readTournament(ctx, tx, leagueID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
-	defer champions.Close()
-	for champions.Next() {
-		var teamID string
-		if err := champions.Scan(&teamID); err != nil {
-			return leagues.League{}, err
-		}
-		league.ChampionTeamIDs = append(league.ChampionTeamIDs, teamID)
-	}
-	if err := champions.Err(); err != nil {
-		return leagues.League{}, err
-	}
-	matches, err := r.pool.Query(ctx, `SELECT id::text, round_number, sequence, home_team_id::text, away_team_id::text, state, home_score, away_score FROM matches WHERE league_id = $1 ORDER BY round_number, sequence`, leagueID)
-	if err != nil {
-		return leagues.League{}, err
-	}
-	defer matches.Close()
-	for matches.Next() {
-		var match leagues.Match
-		if err := matches.Scan(&match.ID, &match.RoundNumber, &match.Sequence, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore); err != nil {
-			return leagues.League{}, err
-		}
-		league.Matches = append(league.Matches, match)
-	}
-	return league, matches.Err()
+	return value, tx.Commit(ctx)
 }
 
 // WithdrawTeam keeps the roster for historical standings and assigns each opponent a 3-0 win.
-func (r AccountLeagueRepository) WithdrawTeam(ctx context.Context, accountID, leagueID, teamID string) (leagues.League, error) {
+func (r AccountTournamentRepository) WithdrawTeam(ctx context.Context, accountID, leagueID, teamID string) (tournaments.Tournament, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer, state string
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.League{}, leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.Tournament{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	if organizer != account.String() {
-		return leagues.League{}, leagues.ErrLeagueForbidden
+		return tournaments.Tournament{}, tournaments.ErrTournamentForbidden
 	}
 	if state != "in_progress" {
-		return leagues.League{}, leagues.ErrLeagueWithdrawalConflict
+		return tournaments.Tournament{}, tournaments.ErrTournamentWithdrawalConflict
+	}
+	var format string
+	if err := tx.QueryRow(ctx, `SELECT format FROM tournaments WHERE id=$1`, leagueID).Scan(&format); err != nil {
+		return tournaments.Tournament{}, err
+	}
+	if format != "league" {
+		return tournaments.Tournament{}, tournaments.ErrTournamentWithdrawalConflict
 	}
 	var withdrawn bool
-	if err := tx.QueryRow(ctx, `SELECT withdrawn_at IS NOT NULL FROM league_teams WHERE league_id = $1 AND id = $2 FOR UPDATE`, leagueID, teamID).Scan(&withdrawn); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.League{}, leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT withdrawn_at IS NOT NULL FROM tournament_teams WHERE tournament_id = $1 AND id = $2 FOR UPDATE`, leagueID, teamID).Scan(&withdrawn); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.Tournament{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	if withdrawn {
-		return leagues.League{}, leagues.ErrLeagueWithdrawalConflict
+		return tournaments.Tournament{}, tournaments.ErrTournamentWithdrawalConflict
 	}
-	rows, err := tx.Query(ctx, `SELECT id::text, home_team_id::text, home_score, away_score FROM matches WHERE league_id = $1 AND (home_team_id = $2 OR away_team_id = $2) FOR UPDATE`, leagueID, teamID)
+	rows, err := tx.Query(ctx, `SELECT id::text, home_team_id::text, home_score, away_score FROM matches WHERE tournament_id = $1 AND (home_team_id = $2 OR away_team_id = $2) FOR UPDATE`, leagueID, teamID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	defer rows.Close()
 	type scoreChange struct {
@@ -329,12 +297,12 @@ func (r AccountLeagueRepository) WithdrawTeam(ctx context.Context, accountID, le
 	for rows.Next() {
 		var change scoreChange
 		if err := rows.Scan(&change.id, &change.homeID, &change.previousHome, &change.previousAway); err != nil {
-			return leagues.League{}, err
+			return tournaments.Tournament{}, err
 		}
 		changes = append(changes, change)
 	}
 	if err := rows.Err(); err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	for _, change := range changes {
 		var homeScore, awayScore int
@@ -344,151 +312,187 @@ func (r AccountLeagueRepository) WithdrawTeam(ctx context.Context, accountID, le
 			homeScore, awayScore = 3, 0
 		}
 		if _, err := tx.Exec(ctx, `UPDATE matches SET state = 'completed', home_score = $2, away_score = $3 WHERE id = $1`, change.id, homeScore, awayScore); err != nil {
-			return leagues.League{}, err
+			return tournaments.Tournament{}, err
 		}
 		if _, err := tx.Exec(ctx, `INSERT INTO match_result_changes (match_id, changed_by_account_id, previous_home_score, previous_away_score, home_score, away_score) VALUES ($1, $2, $3, $4, $5, $6)`, change.id, account, change.previousHome, change.previousAway, homeScore, awayScore); err != nil {
-			return leagues.League{}, err
+			return tournaments.Tournament{}, err
 		}
 	}
-	if _, err := tx.Exec(ctx, `UPDATE league_teams SET withdrawn_at = now() WHERE league_id = $1 AND id = $2`, leagueID, teamID); err != nil {
-		return leagues.League{}, err
+	if _, err := tx.Exec(ctx, `UPDATE tournament_teams SET withdrawn_at = now() WHERE tournament_id = $1 AND id = $2`, leagueID, teamID); err != nil {
+		return tournaments.Tournament{}, err
 	}
-	if _, err := tx.Exec(ctx, `UPDATE leagues SET last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
-		return leagues.League{}, err
+	if _, err := tx.Exec(ctx, `UPDATE tournaments SET last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
+		return tournaments.Tournament{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	return r.GetPublic(ctx, leagueID)
 }
 
 // RecordResult stores the score and a history entry in a single transaction.
-func (r AccountLeagueRepository) RecordResult(ctx context.Context, accountID, leagueID, matchID string, input leagues.MatchResultInput) (leagues.League, error) {
+func (r AccountTournamentRepository) RecordResult(ctx context.Context, accountID, leagueID, matchID string, input tournaments.MatchResultInput) (tournaments.Tournament, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer, state string
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.League{}, leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.Tournament{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	if state != "in_progress" {
-		return leagues.League{}, leagues.ErrMatchResultConflict
+		return tournaments.Tournament{}, tournaments.ErrMatchResultConflict
 	}
 	var administers bool
-	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM league_administrators WHERE league_id = $1 AND account_id = $2)`, leagueID, account).Scan(&administers); err != nil {
-		return leagues.League{}, err
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM tournament_administrators WHERE tournament_id = $1 AND account_id = $2)`, leagueID, account).Scan(&administers); err != nil {
+		return tournaments.Tournament{}, err
 	}
 	if organizer != account.String() && !administers {
-		return leagues.League{}, leagues.ErrMatchResultForbidden
+		return tournaments.Tournament{}, tournaments.ErrMatchResultForbidden
+	}
+	var format string
+	if err := tx.QueryRow(ctx, `SELECT format FROM tournaments WHERE id=$1`, leagueID).Scan(&format); err != nil {
+		return tournaments.Tournament{}, err
+	}
+	if format == "single_elimination" {
+		if err := recordBracketResult(ctx, tx, account.String(), leagueID, matchID, input); err != nil {
+			return tournaments.Tournament{}, err
+		}
+		if _, err := tx.Exec(ctx, `UPDATE tournaments SET last_activity_at=now() WHERE id=$1`, leagueID); err != nil {
+			return tournaments.Tournament{}, err
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return tournaments.Tournament{}, err
+		}
+		return r.GetPublic(ctx, leagueID)
+	}
+	if input.HomePenalties != nil || input.AwayPenalties != nil {
+		return tournaments.Tournament{}, tournaments.ErrInvalidTournamentInput
 	}
 	var previousHome, previousAway *int
-	if err := tx.QueryRow(ctx, `SELECT home_score, away_score FROM matches WHERE id = $1 AND league_id = $2 FOR UPDATE`, matchID, leagueID).Scan(&previousHome, &previousAway); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.League{}, leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT home_score, away_score FROM matches WHERE id = $1 AND tournament_id = $2 FOR UPDATE`, matchID, leagueID).Scan(&previousHome, &previousAway); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.Tournament{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
-	if _, err := tx.Exec(ctx, `UPDATE matches SET state = 'completed', home_score = $3, away_score = $4 WHERE id = $1 AND league_id = $2`, matchID, leagueID, input.HomeScore, input.AwayScore); err != nil {
-		return leagues.League{}, err
+	if _, err := tx.Exec(ctx, `UPDATE matches SET state = 'completed', home_score = $3, away_score = $4 WHERE id = $1 AND tournament_id = $2`, matchID, leagueID, input.HomeScore, input.AwayScore); err != nil {
+		return tournaments.Tournament{}, err
 	}
 	if _, err := tx.Exec(ctx, `INSERT INTO match_result_changes (match_id, changed_by_account_id, previous_home_score, previous_away_score, home_score, away_score) VALUES ($1, $2, $3, $4, $5, $6)`, matchID, account, previousHome, previousAway, input.HomeScore, input.AwayScore); err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
-	if _, err := tx.Exec(ctx, `UPDATE leagues SET last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
-		return leagues.League{}, err
+	if _, err := tx.Exec(ctx, `UPDATE tournaments SET last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
+		return tournaments.Tournament{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	return r.GetPublic(ctx, leagueID)
 }
 
 // Complete closes a complete league and retains its co-champions in the same transaction.
-func (r AccountLeagueRepository) Complete(ctx context.Context, accountID, leagueID string) (leagues.League, error) {
+func (r AccountTournamentRepository) Complete(ctx context.Context, accountID, leagueID string) (tournaments.Tournament, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer, state string
 	var legs int
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state, round_robin_legs FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state, &legs); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.League{}, leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state, round_robin_legs FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state, &legs); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.Tournament{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	if organizer != account.String() {
-		return leagues.League{}, leagues.ErrLeagueForbidden
+		return tournaments.Tournament{}, tournaments.ErrTournamentForbidden
 	}
 	if state != "in_progress" {
-		return leagues.League{}, leagues.ErrLeagueCompletionConflict
+		return tournaments.Tournament{}, tournaments.ErrTournamentCompletionConflict
 	}
 	var pending bool
-	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM matches WHERE league_id = $1 AND state <> 'completed')`, leagueID).Scan(&pending); err != nil {
-		return leagues.League{}, err
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM matches WHERE tournament_id = $1 AND state NOT IN ('completed','bye'))`, leagueID).Scan(&pending); err != nil {
+		return tournaments.Tournament{}, err
 	}
 	if pending {
-		return leagues.League{}, leagues.ErrLeagueCompletionConflict
+		return tournaments.Tournament{}, tournaments.ErrTournamentCompletionConflict
 	}
-	league, err := loadLeagueForCompletion(ctx, tx, leagueID, legs)
-	if err != nil {
-		return leagues.League{}, err
+	var format string
+	if err := tx.QueryRow(ctx, `SELECT format FROM tournaments WHERE id=$1`, leagueID).Scan(&format); err != nil {
+		return tournaments.Tournament{}, err
 	}
-	standings := leagues.CalculateStandings(league)
-	for _, standing := range standings {
-		if standing.Position != 1 {
-			continue
+	if format == "single_elimination" {
+		var winner string
+		if err := tx.QueryRow(ctx, `SELECT winner_team_id::text FROM matches WHERE tournament_id=$1 ORDER BY round_number DESC LIMIT 1`, leagueID).Scan(&winner); err != nil {
+			return tournaments.Tournament{}, err
 		}
-		if _, err := tx.Exec(ctx, `INSERT INTO league_champions (league_id, team_id) VALUES ($1, $2)`, leagueID, standing.TeamID); err != nil {
-			return leagues.League{}, err
+		if _, err := tx.Exec(ctx, `INSERT INTO tournament_champions(tournament_id,team_id) VALUES ($1,$2)`, leagueID, winner); err != nil {
+			return tournaments.Tournament{}, err
+		}
+	} else {
+		league, err := loadTournamentForCompletion(ctx, tx, leagueID, legs)
+		if err != nil {
+			return tournaments.Tournament{}, err
+		}
+		standings := tournaments.CalculateStandings(league)
+		for _, standing := range standings {
+			if standing.Position != 1 {
+				continue
+			}
+			if _, err := tx.Exec(ctx, `INSERT INTO tournament_champions (tournament_id, team_id) VALUES ($1, $2)`, leagueID, standing.TeamID); err != nil {
+				return tournaments.Tournament{}, err
+			}
 		}
 	}
-	if _, err := tx.Exec(ctx, `UPDATE leagues SET state = 'completed', last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
-		return leagues.League{}, err
+	if _, err := tx.Exec(ctx, `UPDATE tournament_stages SET state='completed' WHERE tournament_id=$1`, leagueID); err != nil {
+		return tournaments.Tournament{}, err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE tournaments SET state = 'completed', last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
+		return tournaments.Tournament{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	return r.GetPublic(ctx, leagueID)
 }
 
-func loadLeagueForCompletion(ctx context.Context, tx pgx.Tx, leagueID string, legs int) (leagues.League, error) {
-	league := leagues.League{RoundRobinLegs: legs, Teams: []leagues.Team{}, Matches: []leagues.Match{}}
-	teams, err := tx.Query(ctx, `SELECT id::text, name, position FROM league_teams WHERE league_id = $1 ORDER BY position`, leagueID)
+func loadTournamentForCompletion(ctx context.Context, tx pgx.Tx, leagueID string, legs int) (tournaments.Tournament, error) {
+	league := tournaments.Tournament{RoundRobinLegs: legs, Teams: []tournaments.Team{}, Matches: []tournaments.Match{}}
+	teams, err := tx.Query(ctx, `SELECT id::text, name, position FROM tournament_teams WHERE tournament_id = $1 ORDER BY position`, leagueID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	defer teams.Close()
 	for teams.Next() {
-		var team leagues.Team
+		var team tournaments.Team
 		if err := teams.Scan(&team.ID, &team.Name, &team.Position); err != nil {
-			return leagues.League{}, err
+			return tournaments.Tournament{}, err
 		}
 		league.Teams = append(league.Teams, team)
 	}
 	if err := teams.Err(); err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
-	matches, err := tx.Query(ctx, `SELECT id::text, round_number, sequence, home_team_id::text, away_team_id::text, state, home_score, away_score FROM matches WHERE league_id = $1 ORDER BY round_number, sequence`, leagueID)
+	matches, err := tx.Query(ctx, `SELECT id::text, round_number, sequence, home_team_id::text, away_team_id::text, state, home_score, away_score FROM matches WHERE tournament_id = $1 ORDER BY round_number, sequence`, leagueID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	defer matches.Close()
 	for matches.Next() {
-		var match leagues.Match
+		var match tournaments.Match
 		if err := matches.Scan(&match.ID, &match.RoundNumber, &match.Sequence, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore); err != nil {
-			return leagues.League{}, err
+			return tournaments.Tournament{}, err
 		}
 		league.Matches = append(league.Matches, match)
 	}
@@ -496,91 +500,121 @@ func loadLeagueForCompletion(ctx context.Context, tx pgx.Tx, leagueID string, le
 }
 
 // Start freezes configuration and generates a full round for each leg.
-func (r AccountLeagueRepository) Start(ctx context.Context, accountID, leagueID string, input leagues.StartInput) (leagues.League, error) {
+func (r AccountTournamentRepository) Start(ctx context.Context, accountID, leagueID string, input tournaments.StartInput) (tournaments.Tournament, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer string
 	var state string
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.League{}, leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.Tournament{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	if organizer != account.String() {
-		return leagues.League{}, leagues.ErrLeagueForbidden
+		return tournaments.Tournament{}, tournaments.ErrTournamentForbidden
 	}
 	if state != "published" {
-		return leagues.League{}, leagues.ErrLeagueConflict
+		return tournaments.Tournament{}, tournaments.ErrTournamentConflict
 	}
-	rows, err := tx.Query(ctx, `SELECT id::text FROM league_teams WHERE league_id = $1 ORDER BY position`, leagueID)
+	rows, err := tx.Query(ctx, `SELECT id::text FROM tournament_teams WHERE tournament_id = $1 ORDER BY position`, leagueID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	var ids []string
 	for rows.Next() {
 		var id string
 		if err := rows.Scan(&id); err != nil {
 			rows.Close()
-			return leagues.League{}, err
+			return tournaments.Tournament{}, err
 		}
 		ids = append(ids, id)
 	}
 	rows.Close()
-	for _, fixture := range fixtures(ids, input.RoundRobinLegs) {
-		if _, err := tx.Exec(ctx, `INSERT INTO matches (league_id, round_number, sequence, home_team_id, away_team_id) VALUES ($1, $2, $3, $4, $5)`, leagueID, fixture.round, fixture.sequence, fixture.home, fixture.away); err != nil {
-			return leagues.League{}, err
+	if rows.Err() != nil {
+		return tournaments.Tournament{}, rows.Err()
+	}
+	if len(ids) < 2 || len(ids) > 64 {
+		return tournaments.Tournament{}, tournaments.ErrInvalidTournamentInput
+	}
+	if input.Format == "" {
+		input.Format = "league"
+	}
+	var stageID string
+	var stageLegs *int
+	if input.Format == "league" {
+		stageLegs = &input.RoundRobinLegs
+	}
+	if err := tx.QueryRow(ctx, `INSERT INTO tournament_stages (tournament_id,position,type,state,round_robin_legs) VALUES ($1,1,$2,'in_progress',$3) ON CONFLICT (tournament_id,position) DO UPDATE SET type=EXCLUDED.type,state=EXCLUDED.state,round_robin_legs=EXCLUDED.round_robin_legs RETURNING id::text`, leagueID, input.Format, stageLegs).Scan(&stageID); err != nil {
+		return tournaments.Tournament{}, err
+	}
+	if input.Format == "single_elimination" {
+		if err := insertBracket(ctx, tx, leagueID, stageID, ids); err != nil {
+			return tournaments.Tournament{}, err
+		}
+	} else {
+		for _, fixture := range fixtures(ids, input.RoundRobinLegs) {
+			if _, err := tx.Exec(ctx, `INSERT INTO matches (tournament_id, round_number, sequence, home_team_id, away_team_id,stage_id) VALUES ($1, $2, $3, $4, $5,$6)`, leagueID, fixture.round, fixture.sequence, fixture.home, fixture.away, stageID); err != nil {
+				return tournaments.Tournament{}, err
+			}
 		}
 	}
-	if _, err := tx.Exec(ctx, `UPDATE leagues SET state = 'in_progress', round_robin_legs = $2, last_activity_at = now() WHERE id = $1`, leagueID, input.RoundRobinLegs); err != nil {
-		return leagues.League{}, err
+	legs := input.RoundRobinLegs
+	if legs == 0 {
+		legs = 1
+	}
+	if _, err := tx.Exec(ctx, `UPDATE tournaments SET state = 'in_progress', round_robin_legs = $2,format=$3, last_activity_at = now() WHERE id = $1`, leagueID, legs, input.Format); err != nil {
+		return tournaments.Tournament{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	return r.GetPublic(ctx, leagueID)
 }
 
 // Cancel retains the league and its data but removes it from the active sporting lifecycle.
-func (r AccountLeagueRepository) Cancel(ctx context.Context, accountID, leagueID string) (leagues.League, error) {
+func (r AccountTournamentRepository) Cancel(ctx context.Context, accountID, leagueID string) (tournaments.Tournament, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer, state string
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.League{}, leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.Tournament{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	if organizer != account.String() {
-		return leagues.League{}, leagues.ErrLeagueForbidden
+		return tournaments.Tournament{}, tournaments.ErrTournamentForbidden
 	}
 	if state != "published" && state != "in_progress" {
-		return leagues.League{}, leagues.ErrLeagueCancellationConflict
+		return tournaments.Tournament{}, tournaments.ErrTournamentCancellationConflict
 	}
-	if _, err := tx.Exec(ctx, `UPDATE leagues SET state = 'cancelled', last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
-		return leagues.League{}, err
+	if _, err := tx.Exec(ctx, `UPDATE tournament_stages SET state='cancelled' WHERE tournament_id=$1`, leagueID); err != nil {
+		return tournaments.Tournament{}, err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE tournaments SET state = 'cancelled', last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
+		return tournaments.Tournament{}, err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return leagues.League{}, err
+		return tournaments.Tournament{}, err
 	}
 	return r.GetPublic(ctx, leagueID)
 }
 
 // AssignAdministrator directly assigns a verified account by its public username.
-func (r AccountLeagueRepository) AssignAdministrator(ctx context.Context, accountID, leagueID, username string) error {
+func (r AccountTournamentRepository) AssignAdministrator(ctx context.Context, accountID, leagueID, username string) error {
 	account, err := uuidValue(accountID)
 	if err != nil {
 		return err
@@ -591,29 +625,29 @@ func (r AccountLeagueRepository) AssignAdministrator(ctx context.Context, accoun
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer string
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.ErrTournamentNotFound
 	} else if err != nil {
 		return err
 	}
 	if organizer != account.String() {
-		return leagues.ErrLeagueForbidden
+		return tournaments.ErrTournamentForbidden
 	}
 	var administrator string
 	if err := tx.QueryRow(ctx, `SELECT id::text FROM accounts WHERE username = $1 AND state = 'verified'`, username).Scan(&administrator); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.ErrLeagueNotFound
+		return tournaments.ErrTournamentNotFound
 	} else if err != nil {
 		return err
 	}
 	if administrator == organizer {
-		return leagues.ErrLeagueAdministratorConflict
+		return tournaments.ErrTournamentAdministratorConflict
 	}
-	result, err := tx.Exec(ctx, `INSERT INTO league_administrators (league_id, account_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, leagueID, administrator)
+	result, err := tx.Exec(ctx, `INSERT INTO tournament_administrators (tournament_id, account_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, leagueID, administrator)
 	if err != nil {
 		return err
 	}
 	if result.RowsAffected() == 1 {
-		if _, err := tx.Exec(ctx, `INSERT INTO account_notifications (account_id, kind, league_id) VALUES ($1, 'league_administrator_assigned', $2)`, administrator, leagueID); err != nil {
+		if _, err := tx.Exec(ctx, `INSERT INTO account_notifications (account_id, kind, tournament_id) VALUES ($1, 'tournament_administrator_assigned', $2)`, administrator, leagueID); err != nil {
 			return err
 		}
 	}
@@ -621,8 +655,8 @@ func (r AccountLeagueRepository) AssignAdministrator(ctx context.Context, accoun
 }
 
 // ListNotifications returns the account's internal inbox.
-func (r AccountLeagueRepository) ListNotifications(ctx context.Context, accountID string) ([]notifications.Item, error) {
-	rows, err := r.pool.Query(ctx, `SELECT account_notifications.id::text, account_notifications.kind, leagues.id::text, leagues.name, account_notifications.created_at, account_notifications.read_at FROM account_notifications JOIN leagues ON leagues.id = account_notifications.league_id WHERE account_notifications.account_id = $1 ORDER BY account_notifications.created_at DESC, account_notifications.id DESC`, accountID)
+func (r AccountTournamentRepository) ListNotifications(ctx context.Context, accountID string) ([]notifications.Item, error) {
+	rows, err := r.pool.Query(ctx, `SELECT account_notifications.id::text, account_notifications.kind, tournaments.id::text, tournaments.name, account_notifications.created_at, account_notifications.read_at FROM account_notifications JOIN tournaments ON tournaments.id = account_notifications.tournament_id WHERE account_notifications.account_id = $1 ORDER BY account_notifications.created_at DESC, account_notifications.id DESC`, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -632,7 +666,7 @@ func (r AccountLeagueRepository) ListNotifications(ctx context.Context, accountI
 		var item notifications.Item
 		var createdAt time.Time
 		var readAt *time.Time
-		if err := rows.Scan(&item.ID, &item.Kind, &item.LeagueID, &item.LeagueName, &createdAt, &readAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Kind, &item.TournamentID, &item.TournamentName, &createdAt, &readAt); err != nil {
 			return nil, err
 		}
 		item.CreatedAt = createdAt.Format(time.RFC3339Nano)
@@ -646,46 +680,46 @@ func (r AccountLeagueRepository) ListNotifications(ctx context.Context, accountI
 }
 
 // UnreadCount counts the account's unread notifications.
-func (r AccountLeagueRepository) UnreadCount(ctx context.Context, accountID string) (int, error) {
+func (r AccountTournamentRepository) UnreadCount(ctx context.Context, accountID string) (int, error) {
 	var count int
 	err := r.pool.QueryRow(ctx, `SELECT count(*) FROM account_notifications WHERE account_id = $1 AND read_at IS NULL`, accountID).Scan(&count)
 	return count, err
 }
 
 // MarkAllRead marks the account's pending notifications as read.
-func (r AccountLeagueRepository) MarkAllRead(ctx context.Context, accountID string) error {
+func (r AccountTournamentRepository) MarkAllRead(ctx context.Context, accountID string) error {
 	_, err := r.pool.Exec(ctx, `UPDATE account_notifications SET read_at = now() WHERE account_id = $1 AND read_at IS NULL`, accountID)
 	return err
 }
 
 // Delete removes a notification owned by the account.
-func (r AccountLeagueRepository) Delete(ctx context.Context, accountID, notificationID string) error {
+func (r AccountTournamentRepository) Delete(ctx context.Context, accountID, notificationID string) error {
 	_, err := r.pool.Exec(ctx, `DELETE FROM account_notifications WHERE id = $1 AND account_id = $2`, notificationID, accountID)
 	return err
 }
 
 // DeleteAll removes all account notifications.
-func (r AccountLeagueRepository) DeleteAll(ctx context.Context, accountID string) error {
+func (r AccountTournamentRepository) DeleteAll(ctx context.Context, accountID string) error {
 	_, err := r.pool.Exec(ctx, `DELETE FROM account_notifications WHERE account_id = $1`, accountID)
 	return err
 }
 
 // ListAdministrators returns delegated administrators exclusively to the league owner.
-func (r AccountLeagueRepository) ListAdministrators(ctx context.Context, accountID, leagueID string) ([]string, error) {
+func (r AccountTournamentRepository) ListAdministrators(ctx context.Context, accountID, leagueID string) ([]string, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
 		return nil, err
 	}
 	var organizer string
-	if err := r.pool.QueryRow(ctx, `SELECT organizer_account_id::text FROM leagues WHERE id = $1`, leagueID).Scan(&organizer); errors.Is(err, pgx.ErrNoRows) {
-		return nil, leagues.ErrLeagueNotFound
+	if err := r.pool.QueryRow(ctx, `SELECT organizer_account_id::text FROM tournaments WHERE id = $1`, leagueID).Scan(&organizer); errors.Is(err, pgx.ErrNoRows) {
+		return nil, tournaments.ErrTournamentNotFound
 	} else if err != nil {
 		return nil, err
 	}
 	if organizer != account.String() {
-		return nil, leagues.ErrLeagueForbidden
+		return nil, tournaments.ErrTournamentForbidden
 	}
-	rows, err := r.pool.Query(ctx, `SELECT accounts.username FROM league_administrators JOIN accounts ON accounts.id = league_administrators.account_id WHERE league_administrators.league_id = $1 ORDER BY accounts.username`, leagueID)
+	rows, err := r.pool.Query(ctx, `SELECT accounts.username FROM tournament_administrators JOIN accounts ON accounts.id = tournament_administrators.account_id WHERE tournament_administrators.tournament_id = $1 ORDER BY accounts.username`, leagueID)
 	if err != nil {
 		return nil, err
 	}
@@ -702,7 +736,7 @@ func (r AccountLeagueRepository) ListAdministrators(ctx context.Context, account
 }
 
 // RemoveAdministrator removes a delegated administrator exclusively for the league owner.
-func (r AccountLeagueRepository) RemoveAdministrator(ctx context.Context, accountID, leagueID, username string) error {
+func (r AccountTournamentRepository) RemoveAdministrator(ctx context.Context, accountID, leagueID, username string) error {
 	account, err := uuidValue(accountID)
 	if err != nil {
 		return err
@@ -713,22 +747,22 @@ func (r AccountLeagueRepository) RemoveAdministrator(ctx context.Context, accoun
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer string
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.ErrTournamentNotFound
 	} else if err != nil {
 		return err
 	}
 	if organizer != account.String() {
-		return leagues.ErrLeagueForbidden
+		return tournaments.ErrTournamentForbidden
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM league_administrators WHERE league_id = $1 AND account_id = (SELECT id FROM accounts WHERE username = $2)`, leagueID, username); err != nil {
+	if _, err := tx.Exec(ctx, `DELETE FROM tournament_administrators WHERE tournament_id = $1 AND account_id = (SELECT id FROM accounts WHERE username = $2)`, leagueID, username); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
 }
 
 // TransferOwnership atomically replaces the organizer while preserving the competition.
-func (r AccountLeagueRepository) TransferOwnership(ctx context.Context, accountID, leagueID, username string) error {
+func (r AccountTournamentRepository) TransferOwnership(ctx context.Context, accountID, leagueID, username string) error {
 	account, err := uuidValue(accountID)
 	if err != nil {
 		return err
@@ -739,30 +773,30 @@ func (r AccountLeagueRepository) TransferOwnership(ctx context.Context, accountI
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer string
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text FROM leagues WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.ErrLeagueNotFound
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer); errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.ErrTournamentNotFound
 	} else if err != nil {
 		return err
 	}
 	if organizer != account.String() {
-		return leagues.ErrLeagueForbidden
+		return tournaments.ErrTournamentForbidden
 	}
 	var recipient string
 	if err := tx.QueryRow(ctx, `SELECT id::text FROM accounts WHERE username = $1 AND state = 'verified'`, username).Scan(&recipient); errors.Is(err, pgx.ErrNoRows) {
-		return leagues.ErrLeagueNotFound
+		return tournaments.ErrTournamentNotFound
 	} else if err != nil {
 		return err
 	}
 	if recipient == organizer {
-		return leagues.ErrLeagueOwnershipTransferConflict
+		return tournaments.ErrTournamentOwnershipTransferConflict
 	}
-	if _, err := tx.Exec(ctx, `UPDATE leagues SET organizer_account_id = $2, last_activity_at = now() WHERE id = $1`, leagueID, recipient); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE tournaments SET organizer_account_id = $2, last_activity_at = now() WHERE id = $1`, leagueID, recipient); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(ctx, `DELETE FROM league_administrators WHERE league_id = $1 AND account_id = $2`, leagueID, recipient); err != nil {
+	if _, err := tx.Exec(ctx, `DELETE FROM tournament_administrators WHERE tournament_id = $1 AND account_id = $2`, leagueID, recipient); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO account_notifications (account_id, kind, league_id) VALUES ($1, 'league_ownership_transferred', $2)`, recipient, leagueID); err != nil {
+	if _, err := tx.Exec(ctx, `INSERT INTO account_notifications (account_id, kind, tournament_id) VALUES ($1, 'tournament_ownership_transferred', $2)`, recipient, leagueID); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
@@ -799,12 +833,12 @@ func fixtures(ids []string, legs int) []fixture {
 }
 
 // Authenticate resolves a valid opaque session to its account.
-func (r AccountLeagueRepository) Authenticate(ctx context.Context, token string) (string, error) {
+func (r AccountTournamentRepository) Authenticate(ctx context.Context, token string) (string, error) {
 	hash := sha256.Sum256([]byte("session:" + token))
 	accountID, err := r.queries.FindAuthenticatedAccountID(ctx, hash[:])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return "", leagues.ErrUnauthenticated
+			return "", tournaments.ErrUnauthenticated
 		}
 		return "", fmt.Errorf("buscar sesión: %w", err)
 	}
@@ -812,16 +846,16 @@ func (r AccountLeagueRepository) Authenticate(ctx context.Context, token string)
 }
 
 // GetCurrentSession returns the identity and validity of the presented session.
-func (r AccountLeagueRepository) GetCurrentSession(ctx context.Context, token string) (leagues.CurrentSession, error) {
+func (r AccountTournamentRepository) GetCurrentSession(ctx context.Context, token string) (tournaments.CurrentSession, error) {
 	hash := sha256.Sum256([]byte("session:" + token))
 	row, err := r.queries.GetCurrentSession(ctx, hash[:])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return leagues.CurrentSession{}, leagues.ErrUnauthenticated
+			return tournaments.CurrentSession{}, tournaments.ErrUnauthenticated
 		}
-		return leagues.CurrentSession{}, fmt.Errorf("consultar sesión actual: %w", err)
+		return tournaments.CurrentSession{}, fmt.Errorf("consultar sesión actual: %w", err)
 	}
-	return leagues.CurrentSession{
+	return tournaments.CurrentSession{
 		AccountID:         uuidString(row.ID),
 		Username:          row.Username,
 		IdleExpiresAt:     timestamp(row.IdleExpiresAt.Time),
@@ -830,40 +864,40 @@ func (r AccountLeagueRepository) GetCurrentSession(ctx context.Context, token st
 }
 
 // RevokeSession idempotently revokes the presented session and its refresh tokens.
-func (r AccountLeagueRepository) RevokeSession(ctx context.Context, token string) error {
+func (r AccountTournamentRepository) RevokeSession(ctx context.Context, token string) error {
 	hash := sha256.Sum256([]byte("session:" + token))
 	_, err := r.queries.RevokeSession(ctx, hash[:])
 	return err
 }
 
 // GetAccessMethods returns the access methods configured for an account.
-func (r AccountLeagueRepository) GetAccessMethods(ctx context.Context, accountID string) (leagues.AccessMethods, error) {
+func (r AccountTournamentRepository) GetAccessMethods(ctx context.Context, accountID string) (tournaments.AccessMethods, error) {
 	id, err := uuidValue(accountID)
 	if err != nil {
-		return leagues.AccessMethods{}, err
+		return tournaments.AccessMethods{}, err
 	}
 	row, err := r.queries.GetAccessMethods(ctx, id)
 	if err != nil {
-		return leagues.AccessMethods{}, err
+		return tournaments.AccessMethods{}, err
 	}
-	return leagues.AccessMethods{Email: row.Email, Username: row.Username, HasPassword: row.HasPassword, HasGoogle: row.HasGoogle}, nil
+	return tournaments.AccessMethods{Email: row.Email, Username: row.Username, HasPassword: row.HasPassword, HasGoogle: row.HasGoogle}, nil
 }
 
 // CurrentPasswordHash gets the verifier associated with an active session.
-func (r AccountLeagueRepository) CurrentPasswordHash(ctx context.Context, sessionToken string) (string, error) {
+func (r AccountTournamentRepository) CurrentPasswordHash(ctx context.Context, sessionToken string) (string, error) {
 	hash := sha256.Sum256([]byte("session:" + sessionToken))
 	return r.queries.GetCurrentPasswordHash(ctx, hash[:])
 }
 
 // CreateReauthenticationTicket stores a reauthentication ticket for a session.
-func (r AccountLeagueRepository) CreateReauthenticationTicket(ctx context.Context, sessionToken string, ticketHash []byte) error {
+func (r AccountTournamentRepository) CreateReauthenticationTicket(ctx context.Context, sessionToken string, ticketHash []byte) error {
 	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
 	_, err := r.queries.CreateReauthenticationTicket(ctx, sqlc.CreateReauthenticationTicketParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash})
 	return err
 }
 
 // ConsumeReauthenticationTicketAndSetPassword consumes the ticket and changes the password.
-func (r AccountLeagueRepository) ConsumeReauthenticationTicketAndSetPassword(ctx context.Context, sessionToken string, ticketHash []byte, passwordHash string) error {
+func (r AccountTournamentRepository) ConsumeReauthenticationTicketAndSetPassword(ctx context.Context, sessionToken string, ticketHash []byte, passwordHash string) error {
 	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
 	rows, err := r.queries.ConsumeReauthenticationTicketAndSetPassword(ctx, sqlc.ConsumeReauthenticationTicketAndSetPasswordParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash, PasswordHash: passwordHash})
 	if err != nil {
@@ -877,7 +911,7 @@ func (r AccountLeagueRepository) ConsumeReauthenticationTicketAndSetPassword(ctx
 
 // ConsumeReauthenticationTicketAndRemovePassword removes the local method only
 // when Google remains available for the same account.
-func (r AccountLeagueRepository) ConsumeReauthenticationTicketAndRemovePassword(ctx context.Context, sessionToken string, ticketHash []byte) error {
+func (r AccountTournamentRepository) ConsumeReauthenticationTicketAndRemovePassword(ctx context.Context, sessionToken string, ticketHash []byte) error {
 	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
 	rows, err := r.queries.ConsumeReauthenticationTicketAndRemovePassword(ctx, sqlc.ConsumeReauthenticationTicketAndRemovePasswordParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash})
 	if err != nil {
@@ -890,7 +924,7 @@ func (r AccountLeagueRepository) ConsumeReauthenticationTicketAndRemovePassword(
 }
 
 // List returns the requested page of league relationships.
-func (r AccountLeagueRepository) List(ctx context.Context, accountID string, relationship leagues.Relationship, cursor string, limit int) ([]leagues.Item, error) {
+func (r AccountTournamentRepository) List(ctx context.Context, accountID string, relationship tournaments.Relationship, cursor string, limit int) ([]tournaments.Item, error) {
 	accountUUID, err := uuidValue(accountID)
 	if err != nil {
 		return nil, fmt.Errorf("convertir cuenta: %w", err)
@@ -903,27 +937,27 @@ func (r AccountLeagueRepository) List(ctx context.Context, accountID string, rel
 		return nil, fmt.Errorf("límite inválido")
 	}
 	pageSize := int32(limit)
-	params := sqlc.ListAdministeredLeaguesParams{AccountID: accountUUID, CursorID: cursorUUID, PageSize: pageSize}
-	if relationship == leagues.Followed {
-		rows, queryErr := r.queries.ListFollowedLeagues(ctx, sqlc.ListFollowedLeaguesParams(params))
+	params := sqlc.ListAdministeredTournamentsParams{AccountID: accountUUID, CursorID: cursorUUID, PageSize: pageSize}
+	if relationship == tournaments.Followed {
+		rows, queryErr := r.queries.ListFollowedTournaments(ctx, sqlc.ListFollowedTournamentsParams(params))
 		return followedItems(rows), queryErr
 	}
-	rows, err := r.queries.ListAdministeredLeagues(ctx, params)
+	rows, err := r.queries.ListAdministeredTournaments(ctx, params)
 	return administeredItems(rows), err
 }
 
 // ListRecent returns the fixed summary of relationships with recent activity.
-func (r AccountLeagueRepository) ListRecent(ctx context.Context, accountID string) ([]leagues.Item, error) {
+func (r AccountTournamentRepository) ListRecent(ctx context.Context, accountID string) ([]tournaments.Item, error) {
 	accountUUID, err := uuidValue(accountID)
 	if err != nil {
 		return nil, fmt.Errorf("convertir cuenta: %w", err)
 	}
-	rows, err := r.queries.ListRecentAccountLeagues(ctx, accountUUID)
+	rows, err := r.queries.ListRecentAccountTournaments(ctx, accountUUID)
 	return recentItems(rows), err
 }
 
 // Follow creates the follow relationship when the league is visible.
-func (r AccountLeagueRepository) Follow(ctx context.Context, accountID, leagueID string) (bool, error) {
+func (r AccountTournamentRepository) Follow(ctx context.Context, accountID, leagueID string) (bool, error) {
 	accountUUID, err := uuidValue(accountID)
 	if err != nil {
 		return false, fmt.Errorf("convertir cuenta: %w", err)
@@ -932,7 +966,7 @@ func (r AccountLeagueRepository) Follow(ctx context.Context, accountID, leagueID
 	if err != nil {
 		return false, fmt.Errorf("convertir liga: %w", err)
 	}
-	visible, err := r.queries.FollowVisibleLeague(ctx, sqlc.FollowVisibleLeagueParams{AccountID: accountUUID, LeagueID: leagueUUID})
+	visible, err := r.queries.FollowVisibleTournament(ctx, sqlc.FollowVisibleTournamentParams{AccountID: accountUUID, TournamentID: leagueUUID})
 	if err != nil {
 		return false, fmt.Errorf("seguir liga: %w", err)
 	}
@@ -940,7 +974,7 @@ func (r AccountLeagueRepository) Follow(ctx context.Context, accountID, leagueID
 }
 
 // Unfollow idempotently removes the follow relationship.
-func (r AccountLeagueRepository) Unfollow(ctx context.Context, accountID, leagueID string) error {
+func (r AccountTournamentRepository) Unfollow(ctx context.Context, accountID, leagueID string) error {
 	accountUUID, err := uuidValue(accountID)
 	if err != nil {
 		return fmt.Errorf("convertir cuenta: %w", err)
@@ -949,7 +983,7 @@ func (r AccountLeagueRepository) Unfollow(ctx context.Context, accountID, league
 	if err != nil {
 		return fmt.Errorf("convertir liga: %w", err)
 	}
-	if err := r.queries.UnfollowLeague(ctx, sqlc.UnfollowLeagueParams{AccountID: accountUUID, LeagueID: leagueUUID}); err != nil {
+	if err := r.queries.UnfollowTournament(ctx, sqlc.UnfollowTournamentParams{AccountID: accountUUID, TournamentID: leagueUUID}); err != nil {
 		return fmt.Errorf("dejar de seguir liga: %w", err)
 	}
 	return nil
@@ -974,28 +1008,28 @@ func uuidString(value pgtype.UUID) string { return value.String() }
 
 func timestamp(value time.Time) string { return value.UTC().Format(time.RFC3339Nano) }
 
-func administeredItems(rows []sqlc.ListAdministeredLeaguesRow) []leagues.Item {
-	items := make([]leagues.Item, len(rows))
+func administeredItems(rows []sqlc.ListAdministeredTournamentsRow) []tournaments.Item {
+	items := make([]tournaments.Item, len(rows))
 	for index, row := range rows {
-		items[index] = leagues.Item{ID: uuidString(row.ID), Name: row.Name, State: row.State, CreatedAt: timestamp(row.CreatedAt.Time), LastActivityAt: timestamp(row.LastActivityAt.Time), Relationship: row.Relationship}
+		items[index] = tournaments.Item{ID: uuidString(row.ID), Name: row.Name, State: row.State, CreatedAt: timestamp(row.CreatedAt.Time), LastActivityAt: timestamp(row.LastActivityAt.Time), Relationship: row.Relationship}
 	}
 	return items
 }
 
-func followedItems(rows []sqlc.ListFollowedLeaguesRow) []leagues.Item {
-	items := make([]leagues.Item, len(rows))
+func followedItems(rows []sqlc.ListFollowedTournamentsRow) []tournaments.Item {
+	items := make([]tournaments.Item, len(rows))
 	for index, row := range rows {
-		items[index] = leagues.Item{ID: uuidString(row.ID), Name: row.Name, State: row.State, CreatedAt: timestamp(row.CreatedAt.Time), LastActivityAt: timestamp(row.LastActivityAt.Time), Relationship: row.Relationship}
+		items[index] = tournaments.Item{ID: uuidString(row.ID), Name: row.Name, State: row.State, CreatedAt: timestamp(row.CreatedAt.Time), LastActivityAt: timestamp(row.LastActivityAt.Time), Relationship: row.Relationship}
 	}
 	return items
 }
 
-func recentItems(rows []sqlc.ListRecentAccountLeaguesRow) []leagues.Item {
-	items := make([]leagues.Item, len(rows))
+func recentItems(rows []sqlc.ListRecentAccountTournamentsRow) []tournaments.Item {
+	items := make([]tournaments.Item, len(rows))
 	for index, row := range rows {
-		items[index] = leagues.Item{ID: uuidString(row.ID), Name: row.Name, State: row.State, CreatedAt: timestamp(row.CreatedAt.Time), LastActivityAt: timestamp(row.LastActivityAt.Time), Relationship: row.Relationship}
+		items[index] = tournaments.Item{ID: uuidString(row.ID), Name: row.Name, State: row.State, CreatedAt: timestamp(row.CreatedAt.Time), LastActivityAt: timestamp(row.LastActivityAt.Time), Relationship: row.Relationship}
 	}
 	return items
 }
 
-var _ access.Repository = AccountLeagueRepository{}
+var _ access.Repository = AccountTournamentRepository{}

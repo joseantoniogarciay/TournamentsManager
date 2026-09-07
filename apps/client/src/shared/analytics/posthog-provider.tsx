@@ -120,11 +120,11 @@ function screenName(pathname: string) {
   if (pathname === "/privacy-policy") return "privacy_policy";
   if (pathname === "/link/confirm") return "registration_confirmation";
   if (pathname === "/link/password-reset") return "password_reset_confirmation";
-  if (pathname.endsWith("/administrators/add")) return "league_administrators_add";
-  if (pathname.endsWith("/administrators")) return "league_administrators";
+  if (pathname.endsWith("/administrators/add")) return "tournament_administrators_add";
+  if (pathname.endsWith("/administrators")) return "tournament_administrators";
   if (pathname.endsWith("/teams")) return "league_teams";
   if (pathname.endsWith("/standings")) return "league_standings";
   if (pathname.endsWith("/transfer")) return "league_transfer";
-  if (pathname.startsWith("/league/")) return "league_detail";
+  if (pathname.startsWith("/tournament/")) return "league_detail";
   return "unknown";
 }

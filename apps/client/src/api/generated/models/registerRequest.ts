@@ -6,10 +6,10 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type { Email } from "./email.js";
-import type { LeagueInput } from "./leagueInput.js";
 import type { Locale } from "./locale.js";
 import type { Password } from "./password.js";
 import type { RegisterRequestTermsVersion } from "./registerRequestTermsVersion.js";
+import type { TournamentInput } from "./tournamentInput.js";
 import type { Username } from "./username.js";
 
 export interface RegisterRequest {
@@ -19,5 +19,5 @@ export interface RegisterRequest {
   locale: Locale;
   termsVersion: RegisterRequestTermsVersion;
   /** Borrador local válido transferido junto al alta; es opcional. */
-  draft?: LeagueInput;
+  draft?: TournamentInput;
 }

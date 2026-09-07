@@ -24,9 +24,9 @@ import (
 )
 
 const (
-	cacheControl       = "no-store"
-	maxShellBytes      = 5 << 20
-	maximumLeagueTitle = 120
+	cacheControl           = "no-store"
+	maxShellBytes          = 5 << 20
+	maximumTournamentTitle = 120
 )
 
 var leagueIDPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
@@ -42,13 +42,13 @@ type Config struct {
 	APIHost       string
 }
 
-type publicLeague struct {
+type publicTournament struct {
 	Name  string            `json:"name"`
 	State string            `json:"state"`
 	Teams []json.RawMessage `json:"teams"`
 }
 
-// NewHandler returns the canonical /league/{id} renderer. It is intentionally
+// NewHandler returns the canonical /tournament/{id} renderer. It is intentionally
 // useful to browsers as well as crawlers: no User-Agent sniffing means the URL
 // is stable and a person can still hydrate the normal static application.
 func NewHandler(config Config, client *http.Client) (http.Handler, error) {
@@ -97,9 +97,9 @@ func serve(config Config, client *http.Client, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	league, status, err := fetchLeague(r.Context(), client, config, leagueID)
+	league, status, err := fetchTournament(r.Context(), client, config, leagueID)
 	if err != nil {
-		http.Error(w, "League preview is temporarily unavailable", http.StatusServiceUnavailable)
+		http.Error(w, "Tournament preview is temporarily unavailable", http.StatusServiceUnavailable)
 		return
 	}
 	if status == http.StatusNotFound {
@@ -107,18 +107,18 @@ func serve(config Config, client *http.Client, w http.ResponseWriter, r *http.Re
 		return
 	}
 	if status != http.StatusOK {
-		http.Error(w, "League preview is temporarily unavailable", http.StatusServiceUnavailable)
+		http.Error(w, "Tournament preview is temporarily unavailable", http.StatusServiceUnavailable)
 		return
 	}
 
 	shell, err := readShell(config.WebRoot)
 	if err != nil {
-		http.Error(w, "League preview is temporarily unavailable", http.StatusServiceUnavailable)
+		http.Error(w, "Tournament preview is temporarily unavailable", http.StatusServiceUnavailable)
 		return
 	}
 	page, err := render(shell, league, canonicalURL(config.PublicBaseURL, r.URL.Path))
 	if err != nil {
-		http.Error(w, "League preview is temporarily unavailable", http.StatusServiceUnavailable)
+		http.Error(w, "Tournament preview is temporarily unavailable", http.StatusServiceUnavailable)
 		return
 	}
 	w.Header().Set("Cache-Control", cacheControl)
@@ -128,7 +128,7 @@ func serve(config Config, client *http.Client, w http.ResponseWriter, r *http.Re
 }
 
 func leagueIDFromPath(requestPath string) (string, bool) {
-	const prefix = "/league/"
+	const prefix = "/tournament/"
 	if !strings.HasPrefix(requestPath, prefix) {
 		return "", false
 	}
@@ -136,25 +136,25 @@ func leagueIDFromPath(requestPath string) (string, bool) {
 	return leagueID, leagueIDPattern.MatchString(leagueID)
 }
 
-func fetchLeague(ctx context.Context, client *http.Client, config Config, leagueID string) (publicLeague, int, error) {
+func fetchTournament(ctx context.Context, client *http.Client, config Config, leagueID string) (publicTournament, int, error) {
 	// #nosec G704 -- validate permits only a loopback API URL controlled by launchd.
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(config.APIBaseURL, "/")+"/leagues/"+leagueID, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(config.APIBaseURL, "/")+"/tournaments/"+leagueID, nil)
 	if err != nil {
-		return publicLeague{}, 0, err
+		return publicTournament{}, 0, err
 	}
 	request.Host = config.APIHost
 	// #nosec G704 -- request above can only target the validated loopback Caddy route.
 	response, err := client.Do(request)
 	if err != nil {
-		return publicLeague{}, 0, err
+		return publicTournament{}, 0, err
 	}
 	defer func() { _ = response.Body.Close() }()
 	if response.StatusCode != http.StatusOK {
-		return publicLeague{}, response.StatusCode, nil
+		return publicTournament{}, response.StatusCode, nil
 	}
-	var league publicLeague
+	var league publicTournament
 	if err := json.NewDecoder(io.LimitReader(response.Body, 1<<20)).Decode(&league); err != nil {
-		return publicLeague{}, 0, err
+		return publicTournament{}, 0, err
 	}
 	return league, response.StatusCode, nil
 }
@@ -169,7 +169,7 @@ func readShell(webRoot string) ([]byte, error) {
 	return io.ReadAll(io.LimitReader(file, maxShellBytes+1))
 }
 
-func render(shell []byte, league publicLeague, canonical string) ([]byte, error) {
+func render(shell []byte, league publicTournament, canonical string) ([]byte, error) {
 	if len(shell) > maxShellBytes {
 		return nil, errors.New("static shell exceeds maximum size")
 	}
@@ -181,7 +181,7 @@ func render(shell []byte, league publicLeague, canonical string) ([]byte, error)
 	if head == nil {
 		return nil, errors.New("static shell has no head")
 	}
-	title := truncate(strings.TrimSpace(league.Name), maximumLeagueTitle) + " | FastTourney"
+	title := truncate(strings.TrimSpace(league.Name), maximumTournamentTitle) + " | FastTourney"
 	description := leagueDescription(league)
 	imageURL := canonicalURL(canonicalBaseURL(canonical), "/fasttourney-league-preview.png")
 	setTitle(head, title)
@@ -220,7 +220,7 @@ func canonicalURL(baseURL, requestPath string) string {
 	return strings.TrimRight(baseURL, "/") + requestPath
 }
 
-func leagueDescription(league publicLeague) string {
+func leagueDescription(league publicTournament) string {
 	teamLabel := "teams"
 	if len(league.Teams) == 1 {
 		teamLabel = "team"

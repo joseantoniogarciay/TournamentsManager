@@ -1,12 +1,12 @@
-import type { AccountLeagueState, PublicLeagueState } from "@/api/generated/models";
+import type { AccountTournamentState, PublicTournamentState } from "@/api/generated/models";
 
 import type { TranslationKey } from "./locale";
 
-type LeagueState = AccountLeagueState | PublicLeagueState;
+type TournamentState = AccountTournamentState | PublicTournamentState;
 type Translator = (key: TranslationKey) => string;
 
 /** Traduce los estados de liga del contrato antes de presentarlos a la persona. */
-export function getLeagueStateLabel(t: Translator, state: LeagueState) {
+export function getTournamentStateLabel(t: Translator, state: TournamentState) {
   switch (state) {
     case "published":
       return t("league_state_published");

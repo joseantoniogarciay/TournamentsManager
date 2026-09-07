@@ -2,7 +2,7 @@
 set -eu
 
 # Compila de forma atómica el pequeño proceso local que da metadatos sociales a
-# /league/{uuid}. No publica tráfico: Caddy y launchd se actualizan aparte.
+# /tournament/{uuid}. No publica tráfico: Caddy y launchd se actualizan aparte.
 repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 target=${FASTTOURNEY_LEAGUE_PREVIEW_BINARY:-/opt/homebrew/var/www/fasttourney/bin/league-preview-renderer}
 target_directory=$(dirname -- "$target")

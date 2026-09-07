@@ -31,10 +31,53 @@
   descubribles, conservar `noindex`, devolver 404 real si no son visibles y
   recordar que la caché de la plataforma social no está bajo control del origen.
   Véase ADR-0121.
-
 - **Práctica operativa:** validar primero el renderer en el host público de
   desarrollo con un proceso y puerto propios. No se apunta el host de pruebas a
   los releases o la API de producción, aunque ambos vivan tras el mismo Caddy.
+
+## 2026-09-06 — Un nombre de recurso debe sobrevivir al segundo formato
+
+- **Aprendido:** si una API llama `league` a su recurso raíz, añadir una
+  eliminatoria como variante aparenta ahorrar trabajo pero traslada una
+  incoherencia a rutas, datos, cliente y lenguaje de producto. Migrar temprano a
+  `tournament` cuesta más en el cambio actual y reduce deuda cuando existen más
+  formatos.
+- **Límite:** un recurso raíz genérico no justifica crear ahora un motor genérico
+  de fases. Liga y eliminatoria directa conservan sus propias invariantes; una
+  combinación liga más eliminatoria requerirá primero sus reglas de
+  clasificación.
+- **Evidencia:** ADR-0122.
+
+## 2026-09-06 — Preparar una frontera no implica construir su motor
+
+- **Aprendido:** cuando un bracket puede recibir clasificadas de una liga o de
+  grupos, el partido debe pertenecer a una fase y cada plaza debe declarar su
+  fuente. Esa estructura evita migrar el árbol cuando se añada la clasificación.
+- **Límite:** no se implementan todavía grupos, ranking ni una gramática de
+  configuraciones de fases; las reglas deportivas se aceptarán antes de cada
+  tipo de fase nuevo.
+- **Evidencia:** ADR-0123.
+
+- **Regla reutilizable:** introducir la frontera `Tournament -> Stage -> Match`
+  no obliga a retirar formatos vigentes. Durante el primer incremento cada
+  torneo tiene una fase: `league` conserva una o dos vueltas y
+  `single_elimination` aplica partido único sin empates.
+
+### Retrospectiva técnica — primer incremento de eliminatorias
+
+- **Funcionó:** migrar el recurso completo a `tournament` permitió reutilizar
+  equipos, permisos y ciclo de vida sin presentar un bracket como liga. Las
+  pruebas de migración conservaron liga, resultados, historial, campeonas y
+  notificaciones.
+- **Ajuste durante la validación:** la configuración visual debe usar la opción
+  aún no persistida; de lo contrario, al elegir eliminatoria se seguía mostrando
+  temporalmente la acción de clasificación propia de liga.
+- **Deuda deliberada:** cada torneo contiene una sola fase y el origen de plaza
+  solo admite `seeded_team`, `winner` y `bye`. Grupos, cupos y combinaciones se
+  añadirán después de aceptar sus reglas, no como valores permisivos sin dominio.
+- **Prueba reutilizable:** cubrir todos los tamaños de 2 a 64 garantiza que un
+  cuadro termina en `n-1` partidos disputados, sin parejas de dos *byes* y sin
+  ninguna rama que acepte un resultado empatado o un participante desconocido.
 
 ## 2026-09-06 — Un hito de producto no depende de que todas las plataformas estén distribuidas
 

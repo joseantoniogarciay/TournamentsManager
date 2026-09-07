@@ -21,11 +21,11 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
-	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
 var usernamePattern = regexp.MustCompile(`^[a-z0-9_]{3,30}$`)
@@ -39,29 +39,29 @@ const (
 )
 
 // NewHandler builds the infrastructure routes available before business endpoints.
-func NewHandler(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, creationServices ...leagues.CreationService) http.Handler {
+func NewHandler(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService tournaments.Service, corsAllowedOrigins []string, creationServices ...tournaments.CreationService) http.Handler {
 	return NewHandlerWithCookieSecurity(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, true, creationServices...)
 }
 
 // NewHandlerWithCookieSecurity configures Secure cookies except on local HTTP loopback.
-func NewHandlerWithCookieSecurity(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, creationServices ...leagues.CreationService) http.Handler {
+func NewHandlerWithCookieSecurity(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService tournaments.Service, corsAllowedOrigins []string, cookieSecure bool, creationServices ...tournaments.CreationService) http.Handler {
 	return NewHandlerWithCookieSecurityAndTrustedProxies(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, cookieSecure, nil, creationServices...)
 }
 
 // NewHandlerWithCookieSecurityAndTrustedProxies accepts the IP forwarded by Caddy
 // only when the immediate connection originates from a configured proxy network.
-func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, creationServices ...leagues.CreationService) http.Handler {
+func NewHandlerWithCookieSecurityAndTrustedProxies(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService tournaments.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, creationServices ...tournaments.CreationService) http.Handler {
 	return NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, cookieSecure, trustedProxyCIDRs, nil, creationServices...)
 }
 
 // NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver additionally
 // registers the Google Cross-Account Protection receiver when configured.
-func NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, riscReceiver http.Handler, creationServices ...leagues.CreationService) http.Handler {
+func NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService tournaments.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, riscReceiver http.Handler, creationServices ...tournaments.CreationService) http.Handler {
 	return NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, cookieSecure, trustedProxyCIDRs, "", riscReceiver, creationServices...)
 }
 
 // NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver also accepts X-Client-IP when the edge token supplied by Caddy matches.
-func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService leagues.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, edgeProxyAuthToken string, riscReceiver http.Handler, creationServices ...leagues.CreationService) http.Handler {
+func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService tournaments.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, edgeProxyAuthToken string, riscReceiver http.Handler, creationServices ...tournaments.CreationService) http.Handler {
 	mux := http.NewServeMux()
 	resolveClientIP := newClientIPResolver(trustedProxyCIDRs, edgeProxyAuthToken)
 	cookies := sessionCookies(cookieSecure)
@@ -108,8 +108,8 @@ func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(re
 	mux.Handle("PUT /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(putLocalCredential(accessService)))))
 	mux.Handle("DELETE /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteLocalCredential(accessService)))))
 	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
-	mux.Handle("GET /v1/me/leagues", requireSession(authenticator)(http.HandlerFunc(listAccountLeagues(leagueService))))
-	mux.Handle("GET /v1/me/recent-leagues", requireSession(authenticator)(http.HandlerFunc(listRecentAccountLeagues(leagueService))))
+	mux.Handle("GET /v1/me/tournaments", requireSession(authenticator)(http.HandlerFunc(listAccountTournaments(leagueService))))
+	mux.Handle("GET /v1/me/recent-tournaments", requireSession(authenticator)(http.HandlerFunc(listRecentAccountTournaments(leagueService))))
 	if repository, ok := authenticator.(notifications.Repository); ok {
 		notificationService := notifications.NewService(repository)
 		mux.Handle("GET /v1/me/notifications", requireSession(authenticator)(http.HandlerFunc(listNotifications(notificationService))))
@@ -118,24 +118,24 @@ func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(re
 		mux.Handle("DELETE /v1/me/notifications", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteAllNotifications(notificationService)))))
 		mux.Handle("DELETE /v1/me/notifications/{notificationId}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteNotification(notificationService)))))
 	}
-	followHandler := requireSession(authenticator)(cookieCSRF(http.HandlerFunc(followLeague(leagueService))))
-	mux.Handle("PUT /v1/me/leagues/{leagueId}/follow", followHandler)
-	mux.Handle("DELETE /v1/me/leagues/{leagueId}/follow", followHandler)
+	followHandler := requireSession(authenticator)(cookieCSRF(http.HandlerFunc(followTournament(leagueService))))
+	mux.Handle("PUT /v1/me/tournaments/{tournamentId}/follow", followHandler)
+	mux.Handle("DELETE /v1/me/tournaments/{tournamentId}/follow", followHandler)
 	if len(creationServices) > 0 {
 		creationService := creationServices[0]
-		mux.Handle("POST /v1/leagues", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createLeague(creationService)))))
-		mux.Handle("POST /v1/leagues/{leagueId}/teams", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(addLeagueTeam(creationService)))))
-		mux.Handle("DELETE /v1/leagues/{leagueId}/teams/{teamId}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeLeagueTeam(creationService)))))
-		mux.Handle("POST /v1/leagues/{leagueId}/teams/{teamId}/withdraw", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(withdrawLeagueTeam(creationService)))))
-		mux.Handle("POST /v1/leagues/{leagueId}/start", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(startLeague(creationService)))))
-		mux.Handle("POST /v1/leagues/{leagueId}/cancel", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(cancelLeague(creationService)))))
-		mux.Handle("POST /v1/leagues/{leagueId}/complete", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(completeLeague(creationService)))))
-		mux.Handle("PUT /v1/leagues/{leagueId}/matches/{matchId}/result", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(recordMatchResult(creationService)))))
-		mux.Handle("PUT /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(assignLeagueAdministrator(creationService)))))
-		mux.Handle("GET /v1/leagues/{leagueId}/administrators", requireSession(authenticator)(http.HandlerFunc(listLeagueAdministrators(creationService))))
-		mux.Handle("DELETE /v1/leagues/{leagueId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeLeagueAdministrator(creationService)))))
-		mux.Handle("POST /v1/leagues/{leagueId}/transfer", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(transferLeagueOwnership(creationService)))))
-		mux.HandleFunc("GET /v1/leagues/{leagueId}", getPublicLeague(creationService))
+		mux.Handle("POST /v1/tournaments", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createTournament(creationService)))))
+		mux.Handle("POST /v1/tournaments/{tournamentId}/teams", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(addTournamentTeam(creationService)))))
+		mux.Handle("DELETE /v1/tournaments/{tournamentId}/teams/{teamId}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeTournamentTeam(creationService)))))
+		mux.Handle("POST /v1/tournaments/{tournamentId}/teams/{teamId}/withdraw", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(withdrawTournamentTeam(creationService)))))
+		mux.Handle("POST /v1/tournaments/{tournamentId}/start", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(startTournament(creationService)))))
+		mux.Handle("POST /v1/tournaments/{tournamentId}/cancel", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(cancelTournament(creationService)))))
+		mux.Handle("POST /v1/tournaments/{tournamentId}/complete", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(completeTournament(creationService)))))
+		mux.Handle("PUT /v1/tournaments/{tournamentId}/matches/{matchId}/result", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(recordMatchResult(creationService)))))
+		mux.Handle("PUT /v1/tournaments/{tournamentId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(assignTournamentAdministrator(creationService)))))
+		mux.Handle("GET /v1/tournaments/{tournamentId}/administrators", requireSession(authenticator)(http.HandlerFunc(listTournamentAdministrators(creationService))))
+		mux.Handle("DELETE /v1/tournaments/{tournamentId}/administrators/{username}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeTournamentAdministrator(creationService)))))
+		mux.Handle("POST /v1/tournaments/{tournamentId}/transfer", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(transferTournamentOwnership(creationService)))))
+		mux.HandleFunc("GET /v1/tournaments/{tournamentId}", getPublicTournament(creationService))
 	}
 	withCookieName := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		routedRequest := r.WithContext(context.WithValue(r.Context(), sessionCookieNameContextKey{}, cookies.name))
@@ -164,9 +164,9 @@ func scheduleAccountDeletion(authenticator sessionAuthenticator, cookies session
 			return
 		}
 		effectiveAt, err := scheduler.ScheduleAccountDeletion(r.Context(), accountID)
-		if errors.Is(err, postgres.ErrAccountHasOwnedLeagues) {
-			observability.RecordEndpointFailure(r.Context(), "account.deletion_owned_leagues")
-			writeProblem(w, http.StatusConflict, "Account cannot be deleted while it owns leagues")
+		if errors.Is(err, postgres.ErrAccountHasOwnedTournaments) {
+			observability.RecordEndpointFailure(r.Context(), "account.deletion_owned_tournaments")
+			writeProblem(w, http.StatusConflict, "Account cannot be deleted while it owns tournaments")
 			return
 		}
 		if err != nil {
@@ -221,7 +221,7 @@ func (cookies sessionCookieSettings) clear(w http.ResponseWriter) {
 
 func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
 	type currentSessionReader interface {
-		GetCurrentSession(context.Context, string) (leagues.CurrentSession, error)
+		GetCurrentSession(context.Context, string) (tournaments.CurrentSession, error)
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		reader, ok := authenticator.(currentSessionReader)
@@ -235,7 +235,7 @@ func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
 			return
 		}
 		session, err := reader.GetCurrentSession(r.Context(), token)
-		if errors.Is(err, leagues.ErrUnauthenticated) {
+		if errors.Is(err, tournaments.ErrUnauthenticated) {
 			observability.RecordEndpointFailure(r.Context(), "session.invalid")
 			writeProblem(w, http.StatusUnauthorized, "Invalid session")
 			return
@@ -260,18 +260,21 @@ type leagueInput struct {
 		Name string `json:"name"`
 	} `json:"teams"`
 }
-type startLeagueInput struct {
-	RoundRobinLegs int `json:"roundRobinLegs"`
+type startTournamentInput struct {
+	Format         string `json:"format"`
+	RoundRobinLegs int    `json:"roundRobinLegs"`
 }
 type teamInput struct {
 	Name string `json:"name"`
 }
 type matchResultInput struct {
-	HomeScore *int `json:"homeScore"`
-	AwayScore *int `json:"awayScore"`
+	HomePenalties *int `json:"homePenalties"`
+	AwayPenalties *int `json:"awayPenalties"`
+	HomeScore     *int `json:"homeScore"`
+	AwayScore     *int `json:"awayScore"`
 }
 
-func createLeague(service leagues.CreationService) http.HandlerFunc {
+func createTournament(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
 		if !ok {
@@ -280,21 +283,21 @@ func createLeague(service leagues.CreationService) http.HandlerFunc {
 		}
 		var body leagueInput
 		if err := decodeBody(r, &body); err != nil {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
-		teams := make([]leagues.TeamInput, len(body.Teams))
+		teams := make([]tournaments.TeamInput, len(body.Teams))
 		for i, team := range body.Teams {
-			teams[i] = leagues.TeamInput{Name: team.Name}
+			teams[i] = tournaments.TeamInput{Name: team.Name}
 		}
-		league, err := service.Create(r.Context(), accountID, leagues.CreateInput{Name: body.Name, Teams: teams})
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
-			writeLeagueValidationProblem(w, r)
+		league, err := service.Create(r.Context(), accountID, tournaments.CreateInput{Name: body.Name, Teams: teams})
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrInvalidTournamentInput) {
+			writeTournamentValidationProblem(w, r)
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "Could not create league")
+			writeProblem(w, http.StatusInternalServerError, "Could not create tournament")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -302,35 +305,35 @@ func createLeague(service leagues.CreationService) http.HandlerFunc {
 		_ = json.NewEncoder(w).Encode(league)
 	}
 }
-func addLeagueTeam(service leagues.CreationService) http.HandlerFunc {
+func addTournamentTeam(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
-		leagueID := r.PathValue("leagueId")
+		leagueID := r.PathValue("tournamentId")
 		var body teamInput
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || decodeBody(r, &body) != nil {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
-		team, err := service.AddTeam(r.Context(), accountID, leagueID, leagues.TeamInput{Name: body.Name})
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
-			writeLeagueValidationProblem(w, r)
+		team, err := service.AddTeam(r.Context(), accountID, leagueID, tournaments.TeamInput{Name: body.Name})
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrInvalidTournamentInput) {
+			writeTournamentValidationProblem(w, r)
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot modify this league's teams")
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot modify this tournament's teams")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament is unavailable")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueTeamConflict) {
-			writeProblem(w, http.StatusConflict, "League cannot accept this team")
+		if errors.Is(err, tournaments.ErrTournamentTeamConflict) {
+			writeProblem(w, http.StatusConflict, "Tournament cannot accept this team")
 			return
 		}
 		if err != nil {
@@ -342,30 +345,30 @@ func addLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 		_ = json.NewEncoder(w).Encode(team)
 	}
 }
-func removeLeagueTeam(service leagues.CreationService) http.HandlerFunc {
+func removeTournamentTeam(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
-		leagueID, teamID := r.PathValue("leagueId"), r.PathValue("teamId")
+		leagueID, teamID := r.PathValue("tournamentId"), r.PathValue("teamId")
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(teamID) {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
 		err := service.RemoveTeam(r.Context(), accountID, leagueID, teamID)
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot modify this league's teams")
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot modify this tournament's teams")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League or team is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament or team is unavailable")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueTeamConflict) {
-			writeProblem(w, http.StatusConflict, "An unstarted league must keep at least two teams")
+		if errors.Is(err, tournaments.ErrTournamentTeamConflict) {
+			writeProblem(w, http.StatusConflict, "An unstarted tournament must keep at least two teams")
 			return
 		}
 		if err != nil {
@@ -376,30 +379,30 @@ func removeLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 	}
 }
 
-func withdrawLeagueTeam(service leagues.CreationService) http.HandlerFunc {
+func withdrawTournamentTeam(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
-		leagueID, teamID := r.PathValue("leagueId"), r.PathValue("teamId")
+		leagueID, teamID := r.PathValue("tournamentId"), r.PathValue("teamId")
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(teamID) {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
 		league, err := service.WithdrawTeam(r.Context(), accountID, leagueID, teamID)
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot withdraw teams from this league")
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot withdraw teams from this tournament")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League or team is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament or team is unavailable")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueWithdrawalConflict) {
-			writeProblem(w, http.StatusConflict, "Team cannot be withdrawn from this league")
+		if errors.Is(err, tournaments.ErrTournamentWithdrawalConflict) {
+			writeProblem(w, http.StatusConflict, "Team cannot be withdrawn from this tournament")
 			return
 		}
 		if err != nil {
@@ -410,60 +413,60 @@ func withdrawLeagueTeam(service leagues.CreationService) http.HandlerFunc {
 		_ = json.NewEncoder(w).Encode(league)
 	}
 }
-func getPublicLeague(service leagues.CreationService) http.HandlerFunc {
+func getPublicTournament(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		leagueID := r.PathValue("leagueId")
+		leagueID := r.PathValue("tournamentId")
 		if !uuidPattern.MatchString(leagueID) {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
 		league, err := service.GetPublic(r.Context(), leagueID)
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League is unavailable")
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament is unavailable")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "Could not retrieve league")
+			writeProblem(w, http.StatusInternalServerError, "Could not retrieve tournament")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(league)
 	}
 }
-func startLeague(service leagues.CreationService) http.HandlerFunc {
+func startTournament(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
-		leagueID := r.PathValue("leagueId")
-		var body startLeagueInput
-		if !uuidPattern.MatchString(leagueID) || decodeBody(r, &body) != nil {
-			writeLeagueValidationProblem(w, r)
+		leagueID := r.PathValue("tournamentId")
+		var body startTournamentInput
+		if !uuidPattern.MatchString(leagueID) || decodeBody(r, &body) != nil || (body.Format != "league" && body.Format != "single_elimination") {
+			writeTournamentValidationProblem(w, r)
 			return
 		}
-		league, err := service.Start(r.Context(), accountID, leagueID, leagues.StartInput{RoundRobinLegs: body.RoundRobinLegs})
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
-			writeLeagueValidationProblem(w, r)
+		league, err := service.Start(r.Context(), accountID, leagueID, tournaments.StartInput{Format: body.Format, RoundRobinLegs: body.RoundRobinLegs})
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrInvalidTournamentInput) {
+			writeTournamentValidationProblem(w, r)
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot start this league")
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot start this tournament")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament is unavailable")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueConflict) {
-			writeProblem(w, http.StatusConflict, "League is no longer unstarted")
+		if errors.Is(err, tournaments.ErrTournamentConflict) {
+			writeProblem(w, http.StatusConflict, "Tournament is no longer unstarted")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "Could not start league")
+			writeProblem(w, http.StatusInternalServerError, "Could not start tournament")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -471,34 +474,34 @@ func startLeague(service leagues.CreationService) http.HandlerFunc {
 	}
 }
 
-func cancelLeague(service leagues.CreationService) http.HandlerFunc {
+func cancelTournament(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
-		leagueID := r.PathValue("leagueId")
+		leagueID := r.PathValue("tournamentId")
 		if !uuidPattern.MatchString(leagueID) {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
 		league, err := service.Cancel(r.Context(), accountID, leagueID)
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot cancel this league")
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot cancel this tournament")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament is unavailable")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueCancellationConflict) {
-			writeProblem(w, http.StatusConflict, "League cannot be cancelled from its current state")
+		if errors.Is(err, tournaments.ErrTournamentCancellationConflict) {
+			writeProblem(w, http.StatusConflict, "Tournament cannot be cancelled from its current state")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "Could not cancel league")
+			writeProblem(w, http.StatusInternalServerError, "Could not cancel tournament")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -506,34 +509,34 @@ func cancelLeague(service leagues.CreationService) http.HandlerFunc {
 	}
 }
 
-func completeLeague(service leagues.CreationService) http.HandlerFunc {
+func completeTournament(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
-		leagueID := r.PathValue("leagueId")
+		leagueID := r.PathValue("tournamentId")
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
 		league, err := service.Complete(r.Context(), accountID, leagueID)
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot complete this league")
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot complete this tournament")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament is unavailable")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueCompletionConflict) {
-			writeProblem(w, http.StatusConflict, "League cannot be completed yet")
+		if errors.Is(err, tournaments.ErrTournamentCompletionConflict) {
+			writeProblem(w, http.StatusConflict, "Tournament cannot be completed yet")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "Could not complete league")
+			writeProblem(w, http.StatusInternalServerError, "Could not complete tournament")
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -541,35 +544,35 @@ func completeLeague(service leagues.CreationService) http.HandlerFunc {
 	}
 }
 
-func recordMatchResult(service leagues.CreationService) http.HandlerFunc {
+func recordMatchResult(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
-		leagueID, matchID := r.PathValue("leagueId"), r.PathValue("matchId")
+		leagueID, matchID := r.PathValue("tournamentId"), r.PathValue("matchId")
 		var body matchResultInput
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(matchID) || decodeBody(r, &body) != nil || body.HomeScore == nil || body.AwayScore == nil {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
-		league, err := service.RecordResult(r.Context(), accountID, leagueID, matchID, leagues.MatchResultInput{HomeScore: *body.HomeScore, AwayScore: *body.AwayScore})
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrInvalidLeagueInput) {
-			writeLeagueValidationProblem(w, r)
+		league, err := service.RecordResult(r.Context(), accountID, leagueID, matchID, tournaments.MatchResultInput{HomeScore: *body.HomeScore, AwayScore: *body.AwayScore, HomePenalties: body.HomePenalties, AwayPenalties: body.AwayPenalties})
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrInvalidTournamentInput) || errors.Is(err, tournaments.ErrInvalidBracketResult) {
+			writeTournamentValidationProblem(w, r)
 			return
 		}
-		if errors.Is(err, leagues.ErrMatchResultForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot record results for this league")
+		if errors.Is(err, tournaments.ErrMatchResultForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot record results for this tournament")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League or match is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament or match is unavailable")
 			return
 		}
-		if errors.Is(err, leagues.ErrMatchResultConflict) {
-			writeProblem(w, http.StatusConflict, "League is not in progress")
+		if errors.Is(err, tournaments.ErrMatchResultConflict) || errors.Is(err, tournaments.ErrBracketResultDependency) || errors.Is(err, tournaments.ErrBracketMatchNotReady) {
+			writeProblem(w, http.StatusConflict, "Tournament is not in progress")
 			return
 		}
 		if err != nil {
@@ -581,30 +584,30 @@ func recordMatchResult(service leagues.CreationService) http.HandlerFunc {
 	}
 }
 
-func assignLeagueAdministrator(service leagues.CreationService) http.HandlerFunc {
+func assignTournamentAdministrator(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
-		leagueID, username := r.PathValue("leagueId"), r.PathValue("username")
+		leagueID, username := r.PathValue("tournamentId"), r.PathValue("username")
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !usernamePattern.MatchString(username) {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
 		err := service.AssignAdministrator(r.Context(), accountID, leagueID, username)
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot assign administrators for this league")
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot assign administrators for this tournament")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League or account is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament or account is unavailable")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueAdministratorConflict) {
-			writeProblem(w, http.StatusConflict, "League owner cannot be a delegated administrator")
+		if errors.Is(err, tournaments.ErrTournamentAdministratorConflict) {
+			writeProblem(w, http.StatusConflict, "Tournament owner cannot be a delegated administrator")
 			return
 		}
 		if err != nil {
@@ -615,26 +618,26 @@ func assignLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 	}
 }
 
-func listLeagueAdministrators(service leagues.CreationService) http.HandlerFunc {
+func listTournamentAdministrators(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
-		leagueID := r.PathValue("leagueId")
+		leagueID := r.PathValue("tournamentId")
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
 		usernames, err := service.ListAdministrators(r.Context(), accountID, leagueID)
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot view administrators for this league")
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot view administrators for this tournament")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament is unavailable")
 			return
 		}
 		if err != nil {
@@ -648,26 +651,26 @@ func listLeagueAdministrators(service leagues.CreationService) http.HandlerFunc 
 	}
 }
 
-func removeLeagueAdministrator(service leagues.CreationService) http.HandlerFunc {
+func removeTournamentAdministrator(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
-		leagueID, username := r.PathValue("leagueId"), r.PathValue("username")
+		leagueID, username := r.PathValue("tournamentId"), r.PathValue("username")
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) || !usernamePattern.MatchString(username) {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
 		err := service.RemoveAdministrator(r.Context(), accountID, leagueID, username)
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot remove administrators for this league")
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot remove administrators for this tournament")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament is unavailable")
 			return
 		}
 		if err != nil {
@@ -678,10 +681,10 @@ func removeLeagueAdministrator(service leagues.CreationService) http.HandlerFunc
 	}
 }
 
-func transferLeagueOwnership(service leagues.CreationService) http.HandlerFunc {
+func transferTournamentOwnership(service tournaments.CreationService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountID, ok := currentAccountID(r.Context())
-		leagueID := r.PathValue("leagueId")
+		leagueID := r.PathValue("tournamentId")
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
@@ -690,64 +693,70 @@ func transferLeagueOwnership(service leagues.CreationService) http.HandlerFunc {
 			Username string `json:"username"`
 		}
 		if !uuidPattern.MatchString(leagueID) || json.NewDecoder(r.Body).Decode(&body) != nil || !usernamePattern.MatchString(body.Username) {
-			writeLeagueValidationProblem(w, r)
+			writeTournamentValidationProblem(w, r)
 			return
 		}
 		err := service.TransferOwnership(r.Context(), accountID, leagueID, body.Username)
-		recordLeagueFailure(r.Context(), err)
-		if errors.Is(err, leagues.ErrLeagueForbidden) {
-			writeProblem(w, http.StatusForbidden, "You cannot transfer this league")
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot transfer this tournament")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(w, http.StatusNotFound, "League or account is unavailable")
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament or account is unavailable")
 			return
 		}
-		if errors.Is(err, leagues.ErrLeagueOwnershipTransferConflict) {
-			writeProblem(w, http.StatusConflict, "League owner cannot receive the transfer")
+		if errors.Is(err, tournaments.ErrTournamentOwnershipTransferConflict) {
+			writeProblem(w, http.StatusConflict, "Tournament owner cannot receive the transfer")
 			return
 		}
 		if err != nil {
-			writeProblem(w, http.StatusInternalServerError, "Could not transfer league")
+			writeProblem(w, http.StatusInternalServerError, "Could not transfer tournament")
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
-func writeLeagueValidationProblem(w http.ResponseWriter, r *http.Request) {
+func writeTournamentValidationProblem(w http.ResponseWriter, r *http.Request) {
 	observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 	writeValidationProblem(w)
 }
 
-// recordLeagueFailure preserves the feature's closed vocabulary on the HTTP
+// recordTournamentFailure preserves the feature's closed vocabulary on the HTTP
 // span. It intentionally carries neither resource identifiers nor usernames.
-func recordLeagueFailure(ctx context.Context, err error) {
+func recordTournamentFailure(ctx context.Context, err error) {
 	switch {
 	case err == nil:
 		return
-	case errors.Is(err, leagues.ErrInvalidLeagueInput), errors.Is(err, leagues.ErrInvalidRelationship), errors.Is(err, leagues.ErrInvalidPage):
+	case errors.Is(err, tournaments.ErrInvalidTournamentInput), errors.Is(err, tournaments.ErrInvalidRelationship), errors.Is(err, tournaments.ErrInvalidPage):
 		observability.RecordEndpointFailure(ctx, "validation.rejected")
-	case errors.Is(err, leagues.ErrLeagueNotFound):
-		observability.RecordEndpointFailure(ctx, "league.not_found")
-	case errors.Is(err, leagues.ErrLeagueForbidden), errors.Is(err, leagues.ErrMatchResultForbidden):
-		observability.RecordEndpointFailure(ctx, "league.forbidden")
-	case errors.Is(err, leagues.ErrLeagueConflict):
-		observability.RecordEndpointFailure(ctx, "league.start_conflict")
-	case errors.Is(err, leagues.ErrLeagueCancellationConflict):
-		observability.RecordEndpointFailure(ctx, "league.cancellation_conflict")
-	case errors.Is(err, leagues.ErrLeagueCompletionConflict):
-		observability.RecordEndpointFailure(ctx, "league.completion_conflict")
-	case errors.Is(err, leagues.ErrLeagueTeamConflict):
-		observability.RecordEndpointFailure(ctx, "league.team_conflict")
-	case errors.Is(err, leagues.ErrLeagueWithdrawalConflict):
-		observability.RecordEndpointFailure(ctx, "league.withdrawal_conflict")
-	case errors.Is(err, leagues.ErrMatchResultConflict):
-		observability.RecordEndpointFailure(ctx, "league.result_conflict")
-	case errors.Is(err, leagues.ErrLeagueAdministratorConflict):
-		observability.RecordEndpointFailure(ctx, "league.administrator_conflict")
-	case errors.Is(err, leagues.ErrLeagueOwnershipTransferConflict):
-		observability.RecordEndpointFailure(ctx, "league.ownership_transfer_conflict")
+	case errors.Is(err, tournaments.ErrTournamentNotFound):
+		observability.RecordEndpointFailure(ctx, "tournament.not_found")
+	case errors.Is(err, tournaments.ErrTournamentForbidden), errors.Is(err, tournaments.ErrMatchResultForbidden):
+		observability.RecordEndpointFailure(ctx, "tournament.forbidden")
+	case errors.Is(err, tournaments.ErrTournamentConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.start_conflict")
+	case errors.Is(err, tournaments.ErrTournamentCancellationConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.cancellation_conflict")
+	case errors.Is(err, tournaments.ErrTournamentCompletionConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.completion_conflict")
+	case errors.Is(err, tournaments.ErrTournamentTeamConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.team_conflict")
+	case errors.Is(err, tournaments.ErrTournamentWithdrawalConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.withdrawal_conflict")
+	case errors.Is(err, tournaments.ErrBracketResultDependency):
+		observability.RecordEndpointFailure(ctx, "bracket.result_dependency")
+	case errors.Is(err, tournaments.ErrBracketMatchNotReady):
+		observability.RecordEndpointFailure(ctx, "bracket.match_not_ready")
+	case errors.Is(err, tournaments.ErrInvalidBracketResult):
+		observability.RecordEndpointFailure(ctx, "validation.rejected")
+	case errors.Is(err, tournaments.ErrMatchResultConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.result_conflict")
+	case errors.Is(err, tournaments.ErrTournamentAdministratorConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.administrator_conflict")
+	case errors.Is(err, tournaments.ErrTournamentOwnershipTransferConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.ownership_transfer_conflict")
 	default:
 		observability.RecordDatabaseEndpointFailure(ctx, err)
 	}
@@ -945,7 +954,7 @@ func getAccessMethods(authenticator sessionAuthenticator) http.HandlerFunc {
 			return
 		}
 		reader, ok := authenticator.(interface {
-			GetAccessMethods(context.Context, string) (leagues.AccessMethods, error)
+			GetAccessMethods(context.Context, string) (tournaments.AccessMethods, error)
 		})
 		if !ok {
 			writeProblem(w, http.StatusInternalServerError, "Could not retrieve account")
@@ -1324,16 +1333,16 @@ func verifyRegistration(service registration.Service, cookies sessionCookieSetti
 	}
 }
 
-func followLeague(service leagues.Service) http.HandlerFunc {
+func followTournament(service tournaments.Service) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		accountID, authenticated := currentAccountID(request.Context())
-		leagueID := request.PathValue("leagueId")
+		leagueID := request.PathValue("tournamentId")
 		if !authenticated {
 			writeProblem(writer, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
 		if !uuidPattern.MatchString(leagueID) {
-			writeLeagueValidationProblem(writer, request)
+			writeTournamentValidationProblem(writer, request)
 			return
 		}
 		var err error
@@ -1342,9 +1351,9 @@ func followLeague(service leagues.Service) http.HandlerFunc {
 		} else {
 			err = service.Unfollow(request.Context(), accountID, leagueID)
 		}
-		recordLeagueFailure(request.Context(), err)
-		if errors.Is(err, leagues.ErrLeagueNotFound) {
-			writeProblem(writer, http.StatusNotFound, "League is unavailable")
+		recordTournamentFailure(request.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(writer, http.StatusNotFound, "Tournament is unavailable")
 			return
 		}
 		if err != nil {
@@ -1355,7 +1364,7 @@ func followLeague(service leagues.Service) http.HandlerFunc {
 	}
 }
 
-func listAccountLeagues(service leagues.Service) http.HandlerFunc {
+func listAccountTournaments(service tournaments.Service) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		accountID, authenticated := currentAccountID(request.Context())
 		if !authenticated {
@@ -1363,21 +1372,21 @@ func listAccountLeagues(service leagues.Service) http.HandlerFunc {
 			return
 		}
 
-		relationship := leagues.Relationship(request.URL.Query().Get("relationship"))
+		relationship := tournaments.Relationship(request.URL.Query().Get("relationship"))
 		limit, valid := listLimit(request.URL.Query().Get("limit"))
 		cursor := request.URL.Query().Get("cursor")
 		if !valid || (cursor != "" && !uuidPattern.MatchString(cursor)) {
-			writeLeagueValidationProblem(writer, request)
+			writeTournamentValidationProblem(writer, request)
 			return
 		}
 		page, err := service.List(request.Context(), accountID, relationship, cursor, limit)
-		recordLeagueFailure(request.Context(), err)
-		if errors.Is(err, leagues.ErrInvalidRelationship) || errors.Is(err, leagues.ErrInvalidPage) {
-			writeLeagueValidationProblem(writer, request)
+		recordTournamentFailure(request.Context(), err)
+		if errors.Is(err, tournaments.ErrInvalidRelationship) || errors.Is(err, tournaments.ErrInvalidPage) {
+			writeTournamentValidationProblem(writer, request)
 			return
 		}
 		if err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "Could not retrieve leagues")
+			writeProblem(writer, http.StatusInternalServerError, "Could not retrieve tournaments")
 			return
 		}
 		writer.Header().Set("Content-Type", "application/json")
@@ -1385,7 +1394,7 @@ func listAccountLeagues(service leagues.Service) http.HandlerFunc {
 	}
 }
 
-func listRecentAccountLeagues(service leagues.Service) http.HandlerFunc {
+func listRecentAccountTournaments(service tournaments.Service) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		accountID, authenticated := currentAccountID(request.Context())
 		if !authenticated {
@@ -1393,9 +1402,9 @@ func listRecentAccountLeagues(service leagues.Service) http.HandlerFunc {
 			return
 		}
 		items, err := service.ListRecent(request.Context(), accountID)
-		recordLeagueFailure(request.Context(), err)
+		recordTournamentFailure(request.Context(), err)
 		if err != nil {
-			writeProblem(writer, http.StatusInternalServerError, "Could not retrieve recent leagues")
+			writeProblem(writer, http.StatusInternalServerError, "Could not retrieve recent tournaments")
 			return
 		}
 		writer.Header().Set("Content-Type", "application/json")
@@ -1517,7 +1526,7 @@ func validRegistrationDraft(draft *registration.Draft) bool {
 	if draft == nil {
 		return true
 	}
-	if len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > leagues.MaximumLeagueNameLength || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
+	if len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > tournaments.MaximumTournamentNameLength || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}

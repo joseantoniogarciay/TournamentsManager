@@ -115,110 +115,110 @@ SET revoked_at = now()
 WHERE session_id IN (SELECT id FROM revoked_session)
   AND revoked_at IS NULL;
 
--- name: ListAdministeredLeagues :many
+-- name: ListAdministeredTournaments :many
 SELECT
-    leagues.id,
-    leagues.name,
-    leagues.state,
-    leagues.created_at,
-    leagues.last_activity_at,
+    tournaments.id,
+    tournaments.name,
+    tournaments.state,
+    tournaments.created_at,
+    tournaments.last_activity_at,
     CASE
-        WHEN leagues.organizer_account_id = sqlc.arg(account_id)::uuid THEN 'organizer'
+        WHEN tournaments.organizer_account_id = sqlc.arg(account_id)::uuid THEN 'organizer'
         ELSE 'delegated'
     END AS relationship
-FROM leagues
-LEFT JOIN league_administrators
-    ON league_administrators.league_id = leagues.id
-    AND league_administrators.account_id = sqlc.arg(account_id)::uuid
+FROM tournaments
+LEFT JOIN tournament_administrators
+    ON tournament_administrators.tournament_id = tournaments.id
+    AND tournament_administrators.account_id = sqlc.arg(account_id)::uuid
 WHERE (
-    leagues.organizer_account_id = sqlc.arg(account_id)::uuid
-    OR league_administrators.account_id = sqlc.arg(account_id)::uuid
+    tournaments.organizer_account_id = sqlc.arg(account_id)::uuid
+    OR tournament_administrators.account_id = sqlc.arg(account_id)::uuid
 )
-AND (sqlc.narg(cursor_id)::uuid IS NULL OR leagues.id < sqlc.narg(cursor_id)::uuid)
-ORDER BY leagues.id DESC
+AND (sqlc.narg(cursor_id)::uuid IS NULL OR tournaments.id < sqlc.narg(cursor_id)::uuid)
+ORDER BY tournaments.id DESC
 LIMIT sqlc.arg(page_size);
 
--- name: ListFollowedLeagues :many
+-- name: ListFollowedTournaments :many
 SELECT
-    leagues.id,
-    leagues.name,
-    leagues.state,
-    leagues.created_at,
-    leagues.last_activity_at,
+    tournaments.id,
+    tournaments.name,
+    tournaments.state,
+    tournaments.created_at,
+    tournaments.last_activity_at,
     'follower' AS relationship
-FROM leagues
-JOIN league_followers ON league_followers.league_id = leagues.id
-WHERE league_followers.account_id = sqlc.arg(account_id)::uuid
-  AND leagues.organizer_account_id <> sqlc.arg(account_id)::uuid
+FROM tournaments
+JOIN tournament_followers ON tournament_followers.tournament_id = tournaments.id
+WHERE tournament_followers.account_id = sqlc.arg(account_id)::uuid
+  AND tournaments.organizer_account_id <> sqlc.arg(account_id)::uuid
   AND NOT EXISTS (
       SELECT 1
-      FROM league_administrators
-      WHERE league_administrators.league_id = leagues.id
-        AND league_administrators.account_id = sqlc.arg(account_id)::uuid
+      FROM tournament_administrators
+      WHERE tournament_administrators.tournament_id = tournaments.id
+        AND tournament_administrators.account_id = sqlc.arg(account_id)::uuid
   )
-  AND (sqlc.narg(cursor_id)::uuid IS NULL OR leagues.id < sqlc.narg(cursor_id)::uuid)
-ORDER BY leagues.id DESC
+  AND (sqlc.narg(cursor_id)::uuid IS NULL OR tournaments.id < sqlc.narg(cursor_id)::uuid)
+ORDER BY tournaments.id DESC
 LIMIT sqlc.arg(page_size);
 
--- name: ListRecentAccountLeagues :many
-WITH related_leagues AS (
+-- name: ListRecentAccountTournaments :many
+WITH related_tournaments AS (
     SELECT
-        leagues.id,
-        leagues.name,
-        leagues.state,
-        leagues.created_at,
-        leagues.last_activity_at,
+        tournaments.id,
+        tournaments.name,
+        tournaments.state,
+        tournaments.created_at,
+        tournaments.last_activity_at,
         CASE
-            WHEN leagues.organizer_account_id = sqlc.arg(account_id)::uuid THEN 'organizer'
+            WHEN tournaments.organizer_account_id = sqlc.arg(account_id)::uuid THEN 'organizer'
             ELSE 'delegated'
         END AS relationship
-    FROM leagues
-    LEFT JOIN league_administrators
-        ON league_administrators.league_id = leagues.id
-        AND league_administrators.account_id = sqlc.arg(account_id)::uuid
-    WHERE leagues.organizer_account_id = sqlc.arg(account_id)::uuid
-       OR league_administrators.account_id = sqlc.arg(account_id)::uuid
+    FROM tournaments
+    LEFT JOIN tournament_administrators
+        ON tournament_administrators.tournament_id = tournaments.id
+        AND tournament_administrators.account_id = sqlc.arg(account_id)::uuid
+    WHERE tournaments.organizer_account_id = sqlc.arg(account_id)::uuid
+       OR tournament_administrators.account_id = sqlc.arg(account_id)::uuid
 
     UNION ALL
 
     SELECT
-        leagues.id,
-        leagues.name,
-        leagues.state,
-        leagues.created_at,
-        leagues.last_activity_at,
+        tournaments.id,
+        tournaments.name,
+        tournaments.state,
+        tournaments.created_at,
+        tournaments.last_activity_at,
         'follower' AS relationship
-    FROM leagues
-    JOIN league_followers ON league_followers.league_id = leagues.id
-    WHERE league_followers.account_id = sqlc.arg(account_id)::uuid
-      AND leagues.organizer_account_id <> sqlc.arg(account_id)::uuid
+    FROM tournaments
+    JOIN tournament_followers ON tournament_followers.tournament_id = tournaments.id
+    WHERE tournament_followers.account_id = sqlc.arg(account_id)::uuid
+      AND tournaments.organizer_account_id <> sqlc.arg(account_id)::uuid
       AND NOT EXISTS (
           SELECT 1
-          FROM league_administrators
-          WHERE league_administrators.league_id = leagues.id
-            AND league_administrators.account_id = sqlc.arg(account_id)::uuid
+          FROM tournament_administrators
+          WHERE tournament_administrators.tournament_id = tournaments.id
+            AND tournament_administrators.account_id = sqlc.arg(account_id)::uuid
       )
 )
 SELECT id, name, state, created_at, last_activity_at, relationship
-FROM related_leagues
+FROM related_tournaments
 ORDER BY last_activity_at DESC, id DESC
 LIMIT 5;
 
--- name: FollowVisibleLeague :one
+-- name: FollowVisibleTournament :one
 WITH visible_league AS (
     SELECT id
-    FROM leagues
-    WHERE id = sqlc.arg(league_id)::uuid
+    FROM tournaments
+    WHERE id = sqlc.arg(tournament_id)::uuid
       AND state IN ('published', 'in_progress', 'completed', 'cancelled')
 ), created_follow AS (
-    INSERT INTO league_followers (league_id, account_id)
+    INSERT INTO tournament_followers (tournament_id, account_id)
     SELECT id, sqlc.arg(account_id)::uuid
     FROM visible_league
     ON CONFLICT DO NOTHING
 )
 SELECT EXISTS (SELECT 1 FROM visible_league) AS visible;
 
--- name: UnfollowLeague :exec
-DELETE FROM league_followers
-WHERE league_id = sqlc.arg(league_id)::uuid
+-- name: UnfollowTournament :exec
+DELETE FROM tournament_followers
+WHERE tournament_id = sqlc.arg(tournament_id)::uuid
   AND account_id = sqlc.arg(account_id)::uuid;

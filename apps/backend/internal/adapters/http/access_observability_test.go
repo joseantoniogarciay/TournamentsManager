@@ -36,7 +36,7 @@ func (r accessObservabilityRepository) ConsumeReauthenticationTicketAndRemovePas
 type deletionObservabilityAuthenticator struct{ testAuthenticator }
 
 func (deletionObservabilityAuthenticator) ScheduleAccountDeletion(context.Context, string) (time.Time, error) {
-	return time.Time{}, postgres.ErrAccountHasOwnedLeagues
+	return time.Time{}, postgres.ErrAccountHasOwnedTournaments
 }
 
 func TestAccessEndpointFailuresUseClosedSafeReasons(t *testing.T) {
@@ -105,10 +105,10 @@ func TestAccessEndpointFailuresUseClosedSafeReasons(t *testing.T) {
 			want:    "access_method.last_remaining",
 		},
 		{
-			name:    "account deletion owns leagues",
+			name:    "account deletion owns tournaments",
 			handler: scheduleAccountDeletion(deletionObservabilityAuthenticator{testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}}, sessionCookies(false)),
 			request: withAccount(httptest.NewRequest(http.MethodDelete, "/v1/me/account", nil)),
-			want:    "account.deletion_owned_leagues",
+			want:    "account.deletion_owned_tournaments",
 		},
 	}
 

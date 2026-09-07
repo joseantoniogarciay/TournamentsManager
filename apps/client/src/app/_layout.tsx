@@ -15,7 +15,7 @@ import { typography } from "@tournaments-manager/design-tokens";
 import { FeedbackProvider } from "@/shared/feedback/feedback-provider";
 import { PendingVerificationProvider } from "@/features/registration/pending-verification";
 import { ClientTelemetryProvider } from "@/shared/analytics/posthog-provider";
-import { LeagueStoreProvider } from "@/features/league-creation/league-store";
+import { TournamentStoreProvider } from "@/features/league-creation/league-store";
 import { SessionProvider, useSession } from "@/shared/session/session-provider";
 import { PreferencesProvider, usePreferences } from "@/shared/preferences/preferences-provider";
 import { ConfirmationDialogProvider } from "@/shared/ui";
@@ -69,13 +69,13 @@ export default function RootLayout() {
           <FeedbackProvider>
             <SessionProvider>
               <NotificationProvider>
-                <LeagueStoreProvider>
+                <TournamentStoreProvider>
                   <PendingVerificationProvider>
                     <ConfirmationDialogProvider>
                       <RootNavigator />
                     </ConfirmationDialogProvider>
                   </PendingVerificationProvider>
-                </LeagueStoreProvider>
+                </TournamentStoreProvider>
               </NotificationProvider>
             </SessionProvider>
           </FeedbackProvider>
@@ -145,35 +145,35 @@ function RootNavigator() {
         }}
       />
       <Stack.Screen
-        name="league/[id]"
+        name="tournament/[id]"
         options={{
           headerShown: true,
           presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
         }}
       />
       <Stack.Screen
-        name="league/[id]/teams"
+        name="tournament/[id]/teams"
         options={{
           headerShown: true,
           presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
         }}
       />
       <Stack.Screen
-        name="league/[id]/standings"
+        name="tournament/[id]/standings"
         options={{
           headerShown: true,
           presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
         }}
       />
       <Stack.Screen
-        name="league/[id]/administrators"
+        name="tournament/[id]/administrators"
         options={{
           headerShown: true,
           presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
         }}
       />
       <Stack.Screen
-        name="league/[id]/administrators/add"
+        name="tournament/[id]/administrators/add"
         options={{
           headerShown: true,
           presentation: Platform.OS === "web" ? "card" : "fullScreenModal",

@@ -11,8 +11,8 @@ import type { Uuid } from "./uuid.js";
 export interface Notification {
   id: Uuid;
   kind: NotificationKind;
-  leagueId: Uuid;
-  leagueName: string;
+  tournamentId: Uuid;
+  tournamentName: string;
   createdAt: string;
   /** @nullable */
   readAt: string | null;

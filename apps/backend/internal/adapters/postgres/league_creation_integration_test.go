@@ -12,8 +12,8 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/accounts"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
-	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
 type integrationMailer struct{ passwordResetToken string }
@@ -101,46 +101,46 @@ func TestRISCRevocationIsAtomicAndIdempotent(t *testing.T) {
 	}
 }
 
-func leagueMatchByID(matches []leagues.Match, id string) (leagues.Match, bool) {
+func leagueMatchByID(matches []tournaments.Match, id string) (tournaments.Match, bool) {
 	for _, match := range matches {
 		if match.ID == id {
 			return match, true
 		}
 	}
-	return leagues.Match{}, false
+	return tournaments.Match{}, false
 }
 
-func leagueMatchBetweenTeams(matches []leagues.Match, firstTeamID, secondTeamID string) (leagues.Match, bool) {
+func leagueMatchBetweenTeams(matches []tournaments.Match, firstTeamID, secondTeamID string) (tournaments.Match, bool) {
 	for _, match := range matches {
 		if (match.HomeTeamID == firstTeamID && match.AwayTeamID == secondTeamID) ||
 			(match.HomeTeamID == secondTeamID && match.AwayTeamID == firstTeamID) {
 			return match, true
 		}
 	}
-	return leagues.Match{}, false
+	return tournaments.Match{}, false
 }
 
-func recordWin(t *testing.T, ctx context.Context, service leagues.CreationService, accountID, leagueID string, match leagues.Match, winnerTeamID string, winningScore, losingScore int) {
+func recordWin(t *testing.T, ctx context.Context, service tournaments.CreationService, accountID, leagueID string, match tournaments.Match, winnerTeamID string, winningScore, losingScore int) {
 	t.Helper()
 	homeScore, awayScore := losingScore, winningScore
 	if match.HomeTeamID == winnerTeamID {
 		homeScore, awayScore = winningScore, losingScore
 	}
-	if _, err := service.RecordResult(ctx, accountID, leagueID, match.ID, leagues.MatchResultInput{HomeScore: homeScore, AwayScore: awayScore}); err != nil {
+	if _, err := service.RecordResult(ctx, accountID, leagueID, match.ID, tournaments.MatchResultInput{HomeScore: homeScore, AwayScore: awayScore}); err != nil {
 		t.Fatalf("registrar resultado de %s = %v", match.ID, err)
 	}
 }
 
 // Esta prueba usa una base efímera preparada por el comando de integración.
-func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
+func TestIntegrationTournamentCreationAndStartWithPostgres(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
 	var accountID string
 	if err := pool.QueryRow(ctx, `INSERT INTO accounts (email, locale, state, username, verified_at) VALUES ('organizer@example.test', 'es', 'verified', 'organizer', now()) RETURNING id::text`).Scan(&accountID); err != nil {
 		t.Fatalf("crear organizadora: %v", err)
 	}
-	service := leagues.NewCreationService(NewAccountLeagueRepository(pool))
-	created, err := service.Create(ctx, accountID, leagues.CreateInput{Name: "Liga de verano", Teams: []leagues.TeamInput{{Name: "Azules"}, {Name: "Rojos"}, {Name: "Verdes"}, {Name: "Amarillos"}}})
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	created, err := service.Create(ctx, accountID, tournaments.CreateInput{Name: "Liga de verano", Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}, {Name: "Verdes"}, {Name: "Amarillos"}}})
 	if err != nil {
 		t.Fatalf("crear liga: %v", err)
 	}
@@ -163,30 +163,30 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 		t.Fatalf("reasignar administradora: %v", err)
 	}
 	var assigned bool
-	if err := pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM league_administrators WHERE league_id = $1 AND account_id = $2)`, created.ID, administratorID).Scan(&assigned); err != nil || !assigned {
+	if err := pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM tournament_administrators WHERE tournament_id = $1 AND account_id = $2)`, created.ID, administratorID).Scan(&assigned); err != nil || !assigned {
 		t.Fatalf("comprobar administradora asignada = %v, %v", assigned, err)
 	}
 	if created.State != "published" || len(created.Teams) != 4 || len(created.Matches) != 0 {
 		t.Fatalf("liga creada = %#v, se esperaba publicada sin partidos", created)
 	}
-	started, err := service.Start(ctx, accountID, created.ID, leagues.StartInput{RoundRobinLegs: 2})
+	started, err := service.Start(ctx, accountID, created.ID, tournaments.StartInput{RoundRobinLegs: 2})
 	if err != nil {
 		t.Fatalf("iniciar liga: %v", err)
 	}
 	if started.State != "in_progress" || len(started.Matches) != 12 {
 		t.Fatalf("liga iniciada = state %q, partidos %d; se esperaba in_progress y 12", started.State, len(started.Matches))
 	}
-	withOrganizerResult, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1})
+	withOrganizerResult, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1})
 	organizerMatch, found := leagueMatchByID(withOrganizerResult.Matches, started.Matches[0].ID)
 	if err != nil || !found || organizerMatch.State != "completed" || organizerMatch.HomeScore == nil || *organizerMatch.HomeScore != 2 || organizerMatch.AwayScore == nil || *organizerMatch.AwayScore != 1 {
 		t.Fatalf("resultado de organizadora = %#v, %v; se esperaba marcador 2-1", organizerMatch, err)
 	}
-	withResult, err := service.RecordResult(ctx, administratorID, created.ID, started.Matches[1].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1})
+	withResult, err := service.RecordResult(ctx, administratorID, created.ID, started.Matches[1].ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1})
 	administratorMatch, found := leagueMatchByID(withResult.Matches, started.Matches[1].ID)
 	if err != nil || !found || administratorMatch.State != "completed" || administratorMatch.HomeScore == nil || *administratorMatch.HomeScore != 2 || administratorMatch.AwayScore == nil || *administratorMatch.AwayScore != 1 {
 		t.Fatalf("registrar resultado = %#v, %v; se esperaba marcador 2-1", administratorMatch, err)
 	}
-	corrected, err := service.RecordResult(ctx, administratorID, created.ID, started.Matches[1].ID, leagues.MatchResultInput{HomeScore: 3, AwayScore: 0})
+	corrected, err := service.RecordResult(ctx, administratorID, created.ID, started.Matches[1].ID, tournaments.MatchResultInput{HomeScore: 3, AwayScore: 0})
 	correctedMatch, found := leagueMatchByID(corrected.Matches, started.Matches[1].ID)
 	if err != nil || !found || correctedMatch.HomeScore == nil || *correctedMatch.HomeScore != 3 || correctedMatch.AwayScore == nil || *correctedMatch.AwayScore != 0 {
 		t.Fatalf("corregir resultado = %#v, %v; se esperaba marcador 3-0", correctedMatch, err)
@@ -195,8 +195,8 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	if err := pool.QueryRow(ctx, `SELECT count(*), max(previous_home_score), max(previous_away_score) FROM match_result_changes WHERE match_id = $1`, started.Matches[1].ID).Scan(&historyCount, &previousHome, &previousAway); err != nil || historyCount != 2 || previousHome != 2 || previousAway != 1 {
 		t.Fatalf("historial = count %d, previo %d-%d, %v; se esperaban dos cambios y previo 2-1", historyCount, previousHome, previousAway, err)
 	}
-	if _, err := service.Start(ctx, accountID, created.ID, leagues.StartInput{RoundRobinLegs: 1}); err != leagues.ErrLeagueConflict {
-		t.Fatalf("segundo inicio = %v, se esperaba %v", err, leagues.ErrLeagueConflict)
+	if _, err := service.Start(ctx, accountID, created.ID, tournaments.StartInput{RoundRobinLegs: 1}); err != tournaments.ErrTournamentConflict {
+		t.Fatalf("segundo inicio = %v, se esperaba %v", err, tournaments.ErrTournamentConflict)
 	}
 	cancelled, err := service.Cancel(ctx, accountID, created.ID)
 	if err != nil {
@@ -205,16 +205,16 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	if cancelled.State != "cancelled" || len(cancelled.Teams) != 4 || len(cancelled.Matches) != 12 {
 		t.Fatalf("liga cancelada = %#v, se esperaban datos conservados y estado cancelled", cancelled)
 	}
-	if _, err := service.Cancel(ctx, accountID, created.ID); err != leagues.ErrLeagueCancellationConflict {
-		t.Fatalf("segunda cancelación = %v, se esperaba %v", err, leagues.ErrLeagueCancellationConflict)
+	if _, err := service.Cancel(ctx, accountID, created.ID); err != tournaments.ErrTournamentCancellationConflict {
+		t.Fatalf("segunda cancelación = %v, se esperaba %v", err, tournaments.ErrTournamentCancellationConflict)
 	}
-	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 4, AwayScore: 0}); !errors.Is(err, leagues.ErrMatchResultConflict) {
-		t.Fatalf("registrar resultado tras cancelar = %v, se esperaba %v", err, leagues.ErrMatchResultConflict)
+	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, tournaments.MatchResultInput{HomeScore: 4, AwayScore: 0}); !errors.Is(err, tournaments.ErrMatchResultConflict) {
+		t.Fatalf("registrar resultado tras cancelar = %v, se esperaba %v", err, tournaments.ErrMatchResultConflict)
 	}
-	if _, err := service.Complete(ctx, accountID, created.ID); !errors.Is(err, leagues.ErrLeagueCompletionConflict) {
-		t.Fatalf("finalizar tras cancelar = %v, se esperaba %v", err, leagues.ErrLeagueCompletionConflict)
+	if _, err := service.Complete(ctx, accountID, created.ID); !errors.Is(err, tournaments.ErrTournamentCompletionConflict) {
+		t.Fatalf("finalizar tras cancelar = %v, se esperaba %v", err, tournaments.ErrTournamentCompletionConflict)
 	}
-	published, err := service.Create(ctx, accountID, leagues.CreateInput{Name: "Liga sin empezar", Teams: []leagues.TeamInput{{Name: "Norte"}, {Name: "Sur"}}})
+	published, err := service.Create(ctx, accountID, tournaments.CreateInput{Name: "Liga sin empezar", Teams: []tournaments.TeamInput{{Name: "Norte"}, {Name: "Sur"}}})
 	if err != nil {
 		t.Fatalf("crear segunda liga: %v", err)
 	}
@@ -224,17 +224,17 @@ func TestIntegrationLeagueCreationAndStartWithPostgres(t *testing.T) {
 	}
 }
 
-func TestIntegrationWithdrawLeagueTeamAppliesUniformResultsAndKeepsHistory(t *testing.T) {
+func TestIntegrationWithdrawTournamentTeamAppliesUniformResultsAndKeepsHistory(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
 	organizerID := createVerifiedLocalAccount(t, ctx, pool, "withdraw-organizer@example.test", "withdraworganizer", "correct password")
 	outsiderID := createVerifiedLocalAccount(t, ctx, pool, "withdraw-outsider@example.test", "withdrawoutsider", "correct password")
-	service := leagues.NewCreationService(NewAccountLeagueRepository(pool))
-	created, err := service.Create(ctx, organizerID, leagues.CreateInput{Name: "Liga con baja", Teams: []leagues.TeamInput{{Name: "Azules"}, {Name: "Rojos"}, {Name: "Verdes"}}})
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	created, err := service.Create(ctx, organizerID, tournaments.CreateInput{Name: "Liga con baja", Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}, {Name: "Verdes"}}})
 	if err != nil {
 		t.Fatalf("crear liga = %v", err)
 	}
-	started, err := service.Start(ctx, organizerID, created.ID, leagues.StartInput{RoundRobinLegs: 1})
+	started, err := service.Start(ctx, organizerID, created.ID, tournaments.StartInput{RoundRobinLegs: 1})
 	if err != nil {
 		t.Fatalf("iniciar liga = %v", err)
 	}
@@ -243,10 +243,10 @@ func TestIntegrationWithdrawLeagueTeamAppliesUniformResultsAndKeepsHistory(t *te
 	if !found {
 		t.Fatal("faltaba partido del equipo retirado")
 	}
-	if _, err := service.RecordResult(ctx, organizerID, created.ID, match.ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1}); err != nil {
+	if _, err := service.RecordResult(ctx, organizerID, created.ID, match.ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1}); err != nil {
 		t.Fatalf("registrar resultado previo = %v", err)
 	}
-	if _, err := service.WithdrawTeam(ctx, outsiderID, created.ID, withdrawn.ID); !errors.Is(err, leagues.ErrLeagueForbidden) {
+	if _, err := service.WithdrawTeam(ctx, outsiderID, created.ID, withdrawn.ID); !errors.Is(err, tournaments.ErrTournamentForbidden) {
 		t.Fatalf("baja ajena = %v, se esperaba prohibida", err)
 	}
 	updated, err := service.WithdrawTeam(ctx, organizerID, created.ID, withdrawn.ID)
@@ -274,28 +274,28 @@ func TestIntegrationWithdrawLeagueTeamAppliesUniformResultsAndKeepsHistory(t *te
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM match_result_changes WHERE match_id = $1`, match.ID).Scan(&historyCount); err != nil || historyCount != 2 {
 		t.Fatalf("historial del resultado sustituido = %d, %v; se esperaban dos entradas", historyCount, err)
 	}
-	if _, err := service.WithdrawTeam(ctx, organizerID, created.ID, withdrawn.ID); !errors.Is(err, leagues.ErrLeagueWithdrawalConflict) {
+	if _, err := service.WithdrawTeam(ctx, organizerID, created.ID, withdrawn.ID); !errors.Is(err, tournaments.ErrTournamentWithdrawalConflict) {
 		t.Fatalf("segunda baja = %v, se esperaba conflicto", err)
 	}
 }
 
-func TestIntegrationRecentLeaguesOrdersActivityAndDeduplicatesRelationships(t *testing.T) {
+func TestIntegrationRecentTournamentsOrdersActivityAndDeduplicatesRelationships(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
 	accountID := createVerifiedLocalAccount(t, ctx, pool, "person@example.test", "person", "correct password")
 	otherAccountID := createVerifiedLocalAccount(t, ctx, pool, "other@example.test", "other", "correct password")
 	var administeredID, followedID string
-	if err := pool.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, published_at, last_activity_at) VALUES ($1, 'Administrada', now(), now() - interval '2 hours') RETURNING id::text`, accountID).Scan(&administeredID); err != nil {
+	if err := pool.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, name, published_at, last_activity_at) VALUES ($1, 'Administrada', now(), now() - interval '2 hours') RETURNING id::text`, accountID).Scan(&administeredID); err != nil {
 		t.Fatalf("crear liga administrada: %v", err)
 	}
-	if err := pool.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, published_at, last_activity_at) VALUES ($1, 'Seguida', now(), now() - interval '1 hour') RETURNING id::text`, otherAccountID).Scan(&followedID); err != nil {
+	if err := pool.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, name, published_at, last_activity_at) VALUES ($1, 'Seguida', now(), now() - interval '1 hour') RETURNING id::text`, otherAccountID).Scan(&followedID); err != nil {
 		t.Fatalf("crear liga seguida: %v", err)
 	}
-	if _, err := pool.Exec(ctx, `INSERT INTO league_followers (league_id, account_id) VALUES ($1, $2), ($3, $2)`, administeredID, accountID, followedID); err != nil {
+	if _, err := pool.Exec(ctx, `INSERT INTO tournament_followers (tournament_id, account_id) VALUES ($1, $2), ($3, $2)`, administeredID, accountID, followedID); err != nil {
 		t.Fatalf("seguir ligas: %v", err)
 	}
 
-	items, err := leagues.NewService(NewAccountLeagueRepository(pool)).ListRecent(ctx, accountID)
+	items, err := tournaments.NewService(NewAccountTournamentRepository(pool)).ListRecent(ctx, accountID)
 	if err != nil {
 		t.Fatalf("consultar recientes: %v", err)
 	}
@@ -310,27 +310,27 @@ func TestIntegrationRecentLeaguesOrdersActivityAndDeduplicatesRelationships(t *t
 	}
 }
 
-func TestIntegrationLeagueCompletionPersistsCoChampions(t *testing.T) {
+func TestIntegrationTournamentCompletionPersistsCoChampions(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
 	accountID := createVerifiedLocalAccount(t, ctx, pool, "completion@example.test", "completion", "correct password")
-	service := leagues.NewCreationService(NewAccountLeagueRepository(pool))
-	created, err := service.Create(ctx, accountID, leagues.CreateInput{Name: "Liga empate", Teams: []leagues.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	created, err := service.Create(ctx, accountID, tournaments.CreateInput{Name: "Liga empate", Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
 	if err != nil {
 		t.Fatalf("crear liga = %v", err)
 	}
-	started, err := service.Start(ctx, accountID, created.ID, leagues.StartInput{RoundRobinLegs: 1})
+	started, err := service.Start(ctx, accountID, created.ID, tournaments.StartInput{RoundRobinLegs: 1})
 	if err != nil {
 		t.Fatalf("iniciar liga = %v", err)
 	}
-	if _, err := service.Complete(ctx, accountID, created.ID); !errors.Is(err, leagues.ErrLeagueCompletionConflict) {
-		t.Fatalf("finalizar con pendiente = %v, se esperaba %v", err, leagues.ErrLeagueCompletionConflict)
+	if _, err := service.Complete(ctx, accountID, created.ID); !errors.Is(err, tournaments.ErrTournamentCompletionConflict) {
+		t.Fatalf("finalizar con pendiente = %v, se esperaba %v", err, tournaments.ErrTournamentCompletionConflict)
 	}
 	pending, err := service.GetPublic(ctx, created.ID)
 	if err != nil || pending.State != "in_progress" || len(pending.ChampionTeamIDs) != 0 {
 		t.Fatalf("cierre rechazado dejó la liga = %#v, %v; se esperaba in_progress sin campeones", pending, err)
 	}
-	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 1, AwayScore: 1}); err != nil {
+	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, tournaments.MatchResultInput{HomeScore: 1, AwayScore: 1}); err != nil {
 		t.Fatalf("registrar empate = %v", err)
 	}
 	completed, err := service.Complete(ctx, accountID, created.ID)
@@ -341,28 +341,28 @@ func TestIntegrationLeagueCompletionPersistsCoChampions(t *testing.T) {
 		t.Fatalf("liga finalizada = %#v; se esperaban dos co-campeones", completed)
 	}
 	var persistedChampions int
-	if err := pool.QueryRow(ctx, `SELECT count(*) FROM league_champions WHERE league_id = $1`, created.ID).Scan(&persistedChampions); err != nil || persistedChampions != 2 {
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournament_champions WHERE tournament_id = $1`, created.ID).Scan(&persistedChampions); err != nil || persistedChampions != 2 {
 		t.Fatalf("co-campeones persistidos = %d, %v; se esperaban dos", persistedChampions, err)
 	}
-	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1}); !errors.Is(err, leagues.ErrMatchResultConflict) {
-		t.Fatalf("corregir liga finalizada = %v, se esperaba %v", err, leagues.ErrMatchResultConflict)
+	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1}); !errors.Is(err, tournaments.ErrMatchResultConflict) {
+		t.Fatalf("corregir liga finalizada = %v, se esperaba %v", err, tournaments.ErrMatchResultConflict)
 	}
 }
 
-func TestIntegrationConcurrentLeagueCompletionAllowsOneTransition(t *testing.T) {
+func TestIntegrationConcurrentTournamentCompletionAllowsOneTransition(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
 	accountID := createVerifiedLocalAccount(t, ctx, pool, "concurrent-completion@example.test", "concurrent_completion", "correct password")
-	service := leagues.NewCreationService(NewAccountLeagueRepository(pool))
-	created, err := service.Create(ctx, accountID, leagues.CreateInput{Name: "Liga cierre simultáneo", Teams: []leagues.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	created, err := service.Create(ctx, accountID, tournaments.CreateInput{Name: "Liga cierre simultáneo", Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
 	if err != nil {
 		t.Fatalf("crear liga = %v", err)
 	}
-	started, err := service.Start(ctx, accountID, created.ID, leagues.StartInput{RoundRobinLegs: 1})
+	started, err := service.Start(ctx, accountID, created.ID, tournaments.StartInput{RoundRobinLegs: 1})
 	if err != nil {
 		t.Fatalf("iniciar liga = %v", err)
 	}
-	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1}); err != nil {
+	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1}); err != nil {
 		t.Fatalf("registrar resultado = %v", err)
 	}
 
@@ -385,7 +385,7 @@ func TestIntegrationConcurrentLeagueCompletionAllowsOneTransition(t *testing.T) 
 		switch {
 		case err == nil:
 			successes++
-		case errors.Is(err, leagues.ErrLeagueCompletionConflict):
+		case errors.Is(err, tournaments.ErrTournamentCompletionConflict):
 			conflicts++
 		default:
 			t.Fatalf("finalización simultánea = %v; se esperaba éxito o conflicto", err)
@@ -396,10 +396,10 @@ func TestIntegrationConcurrentLeagueCompletionAllowsOneTransition(t *testing.T) 
 	}
 	var state string
 	var champions int
-	if err := pool.QueryRow(ctx, `SELECT state FROM leagues WHERE id = $1`, created.ID).Scan(&state); err != nil {
+	if err := pool.QueryRow(ctx, `SELECT state FROM tournaments WHERE id = $1`, created.ID).Scan(&state); err != nil {
 		t.Fatalf("consultar estado final = %v", err)
 	}
-	if err := pool.QueryRow(ctx, `SELECT count(*) FROM league_champions WHERE league_id = $1`, created.ID).Scan(&champions); err != nil {
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournament_champions WHERE tournament_id = $1`, created.ID).Scan(&champions); err != nil {
 		t.Fatalf("contar campeones finales = %v", err)
 	}
 	if state != "completed" || champions != 1 {
@@ -407,16 +407,16 @@ func TestIntegrationConcurrentLeagueCompletionAllowsOneTransition(t *testing.T) 
 	}
 }
 
-func TestIntegrationLeagueStandingsReadPersistedResults(t *testing.T) {
+func TestIntegrationTournamentStandingsReadPersistedResults(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
 	accountID := createVerifiedLocalAccount(t, ctx, pool, "standings@example.test", "standings", "correct password")
-	service := leagues.NewCreationService(NewAccountLeagueRepository(pool))
-	created, err := service.Create(ctx, accountID, leagues.CreateInput{Name: "Liga clasificación", Teams: []leagues.TeamInput{{Name: "Azules"}, {Name: "Rojos"}, {Name: "Verdes"}}})
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	created, err := service.Create(ctx, accountID, tournaments.CreateInput{Name: "Liga clasificación", Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}, {Name: "Verdes"}}})
 	if err != nil {
 		t.Fatalf("crear liga = %v", err)
 	}
-	started, err := service.Start(ctx, accountID, created.ID, leagues.StartInput{RoundRobinLegs: 1})
+	started, err := service.Start(ctx, accountID, created.ID, tournaments.StartInput{RoundRobinLegs: 1})
 	if err != nil {
 		t.Fatalf("iniciar liga = %v", err)
 	}
@@ -446,54 +446,54 @@ func TestIntegrationLeagueStandingsReadPersistedResults(t *testing.T) {
 	}
 }
 
-func TestIntegrationLeagueMutationsRequireOrganizerOrAdministrator(t *testing.T) {
+func TestIntegrationTournamentMutationsRequireOrganizerOrAdministrator(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
 	organizerID := createVerifiedLocalAccount(t, ctx, pool, "organizer@example.test", "organizer", "correct password")
 	outsiderID := createVerifiedLocalAccount(t, ctx, pool, "outsider@example.test", "outsider", "correct password")
-	service := leagues.NewCreationService(NewAccountLeagueRepository(pool))
-	created, err := service.Create(ctx, organizerID, leagues.CreateInput{Name: "Liga permisos", Teams: []leagues.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	created, err := service.Create(ctx, organizerID, tournaments.CreateInput{Name: "Liga permisos", Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
 	if err != nil {
 		t.Fatalf("crear liga = %v", err)
 	}
-	if _, err := service.Start(ctx, outsiderID, created.ID, leagues.StartInput{RoundRobinLegs: 1}); !errors.Is(err, leagues.ErrLeagueForbidden) {
-		t.Fatalf("iniciar como ajena = %v, se esperaba %v", err, leagues.ErrLeagueForbidden)
+	if _, err := service.Start(ctx, outsiderID, created.ID, tournaments.StartInput{RoundRobinLegs: 1}); !errors.Is(err, tournaments.ErrTournamentForbidden) {
+		t.Fatalf("iniciar como ajena = %v, se esperaba %v", err, tournaments.ErrTournamentForbidden)
 	}
-	started, err := service.Start(ctx, organizerID, created.ID, leagues.StartInput{RoundRobinLegs: 1})
+	started, err := service.Start(ctx, organizerID, created.ID, tournaments.StartInput{RoundRobinLegs: 1})
 	if err != nil {
 		t.Fatalf("iniciar como organizadora = %v", err)
 	}
-	if _, err := service.RecordResult(ctx, outsiderID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 1, AwayScore: 0}); !errors.Is(err, leagues.ErrMatchResultForbidden) {
-		t.Fatalf("registrar como ajena = %v, se esperaba %v", err, leagues.ErrMatchResultForbidden)
+	if _, err := service.RecordResult(ctx, outsiderID, created.ID, started.Matches[0].ID, tournaments.MatchResultInput{HomeScore: 1, AwayScore: 0}); !errors.Is(err, tournaments.ErrMatchResultForbidden) {
+		t.Fatalf("registrar como ajena = %v, se esperaba %v", err, tournaments.ErrMatchResultForbidden)
 	}
-	if _, err := service.Cancel(ctx, outsiderID, created.ID); !errors.Is(err, leagues.ErrLeagueForbidden) {
-		t.Fatalf("cancelar como ajena = %v, se esperaba %v", err, leagues.ErrLeagueForbidden)
+	if _, err := service.Cancel(ctx, outsiderID, created.ID); !errors.Is(err, tournaments.ErrTournamentForbidden) {
+		t.Fatalf("cancelar como ajena = %v, se esperaba %v", err, tournaments.ErrTournamentForbidden)
 	}
-	if _, err := service.Complete(ctx, outsiderID, created.ID); !errors.Is(err, leagues.ErrLeagueForbidden) {
-		t.Fatalf("finalizar como ajena = %v, se esperaba %v", err, leagues.ErrLeagueForbidden)
+	if _, err := service.Complete(ctx, outsiderID, created.ID); !errors.Is(err, tournaments.ErrTournamentForbidden) {
+		t.Fatalf("finalizar como ajena = %v, se esperaba %v", err, tournaments.ErrTournamentForbidden)
 	}
 }
 
 func TestIntegrationPurgeExpiredAccountsDeletesOnlyExpiredAccountsAndAnonymizesHistory(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	repository := NewAccountLeagueRepository(pool)
+	repository := NewAccountTournamentRepository(pool)
 	organizerID := createVerifiedLocalAccount(t, ctx, pool, "organizer@example.test", "organizer", "correct password")
 	administratorID := createVerifiedLocalAccount(t, ctx, pool, "administrator@example.test", "administrator", "correct password")
 	notDueID := createVerifiedLocalAccount(t, ctx, pool, "not-due@example.test", "notdue", "correct password")
-	creation := leagues.NewCreationService(repository)
-	created, err := creation.Create(ctx, organizerID, leagues.CreateInput{Name: "Liga de purga", Teams: []leagues.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
+	creation := tournaments.NewCreationService(repository)
+	created, err := creation.Create(ctx, organizerID, tournaments.CreateInput{Name: "Liga de purga", Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
 	if err != nil {
 		t.Fatalf("crear liga = %v", err)
 	}
 	if err := creation.AssignAdministrator(ctx, organizerID, created.ID, "administrator"); err != nil {
 		t.Fatalf("asignar administradora = %v", err)
 	}
-	started, err := creation.Start(ctx, organizerID, created.ID, leagues.StartInput{RoundRobinLegs: 1})
+	started, err := creation.Start(ctx, organizerID, created.ID, tournaments.StartInput{RoundRobinLegs: 1})
 	if err != nil {
 		t.Fatalf("iniciar liga = %v", err)
 	}
-	if _, err := creation.RecordResult(ctx, administratorID, created.ID, started.Matches[0].ID, leagues.MatchResultInput{HomeScore: 2, AwayScore: 1}); err != nil {
+	if _, err := creation.RecordResult(ctx, administratorID, created.ID, started.Matches[0].ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1}); err != nil {
 		t.Fatalf("registrar resultado = %v", err)
 	}
 	if _, err := repository.ScheduleAccountDeletion(ctx, administratorID); err != nil {
@@ -578,7 +578,7 @@ func TestIntegrationAccountOptionsRequireSingleUseReauthenticationTicket(t *test
 	ctx := context.Background()
 	pool := integrationPool(t)
 	accountID := createVerifiedLocalAccount(t, ctx, pool, "person@example.test", "person", "old correct password")
-	methods, err := NewAccountLeagueRepository(pool).GetAccessMethods(ctx, accountID)
+	methods, err := NewAccountTournamentRepository(pool).GetAccessMethods(ctx, accountID)
 	if err != nil {
 		t.Fatalf("consultar métodos de acceso: %v", err)
 	}
@@ -589,7 +589,7 @@ func TestIntegrationAccountOptionsRequireSingleUseReauthenticationTicket(t *test
 	if _, err := pool.Exec(ctx, `INSERT INTO sessions (account_id, token_hash, idle_expires_at, absolute_expires_at) VALUES ($1, $2, now() + interval '1 day', now() + interval '1 day')`, accountID, sessionHash(sessionToken)); err != nil {
 		t.Fatalf("crear sesión: %v", err)
 	}
-	service := access.NewService(NewAccountLeagueRepository(pool))
+	service := access.NewService(NewAccountTournamentRepository(pool))
 	ticket, _, err := service.ReauthenticateWithPassword(ctx, sessionToken, "old correct password", access.SetLocalPassword)
 	if err != nil {
 		t.Fatalf("reautenticar: %v", err)
@@ -620,7 +620,7 @@ func TestIntegrationAccountOptionsRequireSingleUseReauthenticationTicket(t *test
 	if err := google.AddGoogleWithTicket(ctx, sessionToken, localTicket, linkChallenge.ID, "google-id-token"); err != nil {
 		t.Fatalf("vincular Google: %v", err)
 	}
-	methods, err = NewAccountLeagueRepository(pool).GetAccessMethods(ctx, accountID)
+	methods, err = NewAccountTournamentRepository(pool).GetAccessMethods(ctx, accountID)
 	if err != nil || !methods.HasGoogle || !methods.HasPassword {
 		t.Fatalf("métodos tras vincular Google = %#v, %v; se esperaban contraseña y Google", methods, err)
 	}

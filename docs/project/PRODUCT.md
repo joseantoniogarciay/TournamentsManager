@@ -2,7 +2,7 @@
 
 > Estado: Gate 0B cerrado; primer vertical slice definido.
 >
-> Última actualización: 2026-07-26
+> Última actualización: 2026-09-06
 
 ## Visión
 
@@ -26,8 +26,14 @@ incorporar otros deportes sin reescribir su núcleo.
 - Una misma cuenta admitirá credenciales locales y login con Google; Apple se
   incorporará en un incremento posterior.
 - El fútbol es el deporte inicial.
-- El formato inicial será una liga de fútbol. Eliminatorias, formatos mixtos y
-  otros deportes quedan fuera del primer corte, sin impedir evaluarlos después.
+- El recurso raíz es un torneo. La liga de fútbol existente se conserva como
+  formato `league`; este incremento añade la eliminatoria directa a partido
+  único como formato `single_elimination`. Los formatos mixtos quedan fuera
+  hasta acordar sus reglas. Véase ADR-0122.
+- Un torneo contiene fases ordenadas. Esta entrega crea una sola fase, elegida
+  entre liga a una o dos vueltas y eliminatoria directa a partido único. Una
+  futura liga única o por grupos podrá clasificar equipos para un cuadro
+  posterior cuando se acepten sus reglas. Véase ADR-0123.
 - El creador del torneo será inicialmente su único organizador y creará los
   equipos. Delegar administración se decidirá para una iteración posterior.
 - Las acciones detalladas de creación y gestión de un torneo se definirán de forma
@@ -52,7 +58,7 @@ autenticada.
 
 Es un registro temporal tras un alta local con email, contraseña y `username`.
 No recibe una sesión de producto ni permisos de negocio. Un borrador completo
-permanece local hasta enviar el alta; entonces crea una liga publicada asociada a
+permanece local hasta enviar el alta; entonces crea un torneo publicado asociado a
 la cuenta pendiente, que no puede administrar ni listar hasta verificarla.
 
 ### Usuario autenticado y verificado

@@ -11,4 +11,5 @@ export type MatchState = (typeof MatchState)[keyof typeof MatchState];
 export const MatchState = {
   pending: "pending",
   completed: "completed",
+  bye: "bye",
 } as const;

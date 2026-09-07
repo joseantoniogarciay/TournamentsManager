@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
 type sessionAuthenticator interface {
@@ -40,7 +40,7 @@ func requireSession(authenticator sessionAuthenticator) func(http.Handler) http.
 			}
 			accountID, err := authenticator.Authenticate(request.Context(), credential.token)
 			if err != nil {
-				if errors.Is(err, leagues.ErrUnauthenticated) {
+				if errors.Is(err, tournaments.ErrUnauthenticated) {
 					writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 					return
 				}

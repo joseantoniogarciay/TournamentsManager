@@ -6,6 +6,21 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Added
+
+- Torneos de eliminatoria directa a partido único para 2 a 64 equipos, con
+  cuadro completo, pases directos deterministas, plazas derivadas de ganadoras,
+  desempate explícito por penaltis y navegación responsive entre rondas.
+- Fases ordenadas mínimas (`Tournament -> Stage -> Match`) para que una futura
+  liga o fase de grupos pueda alimentar un cuadro sin volver a migrar los
+  partidos.
+
+### Changed
+
+- El recurso canónico migra de `leagues` a `tournaments` en base de datos,
+  dominio, OpenAPI, cliente y enlaces. La liga a una o dos vueltas continúa
+  disponible como formato `league`; no se conservan rutas antiguas.
+
 ## [1.2.0] - 2026-09-06
 
 ### Added

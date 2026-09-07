@@ -10,7 +10,7 @@ import {
 } from "@/api/generated/federated-identity/federated-identity";
 import type {
   GoogleLoginChallenge,
-  LeagueInput,
+  TournamentInput,
   Locale,
   Transport,
   Username,
@@ -37,7 +37,7 @@ export async function beginGoogleAuthentication() {
 /** Entrega la prueba de Google al backend, que decide sesión, alta o conflicto. */
 export async function finishGoogleAuthentication(input: {
   challenge: GoogleLoginChallenge;
-  draft?: LeagueInput;
+  draft?: TournamentInput;
   idToken: string;
   locale?: Locale;
   sessionTransport: Transport;

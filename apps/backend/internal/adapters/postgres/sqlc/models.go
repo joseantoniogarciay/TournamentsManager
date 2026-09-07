@@ -21,12 +21,12 @@ type Account struct {
 }
 
 type AccountNotification struct {
-	ID        pgtype.UUID
-	AccountID pgtype.UUID
-	Kind      string
-	LeagueID  pgtype.UUID
-	ReadAt    pgtype.Timestamptz
-	CreatedAt pgtype.Timestamptz
+	ID           pgtype.UUID
+	AccountID    pgtype.UUID
+	Kind         string
+	TournamentID pgtype.UUID
+	ReadAt       pgtype.Timestamptz
+	CreatedAt    pgtype.Timestamptz
 }
 
 type EmailVerificationToken struct {
@@ -63,48 +63,6 @@ type GoogleRiscEvent struct {
 	ExpiresAt  pgtype.Timestamptz
 }
 
-type League struct {
-	ID                 pgtype.UUID
-	OrganizerAccountID pgtype.UUID
-	Name               string
-	Sport              string
-	Format             string
-	State              string
-	RoundRobinLegs     int16
-	PointsForWin       int16
-	PointsForDraw      int16
-	PointsForLoss      int16
-	CreatedAt          pgtype.Timestamptz
-	PublishedAt        pgtype.Timestamptz
-	LastActivityAt     pgtype.Timestamptz
-}
-
-type LeagueAdministrator struct {
-	LeagueID   pgtype.UUID
-	AccountID  pgtype.UUID
-	AssignedAt pgtype.Timestamptz
-}
-
-type LeagueChampion struct {
-	LeagueID pgtype.UUID
-	TeamID   pgtype.UUID
-}
-
-type LeagueFollower struct {
-	LeagueID   pgtype.UUID
-	AccountID  pgtype.UUID
-	FollowedAt pgtype.Timestamptz
-}
-
-type LeagueTeam struct {
-	ID             pgtype.UUID
-	LeagueID       pgtype.UUID
-	Name           string
-	NameNormalized string
-	Position       int32
-	WithdrawnAt    pgtype.Timestamptz
-}
-
 type LegalAccountAcceptance struct {
 	ID               pgtype.UUID
 	AccountID        pgtype.UUID
@@ -125,26 +83,38 @@ type LocalCredential struct {
 }
 
 type Match struct {
-	ID          pgtype.UUID
-	LeagueID    pgtype.UUID
-	RoundNumber int32
-	Sequence    int32
-	HomeTeamID  pgtype.UUID
-	AwayTeamID  pgtype.UUID
-	State       string
-	HomeScore   pgtype.Int4
-	AwayScore   pgtype.Int4
+	ID                pgtype.UUID
+	TournamentID      pgtype.UUID
+	RoundNumber       int32
+	Sequence          int32
+	HomeTeamID        pgtype.UUID
+	AwayTeamID        pgtype.UUID
+	State             string
+	HomeScore         pgtype.Int4
+	AwayScore         pgtype.Int4
+	StageID           pgtype.UUID
+	HomeSourceKind    string
+	AwaySourceKind    string
+	HomeSourceMatchID pgtype.UUID
+	AwaySourceMatchID pgtype.UUID
+	WinnerTeamID      pgtype.UUID
+	HomePenalties     pgtype.Int4
+	AwayPenalties     pgtype.Int4
 }
 
 type MatchResultChange struct {
-	ID                 pgtype.UUID
-	MatchID            pgtype.UUID
-	ChangedByAccountID pgtype.UUID
-	PreviousHomeScore  pgtype.Int4
-	PreviousAwayScore  pgtype.Int4
-	HomeScore          int32
-	AwayScore          int32
-	ChangedAt          pgtype.Timestamptz
+	ID                    pgtype.UUID
+	MatchID               pgtype.UUID
+	ChangedByAccountID    pgtype.UUID
+	PreviousHomeScore     pgtype.Int4
+	PreviousAwayScore     pgtype.Int4
+	HomeScore             int32
+	AwayScore             int32
+	ChangedAt             pgtype.Timestamptz
+	PreviousHomePenalties pgtype.Int4
+	PreviousAwayPenalties pgtype.Int4
+	HomePenalties         pgtype.Int4
+	AwayPenalties         pgtype.Int4
 }
 
 type PasswordResetToken struct {
@@ -186,4 +156,56 @@ type SessionRefreshToken struct {
 	ExpiresAt  pgtype.Timestamptz
 	ConsumedAt pgtype.Timestamptz
 	RevokedAt  pgtype.Timestamptz
+}
+
+type Tournament struct {
+	ID                 pgtype.UUID
+	OrganizerAccountID pgtype.UUID
+	Name               string
+	Sport              string
+	Format             string
+	State              string
+	RoundRobinLegs     int16
+	PointsForWin       int16
+	PointsForDraw      int16
+	PointsForLoss      int16
+	CreatedAt          pgtype.Timestamptz
+	PublishedAt        pgtype.Timestamptz
+	LastActivityAt     pgtype.Timestamptz
+}
+
+type TournamentAdministrator struct {
+	TournamentID pgtype.UUID
+	AccountID    pgtype.UUID
+	AssignedAt   pgtype.Timestamptz
+}
+
+type TournamentChampion struct {
+	TournamentID pgtype.UUID
+	TeamID       pgtype.UUID
+}
+
+type TournamentFollower struct {
+	TournamentID pgtype.UUID
+	AccountID    pgtype.UUID
+	FollowedAt   pgtype.Timestamptz
+}
+
+type TournamentStage struct {
+	ID             pgtype.UUID
+	TournamentID   pgtype.UUID
+	Position       int32
+	Type           string
+	State          string
+	CreatedAt      pgtype.Timestamptz
+	RoundRobinLegs pgtype.Int2
+}
+
+type TournamentTeam struct {
+	ID             pgtype.UUID
+	TournamentID   pgtype.UUID
+	Name           string
+	NameNormalized string
+	Position       int32
+	WithdrawnAt    pgtype.Timestamptz
 }
