@@ -3020,3 +3020,28 @@ K3s y también que sus componentes base siguen sanos.
 - **Regla reutilizable:** una acción que debe permanecer sobre un diálogo nativo
   abre un segundo `ModalDialog` anidado y desplazable; la ruta canónica se
   conserva para entradas directas y pantallas sin un diálogo activo.
+
+### 2026-09-08 — Foco, disponibilidad y selección deben expresar el estado actual
+
+- **Aprendido:** conservar una lista cargada durante toda la sesión evita una
+  petición, pero deja Inicio obsoleto después de crear un torneo. Del mismo modo,
+  ofrecer «Clasificación» antes de que exista su proyección y dibujar selectores
+  equivalentes como botones de distinta jerarquía comunica estados que el
+  producto todavía no tiene.
+- **Regla reutilizable:** una pantalla resumen relee su proyección al recuperar
+  el foco cuando otras rutas pueden modificarla; una acción derivada solo aparece
+  cuando su dato está disponible, y todas las opciones de una misma configuración
+  comparten estados visuales y accesibles.
+
+### 2026-09-08 — La navegación del cuadro no compite con el resultado
+
+- **Aprendido:** representar el origen y el destino de un partido como botones
+  secundarios de ancho completo llena la zona donde el marcador y su acción son
+  la información principal. Repetir «Ganador de…» en cada plaza agrava la
+  densidad conforme avanza el cuadro.
+- **Regla reutilizable:** el destino posterior usa un enlace textual discreto al
+  final de la tarjeta; el origen se reduce visualmente a una flecha junto al
+  equipo. Reducir el contenido visible no reduce accesibilidad: ambos conservan
+  44 px de objetivo táctil y una etiqueta que expresa el partido completo. El
+  encabezado del encuentro diferencia su función con semibold, mientras los
+  clubes permanecen en regular y el marcador mantiene la mayor jerarquía.

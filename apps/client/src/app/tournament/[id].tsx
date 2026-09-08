@@ -283,7 +283,10 @@ export default function TournamentScreen() {
     );
   }
   const canCancel = league.state === "published" || league.state === "in_progress";
-  const visibleFormat = league.state === "published" ? format : league.format;
+  const hasStarted =
+    league.state === "in_progress" ||
+    league.state === "completed" ||
+    (league.state === "cancelled" && league.matches.length > 0);
   const canComplete =
     isOrganizer &&
     league.state === "in_progress" &&
@@ -458,7 +461,7 @@ export default function TournamentScreen() {
                     variant="secondary"
                   />
                 </View>
-                {visibleFormat === "league" ? (
+                {league.format === "league" && hasStarted ? (
                   <View style={styles.summaryAction}>
                     <Button
                       label={t("league_standings")}
@@ -475,15 +478,15 @@ export default function TournamentScreen() {
                       {t("league_start_title")}
                     </Text>
                     <View style={styles.configurationOptions}>
-                      <Button
+                      <ConfigurationOption
                         label={t("tournament_format_league")}
-                        variant={format === "league" ? "primary" : "secondary"}
+                        selected={format === "league"}
                         disabled={isStarting}
                         onPress={() => setFormat("league")}
                       />
-                      <Button
+                      <ConfigurationOption
                         label={t("tournament_format_bracket")}
-                        variant={format === "single_elimination" ? "primary" : "secondary"}
+                        selected={format === "single_elimination"}
                         disabled={isStarting}
                         onPress={() => setFormat("single_elimination")}
                       />
@@ -497,50 +500,18 @@ export default function TournamentScreen() {
                           { borderColor: colors.border.default },
                         ]}
                       >
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: roundRobinLegs === 1 }}
+                        <ConfigurationOption
+                          label={t("league_start_one_leg")}
+                          selected={roundRobinLegs === 1}
                           disabled={isStarting}
                           onPress={() => setRoundRobinLegs(1)}
-                          style={[
-                            styles.configurationChip,
-                            roundRobinLegs === 1
-                              ? {
-                                  backgroundColor: color.brand.primary,
-                                  borderColor: color.brand.primary,
-                                }
-                              : {
-                                  backgroundColor: colors.surface.default,
-                                  borderColor: colors.border.default,
-                                },
-                          ]}
-                        >
-                          <Text color={roundRobinLegs === 1 ? "onBrand" : "primary"}>
-                            {t("league_start_one_leg")}
-                          </Text>
-                        </Pressable>
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: roundRobinLegs === 2 }}
+                        />
+                        <ConfigurationOption
+                          label={t("league_start_two_legs")}
+                          selected={roundRobinLegs === 2}
                           disabled={isStarting}
                           onPress={() => setRoundRobinLegs(2)}
-                          style={[
-                            styles.configurationChip,
-                            roundRobinLegs === 2
-                              ? {
-                                  backgroundColor: color.brand.primary,
-                                  borderColor: color.brand.primary,
-                                }
-                              : {
-                                  backgroundColor: colors.surface.default,
-                                  borderColor: colors.border.default,
-                                },
-                          ]}
-                        >
-                          <Text color={roundRobinLegs === 2 ? "onBrand" : "primary"}>
-                            {t("league_start_two_legs")}
-                          </Text>
-                        </Pressable>
+                        />
                       </View>
                     )}
                   </View>
@@ -815,6 +786,39 @@ export default function TournamentScreen() {
     </>
   );
 }
+
+function ConfigurationOption({
+  disabled,
+  label,
+  onPress,
+  selected,
+}: {
+  disabled: boolean;
+  label: string;
+  onPress: () => void;
+  selected: boolean;
+}) {
+  const { colors } = usePreferences();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled, selected }}
+      disabled={disabled}
+      onPress={onPress}
+      style={[
+        styles.configurationChip,
+        selected
+          ? { backgroundColor: color.brand.primary, borderColor: color.brand.primary }
+          : { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+        disabled ? styles.configurationChipDisabled : undefined,
+      ]}
+    >
+      <Text color={selected ? "onBrand" : "primary"}>{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   content: { paddingBottom: space[4] },
   configurationChip: {
@@ -825,6 +829,7 @@ const styles = StyleSheet.create({
     minHeight: control.minHeight,
     paddingHorizontal: control.horizontalPadding,
   },
+  configurationChipDisabled: { opacity: 0.55 },
   configurationOptions: {
     borderTopWidth: 1,
     flexDirection: "row",

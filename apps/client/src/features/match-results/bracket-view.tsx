@@ -1,9 +1,19 @@
+import { SymbolView } from "expo-symbols";
 import { useRef, useState } from "react";
-import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
-import { control, space } from "@tournaments-manager/design-tokens";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import { control, space, typography } from "@tournaments-manager/design-tokens";
 import type { Match, PublicTournament } from "@/api/generated/models";
 import { getTranslator } from "@/shared/i18n/locale";
+import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { Button, Card, Text } from "@/shared/ui";
+import { WebIcon } from "@/shared/ui/web-icon";
 
 export function getBracketRoundLabel(round: number, total: number) {
   const t = getTranslator();
@@ -27,6 +37,7 @@ export function BracketView({
   onEdit: (id: string) => void;
 }) {
   const t = getTranslator();
+  const { colors } = usePreferences();
   const { width } = useWindowDimensions();
   const overview = width >= columnWidth * 2 + space[5] * 2;
   const [selectedRound, setSelectedRound] = useState(1);
@@ -61,7 +72,7 @@ export function BracketView({
     return (
       <Card key={match.id}>
         <View style={styles.stack}>
-          <Text variant="bodyLarge">
+          <Text style={styles.matchTitle} variant="bodyLarge">
             {matchLabel(match)}
             {focusedMatch === match.id ? ` · ${t("bracket_selected")}` : ""}
           </Text>
@@ -78,6 +89,19 @@ export function BracketView({
             return (
               <View key={side} style={styles.slot}>
                 <View style={styles.teamRow}>
+                  {source ? (
+                    <Pressable
+                      accessibilityLabel={t("bracket_go_to_source").replace(
+                        "{match}",
+                        matchLabel(source),
+                      )}
+                      accessibilityRole="button"
+                      onPress={() => navigate(source)}
+                      style={styles.sourceLink}
+                    >
+                      <BracketNavigationIcon color={colors.text.secondary} direction="back" />
+                    </Pressable>
+                  ) : null}
                   <Text style={styles.team} variant="bodyLarge">
                     {name}
                     {match.winnerTeamId && match.winnerTeamId === teamId
@@ -91,13 +115,6 @@ export function BracketView({
                     </Text>
                   ) : null}
                 </View>
-                {source ? (
-                  <Button
-                    variant="ghost"
-                    label={t("bracket_winner_of").replace("{match}", matchLabel(source))}
-                    onPress={() => navigate(source)}
-                  />
-                ) : null}
               </View>
             );
           })}
@@ -106,13 +123,6 @@ export function BracketView({
           ) : null}
           {match.state === "bye" ? (
             <Text color="secondary">{t("bracket_auto_advance")}</Text>
-          ) : null}
-          {next ? (
-            <Button
-              variant="secondary"
-              label={t("bracket_advances_to").replace("{match}", matchLabel(next))}
-              onPress={() => navigate(next)}
-            />
           ) : null}
           {canManage &&
           tournament.state === "in_progress" &&
@@ -128,6 +138,22 @@ export function BracketView({
                 onPress={() => onEdit(match.id)}
               />
             )
+          ) : null}
+          {next ? (
+            <Pressable
+              accessibilityLabel={t("bracket_go_to_destination").replace(
+                "{match}",
+                matchLabel(next),
+              )}
+              accessibilityRole="button"
+              onPress={() => navigate(next)}
+              style={styles.nextLink}
+            >
+              <Text color="secondary" style={styles.nextLinkLabel}>
+                {matchLabel(next)}
+              </Text>
+              <BracketNavigationIcon color={colors.text.secondary} direction="forward" />
+            </Pressable>
           ) : null}
         </View>
       </Card>
@@ -180,11 +206,57 @@ export function BracketView({
   );
 }
 
+function BracketNavigationIcon({
+  color,
+  direction,
+}: {
+  color: string;
+  direction: "back" | "forward";
+}) {
+  if (Platform.OS === "web") {
+    return (
+      <WebIcon
+        color={color}
+        name={direction === "back" ? "back" : "chevronRight"}
+        size={control.iconSize}
+      />
+    );
+  }
+
+  return (
+    <SymbolView
+      name={
+        direction === "back"
+          ? { android: "arrow_back", ios: "chevron.left", web: "arrow_back" }
+          : { android: "arrow_forward", ios: "chevron.right", web: "arrow_forward" }
+      }
+      size={control.iconSize}
+      tintColor={color}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   stack: { gap: space[5] },
   slot: { gap: space[2] },
+  matchTitle: { fontFamily: typography.family.semibold },
   teamRow: { flexDirection: "row", alignItems: "center", gap: space[3] },
   team: { flex: 1 },
+  sourceLink: {
+    alignItems: "center",
+    height: control.minHeight,
+    justifyContent: "center",
+    width: control.minHeight,
+  },
+  nextLink: {
+    alignItems: "center",
+    alignSelf: "flex-end",
+    flexDirection: "row",
+    gap: space[1],
+    justifyContent: "center",
+    minHeight: control.minHeight,
+  },
+  nextLinkLabel: { fontFamily: typography.family.semibold },
   intro: { paddingHorizontal: space[5], gap: space[2] },
   rounds: { paddingHorizontal: space[5], gap: space[2] },
   column: { width: columnWidth, gap: space[5], paddingBottom: space[5] },

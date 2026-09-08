@@ -87,7 +87,9 @@ administrada.
 Con sesión, Inicio muestra además hasta cinco ligas relacionadas con actividad
 reciente. La relación administrada prevalece sobre seguida si coinciden. Si no
 hay ninguna, explica que ahí aparecerán las últimas ligas que tengan actividad.
-Inicio y Torneos se actualizan mediante pull-to-refresh para una sesión activa.
+Inicio vuelve a consultar esta proyección cada vez que recupera el foco, de modo
+que una liga recién creada aparece al regresar; Inicio y Torneos permiten además
+actualizar sus datos mediante pull-to-refresh para una sesión activa.
 
 La sección «Torneos» separa las colecciones completas en «Administro» y «Sigo».
 Es una clasificación de navegación: las autorizaciones continúan verificándose
@@ -211,7 +213,9 @@ una o dos vueltas con puntuación 3-1-0; no incluye fechas, horas ni marcadores
 especiales. Tras iniciarla, el backend calcula la clasificación: en dos vueltas
 prioriza la mini-clasificación entre empatados y en una, diferencia de goles y
 goles a favor generales; una igualdad que persiste comparte posición. La app
-solo presenta esta proyección (ADR-0081).
+solo presenta esta proyección (ADR-0081). El acceso a «Clasificación» no se
+muestra antes de iniciar el torneo; durante esa preparación, el acceso disponible
+es «Equipos».
 
 El ciclo persistido es `publicado → en_curso → finalizado`, con `cancelado` como
 estado terminal desde `publicado` o `en_curso`. El borrador se prepara localmente

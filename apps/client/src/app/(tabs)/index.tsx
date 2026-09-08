@@ -1,6 +1,6 @@
 import { router, type Href, useFocusEffect } from "expo-router";
 import Head from "expo-router/head";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
@@ -30,7 +30,6 @@ export default function HomeScreen() {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const loadedAccountID = useRef<string | null>(null);
   const showGuestHome = !user && (!isRestoring || isStaticWebRender());
 
   useEffect(() => {
@@ -63,14 +62,11 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!user) {
-        loadedAccountID.current = null;
         setRecentTournaments([]);
         setIsLoading(false);
         setIsRefreshing(false);
         return;
       }
-      if (loadedAccountID.current === user.id) return;
-      loadedAccountID.current = user.id;
       void loadRecentTournaments();
     }, [loadRecentTournaments, user]),
   );
