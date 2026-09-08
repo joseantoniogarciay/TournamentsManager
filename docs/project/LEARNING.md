@@ -3045,3 +3045,15 @@ K3s y también que sus componentes base siguen sanos.
   44 px de objetivo táctil y una etiqueta que expresa el partido completo. El
   encabezado del encuentro diferencia su función con semibold, mientras los
   clubes permanecen en regular y el marcador mantiene la mayor jerarquía.
+
+### 2026-09-08 — Un foco de navegación necesita geometría y jerarquía
+
+- **Aprendido:** cambiar de ronda y marcar un ID no garantiza que la tarjeta
+  destino sea visible: el cuadro desplaza su eje horizontal, pero el scroll
+  vertical pertenece a la pantalla contenedora. Añadir «Seleccionado» al título
+  confirma el estado a costa de volver a cargar la zona principal de texto.
+- **Regla reutilizable:** una navegación interna mide destino y viewport después
+  del nuevo render, y solo desplaza el contenedor lo necesario para mostrar la
+  tarjeta completa. El foco visual usa el borde degradado sin alterar el copy;
+  una corona de marca sustituye la palabra «Ganador» y conserva esa semántica en
+  su etiqueta accesible.

@@ -125,6 +125,10 @@ su objetivo táctil conserva 44 px y su etiqueta accesible nombra el partido de
 origen completo. El nombre de ronda y partido usa `bodyLarge` semibold para
 separar la estructura del encuentro de los nombres de clubes, que permanecen en
 `bodyLarge` regular; el marcador conserva la jerarquía tipográfica principal.
+El ganador se identifica con una corona sobre el degradado de marca, sin añadir
+texto al nombre. Al navegar entre emparejamientos, la tarjeta destino se desplaza
+hasta quedar completamente visible y sustituye el texto «Seleccionado» por un
+borde con ese mismo degradado.
 
 El banner global conserva la separación lateral y el radio de una card, pero usa
 un padding compacto de `space[3]` para no ocupar más altura de la necesaria. Se

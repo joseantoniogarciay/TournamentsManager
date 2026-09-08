@@ -1,6 +1,6 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, SectionList, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -67,6 +67,31 @@ export default function TournamentScreen() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [completionConfirmationOpen, setCompletionConfirmationOpen] = useState(false);
   const [completionOpen, setCompletionOpen] = useState(false);
+  const matchList = useRef<SectionList<PublicTournament["matches"][number]>>(null);
+  const matchListOffset = useRef(0);
+  const matchListViewport = useRef<View>(null);
+  const ensureBracketMatchVisible = useCallback((matchView: View) => {
+    const viewport = matchListViewport.current;
+    if (!viewport) return;
+    viewport.measureInWindow((_viewportX, viewportY, _viewportWidth, viewportHeight) => {
+      matchView.measureInWindow((_matchX, matchY, _matchWidth, matchHeight) => {
+        const visibleTop = viewportY + space[3];
+        const visibleBottom = viewportY + viewportHeight - control.minHeight - space[5];
+        const visibleHeight = visibleBottom - visibleTop;
+        const offsetDelta =
+          matchHeight > visibleHeight || matchY < visibleTop
+            ? matchY - visibleTop
+            : matchY + matchHeight > visibleBottom
+              ? matchY + matchHeight - visibleBottom
+              : 0;
+        if (Math.abs(offsetDelta) < 1) return;
+        matchList.current?.getScrollResponder()?.scrollTo({
+          animated: true,
+          y: Math.max(0, matchListOffset.current + offsetDelta),
+        });
+      });
+    });
+  }, []);
   const load = useCallback(
     async (force = false) => {
       if (!id) {
@@ -412,160 +437,168 @@ export default function TournamentScreen() {
         </>
       )}
       <Screen bottomInset="none" topInset="navigation-bar">
-        <SectionList
-          contentContainerStyle={[
-            styles.content,
-            {
-              paddingBottom:
-                insets.bottom +
-                (primaryTournamentAction ? control.minHeight + space[3] + space[5] : space[4]),
-            },
-          ]}
-          ItemSeparatorComponent={() => <View style={styles.matchSeparator} />}
-          sections={league.format === "single_elimination" ? [] : matchSections}
-          showsVerticalScrollIndicator={false}
-          stickySectionHeadersEnabled
-          ListHeaderComponent={
-            <View style={styles.listHeader}>
-              <Card>
-                <View style={styles.stack}>
-                  <View style={styles.summaryList}>
-                    <View style={styles.summaryItem}>
-                      <View
-                        accessible={false}
-                        style={[styles.bullet, { backgroundColor: colors.text.secondary }]}
-                      />
-                      <Text color="secondary" style={styles.summaryText}>
-                        <Text style={styles.summaryLabel}>{t("league_creator_label")}</Text>
-                        {t("league_creator_permissions")}
-                      </Text>
-                    </View>
-                    <View style={styles.summaryItem}>
-                      <View
-                        accessible={false}
-                        style={[styles.bullet, { backgroundColor: colors.text.secondary }]}
-                      />
-                      <Text color="secondary" style={styles.summaryText}>
-                        <Text style={styles.summaryLabel}>{t("league_status_label")}</Text>
-                        {getTournamentStateLabel(t, league.state)}
-                      </Text>
+        <View ref={matchListViewport} style={styles.listViewport}>
+          <SectionList
+            ref={matchList}
+            contentContainerStyle={[
+              styles.content,
+              {
+                paddingBottom:
+                  insets.bottom +
+                  (primaryTournamentAction ? control.minHeight + space[3] + space[5] : space[4]),
+              },
+            ]}
+            ItemSeparatorComponent={() => <View style={styles.matchSeparator} />}
+            onScroll={(event) => {
+              matchListOffset.current = event.nativeEvent.contentOffset.y;
+            }}
+            scrollEventThrottle={16}
+            sections={league.format === "single_elimination" ? [] : matchSections}
+            showsVerticalScrollIndicator={false}
+            stickySectionHeadersEnabled
+            ListHeaderComponent={
+              <View style={styles.listHeader}>
+                <Card>
+                  <View style={styles.stack}>
+                    <View style={styles.summaryList}>
+                      <View style={styles.summaryItem}>
+                        <View
+                          accessible={false}
+                          style={[styles.bullet, { backgroundColor: colors.text.secondary }]}
+                        />
+                        <Text color="secondary" style={styles.summaryText}>
+                          <Text style={styles.summaryLabel}>{t("league_creator_label")}</Text>
+                          {t("league_creator_permissions")}
+                        </Text>
+                      </View>
+                      <View style={styles.summaryItem}>
+                        <View
+                          accessible={false}
+                          style={[styles.bullet, { backgroundColor: colors.text.secondary }]}
+                        />
+                        <Text color="secondary" style={styles.summaryText}>
+                          <Text style={styles.summaryLabel}>{t("league_status_label")}</Text>
+                          {getTournamentStateLabel(t, league.state)}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              </Card>
-              <View style={styles.summaryActions}>
-                <View style={styles.summaryAction}>
-                  <Button
-                    label={t("league_teams")}
-                    onPress={() => router.push(`/tournament/${league.id}/teams`)}
-                    variant="secondary"
-                  />
-                </View>
-                {league.format === "league" && hasStarted ? (
+                </Card>
+                <View style={styles.summaryActions}>
                   <View style={styles.summaryAction}>
                     <Button
-                      label={t("league_standings")}
-                      onPress={() => router.push(`/tournament/${league.id}/standings`)}
+                      label={t("league_teams")}
+                      onPress={() => router.push(`/tournament/${league.id}/teams`)}
                       variant="secondary"
                     />
                   </View>
-                ) : null}
-              </View>
-              {league.state === "published" && isOrganizer ? (
-                <Card>
-                  <View style={styles.stack}>
-                    <Text style={styles.configurationTitle} variant="bodyLarge">
-                      {t("league_start_title")}
-                    </Text>
-                    <View style={styles.configurationOptions}>
-                      <ConfigurationOption
-                        label={t("tournament_format_league")}
-                        selected={format === "league"}
-                        disabled={isStarting}
-                        onPress={() => setFormat("league")}
-                      />
-                      <ConfigurationOption
-                        label={t("tournament_format_bracket")}
-                        selected={format === "single_elimination"}
-                        disabled={isStarting}
-                        onPress={() => setFormat("single_elimination")}
+                  {league.format === "league" && hasStarted ? (
+                    <View style={styles.summaryAction}>
+                      <Button
+                        label={t("league_standings")}
+                        onPress={() => router.push(`/tournament/${league.id}/standings`)}
+                        variant="secondary"
                       />
                     </View>
-                    {format === "single_elimination" ? (
-                      <Text color="secondary">{t("bracket_configuration_help")}</Text>
-                    ) : (
-                      <View
-                        style={[
-                          styles.configurationOptions,
-                          { borderColor: colors.border.default },
-                        ]}
-                      >
-                        <ConfigurationOption
-                          label={t("league_start_one_leg")}
-                          selected={roundRobinLegs === 1}
-                          disabled={isStarting}
-                          onPress={() => setRoundRobinLegs(1)}
-                        />
-                        <ConfigurationOption
-                          label={t("league_start_two_legs")}
-                          selected={roundRobinLegs === 2}
-                          disabled={isStarting}
-                          onPress={() => setRoundRobinLegs(2)}
-                        />
-                      </View>
-                    )}
-                  </View>
-                </Card>
-              ) : null}
-              {league.format === "single_elimination" && league.matches.length > 0 ? (
-                <BracketView
-                  tournament={league}
-                  canManage={canManageResults}
-                  onEdit={openResultEditor}
-                />
-              ) : null}
-            </View>
-          }
-          renderItem={({ item: match }) => {
-            return (
-              <Card>
-                <View style={styles.match}>
-                  <View style={styles.matchSummary}>
-                    <Text style={styles.teamName} variant="bodyLarge">
-                      {teamsByID.get(match.homeTeamId)}
-                    </Text>
-                    <Text style={styles.matchScore} variant="title">
-                      {match.state === "completed"
-                        ? `${match.homeScore} – ${match.awayScore}`
-                        : "–"}
-                    </Text>
-                    <Text style={styles.teamName} variant="bodyLarge">
-                      {teamsByID.get(match.awayTeamId)}
-                    </Text>
-                  </View>
-                  {canManageResults && league.state === "in_progress" ? (
-                    <Button
-                      label={
-                        match.state === "completed"
-                          ? t("league_result_edit")
-                          : t("league_result_add")
-                      }
-                      onPress={() => openResultEditor(match.id)}
-                      variant={match.state === "completed" ? "secondary" : "primary"}
-                    />
                   ) : null}
                 </View>
-              </Card>
-            );
-          }}
-          renderSectionHeader={({ section }) => (
-            <View style={[styles.roundHeader, { backgroundColor: colors.surface.canvas }]}>
-              <Text variant="title">
-                {t("league_match_round").replace("{number}", String(section.round))}
-              </Text>
-            </View>
-          )}
-        />
+                {league.state === "published" && isOrganizer ? (
+                  <Card>
+                    <View style={styles.stack}>
+                      <Text style={styles.configurationTitle} variant="bodyLarge">
+                        {t("league_start_title")}
+                      </Text>
+                      <View style={styles.configurationOptions}>
+                        <ConfigurationOption
+                          label={t("tournament_format_league")}
+                          selected={format === "league"}
+                          disabled={isStarting}
+                          onPress={() => setFormat("league")}
+                        />
+                        <ConfigurationOption
+                          label={t("tournament_format_bracket")}
+                          selected={format === "single_elimination"}
+                          disabled={isStarting}
+                          onPress={() => setFormat("single_elimination")}
+                        />
+                      </View>
+                      {format === "single_elimination" ? (
+                        <Text color="secondary">{t("bracket_configuration_help")}</Text>
+                      ) : (
+                        <View
+                          style={[
+                            styles.configurationOptions,
+                            { borderColor: colors.border.default },
+                          ]}
+                        >
+                          <ConfigurationOption
+                            label={t("league_start_one_leg")}
+                            selected={roundRobinLegs === 1}
+                            disabled={isStarting}
+                            onPress={() => setRoundRobinLegs(1)}
+                          />
+                          <ConfigurationOption
+                            label={t("league_start_two_legs")}
+                            selected={roundRobinLegs === 2}
+                            disabled={isStarting}
+                            onPress={() => setRoundRobinLegs(2)}
+                          />
+                        </View>
+                      )}
+                    </View>
+                  </Card>
+                ) : null}
+                {league.format === "single_elimination" && league.matches.length > 0 ? (
+                  <BracketView
+                    tournament={league}
+                    canManage={canManageResults}
+                    onMatchFocus={ensureBracketMatchVisible}
+                    onEdit={openResultEditor}
+                  />
+                ) : null}
+              </View>
+            }
+            renderItem={({ item: match }) => {
+              return (
+                <Card>
+                  <View style={styles.match}>
+                    <View style={styles.matchSummary}>
+                      <Text style={styles.teamName} variant="bodyLarge">
+                        {teamsByID.get(match.homeTeamId)}
+                      </Text>
+                      <Text style={styles.matchScore} variant="title">
+                        {match.state === "completed"
+                          ? `${match.homeScore} – ${match.awayScore}`
+                          : "–"}
+                      </Text>
+                      <Text style={styles.teamName} variant="bodyLarge">
+                        {teamsByID.get(match.awayTeamId)}
+                      </Text>
+                    </View>
+                    {canManageResults && league.state === "in_progress" ? (
+                      <Button
+                        label={
+                          match.state === "completed"
+                            ? t("league_result_edit")
+                            : t("league_result_add")
+                        }
+                        onPress={() => openResultEditor(match.id)}
+                        variant={match.state === "completed" ? "secondary" : "primary"}
+                      />
+                    ) : null}
+                  </View>
+                </Card>
+              );
+            }}
+            renderSectionHeader={({ section }) => (
+              <View style={[styles.roundHeader, { backgroundColor: colors.surface.canvas }]}>
+                <Text variant="title">
+                  {t("league_match_round").replace("{number}", String(section.round))}
+                </Text>
+              </View>
+            )}
+          />
+        </View>
         {primaryTournamentAction ? (
           <View style={[styles.floatingAction, { bottom: insets.bottom + space[3] }]}>
             <Button
@@ -821,6 +854,7 @@ function ConfigurationOption({
 
 const styles = StyleSheet.create({
   content: { paddingBottom: space[4] },
+  listViewport: { flex: 1 },
   configurationChip: {
     alignItems: "center",
     borderRadius: radius.pill,
