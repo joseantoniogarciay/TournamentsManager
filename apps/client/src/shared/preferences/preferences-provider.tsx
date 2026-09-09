@@ -8,10 +8,18 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useColorScheme } from "react-native";
+import { Platform, useColorScheme } from "react-native";
 
-export type ThemePreference = "system" | "light" | "dark";
-export type ResolvedTheme = "light" | "dark";
+import {
+  getStoredWebThemePreference,
+  isThemePreference,
+  themeCanvasColors,
+  themePreferenceStorageKey,
+  type ResolvedTheme,
+  type ThemePreference,
+} from "./theme";
+
+export type { ResolvedTheme, ThemePreference } from "./theme";
 
 type ThemeColors = {
   surface: { canvas: string; default: string; subtle: string };
@@ -30,11 +38,10 @@ type PreferencesContextValue = {
   setThemePreference: (theme: ThemePreference) => void;
 };
 
-const storageKey = "tournaments-manager.theme-preference";
 const productAnalyticsStorageKey = "tournaments-manager.product-analytics-enabled";
 
 const lightColors: ThemeColors = {
-  surface: { canvas: "#F8FAFC", default: "#FFFFFF", subtle: "#F1F5F9" },
+  surface: { canvas: themeCanvasColors.light, default: "#FFFFFF", subtle: "#F1F5F9" },
   text: { primary: "#101828", secondary: "#475467", placeholder: "#98A2B3", inverse: "#FFFFFF" },
   indicator: { default: color.brand.primary },
   border: { default: "#D0D5DD", focus: color.border.focus, error: "#D92D20" },
@@ -42,7 +49,7 @@ const lightColors: ThemeColors = {
 };
 
 const darkColors: ThemeColors = {
-  surface: { canvas: "#101828", default: "#182230", subtle: "#1D2939" },
+  surface: { canvas: themeCanvasColors.dark, default: "#182230", subtle: "#1D2939" },
   text: { primary: "#F9FAFB", secondary: "#D0D5DD", placeholder: "#98A2B3", inverse: "#101828" },
   indicator: { default: color.text.inverse },
   border: { default: "#475467", focus: color.border.focus, error: "#FDA29B" },
@@ -53,7 +60,11 @@ const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 
 export function PreferencesProvider({ children }: PropsWithChildren) {
   const systemTheme = useColorScheme();
-  const [themePreference, setThemePreferenceState] = useState<ThemePreference>("system");
+  const [themePreference, setThemePreferenceState] = useState<ThemePreference>(() =>
+    Platform.OS === "web" && typeof window !== "undefined"
+      ? getStoredWebThemePreference()
+      : "system",
+  );
   const [productAnalyticsEnabled, setProductAnalyticsEnabledState] = useState(false);
 
   useEffect(() => {
@@ -63,12 +74,12 @@ export function PreferencesProvider({ children }: PropsWithChildren) {
     void Promise.resolve()
       .then(() =>
         Promise.all([
-          AsyncStorage.getItem(storageKey),
+          AsyncStorage.getItem(themePreferenceStorageKey),
           AsyncStorage.getItem(productAnalyticsStorageKey),
         ]),
       )
       .then(([storedTheme, storedProductAnalytics]) => {
-        if (storedTheme === "system" || storedTheme === "light" || storedTheme === "dark") {
+        if (isThemePreference(storedTheme)) {
           setThemePreferenceState(storedTheme);
         }
         setProductAnalyticsEnabledState(storedProductAnalytics === "true");
@@ -78,7 +89,7 @@ export function PreferencesProvider({ children }: PropsWithChildren) {
 
   const setThemePreference = (theme: ThemePreference) => {
     setThemePreferenceState(theme);
-    void AsyncStorage.setItem(storageKey, theme).catch(() => undefined);
+    void AsyncStorage.setItem(themePreferenceStorageKey, theme).catch(() => undefined);
   };
 
   const setProductAnalyticsEnabled = (enabled: boolean) => {

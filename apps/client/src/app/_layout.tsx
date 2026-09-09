@@ -200,20 +200,30 @@ function NavigationTheme({ children }: PropsWithChildren) {
 
   return (
     <ThemeProvider value={resolvedTheme === "dark" ? DarkTheme : DefaultTheme}>
-      <WebPageAppearance backgroundColor={colors.surface.canvas} />
+      <WebPageAppearance backgroundColor={colors.surface.canvas} resolvedTheme={resolvedTheme} />
       {children}
     </ThemeProvider>
   );
 }
 
-function WebPageAppearance({ backgroundColor }: { backgroundColor: string }) {
+function WebPageAppearance({
+  backgroundColor,
+  resolvedTheme,
+}: {
+  backgroundColor: string;
+  resolvedTheme: "light" | "dark";
+}) {
   useEffect(() => {
     if (Platform.OS !== "web") return;
 
+    document.documentElement.dataset.theme = resolvedTheme;
     document.documentElement.style.backgroundColor = backgroundColor;
+    document.documentElement.style.colorScheme = resolvedTheme;
+    document.documentElement.style.setProperty("--initial-canvas-color", backgroundColor);
     document.body.style.backgroundColor = backgroundColor;
+    document.getElementById("initial-theme-color")?.setAttribute("content", backgroundColor);
     document.documentElement.lang = getCurrentLanguage();
-  }, [backgroundColor]);
+  }, [backgroundColor, resolvedTheme]);
 
   useEffect(() => {
     if (Platform.OS !== "web" || !window.visualViewport || !isSafari()) return;
@@ -250,7 +260,6 @@ function WebPageAppearance({ backgroundColor }: { backgroundColor: string }) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
       />
-      <meta name="theme-color" content={backgroundColor} />
       <style>{`
         @supports selector(div:has(> [role="tablist"])) {
           div:has(> [role="tablist"] a[role="tab"][href="/tournaments"]) {

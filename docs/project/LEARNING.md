@@ -3057,3 +3057,13 @@ K3s y también que sus componentes base siguen sanos.
   tarjeta completa. El foco visual usa el borde degradado sin alterar el copy;
   una corona de marca sustituye la palabra «Ganador» y conserva esa semántica en
   su etiqueta accesible.
+
+### 2026-09-09 — El tema web debe resolverse antes del primer render
+
+- **Aprendido:** hidratar una preferencia persistida en un efecto de React llega
+  después del primer frame; si el navegador está claro y la persona eligió
+  oscuro, el documento ya ha mostrado el canvas equivocado.
+- **Regla reutilizable:** el HTML web resuelve de forma síncrona la preferencia
+  persistida antes de pintar y comparte clave y colores con el provider. React
+  conserva después la fuente de verdad interactiva y sincroniza el fondo,
+  `color-scheme` y `theme-color` al cambiar el ajuste.

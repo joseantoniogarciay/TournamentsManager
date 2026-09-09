@@ -62,6 +62,10 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
   superficie `canvas` alcance las zonas superior e inferior del navegador. Los
   insets existentes siguen reservando esas zonas al contenido; el documento web
   sincroniza su fondo y `theme-color` con el tema resuelto.
+- **Primer frame web:** el HTML aplica antes de cargar React la preferencia de
+  tema persistida o, cuando permanece en `system`, la preferencia del navegador.
+  El fondo del documento, `color-scheme` y `theme-color` nacen ya con el tema
+  resuelto para evitar un destello claro al recargar en oscuro.
 - **Botonera web:** web usa la barra inferior estándar de `Tabs`, no el fallback
   de `NativeTabs`. Conserva las tres rutas, iconos y colores semánticos; Cuenta
   ofrece en su cabecera el mismo acceso localizado a Ajustes que las apps.
