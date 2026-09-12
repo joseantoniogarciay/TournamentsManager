@@ -65,7 +65,10 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 - **Primer frame web:** el HTML aplica antes de cargar React la preferencia de
   tema persistida o, cuando permanece en `system`, la preferencia del navegador.
   El fondo del documento, `color-scheme` y `theme-color` nacen ya con el tema
-  resuelto para evitar un destello claro al recargar en oscuro.
+  resuelto para evitar un destello claro al recargar en oscuro. Un script mínimo
+  y bloqueante del mismo origen ejecuta esa lectura sin relajar la CSP; la clave
+  y los colores siguen procediendo de la fuente TypeScript mediante atributos
+  del documento.
 - **Botonera web:** web usa la barra inferior estándar de `Tabs`, no el fallback
   de `NativeTabs`. Conserva las tres rutas, iconos y colores semánticos; Cuenta
   ofrece en su cabecera el mismo acceso localizado a Ajustes que las apps.

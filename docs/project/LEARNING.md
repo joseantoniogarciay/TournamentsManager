@@ -3066,4 +3066,7 @@ K3s y también que sus componentes base siguen sanos.
 - **Regla reutilizable:** el HTML web resuelve de forma síncrona la preferencia
   persistida antes de pintar y comparte clave y colores con el provider. React
   conserva después la fuente de verdad interactiva y sincroniza el fondo,
-  `color-scheme` y `theme-color` al cambiar el ajuste.
+  `color-scheme` y `theme-color` al cambiar el ajuste. Cuando CSP no admite
+  scripts inline, un recurso bloqueante del mismo origen conserva ese orden sin
+  ampliar `script-src`; recibe sus valores desde atributos generados por el HTML
+  para no duplicar configuración.
