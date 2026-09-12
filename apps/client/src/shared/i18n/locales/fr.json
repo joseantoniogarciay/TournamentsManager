@@ -16,6 +16,8 @@
   "bracket_auto_advance": "Qualification automatique. Aucun match à jouer.",
   "bracket_result_locked": "Un match suivant a déjà un résultat. Ce résultat ne peut plus être modifié.",
   "bracket_navigation_hint": "Choisissez un tour. Consultez l'origine de chaque place ou le prochain match du vainqueur.",
+  "bracket_overview_navigation_hint": "Parcourez le tableau. Consultez l'origine de chaque place ou le prochain match du vainqueur.",
+  "bracket_horizontal_scroll": "Faire défiler horizontalement le tableau",
   "bracket_configuration_help": "Élimination directe sur un seul match. L'ordre des équipes détermine le tableau. Des qualifications directes sont attribuées si nécessaire. Chaque match doit avoir un vainqueur.",
   "bracket_penalties_caption": "Les tirs au but sont indiqués entre parenthèses.",
   "bracket_penalties_help": "Un score égal exige un vainqueur aux tirs au but. Saisissez deux scores différents.",

@@ -543,6 +543,11 @@ export default function TournamentScreen() {
               <BracketView
                 tournament={league}
                 canManage={canManageResults}
+                horizontalControlBottomOffset={
+                  primaryTournamentAction
+                    ? insets.bottom + space[3] + control.minHeight + space[2]
+                    : insets.bottom
+                }
                 onMatchFocus={ensureBracketMatchVisible}
                 onEdit={openResultEditor}
                 onRoundChange={setSelectedBracketRound}

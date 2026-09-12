@@ -3071,12 +3071,26 @@ K3s y también que sus componentes base siguen sanos.
   ampliar `script-src`; recibe sus valores desde atributos generados por el HTML
   para no duplicar configuración.
 
-### 2026-09-12 — Un selector persistente debe ser la única fuente visual de la fase
+### 2026-09-12 — La fase necesita una única referencia visual persistente
 
-- **Aprendido:** fijar la navegación de rondas y mantener a la vez el título de
-  la columna y la fase en cada tarjeta repite la misma información, reduce el
-  espacio útil y hace más difícil localizar el partido.
-- **Regla reutilizable:** cuando un selector de contexto permanece visible al
-  desplazar, ese control nombra la fase una sola vez. El contenido muestra solo
-  la identidad local necesaria —«Partido N» o «Final»—, mientras las etiquetas
-  accesibles y los enlaces conservan el contexto completo de ronda y partido.
+- **Aprendido:** mantener a la vez una botonera, el título de cada columna y la
+  fase dentro de cada tarjeta repite la misma información, reduce el espacio útil
+  y hace más difícil localizar el partido. En web grande, donde varias columnas
+  conviven, la botonera tampoco describe mejor el contexto que sus cabeceras.
+- **Regla reutilizable:** la referencia persistente se adapta al layout: selector
+  de contexto en vistas compactas y cabeceras alineadas en una vista multicolumna.
+  El contenido muestra solo la identidad local necesaria —«Partido N» o «Final»—,
+  mientras las etiquetas accesibles y los enlaces conservan ronda y partido
+  completos.
+
+### 2026-09-12 — Un lienzo bidimensional necesita controles por eje independientes
+
+- **Aprendido:** el scroll horizontal nativo de un cuadro alto queda al final de
+  la columna más larga y deja de ser alcanzable durante casi todo el recorrido
+  vertical. Usar el selector de ronda para compensarlo cambia además el contexto
+  que la persona quería conservar.
+- **Regla reutilizable:** cuando una vista web combina desplazamiento vertical y
+  horizontal, el control del eje transversal permanece en el viewport y se
+  sincroniza con el lienzo y sus cabeceras. El selector semántico y la posición
+  visual son estados independientes; una acción flotante conserva prioridad
+  espacial y no queda cubierta por el control de desplazamiento.

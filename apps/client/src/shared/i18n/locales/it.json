@@ -16,6 +16,8 @@
   "bracket_auto_advance": "Passaggio automatico. Nessuna partita da giocare.",
   "bracket_result_locked": "Una partita successiva ha già un risultato. Questo risultato non può più essere modificato.",
   "bracket_navigation_hint": "Scegli un turno. Consulta l'origine di ogni posto o dove avanzerà il vincitore.",
+  "bracket_overview_navigation_hint": "Spostati nel tabellone. Consulta l'origine di ogni posto o dove avanzerà il vincitore.",
+  "bracket_horizontal_scroll": "Scorri orizzontalmente nel tabellone",
   "bracket_configuration_help": "Eliminazione diretta a partita unica. L'ordine delle squadre determina il tabellone. I passaggi diretti vengono assegnati automaticamente quando necessari. Ogni partita deve avere un vincitore.",
   "bracket_penalties_caption": "I gol ai rigori sono indicati tra parentesi.",
   "bracket_penalties_help": "In caso di parità serve un vincitore ai rigori. Inserisci due punteggi diversi.",

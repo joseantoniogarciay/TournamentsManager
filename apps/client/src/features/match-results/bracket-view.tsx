@@ -1,6 +1,9 @@
 import { SymbolView } from "expo-symbols";
 import { useEffect, useRef, useState } from "react";
 import {
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Platform,
   Pressable,
   ScrollView,
@@ -43,9 +46,11 @@ export function BracketView({
   onRoundChange,
   roundSelectionRevision,
   selectedRound,
+  horizontalControlBottomOffset = 0,
 }: {
   tournament: PublicTournament;
   canManage: boolean;
+  horizontalControlBottomOffset?: number;
   onMatchFocus: (matchView: View) => void;
   onEdit: (id: string) => void;
   onRoundChange: (round: number) => void;
@@ -58,21 +63,58 @@ export function BracketView({
   const overview = width >= columnWidth * 2 + space[5] * 2;
   const [focusedMatch, setFocusedMatch] = useState<string>();
   const [focusRevision, setFocusRevision] = useState(0);
-  const scroll = useRef<ScrollView>(null);
+  const [boardViewportWidth, setBoardViewportWidth] = useState<number>();
+  const boardScroll = useRef<ScrollView>(null);
+  const columnHeaders = useRef<ScrollView>(null);
+  const horizontalControl = useRef<ScrollView>(null);
+  const horizontalOffsets = useRef({ board: 0, headers: 0, control: 0 });
   const matchViews = useRef(new Map<string, View>());
   const teams = new Map(tournament.teams.map((team) => [team.id, team.name]));
   const byId = new Map(tournament.matches.map((match) => [match.id, match]));
   const rounds = [...new Set(tournament.matches.map((match) => match.round))].sort((a, b) => a - b);
   const total = rounds.length;
+  const bracketWidth = total * columnWidth;
+  const showsFixedHorizontalControl =
+    Platform.OS === "web" &&
+    overview &&
+    boardViewportWidth !== undefined &&
+    bracketWidth > boardViewportWidth;
+  const measureBoardViewport = (event: LayoutChangeEvent) => {
+    setBoardViewportWidth(event.nativeEvent.layout.width);
+  };
+  const syncHorizontalScroll = (
+    source: "board" | "headers" | "control",
+    event: NativeSyntheticEvent<NativeScrollEvent>,
+  ) => {
+    const nextOffset = event.nativeEvent.contentOffset.x;
+    horizontalOffsets.current[source] = nextOffset;
+    if (source !== "board" && Math.abs(horizontalOffsets.current.board - nextOffset) > 1) {
+      horizontalOffsets.current.board = nextOffset;
+      boardScroll.current?.scrollTo({ x: nextOffset, animated: false });
+    }
+    if (source !== "headers" && Math.abs(horizontalOffsets.current.headers - nextOffset) > 1) {
+      horizontalOffsets.current.headers = nextOffset;
+      columnHeaders.current?.scrollTo({ x: nextOffset, animated: false });
+    }
+    if (source !== "control" && Math.abs(horizontalOffsets.current.control - nextOffset) > 1) {
+      horizontalOffsets.current.control = nextOffset;
+      horizontalControl.current?.scrollTo({ x: nextOffset, animated: false });
+    }
+  };
   const navigate = (match: Match) => {
     onRoundChange(match.round);
     setFocusedMatch(match.id);
     setFocusRevision((revision) => revision + 1);
-    if (overview) scroll.current?.scrollTo({ x: (match.round - 1) * columnWidth, animated: true });
+    if (overview) {
+      boardScroll.current?.scrollTo({ x: (match.round - 1) * columnWidth, animated: true });
+    }
   };
   useEffect(() => {
     if (overview) {
-      scroll.current?.scrollTo({ x: (selectedRound - 1) * columnWidth, animated: true });
+      boardScroll.current?.scrollTo({
+        x: (selectedRound - 1) * columnWidth,
+        animated: true,
+      });
     }
   }, [overview, selectedRound]);
   useEffect(() => setFocusedMatch(undefined), [roundSelectionRevision]);
@@ -223,13 +265,69 @@ export function BracketView({
   return (
     <View style={styles.stack}>
       {overview ? (
-        <ScrollView ref={scroll} horizontal>
-          {rounds.map((round) => (
-            <View key={round} style={styles.column}>
-              {tournament.matches.filter((match) => match.round === round).map(renderMatch)}
+        <>
+          {Platform.OS === "web" ? (
+            <View
+              style={[
+                styles.stickyColumnHeaders,
+                {
+                  backgroundColor: colors.surface.canvas,
+                  borderColor: colors.border.default,
+                },
+              ]}
+            >
+              <ScrollView
+                ref={columnHeaders}
+                horizontal
+                onScroll={(event) => syncHorizontalScroll("headers", event)}
+                scrollEventThrottle={16}
+                showsHorizontalScrollIndicator={false}
+              >
+                {rounds.map((round) => (
+                  <View key={round} style={styles.columnHeader}>
+                    <Text variant="title">{getBracketRoundLabel(round, total)}</Text>
+                  </View>
+                ))}
+              </ScrollView>
             </View>
-          ))}
-        </ScrollView>
+          ) : null}
+          <ScrollView
+            ref={boardScroll}
+            horizontal
+            onLayout={measureBoardViewport}
+            onScroll={(event) => syncHorizontalScroll("board", event)}
+            scrollEventThrottle={16}
+            showsHorizontalScrollIndicator={Platform.OS !== "web"}
+          >
+            {rounds.map((round) => (
+              <View key={round} style={styles.column}>
+                {tournament.matches.filter((match) => match.round === round).map(renderMatch)}
+              </View>
+            ))}
+          </ScrollView>
+          {showsFixedHorizontalControl ? (
+            <View
+              style={[
+                styles.fixedHorizontalControl,
+                {
+                  backgroundColor: colors.surface.canvas,
+                  borderColor: colors.border.default,
+                  bottom: horizontalControlBottomOffset,
+                },
+              ]}
+            >
+              <ScrollView
+                ref={horizontalControl}
+                accessibilityLabel={t("bracket_horizontal_scroll")}
+                horizontal
+                onScroll={(event) => syncHorizontalScroll("control", event)}
+                scrollEventThrottle={16}
+              >
+                <View style={{ height: 1, width: bracketWidth }} />
+              </ScrollView>
+            </View>
+          ) : null}
+        </>
       ) : (
         <View style={styles.stack}>
           {tournament.matches.filter((match) => match.round === selectedRound).map(renderMatch)}
@@ -241,10 +339,14 @@ export function BracketView({
 
 export function BracketIntro() {
   const t = getTranslator();
+  const { width } = useWindowDimensions();
+  const showsOverview = Platform.OS === "web" && width >= columnWidth * 2 + space[5] * 2;
   return (
     <View style={styles.intro}>
       <Text variant="title">{t("bracket_title")}</Text>
-      <Text color="secondary">{t("bracket_navigation_hint")}</Text>
+      <Text color="secondary">
+        {t(showsOverview ? "bracket_overview_navigation_hint" : "bracket_navigation_hint")}
+      </Text>
     </View>
   );
 }
@@ -259,7 +361,9 @@ export function BracketRoundNavigation({
   selectedRound: number;
 }) {
   const { colors } = usePreferences();
+  const { width } = useWindowDimensions();
   const total = rounds.length;
+  if (Platform.OS === "web" && width >= columnWidth * 2 + space[5] * 2) return null;
   return (
     <View style={[styles.stickyRounds, { backgroundColor: colors.surface.canvas }]}>
       <ScrollView
@@ -374,4 +478,24 @@ const styles = StyleSheet.create({
     web: { paddingVertical: space[3], position: "sticky", top: 0, zIndex: 1 },
   }),
   column: { width: columnWidth, gap: space[5], paddingBottom: space[5] },
+  columnHeader: {
+    justifyContent: "center",
+    minHeight: control.minHeight,
+    paddingHorizontal: space[5],
+    width: columnWidth,
+  },
+  stickyColumnHeaders: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    position: "sticky",
+    top: 0,
+    zIndex: 1,
+  },
+  fixedHorizontalControl: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    height: space[5],
+    left: 0,
+    position: "fixed",
+    right: 0,
+    zIndex: 2,
+  },
 });

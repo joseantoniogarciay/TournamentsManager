@@ -16,6 +16,8 @@
   "bracket_auto_advance": "Pase automático. No se disputa partido.",
   "bracket_result_locked": "Un partido posterior ya tiene resultado. Este resultado ya no se puede corregir.",
   "bracket_navigation_hint": "Elige una ronda. Consulta de dónde viene cada plaza o adónde avanzará su ganador.",
+  "bracket_overview_navigation_hint": "Desplázate por el cuadro. Consulta de dónde viene cada plaza o adónde avanzará su ganador.",
+  "bracket_horizontal_scroll": "Desplazar horizontalmente por el cuadro",
   "bracket_configuration_help": "Eliminación directa a partido único. El orden de los equipos determina el cuadro. Se asignan pases directos si hacen falta. Cada partido disputado debe tener un ganador.",
   "bracket_penalties_caption": "Los goles de la tanda aparecen entre paréntesis.",
   "bracket_penalties_help": "El marcador empatado necesita un ganador por penaltis. Introduce dos marcadores de tanda distintos.",

@@ -129,17 +129,23 @@ al resultado. El destino posterior se presenta como enlace sin borde, debajo de
 la acción de resultado y alineado al final. El origen de cada plaza usa una
 flecha atrás junto al equipo: el icono acompaña la altura visual del texto, pero
 su objetivo táctil conserva 44 px y su etiqueta accesible nombra el partido de
-origen completo. El selector de ronda permanece sticky durante el desplazamiento
-y es la única referencia visual repetida a la fase: no se añade otro título sobre
-la columna ni dentro de cada tarjeta. Cada encuentro usa `bodyLarge` semibold con
-«Partido N»; la final muestra únicamente «Final». Las etiquetas accesibles y los
-enlaces de navegación sí conservan ronda y partido completos para no perder
-contexto. Los nombres de clubes permanecen en `bodyLarge` regular y el marcador
-conserva la jerarquía tipográfica principal.
+origen completo. En vistas compactas, el selector de ronda permanece sticky y es
+la única referencia visual repetida a la fase. En web grande desaparece esa
+botonera: una cabecera sticky alineada con cada columna nombra simultáneamente las
+fases visibles. Ninguno de los dos modos añade otro título dentro de cada tarjeta.
+Cada encuentro usa `bodyLarge` semibold con «Partido N»; la final muestra
+únicamente «Final». Las etiquetas accesibles y los enlaces de navegación sí
+conservan ronda y partido completos para no perder contexto. Los nombres de
+clubes permanecen en `bodyLarge` regular y el marcador conserva la jerarquía
+tipográfica principal.
 El ganador se identifica con una corona sobre el degradado de marca, sin añadir
 texto al nombre. Al navegar entre emparejamientos, la tarjeta destino se desplaza
 hasta quedar completamente visible y sustituye el texto «Seleccionado» por un
 borde con ese mismo degradado.
+En web, cuando el conjunto de columnas desborda el viewport, una barra horizontal
+sincronizada con el cuadro y sus cabeceras permanece fijada al borde inferior.
+Permite recorrer todas las fases sin modificar la ronda seleccionada y se sitúa
+por encima de una acción flotante cuando ambas coinciden.
 
 El banner global conserva la separación lateral y el radio de una card, pero usa
 un padding compacto de `space[3]` para no ocupar más altura de la necesaria. Se

@@ -16,6 +16,8 @@
   "bracket_auto_advance": "Automatic advance. No match is played.",
   "bracket_result_locked": "A later match already has a result. This result can no longer be changed.",
   "bracket_navigation_hint": "Choose a round. Follow each slot's source or see where its winner advances.",
+  "bracket_overview_navigation_hint": "Move through the bracket. Follow each slot's source or see where its winner advances.",
+  "bracket_horizontal_scroll": "Scroll horizontally through the bracket",
   "bracket_configuration_help": "Single elimination, one match per tie. Team order determines the bracket. Byes are assigned automatically when needed. Every played match must have a winner.",
   "bracket_penalties_caption": "Shootout goals are shown in parentheses.",
   "bracket_penalties_help": "A tied score needs a shootout winner. Enter different shootout scores.",
