@@ -3070,3 +3070,13 @@ K3s y también que sus componentes base siguen sanos.
   scripts inline, un recurso bloqueante del mismo origen conserva ese orden sin
   ampliar `script-src`; recibe sus valores desde atributos generados por el HTML
   para no duplicar configuración.
+
+### 2026-09-12 — Un selector persistente debe ser la única fuente visual de la fase
+
+- **Aprendido:** fijar la navegación de rondas y mantener a la vez el título de
+  la columna y la fase en cada tarjeta repite la misma información, reduce el
+  espacio útil y hace más difícil localizar el partido.
+- **Regla reutilizable:** cuando un selector de contexto permanece visible al
+  desplazar, ese control nombra la fase una sola vez. El contenido muestra solo
+  la identidad local necesaria —«Partido N» o «Final»—, mientras las etiquetas
+  accesibles y los enlaces conservan el contexto completo de ronda y partido.

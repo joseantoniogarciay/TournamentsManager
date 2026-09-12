@@ -40,17 +40,22 @@ export function BracketView({
   canManage,
   onMatchFocus,
   onEdit,
+  onRoundChange,
+  roundSelectionRevision,
+  selectedRound,
 }: {
   tournament: PublicTournament;
   canManage: boolean;
   onMatchFocus: (matchView: View) => void;
   onEdit: (id: string) => void;
+  onRoundChange: (round: number) => void;
+  roundSelectionRevision: number;
+  selectedRound: number;
 }) {
   const t = getTranslator();
   const { colors } = usePreferences();
   const { width } = useWindowDimensions();
   const overview = width >= columnWidth * 2 + space[5] * 2;
-  const [selectedRound, setSelectedRound] = useState(1);
   const [focusedMatch, setFocusedMatch] = useState<string>();
   const [focusRevision, setFocusRevision] = useState(0);
   const scroll = useRef<ScrollView>(null);
@@ -60,11 +65,17 @@ export function BracketView({
   const rounds = [...new Set(tournament.matches.map((match) => match.round))].sort((a, b) => a - b);
   const total = rounds.length;
   const navigate = (match: Match) => {
-    setSelectedRound(match.round);
+    onRoundChange(match.round);
     setFocusedMatch(match.id);
     setFocusRevision((revision) => revision + 1);
     if (overview) scroll.current?.scrollTo({ x: (match.round - 1) * columnWidth, animated: true });
   };
+  useEffect(() => {
+    if (overview) {
+      scroll.current?.scrollTo({ x: (selectedRound - 1) * columnWidth, animated: true });
+    }
+  }, [overview, selectedRound]);
+  useEffect(() => setFocusedMatch(undefined), [roundSelectionRevision]);
   useEffect(() => {
     if (!focusedMatch) return;
     const frame = requestAnimationFrame(() => {
@@ -73,8 +84,16 @@ export function BracketView({
     });
     return () => cancelAnimationFrame(frame);
   }, [focusRevision, focusedMatch, onMatchFocus, selectedRound]);
+  const matchTitle = (match: Match) => {
+    const roundLabel = getBracketRoundLabel(match.round, total);
+    return match.round === total
+      ? roundLabel
+      : t("bracket_match").replace("{number}", String(match.sequence));
+  };
   const matchLabel = (match: Match) =>
-    `${getBracketRoundLabel(match.round, total)} · ${t("bracket_match").replace("{number}", String(match.sequence))}`;
+    match.round === total
+      ? matchTitle(match)
+      : `${getBracketRoundLabel(match.round, total)} · ${matchTitle(match)}`;
   const successor = (match: Match) =>
     tournament.matches.find(
       (next) => next.homeSourceMatchId === match.id || next.awaySourceMatchId === match.id,
@@ -111,7 +130,7 @@ export function BracketView({
         <Card style={[styles.matchCard, selected ? styles.selectedMatchCard : undefined]}>
           <View style={styles.stack}>
             <Text style={styles.matchTitle} variant="bodyLarge">
-              {matchLabel(match)}
+              {matchTitle(match)}
             </Text>
             {(["home", "away"] as const).map((side) => {
               const teamId = side === "home" ? match.homeTeamId : match.awayTeamId;
@@ -203,10 +222,46 @@ export function BracketView({
   };
   return (
     <View style={styles.stack}>
-      <View style={styles.intro}>
-        <Text variant="title">{t("bracket_title")}</Text>
-        <Text color="secondary">{t("bracket_navigation_hint")}</Text>
-      </View>
+      {overview ? (
+        <ScrollView ref={scroll} horizontal>
+          {rounds.map((round) => (
+            <View key={round} style={styles.column}>
+              {tournament.matches.filter((match) => match.round === round).map(renderMatch)}
+            </View>
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={styles.stack}>
+          {tournament.matches.filter((match) => match.round === selectedRound).map(renderMatch)}
+        </View>
+      )}
+    </View>
+  );
+}
+
+export function BracketIntro() {
+  const t = getTranslator();
+  return (
+    <View style={styles.intro}>
+      <Text variant="title">{t("bracket_title")}</Text>
+      <Text color="secondary">{t("bracket_navigation_hint")}</Text>
+    </View>
+  );
+}
+
+export function BracketRoundNavigation({
+  onSelect,
+  rounds,
+  selectedRound,
+}: {
+  onSelect: (round: number) => void;
+  rounds: number[];
+  selectedRound: number;
+}) {
+  const { colors } = usePreferences();
+  const total = rounds.length;
+  return (
+    <View style={[styles.stickyRounds, { backgroundColor: colors.surface.canvas }]}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -217,33 +272,10 @@ export function BracketView({
             key={round}
             label={getBracketRoundLabel(round, total)}
             variant={selectedRound === round ? "primary" : "secondary"}
-            onPress={() => {
-              setSelectedRound(round);
-              setFocusedMatch(undefined);
-              scroll.current?.scrollTo({ x: (round - 1) * columnWidth, animated: true });
-            }}
+            onPress={() => onSelect(round)}
           />
         ))}
       </ScrollView>
-      {overview ? (
-        <ScrollView ref={scroll} horizontal>
-          {rounds.map((round) => (
-            <View key={round} style={styles.column}>
-              <Text variant="title" style={styles.intro}>
-                {getBracketRoundLabel(round, total)}
-              </Text>
-              {tournament.matches.filter((match) => match.round === round).map(renderMatch)}
-            </View>
-          ))}
-        </ScrollView>
-      ) : (
-        <View style={styles.stack}>
-          <Text variant="title" style={styles.intro}>
-            {getBracketRoundLabel(selectedRound, total)}
-          </Text>
-          {tournament.matches.filter((match) => match.round === selectedRound).map(renderMatch)}
-        </View>
-      )}
     </View>
   );
 }
@@ -337,5 +369,9 @@ const styles = StyleSheet.create({
   nextLinkLabel: { fontFamily: typography.family.semibold },
   intro: { paddingHorizontal: space[5], gap: space[2] },
   rounds: { paddingHorizontal: space[5], gap: space[2] },
+  stickyRounds: Platform.select({
+    default: { paddingVertical: space[3], zIndex: 1 },
+    web: { paddingVertical: space[3], position: "sticky", top: 0, zIndex: 1 },
+  }),
   column: { width: columnWidth, gap: space[5], paddingBottom: space[5] },
 });
