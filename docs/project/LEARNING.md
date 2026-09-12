@@ -3094,3 +3094,14 @@ K3s y también que sus componentes base siguen sanos.
   sincroniza con el lienzo y sus cabeceras. El selector semántico y la posición
   visual son estados independientes; una acción flotante conserva prioridad
   espacial y no queda cubierta por el control de desplazamiento.
+
+### 2026-09-12 — `fixed` no escapa de todo contenedor desplazable
+
+- **Aprendido:** en React Native Web, un control con `position: fixed` dentro del
+  árbol de un `ScrollView` puede quedar anclado al bloque creado por un ancestro
+  transformado. Visualmente conserva la coordenada inferior del primer render,
+  pero se desplaza con el contenido vertical.
+- **Regla reutilizable:** un control que deba permanecer en el viewport se monta
+  como hermano del contenedor desplazable y usa posición absoluta respecto a la
+  pantalla. La coordinación con el contenido se hace mediante estado o una
+  referencia explícita, no dependiendo del posicionamiento CSS interno.

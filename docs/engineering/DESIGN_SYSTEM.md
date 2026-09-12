@@ -145,7 +145,10 @@ borde con ese mismo degradado.
 En web, cuando el conjunto de columnas desborda el viewport, una barra horizontal
 sincronizada con el cuadro y sus cabeceras permanece fijada al borde inferior.
 Permite recorrer todas las fases sin modificar la ronda seleccionada y se sitúa
-por encima de una acción flotante cuando ambas coinciden.
+por encima de una acción flotante cuando ambas coinciden. La barra pertenece al
+viewport de pantalla como hermana del scroll vertical; no vive dentro de este,
+porque un ancestro transformado puede cambiar el bloque de referencia de
+`position: fixed`.
 
 El banner global conserva la separación lateral y el radio de una card, pero usa
 un padding compacto de `space[3]` para no ocupar más altura de la necesaria. Se

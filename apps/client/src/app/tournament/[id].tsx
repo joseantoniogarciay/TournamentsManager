@@ -26,9 +26,11 @@ import {
 import { useTournament, useTournamentStore } from "@/features/league-creation/league-store";
 import { MatchResultConflictError, recordMatchResultRequest } from "@/features/match-results/api";
 import {
+  type BracketHorizontalMetrics,
   BracketIntro,
   BracketRoundNavigation,
   BracketView,
+  type BracketViewHandle,
 } from "@/features/match-results/bracket-view";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -83,8 +85,26 @@ export default function TournamentScreen() {
   const [bracketRoundSelectionRevision, setBracketRoundSelectionRevision] = useState(0);
   const matchList = useRef<SectionList<PublicTournament["matches"][number]>>(null);
   const bracketList = useRef<ScrollView>(null);
+  const bracketView = useRef<BracketViewHandle>(null);
+  const bracketHorizontalControl = useRef<ScrollView>(null);
+  const bracketHorizontalControlOffset = useRef(0);
+  const [bracketHorizontalMetrics, setBracketHorizontalMetrics] =
+    useState<BracketHorizontalMetrics>({ contentWidth: 0, viewportWidth: 0 });
   const matchListOffset = useRef(0);
   const matchListViewport = useRef<View>(null);
+  const updateBracketHorizontalMetrics = useCallback((metrics: BracketHorizontalMetrics) => {
+    setBracketHorizontalMetrics((current) =>
+      current.contentWidth === metrics.contentWidth &&
+      current.viewportWidth === metrics.viewportWidth
+        ? current
+        : metrics,
+    );
+  }, []);
+  const syncBracketHorizontalControl = useCallback((nextOffset: number) => {
+    if (Math.abs(bracketHorizontalControlOffset.current - nextOffset) <= 1) return;
+    bracketHorizontalControlOffset.current = nextOffset;
+    bracketHorizontalControl.current?.scrollTo({ x: nextOffset, animated: false });
+  }, []);
   const ensureBracketMatchVisible = useCallback((matchView: View) => {
     const viewport = matchListViewport.current;
     if (!viewport) return;
@@ -110,6 +130,7 @@ export default function TournamentScreen() {
   useEffect(() => {
     setSelectedBracketRound(1);
     setBracketRoundSelectionRevision(0);
+    setBracketHorizontalMetrics({ contentWidth: 0, viewportWidth: 0 });
   }, [id]);
   const load = useCallback(
     async (force = false) => {
@@ -416,6 +437,10 @@ export default function TournamentScreen() {
     (first, second) => first - second,
   );
   const showsBracket = league.format === "single_elimination" && league.matches.length > 0;
+  const showsBracketHorizontalControl =
+    Platform.OS === "web" &&
+    showsBracket &&
+    bracketHorizontalMetrics.contentWidth > bracketHorizontalMetrics.viewportWidth;
   const selectBracketRound = (round: number) => {
     setSelectedBracketRound(round);
     setBracketRoundSelectionRevision((revision) => revision + 1);
@@ -541,13 +566,11 @@ export default function TournamentScreen() {
                 selectedRound={selectedBracketRound}
               />
               <BracketView
+                ref={bracketView}
                 tournament={league}
                 canManage={canManageResults}
-                horizontalControlBottomOffset={
-                  primaryTournamentAction
-                    ? insets.bottom + space[3] + control.minHeight + space[2]
-                    : insets.bottom
-                }
+                onHorizontalMetricsChange={updateBracketHorizontalMetrics}
+                onHorizontalScroll={syncBracketHorizontalControl}
                 onMatchFocus={ensureBracketMatchVisible}
                 onEdit={openResultEditor}
                 onRoundChange={setSelectedBracketRound}
@@ -666,6 +689,34 @@ export default function TournamentScreen() {
               )}
             />
           )}
+          {showsBracketHorizontalControl ? (
+            <View
+              style={[
+                styles.bracketHorizontalControl,
+                {
+                  backgroundColor: colors.surface.canvas,
+                  borderColor: colors.border.default,
+                  bottom: primaryTournamentAction
+                    ? insets.bottom + space[3] + control.minHeight + space[2]
+                    : insets.bottom,
+                },
+              ]}
+            >
+              <ScrollView
+                ref={bracketHorizontalControl}
+                accessibilityLabel={t("bracket_horizontal_scroll")}
+                horizontal
+                onScroll={(event) => {
+                  const nextOffset = event.nativeEvent.contentOffset.x;
+                  bracketHorizontalControlOffset.current = nextOffset;
+                  bracketView.current?.scrollHorizontallyTo(nextOffset);
+                }}
+                scrollEventThrottle={16}
+              >
+                <View style={{ height: 1, width: bracketHorizontalMetrics.contentWidth }} />
+              </ScrollView>
+            </View>
+          ) : null}
         </View>
         {primaryTournamentAction ? (
           <View style={[styles.floatingAction, { bottom: insets.bottom + space[3] }]}>
@@ -923,6 +974,14 @@ function ConfigurationOption({
 const styles = StyleSheet.create({
   content: { paddingBottom: space[4] },
   listViewport: { flex: 1 },
+  bracketHorizontalControl: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    height: space[5],
+    left: 0,
+    position: "absolute",
+    right: 0,
+    zIndex: 2,
+  },
   configurationChip: {
     alignItems: "center",
     borderRadius: radius.pill,
