@@ -126,9 +126,9 @@ padding y margen exterior horizontal semánticos. La home la usa para separar
 bloques de acción, explicación y pasos; no sustituye a los contenedores de
 layout. En Inicio, los títulos de «Actividad reciente» y sugerencias permanecen
 fuera de sus cards y dejan `space[4]` antes del primer contenido; los torneos
-hermanos conservan entre sí la separación general `space[5]`. El acceso
-persistente a la biblioteca de torneos vive en su tab y no se duplica como una
-card informativa en la home.
+hermanos conservan entre sí `space[5]`, mientras las secciones principales se
+separan con `space[6]`. El acceso persistente a la biblioteca de torneos vive en
+su tab y no se duplica como una card informativa en la home.
 
 En el cuadro de eliminatorias, la navegación entre partidos es secundaria frente
 al resultado. El destino posterior se presenta como enlace sin borde, debajo de

@@ -254,7 +254,7 @@ function Step({
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { gap: space[5] },
+  content: { gap: space[6] },
   hero: { gap: space[4] },
   homeSection: { gap: space[4] },
   recentContent: { gap: space[5] },

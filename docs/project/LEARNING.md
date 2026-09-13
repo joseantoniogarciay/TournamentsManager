@@ -3152,4 +3152,5 @@ K3s y también que sus componentes base siguen sanos.
   hermanos que ya presentan su título sobre el lienzo.
 - **Regla reutilizable:** los títulos hermanos de Inicio viven fuera de sus
   superficies y comparten `space[4]` con el primer contenido. Las cards repetidas
-  mantienen `space[5]` entre sí para no compactar también la colección.
+  mantienen `space[5]` entre sí para no compactar también la colección, y los
+  bloques principales usan `space[6]` para que cada sección conserve su límite.
