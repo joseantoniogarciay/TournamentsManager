@@ -7,7 +7,7 @@
  */
 
 /**
- * En liga solo se admiten goles. En eliminatoria, los goles iguales exigen ambos marcadores de penaltis distintos; con goles distintos no se envían penaltis. Los penaltis no se suman a los goles del partido.
+ * En liga se admite el marcador final; baloncesto rechaza empates. En una eliminatoria de fútbol, un empate exige ambos marcadores de penaltis distintos; baloncesto exige un tanteo final no empatado y nunca envía penaltis. Los penaltis no se suman al marcador del partido.
  */
 export interface MatchResultInput {
   /** @minimum 0 */

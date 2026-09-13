@@ -54,13 +54,13 @@ func readTournament(ctx context.Context, db tournamentReader, id string) (tourna
 	if rows.Err() != nil {
 		return value, rows.Err()
 	}
-	rows, err = db.Query(ctx, `SELECT id::text,stage_id::text,round_number,sequence,COALESCE(home_team_id::text,''),COALESCE(away_team_id::text,''),state,home_score,away_score,home_source_kind,away_source_kind,COALESCE(home_source_match_id::text,''),COALESCE(away_source_match_id::text,''),COALESCE(winner_team_id::text,''),home_penalties,away_penalties FROM matches WHERE tournament_id=$1 ORDER BY stage_id,round_number,sequence`, id)
+	rows, err = db.Query(ctx, `SELECT id::text,stage_id::text,round_number,sequence,COALESCE(home_team_id::text,''),COALESCE(away_team_id::text,''),state,home_score,away_score,home_source_kind,away_source_kind,COALESCE(home_source_match_id::text,''),COALESCE(away_source_match_id::text,''),COALESCE(winner_team_id::text,''),home_penalties,away_penalties,COALESCE(result_type,'') FROM matches WHERE tournament_id=$1 ORDER BY stage_id,round_number,sequence`, id)
 	if err != nil {
 		return value, err
 	}
 	for rows.Next() {
 		var match tournaments.Match
-		if err = rows.Scan(&match.ID, &match.StageID, &match.RoundNumber, &match.Sequence, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore, &match.HomeSourceKind, &match.AwaySourceKind, &match.HomeSourceMatchID, &match.AwaySourceMatchID, &match.WinnerTeamID, &match.HomePenalties, &match.AwayPenalties); err != nil {
+		if err = rows.Scan(&match.ID, &match.StageID, &match.RoundNumber, &match.Sequence, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore, &match.HomeSourceKind, &match.AwaySourceKind, &match.HomeSourceMatchID, &match.AwaySourceMatchID, &match.WinnerTeamID, &match.HomePenalties, &match.AwayPenalties, &match.ResultType); err != nil {
 			rows.Close()
 			return value, err
 		}
@@ -126,7 +126,7 @@ func recordBracketResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID
 	if !exists {
 		return tournaments.ErrTournamentNotFound
 	}
-	bracket := tournaments.Bracket{Size: len(value.Matches) + 1}
+	bracket := tournaments.Bracket{Size: len(value.Matches) + 1, Sport: value.Sport}
 	for _, match := range value.Matches {
 		source := func(kind tournaments.SlotSourceKind, team, sourceID string) tournaments.SlotSource {
 			if kind == tournaments.SeededTeam {
@@ -168,11 +168,11 @@ func recordBracketResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID
 			hp = match.Result.HomePenalties
 			ap = match.Result.AwayPenalties
 		}
-		_, err = tx.Exec(ctx, `UPDATE matches SET home_team_id=NULLIF($2,'')::uuid,away_team_id=NULLIF($3,'')::uuid,winner_team_id=NULLIF($4,'')::uuid,state=$5,home_score=$6,away_score=$7,home_penalties=$8,away_penalties=$9 WHERE id=$1`, value.Matches[i].ID, match.HomeTeamID, match.AwayTeamID, match.WinnerTeamID, state, home, away, hp, ap)
+		_, err = tx.Exec(ctx, `UPDATE matches SET home_team_id=NULLIF($2,'')::uuid,away_team_id=NULLIF($3,'')::uuid,winner_team_id=NULLIF($4,'')::uuid,state=$5,home_score=$6,away_score=$7,home_penalties=$8,away_penalties=$9,result_type=CASE WHEN $5='completed' THEN 'played' ELSE NULL END WHERE id=$1`, value.Matches[i].ID, match.HomeTeamID, match.AwayTeamID, match.WinnerTeamID, state, home, away, hp, ap)
 		if err != nil {
 			return err
 		}
 	}
-	_, err = tx.Exec(ctx, `INSERT INTO match_result_changes(match_id,changed_by_account_id,previous_home_score,previous_away_score,home_score,away_score,previous_home_penalties,previous_away_penalties,home_penalties,away_penalties) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, matchID, accountID, target.HomeScore, target.AwayScore, input.HomeScore, input.AwayScore, target.HomePenalties, target.AwayPenalties, input.HomePenalties, input.AwayPenalties)
+	_, err = tx.Exec(ctx, `INSERT INTO match_result_changes(match_id,changed_by_account_id,previous_home_score,previous_away_score,home_score,away_score,previous_home_penalties,previous_away_penalties,home_penalties,away_penalties,result_type) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'played')`, matchID, accountID, target.HomeScore, target.AwayScore, input.HomeScore, input.AwayScore, target.HomePenalties, target.AwayPenalties, input.HomePenalties, input.AwayPenalties)
 	return err
 }

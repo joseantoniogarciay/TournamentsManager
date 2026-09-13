@@ -73,6 +73,7 @@ func (r testTournamentRepository) Follow(_ context.Context, _ string, _ string) 
 func (r testTournamentRepository) Unfollow(context.Context, string, string) error { return nil }
 
 type testCreationRepository struct {
+	created           tournaments.Tournament
 	administrators    []string
 	administratorsErr error
 	cancelled         tournaments.Tournament
@@ -89,8 +90,8 @@ type testCreationRepository struct {
 	completeErr       error
 }
 
-func (testCreationRepository) Create(context.Context, string, tournaments.CreateInput) (tournaments.Tournament, error) {
-	return tournaments.Tournament{}, nil
+func (r testCreationRepository) Create(context.Context, string, tournaments.CreateInput) (tournaments.Tournament, error) {
+	return r.created, nil
 }
 
 func (r testCreationRepository) AddTeam(context.Context, string, string, tournaments.TeamInput) (tournaments.Team, error) {
@@ -364,6 +365,29 @@ func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
 	}
 }
 
+func TestCreateTournamentAcceptsAndReturnsBasketball(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	created := tournaments.Tournament{
+		ID: "019abcde-2222-7222-8222-222222222222", Name: "Liga de baloncesto",
+		Sport: tournaments.SportBasketball, State: "published", Teams: []tournaments.Team{{ID: "a", Name: "Azules"}, {ID: "b", Name: "Rojos"}}, Matches: []tournaments.Match{},
+	}
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{created: created}))
+	request := httptest.NewRequest(http.MethodPost, "/v1/tournaments", strings.NewReader(`{"name":"Liga de baloncesto","sport":"basketball","teams":[{"name":"Azules"},{"name":"Rojos"}]}`))
+	request.Header.Set("Authorization", "Bearer session-token")
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("status = %d, body = %s; want %d", recorder.Code, recorder.Body.String(), http.StatusCreated)
+	}
+	if !strings.Contains(recorder.Body.String(), `"sport":"basketball"`) {
+		t.Fatalf("body = %s; want basketball sport", recorder.Body.String())
+	}
+}
+
 func TestCancelTournamentAllowsBearerSession(t *testing.T) {
 	t.Parallel()
 	const accountID = "019abcde-1111-7111-8111-111111111111"
@@ -545,7 +569,7 @@ func TestRecordMatchResultUsesTheContractRoundField(t *testing.T) {
 	const accountID = "019abcde-1111-7111-8111-111111111111"
 	const leagueID = "019abcde-2222-7222-8222-222222222222"
 	const matchID = "019abcde-3333-7333-8333-333333333333"
-	creation := tournaments.NewCreationService(testCreationRepository{result: tournaments.Tournament{ID: leagueID, State: "in_progress", Teams: []tournaments.Team{}, Matches: []tournaments.Match{{ID: matchID, RoundNumber: 1, State: "completed"}}}})
+	creation := tournaments.NewCreationService(testCreationRepository{result: tournaments.Tournament{ID: leagueID, State: "in_progress", Teams: []tournaments.Team{}, Matches: []tournaments.Match{{ID: matchID, RoundNumber: 1, State: "completed", ResultType: tournaments.ResultPlayed}}}})
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
 	request := httptest.NewRequest(http.MethodPut, "/v1/tournaments/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(`{"homeScore":2,"awayScore":1}`))
 	request.Header.Set("Authorization", "Bearer session-token")
@@ -573,6 +597,7 @@ func TestRecordMatchResultMapsBusinessErrors(t *testing.T) {
 	}{
 		"not administrator":   {err: tournaments.ErrMatchResultForbidden, status: http.StatusForbidden},
 		"wrong state":         {err: tournaments.ErrMatchResultConflict, status: http.StatusConflict},
+		"basketball tie":      {err: tournaments.ErrInvalidTournamentInput, status: http.StatusBadRequest},
 		"draw without winner": {err: tournaments.ErrInvalidBracketResult, status: http.StatusBadRequest},
 		"dependent result":    {err: tournaments.ErrBracketResultDependency, status: http.StatusConflict},
 		"unresolved slots":    {err: tournaments.ErrBracketMatchNotReady, status: http.StatusConflict},
@@ -863,6 +888,7 @@ func TestValidRegistrationDraftEnforcesTournamentNameCharacterLimit(t *testing.T
 
 	draft := &registration.Draft{
 		Name:  strings.Repeat("a", tournaments.MaximumTournamentNameLength),
+		Sport: tournaments.SportFootball,
 		Teams: []string{"Azules", "Rojos"},
 	}
 	if !validRegistrationDraft(draft) {

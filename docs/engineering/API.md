@@ -126,6 +126,14 @@ restricciones de `TournamentInput`; crea un torneo `published` asociado a la cue
 pendiente. Solo se expone en `GET /me/tournaments` cuando una verificación concede
 una sesión válida.
 
+`TournamentInput` exige `sport: football | basketball`; no existe valor implícito
+en el contrato nuevo. La proyección pública devuelve el mismo enum y métricas de
+clasificación neutrales (`scoreFor`, `scoreAgainst`, `scoreDifference`). Un
+partido completado declara `resultType: played | administrative`: baloncesto
+rechaza tanteos finales empatados y penaltis, mientras fútbol conserva el empate
+de liga y los penaltis de una eliminatoria empatada. Las reglas pertenecen al
+dominio; OpenAPI solo expresa los datos y valores admitidos (ADR-0126).
+
 `POST /v1/tournaments/{tournamentId}/start` exige una unión discriminada. Para
 `format: league` requiere `roundRobinLegs: 1 | 2`; para
 `format: single_elimination` prohíbe ese campo porque el cuadro es siempre a
@@ -205,10 +213,11 @@ ADR-0122.
 
 `POST /v1/tournaments/{tournamentId}/teams/{teamId}/withdraw` expresa una baja durante
 una liga en curso. Solo la organizadora puede ejecutarla una vez por equipo: la
-transacción conserva el equipo, completa todos sus partidos como `3-0` para el
-rival, registra cada sustitución en el historial y devuelve la proyección con
-la clasificación recalculada. Una repetición o una liga fuera de curso devuelve
-`409`. Véase ADR-0041.
+transacción conserva el equipo, completa todos sus partidos con el resultado
+administrativo del deporte (`3-0` en fútbol o `20-0` en baloncesto), registra
+cada sustitución y su tipo en el historial y devuelve la proyección con la
+clasificación recalculada. Una repetición o una liga fuera de curso devuelve
+`409`. Véanse ADR-0041 y ADR-0126.
 
 El cliente muestra feedback específico solo cuando el contrato ofrece una
 recuperación distinta; errores no tratados, `5xx` y respuestas inválidas usan el

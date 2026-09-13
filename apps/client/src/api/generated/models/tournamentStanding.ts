@@ -20,10 +20,10 @@ export interface TournamentStanding {
   /** @minimum 0 */
   lost: number;
   /** @minimum 0 */
-  goalsFor: number;
+  scoreFor: number;
   /** @minimum 0 */
-  goalsAgainst: number;
-  goalDifference: number;
+  scoreAgainst: number;
+  scoreDifference: number;
   /** @minimum 0 */
   points: number;
 }

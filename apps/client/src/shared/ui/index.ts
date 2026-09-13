@@ -1,5 +1,6 @@
 export { Button } from "./button";
 export { Card } from "./card";
+export { ConfigurationOption } from "./configuration-option";
 export {
   ConfirmationDialog,
   ConfirmationDialogHost,

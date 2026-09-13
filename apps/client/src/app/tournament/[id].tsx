@@ -1,18 +1,10 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  SectionList,
-  Share,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Platform, ScrollView, SectionList, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { color, control, radius, space, typography } from "@tournaments-manager/design-tokens";
+import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
 import { APIUnexpectedResponseError } from "@/api/fetch";
 import type { PublicTournament } from "@/api/generated/models";
@@ -41,6 +33,7 @@ import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
   Card,
+  ConfigurationOption,
   LoadingTransition,
   ModalDialog,
   NavigationHeaderButton,
@@ -261,7 +254,10 @@ export default function TournamentScreen() {
       return;
     setSavingMatchID(matchID);
     try {
-      const shootout = league?.format === "single_elimination" && homeScore === awayScore;
+      const shootout =
+        league?.sport === "football" &&
+        league.format === "single_elimination" &&
+        homeScore === awayScore;
       putTournament(
         await recordMatchResultRequest(id, matchID, {
           homeScore,
@@ -383,6 +379,7 @@ export default function TournamentScreen() {
       })
     : undefined;
   const needsShootout =
+    league.sport === "football" &&
     league.format === "single_elimination" &&
     editingScore !== undefined &&
     /^\d+$/.test(editingScore.home) &&
@@ -392,6 +389,7 @@ export default function TournamentScreen() {
     editingScore !== undefined &&
     /^\d+$/.test(editingScore.home) &&
     /^\d+$/.test(editingScore.away) &&
+    (league.sport !== "basketball" || Number(editingScore.home) !== Number(editingScore.away)) &&
     (!needsShootout ||
       (/^\d+$/.test(editingScore.homePenalties) &&
         /^\d+$/.test(editingScore.awayPenalties) &&
@@ -458,6 +456,20 @@ export default function TournamentScreen() {
       <Card>
         <View style={styles.stack}>
           <View style={styles.summaryList}>
+            <View style={styles.summaryItem}>
+              <View
+                accessible={false}
+                style={[styles.bullet, { backgroundColor: colors.text.secondary }]}
+              />
+              <Text color="secondary" style={styles.summaryText}>
+                <Text style={styles.summaryLabel}>{`${t("tournament_sport_label")}: `}</Text>
+                {t(
+                  league.sport === "basketball"
+                    ? "tournament_sport_basketball"
+                    : "tournament_sport_football",
+                )}
+              </Text>
+            </View>
             <View style={styles.summaryItem}>
               <View
                 accessible={false}
@@ -835,7 +847,9 @@ export default function TournamentScreen() {
               <View style={styles.scoreFields}>
                 <View style={styles.scoreField}>
                   <TextField
-                    label={t("league_home_score")}
+                    label={t(
+                      league.sport === "basketball" ? "basketball_home_score" : "league_home_score",
+                    )}
                     keyboardType="number-pad"
                     onChangeText={(home) =>
                       setScores((value) => ({
@@ -848,7 +862,9 @@ export default function TournamentScreen() {
                 </View>
                 <View style={styles.scoreField}>
                   <TextField
-                    label={t("league_away_score")}
+                    label={t(
+                      league.sport === "basketball" ? "basketball_away_score" : "league_away_score",
+                    )}
                     keyboardType="number-pad"
                     onChangeText={(away) =>
                       setScores((value) => ({
@@ -860,6 +876,12 @@ export default function TournamentScreen() {
                   />
                 </View>
               </View>
+              {league.sport === "basketball" &&
+              /^\d+$/.test(editingScore.home) &&
+              /^\d+$/.test(editingScore.away) &&
+              Number(editingScore.home) === Number(editingScore.away) ? (
+                <Text color="error">{t("basketball_tied_score_help")}</Text>
+              ) : null}
               {needsShootout ? (
                 <>
                   <Text color="secondary">{t("bracket_penalties_help")}</Text>
@@ -950,38 +972,6 @@ export default function TournamentScreen() {
   );
 }
 
-function ConfigurationOption({
-  disabled,
-  label,
-  onPress,
-  selected,
-}: {
-  disabled: boolean;
-  label: string;
-  onPress: () => void;
-  selected: boolean;
-}) {
-  const { colors } = usePreferences();
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled, selected }}
-      disabled={disabled}
-      onPress={onPress}
-      style={[
-        styles.configurationChip,
-        selected
-          ? { backgroundColor: color.brand.primary, borderColor: color.brand.primary }
-          : { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-        disabled ? styles.configurationChipDisabled : undefined,
-      ]}
-    >
-      <Text color={selected ? "onBrand" : "primary"}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   content: { paddingBottom: space[4] },
   listViewport: { flex: 1 },
@@ -993,15 +983,6 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 2,
   },
-  configurationChip: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: control.minHeight,
-    paddingHorizontal: control.horizontalPadding,
-  },
-  configurationChipDisabled: { opacity: 0.55 },
   configurationOptions: {
     borderTopWidth: 1,
     flexDirection: "row",

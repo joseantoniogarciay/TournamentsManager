@@ -13,7 +13,7 @@ func TestIntegrationBracketLifecycle(t *testing.T) {
 	ctx := context.Background()
 	owner := createVerifiedLocalAccount(t, ctx, pool, "bracket@example.test", "bracket_owner", "correct horse battery staple")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
-	tournament, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Bracket", Teams: []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}, {Name: "E"}}})
+	tournament, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Bracket", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}, {Name: "E"}}})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -24,9 +24,15 @@ type BracketResult struct {
 	AwayPenalties *int
 }
 
-func (r BracketResult) validate() error {
+func (r BracketResult) validate(sport Sport) error {
 	if r.HomeScore < 0 || r.AwayScore < 0 {
 		return ErrInvalidBracketResult
+	}
+	if sport == SportBasketball {
+		if r.HomeScore == r.AwayScore || r.HomePenalties != nil || r.AwayPenalties != nil {
+			return ErrInvalidBracketResult
+		}
+		return nil
 	}
 	if r.HomeScore != r.AwayScore {
 		if r.HomePenalties != nil || r.AwayPenalties != nil {
@@ -119,7 +125,7 @@ func (b Bracket) Resolve() ([]ResolvedBracketMatch, error) {
 			if home == "" || away == "" {
 				return nil, ErrBracketMatchNotReady
 			}
-			if err := match.Result.validate(); err != nil {
+			if err := match.Result.validate(b.Sport); err != nil {
 				return nil, err
 			}
 			homeWins := match.Result.HomeScore > match.Result.AwayScore
@@ -146,7 +152,7 @@ func (b Bracket) Resolve() ([]ResolvedBracketMatch, error) {
 // RecordResult returns a new bracket, leaving the previous snapshot untouched
 // for history. A result cannot be corrected after a descendant has a result.
 func (b Bracket) RecordResult(round, sequence int, result BracketResult) (Bracket, error) {
-	if err := result.validate(); err != nil {
+	if err := result.validate(b.Sport); err != nil {
 		return Bracket{}, err
 	}
 	resolved, err := b.Resolve()
@@ -177,7 +183,7 @@ func (b Bracket) RecordResult(round, sequence int, result BracketResult) (Bracke
 			ancestorSequence = (ancestorSequence + 1) / 2
 		}
 	}
-	next := Bracket{Size: b.Size, Matches: make([]BracketMatch, len(b.Matches))}
+	next := Bracket{Size: b.Size, Sport: b.Sport, Matches: make([]BracketMatch, len(b.Matches))}
 	copy(next.Matches, b.Matches)
 	for i := range next.Matches {
 		if next.Matches[i].Result != nil {

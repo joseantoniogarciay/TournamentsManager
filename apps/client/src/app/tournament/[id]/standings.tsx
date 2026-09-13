@@ -250,7 +250,7 @@ export default function TournamentStandingsScreen() {
                             styles.statisticsHeaderContent,
                           ]}
                         >
-                          <StatisticsHeader />
+                          <StatisticsHeader sport={league.sport} />
                         </View>
                       ) : (
                         <Animated.View
@@ -263,7 +263,7 @@ export default function TournamentStandingsScreen() {
                             },
                           ]}
                         >
-                          <StatisticsHeader />
+                          <StatisticsHeader sport={league.sport} />
                         </Animated.View>
                       )}
                     </View>
@@ -371,7 +371,7 @@ export default function TournamentStandingsScreen() {
   );
 }
 
-function StatisticsHeader() {
+function StatisticsHeader({ sport }: { sport: PublicTournament["sport"] }) {
   const t = getTranslator();
 
   return (
@@ -389,13 +389,23 @@ function StatisticsHeader() {
         {t("league_standings_lost")}
       </Text>
       <Text color="secondary" style={styles.stat}>
-        {t("league_standings_goals_for")}
+        {t(
+          sport === "basketball" ? "basketball_standings_score_for" : "league_standings_goals_for",
+        )}
       </Text>
       <Text color="secondary" style={styles.stat}>
-        {t("league_standings_goals_against")}
+        {t(
+          sport === "basketball"
+            ? "basketball_standings_score_against"
+            : "league_standings_goals_against",
+        )}
       </Text>
       <Text color="secondary" style={styles.stat}>
-        {t("league_standings_goal_difference")}
+        {t(
+          sport === "basketball"
+            ? "basketball_standings_score_difference"
+            : "league_standings_goal_difference",
+        )}
       </Text>
     </View>
   );
@@ -414,15 +424,15 @@ function StatisticsValues({
       <Text style={styles.stat}>{standing.won}</Text>
       <Text style={styles.stat}>{standing.drawn}</Text>
       <Text style={styles.stat}>{standing.lost}</Text>
-      <Text style={styles.stat}>{standing.goalsFor}</Text>
-      <Text style={styles.stat}>{standing.goalsAgainst}</Text>
+      <Text style={styles.stat}>{standing.scoreFor}</Text>
+      <Text style={styles.stat}>{standing.scoreAgainst}</Text>
       <Text style={styles.stat}>
-        {standing.goalDifference > 0
+        {standing.scoreDifference > 0
           ? t("league_standings_positive_goal_difference").replace(
               "{value}",
-              standing.goalDifference.toString(),
+              standing.scoreDifference.toString(),
             )
-          : standing.goalDifference}
+          : standing.scoreDifference}
       </Text>
     </View>
   );
@@ -430,6 +440,18 @@ function StatisticsValues({
 
 function StandingsRulesContent({ league }: { league: PublicTournament | null | undefined }) {
   const t = getTranslator();
+
+  if (league?.sport === "basketball") {
+    return (
+      <View style={styles.stack}>
+        <Text variant="title">{t("league_standings_rules_title")}</Text>
+        <Text color="secondary">{t("basketball_standings_rule_points")}</Text>
+        <Text color="secondary">{t("basketball_standings_rule_head_to_head")}</Text>
+        <Text color="secondary">{t("basketball_standings_rule_general")}</Text>
+        <Text color="secondary">{t("league_standings_rule_shared")}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.stack}>

@@ -139,6 +139,8 @@ function parseMatch(value: unknown): Match | null {
     if (key in value && !isIntegerAtLeast(value[key], 0)) return null;
   }
   if ("winnerTeamId" in value && !isUUID(value.winnerTeamId)) return null;
+  if ("resultType" in value && !["played", "administrative"].includes(String(value.resultType)))
+    return null;
   if (
     value.state === "completed" &&
     (!isIntegerAtLeast(value.homeScore, 0) ||
@@ -148,6 +150,7 @@ function parseMatch(value: unknown): Match | null {
   )
     return null;
   if (value.state === "bye" && !isUUID(value.winnerTeamId)) return null;
+  if (value.state === "completed" && !("resultType" in value)) return null;
   return value as unknown as Match;
 }
 
@@ -187,11 +190,11 @@ function parseTournamentStanding(value: unknown): TournamentStanding | null {
     !isIntegerAtLeast(value.won, 0) ||
     !isIntegerAtLeast(value.drawn, 0) ||
     !isIntegerAtLeast(value.lost, 0) ||
-    !isIntegerAtLeast(value.goalsFor, 0) ||
-    !isIntegerAtLeast(value.goalsAgainst, 0) ||
+    !isIntegerAtLeast(value.scoreFor, 0) ||
+    !isIntegerAtLeast(value.scoreAgainst, 0) ||
     !isIntegerAtLeast(value.points, 0) ||
-    typeof value.goalDifference !== "number" ||
-    !Number.isInteger(value.goalDifference)
+    typeof value.scoreDifference !== "number" ||
+    !Number.isInteger(value.scoreDifference)
   ) {
     return null;
   }
@@ -202,9 +205,9 @@ function parseTournamentStanding(value: unknown): TournamentStanding | null {
     won: value.won,
     drawn: value.drawn,
     lost: value.lost,
-    goalsFor: value.goalsFor,
-    goalsAgainst: value.goalsAgainst,
-    goalDifference: value.goalDifference,
+    scoreFor: value.scoreFor,
+    scoreAgainst: value.scoreAgainst,
+    scoreDifference: value.scoreDifference,
     points: value.points,
   };
 }
@@ -267,6 +270,7 @@ export function parsePublishedTournament(value: unknown): PublishedTournament | 
   if (
     !isUUID(value.id) ||
     typeof value.name !== "string" ||
+    !Object.values(PublicTournamentSport).includes(value.sport as PublicTournament["sport"]) ||
     !Object.values(PublishedTournamentState).includes(
       value.state as PublishedTournament["state"],
     ) ||
@@ -278,6 +282,7 @@ export function parsePublishedTournament(value: unknown): PublishedTournament | 
   return {
     id: value.id,
     name: value.name,
+    sport: value.sport as PublishedTournament["sport"],
     state: value.state as PublishedTournament["state"],
     teams,
     matches,

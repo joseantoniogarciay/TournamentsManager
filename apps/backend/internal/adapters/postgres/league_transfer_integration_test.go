@@ -14,7 +14,7 @@ func TestIntegrationTransferTournamentOwnershipWithPostgres(t *testing.T) {
 	previous := createVerifiedLocalAccount(t, ctx, pool, "previous@example.test", "previous", "correct password")
 	recipient := createVerifiedLocalAccount(t, ctx, pool, "recipient@example.test", "recipient", "correct password")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
-	created, err := service.Create(ctx, previous, tournaments.CreateInput{Name: "Liga transferida", Teams: []tournaments.TeamInput{{Name: "Uno"}, {Name: "Dos"}}})
+	created, err := service.Create(ctx, previous, tournaments.CreateInput{Name: "Liga transferida", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "Uno"}, {Name: "Dos"}}})
 	if err != nil {
 		t.Fatalf("crear liga: %v", err)
 	}

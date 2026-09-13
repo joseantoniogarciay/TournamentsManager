@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0126](../adr/0126-support-football-and-basketball-with-explicit-sport-rules.md)              | Soportar fútbol y baloncesto con reglas deportivas explícitas                  | Aceptado              | 2026-09-13 |
 | [0125](../adr/0125-persist-private-product-suggestions-and-notify-by-email.md)               | Persistir sugerencias privadas y avisar por correo                              | Aceptado              | 2026-09-13 |
 | [0124](../adr/0124-limit-recent-tournaments-to-three.md)                                    | Limitar a tres los torneos recientes de Inicio                                  | Aceptado              | 2026-09-13 |
 | [0123](../adr/0123-model-tournaments-as-ordered-stages.md)                                   | Modelar los torneos como fases ordenadas                                        | Aceptado              | 2026-09-06 |

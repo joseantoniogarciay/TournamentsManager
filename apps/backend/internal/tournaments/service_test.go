@@ -2,6 +2,7 @@ package tournaments
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 )
@@ -62,7 +63,7 @@ func TestListRecentReturnsRepositorySummary(t *testing.T) {
 func TestValidCreateInputEnforcesTournamentNameCharacterLimit(t *testing.T) {
 	t.Parallel()
 
-	input := CreateInput{Teams: []TeamInput{{Name: "Azules"}, {Name: "Rojos"}}}
+	input := CreateInput{Sport: SportFootball, Teams: []TeamInput{{Name: "Azules"}, {Name: "Rojos"}}}
 	input.Name = strings.Repeat("a", MaximumTournamentNameLength)
 	if !validCreateInput(input) {
 		t.Fatalf("validCreateInput() rejected %d characters", MaximumTournamentNameLength)
@@ -70,5 +71,40 @@ func TestValidCreateInputEnforcesTournamentNameCharacterLimit(t *testing.T) {
 	input.Name += "a"
 	if validCreateInput(input) {
 		t.Errorf("validCreateInput() accepted %d characters", MaximumTournamentNameLength+1)
+	}
+}
+
+func TestValidCreateInputRejectsUnknownSport(t *testing.T) {
+	t.Parallel()
+
+	input := CreateInput{Name: "Torneo", Sport: "unknown", Teams: []TeamInput{{Name: "Azules"}, {Name: "Rojos"}}}
+	if validCreateInput(input) {
+		t.Fatal("validCreateInput() accepted an unknown sport")
+	}
+}
+
+func TestValidateLeagueResultUsesSportPolicy(t *testing.T) {
+	t.Parallel()
+
+	if err := ValidateLeagueResult(SportFootball, MatchResultInput{HomeScore: 1, AwayScore: 1}); err != nil {
+		t.Fatalf("football draw rejected: %v", err)
+	}
+	if err := ValidateLeagueResult(SportBasketball, MatchResultInput{HomeScore: 80, AwayScore: 80}); !errors.Is(err, ErrInvalidTournamentInput) {
+		t.Fatalf("basketball draw error = %v, want invalid input", err)
+	}
+	penalties := 4
+	if err := ValidateLeagueResult(SportBasketball, MatchResultInput{HomeScore: 80, AwayScore: 79, HomePenalties: &penalties}); !errors.Is(err, ErrInvalidTournamentInput) {
+		t.Fatalf("basketball penalties error = %v, want invalid input", err)
+	}
+}
+
+func TestAdministrativeWinningScoreUsesSportPolicy(t *testing.T) {
+	t.Parallel()
+
+	for sport, want := range map[Sport]int{SportFootball: 3, SportBasketball: 20} {
+		got, err := AdministrativeWinningScore(sport)
+		if err != nil || got != want {
+			t.Errorf("AdministrativeWinningScore(%q) = %d, %v; want %d", sport, got, err, want)
+		}
 	}
 }

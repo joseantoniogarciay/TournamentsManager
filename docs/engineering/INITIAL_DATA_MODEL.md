@@ -43,13 +43,13 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | `federated_login_challenges` | `id`, `provider`, `nonce_hash`, `expires_at`, `consumed_at`, `created_at`                                              | Google únicamente; nonce de 5 min, de un solo uso y sin sesión asociada.                                                                                                                                                            |
 | `email_verification_tokens`  | `id`, `account_id`, `token_hash`, `expires_at`, `consumed_at`, `invalidated_at`, `created_at`                          | hash único por contexto; expira a 24 h; activo, consumido e invalidado son excluyentes; solo hay un token activo por cuenta.                                                                                                        |
 | `sessions`                   | `id`, `account_id`, `token_hash`, `created_at`, `last_seen_at`, `idle_expires_at`, `absolute_expires_at`, `revoked_at` | hash único; válida solo si la cuenta está verificada, no revocada y ambos vencimientos son futuros.                                                                                                                                 |
-| `tournaments`                | `id`, `organizer_account_id`, `name`, `sport`, `state`, `created_at`, `published_at`, `last_activity_at`                | raíz de identidad, equipos, permisos y visibilidad; no decide por sí misma reglas de liga o eliminatoria. |
+| `tournaments`                | `id`, `organizer_account_id`, `name`, `sport`, `state`, `created_at`, `published_at`, `last_activity_at`                | `sport` es el enum inmutable `football \| basketball` y selecciona la política deportiva; la tabla sigue siendo raíz de identidad, equipos, permisos y visibilidad. |
 | `tournament_stages`          | `id`, `tournament_id`, `position`, `type`, `state`                                                                     | orden único dentro del torneo; `league` y `single_elimination` son tipos distintos. |
 | `tournament_administrators`  | `tournament_id`, `account_id`, `assigned_at`                                                                           | PK compuesta; el creador se conserva en `tournaments.organizer_account_id`, no se duplica. |
 | `tournament_followers`       | `tournament_id`, `account_id`, `followed_at`                                                                           | guardar un torneo no concede permisos. |
 | `tournament_teams`           | `id`, `tournament_id`, `name`, `position`, `withdrawn_at`                                                              | nombre y posición únicos por torneo; el orden es la siembra congelada si la fase lo requiere. |
-| `matches`                    | `id`, `tournament_id`, `stage_id`, `round_number`, `sequence`, fuentes de local y visitante, `winner_team_id`, `state` | cada partido pertenece a una fase. Una plaza procede de equipo sembrado, ganadora, *bye* o, en el futuro, clasificación de grupo; un bracket puede tener equipos aún desconocidos. |
-| `match_result_changes`        | `id`, `match_id`, `changed_by_account_id` opcional, marcador anterior y nuevo, `changed_at`                            | cada registro o corrección conserva la administradora y el marcador previo mientras exista su cuenta; al purgarla, la autora pasa a `NULL` y el marcador se conserva.                                                                  |
+| `matches`                    | `id`, `tournament_id`, `stage_id`, `round_number`, `sequence`, fuentes de local y visitante, `winner_team_id`, `state`, marcador, `result_type` | cada partido pertenece a una fase. Un partido completado distingue resultado `played` o `administrative`; una plaza procede de equipo sembrado, ganadora, *bye* o, en el futuro, clasificación de grupo. |
+| `match_result_changes`        | `id`, `match_id`, `changed_by_account_id` opcional, marcador anterior y nuevo, `result_type`, `changed_at`             | cada registro o corrección conserva la administradora, el marcador previo y si el nuevo resultado fue jugado o administrativo; al purgar la cuenta, la autora pasa a `NULL`. |
 | `tournament_champions`        | `tournament_id`, `team_id`                                                                                              | conserva una única campeona de eliminatoria o todas las co-campeonas de una liga al cerrar el torneo. |
 
 El email conserva el valor aportado para entrega; `lower(email)` es solo la clave
@@ -88,17 +88,21 @@ minúsculo antes de guardar.
    referencia esa fase; cada plaza del cuadro conserva equipo, ganadora previa
    o *bye* como fuente.
 8. **Resultado:** bloquea torneo y partido, exige `in_progress` y administración;
-   en liga admite el marcador, y en eliminatoria exige una ganadora, propaga su
-   identidad solo a las plazas dependientes y rechaza corregirla si ya existe un
-   resultado posterior. Conserva marcador anterior y nuevo, incluidos penaltis.
+   en fútbol admite empate de liga y exige penaltis para resolver una
+   eliminatoria empatada; en baloncesto rechaza empate final y penaltis. La
+   eliminatoria propaga la ganadora solo a las plazas dependientes y rechaza
+   corregirla si ya existe un resultado posterior. Conserva marcador anterior y
+   nuevo, incluidos los penaltis de fútbol y el tipo `played` o `administrative`.
 9. **Finalización:** bloquea el torneo, exige organizadora, estado `in_progress`
    y ningún partido pendiente. En liga persiste las posiciones 1; en
    eliminatoria, la ganadora final. Torneo y fase pasan a `completed` en la misma
    transacción.
-10. **Baja de equipo:** bloquea el torneo y el equipo, exige una fase de liga y estado
-   `in_progress`; marca la baja y completa todos los partidos de ese equipo con
-   `3-0` para el rival. No se aplica a eliminatorias. Cada cambio conserva el marcador anterior y la autora
-   en `match_result_changes`, todo en la misma transacción.
+10. **Baja de equipo:** bloquea el torneo y el equipo, exige una fase de liga y
+   estado `in_progress`; marca la baja y completa todos los partidos de ese
+   equipo con resultado administrativo fijo para el rival: `3-0` en fútbol o
+   `20-0` en baloncesto. No se aplica a eliminatorias. Cada cambio conserva el
+   marcador anterior, la autora y `result_type = administrative` en
+   `match_result_changes`, todo en la misma transacción.
 
 La purga es un proceso operativo explícito, idempotente y auditable por conteos,
 sin registrar emails ni tokens. El `ON DELETE` y las FKs se concretarán en la

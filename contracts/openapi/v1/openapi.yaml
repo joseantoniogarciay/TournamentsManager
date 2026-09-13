@@ -1077,9 +1077,11 @@ components:
         name: { type: string, minLength: 1, maxLength: 100 }
     TournamentInput:
       type: object
-      required: [name, teams]
+      additionalProperties: false
+      required: [name, sport, teams]
       properties:
         name: { type: string, minLength: 1, maxLength: 56 }
+        sport: { type: string, enum: [football, basketball] }
         teams:
           type: array
           minItems: 2
@@ -1273,15 +1275,17 @@ components:
         homePenalties: { type: integer, minimum: 0 }
         awayPenalties: { type: integer, minimum: 0 }
       description: >-
-        En liga solo se admiten goles. En eliminatoria, los goles iguales exigen
-        ambos marcadores de penaltis distintos; con goles distintos no se envían
-        penaltis. Los penaltis no se suman a los goles del partido.
+        En liga se admite el marcador final; baloncesto rechaza empates. En una
+        eliminatoria de fútbol, un empate exige ambos marcadores de penaltis
+        distintos; baloncesto exige un tanteo final no empatado y nunca envía
+        penaltis. Los penaltis no se suman al marcador del partido.
     PublishedTournament:
       type: object
-      required: [id, name, state, teams, matches]
+      required: [id, name, sport, state, teams, matches]
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
+        sport: { type: string, enum: [football, basketball] }
         state: { type: string, enum: [published] }
         teams: { type: array, items: { $ref: "#/components/schemas/TournamentTeam" } }
         matches: { type: array, items: { $ref: "#/components/schemas/Match" } }
@@ -1304,7 +1308,7 @@ components:
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
-        sport: { type: string, enum: [football] }
+        sport: { type: string, enum: [football, basketball] }
         format: { type: string, enum: [league, single_elimination] }
         stages:
           type: array
@@ -1330,7 +1334,18 @@ components:
     TournamentStanding:
       type: object
       required:
-        [position, teamId, played, won, drawn, lost, goalsFor, goalsAgainst, goalDifference, points]
+        [
+          position,
+          teamId,
+          played,
+          won,
+          drawn,
+          lost,
+          scoreFor,
+          scoreAgainst,
+          scoreDifference,
+          points,
+        ]
       properties:
         position: { type: integer, minimum: 1 }
         teamId: { $ref: "#/components/schemas/UUID" }
@@ -1338,9 +1353,9 @@ components:
         won: { type: integer, minimum: 0 }
         drawn: { type: integer, minimum: 0 }
         lost: { type: integer, minimum: 0 }
-        goalsFor: { type: integer, minimum: 0 }
-        goalsAgainst: { type: integer, minimum: 0 }
-        goalDifference: { type: integer }
+        scoreFor: { type: integer, minimum: 0 }
+        scoreAgainst: { type: integer, minimum: 0 }
+        scoreDifference: { type: integer }
         points: { type: integer, minimum: 0 }
     TournamentStage:
       type: object
@@ -1391,6 +1406,10 @@ components:
         homeSourceMatchId: { $ref: "#/components/schemas/UUID" }
         awaySourceMatchId: { $ref: "#/components/schemas/UUID" }
         winnerTeamId: { $ref: "#/components/schemas/UUID" }
+        resultType:
+          type: string
+          enum: [played, administrative]
+          description: Ausente mientras el partido no tenga un resultado registrado o sea un bye.
         state: { type: string, enum: [pending, completed, bye] }
         homeScore: { type: integer, minimum: 0 }
         awayScore: { type: integer, minimum: 0 }

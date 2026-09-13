@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type { TeamInput } from "./teamInput.js";
+import type { TournamentInputSport } from "./tournamentInputSport.js";
 
 export interface TournamentInput {
   /**
@@ -13,6 +14,7 @@ export interface TournamentInput {
    * @maxLength 56
    */
   name: string;
+  sport: TournamentInputSport;
   /**
    * @minItems 2
    * @maxItems 64

@@ -50,6 +50,7 @@ type BracketMatch struct {
 // Bracket is a complete, ordered tree for one single-elimination phase.
 type Bracket struct {
 	Size    int
+	Sport   Sport
 	Matches []BracketMatch
 }
 

@@ -61,6 +61,48 @@ func TestCalculateStandingsSharesPositionWhenEveryCriterionIsEqual(t *testing.T)
 	}
 }
 
+func TestCalculateBasketballStandingsDistinguishesPlayedAndAdministrativeLosses(t *testing.T) {
+	league := Tournament{
+		Sport: SportBasketball, State: "in_progress", RoundRobinLegs: 1,
+		Teams: []Team{{ID: "a"}, {ID: "b"}, {ID: "c"}},
+		Matches: []Match{
+			{HomeTeamID: "a", AwayTeamID: "b", State: "completed", ResultType: ResultPlayed, HomeScore: score(84), AwayScore: score(76)},
+			{HomeTeamID: "a", AwayTeamID: "c", State: "completed", ResultType: ResultAdministrative, HomeScore: score(20), AwayScore: score(0)},
+		},
+	}
+
+	standings := calculateStandings(league)
+
+	assertStandings(t, standings, []string{"a", "b", "c"}, []int{1, 2, 3})
+	if standings[0].Points != 4 || standings[1].Points != 1 || standings[2].Points != 0 {
+		t.Fatalf("basketball points = %d, %d, %d; want 4, 1, 0", standings[0].Points, standings[1].Points, standings[2].Points)
+	}
+	if standings[0].ScoreFor != 104 || standings[0].ScoreAgainst != 76 || standings[0].ScoreDifference != 28 {
+		t.Fatalf("basketball score totals = %#v", standings[0])
+	}
+}
+
+func TestCalculateBasketballStandingsUsesHeadToHeadBeforeGeneralDifference(t *testing.T) {
+	league := Tournament{
+		Sport: SportBasketball, State: "in_progress", RoundRobinLegs: 1,
+		Teams: []Team{{ID: "a"}, {ID: "b"}, {ID: "c"}, {ID: "d"}},
+		Matches: []Match{
+			{HomeTeamID: "a", AwayTeamID: "b", State: "completed", ResultType: ResultPlayed, HomeScore: score(80), AwayScore: score(79)},
+			{HomeTeamID: "a", AwayTeamID: "c", State: "completed", ResultType: ResultPlayed, HomeScore: score(60), AwayScore: score(90)},
+			{HomeTeamID: "a", AwayTeamID: "d", State: "completed", ResultType: ResultPlayed, HomeScore: score(80), AwayScore: score(70)},
+			{HomeTeamID: "b", AwayTeamID: "c", State: "completed", ResultType: ResultPlayed, HomeScore: score(100), AwayScore: score(70)},
+			{HomeTeamID: "b", AwayTeamID: "d", State: "completed", ResultType: ResultPlayed, HomeScore: score(100), AwayScore: score(70)},
+			{HomeTeamID: "c", AwayTeamID: "d", State: "completed", ResultType: ResultPlayed, HomeScore: score(70), AwayScore: score(90)},
+		},
+	}
+
+	standings := calculateStandings(league)
+
+	if standings[0].TeamID != "a" || standings[1].TeamID != "b" {
+		t.Fatalf("basketball tie order = %#v; want a before b by head-to-head", standings)
+	}
+}
+
 func TestCalculateStandingsRanksThreeWayTieByCompleteHeadToHeadMiniTable(t *testing.T) {
 	league := Tournament{
 		State: "in_progress", RoundRobinLegs: 2,

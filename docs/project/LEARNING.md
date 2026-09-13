@@ -1,5 +1,16 @@
 # Registro de aprendizaje
 
+## 2026-09-13 — Compartir un marcador no implica compartir sus reglas
+
+- **Aprendido:** fútbol y baloncesto pueden reutilizar dos enteros para el
+  resultado final, pero no la validación, puntuación, desempate ni consecuencias
+  de una retirada. Renombrar la UI sin modelar esas diferencias produciría datos
+  formalmente válidos y deportivamente falsos.
+- **Regla reutilizable:** el enum de deporte selecciona una política cerrada en
+  el dominio; persistencia y transporte conservan conceptos neutrales y el
+  cliente adapta el vocabulario. Se añade un nuevo deporte solo después de
+  definir sus divergencias, sin anticipar un motor configurable.
+
 ## 2026-09-06 — Un diálogo desplazable se limita por su caja completa
 
 - **Aprendido:** limitar solo el `ScrollView` permite que título, padding y separaciones empujen un diálogo fuera del viewport en pantallas pequeñas.

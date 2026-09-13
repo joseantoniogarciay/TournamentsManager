@@ -149,8 +149,8 @@ func (r RegistrationRepository) CreatePending(ctx context.Context, input registr
 	if input.Draft != nil {
 		var leagueID string
 		if err := tx.QueryRow(ctx, `-- name: CreateRegistrationDraftTournament :one
-			INSERT INTO tournaments (organizer_account_id, name, state, published_at)
-			VALUES ($1, $2, 'published', now()) RETURNING id::text`, accountID, input.Draft.Name).Scan(&leagueID); err != nil {
+			INSERT INTO tournaments (organizer_account_id, name, sport, state, published_at)
+			VALUES ($1, $2, $3, 'published', now()) RETURNING id::text`, accountID, input.Draft.Name, input.Draft.Sport).Scan(&leagueID); err != nil {
 			return false, err
 		}
 		for position, name := range input.Draft.Teams {

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type { Match } from "./match.js";
+import type { PublishedTournamentSport } from "./publishedTournamentSport.js";
 import type { PublishedTournamentState } from "./publishedTournamentState.js";
 import type { TournamentTeam } from "./tournamentTeam.js";
 import type { Uuid } from "./uuid.js";
@@ -13,6 +14,7 @@ import type { Uuid } from "./uuid.js";
 export interface PublishedTournament {
   id: Uuid;
   name: string;
+  sport: PublishedTournamentSport;
   state: PublishedTournamentState;
   teams: TournamentTeam[];
   matches: Match[];

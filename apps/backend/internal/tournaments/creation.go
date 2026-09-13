@@ -12,6 +12,20 @@ import (
 // MaximumTournamentNameLength is the contract limit measured in Unicode characters.
 const MaximumTournamentNameLength = 56
 
+// Sport selects the closed sporting policy applied by the domain.
+type Sport string
+
+const (
+	// SportFootball applies football scoring and tiebreak rules.
+	SportFootball Sport = "football"
+	// SportBasketball applies basketball scoring and tiebreak rules.
+	SportBasketball Sport = "basketball"
+)
+
+func validSport(sport Sport) bool {
+	return sport == SportFootball || sport == SportBasketball
+}
+
 var (
 	// ErrInvalidTournamentInput indicates invalid creation or start data.
 	ErrInvalidTournamentInput = errors.New("liga inválida")
@@ -43,6 +57,7 @@ type TeamInput struct{ Name string }
 // CreateInput contains the minimum data for a published league.
 type CreateInput struct {
 	Name  string
+	Sport Sport
 	Teams []TeamInput
 }
 
@@ -52,7 +67,7 @@ type StartInput struct {
 	RoundRobinLegs int
 }
 
-// MatchResultInput represents a simple football score.
+// MatchResultInput represents a final score and any sport-specific tiebreak data.
 type MatchResultInput struct {
 	HomeScore, AwayScore         int
 	HomePenalties, AwayPenalties *int
@@ -76,6 +91,7 @@ type Match struct {
 	WinnerTeamID      string         `json:"winnerTeamId,omitempty"`
 	HomePenalties     *int           `json:"homePenalties,omitempty"`
 	AwayPenalties     *int           `json:"awayPenalties,omitempty"`
+	ResultType        ResultType     `json:"resultType,omitempty"`
 	ID                string         `json:"id"`
 	RoundNumber       int            `json:"round"`
 	Sequence          int            `json:"sequence"`
@@ -86,12 +102,22 @@ type Match struct {
 	AwayScore         *int           `json:"awayScore,omitempty"`
 }
 
+// ResultType distinguishes a played score from one imposed by a sporting rule.
+type ResultType string
+
+const (
+	// ResultPlayed identifies a score recorded from a played match.
+	ResultPlayed ResultType = "played"
+	// ResultAdministrative identifies a score imposed by a sporting rule.
+	ResultAdministrative ResultType = "administrative"
+)
+
 // Tournament is the projection of a visible league.
 type Tournament struct {
 	Stages          []Stage    `json:"stages"`
 	ID              string     `json:"id"`
 	Name            string     `json:"name"`
-	Sport           string     `json:"sport"`
+	Sport           Sport      `json:"sport"`
 	Format          string     `json:"format"`
 	State           string     `json:"state"`
 	RoundRobinLegs  int        `json:"roundRobinLegs"`
@@ -112,16 +138,16 @@ type Stage struct {
 
 // Standing is a domain-calculated row, not data entered by clients.
 type Standing struct {
-	Position       int    `json:"position"`
-	TeamID         string `json:"teamId"`
-	Played         int    `json:"played"`
-	Won            int    `json:"won"`
-	Drawn          int    `json:"drawn"`
-	Lost           int    `json:"lost"`
-	GoalsFor       int    `json:"goalsFor"`
-	GoalsAgainst   int    `json:"goalsAgainst"`
-	GoalDifference int    `json:"goalDifference"`
-	Points         int    `json:"points"`
+	Position        int    `json:"position"`
+	TeamID          string `json:"teamId"`
+	Played          int    `json:"played"`
+	Won             int    `json:"won"`
+	Drawn           int    `json:"drawn"`
+	Lost            int    `json:"lost"`
+	ScoreFor        int    `json:"scoreFor"`
+	ScoreAgainst    int    `json:"scoreAgainst"`
+	ScoreDifference int    `json:"scoreDifference"`
+	Points          int    `json:"points"`
 }
 
 // CreationRepository persists and queries a league's initial lifecycle.
@@ -155,7 +181,7 @@ func (s CreationService) RemoveTeam(ctx context.Context, accountID, leagueID, te
 	return s.repository.RemoveTeam(ctx, accountID, leagueID, teamID)
 }
 
-// WithdrawTeam applies the accepted 3-0 rule to every match of a withdrawn team.
+// WithdrawTeam applies the sport's accepted administrative result to every match of a withdrawn team.
 func (s CreationService) WithdrawTeam(ctx context.Context, accountID, leagueID, teamID string) (Tournament, error) {
 	league, err := s.repository.WithdrawTeam(ctx, accountID, leagueID, teamID)
 	return s.withStandings(league), err
@@ -236,6 +262,29 @@ func (s CreationService) RecordResult(ctx context.Context, accountID, leagueID, 
 	return s.withStandings(league), err
 }
 
+// ValidateLeagueResult keeps sport-specific scoring policy in the domain.
+func ValidateLeagueResult(sport Sport, input MatchResultInput) error {
+	if !validSport(sport) || input.HomeScore < 0 || input.AwayScore < 0 || input.HomePenalties != nil || input.AwayPenalties != nil {
+		return ErrInvalidTournamentInput
+	}
+	if sport == SportBasketball && input.HomeScore == input.AwayScore {
+		return ErrInvalidTournamentInput
+	}
+	return nil
+}
+
+// AdministrativeWinningScore returns the fixed score awarded to the opponent of a withdrawn team.
+func AdministrativeWinningScore(sport Sport) (int, error) {
+	switch sport {
+	case SportFootball:
+		return 3, nil
+	case SportBasketball:
+		return 20, nil
+	default:
+		return 0, ErrInvalidTournamentInput
+	}
+}
+
 // Complete explicitly closes the league and makes its co-champions official.
 func (s CreationService) Complete(ctx context.Context, accountID, leagueID string) (Tournament, error) {
 	league, err := s.repository.Complete(ctx, accountID, leagueID)
@@ -273,15 +322,22 @@ func calculateStandings(league Tournament) []Standing {
 			continue
 		}
 		home.Played, away.Played = home.Played+1, away.Played+1
-		home.GoalsFor, home.GoalsAgainst = home.GoalsFor+*match.HomeScore, home.GoalsAgainst+*match.AwayScore
-		away.GoalsFor, away.GoalsAgainst = away.GoalsFor+*match.AwayScore, away.GoalsAgainst+*match.HomeScore
+		home.ScoreFor, home.ScoreAgainst = home.ScoreFor+*match.HomeScore, home.ScoreAgainst+*match.AwayScore
+		away.ScoreFor, away.ScoreAgainst = away.ScoreFor+*match.AwayScore, away.ScoreAgainst+*match.HomeScore
+		winPoints, drawPoints, lossPoints := 3, 1, 0
+		if league.Sport == SportBasketball {
+			winPoints, drawPoints, lossPoints = 2, 0, 1
+			if match.ResultType == ResultAdministrative {
+				lossPoints = 0
+			}
+		}
 		switch {
 		case *match.HomeScore > *match.AwayScore:
-			home.Won, home.Points, away.Lost = home.Won+1, home.Points+3, away.Lost+1
+			home.Won, home.Points, away.Lost, away.Points = home.Won+1, home.Points+winPoints, away.Lost+1, away.Points+lossPoints
 		case *match.HomeScore < *match.AwayScore:
-			away.Won, away.Points, home.Lost = away.Won+1, away.Points+3, home.Lost+1
+			away.Won, away.Points, home.Lost, home.Points = away.Won+1, away.Points+winPoints, home.Lost+1, home.Points+lossPoints
 		default:
-			home.Drawn, home.Points, away.Drawn, away.Points = home.Drawn+1, home.Points+1, away.Drawn+1, away.Points+1
+			home.Drawn, home.Points, away.Drawn, away.Points = home.Drawn+1, home.Points+drawPoints, away.Drawn+1, away.Points+drawPoints
 		}
 	}
 	standings := make([]Standing, 0, len(league.Teams))
@@ -290,7 +346,7 @@ func calculateStandings(league Tournament) []Standing {
 		if standing == nil {
 			continue
 		}
-		standing.GoalDifference = standing.GoalsFor - standing.GoalsAgainst
+		standing.ScoreDifference = standing.ScoreFor - standing.ScoreAgainst
 		standings = append(standings, *standing)
 	}
 	groups := map[int][]Standing{}
@@ -320,11 +376,11 @@ func CalculateStandings(league Tournament) []Standing { return calculateStanding
 func rankTiedStandings(group []Standing, league Tournament) []Standing {
 	// The mini-table considers the whole tied group, not just the pair that the
 	// algorithm compares. This keeps tiebreaking consistent with three or more teams.
-	head := headToHead(group, league.Matches)
+	head := headToHead(group, league)
 	sort.SliceStable(group, func(i, j int) bool {
 		left, right := group[i], group[j]
 		leftHead, rightHead := head[left.TeamID], head[right.TeamID]
-		if league.RoundRobinLegs == 2 {
+		if league.Sport == SportBasketball || league.RoundRobinLegs == 2 {
 			if comparison := compareStanding(leftHead, rightHead); comparison != 0 {
 				return comparison > 0
 			}
@@ -340,7 +396,7 @@ func rankTiedStandings(group []Standing, league Tournament) []Standing {
 	})
 	position := 1
 	for i := range group {
-		if i > 0 && !sameTiedStandingRank(group[i-1], group[i], head, league.RoundRobinLegs) {
+		if i > 0 && !sameTiedStandingRank(group[i-1], group[i], head, league) {
 			position = i + 1
 		}
 		group[i].Position = position
@@ -348,37 +404,46 @@ func rankTiedStandings(group []Standing, league Tournament) []Standing {
 	return group
 }
 
-func headToHead(group []Standing, matches []Match) map[string]Standing {
+func headToHead(group []Standing, league Tournament) map[string]Standing {
 	result := make(map[string]Standing, len(group))
 	inGroup := make(map[string]bool, len(group))
 	for _, standing := range group {
 		result[standing.TeamID] = Standing{TeamID: standing.TeamID}
 		inGroup[standing.TeamID] = true
 	}
-	for _, match := range matches {
+	for _, match := range league.Matches {
 		if match.State != "completed" || match.HomeScore == nil || match.AwayScore == nil || !inGroup[match.HomeTeamID] || !inGroup[match.AwayTeamID] {
 			continue
 		}
 		home, away := result[match.HomeTeamID], result[match.AwayTeamID]
-		home.GoalsFor, home.GoalsAgainst = home.GoalsFor+*match.HomeScore, home.GoalsAgainst+*match.AwayScore
-		away.GoalsFor, away.GoalsAgainst = away.GoalsFor+*match.AwayScore, away.GoalsAgainst+*match.HomeScore
+		home.ScoreFor, home.ScoreAgainst = home.ScoreFor+*match.HomeScore, home.ScoreAgainst+*match.AwayScore
+		away.ScoreFor, away.ScoreAgainst = away.ScoreFor+*match.AwayScore, away.ScoreAgainst+*match.HomeScore
+		winPoints, drawPoints, lossPoints := 3, 1, 0
+		if league.Sport == SportBasketball {
+			winPoints, drawPoints, lossPoints = 2, 0, 1
+			if match.ResultType == ResultAdministrative {
+				lossPoints = 0
+			}
+		}
 		switch {
 		case *match.HomeScore > *match.AwayScore:
-			home.Points += 3
+			home.Points += winPoints
+			away.Points += lossPoints
 		case *match.HomeScore < *match.AwayScore:
-			away.Points += 3
+			away.Points += winPoints
+			home.Points += lossPoints
 		default:
-			home.Points++
-			away.Points++
+			home.Points += drawPoints
+			away.Points += drawPoints
 		}
-		home.GoalDifference, away.GoalDifference = home.GoalsFor-home.GoalsAgainst, away.GoalsFor-away.GoalsAgainst
+		home.ScoreDifference, away.ScoreDifference = home.ScoreFor-home.ScoreAgainst, away.ScoreFor-away.ScoreAgainst
 		result[match.HomeTeamID], result[match.AwayTeamID] = home, away
 	}
 	return result
 }
 
 func compareStanding(left, right Standing) int {
-	for _, pair := range [][2]int{{left.Points, right.Points}, {left.GoalDifference, right.GoalDifference}, {left.GoalsFor, right.GoalsFor}} {
+	for _, pair := range [][2]int{{left.Points, right.Points}, {left.ScoreDifference, right.ScoreDifference}, {left.ScoreFor, right.ScoreFor}} {
 		if pair[0] != pair[1] {
 			return pair[0] - pair[1]
 		}
@@ -387,20 +452,20 @@ func compareStanding(left, right Standing) int {
 }
 
 func compareGeneralStanding(left, right Standing) int {
-	if left.GoalDifference != right.GoalDifference {
-		return left.GoalDifference - right.GoalDifference
+	if left.ScoreDifference != right.ScoreDifference {
+		return left.ScoreDifference - right.ScoreDifference
 	}
-	return left.GoalsFor - right.GoalsFor
+	return left.ScoreFor - right.ScoreFor
 }
 
-func sameTiedStandingRank(left, right Standing, head map[string]Standing, legs int) bool {
-	if legs == 2 {
+func sameTiedStandingRank(left, right Standing, head map[string]Standing, league Tournament) bool {
+	if league.Sport == SportBasketball || league.RoundRobinLegs == 2 {
 		return compareStanding(head[left.TeamID], head[right.TeamID]) == 0 && compareGeneralStanding(left, right) == 0
 	}
 	return compareGeneralStanding(left, right) == 0 && compareStanding(head[left.TeamID], head[right.TeamID]) == 0
 }
 func validCreateInput(input CreateInput) bool {
-	if len(strings.TrimSpace(input.Name)) == 0 || utf8.RuneCountInString(input.Name) > MaximumTournamentNameLength || len(input.Teams) < 2 || len(input.Teams) > 64 {
+	if !validSport(input.Sport) || len(strings.TrimSpace(input.Name)) == 0 || utf8.RuneCountInString(input.Name) > MaximumTournamentNameLength || len(input.Teams) < 2 || len(input.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}

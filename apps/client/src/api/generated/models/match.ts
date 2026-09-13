@@ -7,6 +7,7 @@
  */
 import type { MatchAwaySourceKind } from "./matchAwaySourceKind.js";
 import type { MatchHomeSourceKind } from "./matchHomeSourceKind.js";
+import type { MatchResultType } from "./matchResultType.js";
 import type { MatchState } from "./matchState.js";
 import type { Uuid } from "./uuid.js";
 
@@ -29,6 +30,8 @@ export interface Match {
   homeSourceMatchId?: Uuid;
   awaySourceMatchId?: Uuid;
   winnerTeamId?: Uuid;
+  /** Ausente mientras el partido no tenga un resultado registrado o sea un bye. */
+  resultType?: MatchResultType;
   state: MatchState;
   /** @minimum 0 */
   homeScore?: number;

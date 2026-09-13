@@ -1,11 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import type { TournamentInput } from "@/api/generated/models";
+import { TournamentInputSport } from "@/api/generated/models/tournamentInputSport";
 
 const key = "tm-league-draft";
 export const maximumTournamentTeams = 64;
 export const maximumTournamentNameLength = 56;
-export type LocalTournamentDraft = { name: string; teams: string[] };
+export type TournamentSport = TournamentInputSport;
+export type LocalTournamentDraft = { name: string; sport: TournamentSport; teams: string[] };
 
 export async function getLocalTournamentDraft(): Promise<LocalTournamentDraft | null> {
   const serialized = await AsyncStorage.getItem(key);
@@ -17,7 +19,14 @@ export async function getLocalTournamentDraft(): Promise<LocalTournamentDraft | 
     return typeof draft.name === "string" &&
       Array.isArray(draft.teams) &&
       draft.teams.every((team) => typeof team === "string")
-      ? { name: draft.name, teams: draft.teams }
+      ? {
+          name: draft.name,
+          sport:
+            draft.sport === TournamentInputSport.basketball
+              ? TournamentInputSport.basketball
+              : TournamentInputSport.football,
+          teams: draft.teams,
+        }
       : null;
   } catch {
     return null;
@@ -45,5 +54,5 @@ export function toTournamentInput(draft: LocalTournamentDraft | null): Tournamen
   ) {
     return undefined;
   }
-  return { name, teams: teams.map((name) => ({ name })) };
+  return { name, sport: draft.sport, teams: teams.map((name) => ({ name })) };
 }

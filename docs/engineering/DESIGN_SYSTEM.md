@@ -121,6 +121,14 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 | RequestErrorCard   | error de red, genérico o no disponible; reintento o cierre | Estado terminal de una carga sin contenido. Recibe el mensaje seguro ya clasificado; reintenta cuando esa acción puede recuperar la carga y ofrece cierre cuando la feature conoce un estado terminal, como un recurso que devuelve `404`. Sustituye al banner para no duplicar el aviso en una pantalla vacía.                                                                                                                                                                                                                                                                                                                                                                                                              |
 | InlineMessage      | error, help, success                                       | Bajo el control asociado; texto claro y disponible para lector de pantalla.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
+El deporte del torneo usa el «Selector de opción» al principio del formulario de
+creación, antes de los campos que pueda condicionar. Sus valores iniciales son
+«Fútbol» y «Baloncesto», conserva una selección visible y no se vuelve editable
+tras publicar. El enum recibido gobierna el vocabulario posterior: goles para
+fútbol, puntos para baloncesto y ayuda inline cuando un tanteo de baloncesto
+queda empatado. El resultado administrativo fijo se explica en la confirmación
+de retirada, sin presentar un campo que sugiera que puede configurarse.
+
 `Card` está implementada en `shared/ui`: aplica superficie, borde, radio,
 padding y margen exterior horizontal semánticos. La home la usa para separar
 bloques de acción, explicación y pasos; no sustituye a los contenedores de

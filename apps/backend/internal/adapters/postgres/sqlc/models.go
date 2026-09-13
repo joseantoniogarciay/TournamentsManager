@@ -100,6 +100,7 @@ type Match struct {
 	WinnerTeamID      pgtype.UUID
 	HomePenalties     pgtype.Int4
 	AwayPenalties     pgtype.Int4
+	ResultType        pgtype.Text
 }
 
 type MatchResultChange struct {
@@ -115,6 +116,7 @@ type MatchResultChange struct {
 	PreviousAwayPenalties pgtype.Int4
 	HomePenalties         pgtype.Int4
 	AwayPenalties         pgtype.Int4
+	ResultType            string
 }
 
 type PasswordResetToken struct {

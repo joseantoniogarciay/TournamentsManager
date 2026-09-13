@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
 const (
@@ -65,6 +66,7 @@ type Registration struct {
 // Draft is the complete tournament that can be created with a new account in the same transaction.
 type Draft struct {
 	Name  string
+	Sport tournaments.Sport
 	Teams []string
 }
 

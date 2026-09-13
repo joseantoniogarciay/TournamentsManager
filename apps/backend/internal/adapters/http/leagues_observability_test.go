@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
@@ -76,6 +77,12 @@ func TestTournamentHandlersRecordValidationAndBusinessFailuresOnRootSpan(t *test
 			want:    "validation.rejected",
 		},
 		{
+			name:    "create tournament without sport",
+			handler: createTournament(tournaments.NewCreationService(testCreationRepository{})),
+			request: httptest.NewRequest(http.MethodPost, "/v1/tournaments", strings.NewReader(`{"name":"Torneo","teams":[{"name":"A"},{"name":"B"}]}`)),
+			want:    "validation.rejected",
+		},
+		{
 			name:    "follow invisible league",
 			handler: followTournament(tournaments.NewService(testTournamentRepository{})),
 			request: leaguePathRequest(http.MethodPut, "/v1/me/tournaments/019abcde-2222-7222-8222-222222222222/follow", "019abcde-2222-7222-8222-222222222222"),
@@ -88,7 +95,7 @@ func TestTournamentHandlersRecordValidationAndBusinessFailuresOnRootSpan(t *test
 			recorder := tracetest.NewSpanRecorder()
 			provider := trace.NewTracerProvider(trace.WithSpanProcessor(recorder))
 			ctx, span := provider.Tracer("test").Start(test.request.Context(), "HTTP root")
-			if test.name == "follow invisible league" {
+			if test.name == "follow invisible league" || test.name == "create tournament without sport" {
 				ctx = context.WithValue(ctx, accountContextKey{}, "019abcde-1111-7111-8111-111111111111")
 			}
 			test.handler.ServeHTTP(httptest.NewRecorder(), test.request.WithContext(ctx))

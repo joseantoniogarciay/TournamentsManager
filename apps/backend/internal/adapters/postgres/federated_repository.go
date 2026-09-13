@@ -75,7 +75,7 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 	}
 	if registration.Draft != nil {
 		var leagueID string
-		if err := tx.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, name, state, published_at) VALUES ($1, $2, 'published', now()) RETURNING id::text`, accountID, registration.Draft.Name).Scan(&leagueID); err != nil {
+		if err := tx.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, name, sport, state, published_at) VALUES ($1, $2, $3, 'published', now()) RETURNING id::text`, accountID, registration.Draft.Name, registration.Draft.Sport).Scan(&leagueID); err != nil {
 			return federated.Session{}, err
 		}
 		for position, name := range registration.Draft.Teams {

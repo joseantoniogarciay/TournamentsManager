@@ -2,7 +2,7 @@ import { router, Stack } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View, type TextInput } from "react-native";
 
-import { control, radius, space } from "@tournaments-manager/design-tokens";
+import { space } from "@tournaments-manager/design-tokens";
 
 import { createTournamentRequest } from "@/features/league-creation/api";
 import {
@@ -11,6 +11,7 @@ import {
   maximumTournamentNameLength,
   maximumTournamentTeams,
   saveLocalTournamentDraft,
+  type TournamentSport,
 } from "@/features/league-creation/draft";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -20,9 +21,11 @@ import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
   Card,
+  ConfigurationOption,
   KeyboardAwareScrollView,
   NavigationHeaderButton,
   Screen,
+  Text,
   TextField,
   usesLiquidGlassNavigation,
 } from "@/shared/ui";
@@ -33,6 +36,7 @@ export default function CreateTournamentScreen() {
   const { user } = useSession();
   const { colors } = usePreferences();
   const [name, setName] = useState("");
+  const [sport, setSport] = useState<TournamentSport>("football");
   const [teams, setTeams] = useState(["", ""]);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,13 +47,14 @@ export default function CreateTournamentScreen() {
     void getLocalTournamentDraft().then((draft) => {
       if (draft) {
         setName(draft.name);
+        setSport(draft.sport);
         setTeams(draft.teams.length >= 2 ? draft.teams : ["", ""]);
       }
     });
   }, []);
   useEffect(() => {
-    void saveLocalTournamentDraft({ name, teams });
-  }, [name, teams]);
+    void saveLocalTournamentDraft({ name, sport, teams });
+  }, [name, sport, teams]);
   useEffect(() => {
     if (teamToFocus === undefined) return;
     teamInputRefs.current[teamToFocus]?.focus();
@@ -87,6 +92,7 @@ export default function CreateTournamentScreen() {
     try {
       const league = await createTournamentRequest({
         name: name.trim(),
+        sport,
         teams: normalizedTeams.map((team) => ({ name: team })),
       });
       await clearLocalTournamentDraft();
@@ -158,6 +164,21 @@ export default function CreateTournamentScreen() {
         >
           <Card>
             <View style={styles.form}>
+              <View style={styles.sportSelector}>
+                <Text variant="bodyLarge">{t("tournament_sport_label")}</Text>
+                <View style={styles.sportOptions}>
+                  <ConfigurationOption
+                    label={t("tournament_sport_football")}
+                    onPress={() => setSport("football")}
+                    selected={sport === "football"}
+                  />
+                  <ConfigurationOption
+                    label={t("tournament_sport_basketball")}
+                    onPress={() => setSport("basketball")}
+                    selected={sport === "basketball"}
+                  />
+                </View>
+              </View>
               <TextField
                 error={nameError}
                 label={t("league_name_label")}
@@ -201,12 +222,6 @@ export default function CreateTournamentScreen() {
 const styles = StyleSheet.create({
   content: { gap: space[5] },
   form: { gap: space[4] },
-  navigationButton: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    height: control.minHeight,
-    justifyContent: "center",
-    width: control.minHeight,
-  },
+  sportOptions: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
+  sportSelector: { gap: space[2] },
 });

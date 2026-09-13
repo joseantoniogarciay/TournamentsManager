@@ -166,7 +166,11 @@ export default function TournamentTeamsScreen() {
     confirm({
       title: t(withdrawn ? "league_withdraw_team_title" : "league_remove_team_title"),
       description: t(
-        withdrawn ? "league_withdraw_team_description" : "league_remove_team_description",
+        withdrawn
+          ? league?.sport === "basketball"
+            ? "basketball_withdraw_team_description"
+            : "league_withdraw_team_description"
+          : "league_remove_team_description",
       ).replace("{name}", teamName),
       acceptLabel: t(withdrawn ? "league_withdraw_team" : "league_remove_team"),
       cancelLabel: t("common_cancel"),

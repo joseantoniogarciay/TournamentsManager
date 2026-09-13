@@ -123,7 +123,7 @@ func (r AccountTournamentRepository) Create(ctx context.Context, accountID strin
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var league tournaments.Tournament
-	if err := tx.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, name, state, published_at) VALUES ($1, $2, 'published', now()) RETURNING id::text, name, sport, format, state`, account, input.Name).Scan(&league.ID, &league.Name, &league.Sport, &league.Format, &league.State); err != nil {
+	if err := tx.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, name, sport, state, published_at) VALUES ($1, $2, $3, 'published', now()) RETURNING id::text, name, sport, format, state`, account, input.Name, input.Sport).Scan(&league.ID, &league.Name, &league.Sport, &league.Format, &league.State); err != nil {
 		return tournaments.Tournament{}, err
 	}
 	league.Teams = make([]tournaments.Team, len(input.Teams))
@@ -244,7 +244,7 @@ func (r AccountTournamentRepository) GetPublic(ctx context.Context, leagueID str
 	return value, tx.Commit(ctx)
 }
 
-// WithdrawTeam keeps the roster for historical standings and assigns each opponent a 3-0 win.
+// WithdrawTeam keeps the roster for historical standings and applies the domain's administrative score.
 func (r AccountTournamentRepository) WithdrawTeam(ctx context.Context, accountID, leagueID, teamID string) (tournaments.Tournament, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -268,11 +268,16 @@ func (r AccountTournamentRepository) WithdrawTeam(ctx context.Context, accountID
 		return tournaments.Tournament{}, tournaments.ErrTournamentWithdrawalConflict
 	}
 	var format string
-	if err := tx.QueryRow(ctx, `SELECT format FROM tournaments WHERE id=$1`, leagueID).Scan(&format); err != nil {
+	var sport tournaments.Sport
+	if err := tx.QueryRow(ctx, `SELECT format,sport FROM tournaments WHERE id=$1`, leagueID).Scan(&format, &sport); err != nil {
 		return tournaments.Tournament{}, err
 	}
 	if format != "league" {
 		return tournaments.Tournament{}, tournaments.ErrTournamentWithdrawalConflict
+	}
+	winningScore, err := tournaments.AdministrativeWinningScore(sport)
+	if err != nil {
+		return tournaments.Tournament{}, err
 	}
 	var withdrawn bool
 	if err := tx.QueryRow(ctx, `SELECT withdrawn_at IS NOT NULL FROM tournament_teams WHERE tournament_id = $1 AND id = $2 FOR UPDATE`, leagueID, teamID).Scan(&withdrawn); errors.Is(err, pgx.ErrNoRows) {
@@ -307,14 +312,14 @@ func (r AccountTournamentRepository) WithdrawTeam(ctx context.Context, accountID
 	for _, change := range changes {
 		var homeScore, awayScore int
 		if change.homeID == teamID {
-			homeScore, awayScore = 0, 3
+			homeScore, awayScore = 0, winningScore
 		} else {
-			homeScore, awayScore = 3, 0
+			homeScore, awayScore = winningScore, 0
 		}
-		if _, err := tx.Exec(ctx, `UPDATE matches SET state = 'completed', home_score = $2, away_score = $3 WHERE id = $1`, change.id, homeScore, awayScore); err != nil {
+		if _, err := tx.Exec(ctx, `UPDATE matches SET state = 'completed', home_score = $2, away_score = $3, result_type='administrative' WHERE id = $1`, change.id, homeScore, awayScore); err != nil {
 			return tournaments.Tournament{}, err
 		}
-		if _, err := tx.Exec(ctx, `INSERT INTO match_result_changes (match_id, changed_by_account_id, previous_home_score, previous_away_score, home_score, away_score) VALUES ($1, $2, $3, $4, $5, $6)`, change.id, account, change.previousHome, change.previousAway, homeScore, awayScore); err != nil {
+		if _, err := tx.Exec(ctx, `INSERT INTO match_result_changes (match_id, changed_by_account_id, previous_home_score, previous_away_score, home_score, away_score, result_type) VALUES ($1, $2, $3, $4, $5, $6, 'administrative')`, change.id, account, change.previousHome, change.previousAway, homeScore, awayScore); err != nil {
 			return tournaments.Tournament{}, err
 		}
 	}
@@ -358,7 +363,8 @@ func (r AccountTournamentRepository) RecordResult(ctx context.Context, accountID
 		return tournaments.Tournament{}, tournaments.ErrMatchResultForbidden
 	}
 	var format string
-	if err := tx.QueryRow(ctx, `SELECT format FROM tournaments WHERE id=$1`, leagueID).Scan(&format); err != nil {
+	var sport tournaments.Sport
+	if err := tx.QueryRow(ctx, `SELECT format,sport FROM tournaments WHERE id=$1`, leagueID).Scan(&format, &sport); err != nil {
 		return tournaments.Tournament{}, err
 	}
 	if format == "single_elimination" {
@@ -373,7 +379,7 @@ func (r AccountTournamentRepository) RecordResult(ctx context.Context, accountID
 		}
 		return r.GetPublic(ctx, leagueID)
 	}
-	if input.HomePenalties != nil || input.AwayPenalties != nil {
+	if err := tournaments.ValidateLeagueResult(sport, input); err != nil {
 		return tournaments.Tournament{}, tournaments.ErrInvalidTournamentInput
 	}
 	var previousHome, previousAway *int
@@ -382,10 +388,10 @@ func (r AccountTournamentRepository) RecordResult(ctx context.Context, accountID
 	} else if err != nil {
 		return tournaments.Tournament{}, err
 	}
-	if _, err := tx.Exec(ctx, `UPDATE matches SET state = 'completed', home_score = $3, away_score = $4 WHERE id = $1 AND tournament_id = $2`, matchID, leagueID, input.HomeScore, input.AwayScore); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE matches SET state = 'completed', home_score = $3, away_score = $4, result_type='played' WHERE id = $1 AND tournament_id = $2`, matchID, leagueID, input.HomeScore, input.AwayScore); err != nil {
 		return tournaments.Tournament{}, err
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO match_result_changes (match_id, changed_by_account_id, previous_home_score, previous_away_score, home_score, away_score) VALUES ($1, $2, $3, $4, $5, $6)`, matchID, account, previousHome, previousAway, input.HomeScore, input.AwayScore); err != nil {
+	if _, err := tx.Exec(ctx, `INSERT INTO match_result_changes (match_id, changed_by_account_id, previous_home_score, previous_away_score, home_score, away_score, result_type) VALUES ($1, $2, $3, $4, $5, $6, 'played')`, matchID, account, previousHome, previousAway, input.HomeScore, input.AwayScore); err != nil {
 		return tournaments.Tournament{}, err
 	}
 	if _, err := tx.Exec(ctx, `UPDATE tournaments SET last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
@@ -409,8 +415,9 @@ func (r AccountTournamentRepository) Complete(ctx context.Context, accountID, le
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer, state string
+	var sport tournaments.Sport
 	var legs int
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state, round_robin_legs FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state, &legs); errors.Is(err, pgx.ErrNoRows) {
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state, round_robin_legs, sport FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state, &legs, &sport); errors.Is(err, pgx.ErrNoRows) {
 		return tournaments.Tournament{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
 		return tournaments.Tournament{}, err
@@ -441,7 +448,7 @@ func (r AccountTournamentRepository) Complete(ctx context.Context, accountID, le
 			return tournaments.Tournament{}, err
 		}
 	} else {
-		league, err := loadTournamentForCompletion(ctx, tx, leagueID, legs)
+		league, err := loadTournamentForCompletion(ctx, tx, leagueID, legs, sport)
 		if err != nil {
 			return tournaments.Tournament{}, err
 		}
@@ -467,8 +474,8 @@ func (r AccountTournamentRepository) Complete(ctx context.Context, accountID, le
 	return r.GetPublic(ctx, leagueID)
 }
 
-func loadTournamentForCompletion(ctx context.Context, tx pgx.Tx, leagueID string, legs int) (tournaments.Tournament, error) {
-	league := tournaments.Tournament{RoundRobinLegs: legs, Teams: []tournaments.Team{}, Matches: []tournaments.Match{}}
+func loadTournamentForCompletion(ctx context.Context, tx pgx.Tx, leagueID string, legs int, sport tournaments.Sport) (tournaments.Tournament, error) {
+	league := tournaments.Tournament{RoundRobinLegs: legs, Sport: sport, Teams: []tournaments.Team{}, Matches: []tournaments.Match{}}
 	teams, err := tx.Query(ctx, `SELECT id::text, name, position FROM tournament_teams WHERE tournament_id = $1 ORDER BY position`, leagueID)
 	if err != nil {
 		return tournaments.Tournament{}, err
@@ -484,14 +491,14 @@ func loadTournamentForCompletion(ctx context.Context, tx pgx.Tx, leagueID string
 	if err := teams.Err(); err != nil {
 		return tournaments.Tournament{}, err
 	}
-	matches, err := tx.Query(ctx, `SELECT id::text, round_number, sequence, home_team_id::text, away_team_id::text, state, home_score, away_score FROM matches WHERE tournament_id = $1 ORDER BY round_number, sequence`, leagueID)
+	matches, err := tx.Query(ctx, `SELECT id::text, round_number, sequence, home_team_id::text, away_team_id::text, state, home_score, away_score, result_type FROM matches WHERE tournament_id = $1 ORDER BY round_number, sequence`, leagueID)
 	if err != nil {
 		return tournaments.Tournament{}, err
 	}
 	defer matches.Close()
 	for matches.Next() {
 		var match tournaments.Match
-		if err := matches.Scan(&match.ID, &match.RoundNumber, &match.Sequence, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore); err != nil {
+		if err := matches.Scan(&match.ID, &match.RoundNumber, &match.Sequence, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore, &match.ResultType); err != nil {
 			return tournaments.Tournament{}, err
 		}
 		league.Matches = append(league.Matches, match)

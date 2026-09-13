@@ -8,6 +8,13 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Fútbol y baloncesto son perfiles deportivos explícitos elegidos al crear el
+  torneo. Baloncesto incorpora tanteos sin empate, clasificación 2-1-0,
+  desempate directo y retirada administrativa fija 20-0; fútbol conserva 3-1-0
+  y retirada 3-0.
+- Los resultados distinguen si fueron jugados o administrativos, incluido su
+  historial, y la clasificación usa nombres de marcador neutrales en el
+  contrato aunque la interfaz presente goles o puntos según el deporte.
 - Las cuentas autenticadas pueden enviar desde Inicio sugerencias privadas de
   producto, persistidas antes de avisar por correo, con límite de tres por hora,
   campo recuperable ante error y agradecimiento visible tras el envío.

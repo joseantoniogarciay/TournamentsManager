@@ -268,7 +268,8 @@ func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
 }
 
 type leagueInput struct {
-	Name  string `json:"name"`
+	Name  string            `json:"name"`
+	Sport tournaments.Sport `json:"sport"`
 	Teams []struct {
 		Name string `json:"name"`
 	} `json:"teams"`
@@ -303,7 +304,7 @@ func createTournament(service tournaments.CreationService) http.HandlerFunc {
 		for i, team := range body.Teams {
 			teams[i] = tournaments.TeamInput{Name: team.Name}
 		}
-		league, err := service.Create(r.Context(), accountID, tournaments.CreateInput{Name: body.Name, Teams: teams})
+		league, err := service.Create(r.Context(), accountID, tournaments.CreateInput{Name: body.Name, Sport: body.Sport, Teams: teams})
 		recordTournamentFailure(r.Context(), err)
 		if errors.Is(err, tournaments.ErrInvalidTournamentInput) {
 			writeTournamentValidationProblem(w, r)
@@ -1080,7 +1081,7 @@ func toFederatedDraft(draft *registration.Draft) *federated.Draft {
 	if draft == nil {
 		return nil
 	}
-	return &federated.Draft{Name: strings.TrimSpace(draft.Name), Teams: draft.Teams}
+	return &federated.Draft{Name: strings.TrimSpace(draft.Name), Sport: draft.Sport, Teams: draft.Teams}
 }
 
 func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession, cookies sessionCookieSettings) {
@@ -1513,7 +1514,7 @@ func register(service registration.Service, limiter *requestLimiter, resolveClie
 			for index, team := range body.Draft.Teams {
 				teams[index] = team.Name
 			}
-			input.Draft = &registration.Draft{Name: body.Draft.Name, Teams: teams}
+			input.Draft = &registration.Draft{Name: body.Draft.Name, Sport: body.Draft.Sport, Teams: teams}
 		}
 		input = registration.NormalizeInput(input)
 		if !validRegistration(input) || input.TermsVersion != legal.CurrentTermsVersion || !validRegistrationDraft(input.Draft) {
@@ -1539,7 +1540,7 @@ func validRegistrationDraft(draft *registration.Draft) bool {
 	if draft == nil {
 		return true
 	}
-	if len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > tournaments.MaximumTournamentNameLength || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
+	if (draft.Sport != tournaments.SportFootball && draft.Sport != tournaments.SportBasketball) || len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > tournaments.MaximumTournamentNameLength || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}

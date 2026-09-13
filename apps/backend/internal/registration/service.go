@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -62,6 +63,7 @@ type Input struct {
 // Draft represents a complete draft crossing the registration boundary.
 type Draft struct {
 	Name  string
+	Sport tournaments.Sport
 	Teams []string
 }
 

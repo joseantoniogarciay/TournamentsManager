@@ -6,10 +6,12 @@
  * OpenAPI spec version: 1.0.0-design
  */
 
-export type PublicTournamentSport =
-  (typeof PublicTournamentSport)[keyof typeof PublicTournamentSport];
+/**
+ * Ausente mientras el partido no tenga un resultado registrado o sea un bye.
+ */
+export type MatchResultType = (typeof MatchResultType)[keyof typeof MatchResultType];
 
-export const PublicTournamentSport = {
-  football: "football",
-  basketball: "basketball",
+export const MatchResultType = {
+  played: "played",
+  administrative: "administrative",
 } as const;

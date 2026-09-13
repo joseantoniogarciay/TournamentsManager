@@ -89,6 +89,21 @@ func TestBracketShootoutAndCorrection(t *testing.T) {
 	}
 }
 
+func TestBasketballBracketRejectsTiesAndShootouts(t *testing.T) {
+	b, _ := GenerateSingleElimination([]string{"a", "b"})
+	b.Sport = SportBasketball
+	home, away := 5, 4
+	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 80, AwayScore: 80}); err != ErrInvalidBracketResult {
+		t.Fatalf("tied basketball result = %v", err)
+	}
+	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 80, AwayScore: 80, HomePenalties: &home, AwayPenalties: &away}); err != ErrInvalidBracketResult {
+		t.Fatalf("basketball shootout = %v", err)
+	}
+	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 81, AwayScore: 80}); err != nil {
+		t.Fatalf("decisive basketball result = %v", err)
+	}
+}
+
 func TestBracketAllowsCorrectionInIndependentBranch(t *testing.T) {
 	b, _ := GenerateSingleElimination([]string{"a", "b", "c", "d", "e", "f", "g", "h"})
 	var err error

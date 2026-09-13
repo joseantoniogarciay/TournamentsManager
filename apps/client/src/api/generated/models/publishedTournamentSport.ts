@@ -6,10 +6,10 @@
  * OpenAPI spec version: 1.0.0-design
  */
 
-export type PublicTournamentSport =
-  (typeof PublicTournamentSport)[keyof typeof PublicTournamentSport];
+export type PublishedTournamentSport =
+  (typeof PublishedTournamentSport)[keyof typeof PublishedTournamentSport];
 
-export const PublicTournamentSport = {
+export const PublishedTournamentSport = {
   football: "football",
   basketball: "basketball",
 } as const;
