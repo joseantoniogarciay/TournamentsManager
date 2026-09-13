@@ -96,6 +96,11 @@ o invariantes propios.
 Las transacciones se definen desde el caso de uso. No se añade una abstracción
 genérica de unit of work o repository antes de que proteja un límite real.
 
+`product_suggestions` conserva el texto privado junto a su cuenta y fecha. La
+base valida el cuerpo recortado entre 8 y 1.000 caracteres y elimina los registros
+con la cuenta mediante `ON DELETE CASCADE`. Estados, respuestas y visibilidad no
+forman parte de este esquema inicial; se añadirán solo con un caso de uso aceptado.
+
 ## Decisiones pendientes tras el esquema inicial
 
 - límites de consistencia y transacciones de cada caso de uso;

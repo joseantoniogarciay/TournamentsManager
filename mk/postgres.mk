@@ -54,14 +54,14 @@ dev-api-env-check:
 # Valida los contratos locales sin mostrar valores ni sobrescribir archivos.
 local-config-check: db-env-check db-backend-env-check
 	@set -a; . $(BACKEND_ENV); set +a; \
-	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
+	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM SUGGESTION_RECIPIENT PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
 		eval "value=\$${$$name}"; \
 		[ -n "$$value" ] || { echo "Falta $$name en $(BACKEND_ENV). Revisa apps/backend/.env.example"; exit 1; }; \
 	done
 
 dev-config-check: db-env-check dev-api-env-check
 	@set -a; . $(DEV_API_ENV); set +a; \
-	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
+	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM SUGGESTION_RECIPIENT PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
 		eval "value=\$${$$name}"; \
 		[ -n "$$value" ] || { echo "Falta $$name en $(DEV_API_ENV). Revisa infra/local/api.docker.env.example"; exit 1; }; \
 	done
@@ -75,7 +75,7 @@ dev-public-config-check:
 		[ -n "$$value" ] || { echo "Falta $$name en $(PUBLIC_DEV_ENV)"; exit 1; }; \
 	done
 	@set -a; . $(PUBLIC_DEV_API_ENV); set +a; \
-	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM SMTP_USERNAME SMTP_PASSWORD PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
+	for name in DATABASE_URL HTTP_ADDR SMTP_ADDR SMTP_FROM SMTP_USERNAME SMTP_PASSWORD SUGGESTION_RECIPIENT PUBLIC_BASE_URL CORS_ALLOWED_ORIGINS; do \
 		eval "value=\$${$$name}"; \
 		[ -n "$$value" ] || { echo "Falta $$name en $(PUBLIC_DEV_API_ENV)"; exit 1; }; \
 	done

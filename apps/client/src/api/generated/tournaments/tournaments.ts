@@ -120,7 +120,7 @@ export const getListRecentAccountTournamentsUrl = () => {
 
 /**
  * Incluye una vez cada torneo administrado o seguido por la cuenta actual. Una relación administrada prevalece sobre seguida y el orden es por actividad del torneo descendente, con ID UUIDv7 descendente como desempate.
- * @summary Lista hasta cinco torneos relacionados con actividad reciente
+ * @summary Lista hasta tres torneos relacionados con actividad reciente
  */
 export const listRecentAccountTournaments = async (
   options?: RequestInit,

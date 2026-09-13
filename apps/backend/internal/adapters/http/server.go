@@ -25,6 +25,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/suggestions"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
@@ -36,6 +37,8 @@ const (
 	usernameAvailabilityWindow = time.Minute
 	userSearchLimit            = 60
 	registrationLimit          = 5
+	suggestionLimit            = 3
+	suggestionWindow           = time.Hour
 )
 
 // NewHandler builds the infrastructure routes available before business endpoints.
@@ -62,6 +65,12 @@ func NewHandlerWithCookieSecurityAndTrustedProxiesAndRISCReceiver(registrationSe
 
 // NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver also accepts X-Client-IP when the edge token supplied by Caddy matches.
 func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService tournaments.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, edgeProxyAuthToken string, riscReceiver http.Handler, creationServices ...tournaments.CreationService) http.Handler {
+	return NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiverAndSuggestions(registrationService, federatedService, authenticator, leagueService, corsAllowedOrigins, cookieSecure, trustedProxyCIDRs, edgeProxyAuthToken, riscReceiver, nil, creationServices...)
+}
+
+// NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiverAndSuggestions registers
+// private product feedback when its accepted service is configured.
+func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiverAndSuggestions(registrationService registration.Service, federatedService *federated.Service, authenticator sessionAuthenticator, leagueService tournaments.Service, corsAllowedOrigins []string, cookieSecure bool, trustedProxyCIDRs []netip.Prefix, edgeProxyAuthToken string, riscReceiver http.Handler, suggestionService *suggestions.Service, creationServices ...tournaments.CreationService) http.Handler {
 	mux := http.NewServeMux()
 	resolveClientIP := newClientIPResolver(trustedProxyCIDRs, edgeProxyAuthToken)
 	cookies := sessionCookies(cookieSecure)
@@ -110,6 +119,10 @@ func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(re
 	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
 	mux.Handle("GET /v1/me/tournaments", requireSession(authenticator)(http.HandlerFunc(listAccountTournaments(leagueService))))
 	mux.Handle("GET /v1/me/recent-tournaments", requireSession(authenticator)(http.HandlerFunc(listRecentAccountTournaments(leagueService))))
+	if suggestionService != nil {
+		suggestionLimiter := newRequestLimiter(suggestionLimit, suggestionWindow)
+		mux.Handle("POST /v1/me/suggestions", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(submitSuggestion(*suggestionService, suggestionLimiter)))))
+	}
 	if repository, ok := authenticator.(notifications.Repository); ok {
 		notificationService := notifications.NewService(repository)
 		mux.Handle("GET /v1/me/notifications", requireSession(authenticator)(http.HandlerFunc(listNotifications(notificationService))))

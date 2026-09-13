@@ -127,6 +127,13 @@ type PasswordResetToken struct {
 	InvalidatedAt pgtype.Timestamptz
 }
 
+type ProductSuggestion struct {
+	ID        pgtype.UUID
+	AccountID pgtype.UUID
+	Body      string
+	CreatedAt pgtype.Timestamptz
+}
+
 type ReauthenticationTicket struct {
 	ID         pgtype.UUID
 	AccountID  pgtype.UUID

@@ -25,7 +25,28 @@ tags:
     description: Publicación y lectura pública de torneos visibles.
   - name: Notifications
     description: Buzón interno de la cuenta autenticada.
+  - name: Suggestions
+    description: Sugerencias privadas enviadas por la cuenta autenticada.
 paths:
+  /me/suggestions:
+    post:
+      tags: [Suggestions]
+      operationId: createCurrentAccountSuggestion
+      summary: Guarda una sugerencia privada para mejorar el producto
+      description: >-
+        Persiste la sugerencia antes de intentar avisar al responsable. El aviso
+        por correo es secundario y un fallo de entrega no revierte la sugerencia.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SuggestionInput" }
+      responses:
+        "201": { description: Sugerencia guardada. }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
   /me/notifications:
     get:
       tags: [Notifications]
@@ -509,7 +530,7 @@ paths:
     get:
       tags: [Tournaments]
       operationId: listRecentAccountTournaments
-      summary: Lista hasta cinco torneos relacionados con actividad reciente
+      summary: Lista hasta tres torneos relacionados con actividad reciente
       description: >-
         Incluye una vez cada torneo administrado o seguido por la cuenta actual.
         Una relación administrada prevalece sobre seguida y el orden es por
@@ -517,12 +538,12 @@ paths:
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       responses:
         "200":
-          description: Resumen de hasta cinco torneos relacionados recientes.
+          description: Resumen de hasta tres torneos relacionados recientes.
           content:
             application/json:
               schema:
                 type: array
-                maxItems: 5
+                maxItems: 3
                 items: { $ref: "#/components/schemas/AccountTournament" }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /me/tournaments/{tournamentId}/follow:
@@ -944,6 +965,16 @@ components:
       description: La cuenta todavía organiza algún torneo.
       content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
   schemas:
+    SuggestionInput:
+      type: object
+      additionalProperties: false
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 8
+          maxLength: 1000
+          description: El servidor elimina espacios exteriores antes de validar y guardar.
     UUID:
       type: string
       format: uuid

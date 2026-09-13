@@ -197,6 +197,8 @@ Mailpit pertenece solo al entorno local y no tiene hostname público. El entorno
 `dev` usa Resend por SMTP autenticado con STARTTLS; antes de invitar personas se
 verifica `mail.fasttourney.com` y sus registros SPF, DKIM y DMARC. La clave de
 solo envío vive fuera de Git en `infra/dev/api.docker.env`; véase ADR-0093.
+`SUGGESTION_RECIPIENT` selecciona por entorno el buzón que recibe los avisos de
+sugerencias privadas; no es un secreto ni se fija dentro del binario.
 
 El mismo proyecto `dev` mantiene Prometheus, Alertmanager, Loki, Tempo, Promtail
 y Grafana en red y volúmenes propios. Alertmanager usa una segunda clave Resend

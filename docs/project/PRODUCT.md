@@ -84,12 +84,19 @@ delegado se consideran administradas. Las ligas seguidas se consideran
 guardadas; cuando una liga cumple ambas relaciones, se muestra solo como
 administrada.
 
-Con sesión, Inicio muestra además hasta cinco ligas relacionadas con actividad
+Con sesión, Inicio muestra además hasta tres ligas relacionadas con actividad
 reciente. La relación administrada prevalece sobre seguida si coinciden. Si no
 hay ninguna, explica que ahí aparecerán las últimas ligas que tengan actividad.
 Inicio vuelve a consultar esta proyección cada vez que recupera el foco, de modo
 que una liga recién creada aparece al regresar; Inicio y Torneos permiten además
 actualizar sus datos mediante pull-to-refresh para una sesión activa.
+
+Debajo de Actividad reciente, una cuenta autenticada puede enviar una sugerencia
+privada de entre 8 y 1.000 caracteres desde «¿Te falta algo?». El envío se activa
+solo con una entrada válida. Al guardarse, el campo se vacía y un banner agradece
+la aportación; un fallo conserva el texto para reintentar. Se admiten tres envíos
+por cuenta y hora. La primera versión no publica sugerencias ni permite
+respuestas: PostgreSQL conserva el registro y el correo solo avisa al responsable.
 
 La sección «Torneos» separa las colecciones completas en «Administro» y «Sigo».
 Es una clasificación de navegación: las autorizaciones continúan verificándose

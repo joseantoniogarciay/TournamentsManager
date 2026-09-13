@@ -21,6 +21,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/suggestions"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
@@ -71,6 +72,15 @@ func run(args []string) error {
 	}
 	registrationService := registration.NewService(postgres.NewRegistrationRepository(pool), observability.Mailer{Next: mailer}, observability.PasswordProtector{})
 	accountTournaments := postgres.NewAccountTournamentRepository(pool)
+	var suggestionNotifier suggestions.Notifier
+	if appConfig.SuggestionRecipient != "" {
+		notifier, err := smtpadapter.NewSuggestionNotifier(mailer, appConfig.SuggestionRecipient)
+		if err != nil {
+			return fmt.Errorf("configurar avisos de sugerencias: %w", err)
+		}
+		suggestionNotifier = observability.SuggestionNotifier{Next: notifier}
+	}
+	suggestionService := suggestions.NewService(postgres.NewSuggestionRepository(pool), suggestionNotifier)
 	var federatedService *federated.Service
 	var riscReceiver http.Handler
 	if len(appConfig.GoogleClientIDs) > 0 {
@@ -81,7 +91,7 @@ func run(args []string) error {
 
 	server := &http.Server{
 		Addr:              appConfig.HTTPAddr,
-		Handler:           observability.HTTPHandler(httpadapter.NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiver(registrationService, federatedService, accountTournaments, tournaments.NewService(accountTournaments), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, appConfig.EdgeProxyAuthToken, riscReceiver, tournaments.NewCreationService(accountTournaments))),
+		Handler:           observability.HTTPHandler(httpadapter.NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiverAndSuggestions(registrationService, federatedService, accountTournaments, tournaments.NewService(accountTournaments), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, appConfig.EdgeProxyAuthToken, riscReceiver, &suggestionService, tournaments.NewCreationService(accountTournaments))),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

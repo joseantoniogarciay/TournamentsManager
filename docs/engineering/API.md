@@ -214,6 +214,14 @@ El cliente muestra feedback específico solo cuando el contrato ofrece una
 recuperación distinta; errores no tratados, `5xx` y respuestas inválidas usan el
 mensaje seguro común.
 
+## Sugerencias privadas
+
+`POST /v1/me/suggestions` exige sesión y acepta un único `body` de 8 a 1.000
+caracteres tras retirar espacios exteriores. El cuarto envío de la misma cuenta
+durante una hora devuelve `429` y `Retry-After`; la validación devuelve `400`.
+Un `201` significa que PostgreSQL ya conserva la sugerencia. El intento posterior
+de correo es secundario y no modifica esa respuesta si SMTP falla.
+
 ## Validación y generación
 
 [ADR-0046](../adr/0046-lint-and-generate-openapi-with-redocly-and-orval.md)

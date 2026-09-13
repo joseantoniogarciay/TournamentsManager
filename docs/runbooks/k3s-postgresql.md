@@ -108,12 +108,12 @@ entran mediante el ConfigMap `postgresql-bootstrap-sql`; crea roles, aplica el
 esquema inicial y el grant base. Las migraciones históricas contienen los roles
 de `dev` ya aplicados y son inmutables: el Job las renderiza exclusivamente en
 `emptyDir` con los dos nombres `prod`, aplica esa copia temporal y registra las
-versiones `0`, `2`, `3` y `4` en Goose.
+versiones `0`, `2`, `3`, `4`, `5` y `6` en Goose.
 
 Si el Job falla después del esquema inicial, no se relanza: usa
 `postgresql-bootstrap-migrations.yaml`, que solo completa migraciones y el
 registro de Goose. Verifica al final que runtime conecta, no puede crear tablas
-y que las cuatro versiones aparecen aplicadas. Toma después una copia pgBackRest
+y que las seis versiones aparecen aplicadas. Toma después una copia pgBackRest
 incremental antes de desplegar la API.
 
 ## Backup y restauración aislada local

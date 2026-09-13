@@ -49,6 +49,8 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0125](../adr/0125-persist-private-product-suggestions-and-notify-by-email.md)               | Persistir sugerencias privadas y avisar por correo                              | Aceptado              | 2026-09-13 |
+| [0124](../adr/0124-limit-recent-tournaments-to-three.md)                                    | Limitar a tres los torneos recientes de Inicio                                  | Aceptado              | 2026-09-13 |
 | [0123](../adr/0123-model-tournaments-as-ordered-stages.md)                                   | Modelar los torneos como fases ordenadas                                        | Aceptado              | 2026-09-06 |
 | [0122](../adr/0122-use-tournaments-as-root-and-single-elimination-first.md)                  | Usar torneos como recurso raíz y eliminatoria directa como primer formato      | Aceptado              | 2026-09-06 |
 | [0121](../adr/0121-render-social-previews-at-canonical-league-url.md)                         | Renderizar previews sociales en la URL canónica de liga                         | Aceptado              | 2026-09-06 |

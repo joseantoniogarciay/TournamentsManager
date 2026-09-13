@@ -424,7 +424,7 @@ WITH related_tournaments AS (
 SELECT id, name, state, created_at, last_activity_at, relationship
 FROM related_tournaments
 ORDER BY last_activity_at DESC, id DESC
-LIMIT 5
+LIMIT 3
 `
 
 type ListRecentAccountTournamentsRow struct {

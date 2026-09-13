@@ -3105,3 +3105,21 @@ K3s y también que sus componentes base siguen sanos.
   como hermano del contenedor desplazable y usa posición absoluta respecto a la
   pantalla. La coordinación con el contenido se hace mediante estado o una
   referencia explícita, no dependiendo del posicionamiento CSS interno.
+
+### 2026-09-13 — Un resumen debe reservar espacio para la siguiente acción
+
+- **Aprendido:** el máximo útil de una colección resumida depende también del
+  resto de la jerarquía de la pantalla; cinco tarjetas recientes desplazan una
+  nueva acción de escucha aunque la consulta siga siendo pequeña.
+- **Regla reutilizable:** cuando Inicio ofrece una proyección acotada, el límite
+  se fija en el contrato y en el servidor, no mediante un recorte exclusivo del
+  cliente. Así el payload y la promesa de producto coinciden con lo visible.
+
+### 2026-09-13 — Una notificación no sustituye al resultado duradero
+
+- **Aprendido:** enviar feedback solo por correo convierte la disponibilidad del
+  proveedor y la disciplina de un buzón en la garantía de conservación. También
+  dificulta evolucionar hacia búsqueda, estados o respuestas.
+- **Regla reutilizable:** el caso de uso confirma éxito al persistir; después
+  intenta el canal externo como efecto secundario observable. La interfaz vacía
+  el campo únicamente con esa confirmación y conserva la entrada ante error.

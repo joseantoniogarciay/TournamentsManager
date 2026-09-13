@@ -59,6 +59,7 @@ export * from "./searchUsersParams.js";
 export * from "./serviceUnavailableProblemResponse.js";
 export * from "./sessionEstablishment.js";
 export * from "./startTournamentRequest.js";
+export * from "./suggestionInput.js";
 export * from "./teamInput.js";
 export * from "./tournamentAdministrators.js";
 export * from "./tournamentInput.js";

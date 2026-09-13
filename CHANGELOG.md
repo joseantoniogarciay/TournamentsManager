@@ -8,6 +8,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Las cuentas autenticadas pueden enviar desde Inicio sugerencias privadas de
+  producto, persistidas antes de avisar por correo, con límite de tres por hora,
+  campo recuperable ante error y agradecimiento visible tras el envío.
 - Torneos de eliminatoria directa a partido único para 2 a 64 equipos, con
   cuadro completo, pases directos deterministas, plazas derivadas de ganadoras,
   desempate explícito por penaltis y navegación responsive entre rondas.
@@ -17,6 +20,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- El resumen de actividad reciente de Inicio muestra como máximo tres torneos
+  para conservar espacio para nuevas acciones útiles en la home.
 - El recurso canónico migra de `leagues` a `tournaments` en base de datos,
   dominio, OpenAPI, cliente y enlaces. La liga a una o dos vueltas continúa
   disponible como formato `league`; no se conservan rutas antiguas.

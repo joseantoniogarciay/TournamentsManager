@@ -55,7 +55,7 @@ type Repository interface {
 	Unfollow(context.Context, string, string) error
 }
 
-// ListRecent returns up to five related tournaments with the most recent activity.
+// ListRecent returns up to three related tournaments with the most recent activity.
 func (s Service) ListRecent(ctx context.Context, accountID string) ([]Item, error) {
 	return s.repository.ListRecent(ctx, accountID)
 }

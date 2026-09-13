@@ -15,6 +15,7 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { ProductAnalyticsPreferenceCard } from "@/shared/preferences/product-analytics-preference-card";
+import { SuggestionCard } from "@/features/suggestions/components/suggestion-card";
 import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
 import { Button, Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
@@ -77,8 +78,10 @@ export default function HomeScreen() {
       <Screen bottomInset="none">
         <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
         <ScrollView
+          automaticallyAdjustKeyboardInsets
           key={revision}
           contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
+          keyboardShouldPersistTaps="handled"
           refreshControl={
             user ? (
               <RefreshControl
@@ -125,6 +128,8 @@ export default function HomeScreen() {
               )}
             </View>
           ) : null}
+
+          {user ? <SuggestionCard /> : null}
 
           {showGuestHome ? <GuestOnboarding t={t} /> : null}
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/suggestions"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -165,6 +166,38 @@ func TestMailerRecordsSafeFailureReason(t *testing.T) {
 	spans := exporter.GetSpans()
 	if len(spans) != 1 {
 		t.Fatalf("span count = %d, want 1", len(spans))
+	}
+	if got := spanAttribute(spans[0].Attributes, failureReasonAttribute); got != "smtp.delivery_failed" {
+		t.Fatalf("failure reason = %q, want smtp.delivery_failed", got)
+	}
+	if len(spans[0].Events) != 0 {
+		t.Fatalf("events = %#v, want no raw error event", spans[0].Events)
+	}
+}
+
+type suggestionNotifierStub struct{ err error }
+
+func (n suggestionNotifierStub) NotifySuggestion(context.Context, suggestions.Item) error {
+	return n.err
+}
+
+func TestSuggestionNotifierCreatesSafeFailureSpan(t *testing.T) {
+	exporter := tracetest.NewInMemoryExporter()
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(provider)
+	t.Cleanup(func() {
+		otel.SetTracerProvider(previous)
+		_ = provider.Shutdown(context.Background())
+	})
+
+	err := SuggestionNotifier{Next: suggestionNotifierStub{err: errors.New("private body for person@example.test")}}.NotifySuggestion(context.Background(), suggestions.Item{Username: "person", Body: "private body"})
+	if err == nil {
+		t.Fatal("NotifySuggestion() error = nil, want error")
+	}
+	spans := exporter.GetSpans()
+	if len(spans) != 1 || spans[0].Name != "smtp.send.suggestion" {
+		t.Fatalf("spans = %#v, want one suggestion span", spans)
 	}
 	if got := spanAttribute(spans[0].Attributes, failureReasonAttribute); got != "smtp.delivery_failed" {
 		t.Fatalf("failure reason = %q, want smtp.delivery_failed", got)
