@@ -223,6 +223,7 @@ function WebPageAppearance({
     document.body.style.backgroundColor = backgroundColor;
     document.getElementById("initial-theme-color")?.setAttribute("content", backgroundColor);
     document.documentElement.lang = getCurrentLanguage();
+    document.documentElement.dataset.appHydrated = "true";
   }, [backgroundColor, resolvedTheme]);
 
   useEffect(() => {

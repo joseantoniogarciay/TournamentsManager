@@ -3123,3 +3123,15 @@ K3s y también que sus componentes base siguen sanos.
 - **Regla reutilizable:** el caso de uso confirma éxito al persistir; después
   intenta el canal externo como efecto secundario observable. La interfaz vacía
   el campo únicamente con esa confirmación y conserva la entrada ante error.
+
+### 2026-09-13 — Resolver el canvas no corrige un árbol SSR con colores inline
+
+- **Aprendido:** una exportación estática puede aplicar el tema oscuro a
+  `html`, `body`, `color-scheme` y `theme-color` antes del primer frame y aun
+  mostrar un destello claro. El árbol prerenderizado por React Native Web lleva
+  superficies y texto claros como estilos inline hasta que React hidrata.
+- **Regla reutilizable:** cuando el servidor estático no puede conocer la
+  preferencia del navegador, el canvas correcto se muestra de inmediato y el
+  árbol SSR incompatible permanece oculto solo hasta que la hidratación confirma
+  el tema resuelto. Debe existir un fallback visible cuando JavaScript está
+  desactivado.

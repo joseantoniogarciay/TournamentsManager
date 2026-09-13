@@ -32,7 +32,13 @@ export default function RootHtml({ children }: PropsWithChildren) {
           body {
             background-color: var(--initial-canvas-color);
           }
+          html:not([data-app-hydrated="true"]) #root {
+            visibility: hidden;
+          }
         `}</style>
+        <noscript>
+          <style>{`#root { visibility: visible !important; }`}</style>
+        </noscript>
         <script src="/theme-init.js"></script>
         <ScrollViewStyleReset />
         {headNodes}

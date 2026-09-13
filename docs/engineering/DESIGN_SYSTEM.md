@@ -65,10 +65,13 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 - **Primer frame web:** el HTML aplica antes de cargar React la preferencia de
   tema persistida o, cuando permanece en `system`, la preferencia del navegador.
   El fondo del documento, `color-scheme` y `theme-color` nacen ya con el tema
-  resuelto para evitar un destello claro al recargar en oscuro. Un script mínimo
-  y bloqueante del mismo origen ejecuta esa lectura sin relajar la CSP; la clave
-  y los colores siguen procediendo de la fuente TypeScript mediante atributos
-  del documento.
+  resuelto para evitar un destello claro al recargar en oscuro. Como la
+  exportación estática prerenderiza el árbol de React en claro y sus estilos son
+  inline, ese árbol permanece oculto sobre el canvas correcto hasta que la
+  hidratación confirma el tema resuelto; con JavaScript desactivado vuelve a ser
+  visible. Un script mínimo y bloqueante del mismo origen ejecuta la lectura
+  inicial sin relajar la CSP; la clave y los colores siguen procediendo de la
+  fuente TypeScript mediante atributos del documento.
 - **Botonera web:** web usa la barra inferior estándar de `Tabs`, no el fallback
   de `NativeTabs`. Conserva las tres rutas, iconos y colores semánticos; Cuenta
   ofrece en su cabecera el mismo acceso localizado a Ajustes que las apps.
