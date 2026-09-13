@@ -85,6 +85,7 @@ export default function TournamentScreen() {
   const [bracketRoundSelectionRevision, setBracketRoundSelectionRevision] = useState(0);
   const matchList = useRef<SectionList<PublicTournament["matches"][number]>>(null);
   const bracketList = useRef<ScrollView>(null);
+  const bracketRoundTopOffset = useRef(0);
   const bracketView = useRef<BracketViewHandle>(null);
   const bracketHorizontalControl = useRef<ScrollView>(null);
   const bracketHorizontalControlOffset = useRef(0);
@@ -444,6 +445,13 @@ export default function TournamentScreen() {
   const selectBracketRound = (round: number) => {
     setSelectedBracketRound(round);
     setBracketRoundSelectionRevision((revision) => revision + 1);
+    requestAnimationFrame(() => {
+      matchListOffset.current = bracketRoundTopOffset.current;
+      bracketList.current?.scrollTo({
+        animated: false,
+        y: bracketRoundTopOffset.current,
+      });
+    });
   };
   const tournamentSummary = (
     <>
@@ -561,6 +569,9 @@ export default function TournamentScreen() {
                 <BracketIntro />
               </View>
               <BracketRoundNavigation
+                onLayout={(event) => {
+                  bracketRoundTopOffset.current = event.nativeEvent.layout.y;
+                }}
                 onSelect={selectBracketRound}
                 rounds={bracketRounds}
                 selectedRound={selectedBracketRound}

@@ -3135,3 +3135,21 @@ K3s y también que sus componentes base siguen sanos.
   árbol SSR incompatible permanece oculto solo hasta que la hidratación confirma
   el tema resuelto. Debe existir un fallback visible cuando JavaScript está
   desactivado.
+
+### 2026-09-13 — Cambiar el contexto de una lista reinicia su posición
+
+- **Aprendido:** sustituir los partidos de una ronda no reinicia por sí mismo el
+  offset del `ScrollView`; si ambas rondas tienen contenido suficiente, la nueva
+  ronda aparece por el mismo punto intermedio que la anterior.
+- **Regla reutilizable:** cuando un selector sustituye el contexto completo de
+  una lista, la vista vuelve al primer elemento sin ocultar el propio selector.
+  El destino se mide en el layout en vez de depender de una distancia fija.
+
+### 2026-09-13 — El título de sección pertenece al lienzo
+
+- **Aprendido:** incluir el título de una sección dentro de una card mezcla la
+  jerarquía de navegación con el contenido accionable y diverge de los bloques
+  hermanos que ya presentan su título sobre el lienzo.
+- **Regla reutilizable:** los títulos hermanos de Inicio viven fuera de sus
+  superficies y comparten `space[4]` con el primer contenido. Las cards repetidas
+  mantienen `space[5]` entre sí para no compactar también la colección.

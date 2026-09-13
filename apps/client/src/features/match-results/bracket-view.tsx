@@ -351,10 +351,12 @@ export function BracketIntro() {
 }
 
 export function BracketRoundNavigation({
+  onLayout,
   onSelect,
   rounds,
   selectedRound,
 }: {
+  onLayout: (event: LayoutChangeEvent) => void;
   onSelect: (round: number) => void;
   rounds: number[];
   selectedRound: number;
@@ -364,7 +366,10 @@ export function BracketRoundNavigation({
   const total = rounds.length;
   if (Platform.OS === "web" && width >= columnWidth * 2 + space[5] * 2) return null;
   return (
-    <View style={[styles.stickyRounds, { backgroundColor: colors.surface.canvas }]}>
+    <View
+      onLayout={onLayout}
+      style={[styles.stickyRounds, { backgroundColor: colors.surface.canvas }]}
+    >
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

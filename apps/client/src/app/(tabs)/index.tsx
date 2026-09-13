@@ -109,27 +109,36 @@ export default function HomeScreen() {
           </Card>
 
           {user ? (
-            <View style={styles.recentSection}>
-              <Text style={styles.recentTitle} variant="title">
+            <View style={styles.homeSection}>
+              <Text style={styles.sectionTitle} variant="title">
                 {t("home_recent_leagues_title")}
               </Text>
-              {isLoading ? (
-                <Text color="secondary" style={styles.recentEmpty}>
-                  {t("common_loading")}
-                </Text>
-              ) : recentTournaments.length === 0 ? (
-                <View style={styles.recentEmpty}>
-                  <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
-                </View>
-              ) : (
-                recentTournaments.map((league) => (
-                  <TournamentCard key={league.id} league={league} />
-                ))
-              )}
+              <View style={styles.recentContent}>
+                {isLoading ? (
+                  <Text color="secondary" style={styles.recentEmpty}>
+                    {t("common_loading")}
+                  </Text>
+                ) : recentTournaments.length === 0 ? (
+                  <View style={styles.recentEmpty}>
+                    <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
+                  </View>
+                ) : (
+                  recentTournaments.map((league) => (
+                    <TournamentCard key={league.id} league={league} />
+                  ))
+                )}
+              </View>
             </View>
           ) : null}
 
-          {user ? <SuggestionCard /> : null}
+          {user ? (
+            <View style={styles.homeSection}>
+              <Text style={styles.sectionTitle} variant="title">
+                {t("home_suggestion_title")}
+              </Text>
+              <SuggestionCard />
+            </View>
+          ) : null}
 
           {showGuestHome ? <GuestOnboarding t={t} /> : null}
 
@@ -247,9 +256,10 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { gap: space[5] },
   hero: { gap: space[4] },
+  homeSection: { gap: space[4] },
+  recentContent: { gap: space[5] },
   recentEmpty: { alignItems: "center", paddingHorizontal: space[5], textAlign: "center" },
-  recentSection: { gap: space[5] },
-  recentTitle: { marginHorizontal: space[5] },
+  sectionTitle: { marginHorizontal: space[5] },
   section: { gap: space[2] },
   steps: { gap: space[5] },
   step: { flexDirection: "row", gap: space[3] },

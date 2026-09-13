@@ -42,10 +42,7 @@ export function SuggestionCard() {
   return (
     <Card>
       <View style={styles.content}>
-        <View style={styles.copy}>
-          <Text variant="title">{t("home_suggestion_title")}</Text>
-          <Text color="secondary">{t("home_suggestion_description")}</Text>
-        </View>
+        <Text color="secondary">{t("home_suggestion_description")}</Text>
         <TextField
           accessibilityHint={t("home_suggestion_requirement")}
           accessibilityLabel={t("home_suggestion_accessibility_label")}
@@ -69,5 +66,4 @@ export function SuggestionCard() {
 
 const styles = StyleSheet.create({
   content: { gap: space[4] },
-  copy: { gap: space[2] },
 });

@@ -124,8 +124,11 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 `Card` está implementada en `shared/ui`: aplica superficie, borde, radio,
 padding y margen exterior horizontal semánticos. La home la usa para separar
 bloques de acción, explicación y pasos; no sustituye a los contenedores de
-layout. El acceso persistente a la biblioteca de torneos vive en su tab y no se
-duplica como una card informativa en la home.
+layout. En Inicio, los títulos de «Actividad reciente» y sugerencias permanecen
+fuera de sus cards y dejan `space[4]` antes del primer contenido; los torneos
+hermanos conservan entre sí la separación general `space[5]`. El acceso
+persistente a la biblioteca de torneos vive en su tab y no se duplica como una
+card informativa en la home.
 
 En el cuadro de eliminatorias, la navegación entre partidos es secundaria frente
 al resultado. El destino posterior se presenta como enlace sin borde, debajo de
@@ -136,6 +139,9 @@ origen completo. En vistas compactas, el selector de ronda permanece sticky y es
 la única referencia visual repetida a la fase. En web grande desaparece esa
 botonera: una cabecera sticky alineada con cada columna nombra simultáneamente las
 fases visibles. Ninguno de los dos modos añade otro título dentro de cada tarjeta.
+Al cambiar de ronda mediante el selector compacto, el desplazamiento vertical de
+los partidos vuelve al inicio de esa sección: el primer partido queda bajo el
+selector sticky y no hereda la posición de la ronda anterior.
 Cada encuentro usa `bodyLarge` semibold con «Partido N»; la final muestra
 únicamente «Final». Las etiquetas accesibles y los enlaces de navegación sí
 conservan ronda y partido completos para no perder contexto. Los nombres de
