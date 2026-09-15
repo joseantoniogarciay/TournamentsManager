@@ -181,6 +181,7 @@ type Tournament struct {
 	CreatedAt          pgtype.Timestamptz
 	PublishedAt        pgtype.Timestamptz
 	LastActivityAt     pgtype.Timestamptz
+	SourceDraftID      pgtype.UUID
 }
 
 type TournamentAdministrator struct {
