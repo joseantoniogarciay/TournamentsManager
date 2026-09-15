@@ -5,10 +5,15 @@ import {
   saveMobileSession,
 } from "@/api/fetch";
 import { createSession } from "@/api/generated/session/session";
-import type { Transport } from "@/api/generated/models";
+import type { TournamentDraftInput, Transport } from "@/api/generated/models";
 
 export type LocalAuthenticationResult =
-  { kind: "pending-verification" } | { kind: "session"; user: { id: string; username: string } };
+  | { kind: "pending-verification" }
+  | {
+      kind: "session";
+      createdTournament: boolean;
+      user: { id: string; username: string };
+    };
 
 /** Error recuperable: el contrato confirma que la autenticación fue rechazada. */
 export class LocalAuthenticationError extends Error {
@@ -23,6 +28,7 @@ export async function authenticateLocalAccount(input: {
   email: string;
   password: string;
   sessionTransport: Transport;
+  draft?: TournamentDraftInput;
 }): Promise<LocalAuthenticationResult> {
   const response = await createSession(input, undefined, apiFetch);
   if (response.status === 202) return { kind: "pending-verification" };
@@ -30,5 +36,5 @@ export async function authenticateLocalAccount(input: {
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   if (input.sessionTransport === "bearer") await saveMobileSession(response.data);
   captureProductOutcome("account_signed_in", response.headers, { method: "password" });
-  return { kind: "session", user: response.data.user };
+  return { kind: "session", createdTournament: Boolean(input.draft), user: response.data.user };
 }

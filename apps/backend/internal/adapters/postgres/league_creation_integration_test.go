@@ -640,6 +640,144 @@ func TestIntegrationPasswordResetConsumesTokenRevokesSessionsAndCreatesNewSessio
 	}
 }
 
+func TestIntegrationLocalLoginCreatesTournamentAndSessionAtomically(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	accountID := createVerifiedLocalAccount(t, ctx, pool, "login-draft@example.test", "login_draft", "correct password")
+	service := registration.NewService(NewRegistrationRepository(pool), nil)
+
+	draft := &registration.Draft{
+		ID:   "019abcde-1111-7111-8111-111111111112",
+		Name: "Torneo recuperado", Sport: tournaments.SportBasketball, Teams: []string{"Norte", "Sur"},
+	}
+	result, err := service.Login(ctx, "login-draft@example.test", "correct password", draft)
+	if err != nil || result.Session.AccountID != accountID {
+		t.Fatalf("login con borrador = %#v, %v", result, err)
+	}
+	if _, err := service.Login(ctx, "login-draft@example.test", "correct password", draft); err != nil {
+		t.Fatalf("reintentar login con el mismo borrador: %v", err)
+	}
+	var sessions, tournamentsCount, teams int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM sessions WHERE account_id = $1 AND revoked_at IS NULL`, accountID).Scan(&sessions); err != nil {
+		t.Fatalf("contar sesiones: %v", err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournaments WHERE organizer_account_id = $1 AND name = 'Torneo recuperado' AND sport = 'basketball'`, accountID).Scan(&tournamentsCount); err != nil {
+		t.Fatalf("contar torneos: %v", err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournament_teams JOIN tournaments ON tournaments.id = tournament_teams.tournament_id WHERE tournaments.organizer_account_id = $1`, accountID).Scan(&teams); err != nil {
+		t.Fatalf("contar equipos: %v", err)
+	}
+	if sessions != 2 || tournamentsCount != 1 || teams != 2 {
+		t.Fatalf("sesiones/torneos/equipos = %d/%d/%d, se esperaba 2/1/2", sessions, tournamentsCount, teams)
+	}
+}
+
+func TestIntegrationGoogleLoginCreatesTournamentAndSessionAtomically(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	accountID := createVerifiedLocalAccount(t, ctx, pool, "google-draft@example.test", "google_draft", "correct password")
+	if _, err := pool.Exec(ctx, `INSERT INTO external_identities (account_id, provider, issuer, subject) VALUES ($1, 'google', $2, 'draft-subject')`, accountID, federated.GoogleIssuer); err != nil {
+		t.Fatalf("crear identidad Google: %v", err)
+	}
+	verifier := &integrationGoogleVerifier{}
+	service := federated.NewService(NewFederatedRepository(pool), verifier)
+	challenge, err := service.CreateChallenge(ctx)
+	if err != nil {
+		t.Fatalf("crear challenge: %v", err)
+	}
+	verifier.identity = federated.Identity{Issuer: federated.GoogleIssuer, Subject: "draft-subject", Email: "google-draft@example.test", Nonce: challenge.Nonce, EmailVerified: true}
+
+	draft := &federated.Draft{
+		ID:   "019abcde-1111-7111-8111-111111111112",
+		Name: "Torneo Google", Sport: tournaments.SportFootball, Teams: []string{"Uno", "Dos"},
+	}
+	result, err := service.Authenticate(ctx, challenge.ID, "google-token", nil, draft)
+	if err != nil || result.AccountID != accountID {
+		t.Fatalf("login Google con borrador = %#v, %v", result, err)
+	}
+	retryChallenge, err := service.CreateChallenge(ctx)
+	if err != nil {
+		t.Fatalf("crear challenge de reintento: %v", err)
+	}
+	verifier.identity.Nonce = retryChallenge.Nonce
+	if _, err := service.Authenticate(ctx, retryChallenge.ID, "google-token", nil, draft); err != nil {
+		t.Fatalf("reintentar login Google con el mismo borrador: %v", err)
+	}
+	var sessions, tournamentsCount int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM sessions WHERE account_id = $1 AND revoked_at IS NULL`, accountID).Scan(&sessions); err != nil {
+		t.Fatalf("contar sesiones: %v", err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournaments WHERE organizer_account_id = $1 AND name = 'Torneo Google'`, accountID).Scan(&tournamentsCount); err != nil {
+		t.Fatalf("contar torneos: %v", err)
+	}
+	if sessions != 2 || tournamentsCount != 1 {
+		t.Fatalf("sesiones/torneos = %d/%d, se esperaba 2/1", sessions, tournamentsCount)
+	}
+}
+
+func TestIntegrationLoginDraftFailureRollsBackSession(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	accountID := createVerifiedLocalAccount(t, ctx, pool, "rollback-draft@example.test", "rollback_draft", "correct password")
+	repository := NewRegistrationRepository(pool)
+
+	_, err := repository.CreateLocalLoginSession(ctx, accountID, sessionHash("rollback-session"), sessionHash("rollback-refresh"), &registration.Draft{
+		ID:   "019abcde-1111-7111-8111-111111111112",
+		Name: "Torneo inválido", Sport: tournaments.SportFootball, Teams: []string{"Duplicado", "Duplicado"},
+	})
+	if err == nil {
+		t.Fatal("el borrador inválido no falló")
+	}
+	var sessions, tournamentsCount int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM sessions WHERE account_id = $1`, accountID).Scan(&sessions); err != nil {
+		t.Fatalf("contar sesiones: %v", err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournaments WHERE organizer_account_id = $1`, accountID).Scan(&tournamentsCount); err != nil {
+		t.Fatalf("contar torneos: %v", err)
+	}
+	if sessions != 0 || tournamentsCount != 0 {
+		t.Fatalf("rollback dejó sesiones/torneos = %d/%d", sessions, tournamentsCount)
+	}
+}
+
+func TestIntegrationGoogleLoginDraftFailureRollsBackChallengeAndSession(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	accountID := createVerifiedLocalAccount(t, ctx, pool, "google-rollback@example.test", "google_rollback", "correct password")
+	if _, err := pool.Exec(ctx, `INSERT INTO external_identities (account_id, provider, issuer, subject) VALUES ($1, 'google', $2, 'rollback-subject')`, accountID, federated.GoogleIssuer); err != nil {
+		t.Fatalf("crear identidad Google: %v", err)
+	}
+	verifier := &integrationGoogleVerifier{}
+	service := federated.NewService(NewFederatedRepository(pool), verifier)
+	challenge, err := service.CreateChallenge(ctx)
+	if err != nil {
+		t.Fatalf("crear challenge: %v", err)
+	}
+	verifier.identity = federated.Identity{Issuer: federated.GoogleIssuer, Subject: "rollback-subject", Email: "google-rollback@example.test", Nonce: challenge.Nonce, EmailVerified: true}
+
+	_, err = service.Authenticate(ctx, challenge.ID, "google-token", nil, &federated.Draft{
+		ID:   "019abcde-1111-7111-8111-111111111112",
+		Name: "Torneo inválido", Sport: tournaments.SportFootball, Teams: []string{"Duplicado", "Duplicado"},
+	})
+	if err == nil {
+		t.Fatal("el borrador Google inválido no falló")
+	}
+	var sessions, tournamentsCount int
+	var challengeConsumed bool
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM sessions WHERE account_id = $1`, accountID).Scan(&sessions); err != nil {
+		t.Fatalf("contar sesiones: %v", err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournaments WHERE organizer_account_id = $1`, accountID).Scan(&tournamentsCount); err != nil {
+		t.Fatalf("contar torneos: %v", err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT consumed_at IS NOT NULL FROM federated_login_challenges WHERE id = $1`, challenge.ID).Scan(&challengeConsumed); err != nil {
+		t.Fatalf("consultar challenge: %v", err)
+	}
+	if sessions != 0 || tournamentsCount != 0 || challengeConsumed {
+		t.Fatalf("rollback dejó sesiones/torneos/challenge consumido = %d/%d/%v", sessions, tournamentsCount, challengeConsumed)
+	}
+}
+
 func TestIntegrationAccountOptionsRequireSingleUseReauthenticationTicket(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)

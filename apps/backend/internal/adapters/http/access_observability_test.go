@@ -50,9 +50,21 @@ func TestAccessEndpointFailuresUseClosedSafeReasons(t *testing.T) {
 	})
 
 	registrationService := registration.NewService(testRegistrationRepository{}, nil)
+	passwordHash, err := registration.HashPassword("correct horse battery staple")
+	if err != nil {
+		t.Fatalf("crear hash: %v", err)
+	}
+	localFailureService := registration.NewService(testRegistrationRepository{
+		loginAccount: registration.LocalAccount{ID: "019abcde-1111-7111-8111-111111111111", PasswordHash: passwordHash, Verified: true},
+		loginError:   errors.New("transaction failed"),
+	}, nil)
 	federatedService := federated.NewService(
 		testFederatedRepository{reauthenticationErr: federated.ErrIdentityConflict},
 		testGoogleVerifier{identity: federated.Identity{Email: "person@example.test", EmailVerified: true, Issuer: federated.GoogleIssuer, Nonce: "nonce", Subject: "other-google-account"}},
+	)
+	federatedFailureService := federated.NewService(
+		testFederatedRepository{authenticateErr: errors.New("transaction failed")},
+		testGoogleVerifier{identity: federated.Identity{Email: "person@example.test", EmailVerified: true, Issuer: federated.GoogleIssuer, Nonce: "nonce", Subject: "google-account"}},
 	)
 	accessService := access.NewService(accessObservabilityRepository{setErr: errors.New("ticket absent"), removeErr: access.ErrLastAccessMethod})
 
@@ -79,6 +91,18 @@ func TestAccessEndpointFailuresUseClosedSafeReasons(t *testing.T) {
 			handler: createLocalSession(registrationService, newLoginLimiter(0, time.Minute), sessionCookies(false), func(*http.Request) string { return "127.0.0.1" }),
 			request: httptest.NewRequest(http.MethodPost, "/v1/sessions", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","sessionTransport":"bearer"}`)),
 			want:    "rate_limit.exceeded",
+		},
+		{
+			name:    "local session technical failure",
+			handler: createLocalSession(localFailureService, newLoginLimiter(10, time.Minute), sessionCookies(false), func(*http.Request) string { return "127.0.0.1" }),
+			request: httptest.NewRequest(http.MethodPost, "/v1/sessions", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","sessionTransport":"bearer","draft":{"draftId":"019abcde-1111-7111-8111-111111111112","name":"Copa","sport":"football","teams":[{"name":"Uno"},{"name":"Dos"}]}}`)),
+			want:    "request.failed",
+		},
+		{
+			name:    "google session technical failure",
+			handler: createGoogleSession(federatedFailureService, sessionCookies(false)),
+			request: httptest.NewRequest(http.MethodPost, "/v1/google-sessions", strings.NewReader(`{"challengeId":"019abcde-1111-7111-8111-111111111111","idToken":"google-token","sessionTransport":"bearer","draft":{"draftId":"019abcde-1111-7111-8111-111111111112","name":"Copa","sport":"football","teams":[{"name":"Uno"},{"name":"Dos"}]}}`)),
+			want:    "request.failed",
 		},
 		{
 			name:    "refresh invalid",

@@ -268,9 +268,10 @@ func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
 }
 
 type leagueInput struct {
-	Name  string            `json:"name"`
-	Sport tournaments.Sport `json:"sport"`
-	Teams []struct {
+	DraftID string            `json:"draftId"`
+	Name    string            `json:"name"`
+	Sport   tournaments.Sport `json:"sport"`
+	Teams   []struct {
 		Name string `json:"name"`
 	} `json:"teams"`
 }
@@ -1018,13 +1019,13 @@ func unavailableFederatedLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 type googleSessionRequest struct {
-	ChallengeID      string              `json:"challengeId"`
-	IDToken          string              `json:"idToken"`
-	SessionTransport string              `json:"sessionTransport"`
-	Username         string              `json:"username"`
-	Locale           string              `json:"locale"`
-	TermsVersion     string              `json:"termsVersion"`
-	Draft            *registration.Draft `json:"draft"`
+	ChallengeID      string       `json:"challengeId"`
+	IDToken          string       `json:"idToken"`
+	SessionTransport string       `json:"sessionTransport"`
+	Username         string       `json:"username"`
+	Locale           string       `json:"locale"`
+	TermsVersion     string       `json:"termsVersion"`
+	Draft            *leagueInput `json:"draft"`
 }
 
 func createGoogleChallenge(service federated.Service) http.HandlerFunc {
@@ -1045,16 +1046,22 @@ func createGoogleChallenge(service federated.Service) http.HandlerFunc {
 func createGoogleSession(service federated.Service, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body googleSessionRequest
-		if err := decodeBody(r, &body); err != nil || !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") || (body.Username != "" && body.TermsVersion != legal.CurrentTermsVersion) || (body.Draft != nil && (body.Username == "" || !validRegistrationDraft(body.Draft))) {
+		if err := decodeBody(r, &body); err != nil {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
+			writeValidationProblem(w)
+			return
+		}
+		draft := toRegistrationDraft(body.Draft)
+		if !uuidPattern.MatchString(body.ChallengeID) || body.IDToken == "" || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Username != "" && !usernamePattern.MatchString(body.Username)) || (body.Locale != "" && !registration.IsSupportedLocale(registration.Locale(body.Locale))) || (body.Username == "") != (body.Locale == "") || (body.Username != "" && body.TermsVersion != legal.CurrentTermsVersion) || !validRegistrationDraft(draft) {
 			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
 		}
 		var registrationInput *federated.Registration
 		if body.Username != "" {
-			registrationInput = &federated.Registration{Username: body.Username, Locale: body.Locale, TermsVersion: body.TermsVersion, Draft: toFederatedDraft(body.Draft)}
+			registrationInput = &federated.Registration{Username: body.Username, Locale: body.Locale, TermsVersion: body.TermsVersion}
 		}
-		established, err := service.Authenticate(r.Context(), body.ChallengeID, body.IDToken, registrationInput)
+		established, err := service.Authenticate(r.Context(), body.ChallengeID, body.IDToken, registrationInput, toFederatedDraft(draft))
 		if errors.Is(err, federated.ErrRegistration) {
 			w.WriteHeader(http.StatusAccepted)
 			return
@@ -1070,6 +1077,7 @@ func createGoogleSession(service federated.Service, cookies sessionCookieSetting
 			return
 		}
 		if err != nil {
+			recordAuthenticationTechnicalFailure(r.Context(), err)
 			writeProblem(w, http.StatusInternalServerError, "Could not sign in")
 			return
 		}
@@ -1081,7 +1089,7 @@ func toFederatedDraft(draft *registration.Draft) *federated.Draft {
 	if draft == nil {
 		return nil
 	}
-	return &federated.Draft{Name: strings.TrimSpace(draft.Name), Sport: draft.Sport, Teams: draft.Teams}
+	return &federated.Draft{ID: draft.ID, Name: strings.TrimSpace(draft.Name), Sport: draft.Sport, Teams: draft.Teams}
 }
 
 func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession, cookies sessionCookieSettings) {
@@ -1448,9 +1456,10 @@ type registerRequest struct {
 }
 
 type loginRequest struct {
-	Email            string `json:"email"`
-	Password         string `json:"password"`
-	SessionTransport string `json:"sessionTransport"`
+	Email            string       `json:"email"`
+	Password         string       `json:"password"`
+	SessionTransport string       `json:"sessionTransport"`
+	Draft            *leagueInput `json:"draft"`
 }
 
 // createLocalSession authenticates without disclosing whether email, password, or state failed.
@@ -1462,19 +1471,26 @@ func createLocalSession(service registration.Service, limiter *loginLimiter, coo
 			writeValidationProblem(writer)
 			return
 		}
+		draft := toRegistrationDraft(body.Draft)
+		if !validRegistrationDraft(draft) {
+			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
+			writeValidationProblem(writer)
+			return
+		}
 		if allowed, retryAfter := limiter.allow(resolveClientIP(request), strings.ToLower(strings.TrimSpace(body.Email))); !allowed {
 			observability.RecordEndpointFailure(request.Context(), "rate_limit.exceeded")
 			writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 			writeProblem(writer, http.StatusTooManyRequests, "Too many sign-in attempts")
 			return
 		}
-		result, err := service.Login(request.Context(), body.Email, body.Password)
+		result, err := service.Login(request.Context(), body.Email, body.Password, draft)
 		if errors.Is(err, registration.ErrLoginInvalid) {
 			observability.RecordEndpointFailure(request.Context(), "authentication.credentials_rejected")
 			writeProblem(writer, http.StatusUnauthorized, "Invalid credentials")
 			return
 		}
 		if err != nil {
+			recordAuthenticationTechnicalFailure(request.Context(), err)
 			writeProblem(writer, http.StatusInternalServerError, "Could not sign in")
 			return
 		}
@@ -1490,6 +1506,29 @@ func createLocalSession(service registration.Service, limiter *loginLimiter, coo
 		}
 		writer.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(writer).Encode(response)
+	}
+}
+
+func toRegistrationDraft(draft *leagueInput) *registration.Draft {
+	if draft == nil {
+		return nil
+	}
+	teams := make([]string, len(draft.Teams))
+	for index, team := range draft.Teams {
+		teams[index] = team.Name
+	}
+	normalized := registration.NormalizeInput(registration.Input{Draft: &registration.Draft{ID: draft.DraftID, Name: draft.Name, Sport: draft.Sport, Teams: teams}})
+	return normalized.Draft
+}
+
+func recordAuthenticationTechnicalFailure(ctx context.Context, err error) {
+	switch {
+	case errors.Is(err, context.Canceled):
+		observability.RecordEndpointFailure(ctx, "request.cancelled")
+	case errors.Is(err, context.DeadlineExceeded):
+		observability.RecordEndpointFailure(ctx, "request.timeout")
+	default:
+		observability.RecordEndpointFailure(ctx, "request.failed")
 	}
 }
 
@@ -1514,7 +1553,7 @@ func register(service registration.Service, limiter *requestLimiter, resolveClie
 			for index, team := range body.Draft.Teams {
 				teams[index] = team.Name
 			}
-			input.Draft = &registration.Draft{Name: body.Draft.Name, Sport: body.Draft.Sport, Teams: teams}
+			input.Draft = &registration.Draft{ID: body.Draft.DraftID, Name: body.Draft.Name, Sport: body.Draft.Sport, Teams: teams}
 		}
 		input = registration.NormalizeInput(input)
 		if !validRegistration(input) || input.TermsVersion != legal.CurrentTermsVersion || !validRegistrationDraft(input.Draft) {
@@ -1540,7 +1579,7 @@ func validRegistrationDraft(draft *registration.Draft) bool {
 	if draft == nil {
 		return true
 	}
-	if (draft.Sport != tournaments.SportFootball && draft.Sport != tournaments.SportBasketball) || len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > tournaments.MaximumTournamentNameLength || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
+	if !uuidPattern.MatchString(draft.ID) || (draft.Sport != tournaments.SportFootball && draft.Sport != tournaments.SportBasketball) || len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > tournaments.MaximumTournamentNameLength || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}

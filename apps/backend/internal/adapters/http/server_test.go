@@ -145,6 +145,8 @@ func (testCreationRepository) GetPublic(context.Context, string) (tournaments.To
 type testRegistrationRepository struct {
 	available    bool
 	loginAccount registration.LocalAccount
+	loginDraft   **registration.Draft
+	loginError   error
 	loginSession registration.Session
 }
 
@@ -182,13 +184,17 @@ func (r testRegistrationRepository) FindLocalAccountForLogin(context.Context, st
 	}
 	return r.loginAccount, nil
 }
-func (r testRegistrationRepository) CreateLocalLoginSession(context.Context, string, []byte, []byte) (registration.Session, error) {
-	return r.loginSession, nil
+func (r testRegistrationRepository) CreateLocalLoginSession(_ context.Context, _ string, _, _ []byte, draft *registration.Draft) (registration.Session, error) {
+	if r.loginDraft != nil {
+		*r.loginDraft = draft
+	}
+	return r.loginSession, r.loginError
 }
 
 type testFederatedRepository struct {
 	challengeErr        error
 	authenticateErr     error
+	authenticateDraft   **federated.Draft
 	addWithTicketErr    error
 	removeWithTicketErr error
 	reauthenticationErr error
@@ -203,7 +209,10 @@ func (v testGoogleVerifier) Verify(context.Context, string) (federated.Identity,
 func (r testFederatedRepository) CreateChallenge(context.Context, []byte, time.Time) (string, error) {
 	return "019abcde-1111-7111-8111-111111111111", r.challengeErr
 }
-func (r testFederatedRepository) AuthenticateGoogle(context.Context, string, []byte, federated.Identity, *federated.Registration, []byte, []byte) (federated.Session, error) {
+func (r testFederatedRepository) AuthenticateGoogle(_ context.Context, _ string, _ []byte, _ federated.Identity, _ *federated.Registration, draft *federated.Draft, _, _ []byte) (federated.Session, error) {
+	if r.authenticateDraft != nil {
+		*r.authenticateDraft = draft
+	}
 	return federated.Session{}, r.authenticateErr
 }
 func (testFederatedRepository) AddGoogleIdentity(context.Context, string, string, []byte, federated.Identity) error {
@@ -342,16 +351,18 @@ func testSpanAttribute(attributes []attribute.KeyValue, key string) string {
 
 func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
 	t.Parallel()
+	var receivedDraft *registration.Draft
 	passwordHash, err := registration.HashPassword("correct horse battery staple")
 	if err != nil {
 		t.Fatalf("crear hash: %v", err)
 	}
 	repository := testRegistrationRepository{
 		loginAccount: registration.LocalAccount{ID: "019abcde-1111-7111-8111-111111111111", PasswordHash: passwordHash, Verified: true},
+		loginDraft:   &receivedDraft,
 		loginSession: registration.Session{AccountID: "019abcde-1111-7111-8111-111111111111", Username: "person", IdleExpiresAt: "2026-08-09T12:00:00Z", RefreshExpiresAt: "2026-09-01T12:00:00Z"},
 	}
 	handler := NewHandler(registration.NewService(repository, nil), nil, testAuthenticator{}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins)
-	request := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/v1/sessions", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","sessionTransport":"bearer"}`))
+	request := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/v1/sessions", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","sessionTransport":"bearer","draft":{"draftId":"019abcde-1111-7111-8111-111111111112","name":" Copa ","sport":"football","teams":[{"name":" Norte "},{"name":"Sur"}]}}`))
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
 
@@ -362,6 +373,29 @@ func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
 	}
 	if !strings.Contains(recorder.Body.String(), `"delivery":"bearer"`) || !strings.Contains(recorder.Body.String(), `"sessionToken"`) || !strings.Contains(recorder.Body.String(), `"refreshToken"`) {
 		t.Errorf("body = %s, want bearer session tokens", recorder.Body.String())
+	}
+	if receivedDraft == nil || receivedDraft.ID != "019abcde-1111-7111-8111-111111111112" || receivedDraft.Name != "Copa" || receivedDraft.Teams[0] != "Norte" {
+		t.Errorf("draft = %#v, want normalized tournament", receivedDraft)
+	}
+}
+
+func TestCreateGoogleSessionPassesDraftForExistingIdentity(t *testing.T) {
+	t.Parallel()
+	var receivedDraft *federated.Draft
+	repository := testFederatedRepository{authenticateDraft: &receivedDraft}
+	service := federated.NewService(repository, testGoogleVerifier{identity: federated.Identity{
+		Issuer: federated.GoogleIssuer, Subject: "subject", Email: "person@example.test", Nonce: "nonce", EmailVerified: true,
+	}})
+	request := httptest.NewRequest(http.MethodPost, "/v1/google-sessions", strings.NewReader(`{"challengeId":"019abcde-1111-7111-8111-111111111111","idToken":"google-token","sessionTransport":"bearer","draft":{"draftId":"019abcde-1111-7111-8111-111111111112","name":"Copa Google","sport":"basketball","teams":[{"name":"Uno"},{"name":"Dos"}]}}`))
+	recorder := httptest.NewRecorder()
+
+	createGoogleSession(service, sessionCookies(false)).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", recorder.Code, recorder.Body.String())
+	}
+	if receivedDraft == nil || receivedDraft.ID != "019abcde-1111-7111-8111-111111111112" || receivedDraft.Name != "Copa Google" || receivedDraft.Sport != tournaments.SportBasketball {
+		t.Fatalf("draft = %#v, want basketball tournament", receivedDraft)
 	}
 }
 
@@ -887,6 +921,7 @@ func TestValidRegistrationDraftEnforcesTournamentNameCharacterLimit(t *testing.T
 	t.Parallel()
 
 	draft := &registration.Draft{
+		ID:    "019abcde-1111-7111-8111-111111111112",
 		Name:  strings.Repeat("a", tournaments.MaximumTournamentNameLength),
 		Sport: tournaments.SportFootball,
 		Teams: []string{"Azules", "Rojos"},
@@ -894,6 +929,11 @@ func TestValidRegistrationDraftEnforcesTournamentNameCharacterLimit(t *testing.T
 	if !validRegistrationDraft(draft) {
 		t.Fatalf("validRegistrationDraft() rejected %d characters", tournaments.MaximumTournamentNameLength)
 	}
+	draft.ID = ""
+	if validRegistrationDraft(draft) {
+		t.Error("validRegistrationDraft() accepted a transferred draft without draftId")
+	}
+	draft.ID = "019abcde-1111-7111-8111-111111111112"
 	draft.Name += "a"
 	if validRegistrationDraft(draft) {
 		t.Errorf("validRegistrationDraft() accepted %d characters", tournaments.MaximumTournamentNameLength+1)

@@ -16,11 +16,17 @@ import { control, radius, space } from "@tournaments-manager/design-tokens";
 import googleLogo from "../../../../assets/google-g.png";
 
 import { GoogleAuthenticationError } from "@/features/federated-google/api";
+import type { TournamentDraftInput } from "@/api/generated/models";
 import {
   authenticateLocalAccount,
   LocalAuthenticationError,
 } from "@/features/local-authentication/api";
 import { useGoogleAuthentication } from "@/features/federated-google/use-google-authentication";
+import {
+  clearLocalTournamentDraft,
+  getLocalTournamentDraft,
+  toTournamentDraftInput,
+} from "@/features/league-creation/draft";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -56,9 +62,17 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
   const { height: viewportHeight } = useWindowDimensions();
   const { completeSessionReplacement, signOut, user } = useSession();
   const { confirm } = useConfirmationDialog();
+  const [draft, setDraft] = useState<TournamentDraftInput>();
   const completeAccountSessionReplacement = useCallback(
-    (nextUser: Parameters<typeof completeSessionReplacement>[0]) =>
-      completeSessionReplacement(nextUser, sessionReplacementDestination),
+    (nextUser: Parameters<typeof completeSessionReplacement>[0], createdTournament = false) => {
+      if (!createdTournament) {
+        completeSessionReplacement(nextUser, sessionReplacementDestination);
+        return;
+      }
+      void clearLocalTournamentDraft().finally(() =>
+        completeSessionReplacement(nextUser, "/tournaments"),
+      );
+    },
     [completeSessionReplacement, sessionReplacementDestination],
   );
   const tabContentBottomPadding = useTabContentBottomPadding();
@@ -87,16 +101,27 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
     requiresUsername,
     start: startGoogleAuthentication,
   } = useGoogleAuthentication({
+    draft,
     locale: getCurrentLanguage(),
     onSession: completeAccountSessionReplacement,
   });
   const emailError = !isEmail(email) ? t("validation_email") : undefined;
-  const passwordError = password ? undefined : t("validation_password_required");
+  const passwordError = !password
+    ? t("validation_password_required")
+    : password.length < 8
+      ? t("validation_password_length")
+      : undefined;
   const googleUsernameError = !googleUsername.trim()
     ? t("validation_username_required")
     : !googleUsernameIsValid
       ? t("validation_username_format")
       : undefined;
+
+  useEffect(() => {
+    void getLocalTournamentDraft().then((localDraft) =>
+      setDraft(toTournamentDraftInput(localDraft)),
+    );
+  }, []);
 
   useEffect(() => {
     if (!googleError) return;
@@ -129,6 +154,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
     setIsSigningIn(true);
     try {
       const result = await authenticateLocalAccount({
+        ...(draft ? { draft } : {}),
         email,
         password,
         sessionTransport: Platform.OS === "web" ? "cookie" : "bearer",
@@ -137,7 +163,7 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
         show({ kind: "success", message: t("account_login_verification_sent") });
         return;
       }
-      completeAccountSessionReplacement(result.user);
+      completeAccountSessionReplacement(result.user, result.createdTournament);
     } catch (error) {
       if (error instanceof LocalAuthenticationError) {
         show({ kind: "generic-error", message: t("account_login_invalid_credentials") });

@@ -417,6 +417,7 @@ paths:
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
     get:
       tags: [Session]
       operationId: getCurrentSession
@@ -493,6 +494,7 @@ paths:
         "409":
           description: La identidad es nueva, pero su email ya pertenece a otra cuenta; no se vincula ni se crea sesión.
           $ref: "#/components/responses/VerificationConflictProblem"
+        "500": { $ref: "#/components/responses/RequestProblem" }
         "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
   /me/tournaments:
     get:
@@ -961,6 +963,9 @@ components:
     ServiceUnavailableProblem:
       description: Operación temporalmente no disponible.
       content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    RequestProblem:
+      description: La operación no pudo completarse por un fallo interno seguro.
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
     AccountDeletionConflictProblem:
       description: La cuenta todavía organiza algún torneo.
       content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
@@ -1087,6 +1092,22 @@ components:
           minItems: 2
           maxItems: 64
           items: { $ref: "#/components/schemas/TeamInput" }
+    TournamentDraftInput:
+      type: object
+      additionalProperties: false
+      required: [draftId, name, sport, teams]
+      properties:
+        draftId:
+          type: string
+          format: uuid
+          description: Identidad estable del borrador usada para deduplicar reintentos por cuenta.
+        name: { type: string, minLength: 1, maxLength: 56 }
+        sport: { type: string, enum: [football, basketball] }
+        teams:
+          type: array
+          minItems: 2
+          maxItems: 64
+          items: { $ref: "#/components/schemas/TeamInput" }
     RegisterRequest:
       type: object
       required: [email, password, username, locale, termsVersion]
@@ -1100,7 +1121,7 @@ components:
           enum: ["2026-08-22"]
         draft:
           description: Borrador local válido transferido junto al alta; es opcional.
-          allOf: [{ $ref: "#/components/schemas/TournamentInput" }]
+          allOf: [{ $ref: "#/components/schemas/TournamentDraftInput" }]
     Locale:
       type: string
       enum: [es, en, it, fr]
@@ -1117,6 +1138,12 @@ components:
         email: { $ref: "#/components/schemas/Email" }
         password: { $ref: "#/components/schemas/Password" }
         sessionTransport: { $ref: "#/components/schemas/Transport" }
+        draft:
+          description: >-
+            Torneo local válido que se crea atómicamente con una sesión exitosa;
+            una cuenta pendiente que recibe 202 no lo transfiere. Repetir el
+            mismo draftId para la misma cuenta no duplica el torneo.
+          allOf: [{ $ref: "#/components/schemas/TournamentDraftInput" }]
     User:
       type: object
       required: [id, username]
@@ -1251,8 +1278,11 @@ components:
           type: string
           enum: ["2026-08-22"]
         draft:
-          description: Torneo válido transferido únicamente al crear una cuenta Google nueva.
-          allOf: [{ $ref: "#/components/schemas/TournamentInput" }]
+          description: >-
+            Torneo local válido creado atómicamente con la cuenta Google nueva o
+            con la sesión de una identidad Google ya vinculada. Repetir el mismo
+            draftId para la misma cuenta no duplica el torneo.
+          allOf: [{ $ref: "#/components/schemas/TournamentDraftInput" }]
     StartTournamentRequest:
       oneOf:
         - type: object

@@ -1,4 +1,5 @@
 import { router, Stack } from "expo-router";
+import { randomUUID } from "expo-crypto";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View, type TextInput } from "react-native";
 
@@ -38,6 +39,8 @@ export default function CreateTournamentScreen() {
   const [name, setName] = useState("");
   const [sport, setSport] = useState<TournamentSport>("football");
   const [teams, setTeams] = useState(["", ""]);
+  const [draftId, setDraftId] = useState(() => randomUUID());
+  const [draftLoaded, setDraftLoaded] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const teamInputRefs = useRef<Record<number, TextInput | null>>({});
@@ -46,15 +49,17 @@ export default function CreateTournamentScreen() {
   useEffect(() => {
     void getLocalTournamentDraft().then((draft) => {
       if (draft) {
+        setDraftId(draft.draftId);
         setName(draft.name);
         setSport(draft.sport);
         setTeams(draft.teams.length >= 2 ? draft.teams : ["", ""]);
       }
+      setDraftLoaded(true);
     });
   }, []);
   useEffect(() => {
-    void saveLocalTournamentDraft({ name, sport, teams });
-  }, [name, sport, teams]);
+    if (draftLoaded) void saveLocalTournamentDraft({ draftId, name, sport, teams });
+  }, [draftId, draftLoaded, name, sport, teams]);
   useEffect(() => {
     if (teamToFocus === undefined) return;
     teamInputRefs.current[teamToFocus]?.focus();

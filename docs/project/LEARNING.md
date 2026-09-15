@@ -87,7 +87,7 @@
   solo admite `seeded_team`, `winner` y `bye`. Grupos, cupos y combinaciones se
   añadirán después de aceptar sus reglas, no como valores permisivos sin dominio.
 - **Prueba reutilizable:** cubrir todos los tamaños de 2 a 64 garantiza que un
-  cuadro termina en `n-1` partidos disputados, sin parejas de dos *byes* y sin
+  cuadro termina en `n-1` partidos disputados, sin parejas de dos _byes_ y sin
   ninguna rama que acepte un resultado empatado o un participante desconocido.
 
 ## 2026-09-06 — Un hito de producto no depende de que todas las plataformas estén distribuidas
@@ -3165,3 +3165,36 @@ K3s y también que sus componentes base siguen sanos.
   superficies y comparten `space[4]` con el primer contenido. Las cards repetidas
   mantienen `space[5]` entre sí para no compactar también la colección, y los
   bloques principales usan `space[6]` para que cada sección conserve su límite.
+
+### 2026-09-15 — Una intención de acceso compuesta necesita un solo commit
+
+- **Aprendido:** encadenar en el cliente «iniciar sesión» y «crear torneo» puede
+  confirmar la identidad aunque falle la operación que motivó el acceso. El
+  borrador local evita perder los campos, pero no satisface la promesa de que el
+  torneo ya quedó asociado.
+- **Regla reutilizable:** cuando dos escrituras pertenecen a una misma intención
+  y comparten PostgreSQL, el DTO puede transportar el dato opcional y el
+  repositorio debe confirmar sesión y agregado en una sola transacción. No se
+  introduce una saga mientras no existan límites distribuidos. El cliente borra
+  su copia recuperable solo después del éxito.
+
+### 2026-09-15 — La validación del login debe coincidir en ambos bordes
+
+- **Aprendido:** aceptar en cliente una contraseña no vacía cuando el contrato
+  exige al menos ocho caracteres convierte un error corregible en un `400` con
+  feedback genérico. Ese rechazo ocurre antes del limitador y puede confundirse
+  con un bloqueo por intentos.
+- **Regla reutilizable:** el cliente replica las restricciones de formato que
+  ayudan a corregir el formulario; el backend vuelve a validarlas como frontera
+  no confiable. Solo un `429` contractual se presenta como límite de intentos.
+
+### 2026-09-15 — Atomicidad e idempotencia protegen fallos distintos
+
+- **Aprendido:** una transacción evita confirmar la sesión sin el torneo, pero
+  una respuesta perdida después del commit permite que el cliente repita una
+  intención ya aplicada. Comparar el contenido no identifica esa intención y
+  puede mezclar torneos legítimamente iguales.
+- **Regla reutilizable:** una creación recuperable conserva una clave opaca
+  estable desde el primer borrador y PostgreSQL impone su unicidad dentro del
+  propietario. El conflicto se resuelve dentro de la misma transacción y no se
+  exportan la clave ni el contenido como telemetría.

@@ -163,8 +163,15 @@ no puede publicar ni realizar acciones protegidas. Véase
 ### Login
 
 1. La persona demuestra su identidad mediante contraseña o Google.
-2. El cliente obtiene una sesión apropiada para web o mobile.
-3. El backend autoriza cada acción sobre recursos concretos.
+2. Si existe un borrador local completo, el cliente puede incluirlo en la misma operación.
+3. El backend crea atómicamente la sesión y, cuando se envió, el torneo con sus equipos.
+4. Repetir la operación con el mismo borrador y cuenta reutiliza el torneo ya creado.
+5. El cliente descarta el borrador local solo al confirmar el éxito.
+6. El backend autoriza cada acción posterior sobre recursos concretos.
+
+Una cuenta local pendiente conserva el `202` sin sesión y no transfiere el
+borrador mediante login. La garantía transaccional de acceso y torneo está
+aceptada en [ADR-0127](../adr/0127-create-tournament-atomically-with-login-session.md).
 
 Google es un método de acceso vinculado al mismo usuario interno. Añadir o cambiar
 un email de contacto no reemplaza el vínculo con el proveedor.

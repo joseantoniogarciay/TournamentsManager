@@ -113,6 +113,18 @@ abrir el deep link, después de retirar el token de la URL, y reemplaza la sesi�
 preexistente si la hubiera. Un login correcto de cuenta pendiente invalida el token activo y
 solicita otro correo, sin crear sesión.
 
+Cuando una cuenta verificada inicia sesión con contraseña o Google, la petición
+puede incluir un torneo local completo. PostgreSQL crea el torneo, sus equipos y
+la sesión en una sola transacción; cualquier fallo revierte el conjunto. El
+cliente conserva el borrador hasta recibir el éxito. Esta garantía amplía a los
+logins la atomicidad que ya existía durante el alta, sin hacer que Google ni el
+cliente decidan autorización. Véase
+[ADR-0127](../adr/0127-create-tournament-atomically-with-login-session.md).
+
+El borrador conserva además un `draftId` aleatorio estable. El identificador no
+es una credencial ni concede acceso: solo permite que PostgreSQL reconozca la
+misma intención para la misma cuenta y evite duplicar el torneo tras un reintento.
+
 ## Subject de Apple y Google
 
 En un login federado, el frontend puede recibir un identificador y un token, pero
@@ -216,6 +228,7 @@ guarde contraseñas largas.
 - [OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0.html)
 - [RFC 9110: métodos seguros](https://www.rfc-editor.org/rfc/rfc9110.html#name-safe-methods)
 - [OWASP: Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)
+
 # Métodos de acceso administrados
 
 ADR-0094 completa la gestión de Google y contraseña: una cuenta conserva siempre

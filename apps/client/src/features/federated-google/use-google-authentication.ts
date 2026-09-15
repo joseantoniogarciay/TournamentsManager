@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 
 import type {
   GoogleLoginChallenge,
-  TournamentInput,
+  TournamentDraftInput,
   Locale,
   Username,
 } from "@/api/generated/models";
@@ -45,7 +45,7 @@ export function useGoogleAuthentication({
   draft,
   onSession,
 }: {
-  draft?: TournamentInput;
+  draft?: TournamentDraftInput;
   locale: Locale;
   onSession: (user: { id: string; username: string }, createdTournament: boolean) => void;
 }) {
@@ -105,7 +105,7 @@ export function useGoogleAuthentication({
         ...input,
         locale: username ? locale : undefined,
         termsVersion: username ? "2026-08-22" : undefined,
-        draft: username ? draft : undefined,
+        draft,
         sessionTransport,
         username,
       });
@@ -115,7 +115,7 @@ export function useGoogleAuthentication({
       }
       setChallenge(null);
       setPendingAccount(null);
-      onSession(result.session.user, Boolean(username && draft));
+      onSession(result.session.user, Boolean(draft));
     },
     [draft, locale, onSession, sessionTransport],
   );

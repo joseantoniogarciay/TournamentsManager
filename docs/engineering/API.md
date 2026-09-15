@@ -126,6 +126,15 @@ restricciones de `TournamentInput`; crea un torneo `published` asociado a la cue
 pendiente. Solo se expone en `GET /me/tournaments` cuando una verificación concede
 una sesión válida.
 
+`POST /sessions` y `POST /google-sessions` aceptan también `draft` opcional. Si
+la operación devuelve `200`, el torneo `published`, sus equipos y la sesión se
+han confirmado en una sola transacción; si falla cualquiera de esas escrituras,
+no se entrega ni persiste la sesión. El `202` de una cuenta local pendiente no
+transfiere el borrador. El cliente solo elimina su copia local tras el `200`
+(ADR-0127). El DTO transferible añade un `draftId` UUID estable. La combinación
+de cuenta organizadora y `draftId` es única: repetir la misma intención después
+de perder una respuesta puede emitir otra sesión, pero no otro torneo ni equipos.
+
 `TournamentInput` exige `sport: football | basketball`; no existe valor implícito
 en el contrato nuevo. La proyección pública devuelve el mismo enum y métricas de
 clasificación neutrales (`scoreFor`, `scoreAgainst`, `scoreDifference`). Un
@@ -139,7 +148,7 @@ dominio; OpenAPI solo expresa los datos y valores admitidos (ADR-0126).
 `format: single_elimination` prohíbe ese campo porque el cuadro es siempre a
 partido único. El inicio crea una fase ordenada y todos sus partidos. En una
 eliminatoria, cada plaza declara si parte de un equipo sembrado, de la ganadora
-de otro partido o de un *bye*; por eso la proyección puede explicar participantes
+de otro partido o de un _bye_; por eso la proyección puede explicar participantes
 aún desconocidos sin IDs ficticios. El primer corte admite una sola fase por
 torneo, aunque la pertenencia `Tournament -> Stage -> Match` evita otra
 migración cuando se acepten liga/grupos más eliminatoria.

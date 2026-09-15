@@ -24,7 +24,7 @@ import { TermsAcceptance } from "@/shared/legal/terms-acceptance";
 import {
   clearLocalTournamentDraft,
   getLocalTournamentDraft,
-  toTournamentInput,
+  toTournamentDraftInput,
 } from "@/features/league-creation/draft";
 
 export default function RegisterScreen() {
@@ -66,7 +66,7 @@ export default function RegisterScreen() {
 
     setIsSubmitting(true);
     try {
-      const draft = toTournamentInput(await getLocalTournamentDraft());
+      const draft = toTournamentDraftInput(await getLocalTournamentDraft());
       await registerLocalAccountRequest({
         ...(draft ? { draft } : {}),
         email: email.trim(),

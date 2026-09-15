@@ -62,6 +62,7 @@ type Input struct {
 
 // Draft represents a complete draft crossing the registration boundary.
 type Draft struct {
+	ID    string
 	Name  string
 	Sport tournaments.Sport
 	Teams []string
@@ -78,7 +79,7 @@ type Repository interface {
 	InspectPasswordReset(context.Context, []byte) (string, error)
 	ConsumePasswordReset(context.Context, []byte, string, []byte, []byte) (Session, error)
 	FindLocalAccountForLogin(context.Context, string) (LocalAccount, error)
-	CreateLocalLoginSession(context.Context, string, []byte, []byte) (Session, error)
+	CreateLocalLoginSession(context.Context, string, []byte, []byte, *Draft) (Session, error)
 	RenewLoginVerification(context.Context, string, []byte) (string, Locale, error)
 }
 
@@ -116,7 +117,7 @@ type LoginResult struct {
 }
 
 // Login verifies a local credential and creates a session, or renews pending verification.
-func (s Service) Login(ctx context.Context, email, password string) (LoginResult, error) {
+func (s Service) Login(ctx context.Context, email, password string, draft *Draft) (LoginResult, error) {
 	account, err := s.repository.FindLocalAccountForLogin(ctx, strings.TrimSpace(email))
 	if err != nil || !s.passwordProtector.Verify(ctx, password, account.PasswordHash) {
 		return LoginResult{}, ErrLoginInvalid
@@ -145,7 +146,11 @@ func (s Service) Login(ctx context.Context, email, password string) (LoginResult
 	accessToken, refreshToken := base64.RawURLEncoding.EncodeToString(access), base64.RawURLEncoding.EncodeToString(refresh)
 	accessHash := sha256.Sum256([]byte("session:" + accessToken))
 	refreshHash := sha256.Sum256([]byte("refresh:" + refreshToken))
-	session, err := s.repository.CreateLocalLoginSession(ctx, account.ID, accessHash[:], refreshHash[:])
+	if draft != nil {
+		normalized := NormalizeInput(Input{Draft: draft})
+		draft = normalized.Draft
+	}
+	session, err := s.repository.CreateLocalLoginSession(ctx, account.ID, accessHash[:], refreshHash[:], draft)
 	if err != nil {
 		return LoginResult{}, err
 	}

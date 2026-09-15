@@ -7,10 +7,13 @@
  */
 import type { Email } from "./email.js";
 import type { Password } from "./password.js";
+import type { TournamentDraftInput } from "./tournamentDraftInput.js";
 import type { Transport } from "./transport.js";
 
 export interface LoginRequest {
   email: Email;
   password: Password;
   sessionTransport: Transport;
+  /** Torneo local válido que se crea atómicamente con una sesión exitosa; una cuenta pendiente que recibe 202 no lo transfiere. Repetir el mismo draftId para la misma cuenta no duplica el torneo. */
+  draft?: TournamentDraftInput;
 }

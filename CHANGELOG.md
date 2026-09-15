@@ -27,11 +27,22 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- Los accesos con contraseña y Google pueden transferir el torneo local: torneo,
+  equipos y sesión se confirman ahora en una sola transacción, y el cliente
+  conserva el borrador si la operación falla. Cada borrador mantiene un
+  `draftId` y los reintentos para la misma cuenta no duplican el torneo.
 - El resumen de actividad reciente de Inicio muestra como máximo tres torneos
   para conservar espacio para nuevas acciones útiles en la home.
 - El recurso canónico migra de `leagues` a `tournaments` en base de datos,
   dominio, OpenAPI, cliente y enlaces. La liga a una o dos vueltas continúa
   disponible como formato `league`; no se conservan rutas antiguas.
+
+### Fixed
+
+- El login valida también la longitud mínima de la contraseña en el cliente para
+  no presentar un rechazo de formato como un problema genérico del servicio.
+- El adaptador Google acepta la forma `TournamentInput` del contrato, incluidos
+  sus equipos como objetos, al transferir un borrador.
 
 ## [1.2.0] - 2026-09-06
 
