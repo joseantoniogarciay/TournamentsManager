@@ -3209,3 +3209,14 @@ K3s y también que sus componentes base siguen sanos.
   se revisan también las subidas transitivas elegidas por Minimal Version
   Selection y se repiten tests, build y `govulncheck`; no se desactiva el gate
   para recuperar una CI verde.
+
+### 2026-09-15 — Los tipos de consulta no son el modelo de dominio
+
+- **Aprendido:** `sqlc` puede generar tanto `...Params` y `...Row` ajustados a
+  consultas reales como structs que reflejan tablas completas. Los primeros sí
+  forman parte del adaptador PostgreSQL; los segundos son código muerto cuando
+  ninguna consulta los devuelve.
+- **Regla reutilizable:** el dominio conserva tipos propios y el adaptador mapea
+  a los tipos de consulta generados. Se activa `omit_unused_structs` para no
+  generar espejos de tabla sin consumidores, sin eliminar los parámetros ni los
+  resultados que hacen tipado el acceso SQL.

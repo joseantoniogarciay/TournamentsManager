@@ -27,6 +27,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- `sqlc` deja de generar structs completos para tablas que ninguna consulta
+  utiliza; conserva los tipos `...Params` y `...Row` específicos del acceso SQL.
 - Los accesos con contraseña y Google pueden transferir el torneo local: torneo,
   equipos y sesión se confirman ahora en una sola transacción, y el cliente
   conserva el borrador si la operación falla. Cada borrador mantiene un

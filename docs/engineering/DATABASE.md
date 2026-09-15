@@ -89,9 +89,20 @@ de runtime y verificarlos antes de publicar.
 
 ## Límite con el dominio
 
-Los tipos de filas generados por `sqlc` representan persistencia, no entidades de
-negocio. El adaptador realiza mapeos explícitos cuando el dominio necesite tipos
-o invariantes propios.
+La frontera usa tres clases de tipos con responsabilidades distintas:
+
+- los paquetes de dominio y caso de uso definen sus propios `Input`, entidades y
+  resultados para expresar reglas sin depender de PostgreSQL;
+- `sqlc` genera `...Params` y `...Row` específicos de cada consulta; el adaptador
+  PostgreSQL los usa para ejecutar SQL y realizar el escaneo tipado;
+- los structs que reflejan una tabla completa solo se generan si alguna consulta
+  los devuelve. `omit_unused_structs` evita mantener espejos de tablas que no
+  participan en el código.
+
+Los tipos generados por `sqlc` representan persistencia, no entidades de negocio.
+El adaptador realiza mapeos explícitos entre ambos lados cuando el dominio
+necesite tipos o invariantes propios. Que un `...Params` o `...Row` se utilice no
+autoriza a propagarlo fuera del adaptador.
 
 Las transacciones se definen desde el caso de uso. No se añade una abstracción
 genérica de unit of work o repository antes de que proteja un límite real.

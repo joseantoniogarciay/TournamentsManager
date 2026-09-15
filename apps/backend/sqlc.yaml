@@ -13,3 +13,4 @@ sql:
         emit_empty_slices: true
         emit_interface: false
         emit_prepared_queries: false
+        omit_unused_structs: true
