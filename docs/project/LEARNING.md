@@ -3198,3 +3198,14 @@ K3s y también que sus componentes base siguen sanos.
   estable desde el primer borrador y PostgreSQL impone su unicidad dentro del
   propietario. El conflicto se resuelve dentro de la misma transacción y no se
   exportan la clave ni el contenido como telemetría.
+
+### 2026-09-15 — Un gate de vulnerabilidades depende de conocimiento externo mutable
+
+- **Aprendido:** una revisión local puede pasar y el mismo commit fallar después
+  cuando la base de vulnerabilidades publica una incidencia nueva. No es deriva
+  del código ni un falso positivo por sí mismo: el gate está reevaluando el
+  grafo fijado con evidencia de seguridad más reciente.
+- **Regla reutilizable:** se actualiza a la primera versión parcheada indicada,
+  se revisan también las subidas transitivas elegidas por Minimal Version
+  Selection y se repiten tests, build y `govulncheck`; no se desactiva el gate
+  para recuperar una CI verde.

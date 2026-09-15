@@ -44,6 +44,11 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - El adaptador Google acepta la forma `TournamentInput` del contrato, incluidos
   sus equipos como objetos, al transferir un borrador.
 
+### Security
+
+- `google.golang.org/grpc` sube a `v1.83.1`, que corrige el agotamiento de
+  memoria mediante fragmentación de frames HTTP/2 descrito por `GO-2026-6348`.
+
 ## [1.2.0] - 2026-09-06
 
 ### Added
