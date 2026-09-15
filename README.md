@@ -64,6 +64,7 @@ La guía de recorrido y organización del backend está en
 - [ARCHITECTURE.md](docs/engineering/ARCHITECTURE.md)
 - [DEVELOPMENT.md](docs/engineering/DEVELOPMENT.md)
 - [DATABASE.md](docs/engineering/DATABASE.md)
+- [Mapa entidad-relación de PostgreSQL](docs/diagrams/database-erd.md)
 - [API.md](docs/engineering/API.md)
 - [IDENTITY.md](docs/engineering/IDENTITY.md)
 - [SECURITY.md](docs/engineering/SECURITY.md)

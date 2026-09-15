@@ -3220,3 +3220,14 @@ K3s y también que sus componentes base siguen sanos.
   a los tipos de consulta generados. Se activa `omit_unused_structs` para no
   generar espejos de tabla sin consumidores, sin eliminar los parámetros ni los
   resultados que hacen tipado el acceso SQL.
+
+### 2026-09-15 — Un ERD explica el esquema, pero no lo sustituye
+
+- **Aprendido:** el inventario textual de entidades permite buscar detalles,
+  pero no muestra de un vistazo tablas puente, cardinalidades ni efectos de
+  borrado. Un único gráfico con todas las columnas también pierde utilidad por
+  saturación.
+- **Regla reutilizable:** el mapa visual se divide por límites reconocibles,
+  comparte las entidades que conectan las vistas y muestra solo claves y campos
+  orientativos. El SQL y las migraciones siguen siendo la fuente ejecutable y el
+  diagrama declara hasta qué versión los representa.

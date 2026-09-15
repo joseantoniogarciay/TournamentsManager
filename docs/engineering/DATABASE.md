@@ -37,6 +37,10 @@ consultas y produce funciones, parámetros, resultados y escaneo tipados. `pgx`
 es el driver que comunica Go con PostgreSQL. Goose se activará para evolucionar
 el esquema fuera del arranque normal cuando haya datos que conservar.
 
+El [mapa entidad-relación](../diagrams/database-erd.md) ofrece una vista visual
+de las tablas y claves foráneas vigentes. Es una ayuda de navegación; el esquema
+SQL y sus migraciones continúan siendo la fuente de verdad ejecutable.
+
 ## PostgreSQL local
 
 [ADR-0076](../adr/0076-run-the-local-api-in-compose-with-air.md) implementa

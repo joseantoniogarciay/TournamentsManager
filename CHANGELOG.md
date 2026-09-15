@@ -8,6 +8,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Mapa entidad-relación versionable del PostgreSQL vigente, dividido entre
+  identidad/acceso y torneos/competición, con claves, cardinalidades y políticas
+  de borrado enlazadas desde el README.
 - Fútbol y baloncesto son perfiles deportivos explícitos elegidos al crear el
   torneo. Baloncesto incorpora tanteos sin empate, clasificación 2-1-0,
   desempate directo y retirada administrativa fija 20-0; fútbol conserva 3-1-0
