@@ -16,9 +16,17 @@ source "$operator_environment"
 : "${K3S_PGBACKREST_REPLICA_DESTINATION:?K3S_PGBACKREST_REPLICA_DESTINATION is required}"
 : "${PGBACKREST_REPO1_CIPHER_PASS:?set PGBACKREST_REPO1_CIPHER_PASS interactively}"
 
-if [[ ! -f "$K3S_PGBACKREST_REPLICA_DESTINATION/backup/fasttourney-prod/backup.info" ]]; then
-  echo "missing pgBackRest backup metadata in replica" >&2
+publisher=${K3S_PGBACKREST_PUBLISHER:-"$HOME/Library/Application Support/FastTourney/k3s/BackupPublisher.app/Contents/MacOS/BackupPublisher"}
+stage_root=${K3S_PGBACKREST_STAGE_ROOT:-"$HOME/Library/Application Support/FastTourney/k3s/staging"}
+
+if [[ ! -x "$publisher" || ! -d "$stage_root" ]]; then
+  echo "missing configured BackupPublisher or its restore staging directory; run install-backup-launch-agents.sh and configure the helper" >&2
   exit 66
+fi
+
+if ! ssh -o BatchMode=yes "$K3S_SSH_USER@$K3S_SSH_HOST" 'sudo -n true' >/dev/null; then
+  echo "cannot authenticate the K3s operator over SSH; load the dedicated key into ssh-agent and verify sudo access" >&2
+  exit 67
 fi
 
 if ! printf '%s\n' "$PGBACKREST_REPO1_CIPHER_PASS" | \
@@ -28,10 +36,13 @@ if ! printf '%s\n' "$PGBACKREST_REPO1_CIPHER_PASS" | \
   exit 65
 fi
 
+restore_replica_directory=$(mktemp -d "$stage_root/.prod-restore.XXXXXX")
 restore_volume="tournaments-manager-prod-postgresql-restore-verify-$$"
+"$publisher" stage-restore "$restore_replica_directory"
 docker volume create "$restore_volume" >/dev/null
 cleanup() {
   docker volume rm -f "$restore_volume" >/dev/null 2>&1 || true
+  rm -rf -- "$restore_replica_directory"
 }
 trap cleanup EXIT
 
@@ -41,7 +52,7 @@ docker run --rm \
   --env PGBACKREST_REPO1_CIPHER_PASS \
   --env POSTGRES_USER=postgres \
   --env POSTGRES_DB=fasttourney_prod \
-  --volume "$K3S_PGBACKREST_REPLICA_DESTINATION:/var/lib/pgbackrest:ro" \
+  --volume "$restore_replica_directory:/var/lib/pgbackrest:ro" \
   --mount "type=volume,src=$restore_volume,dst=/restore" \
   tournaments-manager-postgresql:18.4-pgbackrest-2.59.1 \
   sh -ec '

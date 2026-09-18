@@ -1,5 +1,45 @@
 # Registro de aprendizaje
 
+## 2026-09-18 — Cerrar una versión no impide nuevos incrementos
+
+- **Aprendido:** un producto puede cerrar su v1 cuando cumple su objetivo y sus
+  controles operativos, aunque mantenga espacio para evolucionar. Tratar cada
+  idea posterior como deuda del cierre confunde un hito terminado con un backlog
+  ilimitado.
+- **Regla reutilizable:** una nueva feature comienza como incremento de producto:
+  problema, alternativas, decisión explícita, ADR si cambia reglas, datos o
+  operación, y validación proporcional. Una GitHub Release versionada requiere
+  además el proceso trazable de ADR-0119; declarar un cierre interno no la
+  sustituye.
+
+## 2026-09-18 — Una fase de aprendizaje puede terminar al alcanzar su objetivo
+
+- **Aprendido:** una dirección tecnológica futura no es una obligación. Tras
+  operar K3s con publicación, observabilidad y recuperación demostrada, AWS
+  añadiría superficie de mantenimiento y coste sin responder a una necesidad
+  actual.
+- **Regla reutilizable:** cerrar un itinerario cuando su objetivo verificable se
+  cumple y conservar las alternativas estudiadas como conocimiento histórico.
+  Reabrir cloud exige una necesidad concreta y una nueva autorización, no la
+  inercia de un roadmap. Véase ADR-0128.
+
+## 2026-09-18 — Una réplica accesible para macOS no siempre es montable por Docker
+
+- **Aprendido:** los metadatos de una réplica en iCloud Drive pueden ser
+  legibles para macOS y aun así producir un error de E/S cuando Docker Desktop
+  intenta montar directamente esa ruta en su VM. Dar Full Disk Access a Bash
+  sería una respuesta amplia e innecesaria.
+- **Regla reutilizable:** un helper sandboxed con security-scoped bookmarks
+  puede copiar la réplica cifrada de iCloud a su staging local autorizado; el
+  contenedor de restauración monta solo esa copia temporal de lectura. Separar
+  la autorización de macOS, el staging y el volumen efímero de PostgreSQL
+  conserva el mínimo privilegio y demuestra recuperación sin tocar el PVC
+  activo. La precomprobación SSH debe ejecutarse antes de pedir secretos, para
+  no diagnosticar una clave ausente como una frase de cifrado inválida.
+- **Evidencia:** el 2026-09-18 la restauración desde la réplica publicada
+  terminó con `fasttourney_prod|f`. Véanse ADR-0114, ADR-0115 y el runbook de
+  PostgreSQL en K3s.
+
 ## 2026-09-13 — Compartir un marcador no implica compartir sus reglas
 
 - **Aprendido:** fútbol y baloncesto pueden reutilizar dos enteros para el

@@ -4,7 +4,7 @@ Los cambios relevantes del handbook, producto y operación se registran aquí. E
 formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed` y
 `Security` cuando existan releases.
 
-## [Unreleased]
+## [1.3.0] - 2026-09-18
 
 ### Added
 
@@ -30,6 +30,15 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Changed
 
+- Se declara cerrada la v1 del producto y el roadmap de aprendizaje tras K3s.
+  Las capacidades posteriores serán incrementos de producto independientes; un
+  tag o GitHub Release futuro seguirá el proceso de ADR-0119.
+- El roadmap termina tras la Fase 4 de K3s. La Fase AWS queda cancelada: no se
+  crearán recursos, cuentas ni estado cloud sin una nueva decisión explícita.
+- La verificación de restauración de `prod` prepara la réplica cifrada de
+  iCloud mediante el helper con bookmarks y la monta desde su staging local,
+  evitando permisos TCC amplios y errores de E/S de Docker Desktop. Antes de
+  pedir la frase de cifrado confirma el acceso SSH del operador.
 - `sqlc` deja de generar structs completos para tablas que ninguna consulta
   utiliza; conserva los tipos `...Params` y `...Row` específicos del acceso SQL.
 - Los accesos con contraseña y Google pueden transferir el torneo local: torneo,

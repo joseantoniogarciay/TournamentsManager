@@ -1,6 +1,6 @@
 # Despliegue e infraestructura
 
-> Estado: dirección objetivo definida; diseños concretos pendientes de fases.
+> Estado: Fase 4 completada en K3s doméstico; Fase 5 AWS cancelada por ADR-0128.
 
 ## Progresión
 
@@ -9,7 +9,7 @@
 3. dependencias locales en Docker Compose;
 4. servicio instrumentado y recuperable;
 5. Kubernetes con K3s en una VM Linux local;
-6. laboratorio EKS efímero en AWS mediante Terraform.
+6. sin laboratorio cloud previsto; la Fase AWS fue cancelada por ADR-0128.
 
 Cada salto debe justificar qué capacidad añade y qué coste introduce.
 
@@ -96,45 +96,12 @@ La API se empaquetará como imagen OCI conforme a
 contendrá el backend y mantendrá build y runtime separados. No decide todavía
 la firma, el SBOM ni el escaneo reforzado.
 
-Cuando un laboratorio AWS lo necesite, registry y promoción seguirán
-[ADR-0024](../adr/0024-use-ecr-and-digest-based-image-promotion.md): ECR privado,
-tags inmutables y despliegue por digest. El Mac no necesita imitar un `staging`
-permanente: desarrollo y release doméstico separan datos y configuración, y AWS
-se destruye al acabar cada práctica.
+## Referencia cloud histórica
 
-AWS se usará de forma efímera para aprender y validar Terraform, EKS, red,
-observabilidad y destrucción controlada, conforme a
-[ADR-0088](../adr/0088-use-ephemeral-aws-learning-and-home-runtime.md) y
-[ADR-0111](../adr/0111-use-k3s-vm-for-home-production-runtime.md). El runtime
-doméstico de `prod` será K3s en la VM del Mac; AWS no se mantiene como producción
-permanente sin una nueva decisión basada en usuarios, disponibilidad o coste.
-
-La infraestructura de esa fase se describirá con Terraform conforme a
-[ADR-0025](../adr/0025-use-terraform-for-infrastructure-as-code.md). Esta
-elección no fija todavía una cuenta, backend de estado, bloqueo, región, red ni
-proveedor configurado; esas decisiones se tomarán antes de cualquier `apply`.
-
-La fundación AWS seguirá [ADR-0026](../adr/0026-use-aws-organizations-and-temporary-identities.md):
-`management` centraliza gobierno y facturación sin cargas; `nonprod` alojará
-los futuros `dev` y `staging`, y `prod` producción. El acceso humano y de
-automatización será temporal; el backend de estado sigue pendiente.
-
-Conforme a [ADR-0027](../adr/0027-keep-local-state-until-first-cloud-apply.md)
-y [ADR-0028](../adr/0028-use-hcp-terraform-free-for-remote-state.md), el estado
-es local solo mientras no haya infraestructura AWS real y HCP Terraform Free
-será su backend remoto inicial. Los runs permanecerán inicialmente en la CLI
-local; no hay auto-apply ni recursos AWS autorizados hasta abrir la Fase 5 y
-verificar bloqueo, recuperación y acceso. Git no se usará para almacenar estado.
-
-La topología de entrada y egress de EKS se decidirá antes del primer
-laboratorio cloud. ADR-0029 queda superado parcialmente porque su diseño partía
-de tareas Fargate. Antes del primer `apply` se revisará y autorizará el coste
-completo de cómputo, red, datos, IPv4, logs y transferencia.
-
-ADR-0030 fija la región futura en España (`eu-south-2`), una VPC `/16` no
-solapada por cuenta y dos AZ con dos subredes públicas y dos privadas. Este mapa
-no genera coste: el gasto seguirá bloqueado hasta presentar una estimación
-completa y recibir autorización explícita del usuario.
+ADR-0024 a ADR-0030, ADR-0088 y ADR-0101 conservan el análisis previo de ECR,
+Terraform, IAM, red y laboratorios AWS/EKS. ADR-0128 cancela su ejecución en
+este proyecto: no hay cuenta, backend remoto, `apply`, laboratorio ni gasto
+cloud previsto. Solo una necesidad futura explícita reabriría ese análisis.
 
 ## Decisiones por fase
 
@@ -249,7 +216,8 @@ La observabilidad de terceros se añade después mediante Helm, con charts y
 valores versionados; no se instala inicialmente un operador ni un chart propio
 de toda la plataforma.
 
-### Fase 5
+### Fase 5 — cancelada
 
-Terraform, cuenta AWS, identidad, bootstrap y estado remoto, topología EKS,
-datos, storage, observabilidad, CI/CD, coste y recuperación.
+Terraform, cuenta AWS, identidad, bootstrap y laboratorio EKS no se activarán
+en este proyecto. Este material se conserva como referencia histórica y solo se
+reabrirá mediante la decisión explícita y el análisis de coste de ADR-0128.

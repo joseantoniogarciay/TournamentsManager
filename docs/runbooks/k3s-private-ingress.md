@@ -1,11 +1,14 @@
 # Ingress privado de la API en K3s
 
-> Estado: aplicado y verificado el 2026-09-01.
+> Estado: aplicado y verificado el 2026-09-01; publicado a través de Caddy y
+> Cloudflare el 2026-09-05.
 
 ## Límite
 
-Este módulo crea el Ingress interno de `prod`. No modifica Caddy, Cloudflare
-Tunnel ni el `503` de `api.fasttourney.com`; por tanto no publica producción.
+Este módulo crea el Ingress interno de `prod`. Su aplicación inicial no modifica
+Caddy ni Cloudflare Tunnel; la publicación posterior configura el proxy de
+borde autenticado descrito más abajo. El manifiesto no expone puertos en la LAN
+ni en la WAN.
 
 ## Aplicación y comprobación
 
@@ -26,7 +29,8 @@ curl --fail --resolve api.fasttourney.com:80:192.168.64.2 \
 ```
 
 El éxito demuestra `VM IP → LoadBalancer → Traefik → Ingress → Service → Pod`.
-No pruebes aún el hostname público: debe seguir devolviendo `503`.
+Antes de la publicación de 2026-09-05, el hostname público siguió devolviendo
+`503`; esa limitación ya no aplica al estado operativo actual.
 
 **Evidencia:** el API server aceptó el dry-run y creó `Ingress/api` con clase
 `traefik`, host `api.fasttourney.com` y dirección privada `192.168.64.2`. Desde
@@ -62,7 +66,8 @@ rollback restaura ambos valores de la misma versión. No cambiar solo un lado.
 
 **Evidencia de publicación, 2026-09-05:** Caddy se validó antes de recargarse;
 el primer intento devolvió `502` mientras el servicio reiniciaba y se restauró
-el `503`. El gate definitivo espera a que el listener loopback esté disponible.
+temporalmente el `503`. Con el listener loopback disponible, se completó el
+gate de publicación.
 Después, `api.fasttourney.com/healthz` devolvió `200` tanto por loopback como a
 través de Cloudflare; las dos réplicas de API estaban `Running` y Prometheus
 conservó `up{job="tournaments-manager-api"}=1`.

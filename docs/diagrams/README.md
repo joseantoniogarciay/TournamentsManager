@@ -21,5 +21,5 @@ versionables, sencillos y enlazar la decisión o documento que representan.
 | [Mapa entidad-relación de PostgreSQL](database-erd.md) | Vigente hasta migración `00008` | [`apps/backend/db`](../../apps/backend/db/)       |
 | Contenedores/componentes                               | Pendiente de diseño             | Fase 2                                            |
 | Despliegue local                                       | Pendiente                       | Fase 1                                            |
-| Despliegue Kubernetes                                  | Pendiente                       | Fase 4                                            |
+| Despliegue Kubernetes                                  | Pendiente de diagramar           | [Retrospectiva de Fase 4](../project/PHASE_4_RETROSPECTIVE.md) |
 | Despliegue AWS                                         | Pendiente                       | Fase 5                                            |
