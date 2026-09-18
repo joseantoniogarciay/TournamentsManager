@@ -1,6 +1,6 @@
 import { router, type Href, useFocusEffect } from "expo-router";
 import Head from "expo-router/head";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
@@ -9,12 +9,13 @@ import { radius, space } from "@tournaments-manager/design-tokens";
 import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
 import { isStaticWebRender } from "@/shared/i18n/is-static-web-render";
-import { listRecentRelatedLeagues } from "@/features/league-creation/api";
-import { LeagueCard } from "@/features/league-creation/components/league-card";
+import { listRecentRelatedTournaments } from "@/features/league-creation/api";
+import { TournamentCard } from "@/features/league-creation/components/league-card";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { ProductAnalyticsPreferenceCard } from "@/shared/preferences/product-analytics-preference-card";
+import { SuggestionCard } from "@/features/suggestions/components/suggestion-card";
 import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
 import { Button, Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
@@ -25,12 +26,11 @@ export default function HomeScreen() {
   const { show } = useFeedback();
   const tabContentBottomPadding = useTabContentBottomPadding();
   const t = getTranslator();
-  const [recentLeagues, setRecentLeagues] = useState<
-    Awaited<ReturnType<typeof listRecentRelatedLeagues>>
+  const [recentTournaments, setRecentTournaments] = useState<
+    Awaited<ReturnType<typeof listRecentRelatedTournaments>>
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const loadedAccountID = useRef<string | null>(null);
   const showGuestHome = !user && (!isRestoring || isStaticWebRender());
 
   useEffect(() => {
@@ -41,13 +41,13 @@ export default function HomeScreen() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const loadRecentLeagues = useCallback(
+  const loadRecentTournaments = useCallback(
     async (isManualRefresh = false) => {
       if (!user) return;
       if (isManualRefresh) setIsRefreshing(true);
       else setIsLoading(true);
       try {
-        setRecentLeagues(await listRecentRelatedLeagues());
+        setRecentTournaments(await listRecentRelatedTournaments());
       } catch (error) {
         if (error instanceof APISessionInvalidatedError) return;
         const failure = getRequestFailure(error);
@@ -63,16 +63,13 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!user) {
-        loadedAccountID.current = null;
-        setRecentLeagues([]);
+        setRecentTournaments([]);
         setIsLoading(false);
         setIsRefreshing(false);
         return;
       }
-      if (loadedAccountID.current === user.id) return;
-      loadedAccountID.current = user.id;
-      void loadRecentLeagues();
-    }, [loadRecentLeagues, user]),
+      void loadRecentTournaments();
+    }, [loadRecentTournaments, user]),
   );
 
   return (
@@ -81,12 +78,14 @@ export default function HomeScreen() {
       <Screen bottomInset="none">
         <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
         <ScrollView
+          automaticallyAdjustKeyboardInsets
           key={revision}
           contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
+          keyboardShouldPersistTaps="handled"
           refreshControl={
             user ? (
               <RefreshControl
-                onRefresh={() => void loadRecentLeagues(true)}
+                onRefresh={() => void loadRecentTournaments(true)}
                 refreshing={isRefreshing}
                 colors={[colors.indicator.default]}
                 tintColor={colors.indicator.default}
@@ -110,21 +109,34 @@ export default function HomeScreen() {
           </Card>
 
           {user ? (
-            <View style={styles.recentSection}>
-              <Text style={styles.recentTitle} variant="title">
+            <View style={styles.homeSection}>
+              <Text style={styles.sectionTitle} variant="title">
                 {t("home_recent_leagues_title")}
               </Text>
-              {isLoading ? (
-                <Text color="secondary" style={styles.recentEmpty}>
-                  {t("common_loading")}
-                </Text>
-              ) : recentLeagues.length === 0 ? (
-                <View style={styles.recentEmpty}>
-                  <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
-                </View>
-              ) : (
-                recentLeagues.map((league) => <LeagueCard key={league.id} league={league} />)
-              )}
+              <View style={styles.recentContent}>
+                {isLoading ? (
+                  <Text color="secondary" style={styles.recentEmpty}>
+                    {t("common_loading")}
+                  </Text>
+                ) : recentTournaments.length === 0 ? (
+                  <View style={styles.recentEmpty}>
+                    <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
+                  </View>
+                ) : (
+                  recentTournaments.map((league) => (
+                    <TournamentCard key={league.id} league={league} />
+                  ))
+                )}
+              </View>
+            </View>
+          ) : null}
+
+          {user ? (
+            <View style={styles.homeSection}>
+              <Text style={styles.sectionTitle} variant="title">
+                {t("home_suggestion_title")}
+              </Text>
+              <SuggestionCard />
             </View>
           ) : null}
 
@@ -242,11 +254,12 @@ function Step({
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { gap: space[5] },
+  content: { gap: space[6] },
   hero: { gap: space[4] },
+  homeSection: { gap: space[4] },
+  recentContent: { gap: space[5] },
   recentEmpty: { alignItems: "center", paddingHorizontal: space[5], textAlign: "center" },
-  recentSection: { gap: space[5] },
-  recentTitle: { marginHorizontal: space[5] },
+  sectionTitle: { marginHorizontal: space[5] },
   section: { gap: space[2] },
   steps: { gap: space[5] },
   step: { flexDirection: "row", gap: space[3] },

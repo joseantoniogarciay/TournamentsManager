@@ -106,7 +106,7 @@ activó y resolvió la alerta crítica real en local; la entrega externa de `dev
 se verificó mediante Alertmanager, Resend, Cloudflare y el buzón final. Véase la
 [retrospectiva de Fase 3](PHASE_3_RETROSPECTIVE.md).
 
-## Fase 4 — Kubernetes
+## Fase 4 — Kubernetes — completada
 
 **Objetivo:** aprender orquestación cuando el servicio ya sea operable.
 
@@ -126,19 +126,24 @@ están aceptados en ADR-0110; el destino doméstico de `prod`, en ADR-0111.
 ADR-0112 fija el orden de entrega: manifiestos propios para aprender el core y
 Helm para la observabilidad de terceros una vez ese core esté verificado.
 ADR-0114 fija que el repositorio pgBackRest propio de `prod` se replica desde la
-VM al Mac por SSH, sin carpeta compartida ni clave del Mac en Kubernetes. Quedan
-aprovisionamiento reproducible de la VM, health checks, recursos de los
-workloads, configuración, secretos y estrategia de despliegue.
+VM al Mac por SSH, sin carpeta compartida ni clave del Mac en Kubernetes. La VM,
+health checks, recursos, configuración, secretos y estrategia de despliegue ya
+están aplicados. La restauración aislada desde la réplica publicada se demostró
+el 2026-09-18 y una ejecución incremental programada terminó correctamente el
+mismo día.
 
-**Salida:** despliegue local reproducible, recuperación demostrada y comparación
-documentada frente a Docker Compose.
+**Salida:** completada. El despliegue local es reproducible, la recuperación se
+demostró desde la réplica publicada y la comparación con Docker Compose quedó
+documentada. Véase la [retrospectiva de Fase 4](PHASE_4_RETROSPECTIVE.md).
 
 ### Itinerario de aprendizaje y entrega de K3s
 
 Este itinerario permanece vigente entre sesiones. Cada módulo se cierra con:
 problema operativo, concepto Kubernetes, comparación con Compose, manifiestos
 explicados, verificación, fallo controlado cuando proceda y retrospectiva breve.
-No autoriza a publicar `prod` hasta completar los gates de ADR-0111.
+La publicación de los hosts de `prod` se completó el 2026-09-05 tras superar
+los gates de ADR-0111; cada cambio posterior conserva su plan de verificación y
+rollback.
 
 1. **Host y control plane:** verificar VM, servicio K3s, `kubectl`, nodo y
    almacenamiento local; distinguir host, runtime de contenedores y control
@@ -152,9 +157,11 @@ No autoriza a publicar `prod` hasta completar los gates de ADR-0111.
    recuperación de pods frente al arranque de contenedores de Compose.
 5. **PostgreSQL con estado:** usar `StatefulSet` y `PersistentVolumeClaim`;
    estudiar identidad, orden y persistencia, y por qué difiere de la API.
-6. **Recuperación de datos:** aplicar a `prod` el patrón pgBackRest de ADR-0108
-   con volumen, repositorio y clave propios; replicarlo por SSH conforme a
-   ADR-0114 y demostrar una restauración aislada desde la réplica recibida.
+6. **Recuperación de datos — completado el 2026-09-18:** aplicar a `prod` el
+   patrón pgBackRest de ADR-0108 con volumen, repositorio y clave propios;
+   replicarlo por SSH conforme a ADR-0114 y demostrar una restauración aislada
+   desde la réplica recibida. La restauración confirmó `fasttourney_prod|f`
+   desde el staging autorizado por el helper, nunca desde el PVC activo.
 7. **Entrada pública:** enrutar Cloudflare Tunnel → Caddy → ingress K3s;
    diferenciar exposición interna por `Service` del enrutamiento HTTP por
    `Ingress` y conservar la ausencia de puertos LAN/WAN.
@@ -162,23 +169,34 @@ No autoriza a publicar `prod` hasta completar los gates de ADR-0111.
    versionados para los componentes de terceros; recorrer logs, eventos,
    métricas, alertas, rollouts y rollbacks; provocar fallos controlados de API
    y dependencia. No se introduce un operador inicialmente.
-9. **Gate de publicación:** comprobar persistencia, restauración, secretos,
+9. **Gate de publicación — completado el 2026-09-05:** comprobar persistencia, restauración, secretos,
    recursos/probes, ingress, rollback y alertas antes de retirar el `503` de
-   los hosts de producción.
+   los hosts de producción. `fasttourney.com` y `api.fasttourney.com` quedan
+   abiertos a través de Cloudflare Tunnel y Caddy; el rollback de la API vuelve
+   a `503` sin modificar K3s ni los datos.
 
-## Fase 5 — Cloud
+## Fase 5 — Cloud — cancelada
 
-**Objetivo:** desplegar y operar en AWS mediante Terraform sin acoplar el dominio
-al proveedor.
-
-**Decisiones previas:** cuenta y seguridad, red, cómputo, datos, almacenamiento,
-coste, backup, CI/CD y estrategia de rollback.
-
-**Salida:** infraestructura reproducible, despliegue verificable, observabilidad,
-presupuesto y procedimiento de recuperación documentados.
+La Fase 5 se cancela mediante ADR-0128. AWS, Terraform y HCP Terraform no se
+configurarán ni crearán recursos para este proyecto. Las decisiones anteriores
+se conservan como conocimiento histórico, no como trabajo pendiente. Una
+necesidad futura de cloud requerirá un nuevo análisis de coste y autorización
+explícita del usuario.
 
 ## Retrospectiva obligatoria
 
 Cada fase termina usando
 [phase-retrospective.md](../playbooks/phase-retrospective.md). Sus conclusiones
 actualizan `LEARNING.md`, el handbook y, si procede, los ADR.
+
+## Cierre de producto v1
+
+La v1 queda cerrada el 2026-09-18: el roadmap de aprendizaje termina tras la
+Fase 4 y ADR-0128 cancela la Fase AWS. Explorar nuevas capacidades no reabre
+fases ya cerradas ni convierte el producto en incompleto; cada una inicia un
+incremento de producto con problema, alternativas, decisión explícita y la
+validación proporcional correspondiente.
+
+Este cierre no crea por sí mismo un tag o GitHub Release. Cuando se decida
+publicar un nuevo hito versionado, se seguirá ADR-0119 sobre un commit integrado
+en `main`, con validación y artefacto trazable.

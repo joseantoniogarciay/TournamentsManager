@@ -110,29 +110,57 @@ La fuente de verdad de diseño es
 Usa OpenAPI 3.1, prefijo `/v1` y `application/problem+json` conforme a RFC 9457.
 Incluye alta, reenvío y confirmación de verificación, login, sesión actual y
 logout; la baja programada de cuenta se incorporará conforme a ADR-0074. Incluye
-también consulta del borrador verificado, colecciones autenticadas de ligas
-relacionadas y recientes, publicación y lectura pública por ID. `GET /me/leagues` pagina por
+también consulta del borrador verificado, colecciones autenticadas de torneos
+relacionados y recientes, publicación y lectura pública por ID.
+`GET /me/tournaments` pagina por
 UUIDv7 y filtra en el servidor las relaciones `administered` y `followed`; la
-segunda excluye una liga ya administrada para que la UI no la duplique. Véase
+segunda excluye un torneo ya administrado para que la UI no lo duplique. Véase
 [ADR-0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md).
-`GET /me/recent-leagues` devuelve como máximo cinco relaciones sin duplicados,
-ordenadas por actividad de liga; no es una colección paginada. Véase
+`GET /me/recent-tournaments` devuelve como máximo cinco relaciones sin duplicados,
+ordenadas por actividad del torneo; no es una colección paginada. Véase
 [ADR-0073](../adr/0073-show-recent-related-leagues-on-home.md).
 El alta exige identidad local y un locale efectivo de `es`, `en`, `it` o `fr`;
 el backend lo valida y lo persiste como preferencia de cuenta para localizar
 emails. El borrador es opcional y, si se envía, debe cumplir íntegramente las
-restricciones de `LeagueInput`; crea una liga `published` asociada a la cuenta
-pendiente. Solo se expone en `GET /me/leagues` cuando una verificación concede
+restricciones de `TournamentInput`; crea un torneo `published` asociado a la cuenta
+pendiente. Solo se expone en `GET /me/tournaments` cuando una verificación concede
 una sesión válida.
 
-`POST /leagues/{leagueId}/cancel` expresa la transición de cancelación, igual
+`POST /sessions` y `POST /google-sessions` aceptan también `draft` opcional. Si
+la operación devuelve `200`, el torneo `published`, sus equipos y la sesión se
+han confirmado en una sola transacción; si falla cualquiera de esas escrituras,
+no se entrega ni persiste la sesión. El `202` de una cuenta local pendiente no
+transfiere el borrador. El cliente solo elimina su copia local tras el `200`
+(ADR-0127). El DTO transferible añade un `draftId` UUID estable. La combinación
+de cuenta organizadora y `draftId` es única: repetir la misma intención después
+de perder una respuesta puede emitir otra sesión, pero no otro torneo ni equipos.
+
+`TournamentInput` exige `sport: football | basketball`; no existe valor implícito
+en el contrato nuevo. La proyección pública devuelve el mismo enum y métricas de
+clasificación neutrales (`scoreFor`, `scoreAgainst`, `scoreDifference`). Un
+partido completado declara `resultType: played | administrative`: baloncesto
+rechaza tanteos finales empatados y penaltis, mientras fútbol conserva el empate
+de liga y los penaltis de una eliminatoria empatada. Las reglas pertenecen al
+dominio; OpenAPI solo expresa los datos y valores admitidos (ADR-0126).
+
+`POST /v1/tournaments/{tournamentId}/start` exige una unión discriminada. Para
+`format: league` requiere `roundRobinLegs: 1 | 2`; para
+`format: single_elimination` prohíbe ese campo porque el cuadro es siempre a
+partido único. El inicio crea una fase ordenada y todos sus partidos. En una
+eliminatoria, cada plaza declara si parte de un equipo sembrado, de la ganadora
+de otro partido o de un _bye_; por eso la proyección puede explicar participantes
+aún desconocidos sin IDs ficticios. El primer corte admite una sola fase por
+torneo, aunque la pertenencia `Tournament -> Stage -> Match` evita otra
+migración cuando se acepten liga/grupos más eliminatoria.
+
+`POST /tournaments/{tournamentId}/cancel` expresa la transición de cancelación, igual
 que el inicio usa una operación explícita y no una mutación implícita de la
 lectura pública. Exige sesión de la organizadora y CSRF cuando se entrega por
 cookie; no recibe cuerpo ni motivo. Devuelve la proyección pública conservada
 en estado `cancelled`. Solo `published` e `in_progress` admiten la transición;
 
-`POST /v1/leagues/{leagueId}/transfer` recibe el `username` de una cuenta
-verificada distinta y solo admite a la organizadora actual. Bloquea la liga y
+`POST /v1/tournaments/{tournamentId}/transfer` recibe el `username` de una cuenta
+verificada distinta y solo admite a la organizadora actual. Bloquea el torneo y
 cambia su propiedad atómicamente, sin alterar equipos, partidos, resultados ni
 las demás administraciones. La destinataria deja de ser administradora delegada
 si ya lo era, recibe una notificación interna y la anterior organizadora pierde
@@ -161,7 +189,7 @@ funcionar en el futuro; por ello no se admite el comodín `*`.
 
 Las operaciones protegidas pasan por middleware de sesión: acepta cookie o
 Bearer, nunca ambas credenciales a la vez, y deja el ID de cuenta en el contexto
-interno. La autorización por liga permanece en el caso de uso. Las mutaciones
+interno. La autorización por torneo permanece en el caso de uso. Las mutaciones
 por cookie aplican una protección CSRF independiente y solo confían en los
 orígenes exactos ya validados en `CORS_ALLOWED_ORIGINS`; Bearer no usa ese
 control porque no viaja automáticamente con el navegador. Véase
@@ -169,36 +197,48 @@ control porque no viaja automáticamente con el navegador. Véase
 
 ## Resultados de partidos
 
-`PUT /v1/leagues/{leagueId}/matches/{matchId}/result` acepta únicamente dos
-enteros no negativos (`homeScore`, `awayScore`). Exige a la organizadora o una
-administradora delegada y una liga `in_progress`; aplica el marcador de inmediato y devuelve la
+`PUT /v1/tournaments/{tournamentId}/matches/{matchId}/result` acepta dos
+enteros no negativos (`homeScore`, `awayScore`). En eliminatoria, un empate
+exige además `homePenaltyScore` y `awayPenaltyScore`, distintos entre sí; una
+liga no acepta penaltis. Exige a la organizadora o una administradora delegada
+y un torneo `in_progress`; aplica el marcador de inmediato y devuelve la
 proyección pública actualizada. Cada escritura se conserva internamente con el
 marcador anterior, autora e instante, conforme a ADR-0035 a ADR-0037. El
 historial no se expone todavía como una funcionalidad de disputa o restauración.
 
-`GET /v1/leagues/{leagueId}` y las respuestas de inicio, cancelación y resultado
+`GET /v1/tournaments/{tournamentId}` y las respuestas de inicio, cancelación y resultado
 incluyen `standings`, una proyección calculada por el dominio a partir de los
 marcadores persistidos y las vueltas configuradas. El cliente no recalcula ni
 ordena la tabla. Una futura victoria de torneo en perfil se derivará de la misma
 fuente al finalizar la liga; no se aceptan títulos enviados por cliente. Véase
 [ADR-0081](../adr/0081-calculate-league-standings-in-the-backend.md).
 
-`POST /v1/leagues/{leagueId}/complete` pertenece únicamente a la organizadora.
-Solo acepta una liga en curso cuyos partidos estén todos resueltos; el backend
-recalcula la tabla bajo el bloqueo de la transición, guarda todos los equipos de
-posición 1 —incluidos co-campeones— y devuelve la proyección final. El cliente
-no envía ni elige una ganadora. Véanse ADR-0039 y ADR-0082.
+`POST /v1/tournaments/{tournamentId}/complete` pertenece únicamente a la
+organizadora. Solo acepta un torneo en curso cuyos partidos estén todos
+resueltos. En liga recalcula la tabla bajo bloqueo y guarda todos los equipos de
+posición 1 —incluidos co-campeones—; en eliminatoria guarda la ganadora de la
+final. El cliente no envía ni elige una ganadora. Véanse ADR-0039, ADR-0082 y
+ADR-0122.
 
-`POST /v1/leagues/{leagueId}/teams/{teamId}/withdraw` expresa una baja durante
+`POST /v1/tournaments/{tournamentId}/teams/{teamId}/withdraw` expresa una baja durante
 una liga en curso. Solo la organizadora puede ejecutarla una vez por equipo: la
-transacción conserva el equipo, completa todos sus partidos como `3-0` para el
-rival, registra cada sustitución en el historial y devuelve la proyección con
-la clasificación recalculada. Una repetición o una liga fuera de curso devuelve
-`409`. Véase ADR-0041.
+transacción conserva el equipo, completa todos sus partidos con el resultado
+administrativo del deporte (`3-0` en fútbol o `20-0` en baloncesto), registra
+cada sustitución y su tipo en el historial y devuelve la proyección con la
+clasificación recalculada. Una repetición o una liga fuera de curso devuelve
+`409`. Véanse ADR-0041 y ADR-0126.
 
 El cliente muestra feedback específico solo cuando el contrato ofrece una
 recuperación distinta; errores no tratados, `5xx` y respuestas inválidas usan el
 mensaje seguro común.
+
+## Sugerencias privadas
+
+`POST /v1/me/suggestions` exige sesión y acepta un único `body` de 8 a 1.000
+caracteres tras retirar espacios exteriores. El cuarto envío de la misma cuenta
+durante una hora devuelve `429` y `Retry-After`; la validación devuelve `400`.
+Un `201` significa que PostgreSQL ya conserva la sugerencia. El intento posterior
+de correo es secundario y no modifica esa respuesta si SMTP falla.
 
 ## Validación y generación
 

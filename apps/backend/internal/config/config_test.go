@@ -104,6 +104,25 @@ func TestLoadRejectsEmailSubjectPrefixWithNewline(t *testing.T) {
 	}
 }
 
+func TestLoadRejectsInvalidSuggestionRecipient(t *testing.T) {
+	t.Parallel()
+
+	_, err := load(func(key string) string {
+		return map[string]string{
+			databaseURLEnv:         "postgres://localhost:5432/tournaments",
+			httpAddrEnv:            "127.0.0.1:8080",
+			smtpAddrEnv:            "127.0.0.1:1025",
+			smtpFromEnv:            "no-reply@example.test",
+			publicBaseURLEnv:       "http://127.0.0.1:8080",
+			corsAllowedOriginsEnv:  "http://localhost:8082",
+			suggestionRecipientEnv: "not-an-email",
+		}[key]
+	})
+	if err == nil || !strings.Contains(err.Error(), suggestionRecipientEnv) {
+		t.Fatalf("load() error = %v, want error mentioning %s", err, suggestionRecipientEnv)
+	}
+}
+
 func TestLoadRejectsInvalidOTELTracesEndpoint(t *testing.T) {
 	t.Parallel()
 

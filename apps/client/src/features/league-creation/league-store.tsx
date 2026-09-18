@@ -8,16 +8,16 @@ import {
 } from "react";
 import { useSyncExternalStore } from "react";
 
-import type { PublicLeague } from "@/api/generated/models";
+import type { PublicTournament } from "@/api/generated/models";
 
-import { getLeague } from "./api";
+import { getTournament } from "./api";
 
 type Listener = () => void;
 
-class LeagueStore {
-  private readonly leagues = new Map<string, PublicLeague>();
+class TournamentStore {
+  private readonly leagues = new Map<string, PublicTournament>();
   private readonly listeners = new Map<string, Set<Listener>>();
-  private readonly loading = new Map<string, Promise<PublicLeague>>();
+  private readonly loading = new Map<string, Promise<PublicTournament>>();
 
   get(id: string | undefined) {
     return id ? this.leagues.get(id) : undefined;
@@ -34,12 +34,12 @@ class LeagueStore {
     };
   }
 
-  put(league: PublicLeague) {
+  put(league: PublicTournament) {
     this.leagues.set(league.id, league);
     this.listeners.get(league.id)?.forEach((listener) => listener());
   }
 
-  update(id: string, updater: (league: PublicLeague) => PublicLeague) {
+  update(id: string, updater: (league: PublicTournament) => PublicTournament) {
     const league = this.leagues.get(id);
     if (league) this.put(updater(league));
   }
@@ -51,7 +51,7 @@ class LeagueStore {
     }
     const pending = this.loading.get(id);
     if (pending) return pending;
-    const request = getLeague(id)
+    const request = getTournament(id)
       .then((league) => {
         this.put(league);
         return league;
@@ -62,45 +62,49 @@ class LeagueStore {
   }
 }
 
-type LeagueStoreValue = {
-  loadLeague: (id: string) => Promise<PublicLeague>;
-  putLeague: (league: PublicLeague) => void;
-  refreshLeague: (id: string) => Promise<PublicLeague>;
-  updateLeague: (id: string, updater: (league: PublicLeague) => PublicLeague) => void;
-  store: LeagueStore;
+type TournamentStoreValue = {
+  loadTournament: (id: string) => Promise<PublicTournament>;
+  putTournament: (league: PublicTournament) => void;
+  refreshTournament: (id: string) => Promise<PublicTournament>;
+  updateTournament: (id: string, updater: (league: PublicTournament) => PublicTournament) => void;
+  store: TournamentStore;
 };
 
-const LeagueStoreContext = createContext<LeagueStoreValue | null>(null);
+const TournamentStoreContext = createContext<TournamentStoreValue | null>(null);
 
-export function LeagueStoreProvider({ children }: PropsWithChildren) {
-  const store = useRef(new LeagueStore()).current;
-  const loadLeague = useCallback((id: string) => store.load(id), [store]);
-  const refreshLeague = useCallback((id: string) => store.load(id, true), [store]);
-  const putLeague = useCallback((league: PublicLeague) => store.put(league), [store]);
-  const updateLeague = useCallback(
-    (id: string, updater: (league: PublicLeague) => PublicLeague) => store.update(id, updater),
+export function TournamentStoreProvider({ children }: PropsWithChildren) {
+  const store = useRef(new TournamentStore()).current;
+  const loadTournament = useCallback((id: string) => store.load(id), [store]);
+  const refreshTournament = useCallback((id: string) => store.load(id, true), [store]);
+  const putTournament = useCallback((league: PublicTournament) => store.put(league), [store]);
+  const updateTournament = useCallback(
+    (id: string, updater: (league: PublicTournament) => PublicTournament) =>
+      store.update(id, updater),
     [store],
   );
   const value = useMemo(
-    () => ({ loadLeague, putLeague, refreshLeague, store, updateLeague }),
-    [loadLeague, putLeague, refreshLeague, store, updateLeague],
+    () => ({ loadTournament, putTournament, refreshTournament, store, updateTournament }),
+    [loadTournament, putTournament, refreshTournament, store, updateTournament],
   );
-  return <LeagueStoreContext.Provider value={value}>{children}</LeagueStoreContext.Provider>;
+  return (
+    <TournamentStoreContext.Provider value={value}>{children}</TournamentStoreContext.Provider>
+  );
 }
 
-function useLeagueStoreContext() {
-  const context = useContext(LeagueStoreContext);
-  if (!context) throw new Error("LeagueStoreProvider is required");
+function useTournamentStoreContext() {
+  const context = useContext(TournamentStoreContext);
+  if (!context) throw new Error("TournamentStoreProvider is required");
   return context;
 }
 
-export function useLeagueStore() {
-  const { loadLeague, putLeague, refreshLeague, updateLeague } = useLeagueStoreContext();
-  return { loadLeague, putLeague, refreshLeague, updateLeague };
+export function useTournamentStore() {
+  const { loadTournament, putTournament, refreshTournament, updateTournament } =
+    useTournamentStoreContext();
+  return { loadTournament, putTournament, refreshTournament, updateTournament };
 }
 
-export function useLeague(id: string | undefined) {
-  const { store } = useLeagueStoreContext();
+export function useTournament(id: string | undefined) {
+  const { store } = useTournamentStoreContext();
   return useSyncExternalStore(
     useCallback((listener: Listener) => store.subscribe(id, listener), [id, store]),
     useCallback(() => store.get(id), [id, store]),
@@ -108,6 +112,6 @@ export function useLeague(id: string | undefined) {
   );
 }
 
-export function useLeagueState(id: string, fallback: PublicLeague["state"]) {
-  return useLeague(id)?.state ?? fallback;
+export function useTournamentState(id: string, fallback: PublicTournament["state"]) {
+  return useTournament(id)?.state ?? fallback;
 }

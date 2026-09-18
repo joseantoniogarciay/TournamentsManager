@@ -275,8 +275,8 @@ make dev-up
 y Mailpit estén saludables y mantiene los logs en primer plano. El servicio API
 selecciona el target Docker `dev`: Air recompila y reinicia la API al guardar un
 archivo Go. El contrato `infra/local/api.docker.env` exige `DATABASE_URL`,
-`HTTP_ADDR`, `SMTP_ADDR`, `SMTP_FROM`, `PUBLIC_BASE_URL` y
-`CORS_ALLOWED_ORIGINS`.
+`HTTP_ADDR`, `SMTP_ADDR`, `SMTP_FROM`, `SUGGESTION_RECIPIENT`,
+`PUBLIC_BASE_URL` y `CORS_ALLOWED_ORIGINS`.
 `PUBLIC_BASE_URL` es la URL del cliente a la que llega el correo, no la de la
 API: en local usa `http://localhost:8082`; así el navegador puede usar la
 excepción de desarrollo para cookies `Secure`. Fuera de loopback debe ser HTTPS y

@@ -49,6 +49,13 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0128](../adr/0128-close-roadmap-after-k3s-and-cancel-aws-phase.md)                          | Cerrar el roadmap tras K3s y cancelar la Fase AWS                              | Aceptado              | 2026-09-18 |
+| [0127](../adr/0127-create-tournament-atomically-with-login-session.md)                        | Crear el torneo atómicamente con la sesión de acceso                            | Aceptado              | 2026-09-15 |
+| [0126](../adr/0126-support-football-and-basketball-with-explicit-sport-rules.md)              | Soportar fútbol y baloncesto con reglas deportivas explícitas                   | Aceptado              | 2026-09-13 |
+| [0125](../adr/0125-persist-private-product-suggestions-and-notify-by-email.md)                | Persistir sugerencias privadas y avisar por correo                              | Aceptado              | 2026-09-13 |
+| [0124](../adr/0124-limit-recent-tournaments-to-three.md)                                      | Limitar a tres los torneos recientes de Inicio                                  | Aceptado              | 2026-09-13 |
+| [0123](../adr/0123-model-tournaments-as-ordered-stages.md)                                    | Modelar los torneos como fases ordenadas                                        | Aceptado              | 2026-09-06 |
+| [0122](../adr/0122-use-tournaments-as-root-and-single-elimination-first.md)                   | Usar torneos como recurso raíz y eliminatoria directa como primer formato       | Aceptado              | 2026-09-06 |
 | [0121](../adr/0121-render-social-previews-at-canonical-league-url.md)                         | Renderizar previews sociales en la URL canónica de liga                         | Aceptado              | 2026-09-06 |
 | [0120](../adr/0120-index-public-home-without-indexing-app-routes.md)                          | Indexar la home pública sin indexar las rutas de aplicación                     | Aceptado              | 2026-09-06 |
 | [0119](../adr/0119-version-production-milestones-with-semver-tags-and-github-releases.md)     | Versionar hitos de producción con tags SemVer y GitHub Releases                 | Aceptado              | 2026-09-06 |

@@ -35,7 +35,7 @@ func (r FederatedRepository) CreateChallenge(ctx context.Context, nonceHash []by
 }
 
 // AuthenticateGoogle consumes the challenge and resolves the identity in a transaction.
-func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID string, nonceHash []byte, identity federated.Identity, registration *federated.Registration, accessHash, refreshHash []byte) (federated.Session, error) {
+func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID string, nonceHash []byte, identity federated.Identity, registration *federated.Registration, draft *federated.Draft, accessHash, refreshHash []byte) (federated.Session, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return federated.Session{}, err
@@ -48,6 +48,11 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 
 	account, err := queries.FindGoogleIdentityAccount(ctx, sqlc.FindGoogleIdentityAccountParams{Issuer: identity.Issuer, Subject: identity.Subject})
 	if err == nil {
+		if draft != nil {
+			if err := createTournamentFromDraft(ctx, tx, account.ID.String(), draft.ID, draft.Name, draft.Sport, draft.Teams); err != nil {
+				return federated.Session{}, err
+			}
+		}
 		return createSession(ctx, tx, queries, account.ID, account.Username, accessHash, refreshHash)
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
@@ -73,15 +78,9 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 	if _, err := tx.Exec(ctx, `INSERT INTO legal_account_acceptances (account_id, email_hash, terms_version, terms_content_hash, source) VALUES ($1, $2, $3, $4, 'google_registration')`, accountID, emailHash[:], registration.TermsVersion, legal.CurrentTermsContentHash()); err != nil {
 		return federated.Session{}, err
 	}
-	if registration.Draft != nil {
-		var leagueID string
-		if err := tx.QueryRow(ctx, `INSERT INTO leagues (organizer_account_id, name, state, published_at) VALUES ($1, $2, 'published', now()) RETURNING id::text`, accountID, registration.Draft.Name).Scan(&leagueID); err != nil {
+	if draft != nil {
+		if err := createTournamentFromDraft(ctx, tx, accountID.String(), draft.ID, draft.Name, draft.Sport, draft.Teams); err != nil {
 			return federated.Session{}, err
-		}
-		for position, name := range registration.Draft.Teams {
-			if _, err := tx.Exec(ctx, `INSERT INTO league_teams (league_id, name, name_normalized, position) VALUES ($1, $2, lower($2), $3)`, leagueID, name, position+1); err != nil {
-				return federated.Session{}, err
-			}
 		}
 	}
 	return createSession(ctx, tx, queries, accountID, registration.Username, accessHash, refreshHash)

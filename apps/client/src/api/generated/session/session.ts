@@ -17,6 +17,7 @@ import type {
   ReauthenticationRequest,
   ReauthenticationTicket,
   ReauthenticationTicketRequest,
+  RequestProblemResponse,
   SessionEstablishment,
   ValidationProblemResponse,
   VerificationConflictProblemResponse,
@@ -304,11 +305,19 @@ export type createSessionResponse429 = {
   status: 429;
 };
 
+export type createSessionResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
 export type createSessionResponseSuccess = (createSessionResponse200 | createSessionResponse202) & {
   headers: Headers;
 };
 export type createSessionResponseError = (
-  createSessionResponse400 | createSessionResponse401 | createSessionResponse429
+  | createSessionResponse400
+  | createSessionResponse401
+  | createSessionResponse429
+  | createSessionResponse500
 ) & {
   headers: Headers;
 };

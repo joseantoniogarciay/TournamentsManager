@@ -5,12 +5,12 @@ import "context"
 
 // Item is a notification that can be displayed in an account inbox.
 type Item struct {
-	ID         string  `json:"id"`
-	Kind       string  `json:"kind"`
-	LeagueID   string  `json:"leagueId"`
-	LeagueName string  `json:"leagueName"`
-	CreatedAt  string  `json:"createdAt"`
-	ReadAt     *string `json:"readAt"`
+	ID             string  `json:"id"`
+	Kind           string  `json:"kind"`
+	TournamentID   string  `json:"tournamentId"`
+	TournamentName string  `json:"tournamentName"`
+	CreatedAt      string  `json:"createdAt"`
+	ReadAt         *string `json:"readAt"`
 }
 
 // Repository persists each account's internal inbox.

@@ -5,21 +5,26 @@
 ejecuta esa ruta; no se edita directamente, para que los cambios permanezcan
 revisables en Git.
 
-## Estado inicial seguro
+## Estado y punto de partida
 
 Cloudflare Tunnel termina TLS públicamente y reenvía cada hostname a Caddy por
 `http://127.0.0.1:9080`; Caddy solo escucha en loopback. La primera configuración
 redirige `www` al dominio canónico, sirve la web estática de desarrollo y enlaza
-su API a `127.0.0.1:8081`. Los hosts aún no publicados `fasttourney.com` y
-`api.fasttourney.com` devuelven `503`. No expone API directamente, PostgreSQL
-ni ficheros `.well-known` incompletos.
+su API a `127.0.0.1:8081`. Ese fue el estado inicial seguro: los hosts de
+producción devolvían `503` hasta completar sus gates.
+
+Desde el 2026-09-05, `fasttourney.com` sirve la web de producción y
+`api.fasttourney.com` enruta la API de producción hacia el Ingress de K3s. La
+API continúa sin exponerse directamente: Cloudflare Tunnel llega a Caddy solo
+por loopback, y Caddy se autentica ante K3s con la credencial privada de borde.
+PostgreSQL y los ficheros `.well-known` incompletos no se publican.
 
 No se requieren redirecciones de puertos en UniFi ni DDNS para este flujo. Tras
 validar cada hostname por el túnel, se eliminan los forwards TCP 80/443 y la
 configuración DDNS. Los proxies y archivos reales se añaden solo junto con sus
 respectivos artefactos y configuración.
 
-## Web de producción preparada, aún cerrada
+## Web de producción publicada
 
 `stage-prod-web.sh` exporta un SHA de producción hacia
 `/opt/homebrew/var/www/fasttourney/prod/releases/<SHA>/`, incorpora los dos
@@ -45,7 +50,7 @@ seguro vuelve explícitamente ese bloque a `respond ... 503`, valida y recarga
 Caddy; el procedimiento completo está en el
 [runbook de publicación](../../docs/runbooks/production-web-publication.md).
 
-El documento exacto `/league/{uuid}` se desvía antes del fallback estático al
+El documento exacto `/tournament/{uuid}` se desvía antes del fallback estático al
 renderer externo `league-preview-renderer`; no hay una ruta `/share` ni un
 redirect. El binario se compila con `build-league-preview-renderer.sh` fuera del
 artefacto Expo. Los templates `dev` y `prod` aíslan puerto, enlace `current`,

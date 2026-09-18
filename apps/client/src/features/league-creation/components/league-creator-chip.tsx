@@ -7,7 +7,7 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { Text } from "@/shared/ui";
 
 /** Identifica de forma consistente a la cuenta que creó la liga. */
-export function LeagueCreatorChip() {
+export function TournamentCreatorChip() {
   const t = getTranslator();
   const { colors } = usePreferences();
 

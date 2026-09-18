@@ -3,6 +3,7 @@ package config
 
 import (
 	"fmt"
+	"net/mail"
 	"net/netip"
 	"net/url"
 	"os"
@@ -10,37 +11,39 @@ import (
 )
 
 const (
-	databaseURLEnv        = "DATABASE_URL"
-	httpAddrEnv           = "HTTP_ADDR"
-	smtpAddrEnv           = "SMTP_ADDR"
-	smtpFromEnv           = "SMTP_FROM"
-	smtpUsernameEnv       = "SMTP_USERNAME"
-	smtpPasswordEnv       = "SMTP_PASSWORD"
-	emailSubjectPrefixEnv = "EMAIL_SUBJECT_PREFIX"
-	publicBaseURLEnv      = "PUBLIC_BASE_URL"
-	corsAllowedOriginsEnv = "CORS_ALLOWED_ORIGINS"
-	googleClientIDsEnv    = "GOOGLE_CLIENT_IDS"
-	trustedProxyCIDRsEnv  = "TRUSTED_PROXY_CIDRS"
-	edgeProxyAuthTokenEnv = "EDGE_PROXY_AUTH_TOKEN" // #nosec G101 -- runtime environment variable name, not a credential.
-	otelTracesEndpointEnv = "OTEL_TRACES_ENDPOINT"
+	databaseURLEnv         = "DATABASE_URL"
+	httpAddrEnv            = "HTTP_ADDR"
+	smtpAddrEnv            = "SMTP_ADDR"
+	smtpFromEnv            = "SMTP_FROM"
+	smtpUsernameEnv        = "SMTP_USERNAME"
+	smtpPasswordEnv        = "SMTP_PASSWORD"
+	emailSubjectPrefixEnv  = "EMAIL_SUBJECT_PREFIX"
+	suggestionRecipientEnv = "SUGGESTION_RECIPIENT"
+	publicBaseURLEnv       = "PUBLIC_BASE_URL"
+	corsAllowedOriginsEnv  = "CORS_ALLOWED_ORIGINS"
+	googleClientIDsEnv     = "GOOGLE_CLIENT_IDS"
+	trustedProxyCIDRsEnv   = "TRUSTED_PROXY_CIDRS"
+	edgeProxyAuthTokenEnv  = "EDGE_PROXY_AUTH_TOKEN" // #nosec G101 -- runtime environment variable name, not a credential.
+	otelTracesEndpointEnv  = "OTEL_TRACES_ENDPOINT"
 )
 
 // Config contains only the configuration needed to start the API.
 type Config struct {
-	DatabaseURL        string
-	HTTPAddr           string
-	SMTPAddr           string
-	SMTPFrom           string
-	SMTPUsername       string
-	SMTPPassword       string
-	EmailSubjectPrefix string
-	PublicBaseURL      string
-	CookieSecure       bool
-	CORSAllowedOrigins []string
-	GoogleClientIDs    []string
-	TrustedProxyCIDRs  []netip.Prefix
-	EdgeProxyAuthToken string
-	OTELTracesEndpoint string
+	DatabaseURL         string
+	HTTPAddr            string
+	SMTPAddr            string
+	SMTPFrom            string
+	SMTPUsername        string
+	SMTPPassword        string
+	EmailSubjectPrefix  string
+	SuggestionRecipient string
+	PublicBaseURL       string
+	CookieSecure        bool
+	CORSAllowedOrigins  []string
+	GoogleClientIDs     []string
+	TrustedProxyCIDRs   []netip.Prefix
+	EdgeProxyAuthToken  string
+	OTELTracesEndpoint  string
 }
 
 // Load gets configuration from the environment and fails before opening ports
@@ -84,6 +87,14 @@ func load(getenv func(string) string) (Config, error) {
 	if strings.ContainsAny(emailSubjectPrefix, "\r\n") {
 		return Config{}, fmt.Errorf("%s no puede contener saltos de línea", emailSubjectPrefixEnv)
 	}
+	suggestionRecipient := strings.TrimSpace(getenv(suggestionRecipientEnv))
+	if suggestionRecipient != "" {
+		parsedRecipient, err := mail.ParseAddress(suggestionRecipient)
+		if err != nil || parsedRecipient.Address == "" || strings.ContainsAny(suggestionRecipient, "\r\n") {
+			return Config{}, fmt.Errorf("%s debe contener un email válido", suggestionRecipientEnv)
+		}
+		suggestionRecipient = parsedRecipient.Address
+	}
 	publicBaseURL := getenv(publicBaseURLEnv)
 	parsedPublicURL, err := url.Parse(publicBaseURL)
 	if err != nil || !validPublicBaseURL(parsedPublicURL) {
@@ -108,20 +119,21 @@ func load(getenv func(string) string) (Config, error) {
 	}
 
 	return Config{
-		DatabaseURL:        databaseURL,
-		HTTPAddr:           httpAddr,
-		SMTPAddr:           smtpAddr,
-		SMTPFrom:           smtpFrom,
-		SMTPUsername:       smtpUsername,
-		SMTPPassword:       smtpPassword,
-		EmailSubjectPrefix: emailSubjectPrefix,
-		PublicBaseURL:      publicBaseURL,
-		CookieSecure:       parsedPublicURL.Scheme == "https",
-		CORSAllowedOrigins: corsAllowedOrigins,
-		GoogleClientIDs:    googleClientIDs,
-		TrustedProxyCIDRs:  trustedProxyCIDRs,
-		EdgeProxyAuthToken: edgeProxyAuthToken,
-		OTELTracesEndpoint: otelTracesEndpoint,
+		DatabaseURL:         databaseURL,
+		HTTPAddr:            httpAddr,
+		SMTPAddr:            smtpAddr,
+		SMTPFrom:            smtpFrom,
+		SMTPUsername:        smtpUsername,
+		SMTPPassword:        smtpPassword,
+		EmailSubjectPrefix:  emailSubjectPrefix,
+		SuggestionRecipient: suggestionRecipient,
+		PublicBaseURL:       publicBaseURL,
+		CookieSecure:        parsedPublicURL.Scheme == "https",
+		CORSAllowedOrigins:  corsAllowedOrigins,
+		GoogleClientIDs:     googleClientIDs,
+		TrustedProxyCIDRs:   trustedProxyCIDRs,
+		EdgeProxyAuthToken:  edgeProxyAuthToken,
+		OTELTracesEndpoint:  otelTracesEndpoint,
 	}, nil
 }
 

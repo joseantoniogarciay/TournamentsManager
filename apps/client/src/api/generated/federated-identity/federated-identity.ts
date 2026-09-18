@@ -12,6 +12,7 @@ import type {
   GoogleLoginChallenge,
   RateLimitProblemResponse,
   ReauthenticationTicketRequest,
+  RequestProblemResponse,
   ServiceUnavailableProblemResponse,
   SessionEstablishment,
   ValidationProblemResponse,
@@ -208,6 +209,11 @@ export type createGoogleSessionResponse409 = {
   status: 409;
 };
 
+export type createGoogleSessionResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
 export type createGoogleSessionResponse503 = {
   data: ServiceUnavailableProblemResponse;
   status: 503;
@@ -219,7 +225,10 @@ export type createGoogleSessionResponseSuccess = (
   headers: Headers;
 };
 export type createGoogleSessionResponseError = (
-  createGoogleSessionResponse400 | createGoogleSessionResponse409 | createGoogleSessionResponse503
+  | createGoogleSessionResponse400
+  | createGoogleSessionResponse409
+  | createGoogleSessionResponse500
+  | createGoogleSessionResponse503
 ) & {
   headers: Headers;
 };

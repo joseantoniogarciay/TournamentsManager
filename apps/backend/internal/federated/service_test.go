@@ -23,7 +23,7 @@ type stubRepository struct {
 func (r *stubRepository) CreateChallenge(context.Context, []byte, time.Time) (string, error) {
 	return "019abcde-1111-7111-8111-111111111111", nil
 }
-func (r *stubRepository) AuthenticateGoogle(context.Context, string, []byte, Identity, *Registration, []byte, []byte) (Session, error) {
+func (r *stubRepository) AuthenticateGoogle(context.Context, string, []byte, Identity, *Registration, *Draft, []byte, []byte) (Session, error) {
 	r.authenticateCalled = true
 	return Session{AccountID: "account", Username: "person"}, nil
 }
@@ -48,7 +48,7 @@ func (r *stubRepository) RevokeSessionsForGoogleIdentity(context.Context, RISCEv
 func TestAuthenticateRejectsUnverifiedGoogleEmailBeforeRepository(t *testing.T) {
 	repository := &stubRepository{}
 	service := NewService(repository, stubVerifier{identity: Identity{Issuer: GoogleIssuer, Subject: "subject", Email: "person@example.test", Nonce: "nonce"}})
-	_, err := service.Authenticate(context.Background(), "019abcde-1111-7111-8111-111111111111", "token", nil)
+	_, err := service.Authenticate(context.Background(), "019abcde-1111-7111-8111-111111111111", "token", nil, nil)
 	if !errors.Is(err, ErrChallengeInvalid) {
 		t.Fatalf("Authenticate() error = %v, want challenge invalid", err)
 	}
@@ -72,7 +72,7 @@ func TestAuthenticateRejectsInvalidGoogleIdentityBeforeRepository(t *testing.T) 
 		t.Run(test.name, func(t *testing.T) {
 			repository := &stubRepository{}
 			service := NewService(repository, stubVerifier{identity: test.identity})
-			_, err := service.Authenticate(context.Background(), "019abcde-1111-7111-8111-111111111111", "token", nil)
+			_, err := service.Authenticate(context.Background(), "019abcde-1111-7111-8111-111111111111", "token", nil, nil)
 			if !errors.Is(err, ErrChallengeInvalid) {
 				t.Fatalf("Authenticate() error = %v, want %v", err, ErrChallengeInvalid)
 			}

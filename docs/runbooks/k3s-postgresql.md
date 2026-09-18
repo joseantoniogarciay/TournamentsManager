@@ -108,12 +108,12 @@ entran mediante el ConfigMap `postgresql-bootstrap-sql`; crea roles, aplica el
 esquema inicial y el grant base. Las migraciones históricas contienen los roles
 de `dev` ya aplicados y son inmutables: el Job las renderiza exclusivamente en
 `emptyDir` con los dos nombres `prod`, aplica esa copia temporal y registra las
-versiones `0`, `2`, `3` y `4` en Goose.
+versiones `0`, `2`, `3`, `4`, `5` y `6` en Goose.
 
 Si el Job falla después del esquema inicial, no se relanza: usa
 `postgresql-bootstrap-migrations.yaml`, que solo completa migraciones y el
 registro de Goose. Verifica al final que runtime conecta, no puede crear tablas
-y que las cuatro versiones aparecen aplicadas. Toma después una copia pgBackRest
+y que las seis versiones aparecen aplicadas. Toma después una copia pgBackRest
 incremental antes de desplegar la API.
 
 ## Backup y restauración aislada local
@@ -209,16 +209,43 @@ el PVC local. En un terminal del Mac, lee la frase desde Contraseñas sin pegarl
 en la conversación ni guardarla en un fichero y ejecuta:
 
 ```sh
+docker image inspect tournaments-manager-postgresql:18.4-pgbackrest-2.59.1 >/dev/null \
+  || docker build --tag tournaments-manager-postgresql:18.4-pgbackrest-2.59.1 infra/k3s/postgresql
+ssh-add --apple-use-keychain ~/.ssh/fasttourney_k3s_operator
+. infra/k3s/.env
+ssh -o BatchMode=yes "$K3S_SSH_USER@$K3S_SSH_HOST" 'sudo -n true'
 read -rs PGBACKREST_REPO1_CIPHER_PASS
 export PGBACKREST_REPO1_CIPHER_PASS
 bash infra/k3s/scripts/restore-prod-replica-verify.sh
 unset PGBACKREST_REPO1_CIPHER_PASS
 ```
 
+La imagen se construye localmente solo si todavía no existe; coincide con la que
+usa PostgreSQL en K3s y el contenedor efímero de restauración. El comando no
+lee la frase ni monta datos activos.
+
+`ssh-add` puede pedir la passphrase de la clave del operador, pero no la imprime
+ni la entrega al script. La comprobación siguiente confirma la autenticación SSH
+y el `sudo` limitado antes de pedir la frase de cifrado; así un problema de
+acceso no se confunde con una frase inválida.
+
 Antes de restaurar, el verificador compara la frase enviada por SSH con el
-Secret activo sin imprimir ninguno de ambos valores. Después monta
-`FastTourney/postgresql-backups/prod` como solo lectura en un contenedor
+Secret activo sin imprimir ninguno de ambos valores. Después solicita al helper
+`BackupPublisher` una copia temporal de `FastTourney/postgresql-backups/prod`
+en su staging local autorizado, la monta como solo lectura en un contenedor
 temporal, restaura en un volumen temporal de Docker y comprueba
 `fasttourney_prod|f`. No monta la VM, ningún PVC ni publica un puerto. Roles,
 esquema y Goose ya están inicializados; la API y sus migraciones futuras siguen
 siendo pasos explícitos.
+
+El helper usa los dos bookmarks de ADR-0115 para leer iCloud Drive y escribir
+solo bajo su staging. Esto evita tanto el error de E/S de Docker Desktop al
+montar iCloud directamente como conceder Full Disk Access a Bash. La copia
+conserva el cifrado, se elimina al terminar y la prueba sigue partiendo de la
+réplica recibida, no del PVC de K3s.
+
+**Evidencia 2026-09-18:** con la VM activa y la clave SSH del operador cargada
+en `ssh-agent`, el helper preparó la réplica publicada en el staging autorizado.
+El contenedor temporal restauró esa copia y terminó con `fasttourney_prod|f`.
+La prueba no montó el PVC, no publicó ningún puerto y eliminó sus recursos
+temporales al finalizar.

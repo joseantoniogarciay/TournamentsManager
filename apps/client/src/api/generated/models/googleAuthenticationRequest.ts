@@ -6,9 +6,9 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type { GoogleAuthenticationRequestTermsVersion } from "./googleAuthenticationRequestTermsVersion.js";
-import type { LeagueInput } from "./leagueInput.js";
 import type { Locale } from "./locale.js";
 import type { OpaqueToken } from "./opaqueToken.js";
+import type { TournamentDraftInput } from "./tournamentDraftInput.js";
 import type { Transport } from "./transport.js";
 import type { Username } from "./username.js";
 import type { Uuid } from "./uuid.js";
@@ -23,6 +23,6 @@ export interface GoogleAuthenticationRequest {
   locale?: Locale;
   /** Requerido junto a username al crear una cuenta Google nueva. */
   termsVersion?: GoogleAuthenticationRequestTermsVersion;
-  /** Torneo válido transferido únicamente al crear una cuenta Google nueva. */
-  draft?: LeagueInput;
+  /** Torneo local válido creado atómicamente con la cuenta Google nueva o con la sesión de una identidad Google ya vinculada. Repetir el mismo draftId para la misma cuenta no duplica el torneo. */
+  draft?: TournamentDraftInput;
 }

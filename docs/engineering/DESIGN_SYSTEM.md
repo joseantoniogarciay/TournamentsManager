@@ -62,6 +62,16 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
   superficie `canvas` alcance las zonas superior e inferior del navegador. Los
   insets existentes siguen reservando esas zonas al contenido; el documento web
   sincroniza su fondo y `theme-color` con el tema resuelto.
+- **Primer frame web:** el HTML aplica antes de cargar React la preferencia de
+  tema persistida o, cuando permanece en `system`, la preferencia del navegador.
+  El fondo del documento, `color-scheme` y `theme-color` nacen ya con el tema
+  resuelto para evitar un destello claro al recargar en oscuro. Como la
+  exportación estática prerenderiza el árbol de React en claro y sus estilos son
+  inline, ese árbol permanece oculto sobre el canvas correcto hasta que la
+  hidratación confirma el tema resuelto; con JavaScript desactivado vuelve a ser
+  visible. Un script mínimo y bloqueante del mismo origen ejecuta la lectura
+  inicial sin relajar la CSP; la clave y los colores siguen procediendo de la
+  fuente TypeScript mediante atributos del documento.
 - **Botonera web:** web usa la barra inferior estándar de `Tabs`, no el fallback
   de `NativeTabs`. Conserva las tres rutas, iconos y colores semánticos; Cuenta
   ofrece en su cabecera el mismo acceso localizado a Ajustes que las apps.
@@ -100,6 +110,7 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 | Componente         | Estados mínimos                                            | Regla de interacción                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ------------------ | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Button             | primary, secondary, ghost, destructive, disabled, loading  | `loading` deshabilita el control y reserva el ancho del texto para el loader. `destructive` conserva la superficie transparente, borde y texto de error; no existe una variante destructiva rellena para mantener la misma jerarquía en menús y confirmaciones.                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Selector de opción | default, selected, disabled                                | Las alternativas de una misma configuración comparten forma y estados aunque seleccionen dimensiones distintas. La opción elegida usa superficie primaria sólida y la no elegida, superficie y borde neutros; no se reutiliza la jerarquía visual de un botón de acción para representar selección.                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | TextField          | default, focus, filled, error, disabled                    | El foco usa el borde azul primario del perímetro completo del campo; en web no se muestra un anillo interno adicional. El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. Un campo de contraseña que ofrece visibilidad muestra ojo u ojo tachado según su estado y mantiene un objetivo táctil de 44 px.                                                                                                                                                                                                                                                                                                                                                                          |
 | Picker             | default, focus, selected, error, disabled                  | Abre un selector adaptado a plataforma y conserva etiqueta visible.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Checkbox / Switch  | default, selected, disabled, error                         | Objetivo táctil mínimo de 44 px. Si su texto contiene documentos legales, sus enlaces se integran en ese texto y no duplican acciones independientes; pulsarlos abren la ruta legal sin modificar la selección.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -110,11 +121,51 @@ repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
 | RequestErrorCard   | error de red, genérico o no disponible; reintento o cierre | Estado terminal de una carga sin contenido. Recibe el mensaje seguro ya clasificado; reintenta cuando esa acción puede recuperar la carga y ofrece cierre cuando la feature conoce un estado terminal, como un recurso que devuelve `404`. Sustituye al banner para no duplicar el aviso en una pantalla vacía.                                                                                                                                                                                                                                                                                                                                                                                                              |
 | InlineMessage      | error, help, success                                       | Bajo el control asociado; texto claro y disponible para lector de pantalla.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
+El deporte del torneo usa el «Selector de opción» al principio del formulario de
+creación, antes de los campos que pueda condicionar. Sus valores iniciales son
+«Fútbol» y «Baloncesto», conserva una selección visible y no se vuelve editable
+tras publicar. El enum recibido gobierna el vocabulario posterior: goles para
+fútbol, puntos para baloncesto y ayuda inline cuando un tanteo de baloncesto
+queda empatado. El resultado administrativo fijo se explica en la confirmación
+de retirada, sin presentar un campo que sugiera que puede configurarse.
+
 `Card` está implementada en `shared/ui`: aplica superficie, borde, radio,
 padding y margen exterior horizontal semánticos. La home la usa para separar
 bloques de acción, explicación y pasos; no sustituye a los contenedores de
-layout. El acceso persistente a la biblioteca de torneos vive en su tab y no se
-duplica como una card informativa en la home.
+layout. En Inicio, los títulos de «Actividad reciente» y sugerencias permanecen
+fuera de sus cards y dejan `space[4]` antes del primer contenido; los torneos
+hermanos conservan entre sí `space[5]`, mientras las secciones principales se
+separan con `space[6]`. El acceso persistente a la biblioteca de torneos vive en
+su tab y no se duplica como una card informativa en la home.
+
+En el cuadro de eliminatorias, la navegación entre partidos es secundaria frente
+al resultado. El destino posterior se presenta como enlace sin borde, debajo de
+la acción de resultado y alineado al final. El origen de cada plaza usa una
+flecha atrás junto al equipo: el icono acompaña la altura visual del texto, pero
+su objetivo táctil conserva 44 px y su etiqueta accesible nombra el partido de
+origen completo. En vistas compactas, el selector de ronda permanece sticky y es
+la única referencia visual repetida a la fase. En web grande desaparece esa
+botonera: una cabecera sticky alineada con cada columna nombra simultáneamente las
+fases visibles. Ninguno de los dos modos añade otro título dentro de cada tarjeta.
+Al cambiar de ronda mediante el selector compacto, el desplazamiento vertical de
+los partidos vuelve al inicio de esa sección: el primer partido queda bajo el
+selector sticky y no hereda la posición de la ronda anterior.
+Cada encuentro usa `bodyLarge` semibold con «Partido N»; la final muestra
+únicamente «Final». Las etiquetas accesibles y los enlaces de navegación sí
+conservan ronda y partido completos para no perder contexto. Los nombres de
+clubes permanecen en `bodyLarge` regular y el marcador conserva la jerarquía
+tipográfica principal.
+El ganador se identifica con una corona sobre el degradado de marca, sin añadir
+texto al nombre. Al navegar entre emparejamientos, la tarjeta destino se desplaza
+hasta quedar completamente visible y sustituye el texto «Seleccionado» por un
+borde con ese mismo degradado.
+En web, cuando el conjunto de columnas desborda el viewport, una barra horizontal
+sincronizada con el cuadro y sus cabeceras permanece fijada al borde inferior.
+Permite recorrer todas las fases sin modificar la ronda seleccionada y se sitúa
+por encima de una acción flotante cuando ambas coinciden. La barra pertenece al
+viewport de pantalla como hermana del scroll vertical; no vive dentro de este,
+porque un ancestro transformado puede cambiar el bloque de referencia de
+`position: fixed`.
 
 El banner global conserva la separación lateral y el radio de una card, pero usa
 un padding compacto de `space[3]` para no ocupar más altura de la necesaria. Se

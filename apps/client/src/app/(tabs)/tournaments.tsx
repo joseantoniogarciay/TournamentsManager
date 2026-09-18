@@ -6,15 +6,15 @@ import { color, control, radius, space, typography } from "@tournaments-manager/
 
 import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
-import { listRelatedLeagues } from "@/features/league-creation/api";
-import { LeagueCard } from "@/features/league-creation/components/league-card";
+import { listRelatedTournaments } from "@/features/league-creation/api";
+import { TournamentCard } from "@/features/league-creation/components/league-card";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import { Card, LoadingTransition, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
-type LeagueRelationship = "administered" | "followed";
+type TournamentRelationship = "administered" | "followed";
 const floatingActionButtonSize = control.minHeight + 12;
 
 export default function TournamentsScreen() {
@@ -22,28 +22,28 @@ export default function TournamentsScreen() {
   const { isRestoring, revision, user } = useSession();
   const { show } = useFeedback();
   const tabContentBottomPadding = useTabContentBottomPadding();
-  const [administered, setAdministered] = useState<Awaited<ReturnType<typeof listRelatedLeagues>>>(
-    [],
-  );
-  const [followed, setFollowed] = useState<Awaited<ReturnType<typeof listRelatedLeagues>>>([]);
+  const [administered, setAdministered] = useState<
+    Awaited<ReturnType<typeof listRelatedTournaments>>
+  >([]);
+  const [followed, setFollowed] = useState<Awaited<ReturnType<typeof listRelatedTournaments>>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasLoadedLeagues, setHasLoadedLeagues] = useState(false);
+  const [hasLoadedTournaments, setHasLoadedTournaments] = useState(false);
   const [selectedRelationship, setSelectedRelationship] =
-    useState<LeagueRelationship>("administered");
+    useState<TournamentRelationship>("administered");
   const loadedAccountID = useRef<string | null>(null);
-  const isInitialLoad = !isRestoring && Boolean(user) && !hasLoadedLeagues;
+  const isInitialLoad = !isRestoring && Boolean(user) && !hasLoadedTournaments;
   const showFloatingAction = !isRestoring && (!user || !isInitialLoad);
 
-  const loadLeagues = useCallback(
+  const loadTournaments = useCallback(
     async (isManualRefresh = false) => {
       if (!user) return;
       if (isManualRefresh) setIsRefreshing(true);
       else setIsLoading(true);
       try {
         const [nextAdministered, nextFollowed] = await Promise.all([
-          listRelatedLeagues("administered"),
-          listRelatedLeagues("followed"),
+          listRelatedTournaments("administered"),
+          listRelatedTournaments("followed"),
         ]);
         setAdministered(nextAdministered);
         setFollowed(nextFollowed);
@@ -55,7 +55,7 @@ export default function TournamentsScreen() {
         const failure = getRequestFailure(error);
         show({ kind: failure.kind, message: t(failure.messageKey) });
       } finally {
-        setHasLoadedLeagues(true);
+        setHasLoadedTournaments(true);
         if (isManualRefresh) setIsRefreshing(false);
         else setIsLoading(false);
       }
@@ -71,24 +71,24 @@ export default function TournamentsScreen() {
         setFollowed([]);
         setIsLoading(false);
         setIsRefreshing(false);
-        setHasLoadedLeagues(false);
+        setHasLoadedTournaments(false);
         return;
       }
       if (loadedAccountID.current === user.id) return;
       loadedAccountID.current = user.id;
-      void loadLeagues();
-    }, [loadLeagues, user]),
+      void loadTournaments();
+    }, [loadTournaments, user]),
   );
 
   return (
     <Screen bottomInset="none">
-      {!isRestoring && user && hasLoadedLeagues && !isLoading ? (
-        <LeagueLibrary
+      {!isRestoring && user && hasLoadedTournaments && !isLoading ? (
+        <TournamentLibrary
           administered={administered}
           bottomPadding={tabContentBottomPadding + floatingActionButtonSize + space[5]}
           followed={followed}
           isRefreshing={isRefreshing}
-          onRefresh={() => void loadLeagues(true)}
+          onRefresh={() => void loadTournaments(true)}
           onSelectRelationship={setSelectedRelationship}
           selectedRelationship={selectedRelationship}
         />
@@ -122,7 +122,7 @@ export default function TournamentsScreen() {
   );
 }
 
-function LeagueLibrary({
+function TournamentLibrary({
   administered,
   bottomPadding,
   followed,
@@ -131,13 +131,13 @@ function LeagueLibrary({
   selectedRelationship,
   onSelectRelationship,
 }: {
-  administered: Awaited<ReturnType<typeof listRelatedLeagues>>;
+  administered: Awaited<ReturnType<typeof listRelatedTournaments>>;
   bottomPadding: number;
-  followed: Awaited<ReturnType<typeof listRelatedLeagues>>;
+  followed: Awaited<ReturnType<typeof listRelatedTournaments>>;
   isRefreshing: boolean;
   onRefresh: () => void;
-  selectedRelationship: LeagueRelationship;
-  onSelectRelationship: (relationship: LeagueRelationship) => void;
+  selectedRelationship: TournamentRelationship;
+  onSelectRelationship: (relationship: TournamentRelationship) => void;
 }) {
   const t = getTranslator();
   const { colors } = usePreferences();
@@ -184,7 +184,7 @@ function LeagueLibrary({
             <Text color="secondary">{empty}</Text>
           </View>
         ) : (
-          leagues.map((league) => <LeagueCard key={league.id} league={league} />)
+          leagues.map((league) => <TournamentCard key={league.id} league={league} />)
         )}
       </ScrollView>
     </View>

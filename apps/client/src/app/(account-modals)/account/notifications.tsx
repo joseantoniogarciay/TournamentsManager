@@ -154,17 +154,17 @@ export default function NotificationsScreen() {
                         accessibilityRole="button"
                         accessibilityLabel={t("notifications_open_league").replace(
                           "{league}",
-                          item.leagueName,
+                          item.tournamentName,
                         )}
-                        onPress={() => router.push(`/league/${item.leagueId}`)}
+                        onPress={() => router.push(`/tournament/${item.tournamentId}`)}
                         style={styles.message}
                       >
                         <Text variant="body">
                           {t(
-                            item.kind === "league_ownership_transferred"
+                            item.kind === "tournament_ownership_transferred"
                               ? "notifications_ownership_transferred"
                               : "notifications_administrator_assigned",
-                          ).replace("{league}", item.leagueName)}
+                          ).replace("{league}", item.tournamentName)}
                         </Text>
                         <Text color="secondary">
                           {formatNotificationDate(item.createdAt, t("notifications_invalid_date"))}

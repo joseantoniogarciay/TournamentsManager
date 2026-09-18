@@ -6,9 +6,16 @@
  * OpenAPI spec version: 1.0.0-design
  */
 
+/**
+ * En liga se admite el marcador final; baloncesto rechaza empates. En una eliminatoria de fútbol, un empate exige ambos marcadores de penaltis distintos; baloncesto exige un tanteo final no empatado y nunca envía penaltis. Los penaltis no se suman al marcador del partido.
+ */
 export interface MatchResultInput {
   /** @minimum 0 */
   homeScore: number;
   /** @minimum 0 */
   awayScore: number;
+  /** @minimum 0 */
+  homePenalties?: number;
+  /** @minimum 0 */
+  awayPenalties?: number;
 }

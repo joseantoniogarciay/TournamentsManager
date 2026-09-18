@@ -3,7 +3,12 @@ import { makeRedirectUri } from "expo-auth-session";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 
-import type { GoogleLoginChallenge, LeagueInput, Locale, Username } from "@/api/generated/models";
+import type {
+  GoogleLoginChallenge,
+  TournamentDraftInput,
+  Locale,
+  Username,
+} from "@/api/generated/models";
 
 import {
   beginGoogleAuthentication,
@@ -40,9 +45,9 @@ export function useGoogleAuthentication({
   draft,
   onSession,
 }: {
-  draft?: LeagueInput;
+  draft?: TournamentDraftInput;
   locale: Locale;
-  onSession: (user: { id: string; username: string }, createdLeague: boolean) => void;
+  onSession: (user: { id: string; username: string }, createdTournament: boolean) => void;
 }) {
   const [challenge, setChallenge] = useState<GoogleLoginChallenge | null>(null);
   const [pendingAccount, setPendingAccount] = useState<PendingGoogleAccount | null>(null);
@@ -100,7 +105,7 @@ export function useGoogleAuthentication({
         ...input,
         locale: username ? locale : undefined,
         termsVersion: username ? "2026-08-22" : undefined,
-        draft: username ? draft : undefined,
+        draft,
         sessionTransport,
         username,
       });
@@ -110,7 +115,7 @@ export function useGoogleAuthentication({
       }
       setChallenge(null);
       setPendingAccount(null);
-      onSession(result.session.user, Boolean(username && draft));
+      onSession(result.session.user, Boolean(draft));
     },
     [draft, locale, onSession, sessionTransport],
   );

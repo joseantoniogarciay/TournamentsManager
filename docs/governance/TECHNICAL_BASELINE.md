@@ -57,6 +57,9 @@ direcciones del manifiesto continúan sin autorizar recursos ni despliegues por 
 solas; los gates de producto y de cada fase siguen requiriendo sus decisiones,
 validación y autorización de coste.
 
+ADR-0128 cancela la Fase AWS del roadmap: las decisiones cloud de esta base se
+conservan como contexto histórico y no autorizan trabajo ni recursos futuros.
+
 ## Decisión 1 — Topología de repositorios — aceptada
 
 ### Problema

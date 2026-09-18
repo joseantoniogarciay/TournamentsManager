@@ -8,7 +8,7 @@ enum PublisherError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .usage: return "usage: BackupPublisher {configure|publish <repository-directory>}"
+        case .usage: return "usage: BackupPublisher {configure|publish <repository-directory>|stage-restore <repository-directory>}"
         case .missingConfiguration: return "missing folder permission; run configure interactively"
         case .invalidRepository: return "repository does not contain required pgBackRest metadata"
         }
@@ -85,12 +85,39 @@ func publish(repositoryPath: String) throws {
     print("published pgBackRest replica at \(active.path)")
 }
 
+func stageRestore(repositoryPath: String) throws {
+    let staging = try resolveBookmark(at: stagingBookmark)
+    defer { staging.stopAccessingSecurityScopedResource() }
+    let destination = try resolveBookmark(at: destinationBookmark)
+    defer { destination.stopAccessingSecurityScopedResource() }
+
+    let repository = URL(fileURLWithPath: repositoryPath).standardizedFileURL
+    guard repository.path.hasPrefix(staging.standardizedFileURL.path + "/") else {
+        throw PublisherError.invalidRepository
+    }
+
+    let active = destination.appendingPathComponent("prod", isDirectory: true)
+    guard metadataExists(in: active) else { throw PublisherError.invalidRepository }
+
+    if fileManager.fileExists(atPath: repository.path) {
+        try fileManager.removeItem(at: repository)
+    }
+    try fileManager.copyItem(at: active, to: repository)
+    guard metadataExists(in: repository) else {
+        try? fileManager.removeItem(at: repository)
+        throw PublisherError.invalidRepository
+    }
+    print("staged pgBackRest replica for isolated restore")
+}
+
 do {
     let arguments = Array(CommandLine.arguments.dropFirst())
     if arguments.isEmpty || arguments == ["configure"] {
         try configure()
     } else if arguments.count == 2, arguments[0] == "publish" {
         try publish(repositoryPath: arguments[1])
+    } else if arguments.count == 2, arguments[0] == "stage-restore" {
+        try stageRestore(repositoryPath: arguments[1])
     } else {
         throw PublisherError.usage
     }

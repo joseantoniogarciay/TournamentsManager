@@ -31,8 +31,8 @@ function parseNotification(value: unknown): Notification | null {
   if (
     !isUUID(value.id) ||
     !isNotificationKind(value.kind) ||
-    !isUUID(value.leagueId) ||
-    typeof value.leagueName !== "string" ||
+    !isUUID(value.tournamentId) ||
+    typeof value.tournamentName !== "string" ||
     !isDateTime(value.createdAt) ||
     !(value.readAt === null || isDateTime(value.readAt))
   ) {
@@ -42,8 +42,8 @@ function parseNotification(value: unknown): Notification | null {
   return {
     id: value.id,
     kind: value.kind,
-    leagueId: value.leagueId,
-    leagueName: value.leagueName,
+    tournamentId: value.tournamentId,
+    tournamentName: value.tournamentName,
     createdAt: value.createdAt,
     readAt: value.readAt,
   };

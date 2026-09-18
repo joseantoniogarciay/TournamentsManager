@@ -4,7 +4,64 @@ Los cambios relevantes del handbook, producto y operación se registran aquí. E
 formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed` y
 `Security` cuando existan releases.
 
-## [Unreleased]
+## [1.3.0] - 2026-09-18
+
+### Added
+
+- Mapa entidad-relación versionable del PostgreSQL vigente, dividido entre
+  identidad/acceso y torneos/competición, con claves, cardinalidades y políticas
+  de borrado enlazadas desde el README.
+- Fútbol y baloncesto son perfiles deportivos explícitos elegidos al crear el
+  torneo. Baloncesto incorpora tanteos sin empate, clasificación 2-1-0,
+  desempate directo y retirada administrativa fija 20-0; fútbol conserva 3-1-0
+  y retirada 3-0.
+- Los resultados distinguen si fueron jugados o administrativos, incluido su
+  historial, y la clasificación usa nombres de marcador neutrales en el
+  contrato aunque la interfaz presente goles o puntos según el deporte.
+- Las cuentas autenticadas pueden enviar desde Inicio sugerencias privadas de
+  producto, persistidas antes de avisar por correo, con límite de tres por hora,
+  campo recuperable ante error y agradecimiento visible tras el envío.
+- Torneos de eliminatoria directa a partido único para 2 a 64 equipos, con
+  cuadro completo, pases directos deterministas, plazas derivadas de ganadoras,
+  desempate explícito por penaltis y navegación responsive entre rondas.
+- Fases ordenadas mínimas (`Tournament -> Stage -> Match`) para que una futura
+  liga o fase de grupos pueda alimentar un cuadro sin volver a migrar los
+  partidos.
+
+### Changed
+
+- Se declara cerrada la v1 del producto y el roadmap de aprendizaje tras K3s.
+  Las capacidades posteriores serán incrementos de producto independientes; un
+  tag o GitHub Release futuro seguirá el proceso de ADR-0119.
+- El roadmap termina tras la Fase 4 de K3s. La Fase AWS queda cancelada: no se
+  crearán recursos, cuentas ni estado cloud sin una nueva decisión explícita.
+- La verificación de restauración de `prod` prepara la réplica cifrada de
+  iCloud mediante el helper con bookmarks y la monta desde su staging local,
+  evitando permisos TCC amplios y errores de E/S de Docker Desktop. Antes de
+  pedir la frase de cifrado confirma el acceso SSH del operador.
+- `sqlc` deja de generar structs completos para tablas que ninguna consulta
+  utiliza; conserva los tipos `...Params` y `...Row` específicos del acceso SQL.
+- Los accesos con contraseña y Google pueden transferir el torneo local: torneo,
+  equipos y sesión se confirman ahora en una sola transacción, y el cliente
+  conserva el borrador si la operación falla. Cada borrador mantiene un
+  `draftId` y los reintentos para la misma cuenta no duplican el torneo.
+- El resumen de actividad reciente de Inicio muestra como máximo tres torneos
+  para conservar espacio para nuevas acciones útiles en la home.
+- El recurso canónico migra de `leagues` a `tournaments` en base de datos,
+  dominio, OpenAPI, cliente y enlaces. La liga a una o dos vueltas continúa
+  disponible como formato `league`; no se conservan rutas antiguas.
+
+### Fixed
+
+- El login valida también la longitud mínima de la contraseña en el cliente para
+  no presentar un rechazo de formato como un problema genérico del servicio.
+- El adaptador Google acepta la forma `TournamentInput` del contrato, incluidos
+  sus equipos como objetos, al transferir un borrador.
+
+### Security
+
+- `google.golang.org/grpc` sube a `v1.83.1`, que corrige el agotamiento de
+  memoria mediante fragmentación de frames HTTP/2 descrito por `GO-2026-6348`.
 
 ## [1.2.0] - 2026-09-06
 

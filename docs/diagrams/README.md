@@ -14,11 +14,12 @@ versionables, sencillos y enlazar la decisión o documento que representan.
 
 ## Catálogo
 
-| Diagrama | Estado | Fuente |
-|---|---|---|
-| Dirección conceptual de dependencias | Vigente | [ARCHITECTURE.md](../engineering/ARCHITECTURE.md) |
-| [Contexto de producto](system-context.md) | Conceptual | [PRODUCT.md](../project/PRODUCT.md) |
-| Contenedores/componentes | Pendiente de diseño | Fase 2 |
-| Despliegue local | Pendiente | Fase 1 |
-| Despliegue Kubernetes | Pendiente | Fase 4 |
-| Despliegue AWS | Pendiente | Fase 5 |
+| Diagrama                                               | Estado                          | Fuente                                            |
+| ------------------------------------------------------ | ------------------------------- | ------------------------------------------------- |
+| Dirección conceptual de dependencias                   | Vigente                         | [ARCHITECTURE.md](../engineering/ARCHITECTURE.md) |
+| [Contexto de producto](system-context.md)              | Conceptual                      | [PRODUCT.md](../project/PRODUCT.md)               |
+| [Mapa entidad-relación de PostgreSQL](database-erd.md) | Vigente hasta migración `00008` | [`apps/backend/db`](../../apps/backend/db/)       |
+| Contenedores/componentes                               | Pendiente de diseño             | Fase 2                                            |
+| Despliegue local                                       | Pendiente                       | Fase 1                                            |
+| Despliegue Kubernetes                                  | Pendiente de diagramar           | [Retrospectiva de Fase 4](../project/PHASE_4_RETROSPECTIVE.md) |
+| Despliegue AWS                                         | Pendiente                       | Fase 5                                            |

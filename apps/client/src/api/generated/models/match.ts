@@ -5,6 +5,9 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
+import type { MatchAwaySourceKind } from "./matchAwaySourceKind.js";
+import type { MatchHomeSourceKind } from "./matchHomeSourceKind.js";
+import type { MatchResultType } from "./matchResultType.js";
 import type { MatchState } from "./matchState.js";
 import type { Uuid } from "./uuid.js";
 
@@ -14,11 +17,28 @@ export interface Match {
   round: number;
   /** @minimum 1 */
   sequence: number;
-  homeTeamId: Uuid;
-  awayTeamId: Uuid;
+  stageId: Uuid;
+  /**
+   * UUID del equipo conocido; cadena vacía si la plaza aún no está resuelta o es bye.
+   * @pattern ^$|^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+   */
+  homeTeamId: string;
+  /** @pattern ^$|^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ */
+  awayTeamId: string;
+  homeSourceKind: MatchHomeSourceKind;
+  awaySourceKind: MatchAwaySourceKind;
+  homeSourceMatchId?: Uuid;
+  awaySourceMatchId?: Uuid;
+  winnerTeamId?: Uuid;
+  /** Ausente mientras el partido no tenga un resultado registrado o sea un bye. */
+  resultType?: MatchResultType;
   state: MatchState;
   /** @minimum 0 */
   homeScore?: number;
   /** @minimum 0 */
   awayScore?: number;
+  /** @minimum 0 */
+  homePenalties?: number;
+  /** @minimum 0 */
+  awayPenalties?: number;
 }

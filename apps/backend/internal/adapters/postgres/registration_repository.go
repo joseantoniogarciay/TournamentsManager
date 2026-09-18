@@ -12,6 +12,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres/sqlc"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
 // RegistrationRepository implements local registration persistence with sqlc.
@@ -85,17 +86,47 @@ func (r RegistrationRepository) FindLocalAccountForLogin(ctx context.Context, em
 	return registration.LocalAccount{ID: row.ID.String(), Email: row.Email, Locale: registration.Locale(row.Locale), Username: row.Username, PasswordHash: row.PasswordHash, Verified: row.State == "verified"}, nil
 }
 
-// CreateLocalLoginSession persists the hashed tokens of a new local session.
-func (r RegistrationRepository) CreateLocalLoginSession(ctx context.Context, accountID string, sessionHash, refreshHash []byte) (registration.Session, error) {
+// CreateLocalLoginSession persists an optional tournament and the hashed session tokens atomically.
+func (r RegistrationRepository) CreateLocalLoginSession(ctx context.Context, accountID string, sessionHash, refreshHash []byte, draft *registration.Draft) (registration.Session, error) {
 	id, err := parseUUID(accountID)
 	if err != nil {
 		return registration.Session{}, err
 	}
-	row, err := r.queries.CreateLocalLoginSession(ctx, sqlc.CreateLocalLoginSessionParams{ID: id, TokenHash: sessionHash, TokenHash_2: refreshHash})
+	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return registration.Session{}, err
 	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	row, err := r.queries.WithTx(tx).CreateLocalLoginSession(ctx, sqlc.CreateLocalLoginSessionParams{ID: id, TokenHash: sessionHash, TokenHash_2: refreshHash})
+	if err != nil {
+		return registration.Session{}, err
+	}
+	if draft != nil {
+		if err := createTournamentFromDraft(ctx, tx, accountID, draft.ID, draft.Name, draft.Sport, draft.Teams); err != nil {
+			return registration.Session{}, err
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return registration.Session{}, err
+	}
 	return registration.Session{AccountID: accountID, Username: row.Username, IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
+}
+
+func createTournamentFromDraft(ctx context.Context, tx pgx.Tx, accountID, draftID, name string, sport tournaments.Sport, teams []string) error {
+	var tournamentID string
+	err := tx.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, source_draft_id, name, sport, state, published_at) VALUES ($1, $2, $3, $4, 'published', now()) ON CONFLICT (organizer_account_id, source_draft_id) DO NOTHING RETURNING id::text`, accountID, draftID, name, sport).Scan(&tournamentID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	for position, team := range teams {
+		if _, err := tx.Exec(ctx, `INSERT INTO tournament_teams (tournament_id, name, name_normalized, position) VALUES ($1, $2, lower($2), $3)`, tournamentID, team, position+1); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // RenewLoginVerification rotates the pending verification token and returns its recipient.
@@ -147,18 +178,8 @@ func (r RegistrationRepository) CreatePending(ctx context.Context, input registr
 		return false, err
 	}
 	if input.Draft != nil {
-		var leagueID string
-		if err := tx.QueryRow(ctx, `-- name: CreateRegistrationDraftLeague :one
-			INSERT INTO leagues (organizer_account_id, name, state, published_at)
-			VALUES ($1, $2, 'published', now()) RETURNING id::text`, accountID, input.Draft.Name).Scan(&leagueID); err != nil {
+		if err := createTournamentFromDraft(ctx, tx, accountID, input.Draft.ID, input.Draft.Name, input.Draft.Sport, input.Draft.Teams); err != nil {
 			return false, err
-		}
-		for position, name := range input.Draft.Teams {
-			if _, err := tx.Exec(ctx, `-- name: CreateRegistrationDraftTeam :exec
-				INSERT INTO league_teams (league_id, name, name_normalized, position)
-				VALUES ($1, $2, lower($2), $3)`, leagueID, name, position+1); err != nil {
-				return false, err
-			}
 		}
 	}
 	if err := tx.Commit(ctx); err != nil {

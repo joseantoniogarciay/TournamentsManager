@@ -9,6 +9,6 @@
 export type NotificationKind = (typeof NotificationKind)[keyof typeof NotificationKind];
 
 export const NotificationKind = {
-  league_administrator_assigned: "league_administrator_assigned",
-  league_ownership_transferred: "league_ownership_transferred",
+  tournament_administrator_assigned: "tournament_administrator_assigned",
+  tournament_ownership_transferred: "tournament_ownership_transferred",
 } as const;

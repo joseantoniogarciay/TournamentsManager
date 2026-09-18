@@ -33,7 +33,7 @@
 	}
 	# Solo el documento raíz de una liga visible necesita metadatos dinámicos para
 	# previews sociales. Las subrutas siguen siendo estáticas y la URL no cambia.
-	@league_preview path_regexp league_preview ^/league/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+	@league_preview path_regexp league_preview ^/tournament/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
 	handle @league_preview {
 		reverse_proxy 127.0.0.1:8091
 	}
@@ -68,7 +68,7 @@ http://dev.fasttourney.com {
 	}
 	# El carril de desarrollo reproduce el preview de producción sin compartir
 	# proceso, puerto, release ni API. Solo captura el documento raíz de una liga.
-	@development_league_preview path_regexp development_league_preview ^/league/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+	@development_league_preview path_regexp development_league_preview ^/tournament/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
 	handle @development_league_preview {
 		reverse_proxy 127.0.0.1:8092
 	}

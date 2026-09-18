@@ -6,15 +6,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leagues"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
-func TestListLeagueAdministratorsReturnsUsernames(t *testing.T) {
+func TestListTournamentAdministratorsReturnsUsernames(t *testing.T) {
 	const accountID = "019abcde-1111-7111-8111-111111111111"
 	const leagueID = "019abcde-2222-7222-8222-222222222222"
-	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{administrators: []string{"alex", "bea"}}))
-	request := httptest.NewRequest(http.MethodGet, "/v1/leagues/"+leagueID+"/administrators", nil)
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{administrators: []string{"alex", "bea"}}))
+	request := httptest.NewRequest(http.MethodGet, "/v1/tournaments/"+leagueID+"/administrators", nil)
 	request.Header.Set("Authorization", "Bearer session-token")
 	recorder := httptest.NewRecorder()
 
@@ -28,20 +28,20 @@ func TestListLeagueAdministratorsReturnsUsernames(t *testing.T) {
 	}
 }
 
-func TestTransferLeagueOwnershipMapsBusinessErrors(t *testing.T) {
+func TestTransferTournamentOwnershipMapsBusinessErrors(t *testing.T) {
 	const accountID = "019abcde-1111-7111-8111-111111111111"
 	const leagueID = "019abcde-2222-7222-8222-222222222222"
 	for name, test := range map[string]struct {
 		err    error
 		status int
 	}{
-		"forbidden": {leagues.ErrLeagueForbidden, http.StatusForbidden},
-		"conflict":  {leagues.ErrLeagueOwnershipTransferConflict, http.StatusConflict},
-		"not found": {leagues.ErrLeagueNotFound, http.StatusNotFound},
+		"forbidden": {tournaments.ErrTournamentForbidden, http.StatusForbidden},
+		"conflict":  {tournaments.ErrTournamentOwnershipTransferConflict, http.StatusConflict},
+		"not found": {tournaments.ErrTournamentNotFound, http.StatusNotFound},
 	} {
 		t.Run(name, func(t *testing.T) {
-			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{transferErr: test.err}))
-			request := httptest.NewRequest(http.MethodPost, "/v1/leagues/"+leagueID+"/transfer", strings.NewReader(`{"username":"alex"}`))
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{transferErr: test.err}))
+			request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+leagueID+"/transfer", strings.NewReader(`{"username":"alex"}`))
 			request.Header.Set("Authorization", "Bearer session-token")
 			request.Header.Set("X-CSRF-Token", "token")
 			recorder := httptest.NewRecorder()
@@ -61,12 +61,12 @@ func TestAdministratorManagementMapsBusinessErrors(t *testing.T) {
 		err    error
 		status int
 	}{
-		"list forbidden":   {method: http.MethodGet, err: leagues.ErrLeagueForbidden, status: http.StatusForbidden},
-		"remove not found": {method: http.MethodDelete, err: leagues.ErrLeagueNotFound, status: http.StatusNotFound},
+		"list forbidden":   {method: http.MethodGet, err: tournaments.ErrTournamentForbidden, status: http.StatusForbidden},
+		"remove not found": {method: http.MethodDelete, err: tournaments.ErrTournamentNotFound, status: http.StatusNotFound},
 	} {
 		t.Run(name, func(t *testing.T) {
-			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, leagues.NewService(testLeagueRepository{}), testAllowedOrigins, leagues.NewCreationService(testCreationRepository{administratorsErr: test.err, removeErr: test.err}))
-			path := "/v1/leagues/" + leagueID + "/administrators"
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{administratorsErr: test.err, removeErr: test.err}))
+			path := "/v1/tournaments/" + leagueID + "/administrators"
 			if test.method == http.MethodDelete {
 				path += "/alex"
 			}

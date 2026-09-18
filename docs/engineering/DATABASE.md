@@ -37,6 +37,10 @@ consultas y produce funciones, parámetros, resultados y escaneo tipados. `pgx`
 es el driver que comunica Go con PostgreSQL. Goose se activará para evolucionar
 el esquema fuera del arranque normal cuando haya datos que conservar.
 
+El [mapa entidad-relación](../diagrams/database-erd.md) ofrece una vista visual
+de las tablas y claves foráneas vigentes. Es una ayuda de navegación; el esquema
+SQL y sus migraciones continúan siendo la fuente de verdad ejecutable.
+
 ## PostgreSQL local
 
 [ADR-0076](../adr/0076-run-the-local-api-in-compose-with-air.md) implementa
@@ -89,12 +93,28 @@ de runtime y verificarlos antes de publicar.
 
 ## Límite con el dominio
 
-Los tipos de filas generados por `sqlc` representan persistencia, no entidades de
-negocio. El adaptador realiza mapeos explícitos cuando el dominio necesite tipos
-o invariantes propios.
+La frontera usa tres clases de tipos con responsabilidades distintas:
+
+- los paquetes de dominio y caso de uso definen sus propios `Input`, entidades y
+  resultados para expresar reglas sin depender de PostgreSQL;
+- `sqlc` genera `...Params` y `...Row` específicos de cada consulta; el adaptador
+  PostgreSQL los usa para ejecutar SQL y realizar el escaneo tipado;
+- los structs que reflejan una tabla completa solo se generan si alguna consulta
+  los devuelve. `omit_unused_structs` evita mantener espejos de tablas que no
+  participan en el código.
+
+Los tipos generados por `sqlc` representan persistencia, no entidades de negocio.
+El adaptador realiza mapeos explícitos entre ambos lados cuando el dominio
+necesite tipos o invariantes propios. Que un `...Params` o `...Row` se utilice no
+autoriza a propagarlo fuera del adaptador.
 
 Las transacciones se definen desde el caso de uso. No se añade una abstracción
 genérica de unit of work o repository antes de que proteja un límite real.
+
+`product_suggestions` conserva el texto privado junto a su cuenta y fecha. La
+base valida el cuerpo recortado entre 8 y 1.000 caracteres y elimina los registros
+con la cuenta mediante `ON DELETE CASCADE`. Estados, respuestas y visibilidad no
+forman parte de este esquema inicial; se añadirán solo con un caso de uso aceptado.
 
 ## Decisiones pendientes tras el esquema inicial
 

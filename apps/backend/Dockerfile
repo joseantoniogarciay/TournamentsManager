@@ -35,7 +35,17 @@ ENTRYPOINT ["/api"]
 # El migrador es una imagen separada: no se distribuye con la API ni se ejecuta
 # en cada arranque. Solo recibe la credencial de migración en una ejecución
 # explícita de Compose.
+FROM build AS migration-files
+ARG SCHEMA_OWNER=tournaments_manager_dev_schema_owner
+ARG APP_ROLE=tournaments_manager_dev_app
+RUN mkdir -p /out/migrations && \
+    cp -R db/migrations/. /out/migrations/ && \
+    find /out/migrations -type f -name '*.sql' -exec \
+      sed -i \
+        -e "s/tournaments_manager_dev_schema_owner/${SCHEMA_OWNER}/g" \
+        -e "s/tournaments_manager_dev_app/${APP_ROLE}/g" {} +
+
 FROM scratch AS migrator
 COPY --from=build /out/goose /goose
-COPY db/migrations /migrations
+COPY --from=migration-files /out/migrations /migrations
 ENTRYPOINT ["/goose"]

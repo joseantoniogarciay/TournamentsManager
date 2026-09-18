@@ -2,13 +2,13 @@
 
 > Estado: Gate 0B cerrado; primer vertical slice definido.
 >
-> Última actualización: 2026-07-26
+> Última actualización: 2026-09-13
 
 ## Visión
 
-TournamentsManager permitirá descubrir, crear y gestionar torneos. El fútbol será
-el primer deporte para aprender y validar el modelo, pero el producto aspira a
-incorporar otros deportes sin reescribir su núcleo.
+TournamentsManager permitirá descubrir, crear y gestionar torneos. Fútbol fue el
+primer deporte con el que se validó el modelo y baloncesto es el primer perfil
+adicional; los siguientes se incorporarán solo cuando sus reglas estén definidas.
 
 ## Hechos aceptados
 
@@ -25,9 +25,16 @@ incorporar otros deportes sin reescribir su núcleo.
 - La cuenta incluirá registro, inicio de sesión y recuperación de contraseña.
 - Una misma cuenta admitirá credenciales locales y login con Google; Apple se
   incorporará en un incremento posterior.
-- El fútbol es el deporte inicial.
-- El formato inicial será una liga de fútbol. Eliminatorias, formatos mixtos y
-  otros deportes quedan fuera del primer corte, sin impedir evaluarlos después.
+- El torneo declara un deporte inmutable elegido entre `football` y
+  `basketball`; «Fútbol» engloba fútbol sala en esta iteración (ADR-0126).
+- El recurso raíz es un torneo. La liga de fútbol existente se conserva como
+  formato `league`; este incremento añade la eliminatoria directa a partido
+  único como formato `single_elimination`. Los formatos mixtos quedan fuera
+  hasta acordar sus reglas. Véase ADR-0122.
+- Un torneo contiene fases ordenadas. Esta entrega crea una sola fase, elegida
+  entre liga a una o dos vueltas y eliminatoria directa a partido único. Una
+  futura liga única o por grupos podrá clasificar equipos para un cuadro
+  posterior cuando se acepten sus reglas. Véase ADR-0123.
 - El creador del torneo será inicialmente su único organizador y creará los
   equipos. Delegar administración se decidirá para una iteración posterior.
 - Las acciones detalladas de creación y gestión de un torneo se definirán de forma
@@ -52,7 +59,7 @@ autenticada.
 
 Es un registro temporal tras un alta local con email, contraseña y `username`.
 No recibe una sesión de producto ni permisos de negocio. Un borrador completo
-permanece local hasta enviar el alta; entonces crea una liga publicada asociada a
+permanece local hasta enviar el alta; entonces crea un torneo publicado asociado a
 la cuenta pendiente, que no puede administrar ni listar hasta verificarla.
 
 ### Usuario autenticado y verificado
@@ -78,10 +85,19 @@ delegado se consideran administradas. Las ligas seguidas se consideran
 guardadas; cuando una liga cumple ambas relaciones, se muestra solo como
 administrada.
 
-Con sesión, Inicio muestra además hasta cinco ligas relacionadas con actividad
+Con sesión, Inicio muestra además hasta tres ligas relacionadas con actividad
 reciente. La relación administrada prevalece sobre seguida si coinciden. Si no
 hay ninguna, explica que ahí aparecerán las últimas ligas que tengan actividad.
-Inicio y Torneos se actualizan mediante pull-to-refresh para una sesión activa.
+Inicio vuelve a consultar esta proyección cada vez que recupera el foco, de modo
+que una liga recién creada aparece al regresar; Inicio y Torneos permiten además
+actualizar sus datos mediante pull-to-refresh para una sesión activa.
+
+Debajo de Actividad reciente, una cuenta autenticada puede enviar una sugerencia
+privada de entre 8 y 1.000 caracteres desde «¿Te falta algo?». El envío se activa
+solo con una entrada válida. Al guardarse, el campo se vacía y un banner agradece
+la aportación; un fallo conserva el texto para reintentar. Se admiten tres envíos
+por cuenta y hora. La primera versión no publica sugerencias ni permite
+respuestas: PostgreSQL conserva el registro y el correo solo avisa al responsable.
 
 La sección «Torneos» separa las colecciones completas en «Administro» y «Sigo».
 Es una clasificación de navegación: las autorizaciones continúan verificándose
@@ -106,7 +122,9 @@ transferencia es inmediata y le retira sus permisos administrativos.
 El creador lo asigna directamente mediante su `username`, sin aceptación previa.
 El administrador puede abandonar la liga; el creador puede retirarlo con efecto
 inmediato. Su único permiso operativo será gestionar resultados; la mecánica de
-registro queda limitada a goles locales y visitantes, ambos enteros no negativos.
+registro queda limitada al tanteo final local y visitante, ambos enteros no
+negativos, y a los penaltis solo cuando una eliminatoria de fútbol empatada los
+necesita.
 Un resultado que registre se aplica de inmediato, sin confirmación del creador;
 también puede corregirlo y el sistema conserva quién cambió qué y cuándo.
 
@@ -145,8 +163,15 @@ no puede publicar ni realizar acciones protegidas. Véase
 ### Login
 
 1. La persona demuestra su identidad mediante contraseña o Google.
-2. El cliente obtiene una sesión apropiada para web o mobile.
-3. El backend autoriza cada acción sobre recursos concretos.
+2. Si existe un borrador local completo, el cliente puede incluirlo en la misma operación.
+3. El backend crea atómicamente la sesión y, cuando se envió, el torneo con sus equipos.
+4. Repetir la operación con el mismo borrador y cuenta reutiliza el torneo ya creado.
+5. El cliente descarta el borrador local solo al confirmar el éxito.
+6. El backend autoriza cada acción posterior sobre recursos concretos.
+
+Una cuenta local pendiente conserva el `202` sin sesión y no transfiere el
+borrador mediante login. La garantía transaccional de acceso y torneo está
+aceptada en [ADR-0127](../adr/0127-create-tournament-atomically-with-login-session.md).
 
 Google es un método de acceso vinculado al mismo usuario interno. Añadir o cambiar
 un email de contacto no reemplaza el vínculo con el proveedor.
@@ -176,7 +201,8 @@ duración y renovación de sesiones.
 El primer incremento debe ser pequeño y atravesar producto, seguridad, datos, API
 y operación:
 
-1. un invitado prepara localmente un torneo de fútbol de liga y sus equipos;
+1. un invitado prepara localmente un torneo, elige fútbol o baloncesto y crea sus
+   equipos;
 2. una persona se registra, verifica su cuenta e inicia sesión sin perder el
    borrador;
 3. el organizador autenticado persiste y publica el torneo con los datos mínimos;
@@ -195,17 +221,25 @@ visibilidad, los participantes, la administración, los resultados, las bajas, l
 cancelación y la frontera de identidad están definidos. Las capacidades aplazadas
 no bloquean el primer vertical slice.
 
-## Liga de fútbol inicial
+## Reglas deportivas soportadas
 
 Las [ADR-0032](../adr/0032-define-minimum-football-league-data-and-lifecycle.md)
 y [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md) definen
-la estructura mínima de una liga: nombre, fútbol, formato liga, organizador,
-estado, equipos y partidos generados al iniciar. La configuración inicial permite
-una o dos vueltas con puntuación 3-1-0; no incluye fechas, horas ni marcadores
-especiales. Tras iniciarla, el backend calcula la clasificación: en dos vueltas
-prioriza la mini-clasificación entre empatados y en una, diferencia de goles y
-goles a favor generales; una igualdad que persiste comparte posición. La app
-solo presenta esta proyección (ADR-0081).
+la estructura mínima que originó la liga de fútbol. ADR-0126 amplía ese núcleo:
+el torneo elige `football` o `basketball` al crearse y conserva el deporte
+durante todo su ciclo. Ambos admiten liga a una o dos vueltas y eliminatoria
+directa a partido único; no incluyen fechas, horas, periodos ni prórrogas
+desglosadas.
+
+En fútbol, una liga puntúa 3-1-0. En dos vueltas prioriza la
+mini-clasificación entre empatados y en una, diferencia de goles y goles a favor
+generales. En baloncesto, la victoria suma 2, una derrota jugada 1 y una derrota
+administrativa 0; no admite tanteo final empatado y desempata primero por la
+mini-clasificación directa, seguida de diferencia de puntos y puntos anotados
+generales. Una igualdad tras todos los criterios comparte posición. El backend
+calcula la clasificación y la app solo presenta esa proyección (ADR-0081).
+«Clasificación» no se muestra antes de iniciar el torneo; durante esa preparación,
+el acceso disponible es «Equipos».
 
 El ciclo persistido es `publicado → en_curso → finalizado`, con `cancelado` como
 estado terminal desde `publicado` o `en_curso`. El borrador se prepara localmente
@@ -224,7 +258,8 @@ una sola vez los emparejamientos y se congelan equipos y reglas. Solo entonces l
 organizador y los administradores delegados pueden registrar o corregir resultados. El creador solo puede
 finalizarla cuando todos sus partidos tienen resultado. Si un equipo abandona en
 `en_curso`, solo el creador puede declararlo: todos sus partidos, pendientes o
-ya jugados, pasan a `3-0` a favor del rival y la liga continúa.
+ya jugados, pasan a resultado administrativo fijo a favor del rival (`3-0` en
+fútbol y `20-0` en baloncesto) y la liga continúa. El valor no es configurable.
 
 ## Cancelación
 
@@ -268,7 +303,7 @@ Salvo decisión posterior:
 - administración avanzada;
 - calendario completo y arbitraje;
 - notificaciones push;
-- eliminatorias y formatos mixtos;
+- formatos mixtos con varias fases;
 - email y push para avisar de asignaciones administrativas;
 - invitaciones con aceptación, bloqueo y controles antiabuso para asignaciones;
 - jugadores y membresías de personas en equipos.

@@ -8,6 +8,6 @@
 import type { Problem } from "./problem.js";
 
 /**
- * La cuenta todavía organiza alguna liga.
+ * La cuenta todavía organiza algún torneo.
  */
 export type AccountDeletionConflictProblemResponse = Problem;

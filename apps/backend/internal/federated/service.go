@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
 const (
@@ -59,12 +60,13 @@ type Challenge struct{ ID, Nonce, ExpiresAt string }
 // Registration contains the fields required to create a social account.
 type Registration struct {
 	Username, Locale, TermsVersion string
-	Draft                          *Draft
 }
 
-// Draft is the complete tournament that can be created with a new account in the same transaction.
+// Draft is the complete tournament created with a new account or session in the same transaction.
 type Draft struct {
+	ID    string
 	Name  string
+	Sport tournaments.Sport
 	Teams []string
 }
 
@@ -93,7 +95,7 @@ type RISCRepository interface {
 // Repository preserves atomic invariants across challenge, identity, and session.
 type Repository interface {
 	CreateChallenge(context.Context, []byte, time.Time) (string, error)
-	AuthenticateGoogle(context.Context, string, []byte, Identity, *Registration, []byte, []byte) (Session, error)
+	AuthenticateGoogle(context.Context, string, []byte, Identity, *Registration, *Draft, []byte, []byte) (Session, error)
 	AddGoogleIdentity(context.Context, string, string, []byte, Identity) error
 	ReauthenticateGoogle(context.Context, string, string, string, []byte, Identity, []byte) error
 	AddGoogleIdentityWithTicket(context.Context, string, string, []byte, Identity, []byte) error
@@ -168,7 +170,7 @@ func (s Service) CreateChallenge(ctx context.Context) (Challenge, error) {
 }
 
 // Authenticate validates a Google proof and obtains a session or requests registration.
-func (s Service) Authenticate(ctx context.Context, challengeID, idToken string, registration *Registration) (EstablishedSession, error) {
+func (s Service) Authenticate(ctx context.Context, challengeID, idToken string, registration *Registration, draft *Draft) (EstablishedSession, error) {
 	identity, err := s.verify(ctx, idToken)
 	if err != nil {
 		return EstablishedSession{}, err
@@ -181,7 +183,7 @@ func (s Service) Authenticate(ctx context.Context, challengeID, idToken string, 
 	if err != nil {
 		return EstablishedSession{}, err
 	}
-	session, err := s.repository.AuthenticateGoogle(ctx, challengeID, challengeHash[:], identity, registration, accessHash, refreshHash)
+	session, err := s.repository.AuthenticateGoogle(ctx, challengeID, challengeHash[:], identity, registration, draft, accessHash, refreshHash)
 	if err != nil {
 		return EstablishedSession{}, err
 	}

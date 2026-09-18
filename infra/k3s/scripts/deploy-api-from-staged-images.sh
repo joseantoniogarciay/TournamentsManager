@@ -41,8 +41,9 @@ set -euo pipefail
 
 work_dir=/tmp/tournaments-manager-k3s
 secret_file=/tmp/api-runtime.env
+migration_secret_file=/tmp/api-migrations-runtime.env
 integrations_file=/tmp/tournaments-manager-api-integrations.env
-trap 'rm -f "$secret_file" "$integrations_file"' EXIT
+trap 'rm -f "$secret_file" "$migration_secret_file" "$integrations_file"; sudo /usr/local/bin/k3s kubectl -n prod delete secret api-migrations-runtime --ignore-not-found >/dev/null 2>&1 || true' EXIT
 
 printf '%s\n' 'Validando sudo en la VM...'
 sudo -v
@@ -52,6 +53,92 @@ sudo /usr/local/bin/k3s ctr images import "$work_dir/tournaments-manager-api.tar
 printf '%s\n' 'Importando imagen migrator...'
 sudo /usr/local/bin/k3s ctr images import "$work_dir/tournaments-manager-migrator.tar"
 sudo /usr/local/bin/k3s ctr images ls | grep tournaments-manager
+
+# Goose se ejecuta antes de la API con la identidad migradora, nunca con la
+# credencial runtime. El Secret es efímero: se elimina al terminar este script.
+api_image="$(sed -n 's/^[[:space:]]*image: \(tournaments-manager-api:git-[[:alnum:]]*\)$/\1/p' "$work_dir/api.yaml")"
+if [ -z "$api_image" ] || [ "$(printf '%s\n' "$api_image" | wc -l | tr -d ' ')" -ne 1 ]; then
+  echo 'api.yaml debe declarar exactamente una imagen tournaments-manager-api:git-<SHA>.' >&2
+  exit 1
+fi
+migrator_image="${api_image/tournaments-manager-api:/tournaments-manager-migrator:}"
+
+printf '%s\n' 'Creando el Secret efímero de migración...'
+umask 077
+migrator_password="$(
+  sudo /usr/local/bin/k3s kubectl -n prod get secret postgresql-runtime \
+    -o jsonpath='{.data.POSTGRES_MIGRATOR_PASSWORD}' | base64 --decode
+)"
+export migrator_password
+encoded_migrator_password="$(python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["migrator_password"], safe=""))')"
+unset migrator_password
+printf '%s\n' \
+  "DATABASE_URL=postgres://tournaments_manager_prod_migrator:${encoded_migrator_password}@postgresql.prod.svc.cluster.local:5432/fasttourney_prod?sslmode=disable&search_path=public&options=-c%20role%3Dtournaments_manager_prod_schema_owner" \
+  > "$migration_secret_file"
+unset encoded_migrator_password
+
+sudo /usr/local/bin/k3s kubectl create secret generic api-migrations-runtime \
+  --namespace prod \
+  --from-env-file="$migration_secret_file" \
+  --dry-run=client -o yaml |
+  sudo /usr/local/bin/k3s kubectl apply -f -
+
+printf '%s\n' 'Ejecutando migraciones Goose (máximo 180 segundos)...'
+sudo /usr/local/bin/k3s kubectl -n prod delete job api-migrations --ignore-not-found
+cat <<EOF | sudo /usr/local/bin/k3s kubectl apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: api-migrations
+  namespace: prod
+  labels:
+    app.kubernetes.io/name: api-migrations
+    app.kubernetes.io/part-of: tournaments-manager
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api-migrations
+        app.kubernetes.io/part-of: tournaments-manager
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      containers:
+        - name: migrator
+          image: $migrator_image
+          imagePullPolicy: Never
+          args: ["-dir", "/migrations", "up"]
+          env:
+            - name: GOOSE_DRIVER
+              value: postgres
+            - name: GOOSE_DBSTRING
+              valueFrom:
+                secretKeyRef:
+                  name: api-migrations-runtime
+                  key: DATABASE_URL
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
+EOF
+sudo /usr/local/bin/k3s kubectl -n prod wait --for=condition=complete job/api-migrations --timeout=180s
+sudo /usr/local/bin/k3s kubectl -n prod logs job/api-migrations
 
 printf '%s\n' 'Creando el Secret runtime mínimo de la API...'
 umask 077

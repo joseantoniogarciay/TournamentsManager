@@ -27,6 +27,8 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
     passwordVisibility,
     validationSubmitted = false,
     validationTrigger,
+    multiline,
+    style,
     onBlur,
     onChangeText,
     onFocus,
@@ -52,6 +54,7 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
       <View
         style={[
           styles.input,
+          multiline ? styles.multilineInput : null,
           {
             borderColor: isFocused
               ? colors.border.focus
@@ -83,7 +86,13 @@ export const TextField = forwardRef<TextInput, Props>(function TextField(
           }}
           placeholderTextColor={colors.text.placeholder}
           ref={ref}
-          style={[styles.textInput, { color: colors.text.primary }]}
+          multiline={multiline}
+          style={[
+            styles.textInput,
+            multiline ? styles.multilineTextInput : null,
+            { color: colors.text.primary },
+            style,
+          ]}
           {...inputProps}
         />
         {passwordVisibility ? (
@@ -132,6 +141,15 @@ const styles = StyleSheet.create({
     minHeight: control.minHeight,
     outlineStyle: "solid",
     outlineWidth: 0,
+  },
+  multilineInput: {
+    alignItems: "flex-start",
+    minHeight: 120,
+    paddingVertical: space[3],
+  },
+  multilineTextInput: {
+    minHeight: 94,
+    textAlignVertical: "top",
   },
   visibilityButton: {
     alignItems: "center",

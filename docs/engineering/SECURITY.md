@@ -149,6 +149,10 @@ La gestión de configuración sigue
   conexión inmediata procede de `TRUSTED_PROXY_CIDRS`. En K3s, ADR-0118 exige
   además la credencial privada del borde: no se confía la red completa de Pods.
   Una cabecera enviada por un peer o token no confiable se ignora.
+- Las sugerencias exigen sesión, CSRF para cookies y tres envíos por cuenta y
+  hora. Su texto no entra en logs, trazas ni analítica. El aviso SMTP contiene el
+  texto y username únicamente en el cuerpo MIME; destinatario y asunto no aceptan
+  saltos de línea.
 - ADR-0089 fija esos orígenes públicos en `https://dev.fasttourney.com` para
   desarrollo y `https://fasttourney.com` para producción. Cada host publica
   exclusivamente la asociación de su propia aplicación nativa.

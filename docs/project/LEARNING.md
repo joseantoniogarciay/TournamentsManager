@@ -1,5 +1,56 @@
 # Registro de aprendizaje
 
+## 2026-09-18 — Cerrar una versión no impide nuevos incrementos
+
+- **Aprendido:** un producto puede cerrar su v1 cuando cumple su objetivo y sus
+  controles operativos, aunque mantenga espacio para evolucionar. Tratar cada
+  idea posterior como deuda del cierre confunde un hito terminado con un backlog
+  ilimitado.
+- **Regla reutilizable:** una nueva feature comienza como incremento de producto:
+  problema, alternativas, decisión explícita, ADR si cambia reglas, datos o
+  operación, y validación proporcional. Una GitHub Release versionada requiere
+  además el proceso trazable de ADR-0119; declarar un cierre interno no la
+  sustituye.
+
+## 2026-09-18 — Una fase de aprendizaje puede terminar al alcanzar su objetivo
+
+- **Aprendido:** una dirección tecnológica futura no es una obligación. Tras
+  operar K3s con publicación, observabilidad y recuperación demostrada, AWS
+  añadiría superficie de mantenimiento y coste sin responder a una necesidad
+  actual.
+- **Regla reutilizable:** cerrar un itinerario cuando su objetivo verificable se
+  cumple y conservar las alternativas estudiadas como conocimiento histórico.
+  Reabrir cloud exige una necesidad concreta y una nueva autorización, no la
+  inercia de un roadmap. Véase ADR-0128.
+
+## 2026-09-18 — Una réplica accesible para macOS no siempre es montable por Docker
+
+- **Aprendido:** los metadatos de una réplica en iCloud Drive pueden ser
+  legibles para macOS y aun así producir un error de E/S cuando Docker Desktop
+  intenta montar directamente esa ruta en su VM. Dar Full Disk Access a Bash
+  sería una respuesta amplia e innecesaria.
+- **Regla reutilizable:** un helper sandboxed con security-scoped bookmarks
+  puede copiar la réplica cifrada de iCloud a su staging local autorizado; el
+  contenedor de restauración monta solo esa copia temporal de lectura. Separar
+  la autorización de macOS, el staging y el volumen efímero de PostgreSQL
+  conserva el mínimo privilegio y demuestra recuperación sin tocar el PVC
+  activo. La precomprobación SSH debe ejecutarse antes de pedir secretos, para
+  no diagnosticar una clave ausente como una frase de cifrado inválida.
+- **Evidencia:** el 2026-09-18 la restauración desde la réplica publicada
+  terminó con `fasttourney_prod|f`. Véanse ADR-0114, ADR-0115 y el runbook de
+  PostgreSQL en K3s.
+
+## 2026-09-13 — Compartir un marcador no implica compartir sus reglas
+
+- **Aprendido:** fútbol y baloncesto pueden reutilizar dos enteros para el
+  resultado final, pero no la validación, puntuación, desempate ni consecuencias
+  de una retirada. Renombrar la UI sin modelar esas diferencias produciría datos
+  formalmente válidos y deportivamente falsos.
+- **Regla reutilizable:** el enum de deporte selecciona una política cerrada en
+  el dominio; persistencia y transporte conservan conceptos neutrales y el
+  cliente adapta el vocabulario. Se añade un nuevo deporte solo después de
+  definir sus divergencias, sin anticipar un motor configurable.
+
 ## 2026-09-06 — Un diálogo desplazable se limita por su caja completa
 
 - **Aprendido:** limitar solo el `ScrollView` permite que título, padding y separaciones empujen un diálogo fuera del viewport en pantallas pequeñas.
@@ -31,10 +82,53 @@
   descubribles, conservar `noindex`, devolver 404 real si no son visibles y
   recordar que la caché de la plataforma social no está bajo control del origen.
   Véase ADR-0121.
-
 - **Práctica operativa:** validar primero el renderer en el host público de
   desarrollo con un proceso y puerto propios. No se apunta el host de pruebas a
   los releases o la API de producción, aunque ambos vivan tras el mismo Caddy.
+
+## 2026-09-06 — Un nombre de recurso debe sobrevivir al segundo formato
+
+- **Aprendido:** si una API llama `league` a su recurso raíz, añadir una
+  eliminatoria como variante aparenta ahorrar trabajo pero traslada una
+  incoherencia a rutas, datos, cliente y lenguaje de producto. Migrar temprano a
+  `tournament` cuesta más en el cambio actual y reduce deuda cuando existen más
+  formatos.
+- **Límite:** un recurso raíz genérico no justifica crear ahora un motor genérico
+  de fases. Liga y eliminatoria directa conservan sus propias invariantes; una
+  combinación liga más eliminatoria requerirá primero sus reglas de
+  clasificación.
+- **Evidencia:** ADR-0122.
+
+## 2026-09-06 — Preparar una frontera no implica construir su motor
+
+- **Aprendido:** cuando un bracket puede recibir clasificadas de una liga o de
+  grupos, el partido debe pertenecer a una fase y cada plaza debe declarar su
+  fuente. Esa estructura evita migrar el árbol cuando se añada la clasificación.
+- **Límite:** no se implementan todavía grupos, ranking ni una gramática de
+  configuraciones de fases; las reglas deportivas se aceptarán antes de cada
+  tipo de fase nuevo.
+- **Evidencia:** ADR-0123.
+
+- **Regla reutilizable:** introducir la frontera `Tournament -> Stage -> Match`
+  no obliga a retirar formatos vigentes. Durante el primer incremento cada
+  torneo tiene una fase: `league` conserva una o dos vueltas y
+  `single_elimination` aplica partido único sin empates.
+
+### Retrospectiva técnica — primer incremento de eliminatorias
+
+- **Funcionó:** migrar el recurso completo a `tournament` permitió reutilizar
+  equipos, permisos y ciclo de vida sin presentar un bracket como liga. Las
+  pruebas de migración conservaron liga, resultados, historial, campeonas y
+  notificaciones.
+- **Ajuste durante la validación:** la configuración visual debe usar la opción
+  aún no persistida; de lo contrario, al elegir eliminatoria se seguía mostrando
+  temporalmente la acción de clasificación propia de liga.
+- **Deuda deliberada:** cada torneo contiene una sola fase y el origen de plaza
+  solo admite `seeded_team`, `winner` y `bye`. Grupos, cupos y combinaciones se
+  añadirán después de aceptar sus reglas, no como valores permisivos sin dominio.
+- **Prueba reutilizable:** cubrir todos los tamaños de 2 a 64 garantiza que un
+  cuadro termina en `n-1` partidos disputados, sin parejas de dos _byes_ y sin
+  ninguna rama que acepte un resultado empatado o un participante desconocido.
 
 ## 2026-09-06 — Un hito de producto no depende de que todas las plataformas estén distribuidas
 
@@ -2977,3 +3071,203 @@ K3s y también que sus componentes base siguen sanos.
 - **Regla reutilizable:** una acción que debe permanecer sobre un diálogo nativo
   abre un segundo `ModalDialog` anidado y desplazable; la ruta canónica se
   conserva para entradas directas y pantallas sin un diálogo activo.
+
+### 2026-09-08 — Foco, disponibilidad y selección deben expresar el estado actual
+
+- **Aprendido:** conservar una lista cargada durante toda la sesión evita una
+  petición, pero deja Inicio obsoleto después de crear un torneo. Del mismo modo,
+  ofrecer «Clasificación» antes de que exista su proyección y dibujar selectores
+  equivalentes como botones de distinta jerarquía comunica estados que el
+  producto todavía no tiene.
+- **Regla reutilizable:** una pantalla resumen relee su proyección al recuperar
+  el foco cuando otras rutas pueden modificarla; una acción derivada solo aparece
+  cuando su dato está disponible, y todas las opciones de una misma configuración
+  comparten estados visuales y accesibles.
+
+### 2026-09-08 — La navegación del cuadro no compite con el resultado
+
+- **Aprendido:** representar el origen y el destino de un partido como botones
+  secundarios de ancho completo llena la zona donde el marcador y su acción son
+  la información principal. Repetir «Ganador de…» en cada plaza agrava la
+  densidad conforme avanza el cuadro.
+- **Regla reutilizable:** el destino posterior usa un enlace textual discreto al
+  final de la tarjeta; el origen se reduce visualmente a una flecha junto al
+  equipo. Reducir el contenido visible no reduce accesibilidad: ambos conservan
+  44 px de objetivo táctil y una etiqueta que expresa el partido completo. El
+  encabezado del encuentro diferencia su función con semibold, mientras los
+  clubes permanecen en regular y el marcador mantiene la mayor jerarquía.
+
+### 2026-09-08 — Un foco de navegación necesita geometría y jerarquía
+
+- **Aprendido:** cambiar de ronda y marcar un ID no garantiza que la tarjeta
+  destino sea visible: el cuadro desplaza su eje horizontal, pero el scroll
+  vertical pertenece a la pantalla contenedora. Añadir «Seleccionado» al título
+  confirma el estado a costa de volver a cargar la zona principal de texto.
+- **Regla reutilizable:** una navegación interna mide destino y viewport después
+  del nuevo render, y solo desplaza el contenedor lo necesario para mostrar la
+  tarjeta completa. El foco visual usa el borde degradado sin alterar el copy;
+  una corona de marca sustituye la palabra «Ganador» y conserva esa semántica en
+  su etiqueta accesible.
+
+### 2026-09-09 — El tema web debe resolverse antes del primer render
+
+- **Aprendido:** hidratar una preferencia persistida en un efecto de React llega
+  después del primer frame; si el navegador está claro y la persona eligió
+  oscuro, el documento ya ha mostrado el canvas equivocado.
+- **Regla reutilizable:** el HTML web resuelve de forma síncrona la preferencia
+  persistida antes de pintar y comparte clave y colores con el provider. React
+  conserva después la fuente de verdad interactiva y sincroniza el fondo,
+  `color-scheme` y `theme-color` al cambiar el ajuste. Cuando CSP no admite
+  scripts inline, un recurso bloqueante del mismo origen conserva ese orden sin
+  ampliar `script-src`; recibe sus valores desde atributos generados por el HTML
+  para no duplicar configuración.
+
+### 2026-09-12 — La fase necesita una única referencia visual persistente
+
+- **Aprendido:** mantener a la vez una botonera, el título de cada columna y la
+  fase dentro de cada tarjeta repite la misma información, reduce el espacio útil
+  y hace más difícil localizar el partido. En web grande, donde varias columnas
+  conviven, la botonera tampoco describe mejor el contexto que sus cabeceras.
+- **Regla reutilizable:** la referencia persistente se adapta al layout: selector
+  de contexto en vistas compactas y cabeceras alineadas en una vista multicolumna.
+  El contenido muestra solo la identidad local necesaria —«Partido N» o «Final»—,
+  mientras las etiquetas accesibles y los enlaces conservan ronda y partido
+  completos.
+
+### 2026-09-12 — Un lienzo bidimensional necesita controles por eje independientes
+
+- **Aprendido:** el scroll horizontal nativo de un cuadro alto queda al final de
+  la columna más larga y deja de ser alcanzable durante casi todo el recorrido
+  vertical. Usar el selector de ronda para compensarlo cambia además el contexto
+  que la persona quería conservar.
+- **Regla reutilizable:** cuando una vista web combina desplazamiento vertical y
+  horizontal, el control del eje transversal permanece en el viewport y se
+  sincroniza con el lienzo y sus cabeceras. El selector semántico y la posición
+  visual son estados independientes; una acción flotante conserva prioridad
+  espacial y no queda cubierta por el control de desplazamiento.
+
+### 2026-09-12 — `fixed` no escapa de todo contenedor desplazable
+
+- **Aprendido:** en React Native Web, un control con `position: fixed` dentro del
+  árbol de un `ScrollView` puede quedar anclado al bloque creado por un ancestro
+  transformado. Visualmente conserva la coordenada inferior del primer render,
+  pero se desplaza con el contenido vertical.
+- **Regla reutilizable:** un control que deba permanecer en el viewport se monta
+  como hermano del contenedor desplazable y usa posición absoluta respecto a la
+  pantalla. La coordinación con el contenido se hace mediante estado o una
+  referencia explícita, no dependiendo del posicionamiento CSS interno.
+
+### 2026-09-13 — Un resumen debe reservar espacio para la siguiente acción
+
+- **Aprendido:** el máximo útil de una colección resumida depende también del
+  resto de la jerarquía de la pantalla; cinco tarjetas recientes desplazan una
+  nueva acción de escucha aunque la consulta siga siendo pequeña.
+- **Regla reutilizable:** cuando Inicio ofrece una proyección acotada, el límite
+  se fija en el contrato y en el servidor, no mediante un recorte exclusivo del
+  cliente. Así el payload y la promesa de producto coinciden con lo visible.
+
+### 2026-09-13 — Una notificación no sustituye al resultado duradero
+
+- **Aprendido:** enviar feedback solo por correo convierte la disponibilidad del
+  proveedor y la disciplina de un buzón en la garantía de conservación. También
+  dificulta evolucionar hacia búsqueda, estados o respuestas.
+- **Regla reutilizable:** el caso de uso confirma éxito al persistir; después
+  intenta el canal externo como efecto secundario observable. La interfaz vacía
+  el campo únicamente con esa confirmación y conserva la entrada ante error.
+
+### 2026-09-13 — Resolver el canvas no corrige un árbol SSR con colores inline
+
+- **Aprendido:** una exportación estática puede aplicar el tema oscuro a
+  `html`, `body`, `color-scheme` y `theme-color` antes del primer frame y aun
+  mostrar un destello claro. El árbol prerenderizado por React Native Web lleva
+  superficies y texto claros como estilos inline hasta que React hidrata.
+- **Regla reutilizable:** cuando el servidor estático no puede conocer la
+  preferencia del navegador, el canvas correcto se muestra de inmediato y el
+  árbol SSR incompatible permanece oculto solo hasta que la hidratación confirma
+  el tema resuelto. Debe existir un fallback visible cuando JavaScript está
+  desactivado.
+
+### 2026-09-13 — Cambiar el contexto de una lista reinicia su posición
+
+- **Aprendido:** sustituir los partidos de una ronda no reinicia por sí mismo el
+  offset del `ScrollView`; si ambas rondas tienen contenido suficiente, la nueva
+  ronda aparece por el mismo punto intermedio que la anterior.
+- **Regla reutilizable:** cuando un selector sustituye el contexto completo de
+  una lista, la vista vuelve al primer elemento sin ocultar el propio selector.
+  El destino se mide en el layout en vez de depender de una distancia fija.
+
+### 2026-09-13 — El título de sección pertenece al lienzo
+
+- **Aprendido:** incluir el título de una sección dentro de una card mezcla la
+  jerarquía de navegación con el contenido accionable y diverge de los bloques
+  hermanos que ya presentan su título sobre el lienzo.
+- **Regla reutilizable:** los títulos hermanos de Inicio viven fuera de sus
+  superficies y comparten `space[4]` con el primer contenido. Las cards repetidas
+  mantienen `space[5]` entre sí para no compactar también la colección, y los
+  bloques principales usan `space[6]` para que cada sección conserve su límite.
+
+### 2026-09-15 — Una intención de acceso compuesta necesita un solo commit
+
+- **Aprendido:** encadenar en el cliente «iniciar sesión» y «crear torneo» puede
+  confirmar la identidad aunque falle la operación que motivó el acceso. El
+  borrador local evita perder los campos, pero no satisface la promesa de que el
+  torneo ya quedó asociado.
+- **Regla reutilizable:** cuando dos escrituras pertenecen a una misma intención
+  y comparten PostgreSQL, el DTO puede transportar el dato opcional y el
+  repositorio debe confirmar sesión y agregado en una sola transacción. No se
+  introduce una saga mientras no existan límites distribuidos. El cliente borra
+  su copia recuperable solo después del éxito.
+
+### 2026-09-15 — La validación del login debe coincidir en ambos bordes
+
+- **Aprendido:** aceptar en cliente una contraseña no vacía cuando el contrato
+  exige al menos ocho caracteres convierte un error corregible en un `400` con
+  feedback genérico. Ese rechazo ocurre antes del limitador y puede confundirse
+  con un bloqueo por intentos.
+- **Regla reutilizable:** el cliente replica las restricciones de formato que
+  ayudan a corregir el formulario; el backend vuelve a validarlas como frontera
+  no confiable. Solo un `429` contractual se presenta como límite de intentos.
+
+### 2026-09-15 — Atomicidad e idempotencia protegen fallos distintos
+
+- **Aprendido:** una transacción evita confirmar la sesión sin el torneo, pero
+  una respuesta perdida después del commit permite que el cliente repita una
+  intención ya aplicada. Comparar el contenido no identifica esa intención y
+  puede mezclar torneos legítimamente iguales.
+- **Regla reutilizable:** una creación recuperable conserva una clave opaca
+  estable desde el primer borrador y PostgreSQL impone su unicidad dentro del
+  propietario. El conflicto se resuelve dentro de la misma transacción y no se
+  exportan la clave ni el contenido como telemetría.
+
+### 2026-09-15 — Un gate de vulnerabilidades depende de conocimiento externo mutable
+
+- **Aprendido:** una revisión local puede pasar y el mismo commit fallar después
+  cuando la base de vulnerabilidades publica una incidencia nueva. No es deriva
+  del código ni un falso positivo por sí mismo: el gate está reevaluando el
+  grafo fijado con evidencia de seguridad más reciente.
+- **Regla reutilizable:** se actualiza a la primera versión parcheada indicada,
+  se revisan también las subidas transitivas elegidas por Minimal Version
+  Selection y se repiten tests, build y `govulncheck`; no se desactiva el gate
+  para recuperar una CI verde.
+
+### 2026-09-15 — Los tipos de consulta no son el modelo de dominio
+
+- **Aprendido:** `sqlc` puede generar tanto `...Params` y `...Row` ajustados a
+  consultas reales como structs que reflejan tablas completas. Los primeros sí
+  forman parte del adaptador PostgreSQL; los segundos son código muerto cuando
+  ninguna consulta los devuelve.
+- **Regla reutilizable:** el dominio conserva tipos propios y el adaptador mapea
+  a los tipos de consulta generados. Se activa `omit_unused_structs` para no
+  generar espejos de tabla sin consumidores, sin eliminar los parámetros ni los
+  resultados que hacen tipado el acceso SQL.
+
+### 2026-09-15 — Un ERD explica el esquema, pero no lo sustituye
+
+- **Aprendido:** el inventario textual de entidades permite buscar detalles,
+  pero no muestra de un vistazo tablas puente, cardinalidades ni efectos de
+  borrado. Un único gráfico con todas las columnas también pierde utilidad por
+  saturación.
+- **Regla reutilizable:** el mapa visual se divide por límites reconocibles,
+  comparte las entidades que conectan las vistas y muestra solo claves y campos
+  orientativos. El SQL y las migraciones siguen siendo la fuente ejecutable y el
+  diagrama declara hasta qué versión los representa.

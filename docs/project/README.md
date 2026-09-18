@@ -12,3 +12,5 @@
   primer vertical slice y la arquitectura ejecutable del backend.
 - [PHASE_3_RETROSPECTIVE.md](PHASE_3_RETROSPECTIVE.md): cierre técnico de la
   observabilidad correlacionada, el SLO y la entrega de alertas.
+- [PHASE_4_RETROSPECTIVE.md](PHASE_4_RETROSPECTIVE.md): cierre técnico del
+  runtime doméstico K3s, publicación, observabilidad y recuperación demostrada.
