@@ -27,9 +27,9 @@ pero no reemplaza la identidad inmutable por digest que se adoptará con ECR.
 ## Flujo previsto
 
 1. En el Mac se construyen los targets `runtime` y `migrator` del Dockerfile
-   usando tags que contienen el SHA completo del commit. El segundo queda
-   preparado para migraciones explícitas, pero no se ejecuta ni recibe el
-   Secret de runtime de la API.
+   usando tags que contienen el SHA completo del commit. El segundo se usa en
+   un Job explícito y efímero de Goose, antes del rollout de la API, con la
+   identidad migradora; no recibe el Secret runtime de la API.
 2. Se exportan las imágenes como archivos OCI temporales fuera del repositorio.
 3. Se copian a `/tmp` de la VM y se importan con `k3s ctr`.
 4. El manifiesto `Deployment` referencia exactamente el tag `runtime` y declara que no
@@ -77,6 +77,8 @@ SHA=$(git rev-parse HEAD)
 docker build --platform linux/arm64 --target runtime \
   -t "tournaments-manager-api:git-$SHA" apps/backend
 docker build --platform linux/arm64 --target migrator \
+  --build-arg SCHEMA_OWNER=tournaments_manager_prod_schema_owner \
+  --build-arg APP_ROLE=tournaments_manager_prod_app \
   -t "tournaments-manager-migrator:git-$SHA" apps/backend
 docker save "tournaments-manager-api:git-$SHA" -o /tmp/tournaments-manager-api.tar
 docker save "tournaments-manager-migrator:git-$SHA" -o /tmp/tournaments-manager-migrator.tar
@@ -89,9 +91,10 @@ rm -f /tmp/tournaments-manager-api.tar /tmp/tournaments-manager-migrator.tar
 ```
 
 Actualiza `infra/k3s/core/api.yaml` con el tag del `runtime` construido antes de
-aplicar el Deployment. Las migraciones se ejecutarán posteriormente con el
-target `migrator`, la identidad migradora y un Job explícito; importarlo no las
-ejecuta.
+aplicar el Deployment. El wrapper ejecuta entonces un Job de Goose con el target
+`migrator` y la identidad migradora. Construye temporalmente su `DATABASE_URL`
+desde `postgresql-runtime`, espera su éxito y elimina el Secret efímero antes de
+desplegar la API; importarlo por sí solo no ejecuta migraciones.
 
 Si las imágenes y los manifests ya están copiados a
 `/tmp/tournaments-manager-k3s` de la VM, el operador puede ejecutar desde la
