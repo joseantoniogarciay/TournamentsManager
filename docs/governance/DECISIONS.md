@@ -49,7 +49,8 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
-| [0128](../adr/0128-close-roadmap-after-k3s-and-cancel-aws-phase.md)                          | Cerrar el roadmap tras K3s y cancelar la Fase AWS                              | Aceptado              | 2026-09-18 |
+| [0129](../adr/0129-accept-voluntary-developer-tips-with-platform-appropriate-payments.md)     | Aceptar propinas voluntarias con pagos adecuados por plataforma                 | Aceptado              | 2026-09-19 |
+| [0128](../adr/0128-close-roadmap-after-k3s-and-cancel-aws-phase.md)                           | Cerrar el roadmap tras K3s y cancelar la Fase AWS                               | Aceptado              | 2026-09-18 |
 | [0127](../adr/0127-create-tournament-atomically-with-login-session.md)                        | Crear el torneo atómicamente con la sesión de acceso                            | Aceptado              | 2026-09-15 |
 | [0126](../adr/0126-support-football-and-basketball-with-explicit-sport-rules.md)              | Soportar fútbol y baloncesto con reglas deportivas explícitas                   | Aceptado              | 2026-09-13 |
 | [0125](../adr/0125-persist-private-product-suggestions-and-notify-by-email.md)                | Persistir sugerencias privadas y avisar por correo                              | Aceptado              | 2026-09-13 |

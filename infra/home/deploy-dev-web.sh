@@ -5,6 +5,7 @@ repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 release_sha=${1:?"Uso: deploy-dev-web.sh <SHA-completo>"}
 release_root=/opt/homebrew/var/www/fasttourney/dev/releases
 release_directory="$release_root/$release_sha"
+config_file=${FASTTOURNEY_DEV_WEB_CONFIG:-$repository_root/infra/home/secrets/development-web.env}
 
 case "$release_sha" in
   *[!0123456789abcdef]*)
@@ -26,6 +27,34 @@ fi
 install -d -m 755 "$release_root"
 staging_directory=$(mktemp -d "$release_root/.staging.XXXXXX")
 trap 'rm -rf "$staging_directory"' EXIT
+
+if [ -r "$config_file" ]; then
+	# La configuración de desarrollo es opcional: sin enlaces de prueba, la
+	# superficie de propinas permanece oculta en dev.
+	set -a
+	# shellcheck disable=SC1090
+	. "$config_file"
+	set +a
+fi
+
+configured_tip_links=0
+for amount in 2 5 10; do
+	variable_name="EXPO_PUBLIC_TIP_PAYMENT_LINK_${amount}_EUR"
+	eval "variable_value=\${$variable_name:-}"
+	if [ -n "$variable_value" ]; then
+		case "$variable_value" in
+			https://buy.stripe.com/test_*) configured_tip_links=$((configured_tip_links + 1)) ;;
+			*)
+				echo "$variable_name debe contener un Payment Link de prueba de Stripe." >&2
+				exit 1
+				;;
+		esac
+	fi
+done
+if [ "$configured_tip_links" -ne 0 ] && [ "$configured_tip_links" -ne 3 ]; then
+	echo "Los Payment Links de prueba deben configurarse juntos para 2 €, 5 € y 10 €." >&2
+	exit 1
+fi
 
 cd "$repository_root"
 EXPO_NO_DOTENV=1 \

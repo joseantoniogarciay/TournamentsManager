@@ -242,6 +242,17 @@ La configuración y los secretos siguen
   formato inválido.
 - El cliente Expo solo podrá leer desde JavaScript variables `EXPO_PUBLIC_*`, que
   se tratarán como públicas.
+- Las tres variables `EXPO_PUBLIC_TIP_PAYMENT_LINK_<IMPORTE>_EUR` contienen los
+  Payment Links públicos de Stripe para 2 €, 5 € y 10 €. Solo se declaran al
+  activar la web después de completar las verificaciones de Stripe, fiscales y
+  de copy exigidas por [ADR-0129](../adr/0129-accept-voluntary-developer-tips-with-platform-appropriate-payments.md).
+  Si falta una o no es HTTPS, la sección de propinas queda oculta. Los archivos
+  nativos no leen estas variables ni enlazan a un método de pago externo.
+- La exportación pública de desarrollo recibe los tres enlaces de prueba desde
+  `infra/home/secrets/development-web.env`; exige el prefijo
+  `https://buy.stripe.com/test_` y rechaza cualquier configuración parcial. Los
+  enlaces live solo se declaran en `production-web.env`, cuyo gate rechaza a su
+  vez enlaces de prueba y exige también los tres importes juntos.
 - `EXPO_PUBLIC_API_BASE_URL` indica la base pública de la API para el cliente;
   en desarrollo, si no se declara, usa `http://127.0.0.1:8080/v1`. En Android
   físico o emulador debe apuntar a una dirección alcanzable desde el dispositivo,

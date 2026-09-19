@@ -99,6 +99,15 @@ la aportación; un fallo conserva el texto para reintentar. Se admiten tres env�
 por cuenta y hora. La primera versión no publica sugerencias ni permite
 respuestas: PostgreSQL conserva el registro y el correo solo avisa al responsable.
 
+Justo debajo, la home autenticada web puede ofrecer «Apoya el desarrollo» con
+propinas únicas visibles de 2 €, 5 € y 10 €. La sección solo aparece cuando los
+tres Payment Links de Stripe están configurados; abre su checkout alojado y
+declara que no hay contraprestación ni deducción fiscal. iOS y Android no la
+renderizan ni reciben esos enlaces, conforme a [ADR-0129](../adr/0129-accept-voluntary-developer-tips-with-platform-appropriate-payments.md).
+La interfaz de FastTourney se localiza, pero el nombre y la descripción del
+catálogo de Stripe se mantienen en inglés para evitar productos y enlaces por
+idioma.
+
 La sección «Torneos» separa las colecciones completas en «Administro» y «Sigo».
 Es una clasificación de navegación: las autorizaciones continúan verificándose
 en el backend para cada liga y acción. La colección autenticada se define en
@@ -293,7 +302,8 @@ Las invitaciones y una audiencia restringida siguen fuera de este corte.
 
 Salvo decisión posterior:
 
-- pagos y premios;
+- pagos por funciones, suscripciones y premios; las propinas voluntarias sin
+  contraprestación se rigen por ADR-0129;
 - streaming o contenido multimedia;
 - chat;
 - marketplace;

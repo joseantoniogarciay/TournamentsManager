@@ -186,6 +186,12 @@ hace que los enlaces de liga compartidos apunten al dominio público. La API y
 la web de producción se abrieron el 2026-09-05 tras validar TLS, CORS y el
 release; no supone autorizar los clientes ni asociaciones móviles pendientes.
 
+Al activar el canal de apoyo de [ADR-0129](../adr/0129-accept-voluntary-developer-tips-with-platform-appropriate-payments.md),
+`infra/home/secrets/production-web.env` añade los tres Payment Links públicos
+de Stripe para 2 €, 5 € y 10 €. El script ya los propaga a la exportación web;
+si alguno falta o no es HTTPS, la interfaz no ofrece propinas. No se añaden a
+la configuración de builds nativas.
+
 La preparación concreta de la web separa construir de activar:
 `infra/home/stage-prod-web.sh` crea un release estático inmutable con SHA,
 asociaciones móviles reales y configuración OAuth de producción externa a Git;
