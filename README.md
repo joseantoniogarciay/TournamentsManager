@@ -2,7 +2,7 @@
 
 > Estado: producto v1 cerrado; Fases 2, 3 y 4 completadas; roadmap cerrado tras K3s
 >
-> Última revisión: 2026-09-18
+> Última revisión: 2026-09-19
 
 Este repositorio empieza por el handbook porque el objetivo no es solo entregar una
 aplicación: es aprender a diseñar, construir, desplegar y operar un producto con
@@ -109,6 +109,7 @@ La guía de recorrido y organización del backend está en
 | Estrategia de pruebas por riesgo y capas            | Aceptada                                                                                                                                                | [ADR-0019](docs/adr/0019-use-risk-based-layered-testing.md)                                                                                                                                                                     |
 | Go y Docker; AWS                                     | Go y Docker vigentes; AWS cancelado para este roadmap                                                                                                  | [ADR-0128](docs/adr/0128-close-roadmap-after-k3s-and-cancel-aws-phase.md)                                                                                                                                                       |
 | Producto web y mobile de torneos                    | Alcance aceptado                                                                                                                                        | [PRODUCT.md](docs/project/PRODUCT.md)                                                                                                                                                                                           |
+| Apoyo voluntario al desarrollo                      | Web mediante Stripe Payment Links configurados por entorno; implementación móvil aplazada hasta distribuir las apps                                    | [ADR-0129](docs/adr/0129-accept-voluntary-developer-tips-with-platform-appropriate-payments.md)                                                                                                                                |
 | React Native universal                              | Expo, Expo Router y CNG aceptados                                                                                                                       | [ADR-0008](docs/adr/0008-use-a-universal-react-native-client.md), [ADR-0015](docs/adr/0015-use-expo-router-and-continuous-native-generation.md)                                                                                 |
 | TypeScript y cliente API generado                   | Aceptada; toolchain fijado                                                                                                                              | [ADR-0009](docs/adr/0009-use-rest-and-openapi-contract-first.md), [ADR-0014](docs/adr/0014-use-node-pnpm-and-strict-typescript.md)                                                                                              |
 | Redis o Valkey                                      | Pendiente de evaluación                                                                                                                                 | [DECISIONS_TO_REVISIT.md](docs/governance/DECISIONS_TO_REVISIT.md)                                                                                                                                                              |
@@ -150,7 +151,9 @@ la [guía de `apps/client`](apps/client/README.md): explica cómo iniciarlo, su
 navegación actual y las reglas de localización y diseño que aplican a cada
 pantalla. La referencia operativa completa permanece en
 [DEVELOPMENT.md](docs/engineering/DEVELOPMENT.md) para evitar duplicar comandos
-y decisiones técnicas.
+y decisiones técnicas. La home web autenticada muestra apoyo voluntario de 2 €,
+5 € y 10 € solo cuando el entorno configura los tres Payment Links de Stripe;
+iOS y Android no reciben ni muestran esos enlaces.
 
 ## Regla de precedencia
 

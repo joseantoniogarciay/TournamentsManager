@@ -159,6 +159,7 @@ Antes de distribuir móvil:
 
 ## Documentación afectada
 
+- [README del repositorio](../../README.md)
 - [Producto](../project/PRODUCT.md)
 - [Decisiones](../governance/DECISIONS.md)
 - [Decisiones a revisar](../governance/DECISIONS_TO_REVISIT.md)
