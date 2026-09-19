@@ -1,7 +1,8 @@
 # Activación y comprobación de Google RISC
 
-> Estado: implementado en la API; activación externa pendiente en cada proyecto
-> OAuth público. Última prueba: pendiente.
+> Estado: implementado en la API; activación externa aplazada hasta que se opere
+> el stream del proyecto OAuth. No bloquea el cierre de v1 y exige entonces una
+> prueba end-to-end registrada.
 
 ## Síntoma y alcance
 

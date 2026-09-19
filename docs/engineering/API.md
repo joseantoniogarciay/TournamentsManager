@@ -1,13 +1,13 @@
 # API
 
-> Estado: REST y OpenAPI contract-first aceptados; el primer incremento está
-> implementado de forma progresiva conforme a ADR-0045.
+> Estado: contrato OpenAPI v1 e implementación Go activos; cliente TypeScript
+> generado y comprobación de deriva integrados en `make verify`.
 
 ## Relación entre API y backend
 
 El backend es el sistema ejecutado en el servidor: dominio, casos de uso,
 autorización, persistencia, procesos y adaptadores. La API REST es uno de sus
-adaptadores de entrada. Ambos se implementarán en Go.
+adaptadores de entrada. Ambos están implementados en Go.
 
 OpenAPI describe el contrato HTTP entre ese backend y sus consumidores. No
 implementa el servidor ni contiene reglas de negocio.
@@ -60,24 +60,21 @@ endpoint; no que OpenAPI preceda a las decisiones de producto.
 ## Navegación frente a operación REST
 
 Una ruta del cliente no equivale necesariamente a una operación de la API. Por
-ejemplo, el enlace de vinculación aceptado en
-[ADR-0010](../adr/0010-own-identity-with-federated-login.md) abre
-`/auth/link/confirm?token=...` mediante `GET`, pero esa navegación no cambia
-estado. La confirmación explícita realizará una operación `POST` del backend,
-cuyo contrato se diseñará en OpenAPI antes de implementarse.
+ejemplo, un enlace de recuperación abre una ruta del cliente mediante `GET`;
+esa navegación inspecciona el token pero no cambia la contraseña. La
+confirmación explícita usa después `POST /password-reset-confirmations`, cuyo
+contrato representa la mutación.
 
 Esta separación mantiene `GET` como método seguro, permite deep linking con
 fallback web y evita que una previsualización del enlace vincule una cuenta.
 
-## Decisiones pendientes
+## Disparadores de evolución
 
-- estrategia de compatibilidad y retirada cuando exista una segunda versión;
-- presupuestos generales de timeout y protección de abuso para rutas que
-  adquieran tráfico representativo;
-- idempotencia explícita para futuras operaciones cuya repetición pueda causar
-  un efecto distinto del contrato actual;
-- generación de tipos de transporte Go si la duplicación manual deja de ser
-  mantenible.
+No quedan decisiones bloqueantes para el contrato v1. Se reabrirá el análisis
+de compatibilidad al proponer una segunda versión; los presupuestos de timeout
+y abuso se revisarán con tráfico representativo; cada nueva mutación decidirá
+su idempotencia; y solo se generarán tipos de transporte Go si la duplicación
+manual demuestra un coste real.
 
 ## Baseline de calidad
 
@@ -108,9 +105,9 @@ Todo contrato futuro debe:
 La fuente de verdad de diseño es
 [`contracts/openapi/v1/openapi.yaml`](../../contracts/openapi/v1/openapi.yaml).
 Usa OpenAPI 3.1, prefijo `/v1` y `application/problem+json` conforme a RFC 9457.
-Incluye alta, reenvío y confirmación de verificación, login, sesión actual y
-logout; la baja programada de cuenta se incorporará conforme a ADR-0074. Incluye
-también consulta del borrador verificado, colecciones autenticadas de torneos
+Incluye alta, reenvío y confirmación de verificación, login, sesión actual,
+logout y baja programada de cuenta. Incluye también consulta del borrador
+verificado, colecciones autenticadas de torneos
 relacionados y recientes, publicación y lectura pública por ID.
 `GET /me/tournaments` pagina por
 UUIDv7 y filtra en el servidor las relaciones `administered` y `followed`; la
@@ -269,7 +266,7 @@ make openapi-ui
 Scalar se sirve solo en `http://127.0.0.1:8083` y lee directamente
 `contracts/openapi/v1/openapi.yaml`. Admite OpenAPI 3.1 y no es una fuente
 adicional del contrato ni forma parte del artefacto desplegable de la API.
-Para probar operaciones cuando exista el servidor Go local, el contrato apunta
+Para probar operaciones con el servidor Go local, el contrato apunta
 a `http://127.0.0.1:8080/v1`; el puerto `8083` queda reservado para Scalar.
 
 Cada release de desarrollo público publica además la misma referencia en
@@ -278,19 +275,13 @@ ese release y Scalar sustituye su servidor por
 `https://dev-api.fasttourney.com/v1`; no se publica en producción ni requiere
 un hostname, DNS o regla CORS adicional.
 
-## Superficie candidata del primer vertical slice
+## Superficie vigente
 
-Sin fijar todavía rutas ni payloads, la API necesitará capacidades para:
-
-- resolver el acceso visible para invitado o invitación;
-- consultar el detalle permitido;
-- obtener la identidad y sesión actuales;
-- crear un torneo como usuario autenticado;
-- incorporarse a un torneo;
-- consultar la relación del usuario con el torneo.
-
-El diseño debe esperar a las decisiones de visibilidad, incorporación,
-participantes e identidad descritas en [SYSTEM_OPTIONS.md](../governance/SYSTEM_OPTIONS.md).
+El contrato v1 cubre identidad local y Google, sesiones, seguridad de cuenta,
+sugerencias, notificaciones, colecciones autenticadas y el ciclo completo de
+torneos, equipos, partidos, administración, seguimiento y transferencia. La
+lista exacta de rutas y payloads permanece únicamente en OpenAPI para evitar
+mantener un segundo inventario manual.
 
 # Gestión de métodos de acceso
 

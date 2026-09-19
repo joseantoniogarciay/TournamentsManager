@@ -1,7 +1,7 @@
 # Modelo inicial de datos
 
-> Estado: diseño aceptado y ajustado por ADR-0122 y ADR-0123. No es una
-> migración ni un modelo Go.
+> Estado: vista explicativa del modelo vigente hasta la migración `00008`,
+> ajustada por ADR-0122 y ADR-0123. No es una migración ni un modelo Go.
 
 ## Alcance
 

@@ -38,16 +38,13 @@ topología completa.
 - ningún despliegue sin health checks y criterio de éxito;
 - ningún backup sin restauración probada.
 
-## Continuidad futura de producción
+## Continuidad de producción
 
-**Pendiente de diseño concreto antes de implementar.** Para evitar que un cambio
-de versión interrumpa las peticiones, producción evaluará un despliegue
-blue/green detrás del ingress K3s y Caddy: la instancia nueva arranca separada,
-supera health checks y una validación funcional mínima, se conmuta el tráfico y
-la instancia anterior permanece disponible durante un periodo breve de
-observación. Un rollback posterior vuelve a arrancar y validar el SHA anterior
-antes de conmutar otra vez. ADR-0111 fija la VM K3s como runtime, pero no decide
-todavía este mecanismo.
+v1 usa el rollout y rollback verificado de K3s; no adopta blue/green. Se
+evaluaría una instancia paralela detrás del Ingress y Caddy solo si aparece un
+requisito de disponibilidad que el rollout actual no cumpla. ADR-0111 fija la
+VM K3s como runtime y la retrospectiva de Fase 4 registra este límite como deuda
+deliberada, no como trabajo pendiente.
 
 Durante la conmutación ambas versiones deben ser compatibles con el mismo
 esquema PostgreSQL. Los cambios destructivos o incompatibles exigirán una
@@ -56,13 +53,10 @@ restauración), no solo volver a una imagen anterior.
 
 ## Límite de despliegue desde GitHub
 
-El repositorio será público, pero el acceso operativo no. CI construirá y
-verificará en infraestructura aislada. Los jobs de producción necesitarán un
-environment protegido y una identidad temporal o dedicada de mínimo privilegio.
-
-No se conectará el repositorio público a un runner permanente dentro del VPS. El
-modelo concreto —push controlado desde runner alojado o pull de artefactos desde
-el servidor— se decidirá antes del primer despliegue.
+El repositorio es público, pero el acceso operativo no. CI verifica en runners
+alojados sin acceso al runtime doméstico. Los despliegues de `dev` y `prod` son
+operaciones locales explícitas desde identidades dedicadas; no existe un runner
+self-hosted permanente conectado al repositorio público.
 
 La configuración y los secretos de despliegue siguen
 [ADR-0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md):
@@ -91,7 +85,7 @@ metadatos sociales desde la API pública en el mismo shell estático. Más
 superficies dinámicas o SSR completo se decidirán solo si Search Console,
 previews o rendimiento aportan evidencia (ADR-0121 y ADR-0120).
 
-La API se empaquetará como imagen OCI conforme a
+La API se empaqueta como imagen OCI conforme a
 [ADR-0022](../adr/0022-package-backend-as-oci-image.md). Esta imagen solo
 contendrá el backend y mantendrá build y runtime separados. No decide todavía
 la firma, el SBOM ni el escaneo reforzado.
@@ -109,10 +103,9 @@ cloud previsto. Solo una necesidad futura explícita reabriría ese análisis.
 
 Conforme a [ADR-0076](../adr/0076-run-the-local-api-in-compose-with-air.md),
 Compose ejecuta API, PostgreSQL y Mailpit. La API selecciona el target `dev` del
-Dockerfile y usa Air con el código montado; el target `runtime` queda reservado
-para validar el artefacto sin compilador ni Air. Expo se ejecuta en host por sus
-simuladores y herramientas nativas. La imagen `runtime` se desplegará en K3s
-para `prod`, con configuración, red y datos separados de `dev`.
+Dockerfile y usa Air con el código montado; el target `runtime` valida el
+artefacto sin compilador ni Air y es también la imagen desplegada en K3s para
+`prod`. Expo se ejecuta en host por sus simuladores y herramientas nativas.
 
 Una beta doméstica usa Cloudflare Tunnel como entrada HTTPS pública (ADR-0090).
 El conector del Mac inicia una conexión saliente y alcanza Caddy solo por
@@ -121,7 +114,7 @@ interno de la API.
 
 ADR-0089 fija `fasttourney.com` para producción, `dev.fasttourney.com` para
 desarrollo, `api.fasttourney.com` para la API de producción y
-`dev-api.fasttourney.com` para la API de desarrollo. Caddy servirá los ficheros
+`dev-api.fasttourney.com` para la API de desarrollo. Caddy sirve los ficheros
 `.well-known` correctos en los dos primeros hosts; los hosts de API no participan
 en Universal Links ni App Links.
 
@@ -150,14 +143,13 @@ merge de `main`, una GitHub Release y un artefacto activo del mismo SHA. Esto no
 equivale a backup. ADR-0108 añade para `dev` un repositorio
 pgBackRest cifrado, copia base, incrementales y WAL archivado con restauración
 aislada; véase el [runbook de backup PostgreSQL](../runbooks/postgresql-backup-dev.md).
-`prod` ya tiene PostgreSQL con volumen y repositorio propios, pgBackRest cifrado,
-WAL archivado, una primera completa y restauración aislada local verificada.
-Quedan por automatizar la completa semanal, los incrementales diarios y la
-réplica verificable fuera de la VM. Conforme a ADR-0114, el Mac inicia por SSH
-una copia del repositorio cifrado de
-la VM hacia su ubicación doméstica sincronizada; no se comparte una carpeta UTM
-ni se entrega una clave privada del Mac a Kubernetes. Esa ubicación sigue
-compartiendo Mac, cuenta y proveedor: no equivale a independencia ante su
+`prod` tiene PostgreSQL con volumen y repositorio propios, pgBackRest cifrado,
+WAL archivado, completa semanal, incrementales diarios y restauración aislada
+verificada. Conforme a ADR-0114, el Mac inicia por SSH la réplica cifrada desde
+la VM hacia su ubicación doméstica sincronizada; la ejecución programada y la
+restauración desde esa réplica se demostraron el 2026-09-18. No se comparte una
+carpeta UTM ni se entrega una clave privada del Mac a Kubernetes. Esa ubicación
+sigue compartiendo Mac, cuenta y proveedor: no equivale a independencia ante su
 pérdida.
 
 Mailpit pertenece solo al entorno local y no tiene hostname público. El entorno
@@ -173,8 +165,8 @@ de solo envío, montada desde un secreto local, para no compartir el radio de
 revocación del correo transaccional. Las interfaces operativas se publican solo
 en loopback y no forman parte de Cloudflare Tunnel; véase ADR-0100.
 
-Antes de publicar el futuro artefacto web de producción, su script de exportación
-debe declarar, sin leer el `.env` local y limpiando la caché de Metro:
+El script del artefacto web de producción declara, sin leer el `.env` local y
+limpiando la caché de Metro:
 
 ```sh
 EXPO_PUBLIC_API_BASE_URL=https://api.fasttourney.com/v1
@@ -197,8 +189,8 @@ La preparación concreta de la web separa construir de activar:
 asociaciones móviles reales y configuración OAuth de producción externa a Git;
 `activate-prod-web.sh` conmuta solo su enlace simbólico y
 `rollback-prod-web.sh` vuelve a un SHA existente. El bloque Caddy
-`production_web` conserva CSP, SPA y `/.well-known`, pero el host no lo importa
-hasta recibir autorización explícita. El
+`production_web` conserva CSP, SPA y `/.well-known`; activarlo o volver al `503`
+requiere una operación explícita y verificable. El
 [runbook de publicación](../runbooks/production-web-publication.md) exige TLS
 válido, Tunnel sano, CORS, correo, Google y recorridos controlados antes de esa
 conmutación.

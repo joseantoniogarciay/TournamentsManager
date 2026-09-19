@@ -2,11 +2,11 @@
 
 > Estado: base visual Pulse aceptada en ADR-0054.
 
-## Alcance inicial
+## Alcance vigente
 
 Los tokens viven en `packages/design-tokens` y no dependen de React, Expo ni de
 la web. Las pantallas consumen nombres semánticos, nunca hexadecimales o píxeles
-repetidos. Los textos de interfaz se incorporarán en un catálogo separado.
+repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 
 ## Fundaciones
 

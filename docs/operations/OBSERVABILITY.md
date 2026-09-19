@@ -1,6 +1,7 @@
 # Observabilidad
 
-> Base aceptada: OpenTelemetry, Prometheus, Grafana, Loki y Tempo. El
+> Estado: Fase 3 cerrada y stack operativo en `local`, `dev` y `prod`.
+> OpenTelemetry, Prometheus, Grafana, Loki y Tempo forman la base. El
 > OpenTelemetry Collector queda aplazado hasta que una necesidad medida lo
 > justifique. Véase [ADR-0020](../adr/0020-use-minimal-correlated-observability.md).
 
@@ -53,7 +54,7 @@ El servicio debe degradarse de forma segura si un backend de telemetría no est�
 configurado o no está disponible. El dominio no importa SDKs ni tipos de los
 backends.
 
-## Primer corte ejecutable — refresh de sesión
+## Recorrido de referencia — refresh de sesión
 
 La primera pregunta operativa es: **¿por qué falló o se degradó un refresh de
 sesión web?** La ruta observada es `POST /v1/sessions/refresh`; atraviesa HTTP,
@@ -259,7 +260,9 @@ Con esta evidencia se cumple el criterio de salida documentado en
 - seguridad de datos;
 - facilidad de backup, upgrade y diagnóstico.
 
-No se crearán paneles, alertas, SLO, retenciones de producción ni perfiles por
-completitud. La excepción aceptada es el SLO local de refresh, porque responde a
-una pregunta operativa concreta; la unidad mínima sigue siendo una pregunta
-respondida de extremo a extremo y validada provocando un fallo.
+No se añaden paneles, alertas, SLO, retenciones ni perfiles por completitud. El
+SLO de refresh existente responde a una pregunta operativa concreta; la unidad
+mínima sigue siendo una pregunta respondida de extremo a extremo y validada
+provocando un fallo. La desviación de retención de seguridad se registra en
+[LOG_RETENTION.md](LOG_RETENTION.md), no se disfraza ampliando señales sin un
+destino adecuado.

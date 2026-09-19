@@ -1,8 +1,8 @@
 # Estrategia de pruebas
 
-> Estado: estrategia por riesgo y capas aceptada. CI ejecuta `make verify` como
-> señal informativa; las herramientas específicas, presupuestos y gates por
-> riesgo continúan pendientes.
+> Estado: estrategia por riesgo aplicada. CI y el gate local ejecutan
+> `make verify`; las suites Go, PostgreSQL, contrato y exportación web están
+> activas.
 
 ## Objetivo
 
@@ -12,23 +12,23 @@ aislada ni una pirámide rígida.
 
 ## Selección por riesgo
 
-| Riesgo | Evidencia preferida |
-|---|---|
-| Invariante de dominio | Prueba rápida del dominio/caso de uso |
-| Consulta o transacción | Integración con PostgreSQL real |
-| Deriva SQL/esquema/Go | Generación `sqlc` y compilación |
-| Esquema inicial | Aplicación desde vacío y generación `sqlc` |
-| Contrato externo | Prueba de contrato |
-| Deriva OpenAPI/Go | Validación del backend contra la descripción |
-| Deriva OpenAPI/TypeScript | Regeneración determinista y diff limpio |
-| Cableado de componentes | Integración o smoke test |
-| Flujo crítico | Prueba end-to-end mínima |
-| Paridad del cliente | Mismo escenario funcional en web, iOS y Android |
-| Layout adaptativo | Pruebas visuales y de interacción en móvil, tablet y escritorio |
-| Calidad web privada inicial | Accesibilidad, navegación por teclado, URLs internas y rendimiento percibido |
-| Calidad web pública futura | Metadatos, previews sociales, SEO y estrategia de rendering si se acepta visibilidad pública |
-| Seguridad/abuso | Pruebas negativas y de autorización |
-| Operabilidad | Inyección de fallo y verificación de señales/runbook |
+| Riesgo                      | Evidencia preferida                                                                     |
+| --------------------------- | --------------------------------------------------------------------------------------- |
+| Invariante de dominio       | Prueba rápida del dominio/caso de uso                                                   |
+| Consulta o transacción      | Integración con PostgreSQL real                                                         |
+| Deriva SQL/esquema/Go       | Generación `sqlc` y compilación                                                         |
+| Esquema inicial             | Aplicación desde vacío y generación `sqlc`                                              |
+| Contrato externo            | Prueba de contrato                                                                      |
+| Deriva OpenAPI/Go           | Validación del backend contra la descripción                                            |
+| Deriva OpenAPI/TypeScript   | Regeneración determinista y diff limpio                                                 |
+| Cableado de componentes     | Integración o smoke test                                                                |
+| Flujo crítico               | Prueba end-to-end mínima                                                                |
+| Paridad del cliente         | Mismo escenario funcional en web, iOS y Android                                         |
+| Layout adaptativo           | Pruebas visuales y de interacción en móvil, tablet y escritorio                         |
+| Calidad web privada inicial | Accesibilidad, navegación por teclado, URLs internas y rendimiento percibido            |
+| Calidad web pública         | Metadatos, previews sociales, SEO, indexación selectiva y renderer de ligas compartidas |
+| Seguridad/abuso             | Pruebas negativas y de autorización                                                     |
+| Operabilidad                | Inyección de fallo y verificación de señales/runbook                                    |
 
 ## Reglas
 
@@ -106,17 +106,14 @@ Durante el desarrollo se prefiere el test más cercano al cambio:
 go -C apps/backend test ./ruta/del/paquete/...
 ```
 
-No se crean tests vacíos para demostrar que el runner funciona. El primer test se
-añadirá con el primer comportamiento observable o riesgo real.
+No se crean tests vacíos para demostrar que el runner funciona. Cada prueba se
+añade con un comportamiento observable o riesgo real.
 
-## Decisiones pendientes
+## Disparadores de evolución
 
-- librerías de assertions y mocks, si se demuestran necesarias;
-- limpieza adicional de la base efímera de pruebas si el aislamiento por runner deja de ser suficiente;
-- organización, tags y presupuesto temporal;
-- ejecución local y CI: PostgreSQL 18.4 efímero en GitHub Actions para las
-  transacciones que declaran `TM_INTEGRATION_DATABASE_URL` (ADR-0071);
-- pruebas de carga, resiliencia y seguridad.
-- herramientas para pruebas del cliente universal y dispositivos objetivo;
-- matriz mínima de web, iOS, Android, móvil, tablet y escritorio;
-- reparto de pruebas compartidas y específicas de plataforma.
+No quedan decisiones de prueba bloqueantes para v1. Se añadirán librerías de
+assertions o mocks solo ante repetición demostrada; limpieza adicional si el
+aislamiento de PostgreSQL deja de ser suficiente; carga, resiliencia o seguridad
+ante riesgo medido; y matrices distribuidas de dispositivos antes de publicar
+las apps nativas. PostgreSQL 18.4 efímero ya se usa en CI para las transacciones
+que declaran `TM_INTEGRATION_DATABASE_URL` conforme a ADR-0071.

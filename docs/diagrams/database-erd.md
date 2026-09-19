@@ -4,7 +4,7 @@
 >
 > Alcance: `initial_schema.sql` y migraciones hasta `00008`.
 >
-> Última revisión: 2026-09-15.
+> Última revisión: 2026-09-19.
 
 Este mapa es una vista explicativa. La fuente de verdad ejecutable continúa
 siendo el [esquema y sus migraciones](../../apps/backend/db/); ante cualquier

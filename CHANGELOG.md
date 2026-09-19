@@ -4,6 +4,26 @@ Los cambios relevantes del handbook, producto y operación se registran aquí. E
 formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed` y
 `Security` cuando existan releases.
 
+## [Unreleased]
+
+### Added
+
+- La home web autenticada permite apoyar voluntariamente el desarrollo mediante
+  Payment Links de Stripe de 2 €, 5 € y 10 €, configurados por entorno y sin
+  exponerlos en las apps nativas.
+
+### Changed
+
+- El handbook distingue de forma explícita estado vigente e historia: el cierre
+  de v1, K3s doméstico, migraciones, recuperación, API y pruebas dejan de
+  aparecer como trabajo pendiente; las capacidades no adoptadas indican ahora
+  su disparador de revisión.
+- La auditoría documental registra como desviación real —en vez de ocultarla
+  como trabajo cerrado— que K3s conserva 24 horas de eventos de seguridad frente
+  a los 12 meses decididos en ADR-0106.
+- El mapa entidad-relación fija una paleta de alto contraste independiente del
+  tema claro u oscuro de GitHub.
+
 ## [1.3.0] - 2026-09-18
 
 ### Added

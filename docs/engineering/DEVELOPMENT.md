@@ -12,8 +12,8 @@
 - El entorno local debe parecerse a producción en comportamiento, no replicar todo
   su coste ni complejidad.
 - Cada automatización debe poder explicarse y tener una ruta de diagnóstico.
-- Los comandos frecuentes tendrán una única entrada documentada cuando exista
-  código.
+- Los comandos frecuentes tienen una única entrada documentada en el Makefile o
+  script operativo correspondiente.
 - Configuración, secretos y datos de ejemplo se tratarán de forma explícita.
 - La documentación cambia en el mismo conjunto de cambios que el comportamiento.
 - OpenAPI es la fuente editable del contrato HTTP; el cliente TypeScript generado
@@ -22,8 +22,9 @@
   la comprobación de deriva forma parte de `make verify`.
 - El equipo escribe las consultas SQL; el código de acceso generado por `sqlc`
   no se modifica manualmente.
-- El esquema inicial se aplica explícitamente y no al arrancar la API; Goose no
-  se ejecuta durante la primera versión.
+- El esquema inicial se aplica explícitamente solo sobre una base vacía; Goose
+  aplica después las migraciones versionadas como paso de despliegue, nunca al
+  arrancar la API.
 - Toda generación debe ser reproducible mediante un comando versionado y producir
   un diff limpio cuando las entradas no cambian.
 
@@ -237,7 +238,7 @@ La configuración y los secretos siguen
 [ADR-0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md).
 
 - Los `.env` reales son locales y están ignorados por Git.
-- Los `.env.example` futuros serán contratos versionados por app o servicio.
+- Los `.env.example` son contratos versionados por app, servicio o entorno.
 - El backend fallará al arrancar si falta configuración obligatoria o tiene
   formato inválido.
 - El cliente Expo solo podrá leer desde JavaScript variables `EXPO_PUBLIC_*`, que

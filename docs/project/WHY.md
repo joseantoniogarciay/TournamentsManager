@@ -7,9 +7,9 @@ contexto real al aprendizaje, pero la medida de éxito no es solo que “funcion
 El proyecto debe permitir explicar por qué está diseñado así, qué alternativas se
 descartaron, cómo se despliega y cómo se opera cuando algo falla.
 
-## Resultados esperados
+## Resultados alcanzados con el cierre v1
 
-Al finalizar, el responsable del proyecto podrá:
+Tras cerrar las fases 0 a 4, el proyecto aporta evidencia para:
 
 - traducir necesidades de negocio a límites y modelos técnicos;
 - diseñar una arquitectura simple con dependencias controladas;

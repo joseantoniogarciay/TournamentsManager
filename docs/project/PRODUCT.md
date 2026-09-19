@@ -1,44 +1,46 @@
 # Producto
 
-> Estado: Gate 0B cerrado; primer vertical slice definido.
+> Estado: producto v1 cerrado; capacidades posteriores se gestionan como
+> incrementos independientes.
 >
-> Última actualización: 2026-09-13
+> Última actualización: 2026-09-19
 
 ## Visión
 
-TournamentsManager permitirá descubrir, crear y gestionar torneos. Fútbol fue el
+TournamentsManager permite descubrir, crear y gestionar torneos. Fútbol fue el
 primer deporte con el que se validó el modelo y baloncesto es el primer perfil
 adicional; los siguientes se incorporarán solo cuando sus reglas estén definidas.
 
 ## Hechos aceptados
 
-- Existirán aplicaciones web y mobile.
-- Web, iOS y Android ofrecerán el mismo producto con paridad funcional.
-- La experiencia será responsive en navegadores y aplicaciones de móvil, tablet y
+- Existen targets web, iOS y Android en el cliente universal.
+- Web, iOS y Android ofrecen el mismo producto con paridad funcional.
+- La experiencia es responsive en navegadores y aplicaciones de móvil, tablet y
   escritorio, adaptando la presentación cuando corresponda.
-- El producto inicial se orienta a torneos privados entre amistades, clubes o
-  grupos cerrados.
-- Una persona invitada tendrá acceso limitado; la visibilidad pública de torneos
-  se decidirá más adelante.
-- Preparar un borrador de torneo no exigirá una cuenta; persistirlo y publicar el
-  torneo exigirá una cuenta verificada.
-- La cuenta incluirá registro, inicio de sesión y recuperación de contraseña.
-- Una misma cuenta admitirá credenciales locales y login con Google; Apple se
-  incorporará en un incremento posterior.
+- El producto se orienta a torneos entre amistades, clubes o grupos cerrados,
+  con lectura pública por identificador y gestión autenticada.
+- Una persona invitada tiene acceso a la home, al borrador local y a torneos
+  visibles cuyo identificador conoce; eso no concede permisos de gestión.
+- Preparar un borrador de torneo no exige una cuenta; persistirlo y publicar el
+  torneo exige una cuenta verificada.
+- La cuenta incluye registro, inicio de sesión y recuperación de contraseña.
+- Una misma cuenta admite credenciales locales y login con Google. Apple no está
+  adoptado en v1 y se revisa antes de distribuir el cliente iOS.
 - El torneo declara un deporte inmutable elegido entre `football` y
   `basketball`; «Fútbol» engloba fútbol sala en esta iteración (ADR-0126).
 - El recurso raíz es un torneo. La liga de fútbol existente se conserva como
-  formato `league`; este incremento añade la eliminatoria directa a partido
+  formato `league`; también existe la eliminatoria directa a partido
   único como formato `single_elimination`. Los formatos mixtos quedan fuera
   hasta acordar sus reglas. Véase ADR-0122.
-- Un torneo contiene fases ordenadas. Esta entrega crea una sola fase, elegida
+- Un torneo contiene fases ordenadas. Cada torneo crea una sola fase, elegida
   entre liga a una o dos vueltas y eliminatoria directa a partido único. Una
   futura liga única o por grupos podrá clasificar equipos para un cuadro
   posterior cuando se acepten sus reglas. Véase ADR-0123.
-- El creador del torneo será inicialmente su único organizador y creará los
-  equipos. Delegar administración se decidirá para una iteración posterior.
-- Las acciones detalladas de creación y gestión de un torneo se definirán de forma
-  incremental.
+- El creador conserva la propiedad y crea los equipos; puede asignar o retirar
+  administradores delegados y transferir la propiedad bajo las reglas aceptadas.
+- La creación, equipos, inicio, resultados, retirada, cancelación, finalización,
+  seguimiento, administración y transferencia están definidas en el contrato
+  vigente.
 - Se ha aceptado un cliente universal con React Native, Expo, Expo Router, CNG y
   rendering web client-side inicial; la home propia es la única superficie web
   indexable, sin convertir las rutas de aplicación en catálogo (ADR-0120).
@@ -65,7 +67,7 @@ la cuenta pendiente, que no puede administrar ni listar hasta verificarla.
 ### Usuario autenticado y verificado
 
 - gestionar su sesión y perfil básico;
-- usar su `username` público y único, que no podrá cambiar inicialmente;
+- usar su `username` público y único, que no puede cambiar en v1;
 - crear un torneo;
 - consultar los torneos con los que tiene relación.
 
@@ -130,7 +132,7 @@ transferencia es inmediata y le retira sus permisos administrativos.
 
 El creador lo asigna directamente mediante su `username`, sin aceptación previa.
 El administrador puede abandonar la liga; el creador puede retirarlo con efecto
-inmediato. Su único permiso operativo será gestionar resultados; la mecánica de
+inmediato. Su único permiso operativo es gestionar resultados; la mecánica de
 registro queda limitada al tanteo final local y visitante, ambos enteros no
 negativos, y a los penaltis solo cuando una eliminatoria de fútbol empatada los
 necesita.
@@ -185,30 +187,26 @@ aceptada en [ADR-0127](../adr/0127-create-tournament-atomically-with-login-sessi
 Google es un método de acceso vinculado al mismo usuario interno. Añadir o cambiar
 un email de contacto no reemplaza el vínculo con el proveedor.
 
-Si el primer login con Google coincide con una cuenta local todavía no vinculada, el
-acceso queda pendiente. Se envía un enlace de un solo uso al correo verificado y
-no se crea una sesión hasta completar la vinculación.
-
-El enlace abrirá la aplicación instalada mediante deep linking o, en su defecto,
-la web. Mostrará una confirmación explícita antes de vincular la cuenta. Tras
-validarlo se establece la nueva sesión; si el dispositivo tenía otra sesión
-activa, el cliente cambia automáticamente a la cuenta recién validada y termina
-en la home. Un enlace inválido o caducado muestra el error y la recuperación
-posible.
+Si una identidad Google nueva declara un email que ya pertenece a otra cuenta,
+el acceso se deniega sin revelar el método existente ni enviar un enlace de
+vinculación. La persona inicia sesión con su método habitual y, desde
+`Cuenta > Seguridad`, puede añadir Google tras una reautenticación reciente. No
+se fusionan cuentas ni se mueven identidades entre usuarios. Véanse
+[ADR-0066](../adr/0066-deny-cross-account-identity-linking-and-merges.md) y
+[ADR-0067](../adr/0067-allow-authenticated-same-account-access-method-linking.md).
 
 ### Recuperación de contraseña
 
-“Recordar contraseña” se interpreta como recuperación segura: nunca se recupera
-la contraseña anterior. Se emitirá un token o código temporal mediante un canal
-verificado y se permitirá establecer una nueva.
+“Recordar contraseña” se implementa como recuperación segura: nunca se recupera
+la contraseña anterior. El backend emite por email un token temporal de un solo
+uso y permite establecer una nueva, revocando las sesiones anteriores.
 
 Mantener una sesión abierta (“recuérdame”) es una decisión diferente sobre
 duración y renovación de sesiones.
 
-## Primer incremento backend aceptado
+## Primer incremento backend cerrado
 
-El primer incremento debe ser pequeño y atravesar producto, seguridad, datos, API
-y operación:
+El primer incremento atravesó producto, seguridad, datos, API y operación:
 
 1. un invitado prepara localmente un torneo, elige fútbol o baloncesto y crea sus
    equipos;
@@ -219,10 +217,10 @@ y operación:
 5. una persona inicia sesión con Google y recibe la misma clase de sesión propia
    que con contraseña.
 
-El corte siguiente implementa el registro y la corrección inmediata de
-marcadores por administradores delegados en ligas en curso. La clasificación se
-calcula en backend y se expone como una proyección de lectura; la retirada de
-equipos conserva su entrega posterior.
+Los incrementos posteriores completaron registro y corrección de marcadores,
+clasificación calculada en backend, retirada de equipos, administración
+delegada, transferencia, notificaciones, seguridad de cuenta y los formatos y
+deportes descritos en este documento.
 
 El alcance está aceptado en [ADR-0043](../adr/0043-deliver-publish-and-read-league-first-backend-increment.md).
 El Gate 0B está cerrado: el formato, los datos mínimos, el ciclo de vida, la
@@ -298,7 +296,7 @@ Los borradores no son accesibles por ID. “Crear y publicar” es una comodidad
 interfaz que ejecuta la misma validación y transición que publicar un borrador.
 Las invitaciones y una audiencia restringida siguen fuera de este corte.
 
-## Fuera del primer alcance
+## Fuera del alcance de v1
 
 Salvo decisión posterior:
 

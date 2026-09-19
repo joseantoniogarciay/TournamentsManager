@@ -38,12 +38,11 @@ El baseline de toolchain está aceptado en
 Las excepciones `//nolint` nombran el linter y explican el motivo. No se desactiva
 una categoría completa para resolver un caso local.
 
-Continúan pendientes de su contexto de implementación:
-
-- nombres y límites concretos de paquetes;
-- política de errores y logging;
-- estructura interna del monolito modular;
-- reglas de código generado.
+Los nombres y límites de paquetes, la política de errores y logging, la
+estructura del monolito y el código generado ya están materializados en las
+guías de backend, arquitectura y observabilidad. Esta guía conserva solo las
+reglas transversales; un cambio de esas convenciones se documenta junto al caso
+concreto, no como una decisión pendiente global.
 
 ## TypeScript
 

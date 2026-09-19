@@ -1,5 +1,32 @@
 # Registro de aprendizaje
 
+## 2026-09-19 — Cerrar trabajo no basta si los índices siguen prometiéndolo
+
+- **Aprendido:** un roadmap puede estar formalmente cerrado y, aun así, sus
+  READMEs y documentos de referencia conservar “pendiente”, tiempo futuro o
+  gates ya superados. Esa deriva hace que el repositorio parezca incompleto y
+  oculta qué deuda es deliberada.
+- **Regla reutilizable:** los documentos vigentes describen el presente con
+  cuatro estados explícitos: implementado, cancelado, no adoptado o aplazado
+  hasta un disparador. El manifiesto, los ADR, el changelog, las retrospectivas
+  y las entradas cronológicas conservan el lenguaje de su momento porque son
+  historia, no backlog.
+
+## 2026-09-19 — El mismo propósito no implica el mismo carril de pago
+
+- **Aprendido:** una propina sin beneficio no necesita modelarse como un derecho
+  del producto, pero web y tiendas móviles imponen reglas y procesadores
+  distintos. Reutilizar un enlace web dentro de una app puede convertir una
+  simplificación técnica en un riesgo de distribución.
+- **Regla reutilizable:** se declara primero si el pago concede una
+  contraprestación. Si no la concede, el dominio no guarda saldo ni permisos;
+  web usa checkout alojado y cada app distribuida adopta el canal de facturación
+  que su tienda exige, revisando política y fiscalidad antes de activarlo.
+- **Decisión de alcance:** localizar la interfaz propia no obliga a duplicar el
+  catálogo de un checkout alojado. Un único texto en inglés evita que cada nuevo
+  idioma multiplique productos, precios y enlaces; se revisará solo si la
+  evidencia de uso justifica ese mantenimiento.
+
 ## 2026-09-18 — Cerrar una versión no impide nuevos incrementos
 
 - **Aprendido:** un producto puede cerrar su v1 cuando cumple su objetivo y sus
@@ -3271,18 +3298,3 @@ K3s y también que sus componentes base siguen sanos.
   comparte las entidades que conectan las vistas y muestra solo claves y campos
   orientativos. El SQL y las migraciones siguen siendo la fuente ejecutable y el
   diagrama declara hasta qué versión los representa.
-
-### 2026-09-19 — El mismo propósito no implica el mismo carril de pago
-
-- **Aprendido:** una propina sin beneficio no necesita modelarse como un derecho
-  del producto, pero web y tiendas móviles imponen reglas y procesadores
-  distintos. Reutilizar un enlace web dentro de una app puede convertir una
-  simplificación técnica en un riesgo de distribución.
-- **Regla reutilizable:** se declara primero si el pago concede una
-  contraprestación. Si no la concede, el dominio no guarda saldo ni permisos;
-  web usa checkout alojado y cada app distribuida adopta el canal de facturación
-  que su tienda exige, revisando política y fiscalidad antes de activarlo.
-- **Decisión de alcance:** localizar la interfaz propia no obliga a duplicar el
-  catálogo de un checkout alojado. Un único texto en inglés evita que cada nuevo
-  idioma multiplique productos, precios y enlaces; se revisará solo si la
-  evidencia de uso justifica ese mantenimiento.

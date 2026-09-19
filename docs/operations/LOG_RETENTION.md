@@ -1,20 +1,32 @@
 # Retención de registros
 
-> Estado: decisión aceptada en ADR-0106. Última revisión: 2026-08-22.
+> Estado: evidencia legal y retención técnica operativas, con una desviación
+> conocida respecto a ADR-0106: `prod` no conserva aún doce meses de eventos de
+> seguridad. Última revisión: 2026-09-19.
 
-| Categoría | Contenido permitido | Plazo | Destino |
-| --- | --- | ---: | --- |
-| Diagnóstico | nivel, ruta, estado, latencia, IDs técnicos de correlación y causa cerrada | 30 días | Loki |
-| Seguridad | evento cerrado de autenticación o límite, sin email, IP, token ni cuerpo | 12 meses | registro de seguridad pendiente de backend de producción |
-| Trazas | atributos técnicos sin PII ni secretos | 7 días | Tempo |
-| Métricas `dev` | agregados sin identificadores | 24 horas | Prometheus |
-| Evidencia de aceptación | versión, huella de términos, momento, canal y huella de email | cuenta activa + 5 años bloqueada tras baja | PostgreSQL y backup legal independiente |
+| Categoría               | Contenido permitido                                                        |                                            Plazo | Destino                                               |
+| ----------------------- | -------------------------------------------------------------------------- | -----------------------------------------------: | ----------------------------------------------------- |
+| Diagnóstico             | nivel, ruta, estado, latencia, IDs técnicos de correlación y causa cerrada |             30 días en `dev`; 24 horas en `prod` | Loki                                                  |
+| Seguridad               | evento cerrado de autenticación o límite, sin email, IP, token ni cuerpo   | 12 meses decididos; 24 horas efectivas en `prod` | Loki; falta un almacén separado para cumplir ADR-0106 |
+| Trazas                  | atributos técnicos sin PII ni secretos                                     |                                           7 días | Tempo                                                 |
+| Métricas `dev`          | agregados sin identificadores                                              |                                         24 horas | Prometheus                                            |
+| Evidencia de aceptación | versión, huella de términos, momento, canal y huella de email              |       cuenta activa + 5 años bloqueada tras baja | PostgreSQL y backup legal independiente               |
 
 Los plazos son máximos; un incidente o requerimiento legal puede imponer un
 bloqueo documentado. Las copias de la evidencia legal se cifran, se limitan a
 personal autorizado y se purgan con una retención que nunca sea menor a la del
-registro original. El backup no sustituye el futuro plan de recuperación de
-PostgreSQL.
+registro original. El backup legal no sustituye los planes de recuperación
+PostgreSQL ya documentados para `dev` y `prod`.
+
+## Desviación operativa conocida
+
+ADR-0106 sigue siendo la autoridad y fija doce meses para eventos de seguridad
+sin PII. El runtime K3s configura actualmente Loki con 24 horas de retención y
+no existe otro almacén de seguridad en el repositorio. Por tanto, la Fase 3 está
+cerrada como capacidad de observabilidad, pero este requisito de conservación
+no puede darse por implementado. Cerrarlo exige decidir e implantar un destino
+separado, cifrado y con purga verificable; ampliar Loki indiscriminadamente no
+es suficiente si mezcla logs diagnósticos con evidencia de seguridad.
 
 Los contenedores de Loki usan el controlador `json-file` de Docker con rotación
 de tres archivos de hasta 10 MB. Es un límite de seguridad para su salida
