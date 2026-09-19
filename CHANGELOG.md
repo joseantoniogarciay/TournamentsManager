@@ -6,6 +6,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-19
+
 ### Added
 
 - La organizadora puede crear un torneo con su propio equipo, completar después
