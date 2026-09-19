@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- La organizadora puede crear un torneo con su propio equipo, completar después
+  la composición con equipos sin cuenta o compartir una invitación revocable
+  para que cada cuenta inscriba su equipo. La inscripción añade el torneo a
+  «Sigo» sin conceder administración y recuerda localmente el último nombre.
 - La home web autenticada permite apoyar voluntariamente el desarrollo mediante
   Payment Links de Stripe de 2 €, 5 € y 10 €, configurados por entorno y sin
   exponerlos en las apps nativas.

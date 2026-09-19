@@ -18,7 +18,7 @@ export interface TournamentDraftInput {
   name: string;
   sport: TournamentDraftInputSport;
   /**
-   * @minItems 2
+   * @minItems 1
    * @maxItems 64
    */
   teams: TeamInput[];

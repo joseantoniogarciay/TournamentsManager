@@ -1,4 +1,4 @@
-import { router, Stack } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 
 import { AccountScreen } from "@/app/(tabs)/account";
 import { getTranslator } from "@/shared/i18n/locale";
@@ -8,12 +8,15 @@ import { NavigationHeaderButton, usesLiquidGlassNavigation } from "@/shared/ui";
 export default function AccountAuthenticationScreen() {
   const t = getTranslator();
   const { colors } = usePreferences();
+  const { destination } = useLocalSearchParams<{ destination?: string }>();
+  const sessionReplacementDestination =
+    destination === "join-team" ? "/join-team" : "/create-tournament";
   const close = () => {
     if (router.canDismiss()) {
       router.dismiss();
       return;
     }
-    router.replace("/");
+    router.replace(sessionReplacementDestination as never);
   };
 
   return (
@@ -50,7 +53,10 @@ export default function AccountAuthenticationScreen() {
           </Stack.Toolbar>
         ) : null}
       </Stack.Screen>
-      <AccountScreen sessionReplacementDestination="/create-tournament" />
+      <AccountScreen
+        sessionReplacementDestination={sessionReplacementDestination}
+        transferTournamentDraft={sessionReplacementDestination !== "/join-team"}
+      />
     </>
   );
 }

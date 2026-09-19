@@ -5,19 +5,13 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
-import type { TeamInput } from "./teamInput.js";
-import type { TournamentInputSport } from "./tournamentInputSport.js";
+import type { Uuid } from "./uuid.js";
 
-export interface TournamentInput {
+export interface TournamentTeamInvitation {
+  tournamentId: Uuid;
   /**
    * @minLength 1
    * @maxLength 56
    */
-  name: string;
-  sport: TournamentInputSport;
-  /**
-   * @minItems 1
-   * @maxItems 64
-   */
-  teams: TeamInput[];
+  tournamentName: string;
 }

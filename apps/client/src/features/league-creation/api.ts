@@ -10,13 +10,17 @@ import {
   assignTournamentAdministrator,
   cancelTournament,
   completeTournament,
+  createTournamentTeamInvitation,
   createTournament,
   getPublicTournament,
   listTournamentAdministrators,
   listCurrentAccountTournaments,
   listRecentAccountTournaments,
+  inspectTournamentTeamInvitation,
+  joinTournamentWithTeamInvitation,
   removeTournamentTeam,
   removeTournamentAdministrator,
+  revokeTournamentTeamInvitation,
   startTournament,
   transferTournamentOwnership,
   withdrawTournamentTeam,
@@ -25,6 +29,7 @@ import type {
   TournamentInput,
   StartTournamentRequest,
   TeamInput,
+  TournamentTeamInvitationToken,
   Username,
 } from "@/api/generated/models";
 import { searchUsers } from "@/api/generated/users/users";
@@ -34,6 +39,9 @@ import {
   parsePublicTournament,
   parsePublishedTournament,
   parseRecentAccountTournaments,
+  parseTournamentTeamInvitation,
+  parseTournamentTeamInvitationToken,
+  parseTournamentTeamRegistration,
   parseUsernames,
 } from "./response-parser";
 
@@ -56,6 +64,18 @@ export class TournamentUnavailableError extends Error {
   }
 }
 
+export class TournamentTeamInvitationUnavailableError extends Error {
+  constructor() {
+    super("Invitación de equipo no disponible");
+  }
+}
+
+export class TournamentTeamInvitationConflictError extends Error {
+  constructor() {
+    super("La invitación no puede aceptar este equipo");
+  }
+}
+
 export async function createTournamentRequest(input: TournamentInput) {
   captureProductIntent("league_creation_submitted");
   const response = await createTournament(input, undefined, authenticatedApiFetch);
@@ -71,6 +91,50 @@ export async function addTournamentTeamRequest(leagueID: string, input: TeamInpu
   const team = parseTournamentTeam(response.data);
   if (!team) throw new APIUnexpectedResponseError(response.status);
   return team;
+}
+export async function createTournamentTeamInvitationRequest(tournamentID: string) {
+  const response = await createTournamentTeamInvitation(
+    tournamentID,
+    undefined,
+    authenticatedApiFetch,
+  );
+  if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
+  const token = parseTournamentTeamInvitationToken(response.data);
+  if (!token) throw new APIUnexpectedResponseError(response.status);
+  return token;
+}
+export async function revokeTournamentTeamInvitationRequest(tournamentID: string) {
+  const response = await revokeTournamentTeamInvitation(
+    tournamentID,
+    undefined,
+    authenticatedApiFetch,
+  );
+  if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
+}
+export async function inspectTournamentTeamInvitationRequest(token: string) {
+  const response = await inspectTournamentTeamInvitation(
+    { token: token as TournamentTeamInvitationToken },
+    undefined,
+    apiFetch,
+  );
+  if (response.status === 404) throw new TournamentTeamInvitationUnavailableError();
+  if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
+  const invitation = parseTournamentTeamInvitation(response.data);
+  if (!invitation) throw new APIUnexpectedResponseError(response.status);
+  return invitation;
+}
+export async function joinTournamentWithTeamInvitationRequest(token: string, name: string) {
+  const response = await joinTournamentWithTeamInvitation(
+    { token: token as TournamentTeamInvitationToken, name },
+    undefined,
+    authenticatedApiFetch,
+  );
+  if (response.status === 404) throw new TournamentTeamInvitationUnavailableError();
+  if (response.status === 409) throw new TournamentTeamInvitationConflictError();
+  if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
+  const registration = parseTournamentTeamRegistration(response.data);
+  if (!registration) throw new APIUnexpectedResponseError(response.status);
+  return registration;
 }
 export async function removeTournamentTeamRequest(leagueID: string, teamID: string) {
   const response = await removeTournamentTeam(leagueID, teamID, undefined, authenticatedApiFetch);
@@ -171,10 +235,10 @@ export async function getTournamentRelationship(leagueID: string) {
     undefined,
     authenticatedApiFetch,
   );
-  if (response.status !== 200) return undefined;
+  if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   const items = parseAccountTournamentPageItems(response.data);
-  if (!items) return undefined;
-  return items.find((league) => league.id === leagueID)?.relationship;
+  if (!items) throw new APIUnexpectedResponseError(response.status);
+  return items.find((league) => league.id === leagueID)?.relationship ?? null;
 }
 export async function listRelatedTournaments(relationship: "administered" | "followed") {
   const response = await listCurrentAccountTournaments(

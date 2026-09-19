@@ -83,6 +83,15 @@ CSRF; una lectura `GET` y el transporte Bearer móvil no la requieren.
   uso después de retirar el token de la URL; véase ADR-0061;
 - la URL base procede de configuración confiable y el token no se propaga por
   historial, referencias, analytics o recursos de terceros;
+- el enlace de inscripción de equipo transporta su secreto en el fragmento
+  `#token`, que no se envía al servidor web; el cliente lo retira de la URL,
+  persiste la intención pendiente en almacenamiento seguro nativo —y en el
+  almacenamiento local disponible en web— y lo presenta a la API en un cuerpo
+  `POST`. PostgreSQL conserva únicamente SHA-256 con contexto. Regenerar o
+  revocar invalida el secreto anterior y empezar el torneo elimina la capacidad;
+- conocer una invitación solo permite a una cuenta verificada inscribir un
+  equipo y seguir el torneo: no concede administración ni escritura de
+  resultados. Se acepta que el enlace pueda reenviarse mientras esté activo;
 - al completar un registro desde un cliente con sesión, la credencial presentada
   se revoca antes de entregar la nueva, conforme a ADR-0061;
 - cifrado y retención definidos según el tipo de dato;

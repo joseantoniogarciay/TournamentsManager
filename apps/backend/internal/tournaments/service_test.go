@@ -74,6 +74,19 @@ func TestValidCreateInputEnforcesTournamentNameCharacterLimit(t *testing.T) {
 	}
 }
 
+func TestValidCreateInputAcceptsTheOrganizersSingleTeam(t *testing.T) {
+	t.Parallel()
+
+	input := CreateInput{
+		Name:  "Torneo",
+		Sport: SportFootball,
+		Teams: []TeamInput{{Name: "Mi equipo"}},
+	}
+	if !validCreateInput(input) {
+		t.Fatal("validCreateInput() rejected the organizer's single team")
+	}
+}
+
 func TestValidCreateInputRejectsUnknownSport(t *testing.T) {
 	t.Parallel()
 

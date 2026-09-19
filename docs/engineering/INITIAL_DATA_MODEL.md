@@ -1,18 +1,18 @@
 # Modelo inicial de datos
 
-> Estado: vista explicativa del modelo vigente hasta la migración `00008`,
-> ajustada por ADR-0122 y ADR-0123. No es una migración ni un modelo Go.
+> Estado: vista explicativa del modelo vigente hasta la migración `00009`,
+> ajustada por ADR-0122, ADR-0123 y ADR-0130. No es una migración ni un modelo Go.
 
 ## Alcance
 
 Este modelo cubre alta local y con Google, verificación, sesión,
 publicación/lectura de torneos, sus relaciones de seguimiento o administración
-delegada, fases ordenadas y los orígenes de plaza de un bracket. El primer corte
+delegada, inscripción de equipos por invitación, fases ordenadas y los orígenes
+de plaza de un bracket. El primer corte
 admite una única fase de liga o eliminatoria directa; liga por grupos y la
 composición de varias fases quedan preparadas, pero no implementadas. No
-incorpora Apple ni resultados oficiales por
-cuenta: estos últimos siguen esperando la decisión de vinculación de cuentas a
-equipos.
+incorpora Apple, jugadores, plantillas ni permisos de resultados asociados a la
+cuenta que inscribió el equipo.
 
 ## Entidades y relaciones
 
@@ -27,7 +27,8 @@ accounts 1 ── 0..1 local_credentials
 tournaments 1 ── * tournament_administrators ── 1 accounts
 tournaments 1 ── * tournament_followers ── 1 accounts
 
-tournaments 1 ── * tournament_teams
+tournaments 1 ── 0..1 tournament_team_invitations
+tournaments 1 ── * tournament_teams 1 ── 0..1 tournament_team_accounts ── 1 accounts
 tournaments 1 ── * tournament_stages 1 ── * matches
 ```
 
@@ -48,6 +49,8 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | `tournament_administrators`  | `tournament_id`, `account_id`, `assigned_at`                                                                                                    | PK compuesta; el creador se conserva en `tournaments.organizer_account_id`, no se duplica.                                                                                                                                                                                                              |
 | `tournament_followers`       | `tournament_id`, `account_id`, `followed_at`                                                                                                    | guardar un torneo no concede permisos.                                                                                                                                                                                                                                                                  |
 | `tournament_teams`           | `id`, `tournament_id`, `name`, `position`, `withdrawn_at`                                                                                       | nombre y posición únicos por torneo; el orden es la siembra congelada si la fase lo requiere.                                                                                                                                                                                                           |
+| `tournament_team_invitations` | `tournament_id`, `token_hash`, `created_at`                                                                                                    | como máximo una invitación activa por torneo; regenerarla sustituye el hash anterior y el inicio la elimina. El secreto solo se devuelve al crearlo.                                                                                                                                                     |
+| `tournament_team_accounts`   | `tournament_id`, `team_id`, `account_id`, `joined_at`                                                                                           | una cuenta mantiene como máximo un equipo vinculado por torneo y un equipo se vincula como máximo a una cuenta; el vínculo no concede administración. Al eliminar el equipo o programar la baja de cuenta desaparece el vínculo, no el equipo deportivo.                                                     |
 | `matches`                    | `id`, `tournament_id`, `stage_id`, `round_number`, `sequence`, fuentes de local y visitante, `winner_team_id`, `state`, marcador, `result_type` | cada partido pertenece a una fase. Un partido completado distingue resultado `played` o `administrative`; una plaza procede de equipo sembrado, ganadora, _bye_ o, en el futuro, clasificación de grupo.                                                                                                |
 | `match_result_changes`       | `id`, `match_id`, `changed_by_account_id` opcional, marcador anterior y nuevo, `result_type`, `changed_at`                                      | cada registro o corrección conserva la administradora, el marcador previo y si el nuevo resultado fue jugado o administrativo; al purgar la cuenta, la autora pasa a `NULL`.                                                                                                                            |
 | `tournament_champions`       | `tournament_id`, `team_id`                                                                                                                      | conserva una única campeona de eliminatoria o todas las co-campeonas de una liga al cerrar el torneo.                                                                                                                                                                                                   |
@@ -80,7 +83,8 @@ minúsculo antes de guardar.
 6. **Baja programada:** una cuenta verificada sin torneos propios pasa a
    `deletion_pending` y conserva la fecha de solicitud. En una transacción se
    invalidan sesiones y tokens, y se eliminan seguimientos y administraciones
-   delegadas. Un comando interno diario purga en lotes de hasta 100 las cuentas
+   delegadas y vínculos con equipos, sin borrar los equipos. Un comando interno
+   diario purga en lotes de hasta 100 las cuentas
    con 30 días vencidos; los `match_result_changes` conservan el resultado y
    quedan sin autora. La recuperación se define después.
 7. **Inicio:** bloquea el torneo, congela una fase `league` a una o dos vueltas
@@ -103,6 +107,11 @@ minúsculo antes de guardar.
     `20-0` en baloncesto. No se aplica a eliminatorias. Cada cambio conserva el
     marcador anterior, la autora y `result_type = administrative` en
     `match_result_changes`, todo en la misma transacción.
+11. **Inscripción por invitación:** la organizadora rota o revoca el único hash
+    activo mientras el torneo está `published`. Una cuenta verificada presenta
+    el secreto en el cuerpo, y una sola transacción bloquea el torneo, comprueba
+    estado, límite y unicidad, crea el equipo, lo vincula a la cuenta, añade el
+    seguimiento y actualiza la actividad. El inicio elimina la invitación.
 
 La purga es un proceso operativo explícito, idempotente y auditable por conteos,
 sin registrar emails ni tokens. El `ON DELETE` y las FKs se concretarán en la

@@ -23,7 +23,7 @@ import { restoreWebSession } from "./api";
 
 type SessionUser = { id: string; username: string };
 export type SessionReplacementDestination =
-  "/" | "/account" | "/create-tournament" | "/tournaments";
+  "/" | "/account" | "/create-tournament" | "/join-team" | "/tournaments";
 type SessionContextValue = {
   isRestoring: boolean;
   replacementDestination: SessionReplacementDestination;

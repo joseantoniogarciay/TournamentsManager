@@ -7,6 +7,7 @@ import { TournamentInputSport } from "@/api/generated/models/tournamentInputSpor
 const key = "tm-league-draft";
 export const maximumTournamentTeams = 64;
 export const maximumTournamentNameLength = 56;
+export const maximumTeamNameLength = 100;
 export type TournamentSport = TournamentInputSport;
 export type LocalTournamentDraft = {
   draftId: string;
@@ -68,10 +69,10 @@ export function toTournamentDraftInput(
   if (
     !name ||
     name.length > maximumTournamentNameLength ||
-    teams.length < 2 ||
+    teams.length < 1 ||
     teams.length > maximumTournamentTeams ||
     new Set(teams.map((team) => team.toLowerCase())).size !== teams.length ||
-    teams.some((team) => team.length > 100)
+    teams.some((team) => team.length > maximumTeamNameLength)
   ) {
     return undefined;
   }

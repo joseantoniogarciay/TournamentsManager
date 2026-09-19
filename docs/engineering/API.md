@@ -113,7 +113,7 @@ relacionados y recientes, publicación y lectura pública por ID.
 UUIDv7 y filtra en el servidor las relaciones `administered` y `followed`; la
 segunda excluye un torneo ya administrado para que la UI no lo duplique. Véase
 [ADR-0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md).
-`GET /me/recent-tournaments` devuelve como máximo cinco relaciones sin duplicados,
+`GET /me/recent-tournaments` devuelve como máximo tres relaciones sin duplicados,
 ordenadas por actividad del torneo; no es una colección paginada. Véase
 [ADR-0073](../adr/0073-show-recent-related-leagues-on-home.md).
 El alta exige identidad local y un locale efectivo de `es`, `en`, `it` o `fr`;
@@ -139,6 +139,17 @@ partido completado declara `resultType: played | administrative`: baloncesto
 rechaza tanteos finales empatados y penaltis, mientras fútbol conserva el empate
 de liga y los penaltis de una eliminatoria empatada. Las reglas pertenecen al
 dominio; OpenAPI solo expresa los datos y valores admitidos (ADR-0126).
+
+La publicación exige al menos el equipo propio de la organizadora. Mientras el
+torneo siga `published`, esta puede añadir equipos sin cuenta y gestionar un
+único enlace específico de inscripción con
+`POST|DELETE /tournaments/{tournamentId}/team-invitation`. El secreto de 256 bits
+se devuelve solo al crearlo; regenerar sustituye el anterior. La inspección
+pública usa `POST /team-invitations/inspection` y la inscripción autenticada
+`POST /team-invitations/registration`, siempre con el token en JSON y nunca en
+ruta o query. Inscribir crea equipo, vínculo de cuenta y seguimiento de forma
+atómica, sin administración. `404` representa un enlace inactivo y `409` una
+incorporación que ya no cabe o entra en conflicto. Véase ADR-0130.
 
 `POST /v1/tournaments/{tournamentId}/start` exige una unión discriminada. Para
 `format: league` requiere `roundRobinLegs: 1 | 2`; para

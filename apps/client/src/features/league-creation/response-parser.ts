@@ -12,6 +12,8 @@ import { PublicTournamentState } from "@/api/generated/models/publicTournamentSt
 import type { PublishedTournament } from "@/api/generated/models/publishedTournament";
 import { PublishedTournamentState } from "@/api/generated/models/publishedTournamentState";
 import type { Username } from "@/api/generated/models/username";
+import type { TournamentTeamInvitation } from "@/api/generated/models/tournamentTeamInvitation";
+import type { TournamentTeamRegistration } from "@/api/generated/models/tournamentTeamRegistration";
 
 type RecordValue = Record<string, unknown>;
 
@@ -104,6 +106,23 @@ export function parseTournamentTeam(value: unknown): TournamentTeam | null {
     return null;
   }
   return { id: value.id, name: value.name, withdrawn: value.withdrawn };
+}
+
+export function parseTournamentTeamInvitation(value: unknown): TournamentTeamInvitation | null {
+  if (!isRecord(value) || !isUUID(value.tournamentId) || typeof value.tournamentName !== "string")
+    return null;
+  return { tournamentId: value.tournamentId, tournamentName: value.tournamentName };
+}
+
+export function parseTournamentTeamInvitationToken(value: unknown): string | null {
+  if (!isRecord(value) || typeof value.token !== "string") return null;
+  return /^[A-Za-z0-9_-]{43}$/.test(value.token) ? value.token : null;
+}
+
+export function parseTournamentTeamRegistration(value: unknown): TournamentTeamRegistration | null {
+  if (!isRecord(value) || !isUUID(value.tournamentId)) return null;
+  const team = parseTournamentTeam(value.team);
+  return team ? { tournamentId: value.tournamentId, team } : null;
 }
 
 function parseTournamentTeams(value: unknown): TournamentTeam[] | null {

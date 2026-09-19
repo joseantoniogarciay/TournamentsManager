@@ -36,8 +36,10 @@ adicional; los siguientes se incorporarán solo cuando sus reglas estén definid
   entre liga a una o dos vueltas y eliminatoria directa a partido único. Una
   futura liga única o por grupos podrá clasificar equipos para un cuadro
   posterior cuando se acepten sus reglas. Véase ADR-0123.
-- El creador conserva la propiedad y crea los equipos; puede asignar o retirar
-  administradores delegados y transferir la propiedad bajo las reglas aceptadas.
+- El creador conserva la propiedad, crea el torneo con su propio equipo y puede
+  añadir equipos sin cuenta o invitar a otras personas para que inscriban el
+  suyo antes del inicio; puede además asignar o retirar administradores
+  delegados y transferir la propiedad bajo las reglas aceptadas (ADR-0130).
 - La creación, equipos, inicio, resultados, retirada, cancelación, finalización,
   seguimiento, administración y transferencia están definidas en el contrato
   vigente.
@@ -123,10 +125,13 @@ del navegador. Véase [ADR-0057](../adr/0057-define-contextual-home-and-tourname
 ### Organizador
 
 Es inicialmente el usuario autenticado que creó el torneo, con permisos sobre él
-y capacidad de crear sus equipos y gestionar resultados. Conserva la propiedad y
-es el único que puede asignar o retirar administradores delegados. Puede
-transferir el torneo a otra cuenta verificada mediante su `username`; la
-transferencia es inmediata y le retira sus permisos administrativos.
+y capacidad de crear equipos y gestionar resultados. El primer equipo es el
+suyo y queda vinculado a su cuenta. Mientras el torneo no haya empezado puede
+añadir otros equipos sin cuenta asociada o compartir una invitación para que
+cada persona cree el suyo. Conserva la propiedad y es el único que puede asignar
+o retirar administradores delegados. Puede transferir el torneo a otra cuenta
+verificada mediante su `username`; la transferencia es inmediata y le retira
+sus permisos administrativos.
 
 ### Administrador delegado
 
@@ -143,12 +148,46 @@ también puede corregirlo y el sistema conserva quién cambió qué y cuándo.
 
 Un usuario autenticado y verificado puede guardar una liga consultada mediante
 enlace para recuperarla en «ligas seguidas». Seguir no concede permisos ni crea
-participación deportiva.
+participación deportiva. Inscribir un equipo mediante invitación crea también
+este seguimiento para que el torneo aparezca inmediatamente en «Sigo».
 
 ### Participante
 
-Es exclusivamente un equipo creado por el organizador. Las personas no se unen a
-equipos ni a la competición en el primer corte.
+Es un equipo. Puede haberlo creado directamente la organizadora sin asociarlo a
+una cuenta, o puede haberlo inscrito una cuenta verificada mediante invitación.
+La cuenta vinculada representa a ese único equipo dentro del torneo, pero no se
+convierte en administradora ni recibe permiso para gestionar resultados. No se
+modelan jugadores ni varias personas por equipo.
+
+## Explicación de la composición antes del inicio
+
+Este incremento está aceptado en ADR-0130 y pendiente de contrato e
+implementación; el texto siguiente define cómo debe explicarse cuando se
+entregue.
+
+La creación no presenta una lista larga de equipos como requisito. Pide un único
+campo obligatorio bajo el título «Tu equipo» y explica: «Empieza con el equipo
+con el que participas. Podrás completar el torneo después».
+
+Tras crear el torneo, la superficie de equipos presenta las dos opciones con el
+siguiente mensaje base:
+
+> Completa los equipos
+>
+> Puedes añadir equipos sin cuenta o compartir un enlace para que cada persona
+> cree el suyo. Podrás usar las dos opciones hasta que comience el torneo.
+
+Las acciones se nombran «Añadir equipo» y «Compartir invitación». La interfaz
+evita usar solo «anónimo», porque podría entenderse como ocultación de identidad;
+«sin cuenta» explica la diferencia real. Junto a la acción de iniciar se recuerda
+que hacen falta al menos dos equipos y que, después de comenzar, la composición
+queda cerrada.
+
+Quien abre la invitación ve el torneo al que se incorpora, un campo «Nombre de tu
+equipo» y esta consecuencia antes de confirmar: «Tu equipo se añadirá al torneo
+y lo encontrarás en Sigo. No recibirás permisos de administración». El campo se
+prerrellena con el último nombre confirmado en ese dispositivo y sigue siendo
+editable.
 
 ## Flujos de identidad
 
@@ -258,12 +297,14 @@ explícitamente la liga. El backend conserva todos los equipos de la posición 1
 como co-campeones y la app muestra el resultado final antes de llevar a la
 clasificación. Una liga finalizada ya no admite marcadores ni correcciones.
 
-Una liga visible es consultable sin sesión por su ID público y el creador puede modificar sus equipos y
-datos estructurales. En interfaz, `publicado` se muestra como «Sin empezar».
-Al iniciarla el creador elige una o dos vueltas, se validan los datos, se generan
-una sola vez los emparejamientos y se congelan equipos y reglas. Solo entonces los
-organizador y los administradores delegados pueden registrar o corregir resultados. El creador solo puede
-finalizarla cuando todos sus partidos tienen resultado. Si un equipo abandona en
+Una liga visible es consultable sin sesión por su ID público. Mientras permanece
+«Sin empezar», la organizadora puede modificar sus datos estructurales, añadir o
+eliminar equipos sin cuenta y gestionar el enlace con el que otras cuentas
+inscriben el suyo. Al iniciarla el creador elige una o dos vueltas, se exige un
+mínimo de dos equipos, se validan los datos, se generan una sola vez los
+emparejamientos y se congelan equipos y reglas. Solo entonces la organizadora y
+los administradores delegados pueden registrar o corregir resultados. El creador
+solo puede finalizarla cuando todos sus partidos tienen resultado. Si un equipo abandona en
 `en_curso`, solo el creador puede declararlo: todos sus partidos, pendientes o
 ya jugados, pasan a resultado administrativo fijo a favor del rival (`3-0` en
 fútbol y `20-0` en baloncesto) y la liga continúa. El valor no es configurable.
@@ -294,7 +335,9 @@ participante ni permisos de administración o resultados.
 
 Los borradores no son accesibles por ID. “Crear y publicar” es una comodidad de
 interfaz que ejecuta la misma validación y transición que publicar un borrador.
-Las invitaciones y una audiencia restringida siguen fuera de este corte.
+La invitación de ADR-0130 es una capacidad separada: una cuenta verificada que
+posee su secreto puede inscribir un equipo mientras el torneo no haya empezado.
+No restringe la audiencia de lectura ni concede otra mutación.
 
 ## Fuera del alcance de v1
 
@@ -314,7 +357,7 @@ Salvo decisión posterior:
 - formatos mixtos con varias fases;
 - email y push para avisar de asignaciones administrativas;
 - invitaciones con aceptación, bloqueo y controles antiabuso para asignaciones;
-- jugadores y membresías de personas en equipos.
+- jugadores, plantillas y varias personas asociadas a un mismo equipo.
 
 ## Gate 0B
 

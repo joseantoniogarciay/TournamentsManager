@@ -92,7 +92,7 @@ function RootNavigator() {
     if (transition !== "resetting" && transition !== "signing-out") return;
 
     if (router.canDismiss()) router.dismissAll();
-    router.replace(transition === "signing-out" ? "/account" : replacementDestination);
+    router.replace((transition === "signing-out" ? "/account" : replacementDestination) as never);
     let secondFrame: number | undefined;
     const firstFrame = requestAnimationFrame(() => {
       secondFrame = requestAnimationFrame(finishSessionReplacement);
@@ -118,6 +118,13 @@ function RootNavigator() {
       />
       <Stack.Screen
         name="create-tournament"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
+        name="join-team"
         options={{
           headerShown: true,
           presentation: Platform.OS === "web" ? "card" : "fullScreenModal",

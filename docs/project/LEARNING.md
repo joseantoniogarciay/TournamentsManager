@@ -1,5 +1,27 @@
 # Registro de aprendizaje
 
+## 2026-09-19 — Participar no equivale a administrar
+
+- **Aprendido:** permitir que una cuenta nombre e inscriba su equipo no exige
+  concederle permisos sobre el torneo ni modelar una plantilla de jugadores. El
+  equipo puede seguir siendo el participante deportivo mientras una relación
+  mínima conserva quién lo incorporó.
+- **Regla reutilizable:** lectura pública, capacidad de inscripción, seguimiento
+  y administración son relaciones distintas. Un enlace secreto y revocable
+  autoriza una mutación concreta; crear el equipo y el seguimiento en una sola
+  transacción evita que la persona participe sin poder recuperar el torneo.
+- **Aprendido:** cargar el torneo no basta si falla la proyección que decide sus
+  acciones. Un error de red o backend al resolver permisos debe bloquear esa
+  vista con el estado compartido de reintento; convertirlo silenciosamente en
+  «sin permisos» oculta acciones legítimas y confunde autorización con fallo.
+- **Regla reutilizable:** un fragmento evita enviar la capacidad al servidor
+  web, pero el cliente debe retirarlo enseguida y persistirlo según sensibilidad:
+  almacenamiento seguro nativo y la alternativa local disponible en web.
+- **Decisión de alcance:** la organizadora empieza con su propio equipo y puede
+  añadir equipos anónimos antes del inicio. Las cuentas invitadas inscriben como
+  máximo uno, sin administrar; jugadores, plantillas y aprobación individual se
+  posponen. Véase ADR-0130.
+
 ## 2026-09-19 — Cerrar trabajo no basta si los índices siguen prometiéndolo
 
 - **Aprendido:** un roadmap puede estar formalmente cerrado y, aun así, sus

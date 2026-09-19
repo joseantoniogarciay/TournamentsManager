@@ -57,7 +57,7 @@ export default function TournamentScreen() {
   const { confirm } = useConfirmationDialog();
   const league = useTournament(id);
   const { loadTournament, putTournament, refreshTournament } = useTournamentStore();
-  const [relationship, setRelationship] = useState<string>();
+  const [relationship, setRelationship] = useState<string | null>();
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
   const [leagueUnavailable, setTournamentUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -135,8 +135,11 @@ export default function TournamentScreen() {
       setIsLoading(true);
       setLoadErrorMessage(undefined);
       setTournamentUnavailable(false);
+      setRelationship(undefined);
       try {
         await (force ? refreshTournament(id) : loadTournament(id));
+        if (user) setRelationship(await getTournamentRelationship(id));
+        else setRelationship(null);
       } catch (error) {
         const unavailable = error instanceof TournamentUnavailableError;
         setTournamentUnavailable(unavailable);
@@ -147,18 +150,12 @@ export default function TournamentScreen() {
         setIsLoading(false);
       }
     },
-    [id, loadTournament, refreshTournament, t],
+    [id, loadTournament, refreshTournament, t, user],
   );
-  useEffect(() => {
-    void load();
-  }, [load]);
   useFocusEffect(
     useCallback(() => {
-      if (!user) return;
-      void getTournamentRelationship(id)
-        .then(setRelationship)
-        .catch(() => setRelationship(undefined));
-    }, [id, user]),
+      void load();
+    }, [load]),
   );
   const isOrganizer = relationship === "organizer";
   const canManageResults = relationship === "organizer" || relationship === "delegated";
@@ -291,7 +288,7 @@ export default function TournamentScreen() {
     }
     router.replace("/");
   };
-  if (!league) {
+  if (!league || loadErrorMessage || (user && relationship === undefined)) {
     const loadingHeaderOptions = {
       headerBackVisible: false,
       headerShadowVisible: false,

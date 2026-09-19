@@ -20,6 +20,11 @@ import type {
   TournamentInput,
   TournamentOwnershipTransferRequest,
   TournamentTeam,
+  TournamentTeamInvitation,
+  TournamentTeamInvitationAccess,
+  TournamentTeamInvitationSecret,
+  TournamentTeamRegistration,
+  TournamentTeamRegistrationInput,
   Username,
   Uuid,
   ValidationProblemResponse,
@@ -351,6 +356,278 @@ export const getPublicTournament = async (
   return { data, status: res.status, headers: res.headers } as getPublicTournamentResponse;
 };
 
+export type createTournamentTeamInvitationResponse201 = {
+  data: TournamentTeamInvitationSecret;
+  status: 201;
+};
+
+export type createTournamentTeamInvitationResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type createTournamentTeamInvitationResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type createTournamentTeamInvitationResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type createTournamentTeamInvitationResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type createTournamentTeamInvitationResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type createTournamentTeamInvitationResponseSuccess =
+  createTournamentTeamInvitationResponse201 & {
+    headers: Headers;
+  };
+export type createTournamentTeamInvitationResponseError = (
+  | createTournamentTeamInvitationResponse400
+  | createTournamentTeamInvitationResponse401
+  | createTournamentTeamInvitationResponse403
+  | createTournamentTeamInvitationResponse404
+  | createTournamentTeamInvitationResponse409
+) & {
+  headers: Headers;
+};
+
+export type createTournamentTeamInvitationResponse =
+  createTournamentTeamInvitationResponseSuccess | createTournamentTeamInvitationResponseError;
+
+export const getCreateTournamentTeamInvitationUrl = (tournamentId: Uuid) => {
+  return `/tournaments/${tournamentId}/team-invitation`;
+};
+
+/**
+ * Exige sesión de la organizadora y un torneo sin empezar. Sustituye la invitación activa anterior y devuelve el nuevo secreto una sola vez.
+ * @summary Crea o regenera el enlace para inscribir equipos
+ */
+export const createTournamentTeamInvitation = async (
+  tournamentId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<createTournamentTeamInvitationResponse> => {
+  const res = await (fetchFn ?? fetch)(getCreateTournamentTeamInvitationUrl(tournamentId), {
+    ...options,
+    method: "POST",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createTournamentTeamInvitationResponse["data"] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as createTournamentTeamInvitationResponse;
+};
+
+export type revokeTournamentTeamInvitationResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type revokeTournamentTeamInvitationResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type revokeTournamentTeamInvitationResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type revokeTournamentTeamInvitationResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type revokeTournamentTeamInvitationResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type revokeTournamentTeamInvitationResponseSuccess =
+  revokeTournamentTeamInvitationResponse204 & {
+    headers: Headers;
+  };
+export type revokeTournamentTeamInvitationResponseError = (
+  | revokeTournamentTeamInvitationResponse400
+  | revokeTournamentTeamInvitationResponse401
+  | revokeTournamentTeamInvitationResponse403
+  | revokeTournamentTeamInvitationResponse404
+) & {
+  headers: Headers;
+};
+
+export type revokeTournamentTeamInvitationResponse =
+  revokeTournamentTeamInvitationResponseSuccess | revokeTournamentTeamInvitationResponseError;
+
+export const getRevokeTournamentTeamInvitationUrl = (tournamentId: Uuid) => {
+  return `/tournaments/${tournamentId}/team-invitation`;
+};
+
+/**
+ * Exige sesión de la organizadora. Es idempotente aunque no exista una invitación activa.
+ * @summary Revoca el enlace activo para inscribir equipos
+ */
+export const revokeTournamentTeamInvitation = async (
+  tournamentId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<revokeTournamentTeamInvitationResponse> => {
+  const res = await (fetchFn ?? fetch)(getRevokeTournamentTeamInvitationUrl(tournamentId), {
+    ...options,
+    method: "DELETE",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: revokeTournamentTeamInvitationResponse["data"] = body ? JSON.parse(body) : undefined;
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as revokeTournamentTeamInvitationResponse;
+};
+
+export type inspectTournamentTeamInvitationResponse200 = {
+  data: TournamentTeamInvitation;
+  status: 200;
+};
+
+export type inspectTournamentTeamInvitationResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type inspectTournamentTeamInvitationResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type inspectTournamentTeamInvitationResponseSuccess =
+  inspectTournamentTeamInvitationResponse200 & {
+    headers: Headers;
+  };
+export type inspectTournamentTeamInvitationResponseError = (
+  inspectTournamentTeamInvitationResponse400 | inspectTournamentTeamInvitationResponse404
+) & {
+  headers: Headers;
+};
+
+export type inspectTournamentTeamInvitationResponse =
+  inspectTournamentTeamInvitationResponseSuccess | inspectTournamentTeamInvitationResponseError;
+
+export const getInspectTournamentTeamInvitationUrl = () => {
+  return `/team-invitations/inspection`;
+};
+
+/**
+ * @summary Identifica el torneo de una invitación activa
+ */
+export const inspectTournamentTeamInvitation = async (
+  tournamentTeamInvitationAccess: TournamentTeamInvitationAccess,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<inspectTournamentTeamInvitationResponse> => {
+  const res = await (fetchFn ?? fetch)(getInspectTournamentTeamInvitationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(tournamentTeamInvitationAccess),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: inspectTournamentTeamInvitationResponse["data"] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as inspectTournamentTeamInvitationResponse;
+};
+
+export type joinTournamentWithTeamInvitationResponse201 = {
+  data: TournamentTeamRegistration;
+  status: 201;
+};
+
+export type joinTournamentWithTeamInvitationResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type joinTournamentWithTeamInvitationResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type joinTournamentWithTeamInvitationResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type joinTournamentWithTeamInvitationResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type joinTournamentWithTeamInvitationResponseSuccess =
+  joinTournamentWithTeamInvitationResponse201 & {
+    headers: Headers;
+  };
+export type joinTournamentWithTeamInvitationResponseError = (
+  | joinTournamentWithTeamInvitationResponse400
+  | joinTournamentWithTeamInvitationResponse401
+  | joinTournamentWithTeamInvitationResponse404
+  | joinTournamentWithTeamInvitationResponse409
+) & {
+  headers: Headers;
+};
+
+export type joinTournamentWithTeamInvitationResponse =
+  joinTournamentWithTeamInvitationResponseSuccess | joinTournamentWithTeamInvitationResponseError;
+
+export const getJoinTournamentWithTeamInvitationUrl = () => {
+  return `/team-invitations/registration`;
+};
+
+/**
+ * Exige una cuenta verificada. Crea atómicamente el equipo, su vínculo con la cuenta y el seguimiento del torneo. No concede administración.
+ * @summary Inscribe el equipo de la cuenta mediante una invitación
+ */
+export const joinTournamentWithTeamInvitation = async (
+  tournamentTeamRegistrationInput: TournamentTeamRegistrationInput,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<joinTournamentWithTeamInvitationResponse> => {
+  const res = await (fetchFn ?? fetch)(getJoinTournamentWithTeamInvitationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(tournamentTeamRegistrationInput),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: joinTournamentWithTeamInvitationResponse["data"] = body ? JSON.parse(body) : {};
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as joinTournamentWithTeamInvitationResponse;
+};
+
 export type startTournamentResponse200 = {
   data: PublicTournament;
   status: 200;
@@ -474,7 +751,7 @@ export const getAddTournamentTeamUrl = (tournamentId: Uuid) => {
 };
 
 /**
- * Exige sesión de la organizadora. Solo se admite mientras el torneo esté publicada; al iniciarla, la composición queda congelada.
+ * Exige sesión de la organizadora. Solo se admite mientras el torneo esté publicado; crea un equipo sin cuenta asociada y, al iniciar, la composición queda congelada.
  * @summary Añade un equipo a un torneo sin empezar
  */
 export const addTournamentTeam = async (
@@ -547,7 +824,7 @@ export const getRemoveTournamentTeamUrl = (tournamentId: Uuid, teamId: Uuid) => 
 };
 
 /**
- * Exige sesión de la organizadora. Solo se admite mientras el torneo esté publicado y conserva al menos dos equipos; para descartarlo debe usarse su cancelación explícita.
+ * Exige sesión de la organizadora. Solo se admite mientras el torneo esté publicado y conserva al menos un equipo; para descartarlo debe usarse su cancelación explícita.
  * @summary Elimina un equipo de un torneo sin empezar
  */
 export const removeTournamentTeam = async (
