@@ -14,6 +14,7 @@ un único diagrama con las 21 tablas ocultaría las cardinalidades.
 ## Identidad y acceso
 
 ```mermaid
+%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#0d1117","primaryColor":"#1f2937","primaryTextColor":"#f8fafc","primaryBorderColor":"#94a3b8","secondaryColor":"#111827","secondaryTextColor":"#f8fafc","secondaryBorderColor":"#94a3b8","tertiaryColor":"#334155","tertiaryTextColor":"#f8fafc","tertiaryBorderColor":"#94a3b8","lineColor":"#94a3b8","textColor":"#f8fafc","edgeLabelBackground":"#111827"}}}%%
 erDiagram
     direction LR
 
@@ -111,6 +112,7 @@ deduplica eventos RISC por su identificador externo.
 ## Torneos y competición
 
 ```mermaid
+%%{init: {"theme":"base","themeVariables":{"darkMode":true,"background":"#0d1117","primaryColor":"#1f2937","primaryTextColor":"#f8fafc","primaryBorderColor":"#94a3b8","secondaryColor":"#111827","secondaryTextColor":"#f8fafc","secondaryBorderColor":"#94a3b8","tertiaryColor":"#334155","tertiaryTextColor":"#f8fafc","tertiaryBorderColor":"#94a3b8","lineColor":"#94a3b8","textColor":"#f8fafc","edgeLabelBackground":"#111827"}}}%%
 erDiagram
     direction LR
 
