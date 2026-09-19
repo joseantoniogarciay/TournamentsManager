@@ -121,10 +121,20 @@ func createTournamentFromDraft(ctx context.Context, tx pgx.Tx, accountID, draftI
 	if err != nil {
 		return err
 	}
+	var firstTeamID string
 	for position, team := range teams {
+		if position == 0 {
+			if err := tx.QueryRow(ctx, `INSERT INTO tournament_teams (tournament_id, name, name_normalized, position) VALUES ($1, $2, lower($2), $3) RETURNING id::text`, tournamentID, team, position+1).Scan(&firstTeamID); err != nil {
+				return err
+			}
+			continue
+		}
 		if _, err := tx.Exec(ctx, `INSERT INTO tournament_teams (tournament_id, name, name_normalized, position) VALUES ($1, $2, lower($2), $3)`, tournamentID, team, position+1); err != nil {
 			return err
 		}
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO tournament_team_accounts (tournament_id, team_id, account_id) VALUES ($1, $2, $3)`, tournamentID, firstTeamID, accountID); err != nil {
+		return err
 	}
 	return nil
 }

@@ -2,14 +2,14 @@
 
 - **Servicio/componente:** web estática `fasttourney.com`, Caddy y Cloudflare Tunnel
 - **Propietario:** operador de FastTourney
-- **Última prueba:** 2026-09-05 — recuperación TLS; publicación de la SPA pendiente
+- **Última prueba:** 2026-09-05 — TLS, CORS, publicación y rollback operativo verificados
 - **Severidad aplicable:** alta mientras afecte a acceso, registro o recuperación
 
 ## Síntoma e impacto
 
-Este runbook cubre la apertura o la recuperación de la SPA de producción. No
-despliega API, PostgreSQL ni Secrets. Hasta completar cada verificación,
-`fasttourney.com` conserva el `503` versionado.
+Este runbook cubre una nueva publicación o la recuperación de la SPA de
+producción. No despliega API, PostgreSQL ni Secrets. Ante una publicación que no
+supere las verificaciones, `fasttourney.com` vuelve al `503` versionado.
 
 ## Prerequisitos y seguridad
 

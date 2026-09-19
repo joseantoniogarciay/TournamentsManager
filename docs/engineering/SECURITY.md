@@ -1,6 +1,7 @@
 # Seguridad
 
-> Estado: baseline de proceso. Los controles concretos dependen del producto.
+> Estado: baseline aplicada a v1; controles de identidad, autorización, CSRF,
+> secretos, proxy confiable, abuso y recuperación cuentan con pruebas y runbooks.
 
 ## Principio
 
@@ -9,7 +10,7 @@ considerar confidencialidad, integridad, disponibilidad, abuso y recuperación.
 
 ## Proceso mínimo
 
-Antes del primer vertical slice:
+Para cada incremento o cambio de frontera:
 
 1. identificar activos, actores y límites de confianza;
 2. clasificar datos;
@@ -31,9 +32,10 @@ Antes del primer vertical slice:
 La autenticación demuestra identidad. La autorización para crear, ver datos no
 visibles, unirse o administrar se evalúa dentro del contexto del torneo.
 
-La identidad será propia y federada: el backend Go gestionará credenciales
-locales y sesiones, y verificará identidades Apple/Google antes de resolver un
-usuario interno. Email no será la clave de una identidad externa y una
+La identidad es propia y federada: el backend Go gestiona credenciales locales
+y sesiones, y verifica Google antes de resolver un usuario interno. Apple
+reutilizará la misma frontera si se implementa al distribuir iOS. Email no es la
+clave de una identidad externa y una
 coincidencia no autoriza vinculación automática. Véanse
 [ADR-0010](../adr/0010-own-identity-with-federated-login.md) e
 [IDENTITY.md](IDENTITY.md).
@@ -57,9 +59,9 @@ telemetría. La deduplicación conserva solo el `jti` durante 35 días y evita q
 un reintento cierre un login creado después del primer procesamiento.
 
 ADR-0059 centraliza la validación de cookie o Bearer en middleware para rutas
-protegidas. La autenticación no sustituye autorización por recurso. Antes de la
-primera mutación autenticada desde web se añadirá una defensa CSRF separada; una
-lectura `GET` y el transporte Bearer móvil no la requieren.
+protegidas. La autenticación no sustituye autorización por recurso. Las
+mutaciones autenticadas mediante cookie exigen origen confiable como defensa
+CSRF; una lectura `GET` y el transporte Bearer móvil no la requieren.
 
 ## Reglas iniciales
 
@@ -81,6 +83,15 @@ lectura `GET` y el transporte Bearer móvil no la requieren.
   uso después de retirar el token de la URL; véase ADR-0061;
 - la URL base procede de configuración confiable y el token no se propaga por
   historial, referencias, analytics o recursos de terceros;
+- el enlace de inscripción de equipo transporta su secreto en el fragmento
+  `#token`, que no se envía al servidor web; el cliente lo retira de la URL,
+  persiste la intención pendiente en almacenamiento seguro nativo —y en el
+  almacenamiento local disponible en web— y lo presenta a la API en un cuerpo
+  `POST`. PostgreSQL conserva únicamente SHA-256 con contexto. Regenerar o
+  revocar invalida el secreto anterior y empezar el torneo elimina la capacidad;
+- conocer una invitación solo permite a una cuenta verificada inscribir un
+  equipo y seguir el torneo: no concede administración ni escritura de
+  resultados. Se acepta que el enlace pueda reenviarse mientras esté activo;
 - al completar un registro desde un cliente con sesión, la credencial presentada
   se revoca antes de entregar la nueva, conforme a ADR-0061;
 - cifrado y retención definidos según el tipo de dato;
@@ -102,23 +113,11 @@ lectura `GET` y el transporte Bearer móvil no la requieren.
 - Cloud usa OIDC y credenciales temporales cuando esté disponible.
 - El VPS usa una identidad de despliegue dedicada y limitada.
 
-Para AWS, ADR-0026 separa `management`, `nonprod` y `prod` mediante AWS
-Organizations. El acceso humano usa IAM Identity Center con MFA y roles
-temporales; los usuarios IAM y access keys persistentes no son el mecanismo
-ordinario de acceso. El usuario root se reserva para acciones excepcionales.
-
-ADR-0027 mantiene estado Terraform local únicamente sin infraestructura AWS
-real. ADR-0028 fija HCP Terraform Free como backend remoto inicial, con
-ejecución local y sin auto-apply. Antes de un `apply` cloud se verificará su
-locking, historial recuperable y el secreto de acceso; GitHub no almacenará
-estados, porque pueden contener valores sensibles y no aporta locking de
-Terraform.
-
-Para la publicación futura, ADR-0029 fija un ALB como único punto de entrada
-público. El security group de la API solo aceptará el puerto de aplicación desde
-el security group del ALB; PostgreSQL no tendrá IP pública y solo aceptará la
-conexión necesaria desde la API. No se usará NAT inicialmente, decisión que se
-revisará si aparece una necesidad de egress privado o cumplimiento.
+Las decisiones históricas de AWS, Terraform, IAM y ALB quedan anuladas como plan
+de ejecución por ADR-0128. No existe cuenta, estado remoto, `apply` ni recurso
+cloud autorizado para este proyecto. El runtime vigente es la VM K3s doméstica,
+con entrada Cloudflare Tunnel → Caddy → Ingress autenticado y PostgreSQL sin
+exposición pública.
 
 La decisión completa está en
 [ADR-0006](../adr/0006-public-github-repository-security-boundary.md).
@@ -157,7 +156,7 @@ La gestión de configuración sigue
   desarrollo y `https://fasttourney.com` para producción. Cada host publica
   exclusivamente la asociación de su propia aplicación nativa.
 
-## Gates futuros
+## Gates permanentes por cambio
 
 | Gate       | Evidencia                                                    |
 | ---------- | ------------------------------------------------------------ |
@@ -168,6 +167,7 @@ La gestión de configuración sigue
 
 No se declarará “seguro” un componente; se documentarán amenazas consideradas,
 controles, evidencia y riesgo residual.
+
 # Reautenticación para cambios de credenciales
 
 Los tickets de reautenticación son secretos de 256 bits, se persisten como

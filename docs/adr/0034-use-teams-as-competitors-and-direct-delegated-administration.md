@@ -5,7 +5,9 @@
 - **Decisor:** Usuario
 - **Propietario del análisis:** Codex
 - **Supera a:** Ninguno
-- **Superado por:** ADR-0048, exclusivamente en el momento de elegir el `username`
+- **Superado por:** ADR-0048, exclusivamente en el momento de elegir el
+  `username`; ADR-0130, exclusivamente en que las cuentas no se vinculaban a
+  equipos y las invitaciones de participación quedaban fuera de alcance
 
 ## Problema
 

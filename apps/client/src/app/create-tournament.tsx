@@ -1,7 +1,7 @@
 import { router, Stack } from "expo-router";
 import { randomUUID } from "expo-crypto";
-import { useEffect, useRef, useState } from "react";
-import { StyleSheet, View, type TextInput } from "react-native";
+import { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
 
 import { space } from "@tournaments-manager/design-tokens";
 
@@ -9,8 +9,8 @@ import { createTournamentRequest } from "@/features/league-creation/api";
 import {
   clearLocalTournamentDraft,
   getLocalTournamentDraft,
+  maximumTeamNameLength,
   maximumTournamentNameLength,
-  maximumTournamentTeams,
   saveLocalTournamentDraft,
   type TournamentSport,
 } from "@/features/league-creation/draft";
@@ -38,13 +38,11 @@ export default function CreateTournamentScreen() {
   const { colors } = usePreferences();
   const [name, setName] = useState("");
   const [sport, setSport] = useState<TournamentSport>("football");
-  const [teams, setTeams] = useState(["", ""]);
+  const [team, setTeam] = useState("");
   const [draftId, setDraftId] = useState(() => randomUUID());
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const teamInputRefs = useRef<Record<number, TextInput | null>>({});
-  const [teamToFocus, setTeamToFocus] = useState<number>();
 
   useEffect(() => {
     void getLocalTournamentDraft().then((draft) => {
@@ -52,43 +50,25 @@ export default function CreateTournamentScreen() {
         setDraftId(draft.draftId);
         setName(draft.name);
         setSport(draft.sport);
-        setTeams(draft.teams.length >= 2 ? draft.teams : ["", ""]);
+        setTeam(draft.teams[0] ?? "");
       }
       setDraftLoaded(true);
     });
   }, []);
   useEffect(() => {
-    if (draftLoaded) void saveLocalTournamentDraft({ draftId, name, sport, teams });
-  }, [draftId, draftLoaded, name, sport, teams]);
-  useEffect(() => {
-    if (teamToFocus === undefined) return;
-    teamInputRefs.current[teamToFocus]?.focus();
-    setTeamToFocus(undefined);
-  }, [teamToFocus, teams.length]);
+    if (draftLoaded) void saveLocalTournamentDraft({ draftId, name, sport, teams: [team] });
+  }, [draftId, draftLoaded, name, sport, team]);
 
-  const normalizedTeamValues = teams.map((team) => team.trim());
-  const normalizedTeams = normalizedTeamValues.filter(Boolean);
+  const normalizedTeam = team.trim();
   const nameError = !name.trim()
     ? t("league_name_required")
     : name.length > maximumTournamentNameLength
       ? t("league_name_too_long")
       : undefined;
-  const teamsError =
-    normalizedTeams.length < 2 ||
-    new Set(normalizedTeams.map((team) => team.toLowerCase())).size !== normalizedTeams.length
-      ? t("league_teams_required")
-      : undefined;
-  const teamError = (index: number) => {
-    if (submitted) return teamsError;
-    const value = normalizedTeamValues[index]?.toLowerCase();
-    if (!value) return undefined;
-    return normalizedTeamValues.filter((team) => team.toLowerCase() === value).length > 1
-      ? t("league_teams_required")
-      : undefined;
-  };
+  const teamError = !normalizedTeam ? t("league_team_required") : undefined;
   const publish = async () => {
     setSubmitted(true);
-    if (nameError || teamsError) return;
+    if (nameError || teamError) return;
     if (!user) {
       router.push("/account-authentication" as never);
       return;
@@ -98,7 +78,7 @@ export default function CreateTournamentScreen() {
       const league = await createTournamentRequest({
         name: name.trim(),
         sport,
-        teams: normalizedTeams.map((team) => ({ name: team })),
+        teams: [{ name: normalizedTeam }],
       });
       await clearLocalTournamentDraft();
       router.replace(`/tournament/${league.id}` as never);
@@ -108,14 +88,6 @@ export default function CreateTournamentScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-  const addTeam = () => {
-    if (teams.length >= maximumTournamentTeams) {
-      show({ kind: "generic-error", message: t("league_team_limit_reached") });
-      return;
-    }
-    setTeamToFocus(teams.length);
-    setTeams((current) => [...current, ""]);
   };
   const close = async () => {
     await clearLocalTournamentDraft();
@@ -193,25 +165,19 @@ export default function CreateTournamentScreen() {
                 validationTrigger="blur"
                 value={name}
               />
-              {teams.map((team, index) => (
-                <TextField
-                  key={index}
-                  error={teamError(index)}
-                  label={t("league_team_label").replace("{number}", String(index + 1))}
-                  onChangeText={(value) =>
-                    setTeams((current) =>
-                      current.map((item, itemIndex) => (itemIndex === index ? value : item)),
-                    )
-                  }
-                  ref={(input) => {
-                    teamInputRefs.current[index] = input;
-                  }}
-                  validationSubmitted={submitted}
-                  validationTrigger="blur"
-                  value={team}
-                />
-              ))}
-              <Button label={t("league_add_team")} onPress={addTeam} variant="secondary" />
+              <View style={styles.teamIntroduction}>
+                <Text variant="bodyLarge">{t("league_own_team_title")}</Text>
+                <Text color="secondary">{t("league_own_team_description")}</Text>
+              </View>
+              <TextField
+                error={teamError}
+                label={t("league_own_team_label")}
+                maxLength={maximumTeamNameLength}
+                onChangeText={setTeam}
+                validationSubmitted={submitted}
+                validationTrigger="blur"
+                value={team}
+              />
               <Button
                 label={t(user ? "league_publish" : "league_sign_in_to_publish")}
                 loading={isSubmitting}
@@ -229,4 +195,5 @@ const styles = StyleSheet.create({
   form: { gap: space[4] },
   sportOptions: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   sportSelector: { gap: space[2] },
+  teamIntroduction: { gap: space[1] },
 });

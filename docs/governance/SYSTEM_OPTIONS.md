@@ -1,13 +1,16 @@
 # Opciones para montar el sistema
 
-> Estado: análisis y recomendaciones iniciales.
+> Estado: registro histórico del análisis inicial; las decisiones vigentes están
+> en los ADR, `PRODUCT.md` y `TECHNICAL_BASELINE.md`.
 >
 > Ninguna recomendación de este documento es una decisión aceptada. Cada gate
 > importante terminará en ADR tras la elección explícita del usuario.
 >
 > El orden original de este documento ha sido reemplazado por
 > [TECHNICAL_BASELINE.md](TECHNICAL_BASELINE.md), cerrado el 2026-07-25. Las
-> secciones de producto vuelven a ser material de decisión para el Gate 0B.
+> secciones de producto fueron resueltas al cerrar el Gate 0B. El lenguaje
+> prospectivo que sigue refleja el momento del análisis y no representa trabajo
+> abierto.
 
 ## Silueta recomendada
 
@@ -20,16 +23,16 @@ Esta silueta minimiza piezas desplegables sin cerrar la evolución.
 
 ## Orden de decisión original — superado
 
-| Orden | Decisión | Por qué bloquea |
-|---|---|---|
-| 1 | MVP de torneo | Define el lenguaje, invariantes y vertical slice |
-| 2 | Participantes, visibilidad e incorporación | Define autorización y datos |
-| 3 | Identidad y sesiones | Afecta web, mobile, API y seguridad |
-| 4 | Topología del repositorio y clientes | Define tooling y reutilización |
-| 5 | Contrato API | Coordina clientes y backend |
-| 6 | Persistencia y migraciones | Materializa el dominio |
-| 7 | Entorno local | Permite comenzar implementación reproducible |
-| 8 | Observabilidad y despliegue | Se diseña sobre un flujo real |
+| Orden | Decisión                                   | Por qué bloquea                                  |
+| ----- | ------------------------------------------ | ------------------------------------------------ |
+| 1     | MVP de torneo                              | Define el lenguaje, invariantes y vertical slice |
+| 2     | Participantes, visibilidad e incorporación | Define autorización y datos                      |
+| 3     | Identidad y sesiones                       | Afecta web, mobile, API y seguridad              |
+| 4     | Topología del repositorio y clientes       | Define tooling y reutilización                   |
+| 5     | Contrato API                               | Coordina clientes y backend                      |
+| 6     | Persistencia y migraciones                 | Materializa el dominio                           |
+| 7     | Entorno local                              | Permite comenzar implementación reproducible     |
+| 8     | Observabilidad y despliegue                | Se diseña sobre un flujo real                    |
 
 Este orden queda superado por
 [ADR-0004](../adr/0004-technical-baseline-before-product-design.md). Primero se

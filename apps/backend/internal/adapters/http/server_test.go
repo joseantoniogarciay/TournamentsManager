@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -88,6 +89,12 @@ type testCreationRepository struct {
 	resultErr         error
 	completed         tournaments.Tournament
 	completeErr       error
+	invitation        tournaments.TeamInvitation
+	invitationErr     error
+	registration      tournaments.TeamRegistration
+	registrationErr   error
+	revokeInviteErr   error
+	saveInviteErr     error
 }
 
 func (r testCreationRepository) Create(context.Context, string, tournaments.CreateInput) (tournaments.Tournament, error) {
@@ -100,6 +107,22 @@ func (r testCreationRepository) AddTeam(context.Context, string, string, tournam
 
 func (r testCreationRepository) RemoveTeam(context.Context, string, string, string) error {
 	return r.removeErr
+}
+
+func (r testCreationRepository) SaveTeamInvitation(context.Context, string, string, tournaments.InvitationTokenHash) error {
+	return r.saveInviteErr
+}
+
+func (r testCreationRepository) RevokeTeamInvitation(context.Context, string, string) error {
+	return r.revokeInviteErr
+}
+
+func (r testCreationRepository) InspectTeamInvitation(context.Context, tournaments.InvitationTokenHash) (tournaments.TeamInvitation, error) {
+	return r.invitation, r.invitationErr
+}
+
+func (r testCreationRepository) JoinTeamInvitation(context.Context, string, tournaments.InvitationTokenHash, tournaments.TeamInput) (tournaments.TeamRegistration, error) {
+	return r.registration, r.registrationErr
 }
 
 func (r testCreationRepository) WithdrawTeam(context.Context, string, string, string) (tournaments.Tournament, error) {
@@ -349,6 +372,32 @@ func testSpanAttribute(attributes []attribute.KeyValue, key string) string {
 	return ""
 }
 
+func TestTournamentInvitationFailureReasonsAreClosedAndSafe(t *testing.T) {
+	t.Parallel()
+	for name, test := range map[string]struct {
+		err    error
+		reason string
+	}{
+		"unavailable": {err: tournaments.ErrTournamentInvitationNotFound, reason: "tournament.invitation_not_found"},
+		"conflict":    {err: tournaments.ErrTournamentInvitationConflict, reason: "tournament.invitation_conflict"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			exporter := tracetest.NewInMemoryExporter()
+			provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+			ctx, span := provider.Tracer("test").Start(context.Background(), "invitation")
+			recordTournamentFailure(ctx, test.err)
+			span.End()
+			spans := exporter.GetSpans()
+			if len(spans) != 1 {
+				t.Fatalf("span count = %d, want 1", len(spans))
+			}
+			if got := testSpanAttribute(spans[0].Attributes, "tournaments_manager.failure.reason"); got != test.reason {
+				t.Fatalf("failure reason = %q, want %q", got, test.reason)
+			}
+		})
+	}
+}
+
 func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
 	t.Parallel()
 	var receivedDraft *registration.Draft
@@ -539,6 +588,112 @@ func TestAddTournamentTeamMapsBusinessErrors(t *testing.T) {
 
 			if recorder.Code != test.status {
 				t.Errorf("status = %d, want %d", recorder.Code, test.status)
+			}
+		})
+	}
+}
+
+func TestCreateTournamentTeamInvitationReturnsOneTimeSecret(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const tournamentID = "019abcde-2222-7222-8222-222222222222"
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{}))
+	request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+tournamentID+"/team-invitation", nil)
+	request.Header.Set("Authorization", "Bearer session-token")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want %d; body = %s", recorder.Code, http.StatusCreated, recorder.Body.String())
+	}
+	var body struct {
+		Token string `json:"token"`
+	}
+	if err := json.NewDecoder(recorder.Body).Decode(&body); err != nil || len(body.Token) != 43 {
+		t.Fatalf("token = %q, decode error = %v; want 43-character secret", body.Token, err)
+	}
+	if recorder.Header().Get("Cache-Control") != "no-store" {
+		t.Errorf("Cache-Control = %q, want no-store", recorder.Header().Get("Cache-Control"))
+	}
+}
+
+func TestInspectTournamentTeamInvitationIsPublicAndReturnsSafeProjection(t *testing.T) {
+	t.Parallel()
+	const tournamentID = "019abcde-2222-7222-8222-222222222222"
+	const token = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	creation := tournaments.NewCreationService(testCreationRepository{invitation: tournaments.TeamInvitation{TournamentID: tournamentID, TournamentName: "Copa abierta"}})
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
+	request := httptest.NewRequest(http.MethodPost, "/v1/team-invitations/inspection", strings.NewReader(`{"token":"`+token+`"}`))
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body = %s", recorder.Code, http.StatusOK, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"tournamentName":"Copa abierta"`) || strings.Contains(recorder.Body.String(), token) {
+		t.Errorf("body = %s; want safe tournament projection without token", recorder.Body.String())
+	}
+}
+
+func TestJoinTournamentTeamInvitationReturnsRegistration(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const tournamentID = "019abcde-2222-7222-8222-222222222222"
+	const teamID = "019abcde-3333-7333-8333-333333333333"
+	const token = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	creation := tournaments.NewCreationService(testCreationRepository{registration: tournaments.TeamRegistration{
+		TournamentID: tournamentID,
+		Team:         tournaments.Team{ID: teamID, Name: "Mi equipo", Position: 2},
+	}})
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
+	request := httptest.NewRequest(http.MethodPost, "/v1/team-invitations/registration", strings.NewReader(`{"token":"`+token+`","name":" Mi equipo "}`))
+	request.Header.Set("Authorization", "Bearer session-token")
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want %d; body = %s", recorder.Code, http.StatusCreated, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"tournamentId":"`+tournamentID+`"`) || !strings.Contains(recorder.Body.String(), `"name":"Mi equipo"`) {
+		t.Errorf("body = %s; want tournament and created team", recorder.Body.String())
+	}
+}
+
+func TestTournamentTeamInvitationEndpointsMapBusinessErrors(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const tournamentID = "019abcde-2222-7222-8222-222222222222"
+	const token = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	tests := []struct {
+		name       string
+		path       string
+		repository testCreationRepository
+		want       int
+	}{
+		{name: "create forbidden", path: "/v1/tournaments/" + tournamentID + "/team-invitation", repository: testCreationRepository{saveInviteErr: tournaments.ErrTournamentForbidden}, want: http.StatusForbidden},
+		{name: "create after start", path: "/v1/tournaments/" + tournamentID + "/team-invitation", repository: testCreationRepository{saveInviteErr: tournaments.ErrTournamentInvitationConflict}, want: http.StatusConflict},
+		{name: "join unavailable", path: "/v1/team-invitations/registration", repository: testCreationRepository{registrationErr: tournaments.ErrTournamentInvitationNotFound}, want: http.StatusNotFound},
+		{name: "join conflict", path: "/v1/team-invitations/registration", repository: testCreationRepository{registrationErr: tournaments.ErrTournamentInvitationConflict}, want: http.StatusConflict},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(test.repository))
+			body := io.Reader(nil)
+			if strings.HasSuffix(test.path, "/registration") {
+				body = strings.NewReader(`{"token":"` + token + `","name":"Azules"}`)
+			}
+			request := httptest.NewRequest(http.MethodPost, test.path, body)
+			request.Header.Set("Authorization", "Bearer session-token")
+			request.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+			handler.ServeHTTP(recorder, request)
+			if recorder.Code != test.want {
+				t.Errorf("status = %d, want %d; body = %s", recorder.Code, test.want, recorder.Body.String())
 			}
 		})
 	}

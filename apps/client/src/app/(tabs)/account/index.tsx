@@ -50,12 +50,16 @@ import {
 } from "@/shared/ui";
 
 type AccountScreenProps = {
-  sessionReplacementDestination?: "/account" | "/create-tournament";
+  sessionReplacementDestination?: "/account" | "/create-tournament" | "/join-team";
+  transferTournamentDraft?: boolean;
 };
 
 type SocialLegalDocument = "privacy" | "terms";
 
-export function AccountScreen({ sessionReplacementDestination = "/account" }: AccountScreenProps) {
+export function AccountScreen({
+  sessionReplacementDestination = "/account",
+  transferTournamentDraft = true,
+}: AccountScreenProps) {
   const t = getTranslator();
   const { show } = useFeedback();
   const { colors } = usePreferences();
@@ -118,10 +122,14 @@ export function AccountScreen({ sessionReplacementDestination = "/account" }: Ac
       : undefined;
 
   useEffect(() => {
+    if (!transferTournamentDraft) {
+      setDraft(undefined);
+      return;
+    }
     void getLocalTournamentDraft().then((localDraft) =>
       setDraft(toTournamentDraftInput(localDraft)),
     );
-  }, []);
+  }, [transferTournamentDraft]);
 
   useEffect(() => {
     if (!googleError) return;

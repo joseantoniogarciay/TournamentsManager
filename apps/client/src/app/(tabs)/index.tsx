@@ -7,6 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import { radius, space } from "@tournaments-manager/design-tokens";
 
 import { APISessionInvalidatedError } from "@/api/fetch";
+import { TipCard } from "@/features/developer-tips/components/tip-card";
 import { getTranslator } from "@/shared/i18n/locale";
 import { isStaticWebRender } from "@/shared/i18n/is-static-web-render";
 import { listRecentRelatedTournaments } from "@/features/league-creation/api";
@@ -137,6 +138,7 @@ export default function HomeScreen() {
                 {t("home_suggestion_title")}
               </Text>
               <SuggestionCard />
+              <TipCard />
             </View>
           ) : null}
 

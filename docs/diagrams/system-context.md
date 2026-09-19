@@ -1,7 +1,7 @@
-# Contexto inicial del sistema
+# Contexto del sistema
 
-> Estado: conceptual; refleja la estrategia de cliente de ADR-0008, ADR-0015 y
-> ADR-0016 y ADR-0120, pero no define despliegue.
+> Estado: vigente como vista conceptual de producto; el despliegue se documenta
+> por separado.
 >
 > Fuente funcional: [PRODUCT.md](../project/PRODUCT.md)
 
@@ -24,11 +24,14 @@ flowchart LR
   negocio.
 - El comportamiento mantiene paridad funcional y la presentación se adapta a
   móvil, tablet y escritorio.
-- El acceso de invitado forma parte del mismo producto en todos los targets; el
-  orden concreto de entrega se decidirá al planificar el vertical slice.
+- El acceso de invitado y las capacidades autenticadas forman parte del mismo
+  producto en todos los targets; cada plataforma adapta navegación y pagos sin
+  mover reglas de negocio fuera de la API.
 - Identidad demuestra quién es la persona.
 - La API decide qué puede hacer sobre cada torneo.
 - Persistencia, email y proveedores son detalles externos.
 
-Los límites exactos se decidirán tras concretar el MVP y la estrategia de
-identidad.
+Los límites funcionales vigentes están en [PRODUCT.md](../project/PRODUCT.md),
+los arquitectónicos en
+[ARCHITECTURE.md](../engineering/ARCHITECTURE.md) y los operativos en
+[DEPLOYMENT.md](../operations/DEPLOYMENT.md).

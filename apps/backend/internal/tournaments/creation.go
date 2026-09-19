@@ -2,6 +2,9 @@ package tournaments
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"regexp"
 	"sort"
@@ -41,6 +44,10 @@ var (
 	ErrTournamentOwnershipTransferConflict = errors.New("transferencia de propiedad inválida")
 	// ErrTournamentTeamConflict indicates that the roster cannot accept the requested team.
 	ErrTournamentTeamConflict = errors.New("equipo de liga inválido")
+	// ErrTournamentInvitationNotFound indicates an inactive or unknown team invitation.
+	ErrTournamentInvitationNotFound = errors.New("invitación de equipo no disponible")
+	// ErrTournamentInvitationConflict indicates that an invitation cannot accept the requested team.
+	ErrTournamentInvitationConflict = errors.New("invitación de equipo no puede aceptar la inscripción")
 	// ErrTournamentWithdrawalConflict indicates that a team cannot be withdrawn now.
 	ErrTournamentWithdrawalConflict = errors.New("equipo no se puede retirar")
 	// ErrMatchResultForbidden indicates that the account does not administer league results.
@@ -80,6 +87,21 @@ type Team struct {
 	Position  int    `json:"position"`
 	Withdrawn bool   `json:"withdrawn"`
 }
+
+// TeamInvitation identifies the tournament behind an active invitation without exposing its hash.
+type TeamInvitation struct {
+	TournamentID   string `json:"tournamentId"`
+	TournamentName string `json:"tournamentName"`
+}
+
+// TeamRegistration confirms both the tournament and team created by an invitation.
+type TeamRegistration struct {
+	TournamentID string `json:"tournamentId"`
+	Team         Team   `json:"team"`
+}
+
+// InvitationTokenHash is the non-recoverable persistence key for an invitation secret.
+type InvitationTokenHash [sha256.Size]byte
 
 // Match represents a generated league match.
 type Match struct {
@@ -155,6 +177,10 @@ type CreationRepository interface {
 	Create(context.Context, string, CreateInput) (Tournament, error)
 	AddTeam(context.Context, string, string, TeamInput) (Team, error)
 	RemoveTeam(context.Context, string, string, string) error
+	SaveTeamInvitation(context.Context, string, string, InvitationTokenHash) error
+	RevokeTeamInvitation(context.Context, string, string) error
+	InspectTeamInvitation(context.Context, InvitationTokenHash) (TeamInvitation, error)
+	JoinTeamInvitation(context.Context, string, InvitationTokenHash, TeamInput) (TeamRegistration, error)
 	WithdrawTeam(context.Context, string, string, string) (Tournament, error)
 	Start(context.Context, string, string, StartInput) (Tournament, error)
 	Cancel(context.Context, string, string) (Tournament, error)
@@ -167,10 +193,51 @@ type CreationRepository interface {
 	GetPublic(context.Context, string) (Tournament, error)
 }
 
+var invitationTokenPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{43}$`)
+
+// CreateTeamInvitation rotates the single active invitation and returns its secret once.
+func (s CreationService) CreateTeamInvitation(ctx context.Context, accountID, tournamentID string) (string, error) {
+	secret := make([]byte, 32)
+	if _, err := rand.Read(secret); err != nil {
+		return "", err
+	}
+	token := base64.RawURLEncoding.EncodeToString(secret)
+	if err := s.repository.SaveTeamInvitation(ctx, accountID, tournamentID, hashInvitationToken(token)); err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+// RevokeTeamInvitation removes the active invitation without affecting registered teams.
+func (s CreationService) RevokeTeamInvitation(ctx context.Context, accountID, tournamentID string) error {
+	return s.repository.RevokeTeamInvitation(ctx, accountID, tournamentID)
+}
+
+// InspectTeamInvitation resolves the safe public projection of an active invitation.
+func (s CreationService) InspectTeamInvitation(ctx context.Context, token string) (TeamInvitation, error) {
+	if !invitationTokenPattern.MatchString(token) {
+		return TeamInvitation{}, ErrInvalidTournamentInput
+	}
+	return s.repository.InspectTeamInvitation(ctx, hashInvitationToken(token))
+}
+
+// JoinTeamInvitation creates the account's team and follows the tournament atomically.
+func (s CreationService) JoinTeamInvitation(ctx context.Context, accountID, token string, input TeamInput) (TeamRegistration, error) {
+	name := strings.TrimSpace(input.Name)
+	if !invitationTokenPattern.MatchString(token) || name == "" || utf8.RuneCountInString(name) > 100 {
+		return TeamRegistration{}, ErrInvalidTournamentInput
+	}
+	return s.repository.JoinTeamInvitation(ctx, accountID, hashInvitationToken(token), TeamInput{Name: name})
+}
+
+func hashInvitationToken(token string) InvitationTokenHash {
+	return sha256.Sum256(append([]byte("tournament-team-invitation:"), token...))
+}
+
 // AddTeam adds a team while the league remains unstarted.
 func (s CreationService) AddTeam(ctx context.Context, accountID, leagueID string, input TeamInput) (Team, error) {
 	name := strings.TrimSpace(input.Name)
-	if name == "" || len(name) > 100 {
+	if name == "" || utf8.RuneCountInString(name) > 100 {
 		return Team{}, ErrInvalidTournamentInput
 	}
 	return s.repository.AddTeam(ctx, accountID, leagueID, TeamInput{Name: name})
@@ -465,13 +532,13 @@ func sameTiedStandingRank(left, right Standing, head map[string]Standing, league
 	return compareGeneralStanding(left, right) == 0 && compareStanding(head[left.TeamID], head[right.TeamID]) == 0
 }
 func validCreateInput(input CreateInput) bool {
-	if !validSport(input.Sport) || len(strings.TrimSpace(input.Name)) == 0 || utf8.RuneCountInString(input.Name) > MaximumTournamentNameLength || len(input.Teams) < 2 || len(input.Teams) > 64 {
+	if !validSport(input.Sport) || len(strings.TrimSpace(input.Name)) == 0 || utf8.RuneCountInString(input.Name) > MaximumTournamentNameLength || len(input.Teams) < 1 || len(input.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}
 	for _, team := range input.Teams {
 		name := strings.TrimSpace(team.Name)
-		if name == "" || len(name) > 100 || seen[strings.ToLower(name)] {
+		if name == "" || utf8.RuneCountInString(name) > 100 || seen[strings.ToLower(name)] {
 			return false
 		}
 		seen[strings.ToLower(name)] = true

@@ -16,7 +16,7 @@ export interface TournamentInput {
   name: string;
   sport: TournamentInputSport;
   /**
-   * @minItems 2
+   * @minItems 1
    * @maxItems 64
    */
   teams: TeamInput[];

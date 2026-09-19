@@ -6,7 +6,7 @@
 ## Alcance
 
 Este runbook protege el clúster `tournaments-manager-dev`, no el entorno
-`local`, la evidencia legal separada ni la futura producción. Usa pgBackRest
+`local`, la evidencia legal separada ni el runtime `prod` de K3s. Usa pgBackRest
 2.59.1, copia física, archivado WAL y recuperación a un instante (PITR).
 
 La copia base contiene el clúster completo. Los incrementales contienen cambios
@@ -17,7 +17,7 @@ para reproducir WAL.
 ## Preparación única
 
 1. Usa una carpeta privada de iCloud Drive distinta de `legal-audit-backups` y
-   separada del futuro repositorio de `prod`:
+   separada del repositorio de `prod`:
 
    ```sh
    POSTGRES_BACKUP_DESTINATION="$HOME/Library/Mobile Documents/com~apple~CloudDocs/FastTourney/postgresql-backups/dev"

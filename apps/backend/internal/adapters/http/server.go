@@ -137,6 +137,10 @@ func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiverAnd
 	if len(creationServices) > 0 {
 		creationService := creationServices[0]
 		mux.Handle("POST /v1/tournaments", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createTournament(creationService)))))
+		mux.Handle("POST /v1/tournaments/{tournamentId}/team-invitation", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createTournamentTeamInvitation(creationService)))))
+		mux.Handle("DELETE /v1/tournaments/{tournamentId}/team-invitation", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(revokeTournamentTeamInvitation(creationService)))))
+		mux.HandleFunc("POST /v1/team-invitations/inspection", inspectTournamentTeamInvitation(creationService))
+		mux.Handle("POST /v1/team-invitations/registration", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(joinTournamentTeamInvitation(creationService)))))
 		mux.Handle("POST /v1/tournaments/{tournamentId}/teams", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(addTournamentTeam(creationService)))))
 		mux.Handle("DELETE /v1/tournaments/{tournamentId}/teams/{teamId}", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(removeTournamentTeam(creationService)))))
 		mux.Handle("POST /v1/tournaments/{tournamentId}/teams/{teamId}/withdraw", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(withdrawTournamentTeam(creationService)))))
@@ -158,6 +162,139 @@ func NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiverAnd
 		r.Pattern = routedRequest.Pattern
 	})
 	return requireAllowedOrigin(corsAllowedOrigins, withCookieName)
+}
+
+func createTournamentTeamInvitation(service tournaments.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		tournamentID := r.PathValue("tournamentId")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
+			return
+		}
+		if !uuidPattern.MatchString(tournamentID) {
+			writeTournamentValidationProblem(w, r)
+			return
+		}
+		token, err := service.CreateTeamInvitation(r.Context(), accountID, tournamentID)
+		recordTournamentFailure(r.Context(), err)
+		switch {
+		case errors.Is(err, tournaments.ErrTournamentForbidden):
+			writeProblem(w, http.StatusForbidden, "You cannot create invitations for this tournament")
+			return
+		case errors.Is(err, tournaments.ErrTournamentNotFound):
+			writeProblem(w, http.StatusNotFound, "Tournament is unavailable")
+			return
+		case errors.Is(err, tournaments.ErrTournamentInvitationConflict):
+			writeProblem(w, http.StatusConflict, "Tournament no longer accepts invitations")
+			return
+		case err != nil:
+			writeProblem(w, http.StatusInternalServerError, "Could not create invitation")
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(map[string]string{"token": token})
+	}
+}
+
+func revokeTournamentTeamInvitation(service tournaments.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		tournamentID := r.PathValue("tournamentId")
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
+			return
+		}
+		if !uuidPattern.MatchString(tournamentID) {
+			writeTournamentValidationProblem(w, r)
+			return
+		}
+		err := service.RevokeTeamInvitation(r.Context(), accountID, tournamentID)
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrTournamentForbidden) {
+			writeProblem(w, http.StatusForbidden, "You cannot revoke invitations for this tournament")
+			return
+		}
+		if errors.Is(err, tournaments.ErrTournamentNotFound) {
+			writeProblem(w, http.StatusNotFound, "Tournament is unavailable")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "Could not revoke invitation")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func inspectTournamentTeamInvitation(service tournaments.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Token string `json:"token"`
+		}
+		if decodeBody(r, &body) != nil {
+			writeTournamentValidationProblem(w, r)
+			return
+		}
+		invitation, err := service.InspectTeamInvitation(r.Context(), body.Token)
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrInvalidTournamentInput) {
+			writeTournamentValidationProblem(w, r)
+			return
+		}
+		if errors.Is(err, tournaments.ErrTournamentInvitationNotFound) {
+			writeProblem(w, http.StatusNotFound, "Invitation is unavailable")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "Could not inspect invitation")
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(invitation)
+	}
+}
+
+func joinTournamentTeamInvitation(service tournaments.CreationService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountID, ok := currentAccountID(r.Context())
+		if !ok {
+			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
+			return
+		}
+		var request struct {
+			Token string `json:"token"`
+			Name  string `json:"name"`
+		}
+		if decodeBody(r, &request) != nil {
+			writeTournamentValidationProblem(w, r)
+			return
+		}
+		registration, err := service.JoinTeamInvitation(r.Context(), accountID, request.Token, tournaments.TeamInput{Name: request.Name})
+		recordTournamentFailure(r.Context(), err)
+		if errors.Is(err, tournaments.ErrInvalidTournamentInput) {
+			writeTournamentValidationProblem(w, r)
+			return
+		}
+		if errors.Is(err, tournaments.ErrTournamentInvitationNotFound) {
+			writeProblem(w, http.StatusNotFound, "Invitation is unavailable")
+			return
+		}
+		if errors.Is(err, tournaments.ErrTournamentInvitationConflict) {
+			writeProblem(w, http.StatusConflict, "Invitation cannot accept this team")
+			return
+		}
+		if err != nil {
+			writeProblem(w, http.StatusInternalServerError, "Could not join tournament")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(registration)
+	}
 }
 
 type accountDeletionScheduler interface {
@@ -383,7 +520,7 @@ func removeTournamentTeam(service tournaments.CreationService) http.HandlerFunc 
 			return
 		}
 		if errors.Is(err, tournaments.ErrTournamentTeamConflict) {
-			writeProblem(w, http.StatusConflict, "An unstarted tournament must keep at least two teams")
+			writeProblem(w, http.StatusConflict, "An unstarted tournament must keep at least one team")
 			return
 		}
 		if err != nil {
@@ -758,6 +895,10 @@ func recordTournamentFailure(ctx context.Context, err error) {
 		observability.RecordEndpointFailure(ctx, "tournament.completion_conflict")
 	case errors.Is(err, tournaments.ErrTournamentTeamConflict):
 		observability.RecordEndpointFailure(ctx, "tournament.team_conflict")
+	case errors.Is(err, tournaments.ErrTournamentInvitationNotFound):
+		observability.RecordEndpointFailure(ctx, "tournament.invitation_not_found")
+	case errors.Is(err, tournaments.ErrTournamentInvitationConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.invitation_conflict")
 	case errors.Is(err, tournaments.ErrTournamentWithdrawalConflict):
 		observability.RecordEndpointFailure(ctx, "tournament.withdrawal_conflict")
 	case errors.Is(err, tournaments.ErrBracketResultDependency):
@@ -1579,13 +1720,13 @@ func validRegistrationDraft(draft *registration.Draft) bool {
 	if draft == nil {
 		return true
 	}
-	if !uuidPattern.MatchString(draft.ID) || (draft.Sport != tournaments.SportFootball && draft.Sport != tournaments.SportBasketball) || len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > tournaments.MaximumTournamentNameLength || len(draft.Teams) < 2 || len(draft.Teams) > 64 {
+	if !uuidPattern.MatchString(draft.ID) || (draft.Sport != tournaments.SportFootball && draft.Sport != tournaments.SportBasketball) || len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > tournaments.MaximumTournamentNameLength || len(draft.Teams) < 1 || len(draft.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}
 	for _, team := range draft.Teams {
 		name := strings.TrimSpace(team)
-		if name == "" || len(name) > 100 || seen[strings.ToLower(name)] {
+		if name == "" || utf8.RuneCountInString(name) > 100 || seen[strings.ToLower(name)] {
 			return false
 		}
 		seen[strings.ToLower(name)] = true

@@ -625,6 +625,96 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: "#/components/schemas/Problem" }
+  /tournaments/{tournamentId}/team-invitation:
+    post:
+      tags: [Tournaments]
+      operationId: createTournamentTeamInvitation
+      summary: Crea o regenera el enlace para inscribir equipos
+      description: >-
+        Exige sesión de la organizadora y un torneo sin empezar. Sustituye la
+        invitación activa anterior y devuelve el nuevo secreto una sola vez.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: tournamentId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "201":
+          description: Invitación creada; el secreto no puede recuperarse después.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TournamentTeamInvitationSecret" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: El torneo no existe. }
+        "409": { description: El torneo ya no está sin empezar. }
+    delete:
+      tags: [Tournaments]
+      operationId: revokeTournamentTeamInvitation
+      summary: Revoca el enlace activo para inscribir equipos
+      description: >-
+        Exige sesión de la organizadora. Es idempotente aunque no exista una
+        invitación activa.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: tournamentId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "204": { description: La invitación ya no está activa. }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: El torneo no existe. }
+  /team-invitations/inspection:
+    post:
+      tags: [Tournaments]
+      operationId: inspectTournamentTeamInvitation
+      summary: Identifica el torneo de una invitación activa
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TournamentTeamInvitationAccess" }
+      responses:
+        "200":
+          description: Invitación activa de un torneo sin empezar.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TournamentTeamInvitation" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "404": { description: "La invitación no existe, fue revocada o ya no admite equipos." }
+  /team-invitations/registration:
+    post:
+      tags: [Tournaments]
+      operationId: joinTournamentWithTeamInvitation
+      summary: Inscribe el equipo de la cuenta mediante una invitación
+      description: >-
+        Exige una cuenta verificada. Crea atómicamente el equipo, su vínculo con
+        la cuenta y el seguimiento del torneo. No concede administración.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TournamentTeamRegistrationInput" }
+      responses:
+        "201":
+          description: Equipo inscrito y torneo guardado en la cuenta.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TournamentTeamRegistration" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "404": { description: "La invitación no existe, fue revocada o ya no admite equipos." }
+        "409":
+          description: >-
+            La cuenta ya inscribió un equipo, el nombre ya existe o el torneo
+            alcanzó el máximo de equipos.
   /tournaments/{tournamentId}/start:
     post:
       tags: [Tournaments]
@@ -663,7 +753,8 @@ paths:
       summary: Añade un equipo a un torneo sin empezar
       description: >-
         Exige sesión de la organizadora. Solo se admite mientras el torneo esté
-        publicada; al iniciarla, la composición queda congelada.
+        publicado; crea un equipo sin cuenta asociada y, al iniciar, la
+        composición queda congelada.
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       parameters:
         - name: tournamentId
@@ -694,7 +785,7 @@ paths:
       summary: Elimina un equipo de un torneo sin empezar
       description: >-
         Exige sesión de la organizadora. Solo se admite mientras el torneo esté
-        publicado y conserva al menos dos equipos; para descartarlo debe
+        publicado y conserva al menos un equipo; para descartarlo debe
         usarse su cancelación explícita.
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       parameters:
@@ -712,7 +803,7 @@ paths:
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
         "403": { description: La sesión no pertenece a la organizadora. }
         "404": { description: El torneo o el equipo no existe. }
-        "409": { description: "El torneo ya se inició o solo conserva dos equipos." }
+        "409": { description: "El torneo ya se inició o solo conserva un equipo." }
   /tournaments/{tournamentId}/teams/{teamId}/withdraw:
     post:
       tags: [Tournaments]
@@ -1077,9 +1168,48 @@ components:
       enum: [cookie, bearer]
     TeamInput:
       type: object
+      additionalProperties: false
       required: [name]
       properties:
         name: { type: string, minLength: 1, maxLength: 100 }
+    TournamentTeamInvitationToken:
+      type: string
+      minLength: 43
+      maxLength: 43
+      pattern: "^[A-Za-z0-9_-]{43}$"
+    TournamentTeamInvitationSecret:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token: { $ref: "#/components/schemas/TournamentTeamInvitationToken" }
+    TournamentTeamInvitationAccess:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token: { $ref: "#/components/schemas/TournamentTeamInvitationToken" }
+    TournamentTeamRegistrationInput:
+      type: object
+      additionalProperties: false
+      required: [token, name]
+      properties:
+        token: { $ref: "#/components/schemas/TournamentTeamInvitationToken" }
+        name: { type: string, minLength: 1, maxLength: 100 }
+    TournamentTeamInvitation:
+      type: object
+      additionalProperties: false
+      required: [tournamentId, tournamentName]
+      properties:
+        tournamentId: { $ref: "#/components/schemas/UUID" }
+        tournamentName: { type: string, minLength: 1, maxLength: 56 }
+    TournamentTeamRegistration:
+      type: object
+      additionalProperties: false
+      required: [tournamentId, team]
+      properties:
+        tournamentId: { $ref: "#/components/schemas/UUID" }
+        team: { $ref: "#/components/schemas/TournamentTeam" }
     TournamentInput:
       type: object
       additionalProperties: false
@@ -1089,7 +1219,7 @@ components:
         sport: { type: string, enum: [football, basketball] }
         teams:
           type: array
-          minItems: 2
+          minItems: 1
           maxItems: 64
           items: { $ref: "#/components/schemas/TeamInput" }
     TournamentDraftInput:
@@ -1105,7 +1235,7 @@ components:
         sport: { type: string, enum: [football, basketball] }
         teams:
           type: array
-          minItems: 2
+          minItems: 1
           maxItems: 64
           items: { $ref: "#/components/schemas/TeamInput" }
     RegisterRequest:

@@ -1,7 +1,8 @@
 # Identidad y acceso
 
-> Estado: identidad propia federada aceptada; sesiones locales opacas,
-> verificación SMTP local y contraseñas Argon2id aceptadas en ADR-0044.
+> Estado: identidad local y Google implementados; sesiones opacas rotatorias,
+> verificación y recuperación por email, reautenticación y gestión de métodos de
+> acceso activas.
 
 ## Vocabulario
 
@@ -10,7 +11,8 @@
   una sesión de producto ni ejecutar acciones de negocio.
 - **Cuenta con baja programada:** cuenta sin sesión ni operaciones de producto,
   retenida durante 30 días desde `deletion_requested_at` antes de su purga
-  definitiva conforme a ADR-0074. La recuperación aún no está implementada.
+  definitiva conforme a ADR-0074. v1 no permite deshacer la baja; añadir esa
+  capacidad requeriría una decisión explícita.
 - **Credencial local:** email y secreto de autenticación gestionados por el
   backend.
 - **Identidad externa:** vínculo con un proveedor mediante `issuer` y `subject`.
@@ -76,9 +78,10 @@ acreditar la identidad con el proveedor y antes de crear la cuenta. No forma
 parte de una credencial, no sustituye al identificador interno y no se puede
 cambiar en el primer corte.
 
-Se usa para buscar y seleccionar administradores de una liga. Las reglas exactas
-de formato, normalización, nombres reservados y un futuro cambio de `username`
-se decidirán antes de implementarlas.
+Se usa para buscar y seleccionar administradores de un torneo. El contrato
+vigente exige entre 3 y 30 caracteres en minúsculas, limitados a letras ASCII,
+números y guion bajo. Cambiar un `username` permanece fuera de v1 y requeriría
+resolver referencias, abuso y expectativas de identidad pública.
 
 El cliente puede consultar `GET /v1/usernames/{username}/availability` cuando
 el valor ya cumple el mínimo de tres caracteres y permanece sin cambios durante
@@ -139,7 +142,7 @@ el backend no confía en campos sueltos.
 5. El backend extrae el `subject` verificado.
 6. Se busca el vínculo `(provider, subject)` y se emite una sesión propia.
 
-En el primer incremento se implementa exclusivamente Google. El backend trata
+Google es el proveedor federado activo. El backend trata
 `sub` como el identificador externo estable, no el email, y valida la credencial
 antes de crear o consultar el vínculo. Apple reutilizará la misma frontera en un
 incremento posterior.
@@ -188,10 +191,9 @@ una contraseña o una identidad social todavía no vinculada a ninguna cuenta. S
 el `(issuer, subject)` ya pertenece a otra cuenta, la operación falla sin mover
 ni duplicar la identidad; si pertenece a la misma cuenta, no crea un duplicado.
 No existe fusión de cuentas: las ligas, administraciones y seguimientos
-permanecen ligados al ID de la cuenta que los creó. Véanse ADR-0066 y ADR-0067.
-La API y la interfaz de Seguridad requieren primero el mecanismo común de
-reautenticación reciente; por eso no forman parte todavía del endpoint de inicio
-de Google implementado en este incremento.
+permanecen ligados al ID de la cuenta que los creó. La API y la interfaz de
+Seguridad usan tickets comunes de reautenticación de un solo uso. Véanse
+ADR-0066 y ADR-0067.
 
 ## Invariantes de seguridad
 

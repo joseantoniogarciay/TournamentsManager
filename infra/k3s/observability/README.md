@@ -32,4 +32,4 @@ El receptor de `prod` usa el remitente `FastTourney Alerts` y el prefijo `[PROD]
 
 Los cinco comandos `helm template` deben ejecutarse con las versiones anteriores y sus valores correspondientes. La instalación no cambia Caddy, Cloudflare Tunnel, el Ingress público ni el `503` de `api.fasttourney.com`.
 
-El procedimiento completo, incluida la instalación interactiva en la VM, la validación y rollback, está en [`docs/runbooks/k3s-observability.md`](../../docs/runbooks/k3s-observability.md).
+El procedimiento completo, incluida la instalación interactiva en la VM, la validación y rollback, está en [`docs/runbooks/k3s-observability.md`](../../../docs/runbooks/k3s-observability.md).

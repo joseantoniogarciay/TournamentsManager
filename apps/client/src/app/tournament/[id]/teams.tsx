@@ -3,26 +3,28 @@ import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { control, radius, space } from "@tournaments-manager/design-tokens";
+import { control, space } from "@tournaments-manager/design-tokens";
 
 import {
   addTournamentTeamRequest,
+  createTournamentTeamInvitationRequest,
   getTournamentRelationship,
+  revokeTournamentTeamInvitationRequest,
   TournamentUnavailableError,
   removeTournamentTeamRequest,
   withdrawTournamentTeamRequest,
 } from "@/features/league-creation/api";
 import { useTournament, useTournamentStore } from "@/features/league-creation/league-store";
-import { maximumTournamentTeams } from "@/features/league-creation/draft";
+import { maximumTeamNameLength, maximumTournamentTeams } from "@/features/league-creation/draft";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
@@ -32,6 +34,7 @@ import {
   Button,
   Card,
   LoadingTransition,
+  ModalDialog,
   NavigationHeaderButton,
   RequestErrorCard,
   Screen,
@@ -52,7 +55,7 @@ export default function TournamentTeamsScreen() {
   const { confirm } = useConfirmationDialog();
   const league = useTournament(id);
   const { loadTournament, refreshTournament, updateTournament } = useTournamentStore();
-  const [relationship, setRelationship] = useState<string>();
+  const [relationship, setRelationship] = useState<string | null>();
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
   const [leagueUnavailable, setTournamentUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,6 +63,8 @@ export default function TournamentTeamsScreen() {
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [removingTeamID, setRemovingTeamID] = useState<string>();
+  const [isSharingInvitation, setIsSharingInvitation] = useState(false);
+  const [isRevokingInvitation, setIsRevokingInvitation] = useState(false);
 
   const load = useCallback(
     async (force = false) => {
@@ -70,8 +75,10 @@ export default function TournamentTeamsScreen() {
       setIsLoading(true);
       setLoadErrorMessage(undefined);
       setTournamentUnavailable(false);
+      setRelationship(undefined);
       try {
         await (force ? refreshTournament(id) : loadTournament(id));
+        if (user) setRelationship(await getTournamentRelationship(id));
       } catch (error) {
         const unavailable = error instanceof TournamentUnavailableError;
         setTournamentUnavailable(unavailable);
@@ -82,18 +89,15 @@ export default function TournamentTeamsScreen() {
         setIsLoading(false);
       }
     },
-    [id, loadTournament, refreshTournament, t],
+    [id, loadTournament, refreshTournament, t, user],
   );
   useEffect(() => {
     void load();
-    if (user)
-      void getTournamentRelationship(id)
-        .then(setRelationship)
-        .catch(() => setRelationship(undefined));
-  }, [id, load, user]);
+  }, [load]);
 
   const canAddTeam = relationship === "organizer" && league?.state === "published";
-  const canRemoveTeam = canAddTeam && (league?.teams.length ?? 0) > 2;
+  const teamLimitReached = (league?.teams.length ?? 0) >= maximumTournamentTeams;
+  const canRemoveTeam = canAddTeam && (league?.teams.length ?? 0) > 1;
   const canWithdrawTeam =
     relationship === "organizer" && league?.state === "in_progress" && league.format === "league";
   const openAddTeam = () => {
@@ -141,6 +145,46 @@ export default function TournamentTeamsScreen() {
       setSaving(false);
     }
   };
+  const shareInvitation = async () => {
+    if (!id || !league || isSharingInvitation) return;
+    if (teamLimitReached) {
+      show({ kind: "generic-error", message: t("league_team_limit_reached") });
+      return;
+    }
+    setIsSharingInvitation(true);
+    try {
+      const token = await createTournamentTeamInvitationRequest(id);
+      const base = (
+        process.env.EXPO_PUBLIC_APP_LINK_URL ??
+        (process.env.APP_ENV === "production" ? undefined : "http://localhost:8082")
+      )?.replace(/\/$/, "");
+      if (!base) throw new Error("missing app link URL");
+      const url = `${base}/join-team#${token}`;
+      await Share.share({
+        message: t("league_invitation_share_message")
+          .replace("{tournament}", league.name)
+          .replace("{url}", url),
+      });
+    } catch (error) {
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    } finally {
+      setIsSharingInvitation(false);
+    }
+  };
+  const revokeInvitation = async () => {
+    if (!id || isRevokingInvitation) return;
+    setIsRevokingInvitation(true);
+    try {
+      await revokeTournamentTeamInvitationRequest(id);
+      show({ kind: "success", message: t("league_invitation_revoked") });
+    } catch (error) {
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    } finally {
+      setIsRevokingInvitation(false);
+    }
+  };
   const remove = async (teamID: string, withdrawn: boolean) => {
     if (!id || (!canRemoveTeam && !canWithdrawTeam)) return;
     setRemovingTeamID(teamID);
@@ -177,20 +221,11 @@ export default function TournamentTeamsScreen() {
       onAccept: () => void remove(teamID, withdrawn),
       onCancel: () => undefined,
     });
-  const navigationButton = (
-    onPress: () => void,
-    label: string,
-    icon: "close" | "add",
-    side: "left" | "right",
-  ) => (
+  const navigationButton = (onPress: () => void, label: string, side: "left") => (
     <NavigationHeaderButton
       accessibilityLabel={label}
-      icon={icon}
-      nativeIcon={
-        icon === "add"
-          ? { android: "add", ios: "plus", web: "add" }
-          : { android: "close", ios: "xmark", web: "close" }
-      }
+      icon="close"
+      nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
       onPress={onPress}
       side={side}
     />
@@ -208,10 +243,7 @@ export default function TournamentTeamsScreen() {
           title: t("league_teams"),
           ...(!usesLiquidGlassNavigation
             ? {
-                headerLeft: () => navigationButton(close, t("common_back"), "close", "left"),
-                headerRight: canAddTeam
-                  ? () => navigationButton(openAddTeam, t("league_add_team"), "add", "right")
-                  : undefined,
+                headerLeft: () => navigationButton(close, t("common_back"), "left"),
               }
             : {}),
         }}
@@ -225,34 +257,47 @@ export default function TournamentTeamsScreen() {
               onPress={close}
             />
           </Stack.Toolbar>
-          {canAddTeam ? (
-            <Stack.Toolbar placement="right">
-              <Stack.Toolbar.Button
-                accessibilityLabel={t("league_add_team")}
-                icon="plus"
-                onPress={openAddTeam}
-              />
-            </Stack.Toolbar>
-          ) : null}
         </>
       ) : null}
       <Screen bottomInset="none" topInset="navigation-bar">
-        {!league ? (
-          loadErrorMessage ? (
-            <RequestErrorCard
-              actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}
-              loading={leagueUnavailable ? false : isLoading}
-              message={loadErrorMessage}
-              onRetry={leagueUnavailable ? closeUnavailable : () => void load(true)}
-            />
-          ) : (
-            <LoadingTransition active message={t("common_loading")} />
-          )
+        {loadErrorMessage ? (
+          <RequestErrorCard
+            actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}
+            loading={leagueUnavailable ? false : isLoading}
+            message={loadErrorMessage}
+            onRetry={leagueUnavailable ? closeUnavailable : () => void load(true)}
+          />
+        ) : !league || (user && relationship === undefined) ? (
+          <LoadingTransition active message={t("common_loading")} />
         ) : (
           <ScrollView
             contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space[5] }]}
             showsVerticalScrollIndicator={false}
           >
+            {canAddTeam ? (
+              <Card>
+                <View style={styles.invitationCard}>
+                  <View style={styles.invitationCopy}>
+                    <Text variant="title">{t("league_complete_teams_title")}</Text>
+                    <Text color="secondary">{t("league_complete_teams_description")}</Text>
+                    <Text color="secondary">{t("league_invitation_rotation_hint")}</Text>
+                  </View>
+                  <Button label={t("league_add_team")} onPress={openAddTeam} variant="secondary" />
+                  <Button
+                    disabled={teamLimitReached}
+                    label={t("league_share_invitation")}
+                    loading={isSharingInvitation}
+                    onPress={() => void shareInvitation()}
+                  />
+                  <Button
+                    label={t("league_revoke_invitation")}
+                    loading={isRevokingInvitation}
+                    onPress={() => void revokeInvitation()}
+                    variant="secondary"
+                  />
+                </View>
+              </Card>
+            ) : null}
             {league.teams.map((team) => (
               <Card density="compact" key={team.id}>
                 <View style={styles.teamRow}>
@@ -292,69 +337,34 @@ export default function TournamentTeamsScreen() {
             ))}
           </ScrollView>
         )}
-        <Modal animationType="fade" onRequestClose={dismissDialog} transparent visible={adding}>
-          <View style={[styles.backdrop, { backgroundColor: colors.surface.canvas }]}>
-            <Pressable
-              accessibilityLabel={t("common_close")}
-              accessibilityRole="button"
-              disabled={saving}
-              onPress={dismissDialog}
-              style={StyleSheet.absoluteFill}
-            />
-            <View
-              accessibilityViewIsModal
-              style={[
-                styles.dialog,
-                { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-              ]}
-            >
-              <Text variant="title">{t("league_add_team_title")}</Text>
-              <TextField label={t("league_add_team_name")} onChangeText={setName} value={name} />
-              <Button
-                disabled={!name.trim()}
-                label={t("league_add_team_save")}
-                loading={saving}
-                onPress={() => void save()}
-              />
-              <Button
-                disabled={saving}
-                label={t("common_cancel")}
-                onPress={dismissDialog}
-                variant="secondary"
-              />
-            </View>
-          </View>
-        </Modal>
+        <ModalDialog
+          dismissAccessibilityLabel={t("common_close")}
+          onDismiss={dismissDialog}
+          visible={adding}
+        >
+          <Text variant="title">{t("league_add_team_title")}</Text>
+          <TextField
+            label={t("league_add_team_name")}
+            maxLength={maximumTeamNameLength}
+            onChangeText={setName}
+            value={name}
+          />
+          <Button
+            disabled={!name.trim()}
+            label={t("league_add_team_save")}
+            loading={saving}
+            onPress={() => void save()}
+          />
+        </ModalDialog>
       </Screen>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: space[5],
-  },
   content: { gap: space[5], paddingBottom: space[5] },
-  dialog: {
-    borderRadius: radius.card,
-    borderWidth: 1,
-    gap: space[5],
-    maxWidth: 440,
-    padding: space[5],
-    width: "100%",
-  },
-  loader: { alignItems: "center", flex: 1, justifyContent: "center" },
-  navigationButton: {
-    alignItems: "center",
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    height: control.minHeight,
-    justifyContent: "center",
-    width: control.minHeight,
-  },
+  invitationCard: { gap: space[4] },
+  invitationCopy: { gap: space[2] },
   removeButton: {
     alignItems: "center",
     height: control.minHeight,

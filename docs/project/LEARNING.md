@@ -1,5 +1,54 @@
 # Registro de aprendizaje
 
+## 2026-09-19 — Participar no equivale a administrar
+
+- **Aprendido:** permitir que una cuenta nombre e inscriba su equipo no exige
+  concederle permisos sobre el torneo ni modelar una plantilla de jugadores. El
+  equipo puede seguir siendo el participante deportivo mientras una relación
+  mínima conserva quién lo incorporó.
+- **Regla reutilizable:** lectura pública, capacidad de inscripción, seguimiento
+  y administración son relaciones distintas. Un enlace secreto y revocable
+  autoriza una mutación concreta; crear el equipo y el seguimiento en una sola
+  transacción evita que la persona participe sin poder recuperar el torneo.
+- **Aprendido:** cargar el torneo no basta si falla la proyección que decide sus
+  acciones. Un error de red o backend al resolver permisos debe bloquear esa
+  vista con el estado compartido de reintento; convertirlo silenciosamente en
+  «sin permisos» oculta acciones legítimas y confunde autorización con fallo.
+- **Regla reutilizable:** un fragmento evita enviar la capacidad al servidor
+  web, pero el cliente debe retirarlo enseguida y persistirlo según sensibilidad:
+  almacenamiento seguro nativo y la alternativa local disponible en web.
+- **Decisión de alcance:** la organizadora empieza con su propio equipo y puede
+  añadir equipos anónimos antes del inicio. Las cuentas invitadas inscriben como
+  máximo uno, sin administrar; jugadores, plantillas y aprobación individual se
+  posponen. Véase ADR-0130.
+
+## 2026-09-19 — Cerrar trabajo no basta si los índices siguen prometiéndolo
+
+- **Aprendido:** un roadmap puede estar formalmente cerrado y, aun así, sus
+  READMEs y documentos de referencia conservar “pendiente”, tiempo futuro o
+  gates ya superados. Esa deriva hace que el repositorio parezca incompleto y
+  oculta qué deuda es deliberada.
+- **Regla reutilizable:** los documentos vigentes describen el presente con
+  cuatro estados explícitos: implementado, cancelado, no adoptado o aplazado
+  hasta un disparador. El manifiesto, los ADR, el changelog, las retrospectivas
+  y las entradas cronológicas conservan el lenguaje de su momento porque son
+  historia, no backlog.
+
+## 2026-09-19 — El mismo propósito no implica el mismo carril de pago
+
+- **Aprendido:** una propina sin beneficio no necesita modelarse como un derecho
+  del producto, pero web y tiendas móviles imponen reglas y procesadores
+  distintos. Reutilizar un enlace web dentro de una app puede convertir una
+  simplificación técnica en un riesgo de distribución.
+- **Regla reutilizable:** se declara primero si el pago concede una
+  contraprestación. Si no la concede, el dominio no guarda saldo ni permisos;
+  web usa checkout alojado y cada app distribuida adopta el canal de facturación
+  que su tienda exige, revisando política y fiscalidad antes de activarlo.
+- **Decisión de alcance:** localizar la interfaz propia no obliga a duplicar el
+  catálogo de un checkout alojado. Un único texto en inglés evita que cada nuevo
+  idioma multiplique productos, precios y enlaces; se revisará solo si la
+  evidencia de uso justifica ese mantenimiento.
+
 ## 2026-09-18 — Cerrar una versión no impide nuevos incrementos
 
 - **Aprendido:** un producto puede cerrar su v1 cuando cumple su objetivo y sus

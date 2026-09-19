@@ -37,6 +37,29 @@ for required_variable in EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID; do
   fi
 done
 
+configured_tip_links=0
+for amount in 2 5 10; do
+  variable_name="EXPO_PUBLIC_TIP_PAYMENT_LINK_${amount}_EUR"
+  eval "variable_value=\${$variable_name:-}"
+  if [ -n "$variable_value" ]; then
+    case "$variable_value" in
+      https://buy.stripe.com/test_*)
+        echo "$variable_name no puede contener un Payment Link de prueba en producción." >&2
+        exit 1
+        ;;
+      https://buy.stripe.com/*) configured_tip_links=$((configured_tip_links + 1)) ;;
+      *)
+        echo "$variable_name debe contener un Payment Link live de Stripe." >&2
+        exit 1
+        ;;
+    esac
+  fi
+done
+if [ "$configured_tip_links" -ne 0 ] && [ "$configured_tip_links" -ne 3 ]; then
+  echo "Los Payment Links live deben configurarse juntos para 2 €, 5 € y 10 €." >&2
+  exit 1
+fi
+
 has_app_links=false
 if [ -e "$app_links_directory/apple-app-site-association" ] || \
   [ -e "$app_links_directory/assetlinks.json" ]; then

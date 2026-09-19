@@ -10,6 +10,7 @@ import {
   type RegistrationVerificationFailure,
 } from "@/features/registration/api";
 import { usePendingVerification } from "@/features/registration/pending-verification";
+import { getPendingTeamInvitation } from "@/features/league-creation/team-invitation";
 import { getTranslator } from "@/shared/i18n/locale";
 import { useSession } from "@/shared/session/session-provider";
 import { Button, Card, LoadingTransition, Screen, Text } from "@/shared/ui";
@@ -67,7 +68,8 @@ export default function LinkConfirmationScreen() {
         }
         if (controller.signal.aborted || activeAttempt.current !== attempt) return;
         setToken(null);
-        completeSessionReplacement(session.user);
+        const pendingInvitation = await getPendingTeamInvitation();
+        completeSessionReplacement(session.user, pendingInvitation ? "/join-team" : "/");
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted || activeAttempt.current !== attempt) return;

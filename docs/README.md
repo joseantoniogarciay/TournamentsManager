@@ -24,3 +24,12 @@ raíz. `README.md` y `AGENTS.md` enlazan este mapa y los documentos obligatorios
 Mover un documento exige actualizar sus enlaces, los índices afectados y
 `AGENTS.md` si forma parte de la autoridad obligatoria. Los enlaces internos se
 validan antes de cerrar el cambio.
+
+## Vigencia e historia
+
+Los documentos de referencia describen el estado presente y no usan
+«pendiente» para capacidades canceladas, descartadas o deliberadamente fuera de
+alcance: indican `cancelado`, `no adoptado` o el disparador concreto de revisión.
+El manifiesto original, los ADR, el changelog, las retrospectivas y las entradas
+cronológicas de aprendizaje conservan en cambio el lenguaje de su momento; son
+historia de decisiones y no una lista de trabajo abierta.

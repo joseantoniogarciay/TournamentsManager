@@ -35,8 +35,10 @@ sin afectar K3s ni PostgreSQL.
 
 La exportación carga únicamente su contrato local ignorado
 `infra/home/secrets/production-web.env`, con el ID OAuth web público de
-producción, y nunca el `.env` genérico del repositorio. Los ficheros de
-asociación móvil reales viven, cuando exista el lanzamiento nativo, junto a él en
+producción y, cuando se active ADR-0129, los tres Payment Links públicos de
+Stripe live. El gate rechaza enlaces de prueba y configuraciones parciales. La
+exportación nunca lee el `.env` genérico del repositorio. Los ficheros de asociación
+móvil reales viven, cuando exista el lanzamiento nativo, junto a él en
 `infra/home/secrets/app-links/`; las plantillas de referencia están en
 `infra/app-links/`. Sin esos ficheros el script prepara un release web válido
 sin `/.well-known`; si se aporta solo uno o sus valores no son reales, lo
@@ -78,6 +80,13 @@ para que ambas URL públicas se incorporen al bundle. También fija
 `APP_ENV=development`, de modo que la exportación usa la identidad **Fast
 Tourney Dev** en lugar de la variante local. Caddy no ejecuta Expo
 Metro.
+
+Cuando se prueban las propinas de ADR-0129, la exportación de desarrollo carga
+opcionalmente `infra/home/secrets/development-web.env`. Ese contrato ignorado
+solo acepta los tres Payment Links de Stripe en modo Test —2 €, 5 € y 10 €—;
+si falta uno, el script rechaza el release. Sin el fichero, la sección no se
+presenta en dev. Los enlaces live pertenecen exclusivamente al contrato de
+producción.
 
 Si la espera de salud de Compose falla, `deploy-dev.sh` no conmuta `current` ni
 escribe el manifiesto. Antes de salir muestra el estado de los servicios y los

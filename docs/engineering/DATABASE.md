@@ -1,20 +1,18 @@
 # Datos y persistencia
 
-> Estado: PostgreSQL, pgx y sqlc activos; Goose queda reservado para la primera
-> migración real. PostgreSQL 18.4 en Compose
-> local. El esquema y las políticas operativas de producción continúan pendientes.
+> Estado: PostgreSQL 18.4, pgx, sqlc y Goose activos; esquema incremental,
+> identidades de mínimo privilegio y recuperación verificadas en `dev` y `prod`.
 
 ## Decisión vigente
 
 [ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md) establece la
-dirección de persistencia; ADR-0072 aplaza el uso de Goose hasta que exista una
-base que deba evolucionarse sin pérdida:
+dirección de persistencia. ADR-0072 aplazó Goose hasta existir datos que
+conservar y ADR-0107 lo activó para las migraciones vigentes:
 
 - PostgreSQL como sistema de registro relacional principal;
 - `pgx` nativo para conexiones, pool y transacciones;
 - SQL escrito por el equipo y código Go tipado generado mediante `sqlc`;
-- migraciones SQL incrementales y versionadas mediante `goose` cuando haya
-  datos que conservar.
+- migraciones SQL incrementales, inmutables y versionadas mediante `goose`.
 
 ```text
 Casos de uso y dominio
@@ -29,13 +27,13 @@ Adaptador y mapeos
           ├── pgx / pgxpool
           └── PostgreSQL
 
-Esquema inicial ── psql ──> PostgreSQL
+Esquema inicial ── psql ──> PostgreSQL ── goose ──> versión vigente
 ```
 
 `sqlc` es un generador, no un ORM ni un driver. Analiza el esquema y las
 consultas y produce funciones, parámetros, resultados y escaneo tipados. `pgx`
-es el driver que comunica Go con PostgreSQL. Goose se activará para evolucionar
-el esquema fuera del arranque normal cuando haya datos que conservar.
+es el driver que comunica Go con PostgreSQL. Goose evoluciona el esquema fuera
+del arranque normal y registra su versión aplicada.
 
 El [mapa entidad-relación](../diagrams/database-erd.md) ofrece una vista visual
 de las tablas y claves foráneas vigentes. Es una ayuda de navegación; el esquema
@@ -116,35 +114,36 @@ base valida el cuerpo recortado entre 8 y 1.000 caracteres y elimina los registr
 con la cuenta mediante `ON DELETE CASCADE`. Estados, respuestas y visibilidad no
 forman parte de este esquema inicial; se añadirán solo con un caso de uso aceptado.
 
-## Decisiones pendientes tras el esquema inicial
+## Criterios de evolución
 
-- límites de consistencia y transacciones de cada caso de uso;
-- concurrencia, idempotencia y bloqueos;
-- configuración del pool, timeouts y errores;
-- datos de desarrollo y pruebas;
-- backup, restore, retención y datos sensibles.
+No quedan decisiones de persistencia bloqueantes para v1. Cada nuevo caso de
+uso decide de forma local sus límites transaccionales, concurrencia,
+idempotencia y bloqueos. Pool, timeouts y errores se configuran por entorno y se
+revisan solo con evidencia operativa.
 
-El entorno público `dev` ya tiene una decisión operativa acotada: ADR-0108 usa
-pgBackRest con copia física, WAL archivado, cifrado y restauración aislada. El
-procedimiento está en el [runbook de backup de dev](../runbooks/postgresql-backup-dev.md);
-no decide todavía la recuperación de producción.
+ADR-0108 protege `dev` con pgBackRest, WAL archivado, cifrado y restauración
+aislada. `prod` usa su propio repositorio pgBackRest, réplica cifrada iniciada
+desde el Mac y restauración aislada demostrada conforme a ADR-0114 y ADR-0115.
+Los procedimientos viven en los runbooks de
+[backup de dev](../runbooks/postgresql-backup-dev.md) y
+[PostgreSQL de K3s](../runbooks/k3s-postgresql.md).
 
 ## Diseño del primer esquema
 
 El [modelo inicial de datos](INITIAL_DATA_MODEL.md), aceptado en ADR-0045,
 define las entidades, restricciones y transacciones del primer incremento.
 [ADR-0047](../adr/0047-organize-initial-postgresql-schema-and-sqlc.md), ajustado
-por ADR-0053, lo materializa en el único esquema inicial, sin crear aún consultas de negocio ni
-adaptadores. `db/schema` es la fuente de esquema para sqlc y para aplicar la
-base efímera; las
-consultas futuras viven en `db/queries` y la salida generada bajo el adaptador
-PostgreSQL se versiona y no se edita manualmente.
+por ADR-0053, lo materializó en el esquema inicial. Las migraciones son ahora la
+entrada de esquema para sqlc y para construir la base efímera; las consultas
+viven en `db/queries` y la salida generada bajo el adaptador PostgreSQL se
+versiona y no se edita manualmente.
 
 ## Cache
 
-Redis aparece como candidato y Valkey debe evaluarse cuando exista un problema
-medido que justifique cache. “Mejor rendimiento” sin presupuesto de latencia,
-carga o perfil de consultas no es un requisito suficiente.
+No se adopta caché en v1. Redis y Valkey son alternativas que solo se evaluarán
+si aparece un problema medido que justifique ese coste. “Mejor rendimiento” sin
+presupuesto de latencia, carga o perfil de consultas no es un requisito
+suficiente.
 
 Antes de añadir cache se documentará:
 
@@ -156,8 +155,11 @@ Antes de añadir cache se documentará:
 6. coste operativo;
 7. Redis frente a Valkey y opción sin cache.
 
-## Evidencia operativa futura
+## Evidencia operativa actual
 
-El handbook deberá incluir generación determinista, migración, rollback o
-forward-fix, backup, restauración, análisis de consultas y respuesta ante
-saturación de conexiones.
+`make verify` comprueba la generación determinista y las migraciones se aplican
+como paso explícito de despliegue. Los runbooks cubren backup y restauración
+aislada en `dev` y `prod`. Un cambio destructivo sigue exigiendo documentar
+rollback, forward-fix o expand/contract; el análisis de consultas y la
+saturación de conexiones se investigan cuando exista evidencia, no como trabajo
+abierto genérico.

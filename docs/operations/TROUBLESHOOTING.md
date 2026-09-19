@@ -13,17 +13,17 @@
 6. Verificar recuperación.
 7. Registrar causa, evidencia y prevención.
 
-## Antes de que exista código
+## Diagnóstico documental y de gobierno
 
-| Síntoma | Comprobación |
-|---|---|
-| Una decisión parece final pero no tiene ADR | Revisar [DECISIONS.md](../governance/DECISIONS.md) |
-| Dos documentos se contradicen | Aplicar la precedencia de [README.md](../../README.md) |
-| Un enlace está roto | Ejecutar la validación documental de Fase 0 |
-| Una tecnología aparece sin comparación | Abrir propuesta con el playbook de decisión |
-| Una fase avanza sin retrospectiva | Completar la plantilla de retrospectiva |
+| Síntoma                                     | Comprobación                                           |
+| ------------------------------------------- | ------------------------------------------------------ |
+| Una decisión parece final pero no tiene ADR | Revisar [DECISIONS.md](../governance/DECISIONS.md)     |
+| Dos documentos se contradicen               | Aplicar la precedencia de [README.md](../../README.md) |
+| Un enlace está roto                         | Ejecutar la validación documental del repositorio      |
+| Una tecnología aparece sin comparación      | Abrir propuesta con el playbook de decisión            |
+| Una fase avanza sin retrospectiva           | Completar la plantilla de retrospectiva                |
 
-## Formato de una entrada futura
+## Formato de una entrada
 
 - **Síntoma**
 - **Impacto**
