@@ -17,6 +17,8 @@ export interface Match {
   round: number;
   /** @minimum 1 */
   sequence: number;
+  /** @minimum 1 */
+  groupNumber?: number;
   stageId: Uuid;
   /**
    * UUID del equipo conocido; cadena vacía si la plaza aún no está resuelta o es bye.

@@ -22,6 +22,7 @@ import {
   removeTournamentAdministrator,
   revokeTournamentTeamInvitation,
   startTournament,
+  startTournamentElimination,
   transferTournamentOwnership,
   withdrawTournamentTeam,
 } from "@/api/generated/tournaments/tournaments";
@@ -73,6 +74,18 @@ export class TournamentTeamInvitationUnavailableError extends Error {
 export class TournamentTeamInvitationConflictError extends Error {
   constructor() {
     super("La invitación no puede aceptar este equipo");
+  }
+}
+
+export class TournamentConfigurationConflictError extends Error {
+  constructor() {
+    super("La composición no satisface la configuración del torneo");
+  }
+}
+
+export class TournamentStageTransitionConflictError extends Error {
+  constructor() {
+    super("La fase de clasificación todavía no puede cerrarse");
   }
 }
 
@@ -149,11 +162,20 @@ export async function withdrawTournamentTeamRequest(leagueID: string, teamID: st
 }
 export async function startTournamentRequest(leagueID: string, input: StartTournamentRequest) {
   const response = await startTournament(leagueID, input, undefined, authenticatedApiFetch);
+  if (response.status === 422) throw new TournamentConfigurationConflictError();
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   const league = parsePublicTournament(response.data);
   if (!league) throw new APIUnexpectedResponseError(response.status);
   captureProductOutcome("league_started", response.headers);
   return league;
+}
+export async function startTournamentEliminationRequest(tournamentID: string) {
+  const response = await startTournamentElimination(tournamentID, undefined, authenticatedApiFetch);
+  if (response.status === 409) throw new TournamentStageTransitionConflictError();
+  if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
+  const tournament = parsePublicTournament(response.data);
+  if (!tournament) throw new APIUnexpectedResponseError(response.status);
+  return tournament;
 }
 export async function cancelTournamentRequest(leagueID: string) {
   const response = await cancelTournament(leagueID, undefined, authenticatedApiFetch);

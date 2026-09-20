@@ -12,10 +12,16 @@ import {
   cancelTournamentRequest,
   completeTournamentRequest,
   getTournamentRelationship,
+  TournamentConfigurationConflictError,
+  TournamentStageTransitionConflictError,
   TournamentUnavailableError,
+  startTournamentEliminationRequest,
   startTournamentRequest,
 } from "@/features/league-creation/api";
+import { minimumTournamentTeamsToStart } from "@/features/league-creation/draft";
 import { useTournament, useTournamentStore } from "@/features/league-creation/league-store";
+import { TournamentTeamManagement } from "@/features/league-creation/team-management";
+import { isShareCancellation } from "@/features/league-creation/share";
 import { MatchResultConflictError, recordMatchResultRequest } from "@/features/match-results/api";
 import {
   type BracketHorizontalMetrics,
@@ -46,6 +52,39 @@ import {
 } from "@/shared/ui";
 
 const localAppLinkURL = "http://localhost:8082";
+const fullBracketSizes = [2, 4, 8, 16, 32, 64] as const;
+
+function getMixedConfigurationRequirement(
+  teamCount: number,
+  structure: "single_table" | "groups",
+  qualifierCount: number,
+  groupCount: number,
+  qualifiersPerGroup: number,
+) {
+  if (structure === "single_table") {
+    return qualifierCount <= teamCount
+      ? { valid: true as const }
+      : { valid: false as const, reason: "teams" as const, required: qualifierCount };
+  }
+  const totalQualifiers = groupCount * qualifiersPerGroup;
+  if (
+    !Number.isInteger(groupCount) ||
+    !Number.isInteger(qualifiersPerGroup) ||
+    groupCount < 2 ||
+    qualifiersPerGroup < 1
+  ) {
+    return { valid: false as const, reason: "numbers" as const };
+  }
+  if (!fullBracketSizes.includes(totalQualifiers as (typeof fullBracketSizes)[number])) {
+    return { valid: false as const, reason: "bracket" as const };
+  }
+  const minimum = groupCount * (qualifiersPerGroup + 1);
+  const balanced = Math.ceil(Math.max(teamCount, minimum) / groupCount) * groupCount;
+  if (teamCount < minimum || teamCount % groupCount !== 0) {
+    return { valid: false as const, reason: "teams" as const, required: balanced };
+  }
+  return { valid: true as const };
+}
 
 export default function TournamentScreen() {
   const t = getTranslator();
@@ -63,7 +102,13 @@ export default function TournamentScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [roundRobinLegs, setRoundRobinLegs] = useState<1 | 2>(1);
-  const [format, setFormat] = useState<"league" | "single_elimination">("league");
+  const [format, setFormat] = useState<
+    "league" | "single_elimination" | "league_then_single_elimination"
+  >("league");
+  const [leagueStructure, setLeagueStructure] = useState<"single_table" | "groups">("single_table");
+  const [qualifierCount, setQualifierCount] = useState<2 | 4 | 8 | 16 | 32 | 64>(2);
+  const [groupCount, setGroupCount] = useState("4");
+  const [qualifiersPerGroup, setQualifiersPerGroup] = useState("2");
   const [menuOpen, setMenuOpen] = useState(false);
   const [scores, setScores] = useState<
     Record<string, { home: string; away: string; homePenalties: string; awayPenalties: string }>
@@ -71,9 +116,13 @@ export default function TournamentScreen() {
   const [savingMatchID, setSavingMatchID] = useState<string>();
   const [editingMatchID, setEditingMatchID] = useState<string>();
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isStartingElimination, setIsStartingElimination] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [completionConfirmationOpen, setCompletionConfirmationOpen] = useState(false);
   const [completionOpen, setCompletionOpen] = useState(false);
+  const [selectedCompetitionPhase, setSelectedCompetitionPhase] = useState<"league" | "bracket">(
+    "bracket",
+  );
   const [selectedBracketRound, setSelectedBracketRound] = useState(1);
   const [bracketRoundSelectionRevision, setBracketRoundSelectionRevision] = useState(0);
   const matchList = useRef<SectionList<PublicTournament["matches"][number]>>(null);
@@ -160,21 +209,68 @@ export default function TournamentScreen() {
   const isOrganizer = relationship === "organizer";
   const canManageResults = relationship === "organizer" || relationship === "delegated";
   const start = async () => {
-    if (!id || isStarting) return;
+    if (
+      !id ||
+      isStarting ||
+      !league ||
+      league.teams.length < minimumTournamentTeamsToStart ||
+      (format === "league_then_single_elimination" && !mixedConfiguration.valid)
+    )
+      return;
     setIsStarting(true);
     try {
-      putTournament(
-        await startTournamentRequest(
-          id,
-          format === "league" ? { format, roundRobinLegs } : { format },
-        ),
-      );
+      const input = (() => {
+        if (format === "league") return { format, roundRobinLegs } as const;
+        if (format === "single_elimination") return { format } as const;
+        if (leagueStructure === "single_table") {
+          return { format, roundRobinLegs, leagueStructure, qualifierCount } as const;
+        }
+        return {
+          format,
+          roundRobinLegs,
+          leagueStructure,
+          groupCount: Number(groupCount),
+          qualifiersPerGroup: Number(qualifiersPerGroup),
+        } as const;
+      })();
+      putTournament(await startTournamentRequest(id, input));
     } catch (error) {
+      if (error instanceof TournamentConfigurationConflictError) {
+        show({ kind: "generic-error", message: t("tournament_mixed_configuration_invalid") });
+        return;
+      }
       const failure = getRequestFailure(error);
       show({ kind: failure.kind, message: t(failure.messageKey) });
     } finally {
       setIsStarting(false);
     }
+  };
+  const startElimination = () => {
+    if (!id || isStartingElimination) return;
+    confirm({
+      title: t("tournament_mixed_start_elimination_title"),
+      description: t("tournament_mixed_start_elimination_description"),
+      acceptLabel: t("tournament_mixed_start_elimination"),
+      cancelLabel: t("common_cancel"),
+      onAccept: () => {
+        setIsStartingElimination(true);
+        void startTournamentEliminationRequest(id)
+          .then(putTournament)
+          .catch((error) => {
+            if (error instanceof TournamentStageTransitionConflictError) {
+              show({
+                kind: "generic-error",
+                message: t("tournament_mixed_transition_conflict"),
+              });
+              return;
+            }
+            const failure = getRequestFailure(error);
+            show({ kind: failure.kind, message: t(failure.messageKey) });
+          })
+          .finally(() => setIsStartingElimination(false));
+      },
+      onCancel: () => undefined,
+    });
   };
   const share = async () => {
     if (!id || !league) return;
@@ -186,9 +282,15 @@ export default function TournamentScreen() {
       show({ kind: "generic-error", message: t("common_request_error") });
       return;
     }
-    await Share.share({
-      message: `${league.name}: ${base}/tournament/${id}`,
-    });
+    try {
+      await Share.share({
+        message: `${league.name}: ${base}/tournament/${id}`,
+      });
+    } catch (error) {
+      if (isShareCancellation(error)) return;
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    }
   };
   const cancel = () => {
     if (isCancelling) return;
@@ -240,6 +342,7 @@ export default function TournamentScreen() {
   const saveResult = async (matchID: string) => {
     if (!id || savingMatchID) return;
     const score = scores[matchID];
+    const match = league?.matches.find((candidate) => candidate.id === matchID);
     const homeScore = Number(score?.home);
     const awayScore = Number(score?.away);
     if (
@@ -253,7 +356,7 @@ export default function TournamentScreen() {
     try {
       const shootout =
         league?.sport === "football" &&
-        league.format === "single_elimination" &&
+        league.stages.find((stage) => stage.id === match?.stageId)?.type === "single_elimination" &&
         homeScore === awayScore;
       putTournament(
         await recordMatchResultRequest(id, matchID, {
@@ -342,15 +445,77 @@ export default function TournamentScreen() {
     );
   }
   const canCancel = league.state === "published" || league.state === "in_progress";
+  const mixedConfiguration = getMixedConfigurationRequirement(
+    league.teams.length,
+    leagueStructure,
+    qualifierCount,
+    Number(groupCount),
+    Number(qualifiersPerGroup),
+  );
+  const canStartTournament =
+    league.teams.length >= minimumTournamentTeamsToStart &&
+    (format !== "league_then_single_elimination" || mixedConfiguration.valid);
+  const showExpandedTeamManagement = league.state === "published" && isOrganizer;
   const hasStarted =
     league.state === "in_progress" ||
     league.state === "completed" ||
     (league.state === "cancelled" && league.matches.length > 0);
+  const qualifyingStage = league.stages.find(
+    (stage) => stage.position === 1 && stage.type === "league",
+  );
+  const eliminationStage = league.stages.find(
+    (stage) => stage.position === 2 && stage.type === "single_elimination",
+  );
+  const qualifyingMatches = qualifyingStage
+    ? league.matches.filter((match) => match.stageId === qualifyingStage.id)
+    : [];
+  const bracketMatches = league.matches.filter(
+    (match) =>
+      match.stageId ===
+      league.stages.find(
+        (stage) => stage.type === "single_elimination" && stage.state !== "pending",
+      )?.id,
+  );
+  const qualifyingStageReady =
+    league.format === "league_then_single_elimination" &&
+    qualifyingStage?.state === "in_progress" &&
+    eliminationStage?.state === "pending" &&
+    qualifyingMatches.length > 0 &&
+    qualifyingMatches.every((match) => match.state === "completed");
+  const eligibleTeamIDs = new Set(
+    league.teams.filter((team) => !team.withdrawn).map((team) => team.id),
+  );
+  const hasEnoughEligibleTeams = (() => {
+    if (!qualifyingStage) return false;
+    if (qualifyingStage.leagueStructure !== "groups") {
+      return eligibleTeamIDs.size >= (qualifyingStage.qualifierCount ?? 0);
+    }
+    if (!qualifyingStage.groupCount || !qualifyingStage.qualifiersPerGroup) return false;
+    for (let group = 1; group <= qualifyingStage.groupCount; group += 1) {
+      const activeInGroup = league.stageTeams.filter(
+        (assignment) =>
+          assignment.stageId === qualifyingStage.id &&
+          assignment.groupNumber === group &&
+          eligibleTeamIDs.has(assignment.teamId),
+      ).length;
+      if (activeInGroup < qualifyingStage.qualifiersPerGroup) return false;
+    }
+    return true;
+  })();
+  const eliminationReady = qualifyingStageReady && hasEnoughEligibleTeams;
+  const eliminationBlockedByWithdrawals = qualifyingStageReady && !hasEnoughEligibleTeams;
+  const canStartElimination = isOrganizer && eliminationReady;
+  const waitingForOwnerToStartElimination = !isOrganizer && eliminationReady;
+  const activeStage = league.stages.find((stage) => stage.state === "in_progress");
+  const activeMatches = activeStage
+    ? league.matches.filter((match) => match.stageId === activeStage.id)
+    : [];
   const canComplete =
     isOrganizer &&
     league.state === "in_progress" &&
-    league.matches.length > 0 &&
-    league.matches.every((match) => match.state === "completed" || match.state === "bye");
+    activeStage?.position === league.stages.length &&
+    activeMatches.length > 0 &&
+    activeMatches.every((match) => match.state === "completed" || match.state === "bye");
   const primaryTournamentAction = (() => {
     switch (league.state) {
       case "published":
@@ -358,9 +523,15 @@ export default function TournamentScreen() {
           ? { label: t("league_start"), loading: isStarting, onPress: () => void start() }
           : undefined;
       case "in_progress":
-        return canComplete
-          ? { label: t("league_complete"), loading: isCompleting, onPress: complete }
-          : undefined;
+        return canStartElimination
+          ? {
+              label: t("tournament_mixed_start_elimination"),
+              loading: isStartingElimination,
+              onPress: startElimination,
+            }
+          : canComplete
+            ? { label: t("league_complete"), loading: isCompleting, onPress: complete }
+            : undefined;
       default:
         return undefined;
     }
@@ -377,7 +548,8 @@ export default function TournamentScreen() {
     : undefined;
   const needsShootout =
     league.sport === "football" &&
-    league.format === "single_elimination" &&
+    league.stages.find((stage) => stage.id === editingMatch?.stageId)?.type ===
+      "single_elimination" &&
     editingScore !== undefined &&
     /^\d+$/.test(editingScore.home) &&
     /^\d+$/.test(editingScore.away) &&
@@ -405,15 +577,22 @@ export default function TournamentScreen() {
     }));
     setEditingMatchID(matchID);
   };
-  const matchesByRound = new Map<number, PublicTournament["matches"]>();
-  for (const match of league.matches) {
-    const matches = matchesByRound.get(match.round) ?? [];
+  const leagueMatches = league.matches.filter(
+    (match) => league.stages.find((stage) => stage.id === match.stageId)?.type === "league",
+  );
+  const matchesByRound = new Map<string, PublicTournament["matches"]>();
+  for (const match of leagueMatches) {
+    const key = `${match.groupNumber ?? 0}:${match.round}`;
+    const matches = matchesByRound.get(key) ?? [];
     matches.push(match);
-    matchesByRound.set(match.round, matches);
+    matchesByRound.set(key, matches);
   }
   const matchSections = [...matchesByRound.entries()]
-    .sort(([firstRound], [secondRound]) => firstRound - secondRound)
-    .map(([round, data]) => ({ data, round }));
+    .map(([key, data]) => {
+      const [group, round] = key.split(":").map(Number);
+      return { data, group, round };
+    })
+    .sort((first, second) => first.group - second.group || first.round - second.round);
   const closeWebMenu = () => setMenuOpen(false);
   const openAdministrators = () => router.push(`/tournament/${league.id}/administrators`);
   const openTransfer = () => router.push(`/tournament/${league.id}/transfer`);
@@ -429,14 +608,32 @@ export default function TournamentScreen() {
       </Text>
     ),
   };
-  const bracketRounds = [...new Set(league.matches.map((match) => match.round))].sort(
+  const bracketRounds = [...new Set(bracketMatches.map((match) => match.round))].sort(
     (first, second) => first - second,
   );
-  const showsBracket = league.format === "single_elimination" && league.matches.length > 0;
+  const hasBracket = bracketMatches.length > 0;
+  const phaseSelectionAvailable = league.format === "league_then_single_elimination" && hasBracket;
+  const showsBracket =
+    hasBracket && (!phaseSelectionAvailable || selectedCompetitionPhase === "bracket");
+  const bracketTournament = { ...league, matches: bracketMatches };
   const showsBracketHorizontalControl =
     Platform.OS === "web" &&
     showsBracket &&
     bracketHorizontalMetrics.contentWidth > bracketHorizontalMetrics.viewportWidth;
+  const phaseSelector = phaseSelectionAvailable ? (
+    <View style={styles.configurationOptions}>
+      <ConfigurationOption
+        label={t("tournament_mixed_phase_league")}
+        onPress={() => setSelectedCompetitionPhase("league")}
+        selected={selectedCompetitionPhase === "league"}
+      />
+      <ConfigurationOption
+        label={t("tournament_mixed_phase_elimination")}
+        onPress={() => setSelectedCompetitionPhase("bracket")}
+        selected={selectedCompetitionPhase === "bracket"}
+      />
+    </View>
+  ) : null;
   const selectBracketRound = (round: number) => {
     setSelectedBracketRound(round);
     setBracketRoundSelectionRevision((revision) => revision + 1);
@@ -490,24 +687,31 @@ export default function TournamentScreen() {
           </View>
         </View>
       </Card>
-      <View style={styles.summaryActions}>
-        <View style={styles.summaryAction}>
-          <Button
-            label={t("league_teams")}
-            onPress={() => router.push(`/tournament/${league.id}/teams`)}
-            variant="secondary"
-          />
-        </View>
-        {league.format === "league" && hasStarted ? (
+      {!showExpandedTeamManagement ? (
+        <View style={styles.summaryActions}>
           <View style={styles.summaryAction}>
             <Button
-              label={t("league_standings")}
-              onPress={() => router.push(`/tournament/${league.id}/standings`)}
+              label={t("league_teams")}
+              onPress={() => router.push(`/tournament/${league.id}/teams`)}
               variant="secondary"
             />
           </View>
-        ) : null}
-      </View>
+          {league.format !== "single_elimination" && hasStarted ? (
+            <View style={styles.summaryAction}>
+              <Button
+                label={t("league_standings")}
+                onPress={() => router.push(`/tournament/${league.id}/standings`)}
+                variant="secondary"
+              />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+      {showExpandedTeamManagement ? (
+        <View style={styles.expandedTeamManagement}>
+          <TournamentTeamManagement relationship={relationship ?? null} tournament={league} />
+        </View>
+      ) : null}
     </>
   );
   return (
@@ -575,6 +779,7 @@ export default function TournamentScreen() {
             >
               <View style={styles.listHeader}>
                 {tournamentSummary}
+                {phaseSelector}
                 <BracketIntro />
               </View>
               <BracketRoundNavigation
@@ -587,7 +792,7 @@ export default function TournamentScreen() {
               />
               <BracketView
                 ref={bracketView}
-                tournament={league}
+                tournament={bracketTournament}
                 canManage={canManageResults}
                 onHorizontalMetricsChange={updateBracketHorizontalMetrics}
                 onHorizontalScroll={syncBracketHorizontalControl}
@@ -620,6 +825,7 @@ export default function TournamentScreen() {
               ListHeaderComponent={
                 <View style={styles.listHeader}>
                   {tournamentSummary}
+                  {phaseSelector}
                   {league.state === "published" && isOrganizer ? (
                     <Card>
                       <View style={styles.stack}>
@@ -639,30 +845,140 @@ export default function TournamentScreen() {
                             disabled={isStarting}
                             onPress={() => setFormat("single_elimination")}
                           />
+                          <ConfigurationOption
+                            label={t("tournament_format_mixed")}
+                            selected={format === "league_then_single_elimination"}
+                            disabled={isStarting}
+                            onPress={() => setFormat("league_then_single_elimination")}
+                          />
                         </View>
                         {format === "single_elimination" ? (
                           <Text color="secondary">{t("bracket_configuration_help")}</Text>
                         ) : (
-                          <View
-                            style={[
-                              styles.configurationOptions,
-                              { borderColor: colors.border.default },
-                            ]}
-                          >
-                            <ConfigurationOption
-                              label={t("league_start_one_leg")}
-                              selected={roundRobinLegs === 1}
-                              disabled={isStarting}
-                              onPress={() => setRoundRobinLegs(1)}
-                            />
-                            <ConfigurationOption
-                              label={t("league_start_two_legs")}
-                              selected={roundRobinLegs === 2}
-                              disabled={isStarting}
-                              onPress={() => setRoundRobinLegs(2)}
-                            />
+                          <View style={styles.stack}>
+                            <View
+                              style={[
+                                styles.configurationOptions,
+                                { borderColor: colors.border.default },
+                              ]}
+                            >
+                              <ConfigurationOption
+                                label={t("league_start_one_leg")}
+                                selected={roundRobinLegs === 1}
+                                disabled={isStarting}
+                                onPress={() => setRoundRobinLegs(1)}
+                              />
+                              <ConfigurationOption
+                                label={t("league_start_two_legs")}
+                                selected={roundRobinLegs === 2}
+                                disabled={isStarting}
+                                onPress={() => setRoundRobinLegs(2)}
+                              />
+                            </View>
+                            {format === "league_then_single_elimination" ? (
+                              <View style={styles.stack}>
+                                <Text color="secondary">
+                                  {t("tournament_mixed_configuration_help")}
+                                </Text>
+                                <View style={styles.configurationOptions}>
+                                  <ConfigurationOption
+                                    label={t("tournament_mixed_single_table")}
+                                    selected={leagueStructure === "single_table"}
+                                    disabled={isStarting}
+                                    onPress={() => setLeagueStructure("single_table")}
+                                  />
+                                  <ConfigurationOption
+                                    label={t("tournament_mixed_groups")}
+                                    selected={leagueStructure === "groups"}
+                                    disabled={isStarting}
+                                    onPress={() => setLeagueStructure("groups")}
+                                  />
+                                </View>
+                                {leagueStructure === "single_table" ? (
+                                  <View style={styles.configurationOptions}>
+                                    {fullBracketSizes.map((count) => (
+                                      <ConfigurationOption
+                                        key={count}
+                                        label={t("tournament_mixed_qualifiers_option").replace(
+                                          "{count}",
+                                          String(count),
+                                        )}
+                                        selected={qualifierCount === count}
+                                        disabled={isStarting}
+                                        onPress={() => setQualifierCount(count)}
+                                      />
+                                    ))}
+                                  </View>
+                                ) : (
+                                  <View style={styles.configurationFields}>
+                                    <TextField
+                                      accessibilityLabel={t("tournament_mixed_group_count")}
+                                      inputMode="numeric"
+                                      label={t("tournament_mixed_group_count")}
+                                      onChangeText={setGroupCount}
+                                      value={groupCount}
+                                    />
+                                    <TextField
+                                      accessibilityLabel={t(
+                                        "tournament_mixed_qualifiers_per_group",
+                                      )}
+                                      inputMode="numeric"
+                                      label={t("tournament_mixed_qualifiers_per_group")}
+                                      onChangeText={setQualifiersPerGroup}
+                                      value={qualifiersPerGroup}
+                                    />
+                                  </View>
+                                )}
+                                {!mixedConfiguration.valid ? (
+                                  <Text color="error">
+                                    {mixedConfiguration.reason === "teams"
+                                      ? t("tournament_mixed_required_teams")
+                                          .replace(
+                                            "{required}",
+                                            String(mixedConfiguration.required),
+                                          )
+                                          .replace("{current}", String(league.teams.length))
+                                      : mixedConfiguration.reason === "bracket"
+                                        ? t("tournament_mixed_bracket_size")
+                                        : t("tournament_mixed_numbers_invalid")}
+                                  </Text>
+                                ) : null}
+                              </View>
+                            ) : null}
                           </View>
                         )}
+                      </View>
+                    </Card>
+                  ) : null}
+                  {league.state === "published" && !isOrganizer ? (
+                    <Card>
+                      <View style={styles.stack}>
+                        <Text color="secondary">{t("league_start_waiting_for_owner")}</Text>
+                        <Button disabled label={t("league_start")} onPress={() => undefined} />
+                      </View>
+                    </Card>
+                  ) : null}
+                  {waitingForOwnerToStartElimination ? (
+                    <Card>
+                      <View style={styles.stack}>
+                        <Text color="secondary">{t("tournament_mixed_waiting_for_owner")}</Text>
+                        <Button
+                          disabled
+                          label={t("tournament_mixed_start_elimination")}
+                          onPress={() => undefined}
+                        />
+                      </View>
+                    </Card>
+                  ) : null}
+                  {eliminationBlockedByWithdrawals ? (
+                    <Card>
+                      <View style={styles.stack}>
+                        <Text color="error">{t("tournament_mixed_not_enough_eligible_teams")}</Text>
+                        <Button
+                          disabled
+                          label={t("tournament_mixed_start_elimination")}
+                          onPress={() => undefined}
+                        />
                       </View>
                     </Card>
                   ) : null}
@@ -685,7 +1001,10 @@ export default function TournamentScreen() {
                           {teamsByID.get(match.awayTeamId)}
                         </Text>
                       </View>
-                      {canManageResults && league.state === "in_progress" ? (
+                      {canManageResults &&
+                      league.state === "in_progress" &&
+                      league.stages.find((stage) => stage.id === match.stageId)?.state ===
+                        "in_progress" ? (
                         <Button
                           label={
                             match.state === "completed"
@@ -703,6 +1022,9 @@ export default function TournamentScreen() {
               renderSectionHeader={({ section }) => (
                 <View style={[styles.roundHeader, { backgroundColor: colors.surface.canvas }]}>
                   <Text variant="title">
+                    {section.group
+                      ? `${t("tournament_group_label").replace("{number}", String(section.group))} · `
+                      : ""}
                     {t("league_match_round").replace("{number}", String(section.round))}
                   </Text>
                 </View>
@@ -741,6 +1063,7 @@ export default function TournamentScreen() {
         {primaryTournamentAction ? (
           <View style={[styles.floatingAction, { bottom: insets.bottom + space[3] }]}>
             <Button
+              disabled={league.state === "published" && !canStartTournament}
               label={primaryTournamentAction.label}
               loading={primaryTournamentAction.loading}
               onPress={primaryTournamentAction.onPress}
@@ -948,7 +1271,7 @@ export default function TournamentScreen() {
             </Text>
           </View>
           <View style={styles.completionSuccessActions}>
-            {league.format === "league" ? (
+            {league.format !== "single_elimination" ? (
               <Button
                 label={t("league_completion_view_standings")}
                 onPress={() => {
@@ -987,12 +1310,14 @@ const styles = StyleSheet.create({
     gap: space[2],
     paddingTop: space[5],
   },
+  configurationFields: { gap: space[3] },
   configurationTitle: { fontFamily: typography.family.semibold },
   floatingAction: {
     left: space[5],
     position: "absolute",
     right: space[5],
   },
+  expandedTeamManagement: { gap: space[5] },
   listHeader: { gap: space[5], paddingBottom: space[5] },
   stack: { flex: 1, gap: space[3] },
   bullet: {

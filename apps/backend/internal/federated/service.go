@@ -71,7 +71,7 @@ type Draft struct {
 }
 
 // Session describes the persisted session without exposing its sensitive tokens.
-type Session struct{ AccountID, Username, IdleExpiresAt, RefreshExpiresAt string }
+type Session struct{ AccountID, Username, LastTeamName, IdleExpiresAt, RefreshExpiresAt string }
 
 // EstablishedSession joins a session with its one-time-delivered tokens.
 type EstablishedSession struct {

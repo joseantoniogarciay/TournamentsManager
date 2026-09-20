@@ -9,7 +9,7 @@ WHERE sessions.token_hash = $1
   AND accounts.state = 'verified';
 
 -- name: GetCurrentSession :one
-SELECT accounts.id, accounts.username, sessions.idle_expires_at, sessions.absolute_expires_at
+SELECT accounts.id, accounts.username, accounts.last_team_name, sessions.idle_expires_at, sessions.absolute_expires_at
 FROM sessions
 JOIN accounts ON accounts.id = sessions.account_id
 WHERE sessions.token_hash = $1

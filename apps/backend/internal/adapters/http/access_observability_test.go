@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
-	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/accounts"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 	"go.opentelemetry.io/otel"
@@ -36,7 +36,7 @@ func (r accessObservabilityRepository) ConsumeReauthenticationTicketAndRemovePas
 type deletionObservabilityAuthenticator struct{ testAuthenticator }
 
 func (deletionObservabilityAuthenticator) ScheduleAccountDeletion(context.Context, string) (time.Time, error) {
-	return time.Time{}, postgres.ErrAccountHasOwnedTournaments
+	return time.Time{}, accounts.ErrAccountHasOwnedTournaments
 }
 
 func TestAccessEndpointFailuresUseClosedSafeReasons(t *testing.T) {

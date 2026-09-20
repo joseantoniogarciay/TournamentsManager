@@ -222,7 +222,7 @@ func (q *Queries) GetCurrentPasswordHash(ctx context.Context, tokenHash []byte) 
 }
 
 const getCurrentSession = `-- name: GetCurrentSession :one
-SELECT accounts.id, accounts.username, sessions.idle_expires_at, sessions.absolute_expires_at
+SELECT accounts.id, accounts.username, accounts.last_team_name, sessions.idle_expires_at, sessions.absolute_expires_at
 FROM sessions
 JOIN accounts ON accounts.id = sessions.account_id
 WHERE sessions.token_hash = $1
@@ -235,6 +235,7 @@ WHERE sessions.token_hash = $1
 type GetCurrentSessionRow struct {
 	ID                pgtype.UUID
 	Username          string
+	LastTeamName      pgtype.Text
 	IdleExpiresAt     pgtype.Timestamptz
 	AbsoluteExpiresAt pgtype.Timestamptz
 }
@@ -245,6 +246,7 @@ func (q *Queries) GetCurrentSession(ctx context.Context, tokenHash []byte) (GetC
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
+		&i.LastTeamName,
 		&i.IdleExpiresAt,
 		&i.AbsoluteExpiresAt,
 	)

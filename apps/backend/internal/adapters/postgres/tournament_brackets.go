@@ -14,7 +14,7 @@ type tournamentReader interface {
 }
 
 func readTournament(ctx context.Context, db tournamentReader, id string) (tournaments.Tournament, error) {
-	value := tournaments.Tournament{Teams: []tournaments.Team{}, Matches: []tournaments.Match{}, Stages: []tournaments.Stage{}, ChampionTeamIDs: []string{}}
+	value := tournaments.Tournament{Teams: []tournaments.Team{}, Matches: []tournaments.Match{}, Stages: []tournaments.Stage{}, StageTeams: []tournaments.StageTeam{}, ChampionTeamIDs: []string{}}
 	err := db.QueryRow(ctx, `SELECT id::text,name,sport,format,state,round_robin_legs FROM tournaments WHERE id=$1`, id).Scan(&value.ID, &value.Name, &value.Sport, &value.Format, &value.State, &value.RoundRobinLegs)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return value, tournaments.ErrTournamentNotFound
@@ -38,13 +38,13 @@ func readTournament(ctx context.Context, db tournamentReader, id string) (tourna
 	if rows.Err() != nil {
 		return value, rows.Err()
 	}
-	rows, err = db.Query(ctx, `SELECT id::text,position,type,state,round_robin_legs FROM tournament_stages WHERE tournament_id=$1 ORDER BY position`, id)
+	rows, err = db.Query(ctx, `SELECT id::text,position,type,state,round_robin_legs,COALESCE(league_structure,''),COALESCE(qualifier_count,0),COALESCE(group_count,0),COALESCE(qualifiers_per_group,0) FROM tournament_stages WHERE tournament_id=$1 ORDER BY position`, id)
 	if err != nil {
 		return value, err
 	}
 	for rows.Next() {
 		var stage tournaments.Stage
-		if err = rows.Scan(&stage.ID, &stage.Position, &stage.Type, &stage.State, &stage.RoundRobinLegs); err != nil {
+		if err = rows.Scan(&stage.ID, &stage.Position, &stage.Type, &stage.State, &stage.RoundRobinLegs, &stage.LeagueStructure, &stage.QualifierCount, &stage.GroupCount, &stage.QualifiersPerGroup); err != nil {
 			rows.Close()
 			return value, err
 		}
@@ -54,13 +54,29 @@ func readTournament(ctx context.Context, db tournamentReader, id string) (tourna
 	if rows.Err() != nil {
 		return value, rows.Err()
 	}
-	rows, err = db.Query(ctx, `SELECT id::text,stage_id::text,round_number,sequence,COALESCE(home_team_id::text,''),COALESCE(away_team_id::text,''),state,home_score,away_score,home_source_kind,away_source_kind,COALESCE(home_source_match_id::text,''),COALESCE(away_source_match_id::text,''),COALESCE(winner_team_id::text,''),home_penalties,away_penalties,COALESCE(result_type,'') FROM matches WHERE tournament_id=$1 ORDER BY stage_id,round_number,sequence`, id)
+	rows, err = db.Query(ctx, `SELECT stage_id::text,team_id::text,seed_position,COALESCE(group_number,0) FROM tournament_stage_teams WHERE tournament_id=$1 ORDER BY stage_id,seed_position`, id)
+	if err != nil {
+		return value, err
+	}
+	for rows.Next() {
+		var stageTeam tournaments.StageTeam
+		if err = rows.Scan(&stageTeam.StageID, &stageTeam.TeamID, &stageTeam.SeedPosition, &stageTeam.GroupNumber); err != nil {
+			rows.Close()
+			return value, err
+		}
+		value.StageTeams = append(value.StageTeams, stageTeam)
+	}
+	rows.Close()
+	if rows.Err() != nil {
+		return value, rows.Err()
+	}
+	rows, err = db.Query(ctx, `SELECT m.id::text,m.stage_id::text,m.round_number,m.sequence,COALESCE(m.group_number,0),COALESCE(m.home_team_id::text,''),COALESCE(m.away_team_id::text,''),m.state,m.home_score,m.away_score,m.home_source_kind,m.away_source_kind,COALESCE(m.home_source_match_id::text,''),COALESCE(m.away_source_match_id::text,''),COALESCE(m.winner_team_id::text,''),m.home_penalties,m.away_penalties,COALESCE(m.result_type,'') FROM matches m JOIN tournament_stages s ON s.id=m.stage_id WHERE m.tournament_id=$1 ORDER BY s.position,m.round_number,m.sequence`, id)
 	if err != nil {
 		return value, err
 	}
 	for rows.Next() {
 		var match tournaments.Match
-		if err = rows.Scan(&match.ID, &match.StageID, &match.RoundNumber, &match.Sequence, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore, &match.HomeSourceKind, &match.AwaySourceKind, &match.HomeSourceMatchID, &match.AwaySourceMatchID, &match.WinnerTeamID, &match.HomePenalties, &match.AwayPenalties, &match.ResultType); err != nil {
+		if err = rows.Scan(&match.ID, &match.StageID, &match.RoundNumber, &match.Sequence, &match.GroupNumber, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore, &match.HomeSourceKind, &match.AwaySourceKind, &match.HomeSourceMatchID, &match.AwaySourceMatchID, &match.WinnerTeamID, &match.HomePenalties, &match.AwayPenalties, &match.ResultType); err != nil {
 			rows.Close()
 			return value, err
 		}
@@ -86,8 +102,14 @@ func readTournament(ctx context.Context, db tournamentReader, id string) (tourna
 	return value, rows.Err()
 }
 
-func insertBracket(ctx context.Context, tx pgx.Tx, tournamentID, stageID string, teams []string) error {
-	bracket, err := tournaments.GenerateSingleElimination(teams)
+func insertBracket(ctx context.Context, tx pgx.Tx, tournamentID, stageID string, teams []string, seeded bool) error {
+	var bracket tournaments.Bracket
+	var err error
+	if seeded {
+		bracket, err = tournaments.GenerateSeededSingleElimination(teams)
+	} else {
+		bracket, err = tournaments.GenerateSingleElimination(teams)
+	}
 	if err != nil {
 		return err
 	}
@@ -126,8 +148,14 @@ func recordBracketResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID
 	if !exists {
 		return tournaments.ErrTournamentNotFound
 	}
-	bracket := tournaments.Bracket{Size: len(value.Matches) + 1, Sport: value.Sport}
+	stageMatches := make([]tournaments.Match, 0)
 	for _, match := range value.Matches {
+		if match.StageID == target.StageID {
+			stageMatches = append(stageMatches, match)
+		}
+	}
+	bracket := tournaments.Bracket{Size: len(stageMatches) + 1, Sport: value.Sport}
+	for _, match := range stageMatches {
 		source := func(kind tournaments.SlotSourceKind, team, sourceID string) tournaments.SlotSource {
 			if kind == tournaments.SeededTeam {
 				return tournaments.SlotSource{Kind: kind, TeamID: team}
@@ -168,7 +196,7 @@ func recordBracketResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID
 			hp = match.Result.HomePenalties
 			ap = match.Result.AwayPenalties
 		}
-		_, err = tx.Exec(ctx, `UPDATE matches SET home_team_id=NULLIF($2,'')::uuid,away_team_id=NULLIF($3,'')::uuid,winner_team_id=NULLIF($4,'')::uuid,state=$5,home_score=$6,away_score=$7,home_penalties=$8,away_penalties=$9,result_type=CASE WHEN $5='completed' THEN 'played' ELSE NULL END WHERE id=$1`, value.Matches[i].ID, match.HomeTeamID, match.AwayTeamID, match.WinnerTeamID, state, home, away, hp, ap)
+		_, err = tx.Exec(ctx, `UPDATE matches SET home_team_id=NULLIF($2,'')::uuid,away_team_id=NULLIF($3,'')::uuid,winner_team_id=NULLIF($4,'')::uuid,state=$5,home_score=$6,away_score=$7,home_penalties=$8,away_penalties=$9,result_type=CASE WHEN $5='completed' THEN 'played' ELSE NULL END WHERE id=$1`, stageMatches[i].ID, match.HomeTeamID, match.AwayTeamID, match.WinnerTeamID, state, home, away, hp, ap)
 		if err != nil {
 			return err
 		}

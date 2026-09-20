@@ -1,5 +1,75 @@
 # Registro de aprendizaje
 
+## 2026-09-20 — Una competición mixta necesita una frontera de congelación
+
+- **Aprendido:** calcular clasificados automáticamente al terminar el último
+  partido deja ambigua la ventana de corrección y puede cambiar participantes de
+  un cuadro sin una acción visible. Generar todo el torneo al principio tampoco
+  resuelve plazas cuyo equipo todavía se desconoce.
+- **Regla reutilizable:** una fase posterior se materializa mediante una
+  transición explícita cuando la anterior está completa. Hasta entonces sus
+  resultados se pueden corregir; después, la clasificación y sus dependencias
+  quedan congeladas. La composición reutiliza políticas de fase concretas en
+  lugar de convertirlas en un motor genérico.
+
+## 2026-09-20 — Un paquete cohesionado no exige un único fichero grande
+
+- **Aprendido:** conservar paquetes pragmáticos no obliga a reunir router,
+  handlers, DTOs y persistencia de varias capacidades en unos pocos ficheros.
+  El compilador mantiene el mismo límite aunque el código se divida para que el
+  nombre del fichero responda dónde buscar.
+- **Regla reutilizable:** primero se separan ficheros por capacidad dentro del
+  paquete existente y se protegen las direcciones de import. Solo se crean
+  nuevos paquetes o tipos de repositorio cuando una frontera real necesita ciclo
+  de vida, propiedad o pruebas independientes.
+
+## 2026-09-20 — Cerrar un selector del sistema no es un error
+
+- **Aprendido:** una misma cancelación del diálogo de compartir se representa de
+  forma distinta por plataforma: iOS resuelve una acción descartada y Web Share
+  rechaza con `AbortError`. Tratar todos los rechazos como fallos muestra feedback
+  falso después de una decisión intencionada.
+- **Regla reutilizable:** los adaptadores de capacidades del sistema normalizan
+  sus salidas antes de aplicar feedback. Cancelar compartir, seleccionar archivos
+  o abandonar otra interacción explícita termina en silencio; solo un fallo real
+  usa el mensaje seguro correspondiente.
+
+## 2026-09-20 — La interfaz debe anticipar las precondiciones del backend
+
+- **Aprendido:** permitir una acción que el estado visible ya sabe inválida
+  convierte una precondición de negocio en un error genérico y obliga a la
+  persona a descubrir la regla mediante ensayo y error.
+- **Regla reutilizable:** el backend conserva la validación autoritativa, pero el
+  cliente refleja la misma precondición para orientar y bloquear envíos
+  imposibles. Si falta el siguiente dato necesario, su gestión se muestra en el
+  contexto actual; una mutación local actualiza la proyección al instante y una
+  mutación externa se incorpora al releerla.
+- **Ajuste:** cumplir un mínimo técnico no demuestra que la tarea esté terminada.
+  La gestión de la composición permanece visible durante toda la preparación;
+  solo el cambio de estado explícito del torneo justifica compactarla.
+
+## 2026-09-20 — Un valor sugerido pertenece al estado del formulario
+
+- **Aprendido:** mostrar un dato recordado como `placeholder` no prerrellena el
+  control ni permite enviarlo; el placeholder es solo una ayuda visual. Además,
+  una sugerencia genérica no debe sustituir una edición recuperable más reciente.
+- **Regla reutilizable:** una preferencia confirmada se carga como valor editable
+  únicamente cuando no existe un borrador. El mismo dato se actualiza después de
+  cada operación correcta que confirme esa elección, sin convertir un fallo del
+  almacenamiento de conveniencia en un falso fallo de la operación remota.
+
+## 2026-09-20 — Una preferencia personal no puede vivir en una clave global del dispositivo
+
+- **Aprendido:** una clave local única mezcla cuentas en el mismo navegador y,
+  a la vez, deja sin sincronizar navegador y app. Guardar la copia bajo la sesión
+  evita la contaminación, pero no basta para recoger cambios realizados desde
+  otro dispositivo que ya estaba autenticado.
+- **Regla reutilizable:** cuando una sugerencia pertenece a la persona y debe
+  cruzar dispositivos, el backend es la fuente de verdad y la escritura comparte
+  transacción con la acción que la confirma. La sesión transporta la proyección,
+  el cliente la relee al entrar en el contexto que la usa y su caché móvil vive
+  dentro de la sesión de esa cuenta, no en otra preferencia global.
+
 ## 2026-09-19 — Participar no equivale a administrar
 
 - **Aprendido:** permitir que una cuenta nombre e inscriba su equipo no exige
@@ -3320,3 +3390,39 @@ K3s y también que sus componentes base siguen sanos.
   comparte las entidades que conectan las vistas y muestra solo claves y campos
   orientativos. El SQL y las migraciones siguen siendo la fuente ejecutable y el
   diagrama declara hasta qué versión los representa.
+
+### 2026-09-20 — Ocultar una acción autorizada para otra persona oculta también el proceso
+
+- **Aprendido:** si una transición depende de la persona propietaria, omitir por
+  completo su acción ante el resto deja ambiguo si falta un permiso, una condición
+  o un proceso automático.
+- **Regla reutilizable:** cuando conocer el siguiente paso ayuda a comprender el
+  estado compartido, la interfaz conserva la acción deshabilitada y explica junto
+  a ella quién debe ejecutarla. El texto nombra el rol vigente, no al creador
+  original, porque la propiedad puede transferirse.
+
+### 2026-09-20 — Una clasificación que alimenta otra fase necesita una frontera irreversible
+
+- **Aprendido:** recalcular implícitamente el cuadro cada vez que cambia una
+  clasificación haría que una corrección histórica pudiera sustituir equipos
+  de partidos ya publicados o jugados.
+- **Regla reutilizable:** cuando una fase produce participantes de la siguiente,
+  una transición explícita persiste pertenencia y siembra en la misma
+  transacción que inicia la fase consumidora. Antes de esa frontera se corrige;
+  después se conserva el historial y se rechaza la mutación.
+- **Coste aceptado:** la organizadora realiza una confirmación adicional y el
+  modelo persiste composición por fase, a cambio de un cuadro reproducible y
+  auditable.
+
+### 2026-09-20 — Pertenecer al historial no implica seguir siendo elegible
+
+- **Aprendido:** una retirada no puede borrar al equipo ni sus resultados, pero
+  conservarlo en la clasificación tampoco debe permitir que ocupe una plaza de
+  una fase posterior.
+- **Regla reutilizable:** la proyección histórica y el conjunto elegible son
+  conceptos distintos. La selección filtra retiradas, conserva el orden
+  deportivo entre los equipos activos y rechaza atómicamente la transición si
+  ya no puede completar todas sus plazas.
+- **Coste aceptado:** una retirada tardía puede impedir iniciar la siguiente
+  fase y exige intervención organizativa; no se reconstruyen grupos ni se
+  inventan _byes_ para ocultar esa pérdida de participantes.

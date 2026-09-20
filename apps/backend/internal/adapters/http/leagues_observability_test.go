@@ -23,6 +23,8 @@ func TestRecordTournamentFailureUsesClosedSafeReasons(t *testing.T) {
 		{"not found", tournaments.ErrTournamentNotFound, "tournament.not_found"},
 		{"forbidden", tournaments.ErrTournamentForbidden, "tournament.forbidden"},
 		{"start conflict", tournaments.ErrTournamentConflict, "tournament.start_conflict"},
+		{"configuration rejected", tournaments.ErrInvalidMixedConfiguration, "tournament.configuration_rejected"},
+		{"stage transition conflict", tournaments.ErrTournamentStageTransitionConflict, "tournament.stage_transition_conflict"},
 		{"team conflict", tournaments.ErrTournamentTeamConflict, "tournament.team_conflict"},
 		{"withdrawal conflict", tournaments.ErrTournamentWithdrawalConflict, "tournament.withdrawal_conflict"},
 		{"result conflict", tournaments.ErrMatchResultConflict, "tournament.result_conflict"},

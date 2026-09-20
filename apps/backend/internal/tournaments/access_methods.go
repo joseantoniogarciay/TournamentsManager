@@ -8,5 +8,5 @@ type AccessMethods struct {
 
 // CurrentSession is the identity and validity of an authenticated session.
 type CurrentSession struct {
-	AccountID, Username, IdleExpiresAt, AbsoluteExpiresAt string
+	AccountID, Username, LastTeamName, IdleExpiresAt, AbsoluteExpiresAt string
 }

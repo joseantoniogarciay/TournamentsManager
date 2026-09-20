@@ -1,5 +1,6 @@
 import * as Google from "expo-auth-session/providers/google";
 import { makeRedirectUri } from "expo-auth-session";
+import type { User } from "@/api/generated/models";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 
@@ -47,7 +48,7 @@ export function useGoogleAuthentication({
 }: {
   draft?: TournamentDraftInput;
   locale: Locale;
-  onSession: (user: { id: string; username: string }, createdTournament: boolean) => void;
+  onSession: (user: User, createdTournament: boolean) => void;
 }) {
   const [challenge, setChallenge] = useState<GoogleLoginChallenge | null>(null);
   const [pendingAccount, setPendingAccount] = useState<PendingGoogleAccount | null>(null);

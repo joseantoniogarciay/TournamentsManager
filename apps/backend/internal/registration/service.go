@@ -182,8 +182,8 @@ func (s Service) Refresh(ctx context.Context, token string) (Session, string, st
 
 // Session describes a session created during verification.
 type Session struct {
-	AccountID, Username             string
-	IdleExpiresAt, RefreshExpiresAt string
+	AccountID, Username, LastTeamName string
+	IdleExpiresAt, RefreshExpiresAt   string
 }
 
 // Mailer delivers the verification link through the configured adapter.

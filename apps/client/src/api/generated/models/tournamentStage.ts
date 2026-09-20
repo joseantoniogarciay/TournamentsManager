@@ -5,6 +5,8 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
+import type { TournamentStageLeagueStructure } from "./tournamentStageLeagueStructure.js";
+import type { TournamentStageQualifierCount } from "./tournamentStageQualifierCount.js";
 import type { TournamentStageRoundRobinLegs } from "./tournamentStageRoundRobinLegs.js";
 import type { TournamentStageState } from "./tournamentStageState.js";
 import type { TournamentStageType } from "./tournamentStageType.js";
@@ -17,4 +19,16 @@ export interface TournamentStage {
   type: TournamentStageType;
   state: TournamentStageState;
   roundRobinLegs?: TournamentStageRoundRobinLegs;
+  leagueStructure?: TournamentStageLeagueStructure;
+  qualifierCount?: TournamentStageQualifierCount;
+  /**
+   * @minimum 2
+   * @maximum 64
+   */
+  groupCount?: number;
+  /**
+   * @minimum 1
+   * @maximum 63
+   */
+  qualifiersPerGroup?: number;
 }

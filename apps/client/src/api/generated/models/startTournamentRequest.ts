@@ -13,4 +13,25 @@ export type StartTournamentRequest =
     }
   | {
       format: "single_elimination";
+    }
+  | {
+      format: "league_then_single_elimination";
+      roundRobinLegs: 1 | 2;
+      leagueStructure: "single_table";
+      qualifierCount: 2 | 4 | 8 | 16 | 32 | 64;
+    }
+  | {
+      format: "league_then_single_elimination";
+      roundRobinLegs: 1 | 2;
+      leagueStructure: "groups";
+      /**
+       * @minimum 2
+       * @maximum 64
+       */
+      groupCount: number;
+      /**
+       * @minimum 1
+       * @maximum 63
+       */
+      qualifiersPerGroup: number;
     };

@@ -151,15 +151,32 @@ ruta o query. Inscribir crea equipo, vínculo de cuenta y seguimiento de forma
 atómica, sin administración. `404` representa un enlace inactivo y `409` una
 incorporación que ya no cabe o entra en conflicto. Véase ADR-0130.
 
+La identidad `User` de las respuestas de sesión puede incluir `lastTeamName`.
+Crear el equipo inicial o inscribirse actualiza esa preferencia dentro de la
+misma transacción que crea y vincula el equipo; restaurar, refrescar o releer la
+sesión entrega el valor vigente sin un endpoint genérico de preferencias
+(ADR-0131).
+
 `POST /v1/tournaments/{tournamentId}/start` exige una unión discriminada. Para
 `format: league` requiere `roundRobinLegs: 1 | 2`; para
 `format: single_elimination` prohíbe ese campo porque el cuadro es siempre a
-partido único. El inicio crea una fase ordenada y todos sus partidos. En una
-eliminatoria, cada plaza declara si parte de un equipo sembrado, de la ganadora
-de otro partido o de un _bye_; por eso la proyección puede explicar participantes
-aún desconocidos sin IDs ficticios. El primer corte admite una sola fase por
-torneo, aunque la pertenencia `Tournament -> Stage -> Match` evita otra
-migración cuando se acepten liga/grupos más eliminatoria.
+partido único. Para `format: league_then_single_elimination` requiere una o dos
+vueltas y discrimina entre `single_table`, con `qualifierCount`, y `groups`, con
+`groupCount` y `qualifiersPerGroup`. El inicio crea la liga activa y la
+eliminatoria pendiente; una configuración imposible o una plantilla que no
+coincida devuelve `422` sin crear partidos.
+
+`POST /v1/tournaments/{tournamentId}/stages/elimination/start` exige a la
+organizadora, todos los partidos de liga completados y el formato mixto aún en
+su primera fase. En una transacción congela la liga, persiste los clasificados
+con su siembra, inicia la segunda fase y genera el cuadro completo sin _byes_.
+Los equipos retirados permanecen en el historial pero se omiten de la selección;
+la plaza pasa al siguiente equipo activo de la misma tabla o grupo. Una
+transición repetida, prematura o sin suficientes equipos elegibles devuelve
+`409`. Desde ese momento los resultados de liga ya no se corrigen. Cada plaza
+del cuadro declara si parte de un equipo sembrado o de la ganadora de otro
+partido, por lo que la proyección explica participantes aún desconocidos sin
+IDs ficticios.
 
 `POST /tournaments/{tournamentId}/cancel` expresa la transición de cancelación, igual
 que el inicio usa una operación explícita y no una mutación implícita de la

@@ -3,7 +3,7 @@
 > Estado: producto v1 cerrado; capacidades posteriores se gestionan como
 > incrementos independientes.
 >
-> Última actualización: 2026-09-19
+> Última actualización: 2026-09-20
 
 ## Visión
 
@@ -28,14 +28,24 @@ adicional; los siguientes se incorporarán solo cuando sus reglas estén definid
   adoptado en v1 y se revisa antes de distribuir el cliente iOS.
 - El torneo declara un deporte inmutable elegido entre `football` y
   `basketball`; «Fútbol» engloba fútbol sala en esta iteración (ADR-0126).
-- El recurso raíz es un torneo. La liga de fútbol existente se conserva como
-  formato `league`; también existe la eliminatoria directa a partido
-  único como formato `single_elimination`. Los formatos mixtos quedan fuera
-  hasta acordar sus reglas. Véase ADR-0122.
-- Un torneo contiene fases ordenadas. Cada torneo crea una sola fase, elegida
-  entre liga a una o dos vueltas y eliminatoria directa a partido único. Una
-  futura liga única o por grupos podrá clasificar equipos para un cuadro
-  posterior cuando se acepten sus reglas. Véase ADR-0123.
+- El recurso raíz es un torneo. La liga existente se conserva como formato
+  `league`; también existe la eliminatoria directa a partido único como formato
+  `single_elimination`; `league_then_single_elimination` encadena una liga
+  general o por grupos con un cuadro a partido único (ADR-0133).
+- Un torneo contiene fases ordenadas. El formato mixto crea la liga activa y la
+  eliminatoria pendiente; al completar la liga, la organizadora confirma la
+  transición, que congela sus resultados, fija clasificados y siembra el cuadro.
+- La liga general clasifica un total configurable. Los grupos son equilibrados,
+  se forman por distribución serpentina y clasifican el mismo número por grupo.
+  En ambos casos el total forma un cuadro completo, potencia de dos entre 2 y
+  64, sin _byes_; si la plantilla no satisface la configuración el torneo no
+  empieza y se indica la cantidad exacta necesaria.
+- Un equipo retirado permanece en la clasificación histórica, pero no puede
+  ocupar una plaza del cuadro: entra el siguiente equipo activo de su tabla o
+  grupo. Si no quedan suficientes elegibles, la transición se rechaza.
+- Tras iniciar la segunda fase, el detalle permite alternar entre los partidos
+  de liga y el cuadro. Quien no sea propietario ve que la transición completada
+  deportivamente está esperando la confirmación de la persona propietaria.
 - El creador conserva la propiedad, crea el torneo con su propio equipo y puede
   añadir equipos sin cuenta o invitar a otras personas para que inscriban el
   suyo antes del inicio; puede además asignar o retirar administradores
@@ -161,13 +171,16 @@ modelan jugadores ni varias personas por equipo.
 
 ## Explicación de la composición antes del inicio
 
-Este incremento está aceptado en ADR-0130 y pendiente de contrato e
-implementación; el texto siguiente define cómo debe explicarse cuando se
-entregue.
+Este incremento está aceptado e implementado conforme a ADR-0130; el texto
+siguiente define cómo se explica en el cliente.
 
 La creación no presenta una lista larga de equipos como requisito. Pide un único
 campo obligatorio bajo el título «Tu equipo» y explica: «Empieza con el equipo
-con el que participas. Podrás completar el torneo después».
+con el que participas. Podrás completar el torneo después». Si no existe un
+borrador, el campo se prerrellena con el último nombre de equipo confirmado en
+esa cuenta y sigue siendo editable; un borrador conservado siempre tiene
+precedencia. La sugerencia se sincroniza mediante la sesión y se relee al abrir
+el formulario para recoger cambios confirmados en otro dispositivo (ADR-0131).
 
 Tras crear el torneo, la superficie de equipos presenta las dos opciones con el
 siguiente mensaje base:
@@ -183,11 +196,23 @@ evita usar solo «anónimo», porque podría entenderse como ocultación de iden
 que hacen falta al menos dos equipos y que, después de comenzar, la composición
 queda cerrada.
 
+Mientras el torneo no haya empezado, el detalle de la organizadora despliega
+directamente la gestión de equipos en lugar de exigir que abra otra pantalla. La
+acción «Iniciar torneo» permanece deshabilitada hasta alcanzar dos equipos, pero
+la gestión no se compacta al cumplir ese mínimo: sigue visible para completar la
+composición prevista. Para cualquier otra persona, el detalle muestra esa misma
+acción deshabilitada junto a «Esperando a que la persona propietaria inicie el
+torneo»; así el permiso y el siguiente paso siguen visibles sin sugerir que puede
+ejecutarlos. Una inscripción recibida por invitación aparece al volver a cargar
+el torneo.
+
 Quien abre la invitación ve el torneo al que se incorpora, un campo «Nombre de tu
 equipo» y esta consecuencia antes de confirmar: «Tu equipo se añadirá al torneo
 y lo encontrarás en Sigo. No recibirás permisos de administración». El campo se
-prerrellena con el último nombre confirmado en ese dispositivo y sigue siendo
-editable.
+prerrellena con el último nombre confirmado en esa cuenta y sigue siendo
+editable. Tanto una creación como una inscripción confirmadas actualizan la
+preferencia de la cuenta para el siguiente formulario de equipo en web, iOS o
+Android.
 
 ## Flujos de identidad
 
@@ -268,6 +293,17 @@ cancelación y la frontera de identidad están definidos. Las capacidades aplaza
 no bloquean el primer vertical slice.
 
 ## Reglas deportivas soportadas
+
+### Incremento aceptado de liga más eliminatoria
+
+ADR-0133 acepta una composición de dos fases que todavía no forma parte del
+contrato ni de las aplicaciones vigentes. La organizadora podrá elegir liga
+general o grupos equilibrados, una o dos vueltas y las plazas clasificadas. El
+total de clasificadas formará un cuadro completo sin _byes_. Al terminar la
+primera fase, una confirmación explícita congelará su clasificación e iniciará
+el cuadro con emparejamientos de mejor contra peor y cabezas de serie separados.
+Una configuración con equipos insuficientes, grupos desiguales o un número de
+clasificadas incompatible no podrá empezar.
 
 Las [ADR-0032](../adr/0032-define-minimum-football-league-data-and-lifecycle.md)
 y [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md) definen

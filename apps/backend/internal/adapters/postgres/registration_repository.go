@@ -30,7 +30,7 @@ func (r RegistrationRepository) VerifyAndCreateSession(ctx context.Context, veri
 	if err != nil {
 		return registration.Session{}, err
 	}
-	return registration.Session{AccountID: row.ID.String(), Username: row.Username, IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
+	return registration.Session{AccountID: row.ID.String(), Username: row.Username, LastTeamName: nullableText(row.LastTeamName), IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
 }
 
 // RotateSessionTokens consumes a refresh token and atomically creates its successors.
@@ -42,7 +42,7 @@ func (r RegistrationRepository) RotateSessionTokens(ctx context.Context, refresh
 	if err != nil {
 		return registration.Session{}, err
 	}
-	return registration.Session{AccountID: row.ID.String(), Username: row.Username, IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
+	return registration.Session{AccountID: row.ID.String(), Username: row.Username, LastTeamName: nullableText(row.LastTeamName), IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
 }
 
 // NewRegistrationRepository connects the use-case port to the PostgreSQL pool.
@@ -109,7 +109,11 @@ func (r RegistrationRepository) CreateLocalLoginSession(ctx context.Context, acc
 	if err := tx.Commit(ctx); err != nil {
 		return registration.Session{}, err
 	}
-	return registration.Session{AccountID: accountID, Username: row.Username, IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
+	lastTeamName := nullableText(row.LastTeamName)
+	if draft != nil && len(draft.Teams) > 0 {
+		lastTeamName = draft.Teams[0]
+	}
+	return registration.Session{AccountID: accountID, Username: row.Username, LastTeamName: lastTeamName, IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
 }
 
 func createTournamentFromDraft(ctx context.Context, tx pgx.Tx, accountID, draftID, name string, sport tournaments.Sport, teams []string) error {
@@ -134,6 +138,9 @@ func createTournamentFromDraft(ctx context.Context, tx pgx.Tx, accountID, draftI
 		}
 	}
 	if _, err := tx.Exec(ctx, `INSERT INTO tournament_team_accounts (tournament_id, team_id, account_id) VALUES ($1, $2, $3)`, tournamentID, firstTeamID, accountID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE accounts SET last_team_name = $2 WHERE id = $1`, accountID, teams[0]); err != nil {
 		return err
 	}
 	return nil
@@ -228,7 +235,7 @@ func (r RegistrationRepository) ConsumePasswordReset(ctx context.Context, tokenH
 	if err != nil {
 		return registration.Session{}, err
 	}
-	session := registration.Session{AccountID: row.ID.String(), Username: row.Username}
+	session := registration.Session{AccountID: row.ID.String(), Username: row.Username, LastTeamName: nullableText(row.LastTeamName)}
 	session.IdleExpiresAt, session.RefreshExpiresAt = row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)
 	return session, nil
 }

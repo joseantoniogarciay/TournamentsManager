@@ -11,6 +11,7 @@ import type { PublicTournamentRoundRobinLegs } from "./publicTournamentRoundRobi
 import type { PublicTournamentSport } from "./publicTournamentSport.js";
 import type { PublicTournamentState } from "./publicTournamentState.js";
 import type { TournamentStage } from "./tournamentStage.js";
+import type { TournamentStageTeam } from "./tournamentStageTeam.js";
 import type { TournamentStanding } from "./tournamentStanding.js";
 import type { TournamentTeam } from "./tournamentTeam.js";
 import type { Uuid } from "./uuid.js";
@@ -21,6 +22,7 @@ export interface PublicTournament {
   sport: PublicTournamentSport;
   format: PublicTournamentFormat;
   stages: TournamentStage[];
+  stageTeams: TournamentStageTeam[];
   state: PublicTournamentState;
   /** Vueltas fijadas para una fase de liga; en eliminatoria se conserva 1 por compatibilidad interna del primer incremento. */
   roundRobinLegs: PublicTournamentRoundRobinLegs;
