@@ -117,8 +117,9 @@ la vinculación solo conserva quién incorporó el equipo y la relación persona
 con el torneo.
 
 El cliente recuerda localmente el último nombre de equipo confirmado y lo
-propone, siempre editable, en la siguiente inscripción. No se sincroniza como
-preferencia de cuenta en este incremento.
+propone, siempre editable, tanto al crear un torneo como en la siguiente
+inscripción. Un borrador de creación conservado tiene precedencia sobre esa
+sugerencia. No se sincroniza como preferencia de cuenta en este incremento.
 
 La interfaz explica la composición como dos caminos disponibles hasta el inicio:
 «Añadir equipo» crea un equipo sin cuenta asociada y «Compartir invitación» deja
@@ -126,6 +127,10 @@ que cada persona cree el suyo. Evita usar «anónimo» como única etiqueta visi
 porque puede sugerir que se oculta una identidad; «sin cuenta» describe la
 diferencia de producto. Antes de confirmar una invitación se indica que el
 torneo aparecerá en «Sigo» y que la incorporación no concede administración.
+Mientras el torneo no haya empezado, el detalle de la organizadora despliega esa
+gestión. La acción de inicio permanece deshabilitada con un solo equipo y se
+habilita desde dos, pero alcanzar el mínimo no compacta la composición ni la
+presenta como terminada.
 
 ## Consecuencias
 
@@ -152,7 +157,8 @@ torneo aparecerá en «Sigo» y que la incorporación no concede administración
 ## Validación
 
 - crear un torneo exige exactamente un equipo inicial vinculado a la
-  organizadora y permite iniciarlo solo cuando contiene al menos dos equipos;
+  organizadora, despliega la gestión hasta que empiece y permite iniciarlo solo
+  cuando contiene al menos dos equipos;
 - la organizadora puede añadir y eliminar equipos anónimos únicamente antes del
   inicio, respetando nombres únicos y el máximo de 64;
 - el enlace público nunca permite inscribir y la invitación revocada o
@@ -166,8 +172,9 @@ torneo aparecerá en «Sigo» y que la incorporación no concede administración
 - iniciar el torneo invalida funcionalmente cualquier incorporación posterior;
 - tokens, nombres e identificadores de cuenta no se exportan en motivos de fallo,
   logs ni métricas;
-- el cliente solo guarda el último nombre después de una respuesta correcta y
-  permite reemplazarlo antes de enviar otra inscripción;
+- el cliente solo guarda el último nombre después de una creación o inscripción
+  correcta, lo propone en ambos formularios cuando no existe un borrador y
+  permite reemplazarlo antes de enviar;
 - creación, gestión de equipos e incorporación explican los dos caminos, el
   cierre al iniciar y la ausencia de permisos administrativos sin depender de
   que la persona deduzca esas reglas del estado de los botones.

@@ -15,7 +15,10 @@ import {
   TournamentUnavailableError,
   startTournamentRequest,
 } from "@/features/league-creation/api";
+import { minimumTournamentTeamsToStart } from "@/features/league-creation/draft";
 import { useTournament, useTournamentStore } from "@/features/league-creation/league-store";
+import { TournamentTeamManagement } from "@/features/league-creation/team-management";
+import { isShareCancellation } from "@/features/league-creation/share";
 import { MatchResultConflictError, recordMatchResultRequest } from "@/features/match-results/api";
 import {
   type BracketHorizontalMetrics,
@@ -160,7 +163,7 @@ export default function TournamentScreen() {
   const isOrganizer = relationship === "organizer";
   const canManageResults = relationship === "organizer" || relationship === "delegated";
   const start = async () => {
-    if (!id || isStarting) return;
+    if (!id || isStarting || !league || league.teams.length < minimumTournamentTeamsToStart) return;
     setIsStarting(true);
     try {
       putTournament(
@@ -186,9 +189,15 @@ export default function TournamentScreen() {
       show({ kind: "generic-error", message: t("common_request_error") });
       return;
     }
-    await Share.share({
-      message: `${league.name}: ${base}/tournament/${id}`,
-    });
+    try {
+      await Share.share({
+        message: `${league.name}: ${base}/tournament/${id}`,
+      });
+    } catch (error) {
+      if (isShareCancellation(error)) return;
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    }
   };
   const cancel = () => {
     if (isCancelling) return;
@@ -342,6 +351,8 @@ export default function TournamentScreen() {
     );
   }
   const canCancel = league.state === "published" || league.state === "in_progress";
+  const canStartTournament = league.teams.length >= minimumTournamentTeamsToStart;
+  const showExpandedTeamManagement = league.state === "published" && isOrganizer;
   const hasStarted =
     league.state === "in_progress" ||
     league.state === "completed" ||
@@ -490,24 +501,31 @@ export default function TournamentScreen() {
           </View>
         </View>
       </Card>
-      <View style={styles.summaryActions}>
-        <View style={styles.summaryAction}>
-          <Button
-            label={t("league_teams")}
-            onPress={() => router.push(`/tournament/${league.id}/teams`)}
-            variant="secondary"
-          />
-        </View>
-        {league.format === "league" && hasStarted ? (
+      {!showExpandedTeamManagement ? (
+        <View style={styles.summaryActions}>
           <View style={styles.summaryAction}>
             <Button
-              label={t("league_standings")}
-              onPress={() => router.push(`/tournament/${league.id}/standings`)}
+              label={t("league_teams")}
+              onPress={() => router.push(`/tournament/${league.id}/teams`)}
               variant="secondary"
             />
           </View>
-        ) : null}
-      </View>
+          {league.format === "league" && hasStarted ? (
+            <View style={styles.summaryAction}>
+              <Button
+                label={t("league_standings")}
+                onPress={() => router.push(`/tournament/${league.id}/standings`)}
+                variant="secondary"
+              />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+      {showExpandedTeamManagement ? (
+        <View style={styles.expandedTeamManagement}>
+          <TournamentTeamManagement relationship={relationship ?? null} tournament={league} />
+        </View>
+      ) : null}
     </>
   );
   return (
@@ -741,6 +759,7 @@ export default function TournamentScreen() {
         {primaryTournamentAction ? (
           <View style={[styles.floatingAction, { bottom: insets.bottom + space[3] }]}>
             <Button
+              disabled={league.state === "published" && !canStartTournament}
               label={primaryTournamentAction.label}
               loading={primaryTournamentAction.loading}
               onPress={primaryTournamentAction.onPress}
@@ -993,6 +1012,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: space[5],
   },
+  expandedTeamManagement: { gap: space[5] },
   listHeader: { gap: space[5], paddingBottom: space[5] },
   stack: { flex: 1, gap: space[3] },
   bullet: {

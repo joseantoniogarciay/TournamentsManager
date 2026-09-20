@@ -1,5 +1,40 @@
 # Registro de aprendizaje
 
+## 2026-09-20 — Cerrar un selector del sistema no es un error
+
+- **Aprendido:** una misma cancelación del diálogo de compartir se representa de
+  forma distinta por plataforma: iOS resuelve una acción descartada y Web Share
+  rechaza con `AbortError`. Tratar todos los rechazos como fallos muestra feedback
+  falso después de una decisión intencionada.
+- **Regla reutilizable:** los adaptadores de capacidades del sistema normalizan
+  sus salidas antes de aplicar feedback. Cancelar compartir, seleccionar archivos
+  o abandonar otra interacción explícita termina en silencio; solo un fallo real
+  usa el mensaje seguro correspondiente.
+
+## 2026-09-20 — La interfaz debe anticipar las precondiciones del backend
+
+- **Aprendido:** permitir una acción que el estado visible ya sabe inválida
+  convierte una precondición de negocio en un error genérico y obliga a la
+  persona a descubrir la regla mediante ensayo y error.
+- **Regla reutilizable:** el backend conserva la validación autoritativa, pero el
+  cliente refleja la misma precondición para orientar y bloquear envíos
+  imposibles. Si falta el siguiente dato necesario, su gestión se muestra en el
+  contexto actual; una mutación local actualiza la proyección al instante y una
+  mutación externa se incorpora al releerla.
+- **Ajuste:** cumplir un mínimo técnico no demuestra que la tarea esté terminada.
+  La gestión de la composición permanece visible durante toda la preparación;
+  solo el cambio de estado explícito del torneo justifica compactarla.
+
+## 2026-09-20 — Un valor sugerido pertenece al estado del formulario
+
+- **Aprendido:** mostrar un dato recordado como `placeholder` no prerrellena el
+  control ni permite enviarlo; el placeholder es solo una ayuda visual. Además,
+  una sugerencia genérica no debe sustituir una edición recuperable más reciente.
+- **Regla reutilizable:** una preferencia confirmada se carga como valor editable
+  únicamente cuando no existe un borrador. El mismo dato se actualiza después de
+  cada operación correcta que confirme esa elección, sin convertir un fallo del
+  almacenamiento de conveniencia en un falso fallo de la operación remota.
+
 ## 2026-09-19 — Participar no equivale a administrar
 
 - **Aprendido:** permitir que una cuenta nombre e inscriba su equipo no exige

@@ -27,6 +27,7 @@ import {
   getLocalTournamentDraft,
   toTournamentDraftInput,
 } from "@/features/league-creation/draft";
+import { rememberLastTeamName } from "@/features/league-creation/team-invitation";
 import { useUsernameAvailability } from "@/features/registration/username-availability";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -73,11 +74,13 @@ export function AccountScreen({
         completeSessionReplacement(nextUser, sessionReplacementDestination);
         return;
       }
-      void clearLocalTournamentDraft().finally(() =>
-        completeSessionReplacement(nextUser, "/tournaments"),
-      );
+      const teamName = draft?.teams[0]?.name;
+      void Promise.allSettled([
+        clearLocalTournamentDraft(),
+        ...(teamName ? [rememberLastTeamName(teamName)] : []),
+      ]).then(() => completeSessionReplacement(nextUser, "/tournaments"));
     },
-    [completeSessionReplacement, sessionReplacementDestination],
+    [completeSessionReplacement, draft, sessionReplacementDestination],
   );
   const tabContentBottomPadding = useTabContentBottomPadding();
   const [email, setEmail] = useState("");

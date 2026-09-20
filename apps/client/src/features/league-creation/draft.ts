@@ -6,6 +6,7 @@ import { TournamentInputSport } from "@/api/generated/models/tournamentInputSpor
 
 const key = "tm-league-draft";
 export const maximumTournamentTeams = 64;
+export const minimumTournamentTeamsToStart = 2;
 export const maximumTournamentNameLength = 56;
 export const maximumTeamNameLength = 100;
 export type TournamentSport = TournamentInputSport;

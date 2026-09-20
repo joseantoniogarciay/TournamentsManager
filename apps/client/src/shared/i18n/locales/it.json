@@ -289,6 +289,7 @@
   "league_add_team_save": "Salva squadra",
   "league_complete_teams_title": "Completa le squadre",
   "league_complete_teams_description": "Puoi aggiungere squadre senza account o condividere un link affinché ogni persona crei la propria. Entrambe le opzioni restano disponibili fino all’inizio del torneo.",
+  "league_start_requires_two_teams": "Servono almeno due squadre per avviare il torneo.",
   "league_invitation_rotation_hint": "Quando crei un nuovo link, quello precedente smetterà di funzionare.",
   "league_share_invitation": "Condividi invito",
   "league_revoke_invitation": "Revoca invito",

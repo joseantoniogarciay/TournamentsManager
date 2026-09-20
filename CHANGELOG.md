@@ -6,6 +6,17 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Fixed
+
+- La creación de torneos prerrellena «Tu equipo» con el último nombre confirmado
+  en el dispositivo cuando no existe un borrador y actualiza ese recuerdo tras
+  crear correctamente.
+- El detalle de un torneo sin empezar mantiene desplegada su gestión de equipos
+  y deshabilita el inicio hasta que exista un segundo, evitando confundir el
+  mínimo técnico con una composición terminada.
+- Cerrar el selector del sistema al compartir un torneo o su invitación deja de
+  mostrar un error genérico.
+
 ## [1.4.0] - 2026-09-19
 
 ### Added

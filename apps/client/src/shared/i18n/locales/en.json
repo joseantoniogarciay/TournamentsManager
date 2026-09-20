@@ -289,6 +289,7 @@
   "league_add_team_save": "Save team",
   "league_complete_teams_title": "Complete the teams",
   "league_complete_teams_description": "You can add teams without an account or share a link so each person can create their own. Both options remain available until the tournament starts.",
+  "league_start_requires_two_teams": "You need at least two teams to start the tournament.",
   "league_invitation_rotation_hint": "When you create a new link, the previous one will stop working.",
   "league_share_invitation": "Share invitation",
   "league_revoke_invitation": "Revoke invitation",

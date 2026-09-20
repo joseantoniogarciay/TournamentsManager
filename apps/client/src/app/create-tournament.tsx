@@ -14,6 +14,7 @@ import {
   saveLocalTournamentDraft,
   type TournamentSport,
 } from "@/features/league-creation/draft";
+import { getLastTeamName, rememberLastTeamName } from "@/features/league-creation/team-invitation";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
@@ -45,15 +46,19 @@ export default function CreateTournamentScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    void getLocalTournamentDraft().then((draft) => {
-      if (draft) {
-        setDraftId(draft.draftId);
-        setName(draft.name);
-        setSport(draft.sport);
-        setTeam(draft.teams[0] ?? "");
-      }
-      setDraftLoaded(true);
-    });
+    void Promise.all([getLocalTournamentDraft(), getLastTeamName().catch(() => "")]).then(
+      ([draft, lastTeamName]) => {
+        if (draft) {
+          setDraftId(draft.draftId);
+          setName(draft.name);
+          setSport(draft.sport);
+          setTeam(draft.teams[0] ?? "");
+        } else {
+          setTeam(lastTeamName);
+        }
+        setDraftLoaded(true);
+      },
+    );
   }, []);
   useEffect(() => {
     if (draftLoaded) void saveLocalTournamentDraft({ draftId, name, sport, teams: [team] });
@@ -80,6 +85,7 @@ export default function CreateTournamentScreen() {
         sport,
         teams: [{ name: normalizedTeam }],
       });
+      await rememberLastTeamName(normalizedTeam).catch(() => undefined);
       await clearLocalTournamentDraft();
       router.replace(`/tournament/${league.id}` as never);
     } catch (error) {
