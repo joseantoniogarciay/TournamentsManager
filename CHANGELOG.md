@@ -6,6 +6,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-20
+
 ### Added
 
 - El formato «Liga + eliminatoria» permite elegir liga general o grupos
