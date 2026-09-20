@@ -318,6 +318,7 @@
   "league_team_withdrawn": "Retirado",
   "league_start_title": "Configuración",
   "league_start": "Iniciar torneo",
+  "league_start_waiting_for_owner": "Esperando a que la persona propietaria inicie el torneo.",
   "league_start_one_leg": "Una vuelta",
   "league_start_two_legs": "Ida y vuelta",
   "league_actions": "Acciones del torneo",

@@ -190,8 +190,11 @@ Mientras el torneo no haya empezado, el detalle de la organizadora despliega
 directamente la gestión de equipos en lugar de exigir que abra otra pantalla. La
 acción «Iniciar torneo» permanece deshabilitada hasta alcanzar dos equipos, pero
 la gestión no se compacta al cumplir ese mínimo: sigue visible para completar la
-composición prevista. Una inscripción recibida por invitación aparece al volver
-a cargar el torneo.
+composición prevista. Para cualquier otra persona, el detalle muestra esa misma
+acción deshabilitada junto a «Esperando a que la persona propietaria inicie el
+torneo»; así el permiso y el siguiente paso siguen visibles sin sugerir que puede
+ejecutarlos. Una inscripción recibida por invitación aparece al volver a cargar
+el torneo.
 
 Quien abre la invitación ve el torneo al que se incorpora, un campo «Nombre de tu
 equipo» y esta consecuencia antes de confirmar: «Tu equipo se añadirá al torneo

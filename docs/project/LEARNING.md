@@ -3367,3 +3367,13 @@ K3s y también que sus componentes base siguen sanos.
   comparte las entidades que conectan las vistas y muestra solo claves y campos
   orientativos. El SQL y las migraciones siguen siendo la fuente ejecutable y el
   diagrama declara hasta qué versión los representa.
+
+### 2026-09-20 — Ocultar una acción autorizada para otra persona oculta también el proceso
+
+- **Aprendido:** si una transición depende de la persona propietaria, omitir por
+  completo su acción ante el resto deja ambiguo si falta un permiso, una condición
+  o un proceso automático.
+- **Regla reutilizable:** cuando conocer el siguiente paso ayuda a comprender el
+  estado compartido, la interfaz conserva la acción deshabilitada y explica junto
+  a ella quién debe ejecutarla. El texto nombra el rol vigente, no al creador
+  original, porque la propiedad puede transferirse.

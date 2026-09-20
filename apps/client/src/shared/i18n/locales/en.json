@@ -318,6 +318,7 @@
   "league_team_withdrawn": "Withdrawn",
   "league_start_title": "Configuration",
   "league_start": "Start tournament",
+  "league_start_waiting_for_owner": "Waiting for the tournament owner to start it.",
   "league_start_one_leg": "One leg",
   "league_start_two_legs": "Two legs",
   "league_actions": "Tournament actions",

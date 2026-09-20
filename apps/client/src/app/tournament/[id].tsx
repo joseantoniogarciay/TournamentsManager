@@ -684,6 +684,14 @@ export default function TournamentScreen() {
                       </View>
                     </Card>
                   ) : null}
+                  {league.state === "published" && !isOrganizer ? (
+                    <Card>
+                      <View style={styles.stack}>
+                        <Text color="secondary">{t("league_start_waiting_for_owner")}</Text>
+                        <Button disabled label={t("league_start")} onPress={() => undefined} />
+                      </View>
+                    </Card>
+                  ) : null}
                 </View>
               }
               renderItem={({ item: match }) => {
