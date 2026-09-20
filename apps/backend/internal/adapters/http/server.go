@@ -369,6 +369,14 @@ func (cookies sessionCookieSettings) clear(w http.ResponseWriter) {
 	}
 }
 
+func sessionUserResponse(accountID, username, lastTeamName string) map[string]string {
+	user := map[string]string{"id": accountID, "username": username}
+	if lastTeamName != "" {
+		user["lastTeamName"] = lastTeamName
+	}
+	return user
+}
+
 func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
 	type currentSessionReader interface {
 		GetCurrentSession(context.Context, string) (tournaments.CurrentSession, error)
@@ -397,7 +405,7 @@ func getCurrentSession(authenticator sessionAuthenticator) http.HandlerFunc {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"user":              map[string]string{"id": session.AccountID, "username": session.Username},
+			"user":              sessionUserResponse(session.AccountID, session.Username, session.LastTeamName),
 			"idleExpiresAt":     session.IdleExpiresAt,
 			"absoluteExpiresAt": session.AbsoluteExpiresAt,
 		})
@@ -1234,9 +1242,9 @@ func toFederatedDraft(draft *registration.Draft) *federated.Draft {
 }
 
 func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession, cookies sessionCookieSettings) {
-	response := map[string]any{"user": map[string]string{"id": established.AccountID, "username": established.Username}, "delivery": transport, "expiresAt": established.IdleExpiresAt, "refreshExpiresAt": established.RefreshExpiresAt}
+	response := map[string]any{"user": sessionUserResponse(established.AccountID, established.Username, established.LastTeamName), "delivery": transport, "expiresAt": established.IdleExpiresAt, "refreshExpiresAt": established.RefreshExpiresAt}
 	if transport == "cookie" {
-		cookies.setSession(w, established.AccessToken, established.RefreshToken, registration.Session{AccountID: established.AccountID, Username: established.Username, IdleExpiresAt: established.IdleExpiresAt, RefreshExpiresAt: established.RefreshExpiresAt})
+		cookies.setSession(w, established.AccessToken, established.RefreshToken, registration.Session{AccountID: established.AccountID, Username: established.Username, LastTeamName: established.LastTeamName, IdleExpiresAt: established.IdleExpiresAt, RefreshExpiresAt: established.RefreshExpiresAt})
 	} else {
 		response["sessionToken"], response["refreshToken"] = established.AccessToken, established.RefreshToken
 	}
@@ -1318,7 +1326,7 @@ func confirmPasswordReset(service registration.Service, cookies sessionCookieSet
 			writeProblem(w, http.StatusInternalServerError, "Could not change password")
 			return
 		}
-		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
+		response := map[string]any{"user": sessionUserResponse(session.AccountID, session.Username, session.LastTeamName), "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
 			cookies.setSession(w, access, refresh, session)
 		} else {
@@ -1376,7 +1384,7 @@ func refreshSession(service registration.Service, cookies sessionCookieSettings)
 			writeProblem(writer, http.StatusInternalServerError, "Could not refresh session")
 			return
 		}
-		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": transport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
+		response := map[string]any{"user": sessionUserResponse(session.AccountID, session.Username, session.LastTeamName), "delivery": transport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
 		if transport == "cookie" {
 			cookies.setSession(writer, accessToken, refreshToken, session)
 		} else {
@@ -1484,7 +1492,7 @@ func verifyRegistration(service registration.Service, cookies sessionCookieSetti
 			writeProblem(writer, http.StatusInternalServerError, "Could not verify account")
 			return
 		}
-		response := map[string]any{"user": map[string]string{"id": session.AccountID, "username": session.Username}, "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
+		response := map[string]any{"user": sessionUserResponse(session.AccountID, session.Username, session.LastTeamName), "delivery": body.SessionTransport, "expiresAt": session.IdleExpiresAt, "refreshExpiresAt": session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
 			cookies.setSession(writer, sessionToken, refreshToken, session)
 		} else {
@@ -1639,7 +1647,7 @@ func createLocalSession(service registration.Service, limiter *loginLimiter, coo
 			writer.WriteHeader(http.StatusAccepted)
 			return
 		}
-		response := map[string]any{"user": map[string]string{"id": result.Session.AccountID, "username": result.Session.Username}, "delivery": body.SessionTransport, "expiresAt": result.Session.IdleExpiresAt, "refreshExpiresAt": result.Session.RefreshExpiresAt}
+		response := map[string]any{"user": sessionUserResponse(result.Session.AccountID, result.Session.Username, result.Session.LastTeamName), "delivery": body.SessionTransport, "expiresAt": result.Session.IdleExpiresAt, "refreshExpiresAt": result.Session.RefreshExpiresAt}
 		if body.SessionTransport == "cookie" {
 			cookies.setSession(writer, result.Access, result.Refresh, result.Session)
 		} else {

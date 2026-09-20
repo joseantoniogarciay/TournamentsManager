@@ -151,6 +151,12 @@ ruta o query. Inscribir crea equipo, vínculo de cuenta y seguimiento de forma
 atómica, sin administración. `404` representa un enlace inactivo y `409` una
 incorporación que ya no cabe o entra en conflicto. Véase ADR-0130.
 
+La identidad `User` de las respuestas de sesión puede incluir `lastTeamName`.
+Crear el equipo inicial o inscribirse actualiza esa preferencia dentro de la
+misma transacción que crea y vincula el equipo; restaurar, refrescar o releer la
+sesión entrega el valor vigente sin un endpoint genérico de preferencias
+(ADR-0131).
+
 `POST /v1/tournaments/{tournamentId}/start` exige una unión discriminada. Para
 `format: league` requiere `roundRobinLegs: 1 | 2`; para
 `format: single_elimination` prohíbe ese campo porque el cuadro es siempre a

@@ -3,7 +3,9 @@ import {
   getMobileSession,
   revokeCurrentSessionSilently,
   setMobileSessionInvalidationHandler,
+  updateMobileSessionUser,
 } from "@/api/fetch";
+import type { User } from "@/api/generated/models";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import {
   createContext,
@@ -19,9 +21,9 @@ import { Platform } from "react-native";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { LoadingTransition } from "@/shared/ui";
-import { restoreWebSession } from "./api";
+import { restoreWebSession, syncAuthenticatedSessionUser } from "./api";
 
-type SessionUser = { id: string; username: string };
+type SessionUser = User;
 export type SessionReplacementDestination =
   "/" | "/account" | "/create-tournament" | "/join-team" | "/tournaments";
 type SessionContextValue = {
@@ -37,6 +39,8 @@ type SessionContextValue = {
   ) => void;
   cancelSessionReplacement: () => void;
   finishSessionReplacement: () => void;
+  rememberLastTeamName: (name: string) => Promise<void>;
+  syncUser: () => Promise<void>;
   signOut: () => Promise<void>;
   completeAccountDeletion: () => Promise<void>;
 };
@@ -74,6 +78,20 @@ export function SessionProvider({ children }: PropsWithChildren) {
     pendingSessionExpiryFeedback.current = null;
     if (message) showAfterNavigation({ kind: "generic-error", message });
   }, [showAfterNavigation]);
+  const rememberLastTeamName = useCallback(
+    async (name: string) => {
+      if (!user) return;
+      const nextUser = { ...user, lastTeamName: name.trim() };
+      setUser(nextUser);
+      await updateMobileSessionUser(nextUser);
+    },
+    [user],
+  );
+  const syncUser = useCallback(async () => {
+    const nextUser = await syncAuthenticatedSessionUser();
+    setUser(nextUser);
+    await updateMobileSessionUser(nextUser);
+  }, []);
   const signOut = useCallback(async () => {
     const session = await getMobileSession();
     void revokeCurrentSessionSilently(session);
@@ -135,6 +153,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
         completeSessionReplacement,
         cancelSessionReplacement,
         finishSessionReplacement,
+        rememberLastTeamName,
+        syncUser,
         signOut,
         completeAccountDeletion,
       }}

@@ -186,6 +186,14 @@ export async function saveMobileSession(session: SessionEstablishment) {
   await SecureStore.setItemAsync(mobileSessionKey, JSON.stringify(mobileSession));
 }
 
+/** Actualiza únicamente la proyección personal conservando los tokens vigentes. */
+export async function updateMobileSessionUser(user: User) {
+  if (Platform.OS === "web") return;
+  const session = await getMobileSession();
+  if (!session) return;
+  await SecureStore.setItemAsync(mobileSessionKey, JSON.stringify({ ...session, user }));
+}
+
 export async function clearMobileSession() {
   if (Platform.OS !== "web") await SecureStore.deleteItemAsync(mobileSessionKey);
 }

@@ -3,7 +3,6 @@ import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
 const pendingInvitationKey = "tm-pending-team-invitation";
-const lastTeamNameKey = "tm-last-team-name";
 const invitationTokenPattern = /^[A-Za-z0-9_-]{43}$/;
 
 export function isTeamInvitationToken(value: string | null | undefined): value is string {
@@ -29,12 +28,4 @@ export function clearPendingTeamInvitation() {
   return Platform.OS === "web"
     ? AsyncStorage.removeItem(pendingInvitationKey)
     : SecureStore.deleteItemAsync(pendingInvitationKey);
-}
-
-export async function getLastTeamName() {
-  return (await AsyncStorage.getItem(lastTeamNameKey)) ?? "";
-}
-
-export function rememberLastTeamName(name: string) {
-  return AsyncStorage.setItem(lastTeamNameKey, name.trim());
 }

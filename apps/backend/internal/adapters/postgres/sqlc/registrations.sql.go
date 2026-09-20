@@ -47,7 +47,7 @@ WITH consumed_token AS (
     SELECT id, $4, now() + interval '30 days' FROM created_session
     RETURNING expires_at
 )
-SELECT accounts.id, accounts.username, created_session.idle_expires_at, created_refresh.expires_at
+SELECT accounts.id, accounts.username, accounts.last_team_name, created_session.idle_expires_at, created_refresh.expires_at
 FROM changed_credential
 JOIN accounts ON accounts.id = changed_credential.account_id
 JOIN created_session ON true
@@ -64,6 +64,7 @@ type ConsumePasswordResetParams struct {
 type ConsumePasswordResetRow struct {
 	ID            pgtype.UUID
 	Username      string
+	LastTeamName  pgtype.Text
 	IdleExpiresAt pgtype.Timestamptz
 	ExpiresAt     pgtype.Timestamptz
 }
@@ -79,6 +80,7 @@ func (q *Queries) ConsumePasswordReset(ctx context.Context, arg ConsumePasswordR
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
+		&i.LastTeamName,
 		&i.IdleExpiresAt,
 		&i.ExpiresAt,
 	)
@@ -95,7 +97,7 @@ WITH created_session AS (
     SELECT created_session.id, $3, now() + interval '30 days' FROM created_session
     RETURNING expires_at
 )
-SELECT accounts.username, created_session.idle_expires_at, created_refresh.expires_at
+SELECT accounts.username, accounts.last_team_name, created_session.idle_expires_at, created_refresh.expires_at
 FROM created_session
 CROSS JOIN created_refresh
 JOIN accounts ON accounts.id = $1
@@ -109,6 +111,7 @@ type CreateLocalLoginSessionParams struct {
 
 type CreateLocalLoginSessionRow struct {
 	Username      string
+	LastTeamName  pgtype.Text
 	IdleExpiresAt pgtype.Timestamptz
 	ExpiresAt     pgtype.Timestamptz
 }
@@ -116,7 +119,12 @@ type CreateLocalLoginSessionRow struct {
 func (q *Queries) CreateLocalLoginSession(ctx context.Context, arg CreateLocalLoginSessionParams) (CreateLocalLoginSessionRow, error) {
 	row := q.db.QueryRow(ctx, createLocalLoginSession, arg.ID, arg.TokenHash, arg.TokenHash_2)
 	var i CreateLocalLoginSessionRow
-	err := row.Scan(&i.Username, &i.IdleExpiresAt, &i.ExpiresAt)
+	err := row.Scan(
+		&i.Username,
+		&i.LastTeamName,
+		&i.IdleExpiresAt,
+		&i.ExpiresAt,
+	)
 	return i, err
 }
 
@@ -315,7 +323,7 @@ WITH consumed_refresh AS (
     FROM rotated_session
     RETURNING expires_at
 )
-SELECT accounts.id, accounts.username, rotated_session.idle_expires_at, created_refresh.expires_at
+SELECT accounts.id, accounts.username, accounts.last_team_name, rotated_session.idle_expires_at, created_refresh.expires_at
 FROM rotated_session
 JOIN accounts ON accounts.id = rotated_session.account_id
 CROSS JOIN created_refresh
@@ -330,6 +338,7 @@ type RotateSessionTokensParams struct {
 type RotateSessionTokensRow struct {
 	ID            pgtype.UUID
 	Username      string
+	LastTeamName  pgtype.Text
 	IdleExpiresAt pgtype.Timestamptz
 	ExpiresAt     pgtype.Timestamptz
 }
@@ -340,6 +349,7 @@ func (q *Queries) RotateSessionTokens(ctx context.Context, arg RotateSessionToke
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
+		&i.LastTeamName,
 		&i.IdleExpiresAt,
 		&i.ExpiresAt,
 	)
@@ -360,7 +370,7 @@ WITH consumed_token AS (
     SET state = 'verified', verified_at = now(), expires_at = NULL
     WHERE id = (SELECT account_id FROM consumed_token)
       AND state = 'pending_verification'
-    RETURNING id, username
+    RETURNING id, username, last_team_name
 ), revoked_presented_session AS (
     UPDATE sessions
     SET revoked_at = now()
@@ -379,7 +389,7 @@ WITH consumed_token AS (
     FROM created_session
     RETURNING expires_at
 )
-SELECT verified_account.id, verified_account.username, created_session.idle_expires_at, created_refresh.expires_at
+SELECT verified_account.id, verified_account.username, verified_account.last_team_name, created_session.idle_expires_at, created_refresh.expires_at
 FROM verified_account
 CROSS JOIN created_session
 CROSS JOIN created_refresh
@@ -395,6 +405,7 @@ type VerifyRegistrationAndCreateSessionParams struct {
 type VerifyRegistrationAndCreateSessionRow struct {
 	ID            pgtype.UUID
 	Username      string
+	LastTeamName  pgtype.Text
 	IdleExpiresAt pgtype.Timestamptz
 	ExpiresAt     pgtype.Timestamptz
 }
@@ -410,6 +421,7 @@ func (q *Queries) VerifyRegistrationAndCreateSession(ctx context.Context, arg Ve
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
+		&i.LastTeamName,
 		&i.IdleExpiresAt,
 		&i.ExpiresAt,
 	)

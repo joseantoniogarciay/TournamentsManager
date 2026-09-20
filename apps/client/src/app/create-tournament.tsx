@@ -14,7 +14,6 @@ import {
   saveLocalTournamentDraft,
   type TournamentSport,
 } from "@/features/league-creation/draft";
-import { getLastTeamName, rememberLastTeamName } from "@/features/league-creation/team-invitation";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
@@ -35,31 +34,35 @@ import {
 export default function CreateTournamentScreen() {
   const t = getTranslator();
   const { show } = useFeedback();
-  const { user } = useSession();
+  const { rememberLastTeamName, syncUser, user } = useSession();
   const { colors } = usePreferences();
   const [name, setName] = useState("");
   const [sport, setSport] = useState<TournamentSport>("football");
   const [team, setTeam] = useState("");
   const [draftId, setDraftId] = useState(() => randomUUID());
   const [draftLoaded, setDraftLoaded] = useState(false);
+  const [teamHasLocalValue, setTeamHasLocalValue] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    void Promise.all([getLocalTournamentDraft(), getLastTeamName().catch(() => "")]).then(
-      ([draft, lastTeamName]) => {
-        if (draft) {
-          setDraftId(draft.draftId);
-          setName(draft.name);
-          setSport(draft.sport);
-          setTeam(draft.teams[0] ?? "");
-        } else {
-          setTeam(lastTeamName);
-        }
-        setDraftLoaded(true);
-      },
-    );
+    void getLocalTournamentDraft().then((draft) => {
+      if (draft) {
+        setDraftId(draft.draftId);
+        setName(draft.name);
+        setSport(draft.sport);
+        setTeam(draft.teams[0] ?? "");
+        setTeamHasLocalValue(true);
+      }
+      setDraftLoaded(true);
+    });
   }, []);
+  useEffect(() => {
+    if (draftLoaded && !teamHasLocalValue) setTeam(user?.lastTeamName ?? "");
+  }, [draftLoaded, teamHasLocalValue, user?.id, user?.lastTeamName]);
+  useEffect(() => {
+    if (user) void syncUser().catch(() => undefined);
+  }, [syncUser, user?.id]);
   useEffect(() => {
     if (draftLoaded) void saveLocalTournamentDraft({ draftId, name, sport, teams: [team] });
   }, [draftId, draftLoaded, name, sport, team]);
@@ -179,7 +182,10 @@ export default function CreateTournamentScreen() {
                 error={teamError}
                 label={t("league_own_team_label")}
                 maxLength={maximumTeamNameLength}
-                onChangeText={setTeam}
+                onChangeText={(value) => {
+                  setTeamHasLocalValue(true);
+                  setTeam(value);
+                }}
                 validationSubmitted={submitted}
                 validationTrigger="blur"
                 value={team}

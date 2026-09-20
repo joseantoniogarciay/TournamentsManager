@@ -168,8 +168,9 @@ La creación no presenta una lista larga de equipos como requisito. Pide un úni
 campo obligatorio bajo el título «Tu equipo» y explica: «Empieza con el equipo
 con el que participas. Podrás completar el torneo después». Si no existe un
 borrador, el campo se prerrellena con el último nombre de equipo confirmado en
-ese dispositivo y sigue siendo editable; un borrador conservado siempre tiene
-precedencia.
+esa cuenta y sigue siendo editable; un borrador conservado siempre tiene
+precedencia. La sugerencia se sincroniza mediante la sesión y se relee al abrir
+el formulario para recoger cambios confirmados en otro dispositivo (ADR-0131).
 
 Tras crear el torneo, la superficie de equipos presenta las dos opciones con el
 siguiente mensaje base:
@@ -195,9 +196,10 @@ a cargar el torneo.
 Quien abre la invitación ve el torneo al que se incorpora, un campo «Nombre de tu
 equipo» y esta consecuencia antes de confirmar: «Tu equipo se añadirá al torneo
 y lo encontrarás en Sigo. No recibirás permisos de administración». El campo se
-prerrellena con el último nombre confirmado en ese dispositivo y sigue siendo
-editable. Tanto una creación como una inscripción confirmadas actualizan ese
-único valor local para el siguiente formulario de equipo.
+prerrellena con el último nombre confirmado en esa cuenta y sigue siendo
+editable. Tanto una creación como una inscripción confirmadas actualizan la
+preferencia de la cuenta para el siguiente formulario de equipo en web, iOS o
+Android.
 
 ## Flujos de identidad
 

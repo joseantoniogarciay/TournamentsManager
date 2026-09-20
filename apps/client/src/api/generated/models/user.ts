@@ -11,4 +11,10 @@ import type { Uuid } from "./uuid.js";
 export interface User {
   id: Uuid;
   username: Username;
+  /**
+   * Último nombre de equipo confirmado por la cuenta. Se omite cuando todavía no existe una sugerencia sincronizada.
+   * @minLength 1
+   * @maxLength 100
+   */
+  lastTeamName?: string;
 }

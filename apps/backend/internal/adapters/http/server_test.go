@@ -46,6 +46,7 @@ func (a testAuthenticator) GetCurrentSession(context.Context, string) (tournamen
 	return tournaments.CurrentSession{
 		AccountID:         a.accountID,
 		Username:          "person",
+		LastTeamName:      "Barrio Norte",
 		IdleExpiresAt:     "2026-08-09T12:00:00Z",
 		AbsoluteExpiresAt: "2026-08-09T12:00:00Z",
 	}, nil
@@ -847,7 +848,7 @@ func TestGetCurrentSessionReturnsIdentity(t *testing.T) {
 	if got := recorder.Header().Get("Cache-Control"); got != "no-store" {
 		t.Errorf("Cache-Control = %q, want no-store", got)
 	}
-	if body := recorder.Body.String(); !strings.Contains(body, `"id":"019abcde-1111-7111-8111-111111111111"`) || !strings.Contains(body, `"username":"person"`) {
+	if body := recorder.Body.String(); !strings.Contains(body, `"id":"019abcde-1111-7111-8111-111111111111"`) || !strings.Contains(body, `"username":"person"`) || !strings.Contains(body, `"lastTeamName":"Barrio Norte"`) {
 		t.Errorf("body = %s, want current session identity", body)
 	}
 }

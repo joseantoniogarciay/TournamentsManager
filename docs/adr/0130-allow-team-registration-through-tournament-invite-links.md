@@ -6,7 +6,8 @@
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0034, exclusivamente en que las cuentas no se vinculaban a
   equipos y las invitaciones de participación quedaban fuera de alcance
-- **Superado por:** Ninguno
+- **Superado por:** [ADR-0131](0131-sync-last-team-name-as-account-preference.md),
+  exclusivamente en el almacenamiento local del último nombre de equipo
 
 ## Problema
 

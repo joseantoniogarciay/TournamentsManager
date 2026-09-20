@@ -163,7 +163,7 @@ func (q *Queries) CreateGoogleLoginChallenge(ctx context.Context, arg CreateGoog
 }
 
 const findGoogleIdentityAccount = `-- name: FindGoogleIdentityAccount :one
-SELECT accounts.id, accounts.username
+SELECT accounts.id, accounts.username, accounts.last_team_name
 FROM external_identities
 JOIN accounts ON accounts.id = external_identities.account_id
 WHERE external_identities.issuer = $1 AND external_identities.subject = $2
@@ -175,14 +175,15 @@ type FindGoogleIdentityAccountParams struct {
 }
 
 type FindGoogleIdentityAccountRow struct {
-	ID       pgtype.UUID
-	Username string
+	ID           pgtype.UUID
+	Username     string
+	LastTeamName pgtype.Text
 }
 
 func (q *Queries) FindGoogleIdentityAccount(ctx context.Context, arg FindGoogleIdentityAccountParams) (FindGoogleIdentityAccountRow, error) {
 	row := q.db.QueryRow(ctx, findGoogleIdentityAccount, arg.Issuer, arg.Subject)
 	var i FindGoogleIdentityAccountRow
-	err := row.Scan(&i.ID, &i.Username)
+	err := row.Scan(&i.ID, &i.Username, &i.LastTeamName)
 	return i, err
 }
 

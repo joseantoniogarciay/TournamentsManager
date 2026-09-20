@@ -237,6 +237,10 @@ func TestIntegrationTournamentTeamInvitationCreatesTeamAndFollowWithoutAdministr
 	if err != nil || len(created.Teams) != 1 {
 		t.Fatalf("crear torneo con equipo propio = %#v, %v", created, err)
 	}
+	var organizerPreference string
+	if err := pool.QueryRow(ctx, `SELECT last_team_name FROM accounts WHERE id = $1`, organizerID).Scan(&organizerPreference); err != nil || organizerPreference != "Organizadores" {
+		t.Fatalf("preferencia organizadora = %q, %v", organizerPreference, err)
+	}
 	firstToken, err := service.CreateTeamInvitation(ctx, organizerID, created.ID)
 	if err != nil {
 		t.Fatalf("crear primera invitación = %v", err)
@@ -260,14 +264,16 @@ func TestIntegrationTournamentTeamInvitationCreatesTeamAndFollowWithoutAdministr
 		t.Fatalf("segunda inscripción de la cuenta = %v; se esperaba conflicto", err)
 	}
 	var follows, administers, ownsTeam bool
+	var participantPreference string
 	if err := pool.QueryRow(ctx, `SELECT
 		EXISTS (SELECT 1 FROM tournament_followers WHERE tournament_id=$1 AND account_id=$2),
 		EXISTS (SELECT 1 FROM tournament_administrators WHERE tournament_id=$1 AND account_id=$2),
-		EXISTS (SELECT 1 FROM tournament_team_accounts WHERE tournament_id=$1 AND team_id=$3 AND account_id=$2)`, created.ID, participantID, joined.Team.ID).Scan(&follows, &administers, &ownsTeam); err != nil {
+		EXISTS (SELECT 1 FROM tournament_team_accounts WHERE tournament_id=$1 AND team_id=$3 AND account_id=$2),
+		(SELECT last_team_name FROM accounts WHERE id=$2)`, created.ID, participantID, joined.Team.ID).Scan(&follows, &administers, &ownsTeam, &participantPreference); err != nil {
 		t.Fatalf("comprobar relaciones = %v", err)
 	}
-	if !follows || administers || !ownsTeam {
-		t.Fatalf("relaciones = follows %v, administers %v, owns team %v", follows, administers, ownsTeam)
+	if !follows || administers || !ownsTeam || participantPreference != "Invitados" {
+		t.Fatalf("relaciones = follows %v, administers %v, owns team %v, preferencia %q", follows, administers, ownsTeam, participantPreference)
 	}
 	if _, err := service.Start(ctx, organizerID, created.ID, tournaments.StartInput{RoundRobinLegs: 1}); err != nil {
 		t.Fatalf("iniciar torneo = %v", err)
@@ -718,7 +724,7 @@ func TestIntegrationLocalLoginCreatesTournamentAndSessionAtomically(t *testing.T
 		Name: "Torneo recuperado", Sport: tournaments.SportBasketball, Teams: []string{"Norte", "Sur"},
 	}
 	result, err := service.Login(ctx, "login-draft@example.test", "correct password", draft)
-	if err != nil || result.Session.AccountID != accountID {
+	if err != nil || result.Session.AccountID != accountID || result.Session.LastTeamName != "Norte" {
 		t.Fatalf("login con borrador = %#v, %v", result, err)
 	}
 	if _, err := service.Login(ctx, "login-draft@example.test", "correct password", draft); err != nil {
@@ -759,7 +765,7 @@ func TestIntegrationGoogleLoginCreatesTournamentAndSessionAtomically(t *testing.
 		Name: "Torneo Google", Sport: tournaments.SportFootball, Teams: []string{"Uno", "Dos"},
 	}
 	result, err := service.Authenticate(ctx, challenge.ID, "google-token", nil, draft)
-	if err != nil || result.AccountID != accountID {
+	if err != nil || result.AccountID != accountID || result.LastTeamName != "Uno" {
 		t.Fatalf("login Google con borrador = %#v, %v", result, err)
 	}
 	retryChallenge, err := service.CreateChallenge(ctx)
@@ -796,14 +802,18 @@ func TestIntegrationLoginDraftFailureRollsBackSession(t *testing.T) {
 		t.Fatal("el borrador inválido no falló")
 	}
 	var sessions, tournamentsCount int
+	var lastTeamName *string
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM sessions WHERE account_id = $1`, accountID).Scan(&sessions); err != nil {
 		t.Fatalf("contar sesiones: %v", err)
 	}
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournaments WHERE organizer_account_id = $1`, accountID).Scan(&tournamentsCount); err != nil {
 		t.Fatalf("contar torneos: %v", err)
 	}
-	if sessions != 0 || tournamentsCount != 0 {
-		t.Fatalf("rollback dejó sesiones/torneos = %d/%d", sessions, tournamentsCount)
+	if err := pool.QueryRow(ctx, `SELECT last_team_name FROM accounts WHERE id = $1`, accountID).Scan(&lastTeamName); err != nil {
+		t.Fatalf("consultar preferencia: %v", err)
+	}
+	if sessions != 0 || tournamentsCount != 0 || lastTeamName != nil {
+		t.Fatalf("rollback dejó sesiones/torneos/preferencia = %d/%d/%v", sessions, tournamentsCount, lastTeamName)
 	}
 }
 

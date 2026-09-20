@@ -5,6 +5,7 @@ import {
   saveMobileSession,
 } from "@/api/fetch";
 import { createSession } from "@/api/generated/session/session";
+import type { User } from "@/api/generated/models";
 import type { TournamentDraftInput, Transport } from "@/api/generated/models";
 
 export type LocalAuthenticationResult =
@@ -12,7 +13,7 @@ export type LocalAuthenticationResult =
   | {
       kind: "session";
       createdTournament: boolean;
-      user: { id: string; username: string };
+      user: User;
     };
 
 /** Error recuperable: el contrato confirma que la autenticación fue rechazada. */

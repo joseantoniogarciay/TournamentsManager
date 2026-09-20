@@ -1280,6 +1280,13 @@ components:
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         username: { $ref: "#/components/schemas/Username" }
+        lastTeamName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: >-
+            Último nombre de equipo confirmado por la cuenta. Se omite cuando
+            todavía no existe una sugerencia sincronizada.
     SessionEstablishment:
       type: object
       required: [user, delivery, expiresAt, refreshExpiresAt]

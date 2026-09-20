@@ -48,12 +48,16 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 
 	account, err := queries.FindGoogleIdentityAccount(ctx, sqlc.FindGoogleIdentityAccountParams{Issuer: identity.Issuer, Subject: identity.Subject})
 	if err == nil {
+		lastTeamName := nullableText(account.LastTeamName)
 		if draft != nil {
 			if err := createTournamentFromDraft(ctx, tx, account.ID.String(), draft.ID, draft.Name, draft.Sport, draft.Teams); err != nil {
 				return federated.Session{}, err
 			}
+			if len(draft.Teams) > 0 {
+				lastTeamName = draft.Teams[0]
+			}
 		}
-		return createSession(ctx, tx, queries, account.ID, account.Username, accessHash, refreshHash)
+		return createSession(ctx, tx, queries, account.ID, account.Username, lastTeamName, accessHash, refreshHash)
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return federated.Session{}, err
@@ -83,7 +87,11 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 			return federated.Session{}, err
 		}
 	}
-	return createSession(ctx, tx, queries, accountID, registration.Username, accessHash, refreshHash)
+	lastTeamName := ""
+	if draft != nil && len(draft.Teams) > 0 {
+		lastTeamName = draft.Teams[0]
+	}
+	return createSession(ctx, tx, queries, accountID, registration.Username, lastTeamName, accessHash, refreshHash)
 }
 
 // AddGoogleIdentity adds an unlinked identity or idempotently confirms the account's own identity.
@@ -241,7 +249,7 @@ func consumeChallenge(ctx context.Context, queries *sqlc.Queries, challengeID st
 	return queries.ConsumeGoogleLoginChallenge(ctx, id)
 }
 
-func createSession(ctx context.Context, tx pgx.Tx, queries *sqlc.Queries, accountID pgtype.UUID, username string, accessHash, refreshHash []byte) (federated.Session, error) {
+func createSession(ctx context.Context, tx pgx.Tx, queries *sqlc.Queries, accountID pgtype.UUID, username, lastTeamName string, accessHash, refreshHash []byte) (federated.Session, error) {
 	created, err := queries.CreateFederatedSession(ctx, sqlc.CreateFederatedSessionParams{AccountID: accountID, TokenHash: accessHash})
 	if err != nil {
 		return federated.Session{}, err
@@ -253,7 +261,7 @@ func createSession(ctx context.Context, tx pgx.Tx, queries *sqlc.Queries, accoun
 	if err := tx.Commit(ctx); err != nil {
 		return federated.Session{}, err
 	}
-	return federated.Session{AccountID: accountID.String(), Username: username, IdleExpiresAt: created.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: refreshExpires.Time.UTC().Format(time.RFC3339Nano)}, nil
+	return federated.Session{AccountID: accountID.String(), Username: username, LastTeamName: lastTeamName, IdleExpiresAt: created.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: refreshExpires.Time.UTC().Format(time.RFC3339Nano)}, nil
 }
 
 func parseUUID(value string) (pgtype.UUID, error) { var id pgtype.UUID; return id, id.Scan(value) }

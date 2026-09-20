@@ -14,10 +14,8 @@ import {
 import { maximumTeamNameLength } from "@/features/league-creation/draft";
 import {
   clearPendingTeamInvitation,
-  getLastTeamName,
   getPendingTeamInvitation,
   isTeamInvitationToken,
-  rememberLastTeamName,
   rememberPendingTeamInvitation,
 } from "@/features/league-creation/team-invitation";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
@@ -45,10 +43,11 @@ export default function JoinTeamScreen() {
   const url = Linking.useURL();
   const { colors } = usePreferences();
   const { show } = useFeedback();
-  const { user } = useSession();
+  const { rememberLastTeamName, syncUser, user } = useSession();
   const [token, setToken] = useState<string>();
   const [invitation, setInvitation] = useState<Invitation>();
   const [name, setName] = useState("");
+  const [nameEdited, setNameEdited] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,8 +55,11 @@ export default function JoinTeamScreen() {
   const [loadError, setLoadError] = useState<"unavailable" | "request">();
 
   useEffect(() => {
-    void getLastTeamName().then(setName);
-  }, []);
+    if (!nameEdited) setName(user?.lastTeamName ?? "");
+  }, [nameEdited, user?.id, user?.lastTeamName]);
+  useEffect(() => {
+    if (user) void syncUser().catch(() => undefined);
+  }, [syncUser, user?.id]);
 
   useEffect(() => {
     let active = true;
@@ -137,7 +139,7 @@ export default function JoinTeamScreen() {
     setIsSubmitting(true);
     try {
       const registration = await joinTournamentWithTeamInvitationRequest(token, normalizedName);
-      await rememberLastTeamName(normalizedName);
+      await rememberLastTeamName(normalizedName).catch(() => undefined);
       await clearPendingTeamInvitation();
       router.replace(`/tournament/${registration.tournamentId}` as never);
     } catch (error) {
@@ -220,7 +222,10 @@ export default function JoinTeamScreen() {
                   error={nameError}
                   label={t("team_invitation_name_label")}
                   maxLength={maximumTeamNameLength}
-                  onChangeText={setName}
+                  onChangeText={(value) => {
+                    setNameEdited(true);
+                    setName(value);
+                  }}
                   validationSubmitted={submitted}
                   validationTrigger="blur"
                   value={name}

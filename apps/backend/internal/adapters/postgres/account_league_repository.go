@@ -138,6 +138,9 @@ func (r AccountTournamentRepository) Create(ctx context.Context, accountID strin
 	if _, err := tx.Exec(ctx, `INSERT INTO tournament_team_accounts (tournament_id, team_id, account_id) VALUES ($1, $2, $3)`, league.ID, league.Teams[0].ID, account); err != nil {
 		return tournaments.Tournament{}, err
 	}
+	if _, err := tx.Exec(ctx, `UPDATE accounts SET last_team_name = $2 WHERE id = $1`, account, league.Teams[0].Name); err != nil {
+		return tournaments.Tournament{}, err
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return tournaments.Tournament{}, err
 	}
@@ -272,6 +275,9 @@ func (r AccountTournamentRepository) JoinTeamInvitation(ctx context.Context, acc
 		return tournaments.TeamRegistration{}, err
 	}
 	if _, err := tx.Exec(ctx, `INSERT INTO tournament_followers (tournament_id, account_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, registration.TournamentID, account); err != nil {
+		return tournaments.TeamRegistration{}, err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE accounts SET last_team_name = $2 WHERE id = $1`, account, registration.Team.Name); err != nil {
 		return tournaments.TeamRegistration{}, err
 	}
 	if _, err := tx.Exec(ctx, `UPDATE tournaments SET last_activity_at = now() WHERE id = $1`, registration.TournamentID); err != nil {
@@ -1015,6 +1021,7 @@ func (r AccountTournamentRepository) GetCurrentSession(ctx context.Context, toke
 	return tournaments.CurrentSession{
 		AccountID:         uuidString(row.ID),
 		Username:          row.Username,
+		LastTeamName:      nullableText(row.LastTeamName),
 		IdleExpiresAt:     timestamp(row.IdleExpiresAt.Time),
 		AbsoluteExpiresAt: timestamp(row.AbsoluteExpiresAt.Time),
 	}, nil
@@ -1162,6 +1169,13 @@ func uuidValue(value string) (pgtype.UUID, error) {
 }
 
 func uuidString(value pgtype.UUID) string { return value.String() }
+
+func nullableText(value pgtype.Text) string {
+	if !value.Valid {
+		return ""
+	}
+	return value.String
+}
 
 func timestamp(value time.Time) string { return value.UTC().Format(time.RFC3339Nano) }
 

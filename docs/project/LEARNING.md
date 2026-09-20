@@ -35,6 +35,18 @@
   cada operación correcta que confirme esa elección, sin convertir un fallo del
   almacenamiento de conveniencia en un falso fallo de la operación remota.
 
+## 2026-09-20 — Una preferencia personal no puede vivir en una clave global del dispositivo
+
+- **Aprendido:** una clave local única mezcla cuentas en el mismo navegador y,
+  a la vez, deja sin sincronizar navegador y app. Guardar la copia bajo la sesión
+  evita la contaminación, pero no basta para recoger cambios realizados desde
+  otro dispositivo que ya estaba autenticado.
+- **Regla reutilizable:** cuando una sugerencia pertenece a la persona y debe
+  cruzar dispositivos, el backend es la fuente de verdad y la escritura comparte
+  transacción con la acción que la confirma. La sesión transporta la proyección,
+  el cliente la relee al entrar en el contexto que la usa y su caché móvil vive
+  dentro de la sesión de esa cuenta, no en otra preferencia global.
+
 ## 2026-09-19 — Participar no equivale a administrar
 
 - **Aprendido:** permitir que una cuenta nombre e inscriba su equipo no exige
