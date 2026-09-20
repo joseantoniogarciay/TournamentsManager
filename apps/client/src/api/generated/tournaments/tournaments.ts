@@ -658,6 +658,11 @@ export type startTournamentResponse409 = {
   status: 409;
 };
 
+export type startTournamentResponse422 = {
+  data: void;
+  status: 422;
+};
+
 export type startTournamentResponseSuccess = startTournamentResponse200 & {
   headers: Headers;
 };
@@ -667,6 +672,7 @@ export type startTournamentResponseError = (
   | startTournamentResponse403
   | startTournamentResponse404
   | startTournamentResponse409
+  | startTournamentResponse422
 ) & {
   headers: Headers;
 };
@@ -678,7 +684,7 @@ export const getStartTournamentUrl = (tournamentId: Uuid) => {
 };
 
 /**
- * Congela una única fase: liga a una o dos vueltas, o eliminatoria directa a partido único. El servidor genera todos los partidos y, en el cuadro, sus fuentes y pases directos deterministas.
+ * Congela una liga, una eliminatoria directa o la primera fase de un torneo mixto. El formato mixto crea una fase de liga en curso y una eliminatoria pendiente; exige grupos equilibrados y un total de clasificadas que forme un cuadro completo sin byes.
  * @summary Configura e inicia un torneo publicado
  */
 export const startTournament = async (
@@ -698,6 +704,76 @@ export const startTournament = async (
 
   const data: startTournamentResponse["data"] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as startTournamentResponse;
+};
+
+export type startTournamentEliminationResponse200 = {
+  data: PublicTournament;
+  status: 200;
+};
+
+export type startTournamentEliminationResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type startTournamentEliminationResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type startTournamentEliminationResponse403 = {
+  data: void;
+  status: 403;
+};
+
+export type startTournamentEliminationResponse404 = {
+  data: void;
+  status: 404;
+};
+
+export type startTournamentEliminationResponse409 = {
+  data: void;
+  status: 409;
+};
+
+export type startTournamentEliminationResponseSuccess = startTournamentEliminationResponse200 & {
+  headers: Headers;
+};
+export type startTournamentEliminationResponseError = (
+  | startTournamentEliminationResponse400
+  | startTournamentEliminationResponse401
+  | startTournamentEliminationResponse403
+  | startTournamentEliminationResponse404
+  | startTournamentEliminationResponse409
+) & {
+  headers: Headers;
+};
+
+export type startTournamentEliminationResponse =
+  startTournamentEliminationResponseSuccess | startTournamentEliminationResponseError;
+
+export const getStartTournamentEliminationUrl = (tournamentId: Uuid) => {
+  return `/tournaments/${tournamentId}/stages/elimination/start`;
+};
+
+/**
+ * Solo la organizadora puede confirmar la transición. Exige que todos los partidos de la fase de liga estén resueltos, excluye equipos retirados, fija las clasificadas elegibles y materializa un cuadro completo sembrado de mejor contra peor.
+ * @summary Congela la clasificación e inicia la eliminatoria
+ */
+export const startTournamentElimination = async (
+  tournamentId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<startTournamentEliminationResponse> => {
+  const res = await (fetchFn ?? fetch)(getStartTournamentEliminationUrl(tournamentId), {
+    ...options,
+    method: "POST",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: startTournamentEliminationResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as startTournamentEliminationResponse;
 };
 
 export type addTournamentTeamResponse201 = {

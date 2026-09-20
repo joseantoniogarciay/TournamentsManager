@@ -721,9 +721,10 @@ paths:
       operationId: startTournament
       summary: Configura e inicia un torneo publicado
       description: >-
-        Congela una única fase: liga a una o dos vueltas, o eliminatoria directa
-        a partido único. El servidor genera todos los partidos y, en el cuadro,
-        sus fuentes y pases directos deterministas.
+        Congela una liga, una eliminatoria directa o la primera fase de un
+        torneo mixto. El formato mixto crea una fase de liga en curso y una
+        eliminatoria pendiente; exige grupos equilibrados y un total de
+        clasificadas que forme un cuadro completo sin byes.
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       parameters:
         - name: tournamentId
@@ -746,6 +747,38 @@ paths:
         "403": { description: La sesión no pertenece a la organizadora. }
         "404": { description: El torneo no existe. }
         "409": { description: El torneo ya no está sin empezar. }
+        "422":
+          { description: La composición de equipos no satisface la configuración mixta elegida. }
+  /tournaments/{tournamentId}/stages/elimination/start:
+    post:
+      tags: [Tournaments]
+      operationId: startTournamentElimination
+      summary: Congela la clasificación e inicia la eliminatoria
+      description: >-
+        Solo la organizadora puede confirmar la transición. Exige que todos los
+        partidos de la fase de liga estén resueltos, excluye equipos retirados,
+        fija las clasificadas elegibles y materializa un cuadro completo
+        sembrado de mejor contra peor.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: tournamentId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Clasificación congelada y eliminatoria iniciada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicTournament" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { description: La sesión no pertenece a la organizadora. }
+        "404": { description: El torneo no existe. }
+        "409":
+          description: >-
+            La liga no está completa, faltan equipos elegibles o la transición
+            ya ocurrió.
   /tournaments/{tournamentId}/teams:
     post:
       tags: [Tournaments]
@@ -1433,6 +1466,24 @@ components:
           required: [format]
           properties:
             format: { const: single_elimination }
+        - oneOf:
+            - type: object
+              additionalProperties: false
+              required: [format, roundRobinLegs, leagueStructure, qualifierCount]
+              properties:
+                format: { const: league_then_single_elimination }
+                roundRobinLegs: { type: integer, enum: [1, 2] }
+                leagueStructure: { const: single_table }
+                qualifierCount: { type: integer, enum: [2, 4, 8, 16, 32, 64] }
+            - type: object
+              additionalProperties: false
+              required: [format, roundRobinLegs, leagueStructure, groupCount, qualifiersPerGroup]
+              properties:
+                format: { const: league_then_single_elimination }
+                roundRobinLegs: { type: integer, enum: [1, 2] }
+                leagueStructure: { const: groups }
+                groupCount: { type: integer, minimum: 2, maximum: 64 }
+                qualifiersPerGroup: { type: integer, minimum: 1, maximum: 63 }
     MatchResultInput:
       type: object
       required: [homeScore, awayScore]
@@ -1468,6 +1519,7 @@ components:
           roundRobinLegs,
           teams,
           stages,
+          stageTeams,
           matches,
           standings,
           championTeamIds,
@@ -1476,10 +1528,13 @@ components:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
         sport: { type: string, enum: [football, basketball] }
-        format: { type: string, enum: [league, single_elimination] }
+        format: { type: string, enum: [league, single_elimination, league_then_single_elimination] }
         stages:
           type: array
           items: { $ref: "#/components/schemas/TournamentStage" }
+        stageTeams:
+          type: array
+          items: { $ref: "#/components/schemas/TournamentStageTeam" }
         state: { type: string, enum: [published, in_progress, completed, cancelled] }
         roundRobinLegs:
           type: integer
@@ -1515,6 +1570,8 @@ components:
         ]
       properties:
         position: { type: integer, minimum: 1 }
+        stageId: { $ref: "#/components/schemas/UUID" }
+        groupNumber: { type: integer, minimum: 1 }
         teamId: { $ref: "#/components/schemas/UUID" }
         played: { type: integer, minimum: 0 }
         won: { type: integer, minimum: 0 }
@@ -1533,6 +1590,18 @@ components:
         type: { type: string, enum: [league, single_elimination] }
         state: { type: string, enum: [pending, in_progress, completed, cancelled] }
         roundRobinLegs: { type: integer, enum: [1, 2] }
+        leagueStructure: { type: string, enum: [single_table, groups] }
+        qualifierCount: { type: integer, enum: [2, 4, 8, 16, 32, 64] }
+        groupCount: { type: integer, minimum: 2, maximum: 64 }
+        qualifiersPerGroup: { type: integer, minimum: 1, maximum: 63 }
+    TournamentStageTeam:
+      type: object
+      required: [stageId, teamId, seedPosition]
+      properties:
+        stageId: { $ref: "#/components/schemas/UUID" }
+        teamId: { $ref: "#/components/schemas/UUID" }
+        seedPosition: { type: integer, minimum: 1 }
+        groupNumber: { type: integer, minimum: 1 }
     TournamentTeam:
       type: object
       required: [id, name, withdrawn]
@@ -1560,6 +1629,7 @@ components:
         id: { $ref: "#/components/schemas/UUID" }
         round: { type: integer, minimum: 1 }
         sequence: { type: integer, minimum: 1 }
+        groupNumber: { type: integer, minimum: 1 }
         stageId: { $ref: "#/components/schemas/UUID" }
         homeTeamId:
           description: UUID del equipo conocido; cadena vacía si la plaza aún no está resuelta o es bye.

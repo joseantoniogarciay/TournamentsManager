@@ -48,3 +48,39 @@ func TestGenerateSingleEliminationRejectsInvalidEntrants(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerateSeededSingleEliminationPairsExtremesAndSeparatesTopSeeds(t *testing.T) {
+	bracket, err := GenerateSeededSingleElimination([]string{"1", "2", "3", "4", "5", "6", "7", "8"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := [][2]string{{"1", "8"}, {"4", "5"}, {"2", "7"}, {"3", "6"}}
+	for index, pair := range want {
+		match := bracket.Matches[index]
+		if match.Home.TeamID != pair[0] || match.Away.TeamID != pair[1] {
+			t.Fatalf("match %d = %s-%s, want %s-%s", index+1, match.Home.TeamID, match.Away.TeamID, pair[0], pair[1])
+		}
+	}
+}
+
+func TestGenerateSeededSingleEliminationRequiresACompleteField(t *testing.T) {
+	if _, err := GenerateSeededSingleElimination([]string{"1", "2", "3"}); err != ErrInvalidBracketEntrants {
+		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestGenerateSeededSingleEliminationSupportsEveryAcceptedFieldSize(t *testing.T) {
+	for _, size := range []int{2, 4, 8, 16, 32, 64} {
+		teams := make([]string, size)
+		for index := range teams {
+			teams[index] = string(rune('A' + index))
+		}
+		bracket, err := GenerateSeededSingleElimination(teams)
+		if err != nil {
+			t.Fatalf("size %d: %v", size, err)
+		}
+		if bracket.Size != size || len(bracket.Matches) != size-1 {
+			t.Fatalf("size %d: bracket = %#v", size, bracket)
+		}
+	}
+}

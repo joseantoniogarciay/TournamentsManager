@@ -145,6 +145,7 @@ function parseMatch(value: unknown): Match | null {
     !Object.values(MatchState).includes(value.state as Match["state"])
   )
     return null;
+  if ("groupNumber" in value && !isIntegerAtLeast(value.groupNumber, 1)) return null;
   for (const side of ["home", "away"] as const) {
     const kind = value[side + "SourceKind"];
     const source = value[side + "SourceMatchId"];
@@ -196,8 +197,31 @@ function parseStages(value: unknown): PublicTournament["stages"] | null {
         : stage.roundRobinLegs !== undefined
     )
       return null;
+    if (
+      "leagueStructure" in stage &&
+      !["single_table", "groups"].includes(String(stage.leagueStructure))
+    )
+      return null;
+    for (const key of ["qualifierCount", "groupCount", "qualifiersPerGroup"]) {
+      if (key in stage && !isIntegerAtLeast(stage[key], 1)) return null;
+    }
   }
   return value as PublicTournament["stages"];
+}
+
+function parseStageTeams(value: unknown): PublicTournament["stageTeams"] | null {
+  if (!Array.isArray(value)) return null;
+  for (const assignment of value) {
+    if (
+      !isRecord(assignment) ||
+      !isUUID(assignment.stageId) ||
+      !isUUID(assignment.teamId) ||
+      !isIntegerAtLeast(assignment.seedPosition, 1) ||
+      ("groupNumber" in assignment && !isIntegerAtLeast(assignment.groupNumber, 1))
+    )
+      return null;
+  }
+  return value as PublicTournament["stageTeams"];
 }
 
 function parseTournamentStanding(value: unknown): TournamentStanding | null {
@@ -219,6 +243,8 @@ function parseTournamentStanding(value: unknown): TournamentStanding | null {
   }
   return {
     position: value.position,
+    ...(isUUID(value.stageId) ? { stageId: value.stageId } : {}),
+    ...(isIntegerAtLeast(value.groupNumber, 1) ? { groupNumber: value.groupNumber } : {}),
     teamId: value.teamId,
     played: value.played,
     won: value.won,
@@ -247,6 +273,7 @@ function parseUUIDs(value: unknown): string[] | null {
 export function parsePublicTournament(value: unknown): PublicTournament | null {
   if (!isRecord(value)) return null;
   const stages = parseStages(value.stages);
+  const stageTeams = parseStageTeams(value.stageTeams);
   const teams = parseTournamentTeams(value.teams);
   const matches = parseMatches(value.matches);
   const standings = parseTournamentStandings(value.standings);
@@ -262,7 +289,8 @@ export function parsePublicTournament(value: unknown): PublicTournament | null {
     !matches ||
     !standings ||
     !championTeamIds ||
-    !stages
+    !stages ||
+    !stageTeams
   ) {
     return null;
   }
@@ -278,6 +306,7 @@ export function parsePublicTournament(value: unknown): PublicTournament | null {
     standings,
     championTeamIds,
     stages,
+    stageTeams,
   };
 }
 

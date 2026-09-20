@@ -6,6 +6,22 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Added
+
+- El formato «Liga + eliminatoria» permite elegir liga general o grupos
+  equilibrados, una o dos vueltas y cuántos equipos se clasifican. El inicio
+  valida la composición exacta, la transición explícita congela la liga y crea
+  un cuadro sin _byes_ que enfrenta y separa a los mejores sembrados. Los
+  equipos retirados ceden su plaza al siguiente elegible; la interfaz permite
+  consultar liga y eliminatorias y explica quién debe confirmar la transición.
+
+### Changed
+
+- Los adaptadores Go y sus pruebas se organizan por capacidad dentro de sus
+  paquetes; la composición HTTP recibe configuración y dependencias explícitas,
+  y la suite protege la dirección negocio → puertos ← adaptadores conforme a
+  ADR-0132.
+
 ### Fixed
 
 - La creación de torneos prerrellena «Tu equipo» con el último nombre confirmado

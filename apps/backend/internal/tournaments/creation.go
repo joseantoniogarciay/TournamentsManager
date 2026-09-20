@@ -70,8 +70,12 @@ type CreateInput struct {
 
 // StartInput defines the rules frozen when the league starts.
 type StartInput struct {
-	Format         string
-	RoundRobinLegs int
+	Format             string
+	RoundRobinLegs     int
+	LeagueStructure    string
+	QualifierCount     int
+	GroupCount         int
+	QualifiersPerGroup int
 }
 
 // MatchResultInput represents a final score and any sport-specific tiebreak data.
@@ -117,6 +121,7 @@ type Match struct {
 	ID                string         `json:"id"`
 	RoundNumber       int            `json:"round"`
 	Sequence          int            `json:"sequence"`
+	GroupNumber       int            `json:"groupNumber,omitempty"`
 	HomeTeamID        string         `json:"homeTeamId"`
 	AwayTeamID        string         `json:"awayTeamId"`
 	State             string         `json:"state"`
@@ -136,30 +141,45 @@ const (
 
 // Tournament is the projection of a visible league.
 type Tournament struct {
-	Stages          []Stage    `json:"stages"`
-	ID              string     `json:"id"`
-	Name            string     `json:"name"`
-	Sport           Sport      `json:"sport"`
-	Format          string     `json:"format"`
-	State           string     `json:"state"`
-	RoundRobinLegs  int        `json:"roundRobinLegs"`
-	Teams           []Team     `json:"teams"`
-	Matches         []Match    `json:"matches"`
-	Standings       []Standing `json:"standings"`
-	ChampionTeamIDs []string   `json:"championTeamIds"`
+	Stages          []Stage     `json:"stages"`
+	StageTeams      []StageTeam `json:"stageTeams"`
+	ID              string      `json:"id"`
+	Name            string      `json:"name"`
+	Sport           Sport       `json:"sport"`
+	Format          string      `json:"format"`
+	State           string      `json:"state"`
+	RoundRobinLegs  int         `json:"roundRobinLegs"`
+	Teams           []Team      `json:"teams"`
+	Matches         []Match     `json:"matches"`
+	Standings       []Standing  `json:"standings"`
+	ChampionTeamIDs []string    `json:"championTeamIds"`
 }
 
 // Stage scopes sporting rules and match ordering inside a tournament.
 type Stage struct {
-	ID             string `json:"id"`
-	Position       int    `json:"position"`
-	Type           string `json:"type"`
-	State          string `json:"state"`
-	RoundRobinLegs *int   `json:"roundRobinLegs,omitempty"`
+	ID                 string `json:"id"`
+	Position           int    `json:"position"`
+	Type               string `json:"type"`
+	State              string `json:"state"`
+	RoundRobinLegs     *int   `json:"roundRobinLegs,omitempty"`
+	LeagueStructure    string `json:"leagueStructure,omitempty"`
+	QualifierCount     int    `json:"qualifierCount,omitempty"`
+	GroupCount         int    `json:"groupCount,omitempty"`
+	QualifiersPerGroup int    `json:"qualifiersPerGroup,omitempty"`
+}
+
+// StageTeam records a team's stable seed and optional group inside one stage.
+type StageTeam struct {
+	StageID      string `json:"stageId"`
+	TeamID       string `json:"teamId"`
+	SeedPosition int    `json:"seedPosition"`
+	GroupNumber  int    `json:"groupNumber,omitempty"`
 }
 
 // Standing is a domain-calculated row, not data entered by clients.
 type Standing struct {
+	StageID         string `json:"stageId,omitempty"`
+	GroupNumber     int    `json:"groupNumber,omitempty"`
 	Position        int    `json:"position"`
 	TeamID          string `json:"teamId"`
 	Played          int    `json:"played"`
@@ -183,6 +203,7 @@ type CreationRepository interface {
 	JoinTeamInvitation(context.Context, string, InvitationTokenHash, TeamInput) (TeamRegistration, error)
 	WithdrawTeam(context.Context, string, string, string) (Tournament, error)
 	Start(context.Context, string, string, StartInput) (Tournament, error)
+	StartElimination(context.Context, string, string) (Tournament, error)
 	Cancel(context.Context, string, string) (Tournament, error)
 	AssignAdministrator(context.Context, string, string, string) error
 	ListAdministrators(context.Context, string, string) ([]string, error)
@@ -276,13 +297,17 @@ func (s CreationService) Start(ctx context.Context, accountID, leagueID string, 
 	if input.Format == "" {
 		input.Format = "league"
 	}
-	if (input.Format != "league" && input.Format != "single_elimination") ||
-		(input.Format == "league" && input.RoundRobinLegs != 1 && input.RoundRobinLegs != 2) ||
-		(input.Format == "single_elimination" && input.RoundRobinLegs != 0) {
+	if !validStartInput(input) {
 		return Tournament{}, ErrInvalidTournamentInput
 	}
 	league, err := s.repository.Start(ctx, accountID, leagueID, input)
 	return s.withStandings(league), err
+}
+
+// StartElimination freezes a completed qualifying stage and starts its bracket.
+func (s CreationService) StartElimination(ctx context.Context, accountID, tournamentID string) (Tournament, error) {
+	tournament, err := s.repository.StartElimination(ctx, accountID, tournamentID)
+	return s.withStandings(tournament), err
 }
 
 // Cancel keeps a league visible but prevents its sporting lifecycle from continuing.
@@ -367,11 +392,11 @@ func (s CreationService) GetPublic(ctx context.Context, leagueID string) (Tourna
 }
 
 func (s CreationService) withStandings(league Tournament) Tournament {
-	if league.Format == "single_elimination" || (league.State != "in_progress" && league.State != "completed") {
+	if league.State != "in_progress" && league.State != "completed" {
 		league.Standings = []Standing{}
 		return league
 	}
-	league.Standings = calculateStandings(league)
+	league.Standings = CalculateTournamentStandings(league)
 	return league
 }
 

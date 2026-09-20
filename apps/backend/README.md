@@ -21,6 +21,12 @@ internal/adapters/postgres/sqlc/ código Go generado; no se edita a mano
 db/schema/                       esquema PostgreSQL inicial que sqlc usa como referencia
 ```
 
+Dentro de cada adaptador, los ficheros se nombran por capacidad —registro,
+sesiones, acceso, notificaciones o torneos— sin crear un subpaquete por capa. La
+composición de producción usa `HandlerConfig` y `HandlerDependencies`; una prueba
+de arquitectura impide que negocio importe adaptadores y que HTTP importe
+PostgreSQL. Véase [ADR-0132](../../docs/adr/0132-organize-go-adapters-by-capability.md).
+
 `cmd/api/main.go` construye las dependencias: abre el pool PostgreSQL, crea los
 repositorios y los entrega a los servicios; después entrega esos servicios al
 adaptador HTTP. Esa composición es el punto donde se unen las capas.
@@ -34,7 +40,7 @@ contrato. El flujo de una petición válida es:
 ```text
 Cliente
   → GET /v1/usernames/{username}/availability
-  → internal/adapters/http/server.go: NewHandler registra la ruta
+  → internal/adapters/http/router.go: NewHandlerWithConfig registra la ruta
   → usernameAvailability valida el formato y aplica el límite de tasa
   → registration.Service.UsernameAvailable
   → registration.Repository.IsUsernameAvailable (puerto de negocio)

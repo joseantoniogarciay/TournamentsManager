@@ -1,5 +1,28 @@
 # Registro de aprendizaje
 
+## 2026-09-20 — Una competición mixta necesita una frontera de congelación
+
+- **Aprendido:** calcular clasificados automáticamente al terminar el último
+  partido deja ambigua la ventana de corrección y puede cambiar participantes de
+  un cuadro sin una acción visible. Generar todo el torneo al principio tampoco
+  resuelve plazas cuyo equipo todavía se desconoce.
+- **Regla reutilizable:** una fase posterior se materializa mediante una
+  transición explícita cuando la anterior está completa. Hasta entonces sus
+  resultados se pueden corregir; después, la clasificación y sus dependencias
+  quedan congeladas. La composición reutiliza políticas de fase concretas en
+  lugar de convertirlas en un motor genérico.
+
+## 2026-09-20 — Un paquete cohesionado no exige un único fichero grande
+
+- **Aprendido:** conservar paquetes pragmáticos no obliga a reunir router,
+  handlers, DTOs y persistencia de varias capacidades en unos pocos ficheros.
+  El compilador mantiene el mismo límite aunque el código se divida para que el
+  nombre del fichero responda dónde buscar.
+- **Regla reutilizable:** primero se separan ficheros por capacidad dentro del
+  paquete existente y se protegen las direcciones de import. Solo se crean
+  nuevos paquetes o tipos de repositorio cuando una frontera real necesita ciclo
+  de vida, propiedad o pruebas independientes.
+
 ## 2026-09-20 — Cerrar un selector del sistema no es un error
 
 - **Aprendido:** una misma cancelación del diálogo de compartir se representa de
@@ -3377,3 +3400,29 @@ K3s y también que sus componentes base siguen sanos.
   estado compartido, la interfaz conserva la acción deshabilitada y explica junto
   a ella quién debe ejecutarla. El texto nombra el rol vigente, no al creador
   original, porque la propiedad puede transferirse.
+
+### 2026-09-20 — Una clasificación que alimenta otra fase necesita una frontera irreversible
+
+- **Aprendido:** recalcular implícitamente el cuadro cada vez que cambia una
+  clasificación haría que una corrección histórica pudiera sustituir equipos
+  de partidos ya publicados o jugados.
+- **Regla reutilizable:** cuando una fase produce participantes de la siguiente,
+  una transición explícita persiste pertenencia y siembra en la misma
+  transacción que inicia la fase consumidora. Antes de esa frontera se corrige;
+  después se conserva el historial y se rechaza la mutación.
+- **Coste aceptado:** la organizadora realiza una confirmación adicional y el
+  modelo persiste composición por fase, a cambio de un cuadro reproducible y
+  auditable.
+
+### 2026-09-20 — Pertenecer al historial no implica seguir siendo elegible
+
+- **Aprendido:** una retirada no puede borrar al equipo ni sus resultados, pero
+  conservarlo en la clasificación tampoco debe permitir que ocupe una plaza de
+  una fase posterior.
+- **Regla reutilizable:** la proyección histórica y el conjunto elegible son
+  conceptos distintos. La selección filtra retiradas, conserva el orden
+  deportivo entre los equipos activos y rechaza atómicamente la transición si
+  ya no puede completar todas sus plazas.
+- **Coste aceptado:** una retirada tardía puede impedir iniciar la siguiente
+  fase y exige intervención organizativa; no se reconstruyen grupos ni se
+  inventan _byes_ para ocultar esa pérdida de participantes.

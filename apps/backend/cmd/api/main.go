@@ -88,10 +88,27 @@ func run(args []string) error {
 		federatedService = &service
 		riscReceiver = httpadapter.NewRISCEventReceiver(googleadapter.NewRISCVerifier(appConfig.GoogleClientIDs), service)
 	}
+	tournamentCreation := tournaments.NewCreationService(accountTournaments)
 
 	server := &http.Server{
-		Addr:              appConfig.HTTPAddr,
-		Handler:           observability.HTTPHandler(httpadapter.NewHandlerWithCookieSecurityAndTrustedProxiesAndEdgeTokenAndRISCReceiverAndSuggestions(registrationService, federatedService, accountTournaments, tournaments.NewService(accountTournaments), appConfig.CORSAllowedOrigins, appConfig.CookieSecure, appConfig.TrustedProxyCIDRs, appConfig.EdgeProxyAuthToken, riscReceiver, &suggestionService, tournaments.NewCreationService(accountTournaments))),
+		Addr: appConfig.HTTPAddr,
+		Handler: observability.HTTPHandler(httpadapter.NewHandlerWithConfig(
+			httpadapter.HandlerConfig{
+				CORSAllowedOrigins: appConfig.CORSAllowedOrigins,
+				CookieSecure:       appConfig.CookieSecure,
+				TrustedProxyCIDRs:  appConfig.TrustedProxyCIDRs,
+				EdgeProxyAuthToken: appConfig.EdgeProxyAuthToken,
+			},
+			httpadapter.HandlerDependencies{
+				Registration:       registrationService,
+				Federated:          federatedService,
+				Authenticator:      accountTournaments,
+				TournamentList:     tournaments.NewService(accountTournaments),
+				TournamentCreation: &tournamentCreation,
+				Suggestions:        &suggestionService,
+				RISCReceiver:       riscReceiver,
+			},
+		)),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

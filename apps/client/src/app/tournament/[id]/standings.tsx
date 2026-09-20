@@ -13,6 +13,7 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 import {
   Button,
   Card,
+  ConfigurationOption,
   LoadingTransition,
   ModalDialog,
   NavigationHeaderButton,
@@ -39,6 +40,7 @@ export default function TournamentStandingsScreen() {
   const [leagueUnavailable, setTournamentUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [informationVisible, setInformationVisible] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(1);
   const [statisticsContentWidth, setStatisticsContentWidth] = useState(0);
   const [statisticsViewportWidth, setStatisticsViewportWidth] = useState(0);
   const [tableViewportWidth, setTableViewportWidth] = useState(0);
@@ -123,6 +125,20 @@ export default function TournamentStandingsScreen() {
   }, [load]);
 
   const teams = useMemo(() => new Map(league?.teams.map((team) => [team.id, team.name])), [league]);
+  const groupNumbers = useMemo(
+    () =>
+      [
+        ...new Set((league?.standings ?? []).flatMap((standing) => standing.groupNumber ?? [])),
+      ].sort((first, second) => first - second),
+    [league],
+  );
+  const displayedStandings = useMemo(
+    () =>
+      groupNumbers.length > 0
+        ? (league?.standings ?? []).filter((standing) => standing.groupNumber === selectedGroup)
+        : (league?.standings ?? []),
+    [groupNumbers.length, league, selectedGroup],
+  );
   const close = () => {
     if (router.canDismiss()) {
       router.dismiss();
@@ -207,15 +223,29 @@ export default function TournamentStandingsScreen() {
             ref={statisticsTimelineScopeRef}
             showsVerticalScrollIndicator={false}
             stickyHeaderIndices={
-              Platform.OS === "web" || league.standings.length === 0 ? undefined : [0]
+              Platform.OS === "web" || displayedStandings.length === 0 || groupNumbers.length > 0
+                ? undefined
+                : [0]
             }
           >
-            {league.standings.length === 0 ? (
+            {groupNumbers.length > 0 ? (
+              <View style={styles.groupSelector}>
+                {groupNumbers.map((group) => (
+                  <ConfigurationOption
+                    key={group}
+                    label={t("tournament_group_label").replace("{number}", String(group))}
+                    onPress={() => setSelectedGroup(group)}
+                    selected={selectedGroup === group}
+                  />
+                ))}
+              </View>
+            ) : null}
+            {displayedStandings.length === 0 ? (
               <Card>
                 <Text color="secondary">{t("league_standings_unavailable")}</Text>
               </Card>
             ) : null}
-            {league.standings.length > 0 ? (
+            {displayedStandings.length > 0 ? (
               <View
                 style={[
                   styles.stickyHeader,
@@ -278,12 +308,12 @@ export default function TournamentStandingsScreen() {
                 </View>
               </View>
             ) : null}
-            {league.standings.length > 0 ? (
+            {displayedStandings.length > 0 ? (
               <View style={styles.tableViewport}>
                 <View style={[styles.table, tableFitsViewport && styles.tableFitted]}>
                   <View style={styles.tableColumns}>
                     <View style={styles.leftColumn}>
-                      {league.standings.map((standing) => (
+                      {displayedStandings.map((standing) => (
                         <View
                           key={standing.teamId}
                           style={[styles.row, { borderColor: colors.border.default }]}
@@ -324,7 +354,7 @@ export default function TournamentStandingsScreen() {
                         }
                       >
                         <View>
-                          {league.standings.map((standing) => (
+                          {displayedStandings.map((standing) => (
                             <View
                               key={standing.teamId}
                               style={[styles.row, { borderColor: colors.border.default }]}
@@ -336,7 +366,7 @@ export default function TournamentStandingsScreen() {
                       </Animated.ScrollView>
                     </View>
                     <View style={styles.pointsColumn}>
-                      {league.standings.map((standing) => (
+                      {displayedStandings.map((standing) => (
                         <View
                           key={standing.teamId}
                           style={[styles.row, { borderColor: colors.border.default }]}
@@ -470,6 +500,7 @@ function StandingsRulesContent({ league }: { league: PublicTournament | null | u
 
 const styles = StyleSheet.create({
   content: { paddingBottom: space[5], paddingHorizontal: space[5] },
+  groupSelector: { flexDirection: "row", flexWrap: "wrap", gap: space[2], paddingBottom: space[4] },
   headerRow: {
     alignItems: "center",
     borderBottomWidth: 1,

@@ -12,4 +12,5 @@ export type PublicTournamentFormat =
 export const PublicTournamentFormat = {
   league: "league",
   single_elimination: "single_elimination",
+  league_then_single_elimination: "league_then_single_elimination",
 } as const;

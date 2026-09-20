@@ -1,7 +1,13 @@
 // Package accounts contains account lifecycle use cases.
 package accounts
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+// ErrAccountHasOwnedTournaments prevents deleting an account that still owns tournaments.
+var ErrAccountHasOwnedTournaments = errors.New("account has owned tournaments")
 
 const purgeBatchSize = 100
 

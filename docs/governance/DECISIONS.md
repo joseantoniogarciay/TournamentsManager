@@ -49,6 +49,8 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0133](../adr/0133-compose-league-and-knockout-stages.md)                                     | Componer liga y eliminatoria en un mismo torneo                                 | Aceptado              | 2026-09-20 |
+| [0132](../adr/0132-organize-go-adapters-by-capability.md)                                     | Organizar los adaptadores Go por capacidad                                      | Aceptado              | 2026-09-20 |
 | [0131](../adr/0131-sync-last-team-name-as-account-preference.md)                              | Sincronizar el último nombre de equipo como preferencia de cuenta               | Aceptado              | 2026-09-20 |
 | [0130](../adr/0130-allow-team-registration-through-tournament-invite-links.md)                | Permitir inscribir equipos mediante enlaces de invitación al torneo             | Superado parcialmente | 2026-09-19 |
 | [0129](../adr/0129-accept-voluntary-developer-tips-with-platform-appropriate-payments.md)     | Aceptar propinas voluntarias con pagos adecuados por plataforma                 | Aceptado              | 2026-09-19 |

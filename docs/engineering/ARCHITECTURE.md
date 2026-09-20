@@ -63,6 +63,10 @@ de la API. Ninguna de estas herramientas entra en el dominio. Véase
    no solo mediante un diagrama.
 7. Un nuevo proceso o servicio exige evidencia de necesidad operativa, de
    seguridad, de escala o de autonomía.
+8. Los adaptadores se organizan por capacidad dentro de su paquete mientras esa
+   división sea suficiente; negocio no importa `internal/adapters` y HTTP no
+   importa PostgreSQL. Estas reglas se verifican en la suite Go conforme a
+   [ADR-0132](../adr/0132-organize-go-adapters-by-capability.md).
 
 ## Contexto funcional actual
 

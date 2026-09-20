@@ -2,7 +2,7 @@
 
 > Propósito: mostrar las tablas y relaciones del esquema efectivo.
 >
-> Alcance: `initial_schema.sql` y migraciones hasta `00008`.
+> Alcance: `initial_schema.sql` y migraciones hasta `00011`.
 >
 > Última revisión: 2026-09-19.
 
@@ -126,6 +126,8 @@ erDiagram
     TOURNAMENTS ||--o{ TOURNAMENT_TEAMS : "inscribe CASCADE"
     TOURNAMENTS ||--o{ TOURNAMENT_STAGES : "ordena CASCADE"
     TOURNAMENTS ||--o{ MATCHES : "contiene CASCADE"
+    TOURNAMENT_STAGES ||--o{ TOURNAMENT_STAGE_TEAMS : "compone CASCADE"
+    TOURNAMENT_TEAMS ||--o{ TOURNAMENT_STAGE_TEAMS : "participa RESTRICT"
     TOURNAMENT_STAGES ||--o{ MATCHES : "programa CASCADE"
     TOURNAMENT_TEAMS o|..o{ MATCHES : "juega local RESTRICT"
     TOURNAMENT_TEAMS o|..o{ MATCHES : "juega visitante RESTRICT"
@@ -179,11 +181,22 @@ erDiagram
         int position
         text type
         text state
+        text league_structure "nullable"
+        int qualifier_count "nullable"
+        int group_count "nullable"
+        int qualifiers_per_group "nullable"
+    }
+    TOURNAMENT_STAGE_TEAMS {
+        uuid stage_id PK, FK
+        uuid team_id PK, FK
+        int seed_position
+        int group_number "nullable"
     }
     MATCHES {
         uuid id PK
         uuid tournament_id FK
         uuid stage_id FK
+        int group_number "nullable"
         uuid home_team_id FK "nullable"
         uuid away_team_id FK "nullable"
         uuid winner_team_id FK "nullable"

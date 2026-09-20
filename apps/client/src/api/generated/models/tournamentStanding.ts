@@ -10,6 +10,9 @@ import type { Uuid } from "./uuid.js";
 export interface TournamentStanding {
   /** @minimum 1 */
   position: number;
+  stageId?: Uuid;
+  /** @minimum 1 */
+  groupNumber?: number;
   teamId: Uuid;
   /** @minimum 0 */
   played: number;
