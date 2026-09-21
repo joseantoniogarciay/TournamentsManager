@@ -23,10 +23,13 @@ const (
 	SportFootball Sport = "football"
 	// SportBasketball applies basketball scoring and tiebreak rules.
 	SportBasketball Sport = "basketball"
+	// SportHandball applies handball scoring and tiebreak rules.
+	SportHandball Sport = "handball"
 )
 
-func validSport(sport Sport) bool {
-	return sport == SportFootball || sport == SportBasketball
+// ValidSport reports whether the public value selects an implemented sporting policy.
+func ValidSport(sport Sport) bool {
+	return sport == SportFootball || sport == SportBasketball || sport == SportHandball
 }
 
 var (
@@ -367,7 +370,7 @@ func (s CreationService) RecordResult(ctx context.Context, accountID, leagueID, 
 
 // ValidateLeagueResult keeps sport-specific scoring policy in the domain.
 func ValidateLeagueResult(sport Sport, input MatchResultInput) error {
-	if !validSport(sport) || input.HomeScore < 0 || input.AwayScore < 0 || input.HomePenalties != nil || input.AwayPenalties != nil {
+	if !ValidSport(sport) || input.HomeScore < 0 || input.AwayScore < 0 || input.HomePenalties != nil || input.AwayPenalties != nil {
 		return ErrInvalidTournamentInput
 	}
 	if sport == SportBasketball && input.HomeScore == input.AwayScore {
@@ -383,6 +386,8 @@ func AdministrativeWinningScore(sport Sport) (int, error) {
 		return 3, nil
 	case SportBasketball:
 		return 20, nil
+	case SportHandball:
+		return 10, nil
 	default:
 		return 0, ErrInvalidTournamentInput
 	}
@@ -427,13 +432,7 @@ func calculateStandings(league Tournament) []Standing {
 		home.Played, away.Played = home.Played+1, away.Played+1
 		home.ScoreFor, home.ScoreAgainst = home.ScoreFor+*match.HomeScore, home.ScoreAgainst+*match.AwayScore
 		away.ScoreFor, away.ScoreAgainst = away.ScoreFor+*match.AwayScore, away.ScoreAgainst+*match.HomeScore
-		winPoints, drawPoints, lossPoints := 3, 1, 0
-		if league.Sport == SportBasketball {
-			winPoints, drawPoints, lossPoints = 2, 0, 1
-			if match.ResultType == ResultAdministrative {
-				lossPoints = 0
-			}
-		}
+		winPoints, drawPoints, lossPoints := leaguePoints(league.Sport, match.ResultType)
 		switch {
 		case *match.HomeScore > *match.AwayScore:
 			home.Won, home.Points, away.Lost, away.Points = home.Won+1, home.Points+winPoints, away.Lost+1, away.Points+lossPoints
@@ -483,7 +482,7 @@ func rankTiedStandings(group []Standing, league Tournament) []Standing {
 	sort.SliceStable(group, func(i, j int) bool {
 		left, right := group[i], group[j]
 		leftHead, rightHead := head[left.TeamID], head[right.TeamID]
-		if league.Sport == SportBasketball || league.RoundRobinLegs == 2 {
+		if headToHeadFirst(league) {
 			if comparison := compareStanding(leftHead, rightHead); comparison != 0 {
 				return comparison > 0
 			}
@@ -521,13 +520,7 @@ func headToHead(group []Standing, league Tournament) map[string]Standing {
 		home, away := result[match.HomeTeamID], result[match.AwayTeamID]
 		home.ScoreFor, home.ScoreAgainst = home.ScoreFor+*match.HomeScore, home.ScoreAgainst+*match.AwayScore
 		away.ScoreFor, away.ScoreAgainst = away.ScoreFor+*match.AwayScore, away.ScoreAgainst+*match.HomeScore
-		winPoints, drawPoints, lossPoints := 3, 1, 0
-		if league.Sport == SportBasketball {
-			winPoints, drawPoints, lossPoints = 2, 0, 1
-			if match.ResultType == ResultAdministrative {
-				lossPoints = 0
-			}
-		}
+		winPoints, drawPoints, lossPoints := leaguePoints(league.Sport, match.ResultType)
 		switch {
 		case *match.HomeScore > *match.AwayScore:
 			home.Points += winPoints
@@ -562,13 +555,32 @@ func compareGeneralStanding(left, right Standing) int {
 }
 
 func sameTiedStandingRank(left, right Standing, head map[string]Standing, league Tournament) bool {
-	if league.Sport == SportBasketball || league.RoundRobinLegs == 2 {
+	if headToHeadFirst(league) {
 		return compareStanding(head[left.TeamID], head[right.TeamID]) == 0 && compareGeneralStanding(left, right) == 0
 	}
 	return compareGeneralStanding(left, right) == 0 && compareStanding(head[left.TeamID], head[right.TeamID]) == 0
 }
+
+func leaguePoints(sport Sport, resultType ResultType) (win, draw, loss int) {
+	switch sport {
+	case SportBasketball:
+		loss = 1
+		if resultType == ResultAdministrative {
+			loss = 0
+		}
+		return 2, 0, loss
+	case SportHandball:
+		return 2, 1, 0
+	default:
+		return 3, 1, 0
+	}
+}
+
+func headToHeadFirst(league Tournament) bool {
+	return league.Sport == SportBasketball || league.Sport == SportHandball || league.RoundRobinLegs == 2
+}
 func validCreateInput(input CreateInput) bool {
-	if !validSport(input.Sport) || len(strings.TrimSpace(input.Name)) == 0 || utf8.RuneCountInString(input.Name) > MaximumTournamentNameLength || len(input.Teams) < 1 || len(input.Teams) > 64 {
+	if !ValidSport(input.Sport) || len(strings.TrimSpace(input.Name)) == 0 || utf8.RuneCountInString(input.Name) > MaximumTournamentNameLength || len(input.Teams) < 1 || len(input.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}

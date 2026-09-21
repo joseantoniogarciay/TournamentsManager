@@ -63,8 +63,9 @@ restablecimiento de contraseña (consumo único, revocación de sesiones y nueva
 sesión) y cambio de contraseña o vinculación de Google desde opciones de cuenta
 con ticket de reautenticación de un solo uso.
 El formato mixto añade recorridos reales de liga general y grupos, grupos
-impares a dos vueltas, baloncesto hasta proclamar campeona, retirada con
-sustitución, permiso exclusivo de la propietaria y dos transiciones simultáneas.
+impares a dos vueltas, baloncesto hasta proclamar campeona, balonmano con
+clasificación 2-1-0 y desempate de siete metros, retirada con sustitución,
+permiso exclusivo de la propietaria y dos transiciones simultáneas.
 El dominio recorre además límites de 2 y 64 clasificadas, empate exacto resuelto
 por siembra y rechazo cuando una o varias retiradas dejan insuficientes equipos
 elegibles.

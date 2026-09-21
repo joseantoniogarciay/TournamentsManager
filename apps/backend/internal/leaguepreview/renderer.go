@@ -194,7 +194,7 @@ func render(shell []byte, league publicTournament, canonical string) ([]byte, er
 	setMeta(head, "property", "og:image", imageURL)
 	setMeta(head, "property", "og:image:width", "1200")
 	setMeta(head, "property", "og:image:height", "630")
-	setMeta(head, "property", "og:image:alt", "FastTourney football league")
+	setMeta(head, "property", "og:image:alt", "FastTourney sports tournament")
 	setMeta(head, "name", "twitter:card", "summary_large_image")
 	setMeta(head, "name", "twitter:title", title)
 	setMeta(head, "name", "twitter:description", description)

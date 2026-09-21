@@ -12,4 +12,5 @@ export type TournamentDraftInputSport =
 export const TournamentDraftInputSport = {
   football: "football",
   basketball: "basketball",
+  handball: "handball",
 } as const;

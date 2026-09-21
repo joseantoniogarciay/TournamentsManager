@@ -12,4 +12,5 @@ export type PublicTournamentSport =
 export const PublicTournamentSport = {
   football: "football",
   basketball: "basketball",
+  handball: "handball",
 } as const;

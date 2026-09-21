@@ -103,6 +103,29 @@ func TestCalculateBasketballStandingsUsesHeadToHeadBeforeGeneralDifference(t *te
 	}
 }
 
+func TestCalculateHandballStandingsUsesTwoOneZeroAndHeadToHead(t *testing.T) {
+	league := Tournament{
+		Sport: SportHandball, State: "in_progress", RoundRobinLegs: 1,
+		Teams: []Team{{ID: "a"}, {ID: "b"}, {ID: "c"}, {ID: "d"}},
+		Matches: []Match{
+			{HomeTeamID: "a", AwayTeamID: "b", State: "completed", ResultType: ResultPlayed, HomeScore: score(25), AwayScore: score(24)},
+			{HomeTeamID: "a", AwayTeamID: "c", State: "completed", ResultType: ResultPlayed, HomeScore: score(20), AwayScore: score(30)},
+			{HomeTeamID: "a", AwayTeamID: "d", State: "completed", ResultType: ResultPlayed, HomeScore: score(21), AwayScore: score(21)},
+			{HomeTeamID: "b", AwayTeamID: "c", State: "completed", ResultType: ResultPlayed, HomeScore: score(31), AwayScore: score(20)},
+			{HomeTeamID: "b", AwayTeamID: "d", State: "completed", ResultType: ResultPlayed, HomeScore: score(22), AwayScore: score(22)},
+		},
+	}
+
+	standings := calculateStandings(league)
+
+	if standings[0].TeamID != "a" || standings[1].TeamID != "b" {
+		t.Fatalf("handball tie order = %#v; want a before b by head-to-head", standings)
+	}
+	if standings[0].Points != 3 || standings[1].Points != 3 {
+		t.Fatalf("handball points = %d, %d; want 3, 3", standings[0].Points, standings[1].Points)
+	}
+}
+
 func TestCalculateStandingsRanksThreeWayTieByCompleteHeadToHeadMiniTable(t *testing.T) {
 	league := Tournament{
 		State: "in_progress", RoundRobinLegs: 2,

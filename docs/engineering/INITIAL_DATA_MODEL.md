@@ -44,7 +44,7 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | `federated_login_challenges`  | `id`, `provider`, `nonce_hash`, `expires_at`, `consumed_at`, `created_at`                                                                                       | Google únicamente; nonce de 5 min, de un solo uso y sin sesión asociada.                                                                                                                                                                                                                                                                                                   |
 | `email_verification_tokens`   | `id`, `account_id`, `token_hash`, `expires_at`, `consumed_at`, `invalidated_at`, `created_at`                                                                   | hash único por contexto; expira a 24 h; activo, consumido e invalidado son excluyentes; solo hay un token activo por cuenta.                                                                                                                                                                                                                                               |
 | `sessions`                    | `id`, `account_id`, `token_hash`, `created_at`, `last_seen_at`, `idle_expires_at`, `absolute_expires_at`, `revoked_at`                                          | hash único; válida solo si la cuenta está verificada, no revocada y ambos vencimientos son futuros.                                                                                                                                                                                                                                                                        |
-| `tournaments`                 | `id`, `organizer_account_id`, `source_draft_id`, `name`, `sport`, `state`, `created_at`, `published_at`, `last_activity_at`                                     | `source_draft_id` es opcional y único por organizador para deduplicar la transferencia; `sport` es el enum inmutable `football \| basketball` y selecciona la política deportiva.                                                                                                                                                                                          |
+| `tournaments`                 | `id`, `organizer_account_id`, `source_draft_id`, `name`, `sport`, `state`, `created_at`, `published_at`, `last_activity_at`                                     | `source_draft_id` es opcional y único por organizador para deduplicar la transferencia; `sport` es el enum inmutable `football \| basketball \| handball` y selecciona la política deportiva.                                                                                                                                                                              |
 | `tournament_stages`           | `id`, `tournament_id`, `position`, `type`, `state`, configuración de liga y clasificación                                                                       | orden único dentro del torneo; `league` y `single_elimination` son tipos distintos. En el formato mixto la liga conserva estructura general o por grupos y la regla de clasificación.                                                                                                                                                                                      |
 | `tournament_stage_teams`      | `tournament_id`, `stage_id`, `team_id`, `seed_position`, `group_number`                                                                                         | congela la pertenencia y siembra de cada fase; el grupo solo existe en la liga por grupos. Una fase no repite equipo ni posición de siembra.                                                                                                                                                                                                                               |
 | `tournament_administrators`   | `tournament_id`, `account_id`, `assigned_at`                                                                                                                    | PK compuesta; el creador se conserva en `tournaments.organizer_account_id`, no se duplica.                                                                                                                                                                                                                                                                                 |
@@ -95,10 +95,13 @@ minúsculo antes de guardar.
    liga; la eliminatoria queda `pending`.
 8. **Resultado:** bloquea torneo y partido, exige `in_progress` y administración;
    en fútbol admite empate de liga y exige penaltis para resolver una
-   eliminatoria empatada; en baloncesto rechaza empate final y penaltis. La
+   eliminatoria empatada; en baloncesto rechaza empate final y penaltis; en
+   balonmano admite empate de liga y exige lanzamientos de siete metros tras un
+   marcador eliminatorio empatado. La
    eliminatoria propaga la ganadora solo a las plazas dependientes y rechaza
    corregirla si ya existe un resultado posterior. Conserva marcador anterior y
-   nuevo, incluidos los penaltis de fútbol y el tipo `played` o `administrative`.
+   nuevo, incluidos los desempates de fútbol o balonmano y el tipo `played` o
+   `administrative`.
 9. **Transición mixta:** bloquea el torneo, exige organizadora y todos los
    partidos de liga completos, calcula y persiste la clasificación definitiva,
    completa la primera fase e inicia un cuadro sembrado sin _byes_. La operación
@@ -109,8 +112,8 @@ minúsculo antes de guardar.
     transacción.
 11. **Baja de equipo:** bloquea el torneo y el equipo, exige una fase de liga y
     estado `in_progress`; marca la baja y completa todos los partidos de ese
-    equipo con resultado administrativo fijo para el rival: `3-0` en fútbol o
-    `20-0` en baloncesto. No se aplica a eliminatorias. Cada cambio conserva el
+    equipo con resultado administrativo fijo para el rival: `3-0` en fútbol,
+    `20-0` en baloncesto o `10-0` en balonmano. No se aplica a eliminatorias. Cada cambio conserva el
     marcador anterior, la autora y `result_type = administrative` en
     `match_result_changes`, todo en la misma transacción.
 12. **Inscripción por invitación:** la organizadora rota o revoca el único hash

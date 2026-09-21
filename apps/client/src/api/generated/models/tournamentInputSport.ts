@@ -11,4 +11,5 @@ export type TournamentInputSport = (typeof TournamentInputSport)[keyof typeof To
 export const TournamentInputSport = {
   football: "football",
   basketball: "basketball",
+  handball: "handball",
 } as const;

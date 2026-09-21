@@ -163,6 +163,11 @@ export default function CreateTournamentScreen() {
                     onPress={() => setSport("basketball")}
                     selected={sport === "basketball"}
                   />
+                  <ConfigurationOption
+                    label={t("tournament_sport_handball")}
+                    onPress={() => setSport("handball")}
+                    selected={sport === "handball"}
+                  />
                 </View>
               </View>
               <TextField

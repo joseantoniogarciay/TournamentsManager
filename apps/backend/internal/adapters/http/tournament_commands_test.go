@@ -116,6 +116,29 @@ func TestCreateTournamentAcceptsAndReturnsBasketball(t *testing.T) {
 	}
 }
 
+func TestCreateTournamentAcceptsAndReturnsHandball(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	created := tournaments.Tournament{
+		ID: "019abcde-2222-7222-8222-222222222222", Name: "Liga de balonmano",
+		Sport: tournaments.SportHandball, State: "published", Teams: []tournaments.Team{{ID: "a", Name: "Azules"}, {ID: "b", Name: "Rojos"}}, Matches: []tournaments.Match{},
+	}
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{created: created}))
+	request := httptest.NewRequest(http.MethodPost, "/v1/tournaments", strings.NewReader(`{"name":"Liga de balonmano","sport":"handball","teams":[{"name":"Azules"},{"name":"Rojos"}]}`))
+	request.Header.Set("Authorization", "Bearer session-token")
+	request.Header.Set("Content-Type", "application/json")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("status = %d, body = %s; want %d", recorder.Code, recorder.Body.String(), http.StatusCreated)
+	}
+	if !strings.Contains(recorder.Body.String(), `"sport":"handball"`) {
+		t.Fatalf("body = %s; want handball sport", recorder.Body.String())
+	}
+}
+
 func TestStartMixedTournamentMapsConfigurationConflict(t *testing.T) {
 	t.Parallel()
 	const accountID = "019abcde-1111-7111-8111-111111111111"

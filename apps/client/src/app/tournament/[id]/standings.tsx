@@ -483,6 +483,18 @@ function StandingsRulesContent({ league }: { league: PublicTournament | null | u
     );
   }
 
+  if (league?.sport === "handball") {
+    return (
+      <View style={styles.stack}>
+        <Text variant="title">{t("league_standings_rules_title")}</Text>
+        <Text color="secondary">{t("handball_standings_rule_points")}</Text>
+        <Text color="secondary">{t("handball_standings_rule_head_to_head")}</Text>
+        <Text color="secondary">{t("handball_standings_rule_general")}</Text>
+        <Text color="secondary">{t("league_standings_rule_shared")}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.stack}>
       <Text variant="title">{t("league_standings_rules_title")}</Text>

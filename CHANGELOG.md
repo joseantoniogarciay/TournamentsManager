@@ -6,6 +6,14 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-21
+
+### Added
+
+- Balonmano se incorpora como tercer perfil deportivo con ligas 2-1-0,
+  desempate directo, retirada administrativa 10-0 y lanzamientos de siete
+  metros para resolver eliminatorias empatadas.
+
 ## [1.6.0] - 2026-09-21
 
 ### Added

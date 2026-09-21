@@ -104,6 +104,27 @@ func TestBasketballBracketRejectsTiesAndShootouts(t *testing.T) {
 	}
 }
 
+func TestHandballBracketUsesSevenMeterShootoutAfterTiedFinalScore(t *testing.T) {
+	b, _ := GenerateSingleElimination([]string{"a", "b"})
+	b.Sport = SportHandball
+	home, away := 5, 4
+
+	updated, err := b.RecordResult(1, 1, BracketResult{HomeScore: 28, AwayScore: 28, HomePenalties: &home, AwayPenalties: &away})
+	if err != nil {
+		t.Fatalf("record handball shootout: %v", err)
+	}
+	resolved, err := updated.Resolve()
+	if err != nil {
+		t.Fatalf("resolve handball shootout: %v", err)
+	}
+	if len(resolved) != 1 || resolved[0].WinnerTeamID != "a" {
+		t.Fatalf("resolved handball bracket = %#v, want team a", resolved)
+	}
+	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 28, AwayScore: 28}); err != ErrInvalidBracketResult {
+		t.Fatalf("tied handball result = %v, want invalid", err)
+	}
+}
+
 func TestBracketAllowsCorrectionInIndependentBranch(t *testing.T) {
 	b, _ := GenerateSingleElimination([]string{"a", "b", "c", "d", "e", "f", "g", "h"})
 	var err error

@@ -40,8 +40,9 @@ export async function getLocalTournamentDraft(): Promise<LocalTournamentDraft | 
           : randomUUID(),
       name: draft.name,
       sport:
-        draft.sport === TournamentInputSport.basketball
-          ? TournamentInputSport.basketball
+        draft.sport === TournamentInputSport.basketball ||
+        draft.sport === TournamentInputSport.handball
+          ? draft.sport
           : TournamentInputSport.football,
       teams: draft.teams,
     };
