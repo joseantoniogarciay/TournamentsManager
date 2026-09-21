@@ -8,6 +8,8 @@ import (
 const (
 	// FormatLeagueThenSingleElimination composes a qualifying league and bracket.
 	FormatLeagueThenSingleElimination = "league_then_single_elimination"
+	// StageTypeQualificationTieBreak resolves an exact qualification cutoff tie.
+	StageTypeQualificationTieBreak = "qualification_tiebreak"
 	// LeagueStructureSingleTable uses one table containing every team.
 	LeagueStructureSingleTable = "single_table"
 	// LeagueStructureGroups divides the field into balanced groups.
@@ -19,7 +21,32 @@ var (
 	ErrInvalidMixedConfiguration = errors.New("invalid mixed tournament configuration")
 	// ErrTournamentStageTransitionConflict rejects an unavailable or incomplete next stage.
 	ErrTournamentStageTransitionConflict = errors.New("tournament stage cannot advance")
+	// ErrQualificationTieBreakRequired prevents a hidden seed-order qualification.
+	ErrQualificationTieBreakRequired = errors.New("qualification tiebreak required")
 )
+
+// QualificationTieBreakPlan describes one tied block crossing a qualification cutoff.
+type QualificationTieBreakPlan struct {
+	PoolNumber        int
+	SourceGroupNumber int
+	QualifierCount    int
+	Standings         []Standing
+}
+
+// QualificationPlan separates already resolved qualifiers from tied cutoff blocks.
+type QualificationPlan struct {
+	Direct []Standing
+	Pools  []QualificationTieBreakPlan
+}
+
+// QualificationTieBreakResolution describes the latest durable state of one pool.
+type QualificationTieBreakResolution struct {
+	QualifiedTeamIDs        []string
+	PendingTeamIDs          []string
+	RemainingQualifierCount int
+	Complete                bool
+	NeedsNextCycle          bool
+}
 
 func validStartInput(input StartInput) bool {
 	switch input.Format {
@@ -151,52 +178,329 @@ func calculateStageStandings(tournament Tournament, stage Stage, groupNumber int
 	return standings
 }
 
-// QualifiedTeamIDs returns the complete, deterministically seeded knockout field.
-func QualifiedTeamIDs(tournament Tournament, stage Stage) ([]string, error) {
-	if stage.Type != "league" || stage.State != "in_progress" {
-		return nil, ErrTournamentStageTransitionConflict
+// PlanQualification finds every exact tie that crosses a qualification cutoff.
+func PlanQualification(tournament Tournament, stage Stage) (QualificationPlan, error) {
+	if stage.Type != "league" || (stage.State != "in_progress" && stage.State != "completed") {
+		return QualificationPlan{}, ErrTournamentStageTransitionConflict
 	}
 	for _, match := range tournament.Matches {
 		if match.StageID == stage.ID && match.State != "completed" {
-			return nil, ErrTournamentStageTransitionConflict
+			return QualificationPlan{}, ErrTournamentStageTransitionConflict
 		}
 	}
+	plan := QualificationPlan{Direct: []Standing{}, Pools: []QualificationTieBreakPlan{}}
+	appendTable := func(standings []Standing, qualifierCount, sourceGroup int) error {
+		if len(standings) < qualifierCount {
+			return ErrTournamentStageTransitionConflict
+		}
+		direct, tied, tiedQualifierCount := qualificationCut(standings, qualifierCount)
+		plan.Direct = append(plan.Direct, direct...)
+		if len(tied) > 0 {
+			plan.Pools = append(plan.Pools, QualificationTieBreakPlan{
+				PoolNumber:        len(plan.Pools) + 1,
+				SourceGroupNumber: sourceGroup,
+				QualifierCount:    tiedQualifierCount,
+				Standings:         tied,
+			})
+		}
+		return nil
+	}
+	if stage.LeagueStructure == LeagueStructureSingleTable {
+		standings := eligibleStandings(tournament, calculateStageStandings(tournament, stage, 0))
+		if !validFullBracketSize(stage.QualifierCount) {
+			return QualificationPlan{}, ErrTournamentStageTransitionConflict
+		}
+		if err := appendTable(standings, stage.QualifierCount, 0); err != nil {
+			return QualificationPlan{}, err
+		}
+		return plan, nil
+	}
+	if stage.LeagueStructure != LeagueStructureGroups || stage.GroupCount < 2 || stage.QualifiersPerGroup < 1 {
+		return QualificationPlan{}, ErrTournamentStageTransitionConflict
+	}
+	for group := 1; group <= stage.GroupCount; group++ {
+		standings := eligibleStandings(tournament, calculateStageStandings(tournament, stage, group))
+		if err := appendTable(standings, stage.QualifiersPerGroup, group); err != nil {
+			return QualificationPlan{}, err
+		}
+	}
+	if !validFullBracketSize(len(plan.Direct) + plannedTieBreakQualifierCount(plan.Pools)) {
+		return QualificationPlan{}, ErrTournamentStageTransitionConflict
+	}
+	return plan, nil
+}
+
+func qualificationCut(standings []Standing, qualifierCount int) ([]Standing, []Standing, int) {
+	if qualifierCount <= 0 || qualifierCount > len(standings) {
+		return nil, nil, 0
+	}
+	boundaryPosition := standings[qualifierCount-1].Position
+	end := qualifierCount
+	for end < len(standings) && standings[end].Position == boundaryPosition {
+		end++
+	}
+	if end == qualifierCount {
+		return standings[:qualifierCount], nil, 0
+	}
+	start := qualifierCount - 1
+	for start > 0 && standings[start-1].Position == boundaryPosition {
+		start--
+	}
+	return standings[:start], standings[start:end], qualifierCount - start
+}
+
+func plannedTieBreakQualifierCount(pools []QualificationTieBreakPlan) int {
+	total := 0
+	for _, pool := range pools {
+		total += pool.QualifierCount
+	}
+	return total
+}
+
+// QualifiedTeamIDs returns a field only when no cutoff tiebreak is necessary.
+func QualifiedTeamIDs(tournament Tournament, stage Stage) ([]string, error) {
+	plan, err := PlanQualification(tournament, stage)
+	if err != nil {
+		return nil, err
+	}
+	if len(plan.Pools) > 0 {
+		return nil, ErrQualificationTieBreakRequired
+	}
+	return orderQualifiedTeamIDs(tournament, plan.Direct, nil), nil
+}
+
+// ResolvedQualifiedTeamIDs combines the frozen league with every completed tiebreak pool.
+func ResolvedQualifiedTeamIDs(tournament Tournament, leagueStage, tieBreakStage Stage) ([]string, error) {
+	plan, err := PlanQualification(tournament, leagueStage)
+	if err != nil {
+		return nil, err
+	}
+	if len(plan.Pools) == 0 {
+		return orderQualifiedTeamIDs(tournament, plan.Direct, nil), nil
+	}
+	poolByNumber := map[int]QualificationTieBreakPool{}
+	for _, pool := range tournament.TieBreakPools {
+		if pool.StageID == tieBreakStage.ID {
+			poolByNumber[pool.PoolNumber] = pool
+		}
+	}
+	poolRanks := map[string][2]int{}
+	candidates := append([]Standing{}, plan.Direct...)
+	for _, planned := range plan.Pools {
+		pool, exists := poolByNumber[planned.PoolNumber]
+		if !exists || pool.State != "completed" || pool.SourceGroupNumber != planned.SourceGroupNumber || pool.QualifierCount != planned.QualifierCount {
+			return nil, ErrTournamentStageTransitionConflict
+		}
+		resolution, err := ResolveQualificationTieBreak(tournament, pool)
+		if err != nil || !resolution.Complete || len(resolution.QualifiedTeamIDs) != planned.QualifierCount {
+			return nil, ErrTournamentStageTransitionConflict
+		}
+		standingByTeam := map[string]Standing{}
+		for _, standing := range planned.Standings {
+			standingByTeam[standing.TeamID] = standing
+		}
+		for rank, teamID := range resolution.QualifiedTeamIDs {
+			standing, exists := standingByTeam[teamID]
+			if !exists {
+				return nil, ErrTournamentStageTransitionConflict
+			}
+			candidates = append(candidates, standing)
+			poolRanks[teamID] = [2]int{planned.PoolNumber, rank + 1}
+		}
+	}
+	return orderQualifiedTeamIDs(tournament, candidates, poolRanks), nil
+}
+
+func orderQualifiedTeamIDs(tournament Tournament, candidates []Standing, poolRanks map[string][2]int) []string {
 	seedByTeam := map[string]int{}
 	for _, team := range tournament.Teams {
 		seedByTeam[team.ID] = team.Position
 	}
-	if stage.LeagueStructure == LeagueStructureSingleTable {
-		standings := eligibleStandings(tournament, calculateStageStandings(tournament, stage, 0))
-		if len(standings) < stage.QualifierCount || !validFullBracketSize(stage.QualifierCount) {
-			return nil, ErrTournamentStageTransitionConflict
-		}
-		return standingTeamIDs(standings[:stage.QualifierCount]), nil
-	}
-	if stage.LeagueStructure != LeagueStructureGroups || stage.GroupCount < 2 || stage.QualifiersPerGroup < 1 {
-		return nil, ErrTournamentStageTransitionConflict
-	}
-	qualified := []Standing{}
-	for group := 1; group <= stage.GroupCount; group++ {
-		standings := eligibleStandings(tournament, calculateStageStandings(tournament, stage, group))
-		if len(standings) < stage.QualifiersPerGroup {
-			return nil, ErrTournamentStageTransitionConflict
-		}
-		qualified = append(qualified, standings[:stage.QualifiersPerGroup]...)
-	}
-	if !validFullBracketSize(len(qualified)) {
-		return nil, ErrTournamentStageTransitionConflict
-	}
-	sort.SliceStable(qualified, func(i, j int) bool {
-		left, right := qualified[i], qualified[j]
+	ordered := append([]Standing{}, candidates...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		left, right := ordered[i], ordered[j]
 		if left.Position != right.Position {
 			return left.Position < right.Position
 		}
 		if comparison := compareStanding(left, right); comparison != 0 {
 			return comparison > 0
 		}
+		leftPool, leftHasPool := poolRanks[left.TeamID]
+		rightPool, rightHasPool := poolRanks[right.TeamID]
+		if leftHasPool && rightHasPool && leftPool[0] == rightPool[0] {
+			return leftPool[1] < rightPool[1]
+		}
 		return seedByTeam[left.TeamID] < seedByTeam[right.TeamID]
 	})
-	return standingTeamIDs(qualified), nil
+	return standingTeamIDs(ordered)
+}
+
+// ResolveQualificationTieBreak replays every cycle and returns either a final
+// qualifier order or the exact subgroup that needs another round.
+func ResolveQualificationTieBreak(tournament Tournament, pool QualificationTieBreakPool) (QualificationTieBreakResolution, error) {
+	if pool.StageID == "" || pool.PoolNumber < 1 || pool.QualifierCount < 1 || pool.CurrentCycle < 1 {
+		return QualificationTieBreakResolution{}, ErrTournamentStageTransitionConflict
+	}
+	expectedTeams := tieBreakStageTeamIDs(tournament, pool)
+	if len(expectedTeams) <= pool.QualifierCount {
+		return QualificationTieBreakResolution{}, ErrTournamentStageTransitionConflict
+	}
+	remaining := pool.QualifierCount
+	qualified := []string{}
+	for cycle := 1; cycle <= pool.CurrentCycle; cycle++ {
+		standings, complete, err := calculateTieBreakStandings(tournament, pool, cycle)
+		if err != nil || !sameTeamSet(expectedTeams, standingTeamIDs(standings)) {
+			return QualificationTieBreakResolution{}, ErrTournamentStageTransitionConflict
+		}
+		if !complete {
+			if cycle != pool.CurrentCycle || pool.State == "completed" {
+				return QualificationTieBreakResolution{}, ErrTournamentStageTransitionConflict
+			}
+			return QualificationTieBreakResolution{
+				QualifiedTeamIDs:        qualified,
+				PendingTeamIDs:          standingTeamIDs(standings),
+				RemainingQualifierCount: remaining,
+			}, nil
+		}
+		selected, tied, tiedQualifierCount := qualificationCut(standings, remaining)
+		qualified = append(qualified, standingTeamIDs(selected)...)
+		if len(tied) == 0 {
+			if cycle != pool.CurrentCycle {
+				return QualificationTieBreakResolution{}, ErrTournamentStageTransitionConflict
+			}
+			return QualificationTieBreakResolution{QualifiedTeamIDs: qualified, Complete: true}, nil
+		}
+		expectedTeams = standingTeamIDs(tied)
+		remaining = tiedQualifierCount
+		if cycle == pool.CurrentCycle {
+			if pool.State == "completed" {
+				return QualificationTieBreakResolution{}, ErrTournamentStageTransitionConflict
+			}
+			return QualificationTieBreakResolution{
+				QualifiedTeamIDs:        qualified,
+				PendingTeamIDs:          expectedTeams,
+				RemainingQualifierCount: remaining,
+				NeedsNextCycle:          true,
+			}, nil
+		}
+	}
+	return QualificationTieBreakResolution{}, ErrTournamentStageTransitionConflict
+}
+
+func calculateTieBreakStandings(tournament Tournament, pool QualificationTieBreakPool, cycle int) ([]Standing, bool, error) {
+	matches := []Match{}
+	participants := map[string]bool{}
+	pairs := map[[2]string]bool{}
+	complete := true
+	for _, match := range tournament.Matches {
+		if match.StageID != pool.StageID || match.GroupNumber != pool.PoolNumber || match.RoundNumber != cycle {
+			continue
+		}
+		if match.HomeTeamID == "" || match.AwayTeamID == "" || match.HomeTeamID == match.AwayTeamID {
+			return nil, false, ErrTournamentStageTransitionConflict
+		}
+		pair := [2]string{match.HomeTeamID, match.AwayTeamID}
+		if pair[0] > pair[1] {
+			pair[0], pair[1] = pair[1], pair[0]
+		}
+		if pairs[pair] {
+			return nil, false, ErrTournamentStageTransitionConflict
+		}
+		pairs[pair] = true
+		participants[match.HomeTeamID] = true
+		participants[match.AwayTeamID] = true
+		complete = complete && match.State == "completed"
+		matches = append(matches, match)
+	}
+	if len(participants) < 2 || len(matches) != len(participants)*(len(participants)-1)/2 {
+		return nil, false, ErrTournamentStageTransitionConflict
+	}
+	order := tieBreakStageTeamIDs(tournament, pool)
+	standingsByTeam := map[string]*Standing{}
+	for _, teamID := range order {
+		if participants[teamID] {
+			standingsByTeam[teamID] = &Standing{StageID: pool.StageID, GroupNumber: pool.PoolNumber, TeamID: teamID}
+		}
+	}
+	if len(standingsByTeam) != len(participants) {
+		return nil, false, ErrTournamentStageTransitionConflict
+	}
+	for _, match := range matches {
+		if match.State != "completed" {
+			continue
+		}
+		if match.HomeScore == nil || match.AwayScore == nil || (match.WinnerTeamID != match.HomeTeamID && match.WinnerTeamID != match.AwayTeamID) {
+			return nil, false, ErrTournamentStageTransitionConflict
+		}
+		home, away := standingsByTeam[match.HomeTeamID], standingsByTeam[match.AwayTeamID]
+		home.Played, away.Played = home.Played+1, away.Played+1
+		home.ScoreFor, home.ScoreAgainst = home.ScoreFor+*match.HomeScore, home.ScoreAgainst+*match.AwayScore
+		away.ScoreFor, away.ScoreAgainst = away.ScoreFor+*match.AwayScore, away.ScoreAgainst+*match.HomeScore
+		if match.WinnerTeamID == match.HomeTeamID {
+			home.Won, away.Lost = home.Won+1, away.Lost+1
+		} else {
+			away.Won, home.Lost = away.Won+1, home.Lost+1
+		}
+	}
+	standings := make([]Standing, 0, len(standingsByTeam))
+	for _, teamID := range order {
+		standing, exists := standingsByTeam[teamID]
+		if !exists {
+			continue
+		}
+		standing.ScoreDifference = standing.ScoreFor - standing.ScoreAgainst
+		standing.Points = standing.Won
+		standings = append(standings, *standing)
+	}
+	sort.SliceStable(standings, func(i, j int) bool {
+		left, right := standings[i], standings[j]
+		if left.Won != right.Won {
+			return left.Won > right.Won
+		}
+		if left.ScoreDifference != right.ScoreDifference {
+			return left.ScoreDifference > right.ScoreDifference
+		}
+		return left.ScoreFor > right.ScoreFor
+	})
+	position := 1
+	for index := range standings {
+		if index > 0 && (standings[index-1].Won != standings[index].Won || standings[index-1].ScoreDifference != standings[index].ScoreDifference || standings[index-1].ScoreFor != standings[index].ScoreFor) {
+			position = index + 1
+		}
+		standings[index].Position = position
+	}
+	return standings, complete, nil
+}
+
+func tieBreakStageTeamIDs(tournament Tournament, pool QualificationTieBreakPool) []string {
+	assignments := []StageTeam{}
+	for _, assignment := range tournament.StageTeams {
+		if assignment.StageID == pool.StageID && assignment.GroupNumber == pool.PoolNumber {
+			assignments = append(assignments, assignment)
+		}
+	}
+	sort.Slice(assignments, func(i, j int) bool { return assignments[i].SeedPosition < assignments[j].SeedPosition })
+	ids := make([]string, len(assignments))
+	for index, assignment := range assignments {
+		ids[index] = assignment.TeamID
+	}
+	return ids
+}
+
+func sameTeamSet(left, right []string) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	seen := map[string]bool{}
+	for _, teamID := range left {
+		seen[teamID] = true
+	}
+	for _, teamID := range right {
+		if !seen[teamID] {
+			return false
+		}
+	}
+	return true
 }
 
 func eligibleStandings(tournament Tournament, standings []Standing) []Standing {

@@ -1,5 +1,12 @@
 # Registro de aprendizaje
 
+## 2026-09-20 — El teclado numérico no valida un campo
+
+- **Aprendido:** `inputMode="numeric"` y el teclado numérico no impiden que web,
+  un teclado físico o el portapapeles introduzcan caracteres ajenos.
+- **Regla reutilizable:** cuando el contrato exige enteros acotados, el valor
+  controlado filtra la entrada y normaliza sus límites al perder el foco.
+
 ## 2026-09-20 — Una competición mixta necesita una frontera de congelación
 
 - **Aprendido:** calcular clasificados automáticamente al terminar el último
@@ -3426,3 +3433,17 @@ K3s y también que sus componentes base siguen sanos.
 - **Coste aceptado:** una retirada tardía puede impedir iniciar la siguiente
   fase y exige intervención organizativa; no se reconstruyen grupos ni se
   inventan _byes_ para ocultar esa pérdida de participantes.
+
+### 2026-09-20 — Un orden estable no es necesariamente un criterio deportivo
+
+- **Aprendido:** una semilla o el orden de alta sirven para presentar y generar
+  emparejamientos reproducibles, pero conceder con ellos una plaza cuando todos
+  los criterios deportivos siguen empatados convierte un detalle técnico en
+  una regla oculta.
+- **Regla reutilizable:** si un empate exacto atraviesa una frontera que otorga
+  acceso a otra fase, se persiste una resolución deportiva explícita. Los
+  participantes ya separados quedan fijados y solo el bloque que comparte la
+  plaza vuelve a competir.
+- **Coste aceptado:** un desempate de `N` equipos crea `N × (N − 1) / 2`
+  partidos por ciclo y puede repetirse. La fase y sus ciclos se muestran por
+  separado para conservar trazabilidad y no contaminar la clasificación de liga.

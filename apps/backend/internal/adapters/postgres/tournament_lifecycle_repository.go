@@ -150,6 +150,18 @@ func (r AccountTournamentRepository) RecordResult(ctx context.Context, accountID
 	if stageState != "in_progress" {
 		return tournaments.Tournament{}, tournaments.ErrMatchResultConflict
 	}
+	if stageType == tournaments.StageTypeQualificationTieBreak {
+		if err := recordQualificationTieBreakResult(ctx, tx, account.String(), leagueID, matchID, sport, input); err != nil {
+			return tournaments.Tournament{}, err
+		}
+		if _, err := tx.Exec(ctx, `UPDATE tournaments SET last_activity_at=now() WHERE id=$1`, leagueID); err != nil {
+			return tournaments.Tournament{}, err
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return tournaments.Tournament{}, err
+		}
+		return r.GetPublic(ctx, leagueID)
+	}
 	if stageType == "single_elimination" {
 		if err := recordBracketResult(ctx, tx, account.String(), leagueID, matchID, input); err != nil {
 			return tournaments.Tournament{}, err
@@ -224,7 +236,7 @@ func (r AccountTournamentRepository) Complete(ctx context.Context, accountID, le
 	}
 	if format == tournaments.FormatLeagueThenSingleElimination {
 		var eliminationInProgress bool
-		if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM tournament_stages WHERE tournament_id=$1 AND position=2 AND type='single_elimination' AND state='in_progress')`, leagueID).Scan(&eliminationInProgress); err != nil {
+		if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM tournament_stages WHERE tournament_id=$1 AND type='single_elimination' AND state='in_progress')`, leagueID).Scan(&eliminationInProgress); err != nil {
 			return tournaments.Tournament{}, err
 		}
 		if !eliminationInProgress {
@@ -353,7 +365,7 @@ func (r AccountTournamentRepository) Start(ctx context.Context, accountID, leagu
 		if err := tx.QueryRow(ctx, `INSERT INTO tournament_stages (tournament_id,position,type,state,round_robin_legs,league_structure,qualifier_count,group_count,qualifiers_per_group) VALUES ($1,1,'league','in_progress',$2,$3,NULLIF($4,0),NULLIF($5,0),NULLIF($6,0)) RETURNING id::text`, leagueID, input.RoundRobinLegs, input.LeagueStructure, input.QualifierCount, input.GroupCount, input.QualifiersPerGroup).Scan(&stageID); err != nil {
 			return tournaments.Tournament{}, err
 		}
-		if _, err := tx.Exec(ctx, `INSERT INTO tournament_stages (tournament_id,position,type,state) VALUES ($1,2,'single_elimination','pending')`, leagueID); err != nil {
+		if _, err := tx.Exec(ctx, `INSERT INTO tournament_stages (tournament_id,position,type,state) VALUES ($1,2,'qualification_tiebreak','pending'),($1,3,'single_elimination','pending')`, leagueID); err != nil {
 			return tournaments.Tournament{}, err
 		}
 		assignments := make([]tournaments.StageTeam, len(ids))
@@ -432,7 +444,95 @@ func insertLeagueFixtures(ctx context.Context, tx pgx.Tx, tournamentID, stageID 
 	return nil
 }
 
-// StartElimination freezes the completed qualifying stage and creates its seeded bracket.
+func insertQualificationTieBreakCycle(ctx context.Context, tx pgx.Tx, tournamentID, stageID string, poolNumber, cycle int, teamIDs []string) error {
+	if len(teamIDs) < 2 {
+		return tournaments.ErrTournamentStageTransitionConflict
+	}
+	var sequence int
+	if err := tx.QueryRow(ctx, `SELECT COALESCE(MAX(sequence),0) FROM matches WHERE stage_id=$1 AND round_number=$2`, stageID, cycle).Scan(&sequence); err != nil {
+		return err
+	}
+	for home := 0; home < len(teamIDs); home++ {
+		for away := home + 1; away < len(teamIDs); away++ {
+			sequence++
+			if _, err := tx.Exec(ctx, `INSERT INTO matches(tournament_id,stage_id,round_number,sequence,group_number,home_team_id,away_team_id) VALUES ($1,$2,$3,$4,$5,$6,$7)`, tournamentID, stageID, cycle, sequence, poolNumber, teamIDs[home], teamIDs[away]); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func recordQualificationTieBreakResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID, matchID string, sport tournaments.Sport, input tournaments.MatchResultInput) error {
+	var stageID, homeTeamID, awayTeamID string
+	var poolNumber, cycle, currentCycle int
+	var poolState string
+	var previousHome, previousAway, previousHomePenalties, previousAwayPenalties *int
+	err := tx.QueryRow(ctx, `SELECT m.stage_id::text,m.group_number,m.round_number,m.home_team_id::text,m.away_team_id::text,m.home_score,m.away_score,m.home_penalties,m.away_penalties,p.current_cycle,p.state FROM matches m JOIN tournament_tiebreak_pools p ON p.stage_id=m.stage_id AND p.pool_number=m.group_number WHERE m.id=$1 AND m.tournament_id=$2 FOR UPDATE OF m,p`, matchID, tournamentID).Scan(&stageID, &poolNumber, &cycle, &homeTeamID, &awayTeamID, &previousHome, &previousAway, &previousHomePenalties, &previousAwayPenalties, &currentCycle, &poolState)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return tournaments.ErrTournamentNotFound
+	}
+	if err != nil {
+		return err
+	}
+	if poolState != "in_progress" || cycle != currentCycle {
+		return tournaments.ErrMatchResultConflict
+	}
+	winnerTeamID, err := tournaments.DecisiveWinnerTeamID(sport, homeTeamID, awayTeamID, input)
+	if err != nil {
+		return tournaments.ErrInvalidTournamentInput
+	}
+	if _, err := tx.Exec(ctx, `UPDATE matches SET state='completed',home_score=$2,away_score=$3,home_penalties=$4,away_penalties=$5,winner_team_id=$6,result_type='played' WHERE id=$1`, matchID, input.HomeScore, input.AwayScore, input.HomePenalties, input.AwayPenalties, winnerTeamID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO match_result_changes(match_id,changed_by_account_id,previous_home_score,previous_away_score,home_score,away_score,previous_home_penalties,previous_away_penalties,home_penalties,away_penalties,result_type) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'played')`, matchID, accountID, previousHome, previousAway, input.HomeScore, input.AwayScore, previousHomePenalties, previousAwayPenalties, input.HomePenalties, input.AwayPenalties); err != nil {
+		return err
+	}
+	value, err := readTournament(ctx, tx, tournamentID)
+	if err != nil {
+		return err
+	}
+	var pool tournaments.QualificationTieBreakPool
+	found := false
+	for _, candidate := range value.TieBreakPools {
+		if candidate.StageID == stageID && candidate.PoolNumber == poolNumber {
+			pool, found = candidate, true
+			break
+		}
+	}
+	if !found {
+		return tournaments.ErrTournamentStageTransitionConflict
+	}
+	resolution, err := tournaments.ResolveQualificationTieBreak(value, pool)
+	if err != nil {
+		return err
+	}
+	if resolution.NeedsNextCycle {
+		nextCycle := pool.CurrentCycle + 1
+		if _, err := tx.Exec(ctx, `UPDATE tournament_tiebreak_pools SET current_cycle=$3 WHERE stage_id=$1 AND pool_number=$2 AND state='in_progress'`, stageID, poolNumber, nextCycle); err != nil {
+			return err
+		}
+		return insertQualificationTieBreakCycle(ctx, tx, tournamentID, stageID, poolNumber, nextCycle, resolution.PendingTeamIDs)
+	}
+	if !resolution.Complete {
+		return nil
+	}
+	if _, err := tx.Exec(ctx, `UPDATE tournament_tiebreak_pools SET state='completed' WHERE stage_id=$1 AND pool_number=$2`, stageID, poolNumber); err != nil {
+		return err
+	}
+	var pendingPools bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM tournament_tiebreak_pools WHERE stage_id=$1 AND state='in_progress')`, stageID).Scan(&pendingPools); err != nil {
+		return err
+	}
+	if !pendingPools {
+		if _, err := tx.Exec(ctx, `UPDATE tournament_stages SET state='completed' WHERE id=$1`, stageID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// StartElimination advances a mixed tournament through any required tiebreak and into its bracket.
 func (r AccountTournamentRepository) StartElimination(ctx context.Context, accountID, tournamentID string) (tournaments.Tournament, error) {
 	account, err := uuidValue(accountID)
 	if err != nil {
@@ -459,22 +559,79 @@ func (r AccountTournamentRepository) StartElimination(ctx context.Context, accou
 	if err != nil {
 		return tournaments.Tournament{}, err
 	}
-	if len(value.Stages) != 2 || value.Stages[0].State != "in_progress" || value.Stages[1].State != "pending" {
+	var leagueStage, tieBreakStage, eliminationStage *tournaments.Stage
+	for index := range value.Stages {
+		switch value.Stages[index].Type {
+		case "league":
+			leagueStage = &value.Stages[index]
+		case tournaments.StageTypeQualificationTieBreak:
+			tieBreakStage = &value.Stages[index]
+		case "single_elimination":
+			eliminationStage = &value.Stages[index]
+		}
+	}
+	if leagueStage == nil || tieBreakStage == nil || eliminationStage == nil || eliminationStage.State != "pending" {
 		return tournaments.Tournament{}, tournaments.ErrTournamentStageTransitionConflict
 	}
-	qualified, err := tournaments.QualifiedTeamIDs(value, value.Stages[0])
-	if err != nil {
-		return tournaments.Tournament{}, err
+	var qualified []string
+	switch {
+	case leagueStage.State == "in_progress" && tieBreakStage.State == "pending":
+		plan, err := tournaments.PlanQualification(value, *leagueStage)
+		if err != nil {
+			return tournaments.Tournament{}, err
+		}
+		if len(plan.Pools) > 0 {
+			seedPosition := 0
+			for _, pool := range plan.Pools {
+				if _, err := tx.Exec(ctx, `INSERT INTO tournament_tiebreak_pools(tournament_id,stage_id,pool_number,source_group_number,qualifier_count) VALUES ($1,$2,$3,$4,$5)`, tournamentID, tieBreakStage.ID, pool.PoolNumber, pool.SourceGroupNumber, pool.QualifierCount); err != nil {
+					return tournaments.Tournament{}, err
+				}
+				teamIDs := make([]string, len(pool.Standings))
+				for index, standing := range pool.Standings {
+					teamIDs[index] = standing.TeamID
+				}
+				for _, teamID := range teamIDs {
+					seedPosition++
+					if _, err := tx.Exec(ctx, `INSERT INTO tournament_stage_teams(tournament_id,stage_id,team_id,seed_position,group_number) VALUES ($1,$2,$3,$4,$5)`, tournamentID, tieBreakStage.ID, teamID, seedPosition, pool.PoolNumber); err != nil {
+						return tournaments.Tournament{}, err
+					}
+				}
+				if err := insertQualificationTieBreakCycle(ctx, tx, tournamentID, tieBreakStage.ID, pool.PoolNumber, 1, teamIDs); err != nil {
+					return tournaments.Tournament{}, err
+				}
+			}
+			if _, err := tx.Exec(ctx, `UPDATE tournament_stages SET state=CASE id WHEN $2 THEN 'completed' WHEN $3 THEN 'in_progress' ELSE state END WHERE tournament_id=$1`, tournamentID, leagueStage.ID, tieBreakStage.ID); err != nil {
+				return tournaments.Tournament{}, err
+			}
+			if _, err := tx.Exec(ctx, `UPDATE tournaments SET last_activity_at=now() WHERE id=$1`, tournamentID); err != nil {
+				return tournaments.Tournament{}, err
+			}
+			if err := tx.Commit(ctx); err != nil {
+				return tournaments.Tournament{}, err
+			}
+			return r.GetPublic(ctx, tournamentID)
+		}
+		qualified, err = tournaments.QualifiedTeamIDs(value, *leagueStage)
+		if err != nil {
+			return tournaments.Tournament{}, err
+		}
+	case leagueStage.State == "completed" && tieBreakStage.State == "completed":
+		qualified, err = tournaments.ResolvedQualifiedTeamIDs(value, *leagueStage, *tieBreakStage)
+		if err != nil {
+			return tournaments.Tournament{}, err
+		}
+	default:
+		return tournaments.Tournament{}, tournaments.ErrTournamentStageTransitionConflict
 	}
 	for index, teamID := range qualified {
-		if _, err := tx.Exec(ctx, `INSERT INTO tournament_stage_teams(tournament_id,stage_id,team_id,seed_position) VALUES ($1,$2,$3,$4)`, tournamentID, value.Stages[1].ID, teamID, index+1); err != nil {
+		if _, err := tx.Exec(ctx, `INSERT INTO tournament_stage_teams(tournament_id,stage_id,team_id,seed_position) VALUES ($1,$2,$3,$4)`, tournamentID, eliminationStage.ID, teamID, index+1); err != nil {
 			return tournaments.Tournament{}, err
 		}
 	}
-	if err := insertBracket(ctx, tx, tournamentID, value.Stages[1].ID, qualified, true); err != nil {
+	if err := insertBracket(ctx, tx, tournamentID, eliminationStage.ID, qualified, true); err != nil {
 		return tournaments.Tournament{}, err
 	}
-	if _, err := tx.Exec(ctx, `UPDATE tournament_stages SET state=CASE position WHEN 1 THEN 'completed' ELSE 'in_progress' END WHERE tournament_id=$1`, tournamentID); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE tournament_stages SET state=CASE WHEN id=$2 THEN 'in_progress' WHEN type IN ('league','qualification_tiebreak') THEN 'completed' ELSE state END WHERE tournament_id=$1`, tournamentID, eliminationStage.ID); err != nil {
 		return tournaments.Tournament{}, err
 	}
 	if _, err := tx.Exec(ctx, `UPDATE tournaments SET last_activity_at=now() WHERE id=$1`, tournamentID); err != nil {

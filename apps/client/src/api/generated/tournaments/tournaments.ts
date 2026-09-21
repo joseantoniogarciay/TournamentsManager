@@ -757,8 +757,8 @@ export const getStartTournamentEliminationUrl = (tournamentId: Uuid) => {
 };
 
 /**
- * Solo la organizadora puede confirmar la transición. Exige que todos los partidos de la fase de liga estén resueltos, excluye equipos retirados, fija las clasificadas elegibles y materializa un cuadro completo sembrado de mejor contra peor.
- * @summary Congela la clasificación e inicia la eliminatoria
+ * Solo la organizadora puede confirmar la transición. Exige que todos los partidos de la fase de liga estén resueltos, excluye equipos retirados, y congela la clasificación. Si un empate exacto atraviesa el corte, inicia o continúa la fase de desempate; cuando todas las plazas están resueltas, materializa un cuadro completo sembrado de mejor contra peor.
+ * @summary Avanza la clasificación hacia la eliminatoria
  */
 export const startTournamentElimination = async (
   tournamentId: Uuid,

@@ -91,8 +91,9 @@ por grupos y una segunda fase de eliminatoria directa sin pases automáticos.
 
 **Aceptada el 2026-09-20:** adoptar la alternativa B con estas reglas:
 
-- la opción visible es «Liga + eliminatoria» y compone una fase `league` seguida
-  de una fase `single_elimination`;
+- la opción visible es «Liga + eliminatoria» y compone una fase `league`, una
+  fase condicional `qualification_tiebreak` y una fase
+  `single_elimination`;
 - la liga general permite una o dos vueltas y un número total de clasificados;
 - la liga por grupos permite elegir número de grupos, una o dos vueltas dentro
   de cada grupo y número de clasificados por grupo;
@@ -106,14 +107,14 @@ por grupos y una segunda fase de eliminatoria directa sin pases automáticos.
   forma un cuadro completo, el torneo no empieza y la interfaz explica la
   cantidad necesaria; el backend repite autoritativamente la validación;
 - la liga general siembra por su clasificación; en grupos se ordenan primero
-  las posiciones obtenidas dentro de cada grupo y después rendimiento,
-  criterios deportivos vigentes y orden de siembra persistido como último
-  desempate;
+  las posiciones obtenidas dentro de cada grupo y después los criterios
+  deportivos vigentes. El orden persistido solo hace determinista la
+  presentación y los emparejamientos, nunca adjudica una plaza empatada;
 - la primera ronda enfrenta mejor contra peor y el árbol separa los cabezas de
   serie para que 1 y 2 solo puedan coincidir en la final;
-- al terminar todos los partidos de liga, la organizadora confirma «Iniciar
-  eliminatoria»; esa acción congela la primera fase, fija clasificados y
-  emparejamientos e inicia la segunda;
+- al terminar todos los partidos de liga, la organizadora confirma «Cerrar liga
+  y continuar»; esa acción congela la primera fase y abre el desempate cuando
+  haga falta o fija clasificados y emparejamientos si el corte ya está resuelto;
 - los resultados de la primera fase se pueden corregir antes de esa
   confirmación, pero quedan congelados después.
 
@@ -129,6 +130,25 @@ por grupos y una segunda fase de eliminatoria directa sin pases automáticos.
 - quien no sea propietario ve la transición preparada como una acción
   deshabilitada y sabe que debe confirmarla la persona propietaria vigente.
 
+**Ampliación aceptada el 2026-09-20 para empates en el corte:**
+
+- si un bloque de dos o más equipos completamente empatados atraviesa el corte
+  de clasificación de una liga general o de un grupo, las plazas afectadas se
+  resuelven en `qualification_tiebreak`;
+- cada bloque forma un grupo de desempate independiente y juega una vuelta
+  todos contra todos, con `N × (N − 1) / 2` partidos para `N` equipos;
+- cada partido produce necesariamente una persona ganadora: fútbol admite
+  penaltis tras empate y baloncesto no admite marcador empatado;
+- la clasificación del desempate usa victorias, diferencia de tantos y tantos a
+  favor. Los equipos ya separados alrededor del corte quedan resueltos; si un
+  subgrupo sigue empatado exactamente en el nuevo corte, juega otra vuelta entre
+  sí hasta resolverlo;
+- los partidos de desempate no cambian la tabla de liga. Al crear la primera
+  ronda se congela la liga; cuando todos los bloques quedan resueltos, la
+  propietaria confirma el inicio de la eliminatoria;
+- la interfaz identifica la fase y sus rondas, explica por qué existen y nunca
+  presenta el orden de alta como criterio deportivo.
+
 ## Consecuencias
 
 ### Positivas
@@ -142,8 +162,10 @@ por grupos y una segunda fase de eliminatoria directa sin pases automáticos.
 
 - La proyección pública deberá distinguir clasificaciones por grupo y mostrar
   las dos fases sin confundir sus partidos.
-- El orden de siembra es un último desempate determinista; no se añaden todavía
-  partidos de desempate ni sorteo posterior.
+- Un empate exacto puede añadir varias rondas y un número cuadrático de partidos
+  por ronda. Se acepta este coste por justicia deportiva; no se convierte la
+  solución en un motor genérico ni se usa sorteo u orden de alta para otorgar
+  plazas.
 - No se evita expresamente una revancha del mismo grupo en la primera ronda si
   resulta del orden global aceptado.
 - La implementación requiere una operación contractual nueva para iniciar la
@@ -153,9 +175,14 @@ por grupos y una segunda fase de eliminatoria directa sin pases automáticos.
 ## Evidencia de implementación
 
 - El contrato discrimina las dos configuraciones mixtas y expone la transición
-  explícita de la segunda fase.
+  explícita que avanza al desempate condicional o al cuadro.
 - La migración `00011` persiste configuración, pertenencia, grupo y siembra por
   fase sin convertirlos en conceptos genéricos fuera del caso aceptado.
+- La migración `00012` añade la fase condicional y sus grupos/ciclos duraderos;
+  la lógica de dominio evita que una semilla conceda una plaza empatada.
+- Las pruebas de dominio cubren empates de dos y tres equipos y la repetición de
+  subgrupos; la integración PostgreSQL recorre dos ciclos de un empate triple,
+  penaltis obligatorios, congelación de liga y posterior creación del cuadro.
 - Las pruebas de dominio y PostgreSQL recorren configuración inválida, grupos
   equilibrados e impares, una y dos vueltas, clasificación, retiradas, cuadro
   completo, concurrencia y congelación de la liga en fútbol y baloncesto.

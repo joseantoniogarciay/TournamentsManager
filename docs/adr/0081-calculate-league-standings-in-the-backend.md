@@ -78,6 +78,22 @@ La A es rápida pero no protege la integridad que requiere el perfil. La C añad
 3. con una vuelta, diferencia general y goles a favor generales antes de los enfrentamientos directos; con dos vueltas, esas métricas generales siguen a la mini-clasificación;
 4. si permanece la igualdad, los equipos comparten posición. No se aplican juego limpio, sorteo ni partido adicional.
 
+**Ampliación aceptada el 2026-09-20 para torneos con fase eliminatoria:**
+
+- compartir posición sigue siendo la representación correcta de la liga, pero
+  el orden de alta o de siembra no puede adjudicar silenciosamente una plaza
+  cuando el empate exacto atraviesa el corte de clasificación;
+- esos equipos resuelven las plazas pendientes en una fase de desempate
+  separada, sin alterar puntos, goles ni posiciones de la liga original;
+- cada ronda de desempate enfrenta una vez a todos los equipos del bloque
+  empatado y ningún partido puede terminar en empate; fútbol usa penaltis cuando
+  el marcador queda igualado y baloncesto exige un marcador desigual;
+- la ronda se ordena por victorias, diferencia de tantos y tantos a favor. Si el
+  corte continúa empatado, se genera otra ronda únicamente entre el subgrupo que
+  todavía comparte la plaza;
+- la liga ordinaria queda congelada al iniciar el primer desempate y la fase
+  eliminatoria no comienza hasta que todas sus plazas estén resueltas.
+
 Los títulos o torneos ganados de una cuenta o perfil se derivarán en backend de la clasificación final; este ADR no crea aún ese perfil ni persiste títulos.
 
 ## Consecuencias
@@ -91,7 +107,9 @@ Los títulos o torneos ganados de una cuenta o perfil se derivarán en backend d
 ### Negativas y deuda aceptada
 
 - El empate múltiple usa la mini-clasificación disponible y puede compartir posición cuando los datos actuales no resuelven la igualdad.
-- No hay reglas de sanciones, tarjetas o desempate presencial.
+- No hay reglas de sanciones ni tarjetas. El partido adicional solo pertenece a
+  la transición de una liga hacia una eliminatoria; una liga independiente
+  conserva campeones empatados.
 - **Medición pendiente:** antes de materializar la clasificación se medirá el cálculo de lectura y tras una corrección con 64 equipos y dos vueltas (4.032 partidos), incluyendo percentiles de latencia y consultas de base de datos.
 
 ## Validación

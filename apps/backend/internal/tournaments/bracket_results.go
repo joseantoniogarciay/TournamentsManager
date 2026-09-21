@@ -24,6 +24,21 @@ type BracketResult struct {
 	AwayPenalties *int
 }
 
+// DecisiveWinnerTeamID validates a match that cannot end tied and returns its winner.
+func DecisiveWinnerTeamID(sport Sport, homeTeamID, awayTeamID string, input MatchResultInput) (string, error) {
+	if homeTeamID == "" || awayTeamID == "" || homeTeamID == awayTeamID {
+		return "", ErrInvalidBracketResult
+	}
+	result := BracketResult(input)
+	if err := result.validate(sport); err != nil {
+		return "", err
+	}
+	if result.HomeScore > result.AwayScore || (result.HomeScore == result.AwayScore && *result.HomePenalties > *result.AwayPenalties) {
+		return homeTeamID, nil
+	}
+	return awayTeamID, nil
+}
+
 func (r BracketResult) validate(sport Sport) error {
 	if r.HomeScore < 0 || r.AwayScore < 0 {
 		return ErrInvalidBracketResult

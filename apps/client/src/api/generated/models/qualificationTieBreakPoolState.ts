@@ -6,10 +6,10 @@
  * OpenAPI spec version: 1.0.0-design
  */
 
-export type TournamentStageType = (typeof TournamentStageType)[keyof typeof TournamentStageType];
+export type QualificationTieBreakPoolState =
+  (typeof QualificationTieBreakPoolState)[keyof typeof QualificationTieBreakPoolState];
 
-export const TournamentStageType = {
-  league: "league",
-  qualification_tiebreak: "qualification_tiebreak",
-  single_elimination: "single_elimination",
+export const QualificationTieBreakPoolState = {
+  in_progress: "in_progress",
+  completed: "completed",
 } as const;

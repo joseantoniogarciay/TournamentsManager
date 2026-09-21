@@ -167,6 +167,14 @@ viewport de pantalla como hermana del scroll vertical; no vive dentro de este,
 porque un ancestro transformado puede cambiar el bloque de referencia de
 `position: fixed`.
 
+En «Liga + eliminatorias», liga, desempate y cuadro se presentan como fases
+seleccionables separadas. «Desempate» solo aparece cuando existen partidos de
+esa fase; una card breve explica el motivo, el requisito de ganador y la posible
+repetición. Sus secciones nombran tanto el bloque independiente como el ciclo,
+sin añadir esos resultados a la clasificación de liga. La acción que congela la
+liga se llama «Cerrar liga y continuar», porque el sistema puede abrir un
+desempate antes de poder crear el cuadro.
+
 El banner global conserva la separación lateral y el radio de una card, pero usa
 un padding compacto de `space[3]` para no ocupar más altura de la necesaria. Se
 coloca tras el inset seguro superior, con una separación adicional de 4 px
@@ -212,6 +220,9 @@ La validación de formato se ejecuta al abandonar un campo y al intentar enviar.
 Como excepción acotada, `TextField` permite validarla al cambiar el texto cuando
 el feedback inmediato ayuda a completar un requisito, como la longitud mínima
 de una contraseña; el indicador complementario se muestra solo al cumplirlo.
+Un teclado o `inputMode` numérico solo facilita la entrada: un campo que acepte
+exclusivamente enteros filtra también el teclado físico y el pegado en su valor
+controlado, y normaliza sus límites contractuales al perder el foco.
 Los requisitos que dependan del servidor se muestran cuando llegue la respuesta.
 Un error por campo se asocia programáticamente a su control; el banner queda para
 errores que no se pueden atribuir a un campo.
