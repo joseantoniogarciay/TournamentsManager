@@ -69,11 +69,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   web: {
     description: "Crea, organiza y sigue ligas de fútbol con FastTourney.",
-    favicon: "./assets/fast-tourney-icon.png",
+    favicon: "./public/apple-touch-icon.png",
     lang: "en",
     output: "static",
   },
-  icon: "./assets/fast-tourney-icon.png",
+  icon: "./public/apple-touch-icon.png",
   ios: {
     bundleIdentifier: environmentConfig[appEnvironment].bundleIdentifier,
     associatedDomains: [`applinks:${appLinkDomain}`, `webcredentials:${appLinkDomain}`],
