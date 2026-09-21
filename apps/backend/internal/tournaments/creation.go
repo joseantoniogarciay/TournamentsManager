@@ -141,18 +141,19 @@ const (
 
 // Tournament is the projection of a visible league.
 type Tournament struct {
-	Stages          []Stage     `json:"stages"`
-	StageTeams      []StageTeam `json:"stageTeams"`
-	ID              string      `json:"id"`
-	Name            string      `json:"name"`
-	Sport           Sport       `json:"sport"`
-	Format          string      `json:"format"`
-	State           string      `json:"state"`
-	RoundRobinLegs  int         `json:"roundRobinLegs"`
-	Teams           []Team      `json:"teams"`
-	Matches         []Match     `json:"matches"`
-	Standings       []Standing  `json:"standings"`
-	ChampionTeamIDs []string    `json:"championTeamIds"`
+	Stages          []Stage                     `json:"stages"`
+	StageTeams      []StageTeam                 `json:"stageTeams"`
+	TieBreakPools   []QualificationTieBreakPool `json:"tieBreakPools"`
+	ID              string                      `json:"id"`
+	Name            string                      `json:"name"`
+	Sport           Sport                       `json:"sport"`
+	Format          string                      `json:"format"`
+	State           string                      `json:"state"`
+	RoundRobinLegs  int                         `json:"roundRobinLegs"`
+	Teams           []Team                      `json:"teams"`
+	Matches         []Match                     `json:"matches"`
+	Standings       []Standing                  `json:"standings"`
+	ChampionTeamIDs []string                    `json:"championTeamIds"`
 }
 
 // Stage scopes sporting rules and match ordering inside a tournament.
@@ -174,6 +175,16 @@ type StageTeam struct {
 	TeamID       string `json:"teamId"`
 	SeedPosition int    `json:"seedPosition"`
 	GroupNumber  int    `json:"groupNumber,omitempty"`
+}
+
+// QualificationTieBreakPool records one independently resolvable cutoff tie.
+type QualificationTieBreakPool struct {
+	StageID           string `json:"stageId"`
+	PoolNumber        int    `json:"poolNumber"`
+	SourceGroupNumber int    `json:"sourceGroupNumber"`
+	QualifierCount    int    `json:"qualifierCount"`
+	CurrentCycle      int    `json:"currentCycle"`
+	State             string `json:"state"`
 }
 
 // Standing is a domain-calculated row, not data entered by clients.
@@ -304,7 +315,7 @@ func (s CreationService) Start(ctx context.Context, accountID, leagueID string, 
 	return s.withStandings(league), err
 }
 
-// StartElimination freezes a completed qualifying stage and starts its bracket.
+// StartElimination freezes qualification, opens a required tiebreak or starts its bracket.
 func (s CreationService) StartElimination(ctx context.Context, accountID, tournamentID string) (Tournament, error) {
 	tournament, err := s.repository.StartElimination(ctx, accountID, tournamentID)
 	return s.withStandings(tournament), err

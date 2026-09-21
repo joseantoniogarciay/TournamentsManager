@@ -187,7 +187,7 @@ function parseStages(value: unknown): PublicTournament["stages"] | null {
       !isRecord(stage) ||
       !isUUID(stage.id) ||
       !isIntegerAtLeast(stage.position, 1) ||
-      !["league", "single_elimination"].includes(String(stage.type)) ||
+      !["league", "qualification_tiebreak", "single_elimination"].includes(String(stage.type)) ||
       !["pending", "in_progress", "completed", "cancelled"].includes(String(stage.state))
     )
       return null;
@@ -222,6 +222,23 @@ function parseStageTeams(value: unknown): PublicTournament["stageTeams"] | null 
       return null;
   }
   return value as PublicTournament["stageTeams"];
+}
+
+function parseTieBreakPools(value: unknown): PublicTournament["tieBreakPools"] | null {
+  if (!Array.isArray(value)) return null;
+  for (const pool of value) {
+    if (
+      !isRecord(pool) ||
+      !isUUID(pool.stageId) ||
+      !isIntegerAtLeast(pool.poolNumber, 1) ||
+      !isIntegerAtLeast(pool.sourceGroupNumber, 0) ||
+      !isIntegerAtLeast(pool.qualifierCount, 1) ||
+      !isIntegerAtLeast(pool.currentCycle, 1) ||
+      !["in_progress", "completed"].includes(String(pool.state))
+    )
+      return null;
+  }
+  return value as PublicTournament["tieBreakPools"];
 }
 
 function parseTournamentStanding(value: unknown): TournamentStanding | null {
@@ -274,6 +291,7 @@ export function parsePublicTournament(value: unknown): PublicTournament | null {
   if (!isRecord(value)) return null;
   const stages = parseStages(value.stages);
   const stageTeams = parseStageTeams(value.stageTeams);
+  const tieBreakPools = parseTieBreakPools(value.tieBreakPools);
   const teams = parseTournamentTeams(value.teams);
   const matches = parseMatches(value.matches);
   const standings = parseTournamentStandings(value.standings);
@@ -290,7 +308,8 @@ export function parsePublicTournament(value: unknown): PublicTournament | null {
     !standings ||
     !championTeamIds ||
     !stages ||
-    !stageTeams
+    !stageTeams ||
+    !tieBreakPools
   ) {
     return null;
   }
@@ -307,6 +326,7 @@ export function parsePublicTournament(value: unknown): PublicTournament | null {
     championTeamIds,
     stages,
     stageTeams,
+    tieBreakPools,
   };
 }
 

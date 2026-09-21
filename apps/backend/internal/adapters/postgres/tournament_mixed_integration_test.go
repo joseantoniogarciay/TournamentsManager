@@ -32,16 +32,19 @@ func TestIntegrationMixedTournamentFreezesQualifiersAndStartsSeededBracket(t *te
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(tournament.Stages) != 2 || tournament.Stages[0].State != "in_progress" || tournament.Stages[1].State != "pending" {
+	leagueStage := mixedStageByType(t, tournament, "league")
+	tieBreakStage := mixedStageByType(t, tournament, tournaments.StageTypeQualificationTieBreak)
+	eliminationStage := mixedStageByType(t, tournament, "single_elimination")
+	if len(tournament.Stages) != 3 || leagueStage.State != "in_progress" || tieBreakStage.State != "pending" || eliminationStage.State != "pending" {
 		t.Fatalf("stages after start = %#v", tournament.Stages)
 	}
 	leagueMatchIDs := make([]string, 0, len(tournament.Matches))
 	for _, match := range tournament.Matches {
-		if match.StageID != tournament.Stages[0].ID {
+		if match.StageID != leagueStage.ID {
 			t.Fatalf("unexpected match before transition: %#v", match)
 		}
 		leagueMatchIDs = append(leagueMatchIDs, match.ID)
-		if _, err = service.RecordResult(ctx, owner, tournament.ID, match.ID, tournaments.MatchResultInput{HomeScore: 1}); err != nil {
+		if _, err = recordHigherSeedWin(ctx, service, owner, tournament, match); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -52,12 +55,15 @@ func TestIntegrationMixedTournamentFreezesQualifiersAndStartsSeededBracket(t *te
 	if err != nil {
 		t.Fatal(err)
 	}
-	if tournament.Stages[0].State != "completed" || tournament.Stages[1].State != "in_progress" {
+	leagueStage = mixedStageByType(t, tournament, "league")
+	tieBreakStage = mixedStageByType(t, tournament, tournaments.StageTypeQualificationTieBreak)
+	eliminationStage = mixedStageByType(t, tournament, "single_elimination")
+	if leagueStage.State != "completed" || tieBreakStage.State != "completed" || eliminationStage.State != "in_progress" {
 		t.Fatalf("stages after transition = %#v", tournament.Stages)
 	}
 	seeded := []string{}
 	for _, assignment := range tournament.StageTeams {
-		if assignment.StageID == tournament.Stages[1].ID {
+		if assignment.StageID == eliminationStage.ID {
 			seeded = append(seeded, assignment.TeamID)
 		}
 	}
@@ -66,7 +72,7 @@ func TestIntegrationMixedTournamentFreezesQualifiersAndStartsSeededBracket(t *te
 	}
 	firstRound := []tournaments.Match{}
 	for _, match := range tournament.Matches {
-		if match.StageID == tournament.Stages[1].ID && match.RoundNumber == 1 {
+		if match.StageID == eliminationStage.ID && match.RoundNumber == 1 {
 			firstRound = append(firstRound, match)
 			if match.State == "bye" {
 				t.Fatalf("mixed bracket contains bye: %#v", match)
@@ -78,6 +84,119 @@ func TestIntegrationMixedTournamentFreezesQualifiersAndStartsSeededBracket(t *te
 	}
 	if _, err = service.RecordResult(ctx, owner, tournament.ID, leagueMatchIDs[0], tournaments.MatchResultInput{HomeScore: 2}); !errors.Is(err, tournaments.ErrMatchResultConflict) {
 		t.Fatalf("frozen league correction error = %v", err)
+	}
+}
+
+func TestIntegrationMixedTournamentRepeatsAnUnresolvedQualificationTieBreak(t *testing.T) {
+	pool := integrationPool(t)
+	ctx := context.Background()
+	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-tiebreak@example.com", "mixed_tiebreak", "password123")
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	created, err := service.Create(ctx, owner, tournaments.CreateInput{
+		Name: "Mixed repeated tiebreak", Sport: tournaments.SportFootball,
+		Teams: []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	value, err := service.Start(ctx, owner, created.ID, tournaments.StartInput{
+		Format: tournaments.FormatLeagueThenSingleElimination, RoundRobinLegs: 1,
+		LeagueStructure: tournaments.LeagueStructureSingleTable, QualifierCount: 2,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	leagueStage := mixedStageByType(t, value, "league")
+	leagueMatchID := ""
+	for _, match := range value.Matches {
+		if match.StageID != leagueStage.ID {
+			continue
+		}
+		leagueMatchID = match.ID
+		value, err = service.RecordResult(ctx, owner, value.ID, match.ID, tournaments.MatchResultInput{})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	value, err = service.StartElimination(ctx, owner, value.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tieBreakStage := mixedStageByType(t, value, tournaments.StageTypeQualificationTieBreak)
+	if tieBreakStage.State != "in_progress" || len(value.TieBreakPools) != 1 || value.TieBreakPools[0].QualifierCount != 2 {
+		t.Fatalf("initial tiebreak = stage %#v, pools %#v", tieBreakStage, value.TieBreakPools)
+	}
+	if _, err = service.RecordResult(ctx, owner, value.ID, leagueMatchID, tournaments.MatchResultInput{HomeScore: 1}); !errors.Is(err, tournaments.ErrMatchResultConflict) {
+		t.Fatalf("frozen league correction error = %v", err)
+	}
+
+	teamIDs := map[string]string{}
+	for _, team := range value.Teams {
+		teamIDs[team.Name] = team.ID
+	}
+	cycleOneWinners := map[[2]string]string{
+		orderedTeamPair(teamIDs["A"], teamIDs["B"]): teamIDs["A"],
+		orderedTeamPair(teamIDs["A"], teamIDs["C"]): teamIDs["C"],
+		orderedTeamPair(teamIDs["B"], teamIDs["C"]): teamIDs["B"],
+	}
+	cycleOne := tiebreakMatchesForCycle(value, tieBreakStage.ID, 1)
+	if len(cycleOne) != 3 {
+		t.Fatalf("cycle one matches = %#v", cycleOne)
+	}
+	if _, err = service.RecordResult(ctx, owner, value.ID, cycleOne[0].ID, tournaments.MatchResultInput{}); !errors.Is(err, tournaments.ErrInvalidTournamentInput) {
+		t.Fatalf("draw without shootout error = %v", err)
+	}
+	for _, match := range cycleOne {
+		winner := cycleOneWinners[orderedTeamPair(match.HomeTeamID, match.AwayTeamID)]
+		input := tournaments.MatchResultInput{HomePenalties: intPointer(4), AwayPenalties: intPointer(3)}
+		if winner == match.AwayTeamID {
+			input.HomePenalties, input.AwayPenalties = intPointer(3), intPointer(4)
+		}
+		value, err = service.RecordResult(ctx, owner, value.ID, match.ID, input)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if value.TieBreakPools[0].CurrentCycle != 2 || mixedStageByType(t, value, tournaments.StageTypeQualificationTieBreak).State != "in_progress" {
+		t.Fatalf("tiebreak after unresolved cycle = %#v", value.TieBreakPools)
+	}
+
+	cycleTwoWinners := map[[2]string]string{
+		orderedTeamPair(teamIDs["A"], teamIDs["B"]): teamIDs["A"],
+		orderedTeamPair(teamIDs["A"], teamIDs["C"]): teamIDs["A"],
+		orderedTeamPair(teamIDs["B"], teamIDs["C"]): teamIDs["B"],
+	}
+	cycleTwo := tiebreakMatchesForCycle(value, tieBreakStage.ID, 2)
+	if len(cycleTwo) != 3 {
+		t.Fatalf("cycle two matches = %#v", cycleTwo)
+	}
+	for _, match := range cycleTwo {
+		winner := cycleTwoWinners[orderedTeamPair(match.HomeTeamID, match.AwayTeamID)]
+		input := tournaments.MatchResultInput{HomeScore: 1}
+		if winner == match.AwayTeamID {
+			input = tournaments.MatchResultInput{AwayScore: 1}
+		}
+		value, err = service.RecordResult(ctx, owner, value.ID, match.ID, input)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if mixedStageByType(t, value, tournaments.StageTypeQualificationTieBreak).State != "completed" || value.TieBreakPools[0].State != "completed" {
+		t.Fatalf("completed tiebreak = stages %#v, pools %#v", value.Stages, value.TieBreakPools)
+	}
+	value, err = service.StartElimination(ctx, owner, value.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	eliminationStage := mixedStageByType(t, value, "single_elimination")
+	qualified := []string{}
+	for _, assignment := range value.StageTeams {
+		if assignment.StageID == eliminationStage.ID {
+			qualified = append(qualified, assignment.TeamID)
+		}
+	}
+	if len(qualified) != 2 || qualified[0] != teamIDs["A"] || qualified[1] != teamIDs["B"] {
+		t.Fatalf("qualified teams = %#v", qualified)
 	}
 }
 
@@ -131,7 +250,7 @@ func TestIntegrationMixedTournamentPersistsBalancedGroupsAndQualifiers(t *testin
 	}
 	groupTeams := map[int]int{}
 	for _, assignment := range tournament.StageTeams {
-		if assignment.StageID == tournament.Stages[0].ID {
+		if assignment.StageID == mixedStageByType(t, tournament, "league").ID {
 			groupTeams[assignment.GroupNumber]++
 		}
 	}
@@ -141,7 +260,7 @@ func TestIntegrationMixedTournamentPersistsBalancedGroupsAndQualifiers(t *testin
 	groupMatches := map[int]int{}
 	for _, match := range tournament.Matches {
 		groupMatches[match.GroupNumber]++
-		if _, err = service.RecordResult(ctx, owner, tournament.ID, match.ID, tournaments.MatchResultInput{HomeScore: 1}); err != nil {
+		if _, err = recordHigherSeedWin(ctx, service, owner, tournament, match); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -152,9 +271,10 @@ func TestIntegrationMixedTournamentPersistsBalancedGroupsAndQualifiers(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
+	eliminationStage := mixedStageByType(t, tournament, "single_elimination")
 	qualified := 0
 	for _, assignment := range tournament.StageTeams {
-		if assignment.StageID == tournament.Stages[1].ID {
+		if assignment.StageID == eliminationStage.ID {
 			qualified++
 		}
 	}
@@ -223,7 +343,7 @@ func TestIntegrationMixedTournamentReplacesAWithdrawnQualifier(t *testing.T) {
 		if match.State == "completed" {
 			continue
 		}
-		if _, err = service.RecordResult(ctx, owner, created.ID, match.ID, tournaments.MatchResultInput{HomeScore: 1}); err != nil {
+		if _, err = recordHigherSeedWin(ctx, service, owner, started, match); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -231,9 +351,10 @@ func TestIntegrationMixedTournamentReplacesAWithdrawnQualifier(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	eliminationStage := mixedStageByType(t, transitioned, "single_elimination")
 	qualified := []string{}
 	for _, assignment := range transitioned.StageTeams {
-		if assignment.StageID == transitioned.Stages[1].ID {
+		if assignment.StageID == eliminationStage.ID {
 			qualified = append(qualified, assignment.TeamID)
 		}
 	}
@@ -313,8 +434,9 @@ func TestIntegrationMixedBasketballCompletesThroughTheBracket(t *testing.T) {
 		t.Fatal(err)
 	}
 	var final tournaments.Match
+	eliminationStage := mixedStageByType(t, transitioned, "single_elimination")
 	for _, match := range transitioned.Matches {
-		if match.StageID == transitioned.Stages[1].ID {
+		if match.StageID == eliminationStage.ID {
 			final = match
 		}
 	}
@@ -332,3 +454,45 @@ func TestIntegrationMixedBasketballCompletesThroughTheBracket(t *testing.T) {
 		t.Fatalf("completed basketball tournament = %#v", completed)
 	}
 }
+
+func mixedStageByType(t *testing.T, tournament tournaments.Tournament, stageType string) tournaments.Stage {
+	t.Helper()
+	for _, stage := range tournament.Stages {
+		if stage.Type == stageType {
+			return stage
+		}
+	}
+	t.Fatalf("missing %s stage in %#v", stageType, tournament.Stages)
+	return tournaments.Stage{}
+}
+
+func recordHigherSeedWin(ctx context.Context, service tournaments.CreationService, owner string, tournament tournaments.Tournament, match tournaments.Match) (tournaments.Tournament, error) {
+	position := map[string]int{}
+	for _, team := range tournament.Teams {
+		position[team.ID] = team.Position
+	}
+	input := tournaments.MatchResultInput{HomeScore: 1}
+	if position[match.AwayTeamID] < position[match.HomeTeamID] {
+		input = tournaments.MatchResultInput{AwayScore: 1}
+	}
+	return service.RecordResult(ctx, owner, tournament.ID, match.ID, input)
+}
+
+func orderedTeamPair(first, second string) [2]string {
+	if first > second {
+		first, second = second, first
+	}
+	return [2]string{first, second}
+}
+
+func tiebreakMatchesForCycle(tournament tournaments.Tournament, stageID string, cycle int) []tournaments.Match {
+	matches := []tournaments.Match{}
+	for _, match := range tournament.Matches {
+		if match.StageID == stageID && match.RoundNumber == cycle {
+			matches = append(matches, match)
+		}
+	}
+	return matches
+}
+
+func intPointer(value int) *int { return &value }

@@ -14,7 +14,7 @@ type tournamentReader interface {
 }
 
 func readTournament(ctx context.Context, db tournamentReader, id string) (tournaments.Tournament, error) {
-	value := tournaments.Tournament{Teams: []tournaments.Team{}, Matches: []tournaments.Match{}, Stages: []tournaments.Stage{}, StageTeams: []tournaments.StageTeam{}, ChampionTeamIDs: []string{}}
+	value := tournaments.Tournament{Teams: []tournaments.Team{}, Matches: []tournaments.Match{}, Stages: []tournaments.Stage{}, StageTeams: []tournaments.StageTeam{}, TieBreakPools: []tournaments.QualificationTieBreakPool{}, ChampionTeamIDs: []string{}}
 	err := db.QueryRow(ctx, `SELECT id::text,name,sport,format,state,round_robin_legs FROM tournaments WHERE id=$1`, id).Scan(&value.ID, &value.Name, &value.Sport, &value.Format, &value.State, &value.RoundRobinLegs)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return value, tournaments.ErrTournamentNotFound
@@ -65,6 +65,22 @@ func readTournament(ctx context.Context, db tournamentReader, id string) (tourna
 			return value, err
 		}
 		value.StageTeams = append(value.StageTeams, stageTeam)
+	}
+	rows.Close()
+	if rows.Err() != nil {
+		return value, rows.Err()
+	}
+	rows, err = db.Query(ctx, `SELECT stage_id::text,pool_number,source_group_number,qualifier_count,current_cycle,state FROM tournament_tiebreak_pools WHERE tournament_id=$1 ORDER BY stage_id,pool_number`, id)
+	if err != nil {
+		return value, err
+	}
+	for rows.Next() {
+		var pool tournaments.QualificationTieBreakPool
+		if err = rows.Scan(&pool.StageID, &pool.PoolNumber, &pool.SourceGroupNumber, &pool.QualifierCount, &pool.CurrentCycle, &pool.State); err != nil {
+			rows.Close()
+			return value, err
+		}
+		value.TieBreakPools = append(value.TieBreakPools, pool)
 	}
 	rows.Close()
 	if rows.Err() != nil {

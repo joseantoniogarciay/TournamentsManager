@@ -49,6 +49,8 @@ export * from "./publicTournamentState.js";
 export * from "./publishedTournament.js";
 export * from "./publishedTournamentSport.js";
 export * from "./publishedTournamentState.js";
+export * from "./qualificationTieBreakPool.js";
+export * from "./qualificationTieBreakPoolState.js";
 export * from "./rateLimitProblemResponse.js";
 export * from "./reauthenticationRequest.js";
 export * from "./reauthenticationRequestPurpose.js";

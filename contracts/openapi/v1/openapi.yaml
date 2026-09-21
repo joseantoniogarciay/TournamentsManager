@@ -753,12 +753,13 @@ paths:
     post:
       tags: [Tournaments]
       operationId: startTournamentElimination
-      summary: Congela la clasificación e inicia la eliminatoria
+      summary: Avanza la clasificación hacia la eliminatoria
       description: >-
         Solo la organizadora puede confirmar la transición. Exige que todos los
         partidos de la fase de liga estén resueltos, excluye equipos retirados,
-        fija las clasificadas elegibles y materializa un cuadro completo
-        sembrado de mejor contra peor.
+        y congela la clasificación. Si un empate exacto atraviesa el corte,
+        inicia o continúa la fase de desempate; cuando todas las plazas están
+        resueltas, materializa un cuadro completo sembrado de mejor contra peor.
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       parameters:
         - name: tournamentId
@@ -767,7 +768,7 @@ paths:
           schema: { $ref: "#/components/schemas/UUID" }
       responses:
         "200":
-          description: Clasificación congelada y eliminatoria iniciada.
+          description: Desempate iniciado o eliminatoria iniciada, según el estado vigente.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PublicTournament" }
@@ -778,7 +779,7 @@ paths:
         "409":
           description: >-
             La liga no está completa, faltan equipos elegibles o la transición
-            ya ocurrió.
+            todavía tiene desempates pendientes o ya ocurrió.
   /tournaments/{tournamentId}/teams:
     post:
       tags: [Tournaments]
@@ -1520,6 +1521,7 @@ components:
           teams,
           stages,
           stageTeams,
+          tieBreakPools,
           matches,
           standings,
           championTeamIds,
@@ -1535,6 +1537,9 @@ components:
         stageTeams:
           type: array
           items: { $ref: "#/components/schemas/TournamentStageTeam" }
+        tieBreakPools:
+          type: array
+          items: { $ref: "#/components/schemas/QualificationTieBreakPool" }
         state: { type: string, enum: [published, in_progress, completed, cancelled] }
         roundRobinLegs:
           type: integer
@@ -1587,7 +1592,7 @@ components:
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         position: { type: integer, minimum: 1 }
-        type: { type: string, enum: [league, single_elimination] }
+        type: { type: string, enum: [league, qualification_tiebreak, single_elimination] }
         state: { type: string, enum: [pending, in_progress, completed, cancelled] }
         roundRobinLegs: { type: integer, enum: [1, 2] }
         leagueStructure: { type: string, enum: [single_table, groups] }
@@ -1602,6 +1607,19 @@ components:
         teamId: { $ref: "#/components/schemas/UUID" }
         seedPosition: { type: integer, minimum: 1 }
         groupNumber: { type: integer, minimum: 1 }
+    QualificationTieBreakPool:
+      type: object
+      required: [stageId, poolNumber, sourceGroupNumber, qualifierCount, currentCycle, state]
+      properties:
+        stageId: { $ref: "#/components/schemas/UUID" }
+        poolNumber: { type: integer, minimum: 1 }
+        sourceGroupNumber:
+          type: integer
+          minimum: 0
+          description: Cero para liga general; en grupos identifica la tabla de origen.
+        qualifierCount: { type: integer, minimum: 1, maximum: 63 }
+        currentCycle: { type: integer, minimum: 1 }
+        state: { type: string, enum: [in_progress, completed] }
     TournamentTeam:
       type: object
       required: [id, name, withdrawn]

@@ -6,6 +6,28 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Added
+
+- Los torneos «Liga + eliminatoria» resuelven cualquier empate exacto que cruce
+  el corte mediante una fase visible de desempate. Dos equipos juegan un partido
+  decisivo y un empate múltiple disputa una vuelta entre sí; si el corte continúa
+  igualado, se crea otro ciclo solo para ese subgrupo. Fútbol exige penaltis
+  cuando el marcador queda igualado y baloncesto exige un tanteo desigual.
+
+### Changed
+
+- La transición mixta congela la liga antes del desempate, conserva sus partidos
+  fuera de la clasificación y solo crea el cuadro cuando todas las plazas están
+  resueltas. La interfaz permite alternar entre liga, desempate y eliminatorias.
+- La introducción de Inicio describe torneos y deportes diversos en lugar de
+  limitarse a una liga de fútbol.
+
+### Fixed
+
+- La configuración por grupos exige al menos dos grupos, muestra errores
+  específicos y filtra teclado físico y pegado para aceptar solo enteros dentro
+  de los límites contractuales.
+
 ## [1.5.0] - 2026-09-20
 
 ### Added

@@ -53,6 +53,20 @@ import {
 
 const localAppLinkURL = "http://localhost:8082";
 const fullBracketSizes = [2, 4, 8, 16, 32, 64] as const;
+const minimumGroupCount = 2;
+const maximumGroupCount = 64;
+const minimumQualifiersPerGroup = 1;
+const maximumQualifiersPerGroup = 63;
+
+function sanitizeIntegerInput(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function normalizeIntegerInput(value: string, minimum: number, maximum: number) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) return String(minimum);
+  return String(Math.min(maximum, Math.max(minimum, parsed)));
+}
 
 function getMixedConfigurationRequirement(
   teamCount: number,
@@ -69,11 +83,17 @@ function getMixedConfigurationRequirement(
   const totalQualifiers = groupCount * qualifiersPerGroup;
   if (
     !Number.isInteger(groupCount) ||
-    !Number.isInteger(qualifiersPerGroup) ||
-    groupCount < 2 ||
-    qualifiersPerGroup < 1
+    groupCount < minimumGroupCount ||
+    groupCount > maximumGroupCount
   ) {
-    return { valid: false as const, reason: "numbers" as const };
+    return { valid: false as const, reason: "groups" as const };
+  }
+  if (
+    !Number.isInteger(qualifiersPerGroup) ||
+    qualifiersPerGroup < minimumQualifiersPerGroup ||
+    qualifiersPerGroup > maximumQualifiersPerGroup
+  ) {
+    return { valid: false as const, reason: "qualifiers" as const };
   }
   if (!fullBracketSizes.includes(totalQualifiers as (typeof fullBracketSizes)[number])) {
     return { valid: false as const, reason: "bracket" as const };
@@ -120,9 +140,9 @@ export default function TournamentScreen() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [completionConfirmationOpen, setCompletionConfirmationOpen] = useState(false);
   const [completionOpen, setCompletionOpen] = useState(false);
-  const [selectedCompetitionPhase, setSelectedCompetitionPhase] = useState<"league" | "bracket">(
-    "bracket",
-  );
+  const [selectedCompetitionPhase, setSelectedCompetitionPhase] = useState<
+    "league" | "tiebreak" | "bracket"
+  >("bracket");
   const [selectedBracketRound, setSelectedBracketRound] = useState(1);
   const [bracketRoundSelectionRevision, setBracketRoundSelectionRevision] = useState(0);
   const matchList = useRef<SectionList<PublicTournament["matches"][number]>>(null);
@@ -247,15 +267,38 @@ export default function TournamentScreen() {
   };
   const startElimination = () => {
     if (!id || isStartingElimination) return;
+    const startsEliminationDirectly =
+      league?.stages.find((stage) => stage.type === "qualification_tiebreak")?.state ===
+      "completed";
     confirm({
-      title: t("tournament_mixed_start_elimination_title"),
-      description: t("tournament_mixed_start_elimination_description"),
-      acceptLabel: t("tournament_mixed_start_elimination"),
+      title: t(
+        startsEliminationDirectly
+          ? "tournament_mixed_start_elimination_title"
+          : "tournament_mixed_finish_league_title",
+      ),
+      description: t(
+        startsEliminationDirectly
+          ? "tournament_mixed_start_elimination_description"
+          : "tournament_mixed_finish_league_description",
+      ),
+      acceptLabel: t(
+        startsEliminationDirectly
+          ? "tournament_mixed_start_elimination"
+          : "tournament_mixed_finish_league",
+      ),
       cancelLabel: t("common_cancel"),
       onAccept: () => {
         setIsStartingElimination(true);
         void startTournamentEliminationRequest(id)
-          .then(putTournament)
+          .then((tournament) => {
+            putTournament(tournament);
+            const activeType = tournament.stages.find(
+              (stage) => stage.state === "in_progress",
+            )?.type;
+            setSelectedCompetitionPhase(
+              activeType === "qualification_tiebreak" ? "tiebreak" : "bracket",
+            );
+          })
           .catch((error) => {
             if (error instanceof TournamentStageTransitionConflictError) {
               show({
@@ -354,9 +397,11 @@ export default function TournamentScreen() {
       return;
     setSavingMatchID(matchID);
     try {
+      const resultStageType = league?.stages.find((stage) => stage.id === match?.stageId)?.type;
       const shootout =
         league?.sport === "football" &&
-        league.stages.find((stage) => stage.id === match?.stageId)?.type === "single_elimination" &&
+        (resultStageType === "single_elimination" ||
+          resultStageType === "qualification_tiebreak") &&
         homeScore === awayScore;
       putTournament(
         await recordMatchResultRequest(id, matchID, {
@@ -463,9 +508,8 @@ export default function TournamentScreen() {
   const qualifyingStage = league.stages.find(
     (stage) => stage.position === 1 && stage.type === "league",
   );
-  const eliminationStage = league.stages.find(
-    (stage) => stage.position === 2 && stage.type === "single_elimination",
-  );
+  const eliminationStage = league.stages.find((stage) => stage.type === "single_elimination");
+  const tieBreakStage = league.stages.find((stage) => stage.type === "qualification_tiebreak");
   const qualifyingMatches = qualifyingStage
     ? league.matches.filter((match) => match.stageId === qualifyingStage.id)
     : [];
@@ -476,12 +520,19 @@ export default function TournamentScreen() {
         (stage) => stage.type === "single_elimination" && stage.state !== "pending",
       )?.id,
   );
+  const qualifyingMatchesCompleted =
+    qualifyingMatches.length > 0 && qualifyingMatches.every((match) => match.state === "completed");
   const qualifyingStageReady =
     league.format === "league_then_single_elimination" &&
     qualifyingStage?.state === "in_progress" &&
+    tieBreakStage?.state === "pending" &&
     eliminationStage?.state === "pending" &&
-    qualifyingMatches.length > 0 &&
-    qualifyingMatches.every((match) => match.state === "completed");
+    qualifyingMatchesCompleted;
+  const tieBreakStageReady =
+    league.format === "league_then_single_elimination" &&
+    qualifyingStage?.state === "completed" &&
+    tieBreakStage?.state === "completed" &&
+    eliminationStage?.state === "pending";
   const eligibleTeamIDs = new Set(
     league.teams.filter((team) => !team.withdrawn).map((team) => team.id),
   );
@@ -502,7 +553,7 @@ export default function TournamentScreen() {
     }
     return true;
   })();
-  const eliminationReady = qualifyingStageReady && hasEnoughEligibleTeams;
+  const eliminationReady = (qualifyingStageReady && hasEnoughEligibleTeams) || tieBreakStageReady;
   const eliminationBlockedByWithdrawals = qualifyingStageReady && !hasEnoughEligibleTeams;
   const canStartElimination = isOrganizer && eliminationReady;
   const waitingForOwnerToStartElimination = !isOrganizer && eliminationReady;
@@ -525,7 +576,11 @@ export default function TournamentScreen() {
       case "in_progress":
         return canStartElimination
           ? {
-              label: t("tournament_mixed_start_elimination"),
+              label: t(
+                tieBreakStageReady
+                  ? "tournament_mixed_start_elimination"
+                  : "tournament_mixed_finish_league",
+              ),
               loading: isStartingElimination,
               onPress: startElimination,
             }
@@ -548,8 +603,9 @@ export default function TournamentScreen() {
     : undefined;
   const needsShootout =
     league.sport === "football" &&
-    league.stages.find((stage) => stage.id === editingMatch?.stageId)?.type ===
-      "single_elimination" &&
+    ["single_elimination", "qualification_tiebreak"].includes(
+      league.stages.find((stage) => stage.id === editingMatch?.stageId)?.type ?? "",
+    ) &&
     editingScore !== undefined &&
     /^\d+$/.test(editingScore.home) &&
     /^\d+$/.test(editingScore.away) &&
@@ -593,6 +649,22 @@ export default function TournamentScreen() {
       return { data, group, round };
     })
     .sort((first, second) => first.group - second.group || first.round - second.round);
+  const tieBreakMatches = tieBreakStage
+    ? league.matches.filter((match) => match.stageId === tieBreakStage.id)
+    : [];
+  const tieBreakMatchesByCycle = new Map<string, PublicTournament["matches"]>();
+  for (const match of tieBreakMatches) {
+    const key = `${match.groupNumber ?? 0}:${match.round}`;
+    const matches = tieBreakMatchesByCycle.get(key) ?? [];
+    matches.push(match);
+    tieBreakMatchesByCycle.set(key, matches);
+  }
+  const tieBreakMatchSections = [...tieBreakMatchesByCycle.entries()]
+    .map(([key, data]) => {
+      const [group, round] = key.split(":").map(Number);
+      return { data, group, round };
+    })
+    .sort((first, second) => first.group - second.group || first.round - second.round);
   const closeWebMenu = () => setMenuOpen(false);
   const openAdministrators = () => router.push(`/tournament/${league.id}/administrators`);
   const openTransfer = () => router.push(`/tournament/${league.id}/transfer`);
@@ -612,9 +684,22 @@ export default function TournamentScreen() {
     (first, second) => first - second,
   );
   const hasBracket = bracketMatches.length > 0;
-  const phaseSelectionAvailable = league.format === "league_then_single_elimination" && hasBracket;
+  const hasTieBreak = tieBreakMatches.length > 0;
+  const displayedCompetitionPhase =
+    selectedCompetitionPhase === "bracket" && !hasBracket
+      ? hasTieBreak
+        ? "tiebreak"
+        : "league"
+      : selectedCompetitionPhase === "tiebreak" && !hasTieBreak
+        ? hasBracket
+          ? "bracket"
+          : "league"
+        : selectedCompetitionPhase;
+  const phaseSelectionAvailable =
+    league.format === "league_then_single_elimination" && (hasTieBreak || hasBracket);
   const showsBracket =
-    hasBracket && (!phaseSelectionAvailable || selectedCompetitionPhase === "bracket");
+    hasBracket && (!phaseSelectionAvailable || displayedCompetitionPhase === "bracket");
+  const showsTieBreak = hasTieBreak && displayedCompetitionPhase === "tiebreak";
   const bracketTournament = { ...league, matches: bracketMatches };
   const showsBracketHorizontalControl =
     Platform.OS === "web" &&
@@ -625,13 +710,22 @@ export default function TournamentScreen() {
       <ConfigurationOption
         label={t("tournament_mixed_phase_league")}
         onPress={() => setSelectedCompetitionPhase("league")}
-        selected={selectedCompetitionPhase === "league"}
+        selected={displayedCompetitionPhase === "league"}
       />
-      <ConfigurationOption
-        label={t("tournament_mixed_phase_elimination")}
-        onPress={() => setSelectedCompetitionPhase("bracket")}
-        selected={selectedCompetitionPhase === "bracket"}
-      />
+      {hasTieBreak ? (
+        <ConfigurationOption
+          label={t("tournament_mixed_phase_tiebreak")}
+          onPress={() => setSelectedCompetitionPhase("tiebreak")}
+          selected={displayedCompetitionPhase === "tiebreak"}
+        />
+      ) : null}
+      {hasBracket ? (
+        <ConfigurationOption
+          label={t("tournament_mixed_phase_elimination")}
+          onPress={() => setSelectedCompetitionPhase("bracket")}
+          selected={displayedCompetitionPhase === "bracket"}
+        />
+      ) : null}
     </View>
   ) : null;
   const selectBracketRound = (round: number) => {
@@ -819,13 +913,29 @@ export default function TournamentScreen() {
                 matchListOffset.current = event.nativeEvent.contentOffset.y;
               }}
               scrollEventThrottle={16}
-              sections={league.format === "single_elimination" ? [] : matchSections}
+              sections={
+                league.format === "single_elimination"
+                  ? []
+                  : showsTieBreak
+                    ? tieBreakMatchSections
+                    : matchSections
+              }
               showsVerticalScrollIndicator={false}
               stickySectionHeadersEnabled
               ListHeaderComponent={
                 <View style={styles.listHeader}>
                   {tournamentSummary}
                   {phaseSelector}
+                  {showsTieBreak ? (
+                    <Card>
+                      <View style={styles.stack}>
+                        <Text style={styles.configurationTitle} variant="bodyLarge">
+                          {t("tournament_mixed_tiebreak_title")}
+                        </Text>
+                        <Text color="secondary">{t("tournament_mixed_tiebreak_help")}</Text>
+                      </View>
+                    </Card>
+                  ) : null}
                   {league.state === "published" && isOrganizer ? (
                     <Card>
                       <View style={styles.stack}>
@@ -913,23 +1023,61 @@ export default function TournamentScreen() {
                                   <View style={styles.configurationFields}>
                                     <TextField
                                       accessibilityLabel={t("tournament_mixed_group_count")}
+                                      error={
+                                        !mixedConfiguration.valid &&
+                                        mixedConfiguration.reason === "groups"
+                                          ? t("tournament_mixed_group_count_invalid")
+                                          : undefined
+                                      }
                                       inputMode="numeric"
+                                      keyboardType="number-pad"
                                       label={t("tournament_mixed_group_count")}
-                                      onChangeText={setGroupCount}
+                                      onBlur={() =>
+                                        setGroupCount((value) =>
+                                          normalizeIntegerInput(
+                                            value,
+                                            minimumGroupCount,
+                                            maximumGroupCount,
+                                          ),
+                                        )
+                                      }
+                                      onChangeText={(value) =>
+                                        setGroupCount(sanitizeIntegerInput(value))
+                                      }
                                       value={groupCount}
                                     />
                                     <TextField
                                       accessibilityLabel={t(
                                         "tournament_mixed_qualifiers_per_group",
                                       )}
+                                      error={
+                                        !mixedConfiguration.valid &&
+                                        mixedConfiguration.reason === "qualifiers"
+                                          ? t("tournament_mixed_qualifiers_per_group_invalid")
+                                          : undefined
+                                      }
                                       inputMode="numeric"
+                                      keyboardType="number-pad"
                                       label={t("tournament_mixed_qualifiers_per_group")}
-                                      onChangeText={setQualifiersPerGroup}
+                                      onBlur={() =>
+                                        setQualifiersPerGroup((value) =>
+                                          normalizeIntegerInput(
+                                            value,
+                                            minimumQualifiersPerGroup,
+                                            maximumQualifiersPerGroup,
+                                          ),
+                                        )
+                                      }
+                                      onChangeText={(value) =>
+                                        setQualifiersPerGroup(sanitizeIntegerInput(value))
+                                      }
                                       value={qualifiersPerGroup}
                                     />
                                   </View>
                                 )}
-                                {!mixedConfiguration.valid ? (
+                                {!mixedConfiguration.valid &&
+                                (mixedConfiguration.reason === "teams" ||
+                                  mixedConfiguration.reason === "bracket") ? (
                                   <Text color="error">
                                     {mixedConfiguration.reason === "teams"
                                       ? t("tournament_mixed_required_teams")
@@ -938,9 +1086,7 @@ export default function TournamentScreen() {
                                             String(mixedConfiguration.required),
                                           )
                                           .replace("{current}", String(league.teams.length))
-                                      : mixedConfiguration.reason === "bracket"
-                                        ? t("tournament_mixed_bracket_size")
-                                        : t("tournament_mixed_numbers_invalid")}
+                                      : t("tournament_mixed_bracket_size")}
                                   </Text>
                                 ) : null}
                               </View>
@@ -961,10 +1107,20 @@ export default function TournamentScreen() {
                   {waitingForOwnerToStartElimination ? (
                     <Card>
                       <View style={styles.stack}>
-                        <Text color="secondary">{t("tournament_mixed_waiting_for_owner")}</Text>
+                        <Text color="secondary">
+                          {t(
+                            tieBreakStageReady
+                              ? "tournament_mixed_waiting_for_owner_elimination"
+                              : "tournament_mixed_waiting_for_owner",
+                          )}
+                        </Text>
                         <Button
                           disabled
-                          label={t("tournament_mixed_start_elimination")}
+                          label={t(
+                            tieBreakStageReady
+                              ? "tournament_mixed_start_elimination"
+                              : "tournament_mixed_finish_league",
+                          )}
                           onPress={() => undefined}
                         />
                       </View>
@@ -994,7 +1150,12 @@ export default function TournamentScreen() {
                         </Text>
                         <Text style={styles.matchScore} variant="title">
                           {match.state === "completed"
-                            ? `${match.homeScore} – ${match.awayScore}`
+                            ? `${match.homeScore} – ${match.awayScore}${
+                                match.homePenalties !== undefined &&
+                                match.awayPenalties !== undefined
+                                  ? ` (${match.homePenalties}–${match.awayPenalties} ${t("bracket_penalties_short")})`
+                                  : ""
+                              }`
                             : "–"}
                         </Text>
                         <Text style={styles.teamName} variant="bodyLarge">
@@ -1022,10 +1183,13 @@ export default function TournamentScreen() {
               renderSectionHeader={({ section }) => (
                 <View style={[styles.roundHeader, { backgroundColor: colors.surface.canvas }]}>
                   <Text variant="title">
-                    {section.group
-                      ? `${t("tournament_group_label").replace("{number}", String(section.group))} · `
-                      : ""}
-                    {t("league_match_round").replace("{number}", String(section.round))}
+                    {showsTieBreak
+                      ? `${t("tournament_mixed_tiebreak_pool").replace("{number}", String(section.group))} · ${t("tournament_mixed_tiebreak_cycle").replace("{number}", String(section.round))}`
+                      : `${
+                          section.group
+                            ? `${t("tournament_group_label").replace("{number}", String(section.group))} · `
+                            : ""
+                        }${t("league_match_round").replace("{number}", String(section.round))}`}
                   </Text>
                 </View>
               )}

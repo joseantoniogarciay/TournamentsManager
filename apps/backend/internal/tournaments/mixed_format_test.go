@@ -89,7 +89,7 @@ func TestQualifiedTeamIDsRejectsAGroupWithoutEnoughEligibleTeams(t *testing.T) {
 	}
 }
 
-func TestQualifiedTeamIDsUsesPersistedSeedAtAnExactCutoffTie(t *testing.T) {
+func TestPlanQualificationRequiresATieBreakAtAnExactCutoffTie(t *testing.T) {
 	legs := 1
 	stage := Stage{ID: "stage", Type: "league", State: "in_progress", RoundRobinLegs: &legs, LeagueStructure: LeagueStructureSingleTable, QualifierCount: 2}
 	tournament := Tournament{
@@ -102,13 +102,112 @@ func TestQualifiedTeamIDsUsesPersistedSeedAtAnExactCutoffTie(t *testing.T) {
 			{StageID: "stage", HomeTeamID: "seed-2", AwayTeamID: "seed-3", State: "completed", HomeScore: integer(0), AwayScore: integer(0)},
 		},
 	}
-	ids, err := QualifiedTeamIDs(tournament, stage)
+	plan, err := PlanQualification(tournament, stage)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(ids) != 2 || ids[0] != "seed-1" || ids[1] != "seed-2" {
-		t.Fatalf("qualified = %#v, want first persisted seeds", ids)
+	if len(plan.Direct) != 0 || len(plan.Pools) != 1 || plan.Pools[0].QualifierCount != 2 || len(plan.Pools[0].Standings) != 3 {
+		t.Fatalf("plan = %#v, want one three-team pool for two places", plan)
 	}
+	if _, err := QualifiedTeamIDs(tournament, stage); err != ErrQualificationTieBreakRequired {
+		t.Fatalf("error = %v, want qualification tiebreak", err)
+	}
+}
+
+func TestPlanQualificationKeepsTheResolvedLeaderAndTiesOnlyTheCutoffPair(t *testing.T) {
+	legs := 1
+	stage := Stage{ID: "league", Type: "league", State: "in_progress", RoundRobinLegs: &legs, LeagueStructure: LeagueStructureSingleTable, QualifierCount: 2}
+	tournament := Tournament{
+		Sport: SportFootball,
+		Teams: []Team{
+			{ID: "a", Position: 1}, {ID: "b", Position: 2}, {ID: "c", Position: 3}, {ID: "d", Position: 4},
+		},
+		Matches: []Match{
+			completedLeagueMatch("league", "a", "b", 1, 0),
+			completedLeagueMatch("league", "a", "c", 1, 0),
+			completedLeagueMatch("league", "a", "d", 1, 0),
+			completedLeagueMatch("league", "b", "c", 0, 0),
+			completedLeagueMatch("league", "b", "d", 1, 0),
+			completedLeagueMatch("league", "c", "d", 1, 0),
+		},
+	}
+	plan, err := PlanQualification(tournament, stage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plan.Direct) != 1 || plan.Direct[0].TeamID != "a" || len(plan.Pools) != 1 || plan.Pools[0].QualifierCount != 1 {
+		t.Fatalf("plan = %#v, want a direct and one place decided between b and c", plan)
+	}
+	ids := standingTeamIDs(plan.Pools[0].Standings)
+	if len(ids) != 2 || ids[0] != "b" || ids[1] != "c" {
+		t.Fatalf("tiebreak participants = %#v, want b and c", ids)
+	}
+}
+
+func TestResolveQualificationTieBreakRepeatsOnlyTheStillTiedPool(t *testing.T) {
+	stageID := "tiebreak"
+	pool := QualificationTieBreakPool{StageID: stageID, PoolNumber: 1, QualifierCount: 2, CurrentCycle: 1, State: "in_progress"}
+	tournament := Tournament{
+		StageTeams: []StageTeam{
+			{StageID: stageID, TeamID: "a", SeedPosition: 1, GroupNumber: 1},
+			{StageID: stageID, TeamID: "b", SeedPosition: 2, GroupNumber: 1},
+			{StageID: stageID, TeamID: "c", SeedPosition: 3, GroupNumber: 1},
+		},
+		Matches: []Match{
+			decidedTieBreakMatch(stageID, 1, 1, 1, "a", "b", "a", 1, 0),
+			decidedTieBreakMatch(stageID, 1, 1, 2, "a", "c", "c", 0, 1),
+			decidedTieBreakMatch(stageID, 1, 1, 3, "b", "c", "b", 1, 0),
+		},
+	}
+
+	resolution, err := ResolveQualificationTieBreak(tournament, pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !resolution.NeedsNextCycle || resolution.RemainingQualifierCount != 2 || len(resolution.PendingTeamIDs) != 3 {
+		t.Fatalf("resolution = %#v, want another three-team cycle", resolution)
+	}
+
+	pool.CurrentCycle = 2
+	tournament.Matches = append(tournament.Matches,
+		decidedTieBreakMatch(stageID, 1, 2, 1, "a", "b", "a", 1, 0),
+		decidedTieBreakMatch(stageID, 1, 2, 2, "a", "c", "a", 1, 0),
+		decidedTieBreakMatch(stageID, 1, 2, 3, "b", "c", "b", 1, 0),
+	)
+	resolution, err = ResolveQualificationTieBreak(tournament, pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !resolution.Complete || len(resolution.QualifiedTeamIDs) != 2 || resolution.QualifiedTeamIDs[0] != "a" || resolution.QualifiedTeamIDs[1] != "b" {
+		t.Fatalf("resolution = %#v, want a and b qualified", resolution)
+	}
+}
+
+func TestResolveQualificationTieBreakUsesOneDecisiveMatchForTwoTeams(t *testing.T) {
+	stageID := "tiebreak"
+	pool := QualificationTieBreakPool{StageID: stageID, PoolNumber: 1, QualifierCount: 1, CurrentCycle: 1, State: "in_progress"}
+	tournament := Tournament{
+		StageTeams: []StageTeam{
+			{StageID: stageID, TeamID: "a", SeedPosition: 1, GroupNumber: 1},
+			{StageID: stageID, TeamID: "b", SeedPosition: 2, GroupNumber: 1},
+		},
+		Matches: []Match{decidedTieBreakMatch(stageID, 1, 1, 1, "a", "b", "b", 0, 0)},
+	}
+	resolution, err := ResolveQualificationTieBreak(tournament, pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !resolution.Complete || len(resolution.QualifiedTeamIDs) != 1 || resolution.QualifiedTeamIDs[0] != "b" {
+		t.Fatalf("resolution = %#v, want b qualified", resolution)
+	}
+}
+
+func decidedTieBreakMatch(stageID string, pool, cycle, sequence int, home, away, winner string, homeScore, awayScore int) Match {
+	return Match{StageID: stageID, GroupNumber: pool, RoundNumber: cycle, Sequence: sequence, HomeTeamID: home, AwayTeamID: away, WinnerTeamID: winner, State: "completed", HomeScore: integer(homeScore), AwayScore: integer(awayScore)}
+}
+
+func completedLeagueMatch(stageID, home, away string, homeScore, awayScore int) Match {
+	return Match{StageID: stageID, HomeTeamID: home, AwayTeamID: away, State: "completed", HomeScore: integer(homeScore), AwayScore: integer(awayScore)}
 }
 
 func TestAssignGroupsUsesSerpentineSeeds(t *testing.T) {

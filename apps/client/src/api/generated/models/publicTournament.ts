@@ -10,6 +10,7 @@ import type { PublicTournamentFormat } from "./publicTournamentFormat.js";
 import type { PublicTournamentRoundRobinLegs } from "./publicTournamentRoundRobinLegs.js";
 import type { PublicTournamentSport } from "./publicTournamentSport.js";
 import type { PublicTournamentState } from "./publicTournamentState.js";
+import type { QualificationTieBreakPool } from "./qualificationTieBreakPool.js";
 import type { TournamentStage } from "./tournamentStage.js";
 import type { TournamentStageTeam } from "./tournamentStageTeam.js";
 import type { TournamentStanding } from "./tournamentStanding.js";
@@ -23,6 +24,7 @@ export interface PublicTournament {
   format: PublicTournamentFormat;
   stages: TournamentStage[];
   stageTeams: TournamentStageTeam[];
+  tieBreakPools: QualificationTieBreakPool[];
   state: PublicTournamentState;
   /** Vueltas fijadas para una fase de liga; en eliminatoria se conserva 1 por compatibilidad interna del primer incremento. */
   roundRobinLegs: PublicTournamentRoundRobinLegs;
