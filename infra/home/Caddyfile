@@ -24,7 +24,7 @@
 	# Solo la home es una superficie pública descubrible. Las rutas de aplicación,
 	# incluidas las ligas leíbles por ID, no se convierten en resultados de búsqueda.
 	@non_indexable_web_routes {
-		not path / /robots.txt /sitemap.xml
+		not path / /favicon.ico /robots.txt /sitemap.xml
 	}
 	header @non_indexable_web_routes X-Robots-Tag "noindex, nofollow, noarchive"
 	handle /.well-known/* {

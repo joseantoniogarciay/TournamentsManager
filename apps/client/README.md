@@ -29,7 +29,9 @@ otro puerto, porque los enlaces de correo y el origen CORS local usan `8082`.
 La configuración de Expo se resuelve en `app.config.ts`, con dos variantes:
 desarrollo (`Fast Tourney Dev`) y producción (`Fast Tourney`). Ambas usan el
 mismo código y se distinguen mediante `APP_ENV`; el icono compartido es
-`assets/fast-tourney-icon.png` (1024 × 1024).
+`assets/fast-tourney-icon.png` (1024 × 1024). La configuración web reutiliza
+esa fuente mediante `web.favicon`; cada exportación genera `/favicon.ico` y su
+declaración en el HTML para navegador y buscadores.
 
 ```bash
 pnpm --filter @tournaments-manager/client start:dev

@@ -79,8 +79,10 @@ acoplada:
 
 La web se entrega con exportación estática de Expo, sin SSR general. La home `/`
 es indexable y el artefacto contiene su HTML, `robots.txt`, sitemap y metadatos;
-el borde añade `X-Robots-Tag: noindex, nofollow, noarchive` a las rutas de
-aplicación. Solo `/league/{uuid}` se deriva a un proceso Go local que inyecta
+el artefacto publica además `/favicon.ico` y la home lo enlaza para navegador y
+buscadores. El borde deja rastreable ese icono y añade
+`X-Robots-Tag: noindex, nofollow, noarchive` a las rutas de aplicación. Solo
+`/league/{uuid}` se deriva a un proceso Go local que inyecta
 metadatos sociales desde la API pública en el mismo shell estático. Más
 superficies dinámicas o SSR completo se decidirán solo si Search Console,
 previews o rendimiento aportan evidencia (ADR-0121 y ADR-0120).

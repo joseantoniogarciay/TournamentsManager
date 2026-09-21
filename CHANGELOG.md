@@ -6,6 +6,14 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-09-21
+
+### Fixed
+
+- La web publica y enlaza el favicon de FastTourney, y el borde de producción
+  permite que los buscadores lo rastreen sin relajar la exclusión de las rutas
+  de aplicación.
+
 ## [1.7.0] - 2026-09-21
 
 ### Added
