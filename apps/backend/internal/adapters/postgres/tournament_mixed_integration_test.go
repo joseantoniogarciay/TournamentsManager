@@ -455,6 +455,50 @@ func TestIntegrationMixedBasketballCompletesThroughTheBracket(t *testing.T) {
 	}
 }
 
+func TestIntegrationMixedHandballCompletesWithSevenMetreShootout(t *testing.T) {
+	pool := integrationPool(t)
+	ctx := context.Background()
+	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-handball@example.com", "mixed_handball", "password123")
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	created, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Mixed handball", Sport: tournaments.SportHandball, Teams: []tournaments.TeamInput{{Name: "One"}, {Name: "Two"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	started, err := service.Start(ctx, owner, created.ID, tournaments.StartInput{Format: tournaments.FormatLeagueThenSingleElimination, RoundRobinLegs: 1, LeagueStructure: tournaments.LeagueStructureSingleTable, QualifierCount: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = service.RecordResult(ctx, owner, created.ID, started.Matches[0].ID, tournaments.MatchResultInput{HomeScore: 28, AwayScore: 26}); err != nil {
+		t.Fatal(err)
+	}
+	transitioned, err := service.StartElimination(ctx, owner, created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var final tournaments.Match
+	eliminationStage := mixedStageByType(t, transitioned, "single_elimination")
+	for _, match := range transitioned.Matches {
+		if match.StageID == eliminationStage.ID {
+			final = match
+		}
+	}
+	if final.ID == "" {
+		t.Fatal("missing handball final")
+	}
+	if _, err = service.RecordResult(ctx, owner, created.ID, final.ID, tournaments.MatchResultInput{
+		HomeScore: 30, AwayScore: 30, HomePenalties: intPointer(5), AwayPenalties: intPointer(4),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	completed, err := service.Complete(ctx, owner, created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completed.State != "completed" || len(completed.ChampionTeamIDs) != 1 {
+		t.Fatalf("completed handball tournament = %#v", completed)
+	}
+}
+
 func mixedStageByType(t *testing.T, tournament tournaments.Tournament, stageType string) tournaments.Stage {
 	t.Helper()
 	for _, stage := range tournament.Stages {

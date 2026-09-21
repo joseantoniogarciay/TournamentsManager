@@ -122,12 +122,14 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 | InlineMessage      | error, help, success                                       | Bajo el control asociado; texto claro y disponible para lector de pantalla.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 El deporte del torneo usa el «Selector de opción» al principio del formulario de
-creación, antes de los campos que pueda condicionar. Sus valores iniciales son
-«Fútbol» y «Baloncesto», conserva una selección visible y no se vuelve editable
-tras publicar. El enum recibido gobierna el vocabulario posterior: goles para
-fútbol, puntos para baloncesto y ayuda inline cuando un tanteo de baloncesto
-queda empatado. El resultado administrativo fijo se explica en la confirmación
-de retirada, sin presentar un campo que sugiera que puede configurarse.
+creación, antes de los campos que pueda condicionar. Sus valores son «Fútbol»,
+«Baloncesto» y «Balonmano», conserva una selección visible y no se vuelve
+editable tras publicar. El enum recibido gobierna el vocabulario posterior:
+goles para fútbol y balonmano, puntos para baloncesto, ayuda inline cuando un
+tanteo de baloncesto queda empatado y «lanzamientos de 7 metros» para el
+desempate de balonmano. El resultado administrativo fijo se explica en la
+confirmación de retirada, sin presentar un campo que sugiera que puede
+configurarse.
 
 `Card` está implementada en `shared/ui`: aplica superficie, borde, radio,
 padding y margen exterior horizontal semánticos. La home la usa para separar

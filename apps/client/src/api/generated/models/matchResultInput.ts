@@ -7,7 +7,7 @@
  */
 
 /**
- * En liga se admite el marcador final; baloncesto rechaza empates. En una eliminatoria de fútbol, un empate exige ambos marcadores de penaltis distintos; baloncesto exige un tanteo final no empatado y nunca envía penaltis. Los penaltis no se suman al marcador del partido.
+ * En liga se admite el marcador final; baloncesto rechaza empates. En una eliminatoria de fútbol o balonmano, un empate exige ambos marcadores de desempate distintos; el cliente los presenta como penaltis o lanzamientos de siete metros según el deporte. Baloncesto exige un tanteo final no empatado y nunca envía desempate. Esos valores no se suman al marcador del partido.
  */
 export interface MatchResultInput {
   /** @minimum 0 */

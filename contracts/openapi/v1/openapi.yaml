@@ -1250,7 +1250,7 @@ components:
       required: [name, sport, teams]
       properties:
         name: { type: string, minLength: 1, maxLength: 56 }
-        sport: { type: string, enum: [football, basketball] }
+        sport: { type: string, enum: [football, basketball, handball] }
         teams:
           type: array
           minItems: 1
@@ -1266,7 +1266,7 @@ components:
           format: uuid
           description: Identidad estable del borrador usada para deduplicar reintentos por cuenta.
         name: { type: string, minLength: 1, maxLength: 56 }
-        sport: { type: string, enum: [football, basketball] }
+        sport: { type: string, enum: [football, basketball, handball] }
         teams:
           type: array
           minItems: 1
@@ -1495,16 +1495,18 @@ components:
         awayPenalties: { type: integer, minimum: 0 }
       description: >-
         En liga se admite el marcador final; baloncesto rechaza empates. En una
-        eliminatoria de fútbol, un empate exige ambos marcadores de penaltis
-        distintos; baloncesto exige un tanteo final no empatado y nunca envía
-        penaltis. Los penaltis no se suman al marcador del partido.
+        eliminatoria de fútbol o balonmano, un empate exige ambos marcadores de
+        desempate distintos; el cliente los presenta como penaltis o
+        lanzamientos de siete metros según el deporte. Baloncesto exige un
+        tanteo final no empatado y nunca envía desempate. Esos valores no se
+        suman al marcador del partido.
     PublishedTournament:
       type: object
       required: [id, name, sport, state, teams, matches]
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
-        sport: { type: string, enum: [football, basketball] }
+        sport: { type: string, enum: [football, basketball, handball] }
         state: { type: string, enum: [published] }
         teams: { type: array, items: { $ref: "#/components/schemas/TournamentTeam" } }
         matches: { type: array, items: { $ref: "#/components/schemas/Match" } }
@@ -1529,7 +1531,7 @@ components:
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
-        sport: { type: string, enum: [football, basketball] }
+        sport: { type: string, enum: [football, basketball, handball] }
         format: { type: string, enum: [league, single_elimination, league_then_single_elimination] }
         stages:
           type: array

@@ -37,6 +37,12 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
+  getShootoutKeys,
+  getSportLabelKey,
+  sportAllowsTiedLeagueResult,
+  sportUsesShootout,
+} from "@/shared/tournaments/sport";
+import {
   Button,
   Card,
   ConfigurationOption,
@@ -399,7 +405,9 @@ export default function TournamentScreen() {
     try {
       const resultStageType = league?.stages.find((stage) => stage.id === match?.stageId)?.type;
       const shootout =
-        league?.sport === "football" &&
+        league !== null &&
+        league !== undefined &&
+        sportUsesShootout(league.sport) &&
         (resultStageType === "single_elimination" ||
           resultStageType === "qualification_tiebreak") &&
         homeScore === awayScore;
@@ -602,7 +610,7 @@ export default function TournamentScreen() {
       })
     : undefined;
   const needsShootout =
-    league.sport === "football" &&
+    sportUsesShootout(league.sport) &&
     ["single_elimination", "qualification_tiebreak"].includes(
       league.stages.find((stage) => stage.id === editingMatch?.stageId)?.type ?? "",
     ) &&
@@ -614,7 +622,8 @@ export default function TournamentScreen() {
     editingScore !== undefined &&
     /^\d+$/.test(editingScore.home) &&
     /^\d+$/.test(editingScore.away) &&
-    (league.sport !== "basketball" || Number(editingScore.home) !== Number(editingScore.away)) &&
+    (sportAllowsTiedLeagueResult(league.sport) ||
+      Number(editingScore.home) !== Number(editingScore.away)) &&
     (!needsShootout ||
       (/^\d+$/.test(editingScore.homePenalties) &&
         /^\d+$/.test(editingScore.awayPenalties) &&
@@ -751,11 +760,7 @@ export default function TournamentScreen() {
               />
               <Text color="secondary" style={styles.summaryText}>
                 <Text style={styles.summaryLabel}>{`${t("tournament_sport_label")}: `}</Text>
-                {t(
-                  league.sport === "basketball"
-                    ? "tournament_sport_basketball"
-                    : "tournament_sport_football",
-                )}
+                {t(getSportLabelKey(league.sport))}
               </Text>
             </View>
             <View style={styles.summaryItem}>
@@ -1368,11 +1373,11 @@ export default function TournamentScreen() {
               ) : null}
               {needsShootout ? (
                 <>
-                  <Text color="secondary">{t("bracket_penalties_help")}</Text>
+                  <Text color="secondary">{t(getShootoutKeys(league.sport).help)}</Text>
                   <View style={styles.scoreFields}>
                     <View style={styles.scoreField}>
                       <TextField
-                        label={t("bracket_home_penalties")}
+                        label={t(getShootoutKeys(league.sport).home)}
                         keyboardType="number-pad"
                         value={editingScore.homePenalties}
                         onChangeText={(homePenalties) =>
@@ -1385,7 +1390,7 @@ export default function TournamentScreen() {
                     </View>
                     <View style={styles.scoreField}>
                       <TextField
-                        label={t("bracket_away_penalties")}
+                        label={t(getShootoutKeys(league.sport).away)}
                         keyboardType="number-pad"
                         value={editingScore.awayPenalties}
                         onChangeText={(awayPenalties) =>

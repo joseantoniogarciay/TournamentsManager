@@ -109,12 +109,18 @@ func TestValidateLeagueResultUsesSportPolicy(t *testing.T) {
 	if err := ValidateLeagueResult(SportBasketball, MatchResultInput{HomeScore: 80, AwayScore: 79, HomePenalties: &penalties}); !errors.Is(err, ErrInvalidTournamentInput) {
 		t.Fatalf("basketball penalties error = %v, want invalid input", err)
 	}
+	if err := ValidateLeagueResult(SportHandball, MatchResultInput{HomeScore: 24, AwayScore: 24}); err != nil {
+		t.Fatalf("handball draw rejected: %v", err)
+	}
+	if err := ValidateLeagueResult(SportHandball, MatchResultInput{HomeScore: 25, AwayScore: 24, HomePenalties: &penalties}); !errors.Is(err, ErrInvalidTournamentInput) {
+		t.Fatalf("handball league shootout error = %v, want invalid input", err)
+	}
 }
 
 func TestAdministrativeWinningScoreUsesSportPolicy(t *testing.T) {
 	t.Parallel()
 
-	for sport, want := range map[Sport]int{SportFootball: 3, SportBasketball: 20} {
+	for sport, want := range map[Sport]int{SportFootball: 3, SportBasketball: 20, SportHandball: 10} {
 		got, err := AdministrativeWinningScore(sport)
 		if err != nil || got != want {
 			t.Errorf("AdministrativeWinningScore(%q) = %d, %v; want %d", sport, got, err, want)

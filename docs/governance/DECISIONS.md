@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0134](../adr/0134-support-handball-with-an-explicit-sport-profile.md)                        | Soportar balonmano con un perfil deportivo explícito                            | Aceptado              | 2026-09-21 |
 | [0133](../adr/0133-compose-league-and-knockout-stages.md)                                     | Componer liga y eliminatoria en un mismo torneo                                 | Aceptado              | 2026-09-20 |
 | [0132](../adr/0132-organize-go-adapters-by-capability.md)                                     | Organizar los adaptadores Go por capacidad                                      | Aceptado              | 2026-09-20 |
 | [0131](../adr/0131-sync-last-team-name-as-account-preference.md)                              | Sincronizar el último nombre de equipo como preferencia de cuenta               | Aceptado              | 2026-09-20 |

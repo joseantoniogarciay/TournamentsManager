@@ -153,7 +153,7 @@ func validRegistrationDraft(draft *registration.Draft) bool {
 	if draft == nil {
 		return true
 	}
-	if !uuidPattern.MatchString(draft.ID) || (draft.Sport != tournaments.SportFootball && draft.Sport != tournaments.SportBasketball) || len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > tournaments.MaximumTournamentNameLength || len(draft.Teams) < 1 || len(draft.Teams) > 64 {
+	if !uuidPattern.MatchString(draft.ID) || !tournaments.ValidSport(draft.Sport) || len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > tournaments.MaximumTournamentNameLength || len(draft.Teams) < 1 || len(draft.Teams) > 64 {
 		return false
 	}
 	seen := map[string]bool{}

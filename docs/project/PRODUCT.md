@@ -8,8 +8,9 @@
 ## Visión
 
 TournamentsManager permite descubrir, crear y gestionar torneos. Fútbol fue el
-primer deporte con el que se validó el modelo y baloncesto es el primer perfil
-adicional; los siguientes se incorporarán solo cuando sus reglas estén definidas.
+primer deporte con el que se validó el modelo; baloncesto y balonmano son
+perfiles adicionales explícitos. Los siguientes se incorporarán solo cuando sus
+reglas estén definidas.
 
 ## Hechos aceptados
 
@@ -26,8 +27,9 @@ adicional; los siguientes se incorporarán solo cuando sus reglas estén definid
 - La cuenta incluye registro, inicio de sesión y recuperación de contraseña.
 - Una misma cuenta admite credenciales locales y login con Google. Apple no está
   adoptado en v1 y se revisa antes de distribuir el cliente iOS.
-- El torneo declara un deporte inmutable elegido entre `football` y
-  `basketball`; «Fútbol» engloba fútbol sala en esta iteración (ADR-0126).
+- El torneo declara un deporte inmutable elegido entre `football`, `basketball`
+  y `handball`; «Fútbol» engloba fútbol sala en esta iteración (ADR-0126 y
+  ADR-0134).
 - El recurso raíz es un torneo. La liga existente se conserva como formato
   `league`; también existe la eliminatoria directa a partido único como formato
   `single_elimination`; `league_then_single_elimination` encadena una liga
@@ -149,8 +151,9 @@ El creador lo asigna directamente mediante su `username`, sin aceptación previa
 El administrador puede abandonar la liga; el creador puede retirarlo con efecto
 inmediato. Su único permiso operativo es gestionar resultados; la mecánica de
 registro queda limitada al tanteo final local y visitante, ambos enteros no
-negativos, y a los penaltis solo cuando una eliminatoria de fútbol empatada los
-necesita.
+negativos, y a un desempate solo cuando una eliminatoria de fútbol o balonmano
+empatada lo necesita. El cliente lo presenta como penaltis en fútbol y
+lanzamientos de siete metros en balonmano.
 Un resultado que registre se aplica de inmediato, sin confirmación del creador;
 también puede corregirlo y el sistema conserva quién cambió qué y cuándo.
 
@@ -272,7 +275,7 @@ duración y renovación de sesiones.
 
 El primer incremento atravesó producto, seguridad, datos, API y operación:
 
-1. un invitado prepara localmente un torneo, elige fútbol o baloncesto y crea sus
+1. un invitado prepara localmente un torneo, elige fútbol, baloncesto o balonmano y crea sus
    equipos;
 2. una persona se registra, verifica su cuenta e inicia sesión sin perder el
    borrador;
@@ -307,18 +310,20 @@ clasificadas incompatible no podrá empezar.
 
 Las [ADR-0032](../adr/0032-define-minimum-football-league-data-and-lifecycle.md)
 y [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md) definen
-la estructura mínima que originó la liga de fútbol. ADR-0126 amplía ese núcleo:
-el torneo elige `football` o `basketball` al crearse y conserva el deporte
-durante todo su ciclo. Ambos admiten liga a una o dos vueltas y eliminatoria
-directa a partido único; no incluyen fechas, horas, periodos ni prórrogas
-desglosadas.
+la estructura mínima que originó la liga de fútbol. ADR-0126 y ADR-0134 amplían
+ese núcleo: el torneo elige `football`, `basketball` o `handball` al crearse y
+conserva el deporte durante todo su ciclo. Los tres admiten liga a una o dos
+vueltas y eliminatoria directa a partido único; no incluyen fechas, horas,
+periodos ni prórrogas desglosadas.
 
 En fútbol, una liga puntúa 3-1-0. En dos vueltas prioriza la
 mini-clasificación entre empatados y en una, diferencia de goles y goles a favor
 generales. En baloncesto, la victoria suma 2, una derrota jugada 1 y una derrota
 administrativa 0; no admite tanteo final empatado y desempata primero por la
 mini-clasificación directa, seguida de diferencia de puntos y puntos anotados
-generales. Una igualdad tras todos los criterios comparte posición. El backend
+generales. En balonmano, una liga puntúa 2-1-0 y desempata por mini-clasificación
+directa, diferencia de goles y goles a favor generales. Una igualdad tras todos
+los criterios comparte posición. El backend
 calcula la clasificación y la app solo presenta esa proyección (ADR-0081).
 «Clasificación» no se muestra antes de iniciar el torneo; durante esa preparación,
 el acceso disponible es «Equipos».
@@ -343,7 +348,8 @@ los administradores delegados pueden registrar o corregir resultados. El creador
 solo puede finalizarla cuando todos sus partidos tienen resultado. Si un equipo abandona en
 `en_curso`, solo el creador puede declararlo: todos sus partidos, pendientes o
 ya jugados, pasan a resultado administrativo fijo a favor del rival (`3-0` en
-fútbol y `20-0` en baloncesto) y la liga continúa. El valor no es configurable.
+fútbol, `20-0` en baloncesto o `10-0` en balonmano) y la liga continúa. El valor
+no es configurable.
 
 ## Cancelación
 

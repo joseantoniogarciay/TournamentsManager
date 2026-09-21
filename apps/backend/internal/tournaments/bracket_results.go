@@ -49,6 +49,11 @@ func (r BracketResult) validate(sport Sport) error {
 		}
 		return nil
 	}
+	// An empty sport is retained as the internal default for brackets generated
+	// before their tournament policy is attached; it follows football semantics.
+	if sport != "" && sport != SportFootball && sport != SportHandball {
+		return ErrInvalidBracketResult
+	}
 	if r.HomeScore != r.AwayScore {
 		if r.HomePenalties != nil || r.AwayPenalties != nil {
 			return ErrInvalidBracketResult

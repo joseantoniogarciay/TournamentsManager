@@ -114,3 +114,64 @@ func TestIntegrationBasketballRejectsTiesAndAppliesTwentyZeroWithdrawal(t *testi
 		}
 	}
 }
+
+func TestIntegrationHandballUsesTwoOneZeroAndTenZeroWithdrawal(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	organizerID := createVerifiedLocalAccount(t, ctx, pool, "handball-organizer@example.test", "handballorganizer", "correct password")
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	created, err := service.Create(ctx, organizerID, tournaments.CreateInput{
+		Name: "Liga de balonmano", Sport: tournaments.SportHandball,
+		Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}, {Name: "Verdes"}},
+	})
+	if err != nil || created.Sport != tournaments.SportHandball {
+		t.Fatalf("crear balonmano = %#v, %v", created, err)
+	}
+	started, err := service.Start(ctx, organizerID, created.ID, tournaments.StartInput{Format: "league", RoundRobinLegs: 1})
+	if err != nil {
+		t.Fatalf("iniciar balonmano = %v", err)
+	}
+	first, found := leagueMatchBetweenTeams(started.Matches, started.Teams[0].ID, started.Teams[1].ID)
+	if !found {
+		t.Fatal("faltaba primer partido de balonmano")
+	}
+	if _, err := service.RecordResult(ctx, organizerID, created.ID, first.ID, tournaments.MatchResultInput{HomeScore: 24, AwayScore: 24}); err != nil {
+		t.Fatalf("empate de balonmano = %v", err)
+	}
+	second, found := leagueMatchBetweenTeams(started.Matches, started.Teams[0].ID, started.Teams[2].ID)
+	if !found {
+		t.Fatal("faltaba segundo partido de balonmano")
+	}
+	winningResult := tournaments.MatchResultInput{HomeScore: 25, AwayScore: 24}
+	if second.AwayTeamID == started.Teams[0].ID {
+		winningResult = tournaments.MatchResultInput{HomeScore: 24, AwayScore: 25}
+	}
+	updated, err := service.RecordResult(ctx, organizerID, created.ID, second.ID, winningResult)
+	if err != nil {
+		t.Fatalf("victoria de balonmano = %v", err)
+	}
+	for _, standing := range updated.Standings {
+		if standing.TeamID == started.Teams[0].ID && standing.Points != 3 {
+			t.Fatalf("puntos de balonmano = %d, se esperaban 3", standing.Points)
+		}
+	}
+	withdrawn := started.Teams[1]
+	updated, err = service.WithdrawTeam(ctx, organizerID, created.ID, withdrawn.ID)
+	if err != nil {
+		t.Fatalf("retirar equipo de balonmano = %v", err)
+	}
+	for _, match := range updated.Matches {
+		if match.HomeTeamID != withdrawn.ID && match.AwayTeamID != withdrawn.ID {
+			continue
+		}
+		if match.ResultType != tournaments.ResultAdministrative || match.HomeScore == nil || match.AwayScore == nil {
+			t.Fatalf("resultado administrativo de balonmano = %#v", match)
+		}
+		if match.HomeTeamID == withdrawn.ID && (*match.HomeScore != 0 || *match.AwayScore != 10) {
+			t.Fatalf("retirada local de balonmano = %d-%d", *match.HomeScore, *match.AwayScore)
+		}
+		if match.AwayTeamID == withdrawn.ID && (*match.HomeScore != 10 || *match.AwayScore != 0) {
+			t.Fatalf("retirada visitante de balonmano = %d-%d", *match.HomeScore, *match.AwayScore)
+		}
+	}
+}

@@ -19,6 +19,7 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
+import { getWithdrawalDescriptionKey } from "@/shared/tournaments/sport";
 import { Button, Card, ModalDialog, Text, TextField, useConfirmationDialog } from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
@@ -151,9 +152,7 @@ export function TournamentTeamManagement({
       title: t(withdrawn ? "league_withdraw_team_title" : "league_remove_team_title"),
       description: t(
         withdrawn
-          ? tournament.sport === "basketball"
-            ? "basketball_withdraw_team_description"
-            : "league_withdraw_team_description"
+          ? getWithdrawalDescriptionKey(tournament.sport)
           : "league_remove_team_description",
       ).replace("{name}", teamName),
       acceptLabel: t(withdrawn ? "league_withdraw_team" : "league_remove_team"),

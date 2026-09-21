@@ -1,5 +1,16 @@
 # Registro de aprendizaje
 
+## 2026-09-21 — Una tercera política descubre supuestos binarios
+
+- **Aprendido:** añadir balonmano no exige un motor deportivo, pero sí hace
+  visibles los fallbacks que interpretaban «no baloncesto» como fútbol. Ese
+  supuesto podía mostrar un deporte, una retirada o un desempate incorrectos
+  aunque contrato y dominio aceptaran el nuevo enum.
+- **Regla reutilizable:** cada política cerrada se selecciona exhaustivamente en
+  dominio y presentación. Se comparten marcador y fases cuando su semántica
+  coincide, y se mantienen explícitas puntuación, validación, retirada y copy
+  específico sin generalizar antes de necesitarlo.
+
 ## 2026-09-20 — El teclado numérico no valida un campo
 
 - **Aprendido:** `inputMode="numeric"` y el teclado numérico no impiden que web,

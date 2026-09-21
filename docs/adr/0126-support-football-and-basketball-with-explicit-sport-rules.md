@@ -6,7 +6,7 @@
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0037, ADR-0041 y ADR-0081 exclusivamente en su alcance
   futbolístico como regla única para todos los torneos
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0134, exclusivamente para ampliar los perfiles explícitos con balonmano
 
 ## Problema
 

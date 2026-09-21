@@ -132,13 +132,14 @@ transfiere el borrador. El cliente solo elimina su copia local tras el `200`
 de cuenta organizadora y `draftId` es única: repetir la misma intención después
 de perder una respuesta puede emitir otra sesión, pero no otro torneo ni equipos.
 
-`TournamentInput` exige `sport: football | basketball`; no existe valor implícito
+`TournamentInput` exige `sport: football | basketball | handball`; no existe valor implícito
 en el contrato nuevo. La proyección pública devuelve el mismo enum y métricas de
 clasificación neutrales (`scoreFor`, `scoreAgainst`, `scoreDifference`). Un
 partido completado declara `resultType: played | administrative`: baloncesto
-rechaza tanteos finales empatados y penaltis, mientras fútbol conserva el empate
-de liga y los penaltis de una eliminatoria empatada. Las reglas pertenecen al
-dominio; OpenAPI solo expresa los datos y valores admitidos (ADR-0126).
+rechaza tanteos finales empatados y penaltis; fútbol y balonmano conservan el
+empate de liga y exigen un desempate decisivo en una eliminatoria empatada. Las
+reglas pertenecen al dominio; OpenAPI solo expresa los datos y valores admitidos
+(ADR-0126 y ADR-0134).
 
 La publicación exige al menos el equipo propio de la organizadora. Mientras el
 torneo siga `published`, esta puede añadir equipos sin cuenta y gestionar un
@@ -248,7 +249,7 @@ ADR-0122.
 `POST /v1/tournaments/{tournamentId}/teams/{teamId}/withdraw` expresa una baja durante
 una liga en curso. Solo la organizadora puede ejecutarla una vez por equipo: la
 transacción conserva el equipo, completa todos sus partidos con el resultado
-administrativo del deporte (`3-0` en fútbol o `20-0` en baloncesto), registra
+administrativo del deporte (`3-0` en fútbol, `20-0` en baloncesto o `10-0` en balonmano), registra
 cada sustitución y su tipo en el historial y devuelve la proyección con la
 clasificación recalculada. Una repetición o una liga fuera de curso devuelve
 `409`. Véanse ADR-0041 y ADR-0126.
