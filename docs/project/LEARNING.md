@@ -1,5 +1,18 @@
 # Registro de aprendizaje
 
+## 2026-09-21 — Safari no sustituye el Web Clip con el favicon
+
+- **Aprendido:** `rel="icon"` cubre el favicon del navegador y los resultados de
+  búsqueda, pero Safari puede seguir mostrando un globo al guardar o minimizar
+  una web si no encuentra un icono de Web Clip. El ICO de 48 px tampoco es la
+  fuente idónea para una representación de alta resolución.
+- **Regla reutilizable:** una web que se usa desde Safari declara además
+  `apple-touch-icon` con un asset cuadrado, opaco y de alta resolución. Se
+  conserva una sola fuente de marca en el directorio público para que la misma
+  exportación la entregue y Expo genere desde ella los iconos de plataforma; no
+  se añade un manifiesto ni modo standalone mientras el producto no necesite
+  instalarse como PWA.
+
 ## 2026-09-21 — El icono nativo no publica el favicon web
 
 - **Aprendido:** declarar `icon` en Expo configura las aplicaciones nativas,

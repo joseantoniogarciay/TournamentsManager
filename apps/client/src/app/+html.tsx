@@ -17,6 +17,7 @@ export default function RootHtml({ children }: PropsWithChildren) {
       <head>
         <meta charSet="utf-8" />
         <meta id="initial-theme-color" name="theme-color" content={themeCanvasColors.light} />
+        <link rel="apple-touch-icon" sizes="1024x1024" href="/apple-touch-icon.png" />
         <style>{`
           :root {
             --initial-canvas-color: ${themeCanvasColors.light};

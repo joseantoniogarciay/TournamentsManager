@@ -6,6 +6,13 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-09-21
+
+### Fixed
+
+- Safari recibe el icono Web Clip de FastTourney en alta resolución al guardar
+  o minimizar la web, en lugar de recurrir al globo genérico.
+
 ## [1.7.1] - 2026-09-21
 
 ### Fixed
