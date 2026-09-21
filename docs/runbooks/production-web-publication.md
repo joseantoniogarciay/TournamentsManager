@@ -145,3 +145,25 @@ comprobaciones externas verificaron certificado válido (`ssl_verify_result=0`),
 host canónico y `https://api.fasttourney.com/healthz` en `200`. Un `502` inicial
 de API fue transitorio: Caddy local y el Ingress privado ya devolvían `200` y el
 reintento público también devolvió `200`.
+
+## Evidencia de publicación del favicon — 2026-09-21
+
+El release `v1.7.1`, SHA
+`e87ddab9cc1a9828e7e395114fe2440ad00cb6c5`, publicó el favicon en `dev` y
+`prod`. `make verify` y las ejecuciones remotas de `Verify` en `develop` y
+`main` terminaron correctamente. El artefacto inmutable contiene un ICO
+cuadrado de 48 px con tamaños adicionales de 32 y 16 px, y la home declara
+`<link rel="icon" href="/favicon.ico"/>`.
+
+Tras activar el release y recargar el Caddyfile versionado, la comprobación
+HTTPS de producción confirmó `/favicon.ico` en `200`, `Content-Type:
+image/x-icon` y sin `X-Robots-Tag: noindex`; `/account` conservó `noindex,
+nofollow, noarchive`. `www` mantuvo su redirección `308`, la API devolvió `200`
+y el preflight CORS de registro devolvió `204` con el origen productivo exacto.
+
+El host `dev` quedó en el mismo SHA y su API devolvió `200`. Cloudflare conservó
+temporalmente en caché la antigua respuesta HTML de `/favicon.ico`; una petición
+con URL no cacheada confirmó el ICO nuevo en origen. El host de desarrollo
+mantiene deliberadamente `X-Robots-Tag: noindex, nofollow, noarchive` en todas
+sus respuestas. El rollback web de producción permanece en `v1.7.0`, SHA
+`b54578fe4bdd8798b292780d8b4463cf525cd44d`.
