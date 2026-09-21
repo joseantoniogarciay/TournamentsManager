@@ -6,6 +6,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-21
+
 ### Added
 
 - Los torneos «Liga + eliminatoria» resuelven cualquier empate exacto que cruce
