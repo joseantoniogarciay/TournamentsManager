@@ -167,3 +167,24 @@ con URL no cacheada confirmó el ICO nuevo en origen. El host de desarrollo
 mantiene deliberadamente `X-Robots-Tag: noindex, nofollow, noarchive` en todas
 sus respuestas. El rollback web de producción permanece en `v1.7.0`, SHA
 `b54578fe4bdd8798b292780d8b4463cf525cd44d`.
+
+## Evidencia de publicación del icono de Safari — 2026-09-21
+
+El release `v1.7.2`, SHA
+`1c0c31c7868d46a333ad142219e6462811f61116`, publicó en `dev` y `prod` un
+`apple-touch-icon` explícito sin añadir manifest, modo `standalone` ni otras
+capacidades PWA. `make verify` y las ejecuciones remotas de `Verify` en
+`develop` y `main` terminaron correctamente. El artefacto inmutable contiene
+un PNG de 1024×1024, RGB y sin transparencia; la home declara tanto
+`apple-touch-icon` como `/favicon.ico`.
+
+Después de activar producción y recargar el Caddyfile versionado, las
+comprobaciones HTTPS confirmaron `/apple-touch-icon.png` en `200` y
+`Content-Type: image/png` en ambos entornos. Producción no aplica `noindex` al
+icono y `/account` conserva `noindex, nofollow, noarchive`; desarrollo mantiene
+deliberadamente esa cabecera en todas sus respuestas. Los manifiestos de
+despliegue de ambos entornos exponen el mismo SHA y las APIs de `dev` y `prod`
+respondieron `200` en `/healthz`.
+
+El rollback web inmediato de producción es `v1.7.1`, SHA
+`e87ddab9cc1a9828e7e395114fe2440ad00cb6c5`.
