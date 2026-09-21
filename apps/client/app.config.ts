@@ -69,6 +69,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   web: {
     description: "Crea, organiza y sigue ligas de fútbol con FastTourney.",
+    favicon: "./assets/fast-tourney-icon.png",
     lang: "en",
     output: "static",
   },

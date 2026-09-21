@@ -1,5 +1,17 @@
 # Registro de aprendizaje
 
+## 2026-09-21 — El icono nativo no publica el favicon web
+
+- **Aprendido:** declarar `icon` en Expo configura las aplicaciones nativas,
+  pero no hace que la exportación web publique un favicon. Sin `web.favicon`,
+  el HTML no contiene `rel="icon"` y el fallback de la SPA puede responder con
+  HTML a `/favicon.ico`, aunque exista un asset de marca cuadrado.
+- **Regla reutilizable:** una superficie web indexable declara también
+  `web.favicon` y valida el artefacto exportado: `/favicon.ico` debe ser una
+  imagen, el documento raíz debe enlazarlo y el borde no debe responder al icono
+  con `X-Robots-Tag: noindex`. Después del despliegue se solicita el nuevo
+  rastreo; la aparición en resultados sigue dependiendo de Google.
+
 ## 2026-09-21 — Una tercera política descubre supuestos binarios
 
 - **Aprendido:** añadir balonmano no exige un motor deportivo, pero sí hace
