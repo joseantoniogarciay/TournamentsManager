@@ -6,6 +6,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.7.4] - 2026-09-22
+
 ### Fixed
 
 - El renderer de previews se promociona con el mismo SHA que la API, usa un
