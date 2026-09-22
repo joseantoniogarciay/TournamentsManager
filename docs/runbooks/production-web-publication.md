@@ -205,3 +205,17 @@ devolvió `204` con el origen productivo y credenciales permitidas.
 
 El rollback web inmediato de producción es `v1.7.2`, SHA
 `1c0c31c7868d46a333ad142219e6462811f61116`.
+
+## Evidencia de promoción acoplada del renderer — 2026-09-22
+
+El release `v1.7.4` desplegó en `dev` el commit
+`75ce6d5039c70c7e5c39f5c702efbae75473ecc1` mediante el flujo completo de API,
+migraciones, web y renderer. Producción ejecuta el renderer del merge trazable
+`803f776ee31e42b3ef99af1d0b3826083ce0a1e6`; ambos LaunchAgents quedaron en
+estado `running` y apuntan a binarios separados bajo `bin/dev` y `bin/prod`.
+
+`make check` terminó correctamente. El readiness por loopback devolvió en cada
+entorno la revisión esperada y confirmó que el shell activo era legible. La URL
+pública controlada `/tournament/01a0c9b0-1d38-7d47-8825-86c5af8b1237`
+respondió `200` tras carga directa; un UUID inexistente conservó el `404` real.
+El endpoint `/-/ready` no se publica en Caddy y solo se consulta en loopback.
