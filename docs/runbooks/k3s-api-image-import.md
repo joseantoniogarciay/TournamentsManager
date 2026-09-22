@@ -39,6 +39,9 @@ pero no reemplaza la identidad inmutable por digest que se adoptará con ECR.
    host `postgresql.prod.svc.cluster.local`.
 6. Tras verificar el Pod, los archivos temporales de `/tmp` se eliminan; las
    imágenes importadas permanecen en `containerd` mientras sean necesarias.
+7. El wrapper compila y reinicia en el Mac el renderer de previews de prod con
+   el mismo SHA de la imagen API. Su readiness debe devolver esa revisión; ante
+   un fallo se restaura el binario anterior y el despliegue termina con error.
 
 ## Secret y despliegue de la API
 
@@ -102,7 +105,9 @@ raíz del repositorio en el Mac el wrapper
 `bash infra/k3s/scripts/deploy-api-from-staged-images.sh`. El wrapper abre SSH
 por sí mismo, reserva el TTY para la contraseña de `sudo` y ejecuta un fichero
 Bash no interactivo sin el perfil de la VM. No debe ejecutarse desde una sesión
-SSH de la VM.
+SSH de la VM. También exige que el árbol local esté limpio y que `HEAD`
+coincida con la revisión de `infra/k3s/core/api.yaml`: esa misma identidad se
+incrusta en el renderer y se comprueba por loopback después de reiniciarlo.
 
 Cuando solo cambian SMTP u OAuth y la imagen actual ya está en K3s, se usa
 `bash infra/k3s/scripts/apply-api-integrations.sh`. Este wrapper actualiza el

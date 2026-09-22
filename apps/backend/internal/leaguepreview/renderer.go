@@ -40,6 +40,7 @@ type Config struct {
 	PublicHost    string
 	APIBaseURL    string
 	APIHost       string
+	Revision      string
 }
 
 type publicTournament struct {
@@ -64,8 +65,8 @@ func NewHandler(config Config, client *http.Client) (http.Handler, error) {
 }
 
 func (config Config) validate() error {
-	if config.WebRoot == "" || config.PublicHost == "" || config.APIHost == "" {
-		return errors.New("web root and hosts are required")
+	if config.WebRoot == "" || config.PublicHost == "" || config.APIHost == "" || config.Revision == "" {
+		return errors.New("web root, hosts and revision are required")
 	}
 	publicURL, err := url.Parse(config.PublicBaseURL)
 	if err != nil || publicURL.Scheme != "https" || publicURL.Host == "" {
@@ -89,6 +90,16 @@ func isLoopbackHost(host string) bool {
 func serve(config Config, client *http.Client, w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet || hostWithoutPort(r.Host) != config.PublicHost {
 		http.NotFound(w, r)
+		return
+	}
+	if r.URL.Path == "/-/ready" {
+		if _, err := readShell(config.WebRoot); err != nil {
+			http.Error(w, "Tournament preview is temporarily unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		w.Header().Set("Cache-Control", cacheControl)
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		_, _ = fmt.Fprintf(w, `{"revision":%q}`, config.Revision)
 		return
 	}
 	leagueID, ok := leagueIDFromPath(r.URL.Path)

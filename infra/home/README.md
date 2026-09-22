@@ -54,17 +54,22 @@ Caddy; el procedimiento completo está en el
 
 El documento exacto `/tournament/{uuid}` se desvía antes del fallback estático al
 renderer externo `league-preview-renderer`; no hay una ruta `/share` ni un
-redirect. El binario se compila con `build-league-preview-renderer.sh` fuera del
-artefacto Expo. Los templates `dev` y `prod` aíslan puerto, enlace `current`,
-host público y API: `dev` usa `127.0.0.1:8092` y `dev-api.fasttourney.com`,
-mientras producción usa `127.0.0.1:8091` y `api.fasttourney.com`. No contiene
-secretos: en producción la lectura viaja por Caddy local, que ya aplica el token
-privado de borde. Se instala manualmente como los demás agentes del Mac,
-sustituyendo `__LEAGUE_PREVIEW_BINARY__` y `__LOG_DIRECTORY__`; después se
-valida el plist, se carga con `launchctl bootstrap`, se comprueba el puerto y
-solo entonces se recarga Caddy. El renderer se reinicia ante fallo, sigue el
-enlace atómico `current` y no necesita reiniciarse al activar o revertir un
-release web.
+redirect. Los templates `dev` y `prod` aíslan binario, puerto, enlace `current`,
+host público y API: `dev` usa `bin/dev`, `127.0.0.1:8092` y
+`dev-api.fasttourney.com`, mientras producción usa `bin/prod`,
+`127.0.0.1:8091` y `api.fasttourney.com`. No contiene secretos: en producción
+la lectura viaja por Caddy local, que ya aplica el token privado de borde. Se
+instala manualmente como los demás agentes del Mac, sustituyendo únicamente
+`__LOG_DIRECTORY__`; después se valida el plist y se carga con
+`launchctl bootstrap`.
+
+El renderer consume el contrato HTTP de la API, por lo que no se promociona con
+la web estática. `deploy-dev.sh` y `deploy-api-from-staged-images.sh` llaman a
+`deploy-league-preview-renderer.sh` después del rollout de su API. Ese paso
+compila el binario aislado con el mismo SHA, reinicia solo su LaunchAgent y
+consulta `/-/ready` por loopback hasta comprobar la revisión y el shell activo;
+si falla, restaura el ejecutable anterior. El proceso sigue el enlace web
+atómico `current`, así que activar o revertir solo la web no lo reinicia.
 
 `deploy-dev.sh` es el único despliegue manual de dev: exige `develop` limpio y
 alineado con `origin/develop`, construye la API runtime, aplica las migraciones

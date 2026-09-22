@@ -66,6 +66,21 @@ func TestHandlerReturnsNotFoundForUnavailableTournament(t *testing.T) {
 	}
 }
 
+func TestHandlerReportsTheRunningRevisionWhenTheShellIsReadable(t *testing.T) {
+	t.Parallel()
+	handler := newTestHandler(t, "http://127.0.0.1:1/v1")
+	request := httptest.NewRequest(http.MethodGet, "/-/ready", nil)
+	request.Host = "fasttourney.test"
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if got := response.Body.String(); got != `{"revision":"test-revision"}` {
+		t.Errorf("body = %q", got)
+	}
+}
+
 func TestHandlerDoesNotCaptureNestedTournamentRoutes(t *testing.T) {
 	t.Parallel()
 	handler := newTestHandler(t, "http://127.0.0.1:1/v1")
@@ -85,7 +100,7 @@ func newTestHandler(t *testing.T, apiURL string) http.Handler {
 		t.Fatal(err)
 	}
 	handler, err := NewHandler(Config{
-		WebRoot: webRoot, PublicBaseURL: "https://fasttourney.test", PublicHost: "fasttourney.test", APIBaseURL: apiURL + "/v1", APIHost: "api.fasttourney.test",
+		WebRoot: webRoot, PublicBaseURL: "https://fasttourney.test", PublicHost: "fasttourney.test", APIBaseURL: apiURL + "/v1", APIHost: "api.fasttourney.test", Revision: "test-revision",
 	}, nil)
 	if err != nil {
 		t.Fatal(err)

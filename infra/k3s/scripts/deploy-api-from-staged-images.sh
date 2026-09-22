@@ -30,6 +30,17 @@ for required_variable in SMTP_USERNAME SMTP_PASSWORD GOOGLE_CLIENT_IDS; do
 done
 unset SMTP_USERNAME SMTP_PASSWORD GOOGLE_CLIENT_IDS required_value
 
+image_revision=$(sed -n 's/^[[:space:]]*image: tournaments-manager-api:git-\([[:xdigit:]]\{7,40\}\)$/\1/p' "$repo_root/infra/k3s/core/api.yaml")
+if [ -z "$image_revision" ] || [ "$(printf '%s\n' "$image_revision" | wc -l | tr -d ' ')" -ne 1 ]; then
+  echo "infra/k3s/core/api.yaml debe declarar exactamente una imagen API con SHA Git." >&2
+  exit 1
+fi
+release_sha=$(git -C "$repo_root" rev-parse "$image_revision^{commit}")
+if [ -n "$(git -C "$repo_root" status --porcelain)" ] || [ "$(git -C "$repo_root" rev-parse HEAD)" != "$release_sha" ]; then
+  echo "HEAD limpio debe coincidir con el SHA de la imagen API antes de desplegar producción." >&2
+  exit 1
+fi
+
 # La transferencia crea el fichero remoto con modo 0600 desde el inicio; scp
 # podría aplicar el umask remoto y dejar una ventana con permisos más amplios.
 ssh "$K3S_SSH_USER@$K3S_SSH_HOST" \
@@ -189,3 +200,7 @@ REMOTE
 # que el perfil interactivo de zsh/Warp altere el heredoc.
 ssh -tt "$K3S_SSH_USER@$K3S_SSH_HOST" \
   'bash --noprofile --norc /tmp/tournaments-manager-deploy-api.sh; status=$?; rm -f /tmp/tournaments-manager-deploy-api.sh; exit "$status"'
+
+# El renderer vive en el borde del Mac pero consume el contrato de la API que
+# acaba de promocionarse. Se despliega después del rollout y con el mismo SHA.
+"$repo_root/infra/home/deploy-league-preview-renderer.sh" prod "$release_sha"

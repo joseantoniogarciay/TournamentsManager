@@ -19,6 +19,8 @@ import (
 
 const shutdownTimeout = 10 * time.Second
 
+var revision = "development"
+
 func main() {
 	if err := run(); err != nil {
 		slog.Error("el renderer de previews no pudo iniciarse", "error", err)
@@ -33,6 +35,7 @@ func run() error {
 		PublicHost:    os.Getenv("LEAGUE_PREVIEW_PUBLIC_HOST"),
 		APIBaseURL:    os.Getenv("LEAGUE_PREVIEW_API_BASE_URL"),
 		APIHost:       os.Getenv("LEAGUE_PREVIEW_API_HOST"),
+		Revision:      revision,
 	}
 	handler, err := leaguepreview.NewHandler(config, nil)
 	if err != nil {
