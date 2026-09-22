@@ -324,6 +324,8 @@
   "league_standings_positive_goal_difference": "+{value}",
   "league_add_team_title": "Ajouter une équipe",
   "league_add_team_name": "Nom de l’équipe",
+  "league_add_team_name_in_use": "Une équipe porte déjà ce nom.",
+  "league_add_team_conflict": "Nous n’avons pas pu ajouter l’équipe. Le nom est peut-être déjà utilisé, le tournoi a peut-être commencé ou il est peut-être complet.",
   "league_add_team_save": "Enregistrer l’équipe",
   "league_complete_teams_title": "Complétez les équipes",
   "league_complete_teams_description": "Vous pouvez ajouter des équipes sans compte ou partager un lien pour que chaque personne crée la sienne. Les deux options restent disponibles jusqu’au début du tournoi.",

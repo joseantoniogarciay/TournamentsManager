@@ -3483,3 +3483,13 @@ K3s y también que sus componentes base siguen sanos.
 - **Coste aceptado:** un desempate de `N` equipos crea `N × (N − 1) / 2`
   partidos por ciclo y puede repetirse. La fase y sus ciclos se muestran por
   separado para conservar trazabilidad y no contaminar la clasificación de liga.
+
+### 2026-09-22 — El feedback de un popup pertenece a su superficie activa
+
+- **Aprendido:** en web, `ModalDialog` vive en un portal por encima de la
+  pantalla; publicar allí un error mediante el banner de la pantalla deja el
+  mensaje oculto detrás del propio popup.
+- **Regla reutilizable:** una operación que mantiene abierto el diálogo muestra
+  dentro de él sus rechazos. Los conflictos atribuibles a un campo se asocian a
+  ese control y los fallos generales usan un aviso accesible en el contenido;
+  el banner se reserva para la pantalla que sigue siendo la superficie activa.

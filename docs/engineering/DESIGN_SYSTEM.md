@@ -228,6 +228,11 @@ controlado, y normaliza sus límites contractuales al perder el foco.
 Los requisitos que dependan del servidor se muestran cuando llegue la respuesta.
 Un error por campo se asocia programáticamente a su control; el banner queda para
 errores que no se pueden atribuir a un campo.
+Si una operación nace dentro de `ModalDialog`, el diálogo conserva visible su
+feedback mientras permanezca abierto: los rechazos atribuibles a un campo usan
+su error inline y los fallos generales usan un aviso accesible dentro del propio
+diálogo. No se envían al banner de la pantalla subyacente, que en web queda por
+debajo del portal modal.
 
 Una ruta terminal que ya explica el estado y ofrece la siguiente acción, como un
 enlace de verificación inválido, no publica además el mismo error en el banner:

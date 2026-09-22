@@ -77,6 +77,12 @@ export class TournamentTeamInvitationConflictError extends Error {
   }
 }
 
+export class TournamentTeamConflictError extends Error {
+  constructor() {
+    super("El torneo no puede aceptar este equipo");
+  }
+}
+
 export class TournamentConfigurationConflictError extends Error {
   constructor() {
     super("La composición no satisface la configuración del torneo");
@@ -100,6 +106,7 @@ export async function createTournamentRequest(input: TournamentInput) {
 }
 export async function addTournamentTeamRequest(leagueID: string, input: TeamInput) {
   const response = await addTournamentTeam(leagueID, input, undefined, authenticatedApiFetch);
+  if (response.status === 409) throw new TournamentTeamConflictError();
   if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
   const team = parseTournamentTeam(response.data);
   if (!team) throw new APIUnexpectedResponseError(response.status);
