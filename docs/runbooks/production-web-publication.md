@@ -188,3 +188,20 @@ respondieron `200` en `/healthz`.
 
 El rollback web inmediato de producción es `v1.7.1`, SHA
 `e87ddab9cc1a9828e7e395114fe2440ad00cb6c5`.
+
+## Evidencia de publicación de feedback visible en torneos — 2026-09-22
+
+El release `v1.7.3` publicó primero en `dev` el commit
+`6d435771b092ccd635ae87084db45455de988554` y después activó en `prod` el merge
+trazable `f8e210152d8fbb5205a7d0d14d5945b7ef76bc7d`. Corrige el margen del selector
+de fases y mantiene dentro del popup los conflictos y fallos al añadir equipos,
+en lugar de ocultarlos tras el portal modal web.
+
+`make verify` y las ejecuciones remotas de `Verify` en `develop` y `main`
+terminaron correctamente. Los manifiestos públicos expusieron los SHA esperados,
+las APIs de ambos entornos respondieron `200` en `/healthz`, la ruta interna de
+producción conservó `noindex, nofollow, noarchive` y el preflight de registro
+devolvió `204` con el origen productivo y credenciales permitidas.
+
+El rollback web inmediato de producción es `v1.7.2`, SHA
+`1c0c31c7868d46a333ad142219e6462811f61116`.
