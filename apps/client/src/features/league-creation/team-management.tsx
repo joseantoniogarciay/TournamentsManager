@@ -10,6 +10,7 @@ import {
   createTournamentTeamInvitationRequest,
   removeTournamentTeamRequest,
   revokeTournamentTeamInvitationRequest,
+  TournamentTeamConflictError,
   withdrawTournamentTeamRequest,
 } from "@/features/league-creation/api";
 import { useTournamentStore } from "@/features/league-creation/league-store";
@@ -39,6 +40,9 @@ export function TournamentTeamManagement({
   const { updateTournament } = useTournamentStore();
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
+  const [nameConflict, setNameConflict] = useState(false);
+  const [saveError, setSaveError] = useState<string>();
+  const [saveSubmitted, setSaveSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [removingTeamID, setRemovingTeamID] = useState<string>();
   const [isSharingInvitation, setIsSharingInvitation] = useState(false);
@@ -50,6 +54,15 @@ export function TournamentTeamManagement({
     relationship === "organizer" &&
     tournament.state === "in_progress" &&
     tournament.format === "league";
+  const normalizedName = name.trim();
+  const duplicateName = tournament.teams.some(
+    (team) => team.name.trim().toLowerCase() === normalizedName.toLowerCase(),
+  );
+  const nameError = duplicateName
+    ? t("league_add_team_name_in_use")
+    : nameConflict
+      ? t("league_add_team_conflict")
+      : undefined;
 
   const openAddTeam = () => {
     if (teamLimitReached) {
@@ -62,25 +75,36 @@ export function TournamentTeamManagement({
     if (saving) return;
     setAdding(false);
     setName("");
+    setNameConflict(false);
+    setSaveError(undefined);
+    setSaveSubmitted(false);
   };
   const save = async () => {
-    if (!name.trim()) return;
+    setSaveSubmitted(true);
+    setNameConflict(false);
+    setSaveError(undefined);
+    if (!normalizedName || duplicateName) return;
     if (teamLimitReached) {
-      show({ kind: "generic-error", message: t("league_team_limit_reached") });
+      setSaveError(t("league_team_limit_reached"));
       return;
     }
     setSaving(true);
     try {
-      const team = await addTournamentTeamRequest(tournament.id, { name: name.trim() });
+      const team = await addTournamentTeamRequest(tournament.id, { name: normalizedName });
       updateTournament(tournament.id, (current) => ({
         ...current,
         teams: [...current.teams, team],
       }));
       setAdding(false);
       setName("");
+      setSaveSubmitted(false);
     } catch (error) {
-      const failure = getRequestFailure(error);
-      show({ kind: failure.kind, message: t(failure.messageKey) });
+      if (error instanceof TournamentTeamConflictError) {
+        setNameConflict(true);
+      } else {
+        const failure = getRequestFailure(error);
+        setSaveError(t(failure.messageKey));
+      }
     } finally {
       setSaving(false);
     }
@@ -234,11 +258,23 @@ export function TournamentTeamManagement({
       >
         <Text variant="title">{t("league_add_team_title")}</Text>
         <TextField
+          error={nameError}
           label={t("league_add_team_name")}
           maxLength={maximumTeamNameLength}
-          onChangeText={setName}
+          onChangeText={(value) => {
+            setName(value);
+            setNameConflict(false);
+            setSaveError(undefined);
+          }}
+          validationSubmitted={saveSubmitted}
+          validationTrigger="blur"
           value={name}
         />
+        {saveError ? (
+          <Text accessibilityRole="alert" color="error">
+            {saveError}
+          </Text>
+        ) : null}
         <Button
           disabled={!name.trim()}
           label={t("league_add_team_save")}

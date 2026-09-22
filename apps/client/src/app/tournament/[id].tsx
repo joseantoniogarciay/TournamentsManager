@@ -715,7 +715,7 @@ export default function TournamentScreen() {
     showsBracket &&
     bracketHorizontalMetrics.contentWidth > bracketHorizontalMetrics.viewportWidth;
   const phaseSelector = phaseSelectionAvailable ? (
-    <View style={styles.configurationOptions}>
+    <View style={[styles.configurationOptions, styles.phaseSelector]}>
       <ConfigurationOption
         label={t("tournament_mixed_phase_league")}
         onPress={() => setSelectedCompetitionPhase("league")}
@@ -1488,6 +1488,7 @@ const styles = StyleSheet.create({
   },
   expandedTeamManagement: { gap: space[5] },
   listHeader: { gap: space[5], paddingBottom: space[5] },
+  phaseSelector: { paddingHorizontal: space[5] },
   stack: { flex: 1, gap: space[3] },
   bullet: {
     borderRadius: radius.pill,

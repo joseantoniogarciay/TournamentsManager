@@ -6,6 +6,16 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-09-22
+
+### Fixed
+
+- El selector de fases conserva el margen lateral en los torneos de liga más
+  eliminatorias.
+- Añadir un equipo con un nombre repetido muestra un mensaje específico dentro
+  del diálogo, y los demás fallos de guardado ya no quedan ocultos detrás del
+  popup en web.
+
 ## [1.7.2] - 2026-09-21
 
 ### Fixed
