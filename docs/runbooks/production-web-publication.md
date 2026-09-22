@@ -70,17 +70,17 @@ supere las verificaciones, `fasttourney.com` vuelve al `503` versionado.
    infra/home/activate-prod-web.sh <SHA-completo>
    ```
 
-5. Si no está instalado aún o si cambió el renderer, compilarlo y cargar su
-   LaunchAgent desde
+5. Si no está instalado aún, cargar su LaunchAgent desde
    `infra/home/launchd/com.fasttourney.prod-league-preview-renderer.plist.template`.
-   Sustituir exclusivamente `__LEAGUE_PREVIEW_BINARY__` y `__LOG_DIRECTORY__`,
-   validar el plist y confirmar que escucha solo en `127.0.0.1:8091`. El binario
-   usa `prod/current`, por lo que no se reinicia en cada activación del release.
-   Validar y recargar Caddy después de que el proceso esté sano.
-6. Con una liga pública controlada, comprobar por HTTPS el HTML de
-   `/league/<uuid>`: debe devolver `200`, el mismo canonical, `og:title` con el
+   Sustituir exclusivamente `__LOG_DIRECTORY__`, validar el plist y confirmar
+   que escucha solo en `127.0.0.1:8091`. Las promociones de API actualizan y
+   verifican automáticamente su binario aislado; una activación exclusivamente
+   web conserva el proceso y este lee `prod/current`. Validar y recargar Caddy
+   después de que el proceso esté sano.
+6. Con un torneo público controlado, comprobar por HTTPS el HTML de
+   `/tournament/<uuid>`: debe devolver `200`, el mismo canonical, `og:title` con el
    nombre, `og:image` de 1200×630 y `X-Robots-Tag: noindex, nofollow, noarchive`.
-   Una liga inexistente debe devolver `404`; `/league/<uuid>/standings` debe
+   Un torneo inexistente debe devolver `404`; `/tournament/<uuid>/standings` debe
    seguir llegando al fallback de la aplicación. Probar la primera URL real en
    un inspector social y conservar solo la evidencia saneada.
 7. Recorrer en navegador un registro con buzón de prueba controlado,

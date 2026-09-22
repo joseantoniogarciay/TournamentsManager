@@ -6,6 +6,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Fixed
+
+- El renderer de previews se promociona con el mismo SHA que la API, usa un
+  binario independiente en dev y prod y verifica su revisión tras reiniciarse;
+  un contrato HTTP antiguo ya no puede dejar los refresh de torneo en `404`.
+
 ## [1.7.3] - 2026-09-22
 
 ### Fixed

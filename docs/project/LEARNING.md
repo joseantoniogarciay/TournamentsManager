@@ -3493,3 +3493,17 @@ K3s y también que sus componentes base siguen sanos.
   dentro de él sus rechazos. Los conflictos atribuibles a un campo se asocian a
   ese control y los fallos generales usan un aviso accesible en el contenido;
   el banner se reserva para la pantalla que sigue siendo la superficie activa.
+
+### 2026-09-22 — Un consumidor local del contrato se despliega con su proveedor
+
+- **Aprendido:** el renderer de previews seguía ejecutando un binario del 6 de
+  septiembre que consultaba `/v1/leagues/{id}` después de que la API migrara a
+  `/v1/tournaments/{id}`. La navegación SPA evitaba el renderer, pero una carga
+  directa recibía su `404`, aunque la API pública devolviera `200`.
+- **Regla reutilizable:** un proceso auxiliar que consume el contrato de la API
+  se promociona con el mismo SHA y verifica en runtime esa revisión. Dev y prod
+  usan binarios separados para que una compilación de desarrollo no cambie el
+  ejecutable que producción arrancaría tras un fallo.
+- **Recuperación:** la promoción conserva el binario anterior hasta superar
+  readiness; si el proceso nuevo no sirve el shell activo con el SHA esperado,
+  restaura el ejecutable previo y termina con error visible.

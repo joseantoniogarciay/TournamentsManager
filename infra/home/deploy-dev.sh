@@ -99,6 +99,10 @@ if ! DEV_API_IMAGE="$api_image" \
   exit 1
 fi
 
+# El renderer consume el contrato HTTP de esta misma API. Promoverlo con el
+# mismo SHA evita que sobreviva una ruta compilada de una versión anterior.
+./infra/home/deploy-league-preview-renderer.sh dev "$release_sha"
+
 next_link="$current_link.next"
 ln -s "releases/$release_sha" "$next_link"
 mv -f -h "$next_link" "$current_link"

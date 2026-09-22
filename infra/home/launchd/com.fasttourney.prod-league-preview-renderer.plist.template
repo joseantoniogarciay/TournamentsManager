@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>Label</key><string>com.fasttourney.prod-league-preview-renderer</string>
-  <key>ProgramArguments</key><array><string>__LEAGUE_PREVIEW_BINARY__</string></array>
+  <key>ProgramArguments</key><array><string>/opt/homebrew/var/www/fasttourney/bin/prod/league-preview-renderer</string></array>
   <key>EnvironmentVariables</key><dict>
     <key>LEAGUE_PREVIEW_LISTEN_ADDRESS</key><string>127.0.0.1:8091</string>
     <key>LEAGUE_PREVIEW_WEB_ROOT</key><string>/opt/homebrew/var/www/fasttourney/prod/current</string>
