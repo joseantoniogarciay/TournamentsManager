@@ -6,6 +6,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-09-23
+
 ### Added
 
 - Los torneos de tenis permiten elegir partidos al mejor de tres o cinco sets y
