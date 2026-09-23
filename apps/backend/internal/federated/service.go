@@ -64,10 +64,11 @@ type Registration struct {
 
 // Draft is the complete tournament created with a new account or session in the same transaction.
 type Draft struct {
-	ID    string
-	Name  string
-	Sport tournaments.Sport
-	Teams []string
+	ID         string
+	Name       string
+	Sport      tournaments.Sport
+	BestOfSets int
+	Teams      []string
 }
 
 // Session describes the persisted session without exposing its sensitive tokens.

@@ -9,6 +9,7 @@ import type { MatchAwaySourceKind } from "./matchAwaySourceKind.js";
 import type { MatchHomeSourceKind } from "./matchHomeSourceKind.js";
 import type { MatchResultType } from "./matchResultType.js";
 import type { MatchState } from "./matchState.js";
+import type { SetResult } from "./setResult.js";
 import type { Uuid } from "./uuid.js";
 
 export interface Match {
@@ -43,4 +44,5 @@ export interface Match {
   homePenalties?: number;
   /** @minimum 0 */
   awayPenalties?: number;
+  sets: SetResult[];
 }

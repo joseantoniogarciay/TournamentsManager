@@ -18,7 +18,7 @@ func (r AccountTournamentRepository) Create(ctx context.Context, accountID strin
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var league tournaments.Tournament
-	if err := tx.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, name, sport, state, published_at) VALUES ($1, $2, $3, 'published', now()) RETURNING id::text, name, sport, format, state`, account, input.Name, input.Sport).Scan(&league.ID, &league.Name, &league.Sport, &league.Format, &league.State); err != nil {
+	if err := tx.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, name, sport, best_of_sets, state, published_at) VALUES ($1, $2, $3, NULLIF($4, 0), 'published', now()) RETURNING id::text, name, sport, COALESCE(best_of_sets, 0), format, state`, account, input.Name, input.Sport, input.BestOfSets).Scan(&league.ID, &league.Name, &league.Sport, &league.BestOfSets, &league.Format, &league.State); err != nil {
 		return tournaments.Tournament{}, err
 	}
 	league.Teams = make([]tournaments.Team, len(input.Teams))

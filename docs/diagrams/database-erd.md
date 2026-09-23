@@ -2,9 +2,9 @@
 
 > Propósito: mostrar las tablas y relaciones del esquema efectivo.
 >
-> Alcance: `initial_schema.sql` y migraciones hasta `00011`.
+> Alcance: `initial_schema.sql` y migraciones hasta `00014`.
 >
-> Última revisión: 2026-09-19.
+> Última revisión: 2026-09-23.
 
 Este mapa es una vista explicativa. La fuente de verdad ejecutable continúa
 siendo el [esquema y sus migraciones](../../apps/backend/db/); ante cualquier
@@ -134,7 +134,9 @@ erDiagram
     TOURNAMENT_TEAMS o|..o{ MATCHES : "gana RESTRICT"
     MATCHES o|..o{ MATCHES : "alimenta plaza local"
     MATCHES o|..o{ MATCHES : "alimenta plaza visitante"
+    MATCHES ||--o{ MATCH_SETS : "detalla CASCADE"
     MATCHES ||--o{ MATCH_RESULT_CHANGES : "audita CASCADE"
+    MATCH_RESULT_CHANGES ||--o{ MATCH_RESULT_CHANGE_SETS : "fotografia CASCADE"
     ACCOUNTS o|..o{ MATCH_RESULT_CHANGES : "corrige SET NULL"
     TOURNAMENTS ||--o{ TOURNAMENT_CHAMPIONS : "proclama CASCADE"
     TOURNAMENT_TEAMS ||--o| TOURNAMENT_CHAMPIONS : "obtiene RESTRICT"
@@ -148,6 +150,7 @@ erDiagram
         uuid organizer_account_id FK
         uuid source_draft_id "nullable"
         text sport
+        int best_of_sets "nullable"
         text format
         text state
     }
@@ -210,6 +213,18 @@ erDiagram
         uuid changed_by_account_id FK "nullable"
         text result_type
         timestamptz changed_at
+    }
+    MATCH_SETS {
+        uuid match_id PK, FK
+        int set_number PK
+        int home_score
+        int away_score
+    }
+    MATCH_RESULT_CHANGE_SETS {
+        uuid change_id PK, FK
+        int set_number PK
+        int home_score
+        int away_score
     }
     TOURNAMENT_CHAMPIONS {
         uuid tournament_id PK, FK

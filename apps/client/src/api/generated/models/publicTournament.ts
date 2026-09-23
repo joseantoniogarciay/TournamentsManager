@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type { Match } from "./match.js";
+import type { PublicTournamentBestOfSets } from "./publicTournamentBestOfSets.js";
 import type { PublicTournamentFormat } from "./publicTournamentFormat.js";
 import type { PublicTournamentRoundRobinLegs } from "./publicTournamentRoundRobinLegs.js";
 import type { PublicTournamentSport } from "./publicTournamentSport.js";
@@ -21,6 +22,7 @@ export interface PublicTournament {
   id: Uuid;
   name: string;
   sport: PublicTournamentSport;
+  bestOfSets?: PublicTournamentBestOfSets;
   format: PublicTournamentFormat;
   stages: TournamentStage[];
   stageTeams: TournamentStageTeam[];

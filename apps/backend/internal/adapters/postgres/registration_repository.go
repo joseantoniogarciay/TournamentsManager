@@ -102,7 +102,7 @@ func (r RegistrationRepository) CreateLocalLoginSession(ctx context.Context, acc
 		return registration.Session{}, err
 	}
 	if draft != nil {
-		if err := createTournamentFromDraft(ctx, tx, accountID, draft.ID, draft.Name, draft.Sport, draft.Teams); err != nil {
+		if err := createTournamentFromDraft(ctx, tx, accountID, draft.ID, draft.Name, draft.Sport, draft.BestOfSets, draft.Teams); err != nil {
 			return registration.Session{}, err
 		}
 	}
@@ -116,9 +116,9 @@ func (r RegistrationRepository) CreateLocalLoginSession(ctx context.Context, acc
 	return registration.Session{AccountID: accountID, Username: row.Username, LastTeamName: lastTeamName, IdleExpiresAt: row.IdleExpiresAt.Time.UTC().Format(time.RFC3339Nano), RefreshExpiresAt: row.ExpiresAt.Time.UTC().Format(time.RFC3339Nano)}, nil
 }
 
-func createTournamentFromDraft(ctx context.Context, tx pgx.Tx, accountID, draftID, name string, sport tournaments.Sport, teams []string) error {
+func createTournamentFromDraft(ctx context.Context, tx pgx.Tx, accountID, draftID, name string, sport tournaments.Sport, bestOfSets int, teams []string) error {
 	var tournamentID string
-	err := tx.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, source_draft_id, name, sport, state, published_at) VALUES ($1, $2, $3, $4, 'published', now()) ON CONFLICT (organizer_account_id, source_draft_id) DO NOTHING RETURNING id::text`, accountID, draftID, name, sport).Scan(&tournamentID)
+	err := tx.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, source_draft_id, name, sport, best_of_sets, state, published_at) VALUES ($1, $2, $3, $4, NULLIF($5, 0), 'published', now()) ON CONFLICT (organizer_account_id, source_draft_id) DO NOTHING RETURNING id::text`, accountID, draftID, name, sport, bestOfSets).Scan(&tournamentID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil
 	}
@@ -195,7 +195,7 @@ func (r RegistrationRepository) CreatePending(ctx context.Context, input registr
 		return false, err
 	}
 	if input.Draft != nil {
-		if err := createTournamentFromDraft(ctx, tx, accountID, input.Draft.ID, input.Draft.Name, input.Draft.Sport, input.Draft.Teams); err != nil {
+		if err := createTournamentFromDraft(ctx, tx, accountID, input.Draft.ID, input.Draft.Name, input.Draft.Sport, input.Draft.BestOfSets, input.Draft.Teams); err != nil {
 			return false, err
 		}
 	}

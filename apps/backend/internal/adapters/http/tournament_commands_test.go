@@ -478,6 +478,37 @@ func TestRecordMatchResultUsesTheContractRoundField(t *testing.T) {
 	}
 }
 
+func TestRecordMatchResultEnforcesExclusiveResultShapes(t *testing.T) {
+	t.Parallel()
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	const leagueID = "019abcde-2222-7222-8222-222222222222"
+	const matchID = "019abcde-3333-7333-8333-333333333333"
+	creation := tournaments.NewCreationService(testCreationRepository{result: tournaments.Tournament{ID: leagueID, State: "in_progress", Teams: []tournaments.Team{}, Matches: []tournaments.Match{}}})
+	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
+	for name, test := range map[string]struct {
+		body   string
+		status int
+	}{
+		"sets":          {body: `{"sets":[{"homeScore":6,"awayScore":4},{"homeScore":7,"awayScore":5}]}`, status: http.StatusOK},
+		"mixed":         {body: `{"homeScore":2,"awayScore":0,"sets":[{"homeScore":6,"awayScore":4},{"homeScore":7,"awayScore":5}]}`, status: http.StatusBadRequest},
+		"empty sets":    {body: `{"sets":[]}`, status: http.StatusBadRequest},
+		"partial score": {body: `{"homeScore":2}`, status: http.StatusBadRequest},
+	} {
+		t.Run(name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodPut, "/v1/tournaments/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(test.body))
+			request.Header.Set("Authorization", "Bearer session-token")
+			request.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+
+			handler.ServeHTTP(recorder, request)
+
+			if recorder.Code != test.status {
+				t.Errorf("status = %d, want %d; body = %s", recorder.Code, test.status, recorder.Body.String())
+			}
+		})
+	}
+}
+
 func TestRecordMatchResultMapsBusinessErrors(t *testing.T) {
 	t.Parallel()
 	const accountID = "019abcde-1111-7111-8111-111111111111"

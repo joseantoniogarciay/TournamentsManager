@@ -62,10 +62,11 @@ type Input struct {
 
 // Draft represents a complete draft crossing the registration boundary.
 type Draft struct {
-	ID    string
-	Name  string
-	Sport tournaments.Sport
-	Teams []string
+	ID         string
+	Name       string
+	Sport      tournaments.Sport
+	BestOfSets int
+	Teams      []string
 }
 
 // Repository persists the pending account, its credential, and its verification.

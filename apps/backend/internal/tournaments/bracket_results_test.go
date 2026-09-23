@@ -125,6 +125,24 @@ func TestHandballBracketUsesSevenMeterShootoutAfterTiedFinalScore(t *testing.T) 
 	}
 }
 
+func TestTennisBracketDerivesWinnerFromSets(t *testing.T) {
+	b, _ := GenerateSingleElimination([]string{"a", "b"})
+	b.Sport, b.BestOfSets = SportTennis, 5
+	sets := []SetScore{{6, 4}, {4, 6}, {7, 5}, {6, 7}, {6, 2}}
+	updated, err := b.RecordResult(1, 1, BracketResult{HomeScore: 3, AwayScore: 2, Sets: sets})
+	if err != nil {
+		t.Fatalf("record tennis result: %v", err)
+	}
+	sets[0].HomeScore = 0
+	resolved, err := updated.Resolve()
+	if err != nil || resolved[0].WinnerTeamID != "a" || resolved[0].Result.Sets[0].HomeScore != 6 {
+		t.Fatalf("resolved tennis bracket = %#v, %v", resolved, err)
+	}
+	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 2, AwayScore: 0, Sets: []SetScore{{6, 0}, {6, 0}}}); err != ErrInvalidBracketResult {
+		t.Fatalf("unfinished best-of-five accepted: %v", err)
+	}
+}
+
 func TestBracketAllowsCorrectionInIndependentBranch(t *testing.T) {
 	b, _ := GenerateSingleElimination([]string{"a", "b", "c", "d", "e", "f", "g", "h"})
 	var err error

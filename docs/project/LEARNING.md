@@ -1,5 +1,21 @@
 # Registro de aprendizaje
 
+## 2026-09-23 — Un resultado multidimensional necesita una única fuente de verdad
+
+- **Aprendido:** reutilizar el marcador agregado para tenis o pádel permitiría
+  declarar una ganadora sin demostrar que los sets son posibles. Guardar el
+  detalle sin derivar el agregado crearía además dos fuentes que podrían
+  contradecirse.
+- **Regla reutilizable:** cuando el detalle decide el resultado, el cliente envía
+  únicamente ese detalle, el dominio valida la secuencia completa y deriva
+  ganador y agregado. Persistencia e historial guardan ambos atómicamente, con
+  restricciones de base de datos como segunda barrera y sin duplicar reglas de
+  negocio configurables.
+- **Retrospectiva técnica:** los perfiles explícitos de tenis y pádel añadieron
+  la variación necesaria sin convertir cinco deportes en un motor genérico. La
+  limitación consciente a eliminatoria evita inventar clasificación de liga y
+  deja claros los siguientes disparadores de diseño.
+
 ## 2026-09-21 — Safari no sustituye el Web Clip con el favicon
 
 - **Aprendido:** `rel="icon"` cubre el favicon del navegador y los resultados de

@@ -142,9 +142,18 @@ function parseMatch(value: unknown): Match | null {
     !isIntegerAtLeast(value.sequence, 1) ||
     !(value.homeTeamId === "" || isUUID(value.homeTeamId)) ||
     !(value.awayTeamId === "" || isUUID(value.awayTeamId)) ||
-    !Object.values(MatchState).includes(value.state as Match["state"])
+    !Object.values(MatchState).includes(value.state as Match["state"]) ||
+    !Array.isArray(value.sets)
   )
     return null;
+  for (const set of value.sets) {
+    if (
+      !isRecord(set) ||
+      !isIntegerAtLeast(set.homeScore, 0) ||
+      !isIntegerAtLeast(set.awayScore, 0)
+    )
+      return null;
+  }
   if ("groupNumber" in value && !isIntegerAtLeast(value.groupNumber, 1)) return null;
   for (const side of ["home", "away"] as const) {
     const kind = value[side + "SourceKind"];
@@ -313,10 +322,18 @@ export function parsePublicTournament(value: unknown): PublicTournament | null {
   ) {
     return null;
   }
+  const racket = value.sport === "tennis" || value.sport === "padel";
+  if (
+    (racket && value.bestOfSets !== 3 && value.bestOfSets !== 5) ||
+    (value.sport === "padel" && value.bestOfSets !== 3) ||
+    (!racket && value.bestOfSets !== undefined)
+  )
+    return null;
   return {
     id: value.id,
     name: value.name,
     sport: value.sport as PublicTournament["sport"],
+    ...(racket ? { bestOfSets: value.bestOfSets as 3 | 5 } : {}),
     format: value.format as PublicTournament["format"],
     state: value.state as PublicTournament["state"],
     roundRobinLegs: value.roundRobinLegs,
@@ -347,10 +364,18 @@ export function parsePublishedTournament(value: unknown): PublishedTournament | 
   ) {
     return null;
   }
+  const racket = value.sport === "tennis" || value.sport === "padel";
+  if (
+    (racket && value.bestOfSets !== 3 && value.bestOfSets !== 5) ||
+    (value.sport === "padel" && value.bestOfSets !== 3) ||
+    (!racket && value.bestOfSets !== undefined)
+  )
+    return null;
   return {
     id: value.id,
     name: value.name,
     sport: value.sport as PublishedTournament["sport"],
+    ...(racket ? { bestOfSets: value.bestOfSets as 3 | 5 } : {}),
     state: value.state as PublishedTournament["state"],
     teams,
     matches,

@@ -6,6 +6,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Added
+
+- Los torneos de tenis permiten elegir partidos al mejor de tres o cinco sets y
+  los de pádel usan tres; ambos registran cada set en eliminatoria directa y
+  rechazan resultados parciales, imposibles o posteriores a la victoria.
+
 ## [1.7.4] - 2026-09-22
 
 ### Fixed

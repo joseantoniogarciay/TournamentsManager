@@ -144,10 +144,11 @@ func joinTournamentTeamInvitation(service tournaments.CreationService) http.Hand
 }
 
 type leagueInput struct {
-	DraftID string            `json:"draftId"`
-	Name    string            `json:"name"`
-	Sport   tournaments.Sport `json:"sport"`
-	Teams   []struct {
+	DraftID    string            `json:"draftId"`
+	Name       string            `json:"name"`
+	Sport      tournaments.Sport `json:"sport"`
+	BestOfSets int               `json:"bestOfSets"`
+	Teams      []struct {
 		Name string `json:"name"`
 	} `json:"teams"`
 }
@@ -163,10 +164,11 @@ type teamInput struct {
 	Name string `json:"name"`
 }
 type matchResultInput struct {
-	HomePenalties *int `json:"homePenalties"`
-	AwayPenalties *int `json:"awayPenalties"`
-	HomeScore     *int `json:"homeScore"`
-	AwayScore     *int `json:"awayScore"`
+	HomePenalties *int                    `json:"homePenalties"`
+	AwayPenalties *int                    `json:"awayPenalties"`
+	HomeScore     *int                    `json:"homeScore"`
+	AwayScore     *int                    `json:"awayScore"`
+	Sets          *[]tournaments.SetScore `json:"sets"`
 }
 
 func createTournament(service tournaments.CreationService) http.HandlerFunc {
@@ -185,7 +187,7 @@ func createTournament(service tournaments.CreationService) http.HandlerFunc {
 		for i, team := range body.Teams {
 			teams[i] = tournaments.TeamInput{Name: team.Name}
 		}
-		league, err := service.Create(r.Context(), accountID, tournaments.CreateInput{Name: body.Name, Sport: body.Sport, Teams: teams})
+		league, err := service.Create(r.Context(), accountID, tournaments.CreateInput{Name: body.Name, Sport: body.Sport, BestOfSets: body.BestOfSets, Teams: teams})
 		recordTournamentFailure(r.Context(), err)
 		if errors.Is(err, tournaments.ErrInvalidTournamentInput) {
 			writeTournamentValidationProblem(w, r)
@@ -485,11 +487,28 @@ func recordMatchResult(service tournaments.CreationService) http.HandlerFunc {
 			writeProblem(w, http.StatusInternalServerError, "Could not resolve session")
 			return
 		}
-		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(matchID) || decodeBody(r, &body) != nil || body.HomeScore == nil || body.AwayScore == nil {
+		if !uuidPattern.MatchString(leagueID) || !uuidPattern.MatchString(matchID) || decodeBody(r, &body) != nil {
 			writeTournamentValidationProblem(w, r)
 			return
 		}
-		league, err := service.RecordResult(r.Context(), accountID, leagueID, matchID, tournaments.MatchResultInput{HomeScore: *body.HomeScore, AwayScore: *body.AwayScore, HomePenalties: body.HomePenalties, AwayPenalties: body.AwayPenalties})
+		hasSetResult := body.Sets != nil && len(*body.Sets) > 0
+		hasScoreResult := body.HomeScore != nil && body.AwayScore != nil
+		mixedResult := body.Sets != nil && (body.HomeScore != nil || body.AwayScore != nil || body.HomePenalties != nil || body.AwayPenalties != nil)
+		if mixedResult || hasSetResult == hasScoreResult {
+			writeTournamentValidationProblem(w, r)
+			return
+		}
+		input := tournaments.MatchResultInput{HomePenalties: body.HomePenalties, AwayPenalties: body.AwayPenalties}
+		if body.Sets != nil {
+			input.Sets = *body.Sets
+		}
+		if body.HomeScore != nil {
+			input.HomeScore = *body.HomeScore
+		}
+		if body.AwayScore != nil {
+			input.AwayScore = *body.AwayScore
+		}
+		league, err := service.RecordResult(r.Context(), accountID, leagueID, matchID, input)
 		recordTournamentFailure(r.Context(), err)
 		if errors.Is(err, tournaments.ErrInvalidTournamentInput) || errors.Is(err, tournaments.ErrInvalidBracketResult) {
 			writeTournamentValidationProblem(w, r)

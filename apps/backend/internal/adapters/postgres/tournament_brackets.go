@@ -15,7 +15,7 @@ type tournamentReader interface {
 
 func readTournament(ctx context.Context, db tournamentReader, id string) (tournaments.Tournament, error) {
 	value := tournaments.Tournament{Teams: []tournaments.Team{}, Matches: []tournaments.Match{}, Stages: []tournaments.Stage{}, StageTeams: []tournaments.StageTeam{}, TieBreakPools: []tournaments.QualificationTieBreakPool{}, ChampionTeamIDs: []string{}}
-	err := db.QueryRow(ctx, `SELECT id::text,name,sport,format,state,round_robin_legs FROM tournaments WHERE id=$1`, id).Scan(&value.ID, &value.Name, &value.Sport, &value.Format, &value.State, &value.RoundRobinLegs)
+	err := db.QueryRow(ctx, `SELECT id::text,name,sport,COALESCE(best_of_sets,0),format,state,round_robin_legs FROM tournaments WHERE id=$1`, id).Scan(&value.ID, &value.Name, &value.Sport, &value.BestOfSets, &value.Format, &value.State, &value.RoundRobinLegs)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return value, tournaments.ErrTournamentNotFound
 	}
@@ -92,6 +92,7 @@ func readTournament(ctx context.Context, db tournamentReader, id string) (tourna
 	}
 	for rows.Next() {
 		var match tournaments.Match
+		match.Sets = []tournaments.SetScore{}
 		if err = rows.Scan(&match.ID, &match.StageID, &match.RoundNumber, &match.Sequence, &match.GroupNumber, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore, &match.HomeSourceKind, &match.AwaySourceKind, &match.HomeSourceMatchID, &match.AwaySourceMatchID, &match.WinnerTeamID, &match.HomePenalties, &match.AwayPenalties, &match.ResultType); err != nil {
 			rows.Close()
 			return value, err
@@ -101,6 +102,29 @@ func readTournament(ctx context.Context, db tournamentReader, id string) (tourna
 	rows.Close()
 	if rows.Err() != nil {
 		return value, rows.Err()
+	}
+	setsByMatch := make(map[string][]tournaments.SetScore)
+	rows, err = db.Query(ctx, `SELECT ms.match_id::text,ms.home_score,ms.away_score FROM match_sets ms JOIN matches m ON m.id=ms.match_id WHERE m.tournament_id=$1 ORDER BY ms.match_id,ms.set_number`, id)
+	if err != nil {
+		return value, err
+	}
+	for rows.Next() {
+		var matchID string
+		var set tournaments.SetScore
+		if err = rows.Scan(&matchID, &set.HomeScore, &set.AwayScore); err != nil {
+			rows.Close()
+			return value, err
+		}
+		setsByMatch[matchID] = append(setsByMatch[matchID], set)
+	}
+	rows.Close()
+	if rows.Err() != nil {
+		return value, rows.Err()
+	}
+	for index := range value.Matches {
+		if sets, ok := setsByMatch[value.Matches[index].ID]; ok {
+			value.Matches[index].Sets = sets
+		}
 	}
 	rows, err = db.Query(ctx, `SELECT team_id::text FROM tournament_champions WHERE tournament_id=$1 ORDER BY team_id`, id)
 	if err != nil {
@@ -170,7 +194,7 @@ func recordBracketResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID
 			stageMatches = append(stageMatches, match)
 		}
 	}
-	bracket := tournaments.Bracket{Size: len(stageMatches) + 1, Sport: value.Sport}
+	bracket := tournaments.Bracket{Size: len(stageMatches) + 1, Sport: value.Sport, BestOfSets: value.BestOfSets}
 	for _, match := range stageMatches {
 		source := func(kind tournaments.SlotSourceKind, team, sourceID string) tournaments.SlotSource {
 			if kind == tournaments.SeededTeam {
@@ -187,9 +211,15 @@ func recordBracketResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID
 			if match.HomeScore == nil || match.AwayScore == nil {
 				return tournaments.ErrInvalidBracketStructure
 			}
-			structural.Result = &tournaments.BracketResult{HomeScore: *match.HomeScore, AwayScore: *match.AwayScore, HomePenalties: match.HomePenalties, AwayPenalties: match.AwayPenalties}
+			structural.Result = &tournaments.BracketResult{HomeScore: *match.HomeScore, AwayScore: *match.AwayScore, HomePenalties: match.HomePenalties, AwayPenalties: match.AwayPenalties, Sets: match.Sets}
 		}
 		bracket.Matches = append(bracket.Matches, structural)
+	}
+	if tournaments.RacketSport(value.Sport) {
+		input, err = tournaments.NormalizeRacketResult(value.Sport, value.BestOfSets, input)
+		if err != nil {
+			return err
+		}
 	}
 	next, err := bracket.RecordResult(target.RoundNumber, target.Sequence, tournaments.BracketResult(input))
 	if err != nil {
@@ -217,6 +247,23 @@ func recordBracketResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID
 			return err
 		}
 	}
-	_, err = tx.Exec(ctx, `INSERT INTO match_result_changes(match_id,changed_by_account_id,previous_home_score,previous_away_score,home_score,away_score,previous_home_penalties,previous_away_penalties,home_penalties,away_penalties,result_type) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'played')`, matchID, accountID, target.HomeScore, target.AwayScore, input.HomeScore, input.AwayScore, target.HomePenalties, target.AwayPenalties, input.HomePenalties, input.AwayPenalties)
-	return err
+	if _, err = tx.Exec(ctx, `DELETE FROM match_sets WHERE match_id=$1`, matchID); err != nil {
+		return err
+	}
+	for index, set := range input.Sets {
+		if _, err = tx.Exec(ctx, `INSERT INTO match_sets(match_id,set_number,home_score,away_score) VALUES ($1,$2,$3,$4)`, matchID, index+1, set.HomeScore, set.AwayScore); err != nil {
+			return err
+		}
+	}
+	var changeID string
+	err = tx.QueryRow(ctx, `INSERT INTO match_result_changes(match_id,changed_by_account_id,previous_home_score,previous_away_score,home_score,away_score,previous_home_penalties,previous_away_penalties,home_penalties,away_penalties,result_type) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'played') RETURNING id::text`, matchID, accountID, target.HomeScore, target.AwayScore, input.HomeScore, input.AwayScore, target.HomePenalties, target.AwayPenalties, input.HomePenalties, input.AwayPenalties).Scan(&changeID)
+	if err != nil {
+		return err
+	}
+	for index, set := range input.Sets {
+		if _, err = tx.Exec(ctx, `INSERT INTO match_result_change_sets(change_id,set_number,home_score,away_score) VALUES ($1,$2,$3,$4)`, changeID, index+1, set.HomeScore, set.AwayScore); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -83,7 +83,7 @@ func toFederatedDraft(draft *registration.Draft) *federated.Draft {
 	if draft == nil {
 		return nil
 	}
-	return &federated.Draft{ID: draft.ID, Name: strings.TrimSpace(draft.Name), Sport: draft.Sport, Teams: draft.Teams}
+	return &federated.Draft{ID: draft.ID, Name: strings.TrimSpace(draft.Name), Sport: draft.Sport, BestOfSets: draft.BestOfSets, Teams: draft.Teams}
 }
 
 func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession, cookies sessionCookieSettings) {

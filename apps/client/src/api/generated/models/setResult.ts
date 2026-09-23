@@ -6,12 +6,15 @@
  * OpenAPI spec version: 1.0.0-design
  */
 
-export type TournamentInputSport = (typeof TournamentInputSport)[keyof typeof TournamentInputSport];
-
-export const TournamentInputSport = {
-  football: "football",
-  basketball: "basketball",
-  handball: "handball",
-  tennis: "tennis",
-  padel: "padel",
-} as const;
+export interface SetResult {
+  /**
+   * @minimum 0
+   * @maximum 7
+   */
+  homeScore: number;
+  /**
+   * @minimum 0
+   * @maximum 7
+   */
+  awayScore: number;
+}
