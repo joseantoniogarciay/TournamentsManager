@@ -9,9 +9,17 @@ export function getSportLabelKey(sport: Sport): TranslationKey {
       return "tournament_sport_basketball";
     case "handball":
       return "tournament_sport_handball";
+    case "tennis":
+      return "tournament_sport_tennis";
+    case "padel":
+      return "tournament_sport_padel";
     default:
       return "tournament_sport_football";
   }
+}
+
+export function isRacketSport(sport: string) {
+  return sport === "tennis" || sport === "padel";
 }
 
 export function sportAllowsTiedLeagueResult(sport: Sport) {

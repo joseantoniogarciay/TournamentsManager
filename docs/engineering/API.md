@@ -132,14 +132,18 @@ transfiere el borrador. El cliente solo elimina su copia local tras el `200`
 de cuenta organizadora y `draftId` es única: repetir la misma intención después
 de perder una respuesta puede emitir otra sesión, pero no otro torneo ni equipos.
 
-`TournamentInput` exige `sport: football | basketball | handball`; no existe valor implícito
-en el contrato nuevo. La proyección pública devuelve el mismo enum y métricas de
-clasificación neutrales (`scoreFor`, `scoreAgainst`, `scoreDifference`). Un
-partido completado declara `resultType: played | administrative`: baloncesto
-rechaza tanteos finales empatados y penaltis; fútbol y balonmano conservan el
-empate de liga y exigen un desempate decisivo en una eliminatoria empatada. Las
-reglas pertenecen al dominio; OpenAPI solo expresa los datos y valores admitidos
-(ADR-0126 y ADR-0134).
+`TournamentInput` exige
+`sport: football | basketball | handball | tennis | padel`; no existe valor
+implícito en el contrato nuevo. La proyección pública devuelve el mismo enum y
+métricas de clasificación neutrales (`scoreFor`, `scoreAgainst`,
+`scoreDifference`). Tenis exige `bestOfSets: 3 | 5` y pádel exige
+`bestOfSets: 3`; los otros perfiles no aceptan esa propiedad. Un partido
+completado declara `resultType: played | administrative`: baloncesto rechaza
+tanteos finales empatados y penaltis; fútbol y balonmano conservan el empate de
+liga y exigen un desempate decisivo en una eliminatoria empatada. Tenis y pádel
+solo pueden iniciar una eliminatoria directa en este incremento. Las reglas
+pertenecen al dominio; OpenAPI expresa la forma de los datos y sus valores
+cerrados (ADR-0126, ADR-0134 y ADR-0135).
 
 La publicación exige al menos el equipo propio de la organizadora. Mientras el
 torneo siga `published`, esta puede añadir equipos sin cuenta y gestionar un
@@ -223,14 +227,18 @@ control porque no viaja automáticamente con el navegador. Véase
 
 ## Resultados de partidos
 
-`PUT /v1/tournaments/{tournamentId}/matches/{matchId}/result` acepta dos
-enteros no negativos (`homeScore`, `awayScore`). En eliminatoria, un empate
-exige además `homePenaltyScore` y `awayPenaltyScore`, distintos entre sí; una
-liga no acepta penaltis. Exige a la organizadora o una administradora delegada
-y un torneo `in_progress`; aplica el marcador de inmediato y devuelve la
-proyección pública actualizada. Cada escritura se conserva internamente con el
-marcador anterior, autora e instante, conforme a ADR-0035 a ADR-0037. El
-historial no se expone todavía como una funcionalidad de disputa o restauración.
+`PUT /v1/tournaments/{tournamentId}/matches/{matchId}/result` acepta una de dos
+formas excluyentes. Los deportes con marcador agregado envían dos enteros no
+negativos (`homeScore`, `awayScore`) y, en una eliminatoria empatada de fútbol o
+balonmano, un desempate decisivo. Tenis y pádel envían `sets` ordenados con el
+tanteo de juegos de cada lado; no envían el agregado. El backend valida cada set
+(`6-0` a `6-4`, `7-5` o `7-6`), rechaza resultados parciales o sets posteriores
+a la victoria y deriva los sets ganados y la participante vencedora. Exige a la
+organizadora o una administradora delegada y un torneo `in_progress`; aplica el
+resultado de inmediato y devuelve la proyección pública actualizada. Cada
+escritura conserva internamente el marcador anterior, sus sets, autora e
+instante, conforme a ADR-0035 a ADR-0037 y ADR-0135. El historial no se expone
+todavía como una funcionalidad de disputa o restauración.
 
 `GET /v1/tournaments/{tournamentId}` y las respuestas de inicio, cancelación y resultado
 incluyen `standings`, una proyección calculada por el dominio a partir de los

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type { TeamInput } from "./teamInput.js";
+import type { TournamentDraftInputBestOfSets } from "./tournamentDraftInputBestOfSets.js";
 import type { TournamentDraftInputSport } from "./tournamentDraftInputSport.js";
 
 export interface TournamentDraftInput {
@@ -17,6 +18,8 @@ export interface TournamentDraftInput {
    */
   name: string;
   sport: TournamentDraftInputSport;
+  /** Obligatorio para tenis; pádel exige 3. Debe omitirse en el resto de deportes. */
+  bestOfSets?: TournamentDraftInputBestOfSets;
   /**
    * @minItems 1
    * @maxItems 64

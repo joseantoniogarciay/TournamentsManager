@@ -38,6 +38,7 @@ export default function CreateTournamentScreen() {
   const { colors } = usePreferences();
   const [name, setName] = useState("");
   const [sport, setSport] = useState<TournamentSport>("football");
+  const [bestOfSets, setBestOfSets] = useState<3 | 5>(3);
   const [team, setTeam] = useState("");
   const [draftId, setDraftId] = useState(() => randomUUID());
   const [draftLoaded, setDraftLoaded] = useState(false);
@@ -51,6 +52,7 @@ export default function CreateTournamentScreen() {
         setDraftId(draft.draftId);
         setName(draft.name);
         setSport(draft.sport);
+        setBestOfSets(draft.bestOfSets ?? 3);
         setTeam(draft.teams[0] ?? "");
         setTeamHasLocalValue(true);
       }
@@ -64,8 +66,9 @@ export default function CreateTournamentScreen() {
     if (user) void syncUser().catch(() => undefined);
   }, [syncUser, user?.id]);
   useEffect(() => {
-    if (draftLoaded) void saveLocalTournamentDraft({ draftId, name, sport, teams: [team] });
-  }, [draftId, draftLoaded, name, sport, team]);
+    if (draftLoaded)
+      void saveLocalTournamentDraft({ draftId, name, sport, bestOfSets, teams: [team] });
+  }, [bestOfSets, draftId, draftLoaded, name, sport, team]);
 
   const normalizedTeam = team.trim();
   const nameError = !name.trim()
@@ -73,7 +76,13 @@ export default function CreateTournamentScreen() {
     : name.length > maximumTournamentNameLength
       ? t("league_name_too_long")
       : undefined;
-  const teamError = !normalizedTeam ? t("league_team_required") : undefined;
+  const teamError = !normalizedTeam
+    ? t(
+        sport === "tennis" || sport === "padel"
+          ? "racket_participant_required"
+          : "league_team_required",
+      )
+    : undefined;
   const publish = async () => {
     setSubmitted(true);
     if (nameError || teamError) return;
@@ -86,6 +95,7 @@ export default function CreateTournamentScreen() {
       const league = await createTournamentRequest({
         name: name.trim(),
         sport,
+        ...(sport === "tennis" || sport === "padel" ? { bestOfSets } : {}),
         teams: [{ name: normalizedTeam }],
       });
       await rememberLastTeamName(normalizedTeam).catch(() => undefined);
@@ -168,8 +178,43 @@ export default function CreateTournamentScreen() {
                     onPress={() => setSport("handball")}
                     selected={sport === "handball"}
                   />
+                  <ConfigurationOption
+                    label={t("tournament_sport_tennis")}
+                    onPress={() => {
+                      setSport("tennis");
+                      setBestOfSets(3);
+                    }}
+                    selected={sport === "tennis"}
+                  />
+                  <ConfigurationOption
+                    label={t("tournament_sport_padel")}
+                    onPress={() => {
+                      setSport("padel");
+                      setBestOfSets(3);
+                    }}
+                    selected={sport === "padel"}
+                  />
                 </View>
               </View>
+              {sport === "tennis" ? (
+                <View style={styles.sportSelector}>
+                  <Text variant="bodyLarge">{t("racket_best_of_label")}</Text>
+                  <View style={styles.sportOptions}>
+                    <ConfigurationOption
+                      label={t("racket_best_of_three")}
+                      onPress={() => setBestOfSets(3)}
+                      selected={bestOfSets === 3}
+                    />
+                    <ConfigurationOption
+                      label={t("racket_best_of_five")}
+                      onPress={() => setBestOfSets(5)}
+                      selected={bestOfSets === 5}
+                    />
+                  </View>
+                </View>
+              ) : sport === "padel" ? (
+                <Text color="secondary">{t("padel_best_of_three_help")}</Text>
+              ) : null}
               <TextField
                 error={nameError}
                 label={t("league_name_label")}
@@ -180,12 +225,28 @@ export default function CreateTournamentScreen() {
                 value={name}
               />
               <View style={styles.teamIntroduction}>
-                <Text variant="bodyLarge">{t("league_own_team_title")}</Text>
-                <Text color="secondary">{t("league_own_team_description")}</Text>
+                <Text variant="bodyLarge">
+                  {t(
+                    sport === "tennis" || sport === "padel"
+                      ? "racket_own_participant_title"
+                      : "league_own_team_title",
+                  )}
+                </Text>
+                <Text color="secondary">
+                  {t(
+                    sport === "tennis" || sport === "padel"
+                      ? "racket_own_participant_description"
+                      : "league_own_team_description",
+                  )}
+                </Text>
               </View>
               <TextField
                 error={teamError}
-                label={t("league_own_team_label")}
+                label={t(
+                  sport === "tennis" || sport === "padel"
+                    ? "racket_own_participant_label"
+                    : "league_own_team_label",
+                )}
                 maxLength={maximumTeamNameLength}
                 onChangeText={(value) => {
                   setTeamHasLocalValue(true);

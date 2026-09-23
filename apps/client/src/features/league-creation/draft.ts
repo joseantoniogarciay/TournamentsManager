@@ -14,6 +14,7 @@ export type LocalTournamentDraft = {
   draftId: string;
   name: string;
   sport: TournamentSport;
+  bestOfSets?: 3 | 5;
   teams: string[];
 };
 
@@ -33,7 +34,7 @@ export async function getLocalTournamentDraft(): Promise<LocalTournamentDraft | 
     ) {
       return null;
     }
-    const normalized = {
+    const normalized: LocalTournamentDraft = {
       draftId:
         typeof draft.draftId === "string" && uuidPattern.test(draft.draftId)
           ? draft.draftId
@@ -41,9 +42,18 @@ export async function getLocalTournamentDraft(): Promise<LocalTournamentDraft | 
       name: draft.name,
       sport:
         draft.sport === TournamentInputSport.basketball ||
-        draft.sport === TournamentInputSport.handball
+        draft.sport === TournamentInputSport.handball ||
+        draft.sport === TournamentInputSport.tennis ||
+        draft.sport === TournamentInputSport.padel
           ? draft.sport
           : TournamentInputSport.football,
+      bestOfSets:
+        draft.sport === TournamentInputSport.tennis && draft.bestOfSets === 5
+          ? 5
+          : draft.sport === TournamentInputSport.tennis ||
+              draft.sport === TournamentInputSport.padel
+            ? 3
+            : undefined,
       teams: draft.teams,
     };
     if (draft.draftId !== normalized.draftId) {
@@ -82,6 +92,9 @@ export function toTournamentDraftInput(
     draftId: draft.draftId,
     name,
     sport: draft.sport,
+    ...(draft.sport === TournamentInputSport.tennis || draft.sport === TournamentInputSport.padel
+      ? { bestOfSets: draft.bestOfSets ?? 3 }
+      : {}),
     teams: teams.map((name) => ({ name })),
   };
 }

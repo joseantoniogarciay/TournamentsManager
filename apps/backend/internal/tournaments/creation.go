@@ -25,12 +25,19 @@ const (
 	SportBasketball Sport = "basketball"
 	// SportHandball applies handball scoring and tiebreak rules.
 	SportHandball Sport = "handball"
+	// SportTennis applies tennis set scoring.
+	SportTennis Sport = "tennis"
+	// SportPadel applies padel set scoring.
+	SportPadel Sport = "padel"
 )
 
 // ValidSport reports whether the public value selects an implemented sporting policy.
 func ValidSport(sport Sport) bool {
-	return sport == SportFootball || sport == SportBasketball || sport == SportHandball
+	return sport == SportFootball || sport == SportBasketball || sport == SportHandball || sport == SportTennis || sport == SportPadel
 }
+
+// RacketSport reports whether results are expressed as ordered sets.
+func RacketSport(sport Sport) bool { return sport == SportTennis || sport == SportPadel }
 
 var (
 	// ErrInvalidTournamentInput indicates invalid creation or start data.
@@ -66,9 +73,10 @@ type TeamInput struct{ Name string }
 
 // CreateInput contains the minimum data for a published league.
 type CreateInput struct {
-	Name  string
-	Sport Sport
-	Teams []TeamInput
+	Name       string
+	Sport      Sport
+	BestOfSets int
+	Teams      []TeamInput
 }
 
 // StartInput defines the rules frozen when the league starts.
@@ -85,6 +93,13 @@ type StartInput struct {
 type MatchResultInput struct {
 	HomeScore, AwayScore         int
 	HomePenalties, AwayPenalties *int
+	Sets                         []SetScore
+}
+
+// SetScore is the game score of one ordered tennis or padel set.
+type SetScore struct {
+	HomeScore int `json:"homeScore"`
+	AwayScore int `json:"awayScore"`
 }
 
 // Team represents a persisted league team.
@@ -130,6 +145,7 @@ type Match struct {
 	State             string         `json:"state"`
 	HomeScore         *int           `json:"homeScore,omitempty"`
 	AwayScore         *int           `json:"awayScore,omitempty"`
+	Sets              []SetScore     `json:"sets"`
 }
 
 // ResultType distinguishes a played score from one imposed by a sporting rule.
@@ -150,6 +166,7 @@ type Tournament struct {
 	ID              string                      `json:"id"`
 	Name            string                      `json:"name"`
 	Sport           Sport                       `json:"sport"`
+	BestOfSets      int                         `json:"bestOfSets,omitempty"`
 	Format          string                      `json:"format"`
 	State           string                      `json:"state"`
 	RoundRobinLegs  int                         `json:"roundRobinLegs"`
@@ -364,13 +381,18 @@ func (s CreationService) RecordResult(ctx context.Context, accountID, leagueID, 
 	if input.HomeScore < 0 || input.AwayScore < 0 {
 		return Tournament{}, ErrInvalidTournamentInput
 	}
+	for _, set := range input.Sets {
+		if set.HomeScore < 0 || set.AwayScore < 0 {
+			return Tournament{}, ErrInvalidTournamentInput
+		}
+	}
 	league, err := s.repository.RecordResult(ctx, accountID, leagueID, matchID, input)
 	return s.withStandings(league), err
 }
 
 // ValidateLeagueResult keeps sport-specific scoring policy in the domain.
 func ValidateLeagueResult(sport Sport, input MatchResultInput) error {
-	if !ValidSport(sport) || input.HomeScore < 0 || input.AwayScore < 0 || input.HomePenalties != nil || input.AwayPenalties != nil {
+	if !ValidSport(sport) || RacketSport(sport) || input.HomeScore < 0 || input.AwayScore < 0 || input.HomePenalties != nil || input.AwayPenalties != nil || len(input.Sets) != 0 {
 		return ErrInvalidTournamentInput
 	}
 	if sport == SportBasketball && input.HomeScore == input.AwayScore {
@@ -581,6 +603,15 @@ func headToHeadFirst(league Tournament) bool {
 }
 func validCreateInput(input CreateInput) bool {
 	if !ValidSport(input.Sport) || len(strings.TrimSpace(input.Name)) == 0 || utf8.RuneCountInString(input.Name) > MaximumTournamentNameLength || len(input.Teams) < 1 || len(input.Teams) > 64 {
+		return false
+	}
+	if input.Sport == SportTennis && input.BestOfSets != 3 && input.BestOfSets != 5 {
+		return false
+	}
+	if input.Sport == SportPadel && input.BestOfSets != 3 {
+		return false
+	}
+	if !RacketSport(input.Sport) && input.BestOfSets != 0 {
 		return false
 	}
 	seen := map[string]bool{}

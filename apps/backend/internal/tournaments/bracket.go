@@ -49,9 +49,10 @@ type BracketMatch struct {
 
 // Bracket is a complete, ordered tree for one single-elimination phase.
 type Bracket struct {
-	Size    int
-	Sport   Sport
-	Matches []BracketMatch
+	Size       int
+	Sport      Sport
+	BestOfSets int
+	Matches    []BracketMatch
 }
 
 // GenerateSingleElimination materializes every round at start time. Team input

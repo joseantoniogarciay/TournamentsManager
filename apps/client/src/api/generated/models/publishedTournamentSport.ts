@@ -13,4 +13,6 @@ export const PublishedTournamentSport = {
   football: "football",
   basketball: "basketball",
   handball: "handball",
+  tennis: "tennis",
+  padel: "padel",
 } as const;

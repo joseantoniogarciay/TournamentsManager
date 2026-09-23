@@ -123,13 +123,18 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 
 El deporte del torneo usa el «Selector de opción» al principio del formulario de
 creación, antes de los campos que pueda condicionar. Sus valores son «Fútbol»,
-«Baloncesto» y «Balonmano», conserva una selección visible y no se vuelve
-editable tras publicar. El enum recibido gobierna el vocabulario posterior:
-goles para fútbol y balonmano, puntos para baloncesto, ayuda inline cuando un
-tanteo de baloncesto queda empatado y «lanzamientos de 7 metros» para el
-desempate de balonmano. El resultado administrativo fijo se explica en la
-confirmación de retirada, sin presentar un campo que sugiera que puede
-configurarse.
+«Baloncesto», «Balonmano», «Tenis» y «Pádel», conserva una selección visible y
+no se vuelve editable tras publicar. Tenis presenta una segunda selección al
+mejor de tres o cinco sets; pádel informa de que usa tres y ambos restringen el
+formato a eliminatoria directa. El enum recibido gobierna el vocabulario
+posterior: goles para fútbol y balonmano, puntos para baloncesto, ayuda inline
+cuando un tanteo de baloncesto queda empatado, «lanzamientos de 7 metros» para
+el desempate de balonmano y «participantes» para persona o pareja en deportes de
+raqueta. El editor de raqueta presenta un par de campos por set, permite dejar
+vacíos los sets que ya no se disputan y mantiene deshabilitada la acción hasta
+que el resultado completo sea coherente. El resultado administrativo fijo se
+explica en la confirmación de retirada, sin presentar un campo que sugiera que
+puede configurarse.
 
 `Card` está implementada en `shared/ui`: aplica superficie, borde, radio,
 padding y margen exterior horizontal semánticos. La home la usa para separar

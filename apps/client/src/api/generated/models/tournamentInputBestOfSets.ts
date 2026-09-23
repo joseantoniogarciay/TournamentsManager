@@ -6,13 +6,13 @@
  * OpenAPI spec version: 1.0.0-design
  */
 
-export type TournamentDraftInputSport =
-  (typeof TournamentDraftInputSport)[keyof typeof TournamentDraftInputSport];
+/**
+ * Obligatorio para tenis; pádel exige 3. Debe omitirse en fútbol, baloncesto y balonmano.
+ */
+export type TournamentInputBestOfSets =
+  (typeof TournamentInputBestOfSets)[keyof typeof TournamentInputBestOfSets];
 
-export const TournamentDraftInputSport = {
-  football: "football",
-  basketball: "basketball",
-  handball: "handball",
-  tennis: "tennis",
-  padel: "padel",
+export const TournamentInputBestOfSets = {
+  NUMBER_3: 3,
+  NUMBER_5: 5,
 } as const;

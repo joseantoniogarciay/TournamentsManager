@@ -323,7 +323,8 @@ func (r AccountTournamentRepository) Start(ctx context.Context, accountID, leagu
 	defer func() { _ = tx.Rollback(ctx) }()
 	var organizer string
 	var state string
-	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state); errors.Is(err, pgx.ErrNoRows) {
+	var sport tournaments.Sport
+	if err := tx.QueryRow(ctx, `SELECT organizer_account_id::text, state, sport FROM tournaments WHERE id = $1 FOR UPDATE`, leagueID).Scan(&organizer, &state, &sport); errors.Is(err, pgx.ErrNoRows) {
 		return tournaments.Tournament{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
 		return tournaments.Tournament{}, err
@@ -356,6 +357,9 @@ func (r AccountTournamentRepository) Start(ctx context.Context, accountID, leagu
 	}
 	if input.Format == "" {
 		input.Format = "league"
+	}
+	if tournaments.RacketSport(sport) && input.Format != "single_elimination" {
+		return tournaments.Tournament{}, tournaments.ErrInvalidTournamentInput
 	}
 	var stageID string
 	if input.Format == tournaments.FormatLeagueThenSingleElimination {
@@ -478,7 +482,7 @@ func recordQualificationTieBreakResult(ctx context.Context, tx pgx.Tx, accountID
 	if poolState != "in_progress" || cycle != currentCycle {
 		return tournaments.ErrMatchResultConflict
 	}
-	winnerTeamID, err := tournaments.DecisiveWinnerTeamID(sport, homeTeamID, awayTeamID, input)
+	winnerTeamID, err := tournaments.DecisiveWinnerTeamID(sport, 0, homeTeamID, awayTeamID, input)
 	if err != nil {
 		return tournaments.ErrInvalidTournamentInput
 	}

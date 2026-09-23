@@ -76,3 +76,54 @@ func TestIntegrationBracketLifecycle(t *testing.T) {
 		t.Fatal("incorrect champion or lifecycle")
 	}
 }
+
+func TestIntegrationTennisSetsAreValidatedPersistedAndHistorized(t *testing.T) {
+	pool := integrationPool(t)
+	ctx := context.Background()
+	owner := createVerifiedLocalAccount(t, ctx, pool, "tennis@example.test", "tennis_owner", "correct horse battery staple")
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	tournament, err := service.Create(ctx, owner, tournaments.CreateInput{
+		Name: "Tenis", Sport: tournaments.SportTennis, BestOfSets: 3,
+		Teams: []tournaments.TeamInput{{Name: "Ana"}, {Name: "Bea"}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = service.Start(ctx, owner, tournament.ID, tournaments.StartInput{Format: "league", RoundRobinLegs: 1}); !errors.Is(err, tournaments.ErrInvalidTournamentInput) {
+		t.Fatalf("tennis league started: %v", err)
+	}
+	tournament, err = service.Start(ctx, owner, tournament.ID, tournaments.StartInput{Format: "single_elimination"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	match := tournament.Matches[0]
+	if _, err = service.RecordResult(ctx, owner, tournament.ID, match.ID, tournaments.MatchResultInput{Sets: []tournaments.SetScore{{HomeScore: 6, AwayScore: 5}, {HomeScore: 6, AwayScore: 0}}}); !errors.Is(err, tournaments.ErrInvalidBracketResult) {
+		t.Fatalf("impossible set accepted: %v", err)
+	}
+	first := tournaments.MatchResultInput{Sets: []tournaments.SetScore{{HomeScore: 6, AwayScore: 4}, {HomeScore: 3, AwayScore: 6}, {HomeScore: 7, AwayScore: 6}}}
+	tournament, err = service.RecordResult(ctx, owner, tournament.ID, match.ID, first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tournament.Matches[0].HomeScore == nil || *tournament.Matches[0].HomeScore != 2 || len(tournament.Matches[0].Sets) != 3 {
+		t.Fatalf("persisted tennis result = %#v", tournament.Matches[0])
+	}
+	second := tournaments.MatchResultInput{Sets: []tournaments.SetScore{{HomeScore: 4, AwayScore: 6}, {HomeScore: 5, AwayScore: 7}}}
+	tournament, err = service.RecordResult(ctx, owner, tournament.ID, match.ID, second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tournament.Matches[0].WinnerTeamID != match.AwayTeamID || len(tournament.Matches[0].Sets) != 2 {
+		t.Fatalf("corrected tennis result = %#v", tournament.Matches[0])
+	}
+	var changes, snapshots int
+	if err = pool.QueryRow(ctx, `SELECT count(*) FROM match_result_changes WHERE match_id=$1`, match.ID).Scan(&changes); err != nil {
+		t.Fatal(err)
+	}
+	if err = pool.QueryRow(ctx, `SELECT count(*) FROM match_result_change_sets s JOIN match_result_changes c ON c.id=s.change_id WHERE c.match_id=$1`, match.ID).Scan(&snapshots); err != nil {
+		t.Fatal(err)
+	}
+	if changes != 2 || snapshots != 5 {
+		t.Fatalf("history changes=%d set snapshots=%d, want 2 and 5", changes, snapshots)
+	}
+}

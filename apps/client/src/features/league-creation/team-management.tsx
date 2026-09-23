@@ -20,7 +20,7 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { getWithdrawalDescriptionKey } from "@/shared/tournaments/sport";
+import { getWithdrawalDescriptionKey, isRacketSport } from "@/shared/tournaments/sport";
 import { Button, Card, ModalDialog, Text, TextField, useConfirmationDialog } from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
@@ -48,6 +48,7 @@ export function TournamentTeamManagement({
   const [isSharingInvitation, setIsSharingInvitation] = useState(false);
   const [isRevokingInvitation, setIsRevokingInvitation] = useState(false);
   const canAddTeam = relationship === "organizer" && tournament.state === "published";
+  const racket = isRacketSport(tournament.sport);
   const teamLimitReached = tournament.teams.length >= maximumTournamentTeams;
   const canRemoveTeam = canAddTeam && tournament.teams.length > 1;
   const canWithdrawTeam =
@@ -59,14 +60,17 @@ export function TournamentTeamManagement({
     (team) => team.name.trim().toLowerCase() === normalizedName.toLowerCase(),
   );
   const nameError = duplicateName
-    ? t("league_add_team_name_in_use")
+    ? t(racket ? "racket_add_participant_name_in_use" : "league_add_team_name_in_use")
     : nameConflict
-      ? t("league_add_team_conflict")
+      ? t(racket ? "racket_add_participant_conflict" : "league_add_team_conflict")
       : undefined;
 
   const openAddTeam = () => {
     if (teamLimitReached) {
-      show({ kind: "generic-error", message: t("league_team_limit_reached") });
+      show({
+        kind: "generic-error",
+        message: t(racket ? "racket_participant_limit_reached" : "league_team_limit_reached"),
+      });
       return;
     }
     setAdding(true);
@@ -85,7 +89,7 @@ export function TournamentTeamManagement({
     setSaveError(undefined);
     if (!normalizedName || duplicateName) return;
     if (teamLimitReached) {
-      setSaveError(t("league_team_limit_reached"));
+      setSaveError(t(racket ? "racket_participant_limit_reached" : "league_team_limit_reached"));
       return;
     }
     setSaving(true);
@@ -173,13 +177,27 @@ export function TournamentTeamManagement({
   };
   const confirmRemove = (teamID: string, teamName: string, withdrawn: boolean) =>
     confirm({
-      title: t(withdrawn ? "league_withdraw_team_title" : "league_remove_team_title"),
+      title: t(
+        withdrawn
+          ? "league_withdraw_team_title"
+          : racket
+            ? "racket_remove_participant_title"
+            : "league_remove_team_title",
+      ),
       description: t(
         withdrawn
           ? getWithdrawalDescriptionKey(tournament.sport)
-          : "league_remove_team_description",
+          : racket
+            ? "racket_remove_participant_description"
+            : "league_remove_team_description",
       ).replace("{name}", teamName),
-      acceptLabel: t(withdrawn ? "league_withdraw_team" : "league_remove_team"),
+      acceptLabel: t(
+        withdrawn
+          ? "league_withdraw_team"
+          : racket
+            ? "racket_remove_participant"
+            : "league_remove_team",
+      ),
       cancelLabel: t("common_cancel"),
       onAccept: () => void remove(teamID, withdrawn),
       onCancel: () => undefined,
@@ -191,26 +209,50 @@ export function TournamentTeamManagement({
         <Card>
           <View style={styles.invitationCard}>
             <View style={styles.invitationCopy}>
-              <Text variant="title">{t("league_complete_teams_title")}</Text>
-              <Text color="secondary">{t("league_complete_teams_description")}</Text>
+              <Text variant="title">
+                {t(racket ? "racket_complete_participants_title" : "league_complete_teams_title")}
+              </Text>
+              <Text color="secondary">
+                {t(
+                  racket
+                    ? "racket_complete_participants_description"
+                    : "league_complete_teams_description",
+                )}
+              </Text>
               {tournament.teams.length < 2 ? (
-                <Text color="secondary">{t("league_start_requires_two_teams")}</Text>
+                <Text color="secondary">
+                  {t(
+                    racket
+                      ? "racket_start_requires_two_participants"
+                      : "league_start_requires_two_teams",
+                  )}
+                </Text>
               ) : null}
-              <Text color="secondary">{t("league_invitation_rotation_hint")}</Text>
+              {!racket ? (
+                <Text color="secondary">{t("league_invitation_rotation_hint")}</Text>
+              ) : null}
             </View>
-            <Button label={t("league_add_team")} onPress={openAddTeam} variant="secondary" />
             <Button
-              disabled={teamLimitReached}
-              label={t("league_share_invitation")}
-              loading={isSharingInvitation}
-              onPress={() => void shareInvitation()}
-            />
-            <Button
-              label={t("league_revoke_invitation")}
-              loading={isRevokingInvitation}
-              onPress={() => void revokeInvitation()}
+              label={t(racket ? "racket_add_participant" : "league_add_team")}
+              onPress={openAddTeam}
               variant="secondary"
             />
+            {!racket ? (
+              <>
+                <Button
+                  disabled={teamLimitReached}
+                  label={t("league_share_invitation")}
+                  loading={isSharingInvitation}
+                  onPress={() => void shareInvitation()}
+                />
+                <Button
+                  label={t("league_revoke_invitation")}
+                  loading={isRevokingInvitation}
+                  onPress={() => void revokeInvitation()}
+                  variant="secondary"
+                />
+              </>
+            ) : null}
           </View>
         </Card>
       ) : null}
@@ -227,7 +269,11 @@ export function TournamentTeamManagement({
             ) : canRemoveTeam || canWithdrawTeam ? (
               <Pressable
                 accessibilityLabel={t(
-                  canWithdrawTeam ? "league_withdraw_team" : "league_remove_team",
+                  canWithdrawTeam
+                    ? "league_withdraw_team"
+                    : racket
+                      ? "racket_remove_participant"
+                      : "league_remove_team",
                 )}
                 accessibilityRole="button"
                 accessibilityState={{ busy: removingTeamID === team.id }}
@@ -256,10 +302,12 @@ export function TournamentTeamManagement({
         onDismiss={dismissDialog}
         visible={adding}
       >
-        <Text variant="title">{t("league_add_team_title")}</Text>
+        <Text variant="title">
+          {t(racket ? "racket_add_participant_title" : "league_add_team_title")}
+        </Text>
         <TextField
           error={nameError}
-          label={t("league_add_team_name")}
+          label={t(racket ? "racket_add_participant_name" : "league_add_team_name")}
           maxLength={maximumTeamNameLength}
           onChangeText={(value) => {
             setName(value);
@@ -277,7 +325,7 @@ export function TournamentTeamManagement({
         ) : null}
         <Button
           disabled={!name.trim()}
-          label={t("league_add_team_save")}
+          label={t(racket ? "racket_add_participant_save" : "league_add_team_save")}
           loading={saving}
           onPress={() => void save()}
         />

@@ -5,17 +5,26 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
+import type { SetResult } from "./setResult.js";
 
 /**
- * En liga se admite el marcador final; baloncesto rechaza empates. En una eliminatoria de fútbol o balonmano, un empate exige ambos marcadores de desempate distintos; el cliente los presenta como penaltis o lanzamientos de siete metros según el deporte. Baloncesto exige un tanteo final no empatado y nunca envía desempate. Esos valores no se suman al marcador del partido.
+ * En liga se admite el marcador final; baloncesto rechaza empates. En una eliminatoria de fútbol o balonmano, un empate exige ambos marcadores de desempate distintos; el cliente los presenta como penaltis o lanzamientos de siete metros según el deporte. Baloncesto exige un tanteo final no empatado y nunca envía desempate. Esos valores no se suman al marcador del partido. Tenis y pádel envían únicamente los sets; el servidor valida cada tanteo, deriva los sets ganados y rechaza juegos posteriores a la victoria.
  */
-export interface MatchResultInput {
-  /** @minimum 0 */
-  homeScore: number;
-  /** @minimum 0 */
-  awayScore: number;
-  /** @minimum 0 */
-  homePenalties?: number;
-  /** @minimum 0 */
-  awayPenalties?: number;
-}
+export type MatchResultInput =
+  | {
+      /** @minimum 0 */
+      homeScore: number;
+      /** @minimum 0 */
+      awayScore: number;
+      /** @minimum 0 */
+      homePenalties?: number;
+      /** @minimum 0 */
+      awayPenalties?: number;
+    }
+  | {
+      /**
+       * @minItems 2
+       * @maxItems 5
+       */
+      sets: SetResult[];
+    };

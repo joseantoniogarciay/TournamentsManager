@@ -50,7 +50,7 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 	if err == nil {
 		lastTeamName := nullableText(account.LastTeamName)
 		if draft != nil {
-			if err := createTournamentFromDraft(ctx, tx, account.ID.String(), draft.ID, draft.Name, draft.Sport, draft.Teams); err != nil {
+			if err := createTournamentFromDraft(ctx, tx, account.ID.String(), draft.ID, draft.Name, draft.Sport, draft.BestOfSets, draft.Teams); err != nil {
 				return federated.Session{}, err
 			}
 			if len(draft.Teams) > 0 {
@@ -83,7 +83,7 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 		return federated.Session{}, err
 	}
 	if draft != nil {
-		if err := createTournamentFromDraft(ctx, tx, accountID.String(), draft.ID, draft.Name, draft.Sport, draft.Teams); err != nil {
+		if err := createTournamentFromDraft(ctx, tx, accountID.String(), draft.ID, draft.Name, draft.Sport, draft.BestOfSets, draft.Teams); err != nil {
 			return federated.Session{}, err
 		}
 	}

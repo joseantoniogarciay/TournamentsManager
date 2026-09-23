@@ -242,6 +242,11 @@ export const BracketView = forwardRef<
             {match.homePenalties !== undefined ? (
               <Text color="secondary">{t("bracket_penalties_caption")}</Text>
             ) : null}
+            {match.sets.length > 0 ? (
+              <Text color="secondary">
+                {match.sets.map((set) => `${set.homeScore}–${set.awayScore}`).join(" · ")}
+              </Text>
+            ) : null}
             {match.state === "bye" ? (
               <Text color="secondary">{t("bracket_auto_advance")}</Text>
             ) : null}

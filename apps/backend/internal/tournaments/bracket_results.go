@@ -22,15 +22,60 @@ type BracketResult struct {
 	AwayScore     int
 	HomePenalties *int
 	AwayPenalties *int
+	Sets          []SetScore
+}
+
+// NormalizeRacketResult validates every set and derives the aggregate score.
+func NormalizeRacketResult(sport Sport, bestOfSets int, input MatchResultInput) (MatchResultInput, error) {
+	if !RacketSport(sport) || (sport == SportTennis && bestOfSets != 3 && bestOfSets != 5) || (sport == SportPadel && bestOfSets != 3) || input.HomePenalties != nil || input.AwayPenalties != nil {
+		return MatchResultInput{}, ErrInvalidBracketResult
+	}
+	winsNeeded := bestOfSets/2 + 1
+	homeWins, awayWins := 0, 0
+	sets := make([]SetScore, len(input.Sets))
+	copy(sets, input.Sets)
+	for _, set := range sets {
+		if homeWins == winsNeeded || awayWins == winsNeeded || !validTieBreakSet(set) {
+			return MatchResultInput{}, ErrInvalidBracketResult
+		}
+		if set.HomeScore > set.AwayScore {
+			homeWins++
+		} else {
+			awayWins++
+		}
+	}
+	if (homeWins != winsNeeded && awayWins != winsNeeded) || (homeWins == winsNeeded && awayWins == winsNeeded) {
+		return MatchResultInput{}, ErrInvalidBracketResult
+	}
+	input.HomeScore, input.AwayScore, input.Sets = homeWins, awayWins, sets
+	return input, nil
+}
+
+func validTieBreakSet(set SetScore) bool {
+	if set.HomeScore < 0 || set.AwayScore < 0 || set.HomeScore == set.AwayScore {
+		return false
+	}
+	winner, loser := set.HomeScore, set.AwayScore
+	if loser > winner {
+		winner, loser = loser, winner
+	}
+	return winner == 6 && loser <= 4 || winner == 7 && (loser == 5 || loser == 6)
 }
 
 // DecisiveWinnerTeamID validates a match that cannot end tied and returns its winner.
-func DecisiveWinnerTeamID(sport Sport, homeTeamID, awayTeamID string, input MatchResultInput) (string, error) {
+func DecisiveWinnerTeamID(sport Sport, bestOfSets int, homeTeamID, awayTeamID string, input MatchResultInput) (string, error) {
 	if homeTeamID == "" || awayTeamID == "" || homeTeamID == awayTeamID {
 		return "", ErrInvalidBracketResult
 	}
+	if RacketSport(sport) {
+		var err error
+		input, err = NormalizeRacketResult(sport, bestOfSets, input)
+		if err != nil {
+			return "", err
+		}
+	}
 	result := BracketResult(input)
-	if err := result.validate(sport); err != nil {
+	if err := result.validate(sport, bestOfSets); err != nil {
 		return "", err
 	}
 	if result.HomeScore > result.AwayScore || (result.HomeScore == result.AwayScore && *result.HomePenalties > *result.AwayPenalties) {
@@ -39,8 +84,18 @@ func DecisiveWinnerTeamID(sport Sport, homeTeamID, awayTeamID string, input Matc
 	return awayTeamID, nil
 }
 
-func (r BracketResult) validate(sport Sport) error {
+func (r BracketResult) validate(sport Sport, bestOfSets int) error {
 	if r.HomeScore < 0 || r.AwayScore < 0 {
+		return ErrInvalidBracketResult
+	}
+	if RacketSport(sport) {
+		normalized, err := NormalizeRacketResult(sport, bestOfSets, MatchResultInput(r))
+		if err != nil || normalized.HomeScore != r.HomeScore || normalized.AwayScore != r.AwayScore {
+			return ErrInvalidBracketResult
+		}
+		return nil
+	}
+	if len(r.Sets) != 0 {
 		return ErrInvalidBracketResult
 	}
 	if sport == SportBasketball {
@@ -145,7 +200,7 @@ func (b Bracket) Resolve() ([]ResolvedBracketMatch, error) {
 			if home == "" || away == "" {
 				return nil, ErrBracketMatchNotReady
 			}
-			if err := match.Result.validate(b.Sport); err != nil {
+			if err := match.Result.validate(b.Sport, b.BestOfSets); err != nil {
 				return nil, err
 			}
 			homeWins := match.Result.HomeScore > match.Result.AwayScore
@@ -172,7 +227,7 @@ func (b Bracket) Resolve() ([]ResolvedBracketMatch, error) {
 // RecordResult returns a new bracket, leaving the previous snapshot untouched
 // for history. A result cannot be corrected after a descendant has a result.
 func (b Bracket) RecordResult(round, sequence int, result BracketResult) (Bracket, error) {
-	if err := result.validate(b.Sport); err != nil {
+	if err := result.validate(b.Sport, b.BestOfSets); err != nil {
 		return Bracket{}, err
 	}
 	resolved, err := b.Resolve()
@@ -203,7 +258,7 @@ func (b Bracket) RecordResult(round, sequence int, result BracketResult) (Bracke
 			ancestorSequence = (ancestorSequence + 1) / 2
 		}
 	}
-	next := Bracket{Size: b.Size, Sport: b.Sport, Matches: make([]BracketMatch, len(b.Matches))}
+	next := Bracket{Size: b.Size, Sport: b.Sport, BestOfSets: b.BestOfSets, Matches: make([]BracketMatch, len(b.Matches))}
 	copy(next.Matches, b.Matches)
 	for i := range next.Matches {
 		if next.Matches[i].Result != nil {
@@ -217,6 +272,7 @@ func (b Bracket) RecordResult(round, sequence int, result BracketResult) (Bracke
 }
 
 func cloneBracketResult(result BracketResult) BracketResult {
+	result.Sets = append([]SetScore(nil), result.Sets...)
 	if result.HomePenalties != nil {
 		value := *result.HomePenalties
 		result.HomePenalties = &value

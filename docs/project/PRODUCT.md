@@ -27,9 +27,10 @@ reglas estén definidas.
 - La cuenta incluye registro, inicio de sesión y recuperación de contraseña.
 - Una misma cuenta admite credenciales locales y login con Google. Apple no está
   adoptado en v1 y se revisa antes de distribuir el cliente iOS.
-- El torneo declara un deporte inmutable elegido entre `football`, `basketball`
-  y `handball`; «Fútbol» engloba fútbol sala en esta iteración (ADR-0126 y
-  ADR-0134).
+- El torneo declara un deporte inmutable elegido entre `football`, `basketball`,
+  `handball`, `tennis` y `padel`; «Fútbol» engloba fútbol sala en esta iteración.
+  Tenis permite partidos al mejor de tres o cinco sets y pádel fija tres
+  (ADR-0126, ADR-0134 y ADR-0135).
 - El recurso raíz es un torneo. La liga existente se conserva como formato
   `league`; también existe la eliminatoria directa a partido único como formato
   `single_elimination`; `league_then_single_elimination` encadena una liga
@@ -315,6 +316,13 @@ ese núcleo: el torneo elige `football`, `basketball` o `handball` al crearse y
 conserva el deporte durante todo su ciclo. Los tres admiten liga a una o dos
 vueltas y eliminatoria directa a partido único; no incluyen fechas, horas,
 periodos ni prórrogas desglosadas.
+
+ADR-0135 incorpora `tennis` y `padel` exclusivamente para eliminatoria directa.
+Tenis permite elegir al mejor de tres o cinco sets; pádel se juega al mejor de
+tres. Cada set normal con tie-break termina `6-0` a `6-4`, `7-5` o `7-6`, y el
+partido termina en cuanto una participante alcanza la mayoría. No se modelan
+super tie-break, advantage set, abandono ni incomparecencia. El nombre de cada
+participante puede representar una persona o pareja, sin plantilla individual.
 
 En fútbol, una liga puntúa 3-1-0. En dos vueltas prioriza la
 mini-clasificación entre empatados y en una, diferencia de goles y goles a favor

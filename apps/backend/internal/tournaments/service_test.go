@@ -96,6 +96,50 @@ func TestValidCreateInputRejectsUnknownSport(t *testing.T) {
 	}
 }
 
+func TestValidCreateInputRequiresRacketSetFormat(t *testing.T) {
+	t.Parallel()
+
+	base := CreateInput{Name: "Torneo", Teams: []TeamInput{{Name: "A"}, {Name: "B"}}}
+	for _, test := range []struct {
+		sport Sport
+		best  int
+		valid bool
+	}{
+		{SportTennis, 3, true}, {SportTennis, 5, true}, {SportTennis, 0, false},
+		{SportPadel, 3, true}, {SportPadel, 5, false}, {SportFootball, 3, false},
+	} {
+		input := base
+		input.Sport, input.BestOfSets = test.sport, test.best
+		if got := validCreateInput(input); got != test.valid {
+			t.Errorf("validCreateInput(%q, %d) = %v, want %v", test.sport, test.best, got, test.valid)
+		}
+	}
+}
+
+func TestNormalizeRacketResultRejectsIncoherentSets(t *testing.T) {
+	t.Parallel()
+
+	valid := MatchResultInput{Sets: []SetScore{{HomeScore: 6, AwayScore: 4}, {HomeScore: 5, AwayScore: 7}, {HomeScore: 7, AwayScore: 6}}}
+	normalized, err := NormalizeRacketResult(SportTennis, 3, valid)
+	if err != nil || normalized.HomeScore != 2 || normalized.AwayScore != 1 {
+		t.Fatalf("NormalizeRacketResult() = %#v, %v; want 2-1", normalized, err)
+	}
+	invalid := []MatchResultInput{
+		{Sets: []SetScore{{HomeScore: 6, AwayScore: 4}}},
+		{Sets: []SetScore{{HomeScore: 6, AwayScore: 5}, {HomeScore: 6, AwayScore: 0}}},
+		{Sets: []SetScore{{HomeScore: 6, AwayScore: 0}, {HomeScore: 6, AwayScore: 0}, {HomeScore: 0, AwayScore: 6}}},
+		{Sets: []SetScore{{HomeScore: 7, AwayScore: 7}, {HomeScore: 6, AwayScore: 0}}},
+	}
+	for _, input := range invalid {
+		if _, err := NormalizeRacketResult(SportTennis, 3, input); !errors.Is(err, ErrInvalidBracketResult) {
+			t.Errorf("incoherent sets accepted: %#v, %v", input.Sets, err)
+		}
+	}
+	if _, err := NormalizeRacketResult(SportPadel, 5, valid); !errors.Is(err, ErrInvalidBracketResult) {
+		t.Errorf("best-of-five padel accepted: %v", err)
+	}
+}
+
 func TestValidateLeagueResultUsesSportPolicy(t *testing.T) {
 	t.Parallel()
 

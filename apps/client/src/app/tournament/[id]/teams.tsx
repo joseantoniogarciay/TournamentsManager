@@ -15,6 +15,7 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
+import { isRacketSport } from "@/shared/tournaments/sport";
 import {
   LoadingTransition,
   NavigationHeaderButton,
@@ -90,7 +91,7 @@ export default function TournamentTeamsScreen() {
           headerStyle: { backgroundColor: colors.surface.canvas },
           headerTintColor: colors.text.primary,
           headerTitleAlign: "center",
-          title: t("league_teams"),
+          title: t(league && isRacketSport(league.sport) ? "racket_participants" : "league_teams"),
           ...(!usesLiquidGlassNavigation
             ? {
                 headerLeft: () => (
