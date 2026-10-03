@@ -9,6 +9,11 @@ no incorpora funcionalidad, migraciones ni cambios del cliente pendientes.
 - Backend: OpenTelemetry 1.45.0, x/crypto 0.56.0, x/net 0.58.0 y gRPC 1.83.2,
   junto con su selección transitiva. Todas las versiones cambiadas se publicaron
   antes del 26 de septiembre, según el proxy oficial de Go.
+- Migrador Goose: se conserva 3.27.1 y se parchea su grafo separado de
+  herramientas (crypto, net, gRPC, cel-go, compress y tooling Go). El análisis
+  de fuentes del grafo anterior encontró GO-2026-6348 alcanzable en gRPC
+  1.83.0, corregido desde 1.83.1. Todas las versiones cambiadas cumplen siete
+  días; no se ejecutan migraciones como parte de este parche de dependencias.
 - Traefik: 3.7.8 → 3.7.13, publicado el 4 de septiembre; imagen fijada por
   digest en `infra/k3s/core/traefik-config.yaml`. El HelmChartConfig conserva el
   parche frente a reconciliaciones de K3s. El nuevo análisis no encuentra el
