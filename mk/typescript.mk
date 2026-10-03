@@ -39,3 +39,7 @@ openapi-ui:
 .PHONY: test-dependencies
 test-dependencies:
 	$(PNPM) run test:dependencies
+
+.PHONY: test-match-incidents
+test-match-incidents:
+	$(PNPM) run test:match-incidents
