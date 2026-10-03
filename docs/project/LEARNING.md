@@ -3970,3 +3970,13 @@ medición no significa cero bytes. Se añaden seis regresiones a `make verify`
 para conservar estas fronteras sin un framework adicional. Integración en Git,
 promoción al checkout estable y aplicación al runtime conservan evidencias
 separadas. La integración no afirma que local/dev ya use el nuevo plazo.
+
+### Promoción posterior del bloque operativo a dev
+
+Con autorización del usuario, el commit operativo pasó la CI con integración
+PostgreSQL y su configuración se promovió a un checkout estable nuevo.
+La recreación conserva las ocho imágenes y volúmenes; verifica retención
+efectiva, readiness, continuidad WAL y salud pública. Se registran por separado
+commit de configuración e imagen de API porque este cambio no reconstruye la
+aplicación. La [evidencia de promoción](../operations/OPERATIONAL_BLOCK_REVIEW_2026-10-03.md#promoción-autorizada-posterior-a-dev)
+completa el cierre anterior; no publica una versión de producción.

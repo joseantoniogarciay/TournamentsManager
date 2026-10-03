@@ -274,3 +274,21 @@ sus montajes propios apuntan a esa ubicación estable; no se reinició API ni
 PostgreSQL. Ambas APIs conservaron HTTPS 200. La revisión automática había
 bloqueado el traslado inicial; la operación se completó tras esa autorización,
 sin sobrescribir los archivos pendientes del workspace original.
+
+### Promoción del bloque operativo de dev — 2026-10-03
+
+Tras autorización del usuario, `b3a5e93` se publicó en `origin/develop` y pasó
+[la CI completa](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37138692151),
+incluida integración PostgreSQL. Su configuración operativa se promovió desde
+`.config/deployments/ops-b3a5e93`, ignorado por Git, conservando la copia anterior.
+Se recrearon los ocho servicios para aplicar rotación y retención de ADR-0139,
+con las mismas imágenes y volúmenes; la API conserva
+`tournaments-manager-dev-api:git-8fe7be1d7f998557051cdbe1bf72fcc2b50630ce`.
+No hubo rebuild de aplicación, migración ni cambio de web estática o renderer.
+
+La retención efectiva es de 24 h en Loki y Tempo, y de un día o 128 MiB TSDB
+para Prometheus; Loki completó un ciclo de retención. Los ocho servicios están
+activos, Loki y Tempo listos y ambas APIs públicas y la web dev devuelven `200`.
+Los agregados de PostgreSQL coinciden antes/después y `pgbackrest check` pasa.
+La [revisión operativa](OPERATIONAL_BLOCK_REVIEW_2026-10-03.md) recoge los límites
+y el manifiesto privado. No cambia el release v1.9.0 de producción.

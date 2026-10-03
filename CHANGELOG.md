@@ -21,8 +21,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 - Telemetría técnica de local/dev a 24 horas con compactor Loki, Tempo,
   límite TSDB adicional de Prometheus y rotación comprimida de contenedores.
-  El checkout de despliegue dev conserva la configuración del release v1.9.0;
-  estos archivos del workspace no se han promovido a ese checkout.
+  Configuración promovida a dev desde el checkout estable `ops-b3a5e93`, tras
+  pasar la CI. Se conservan las imágenes de aplicación y todos los volúmenes.
 - Limpieza selectiva de volúmenes de telemetría vencida mediante
   `make dev-observability-clean` y `make dev-public-observability-clean`.
 - `make dev-migrate` aplica migraciones locales con Goose sin reset ni cambios

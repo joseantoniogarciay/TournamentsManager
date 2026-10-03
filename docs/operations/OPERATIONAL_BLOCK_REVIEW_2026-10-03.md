@@ -84,3 +84,52 @@ Las pruebas de comportamiento y la comprobación posterior de producción cierra
 preguntas distintas. Ante incertidumbre, las herramientas de limpieza y medición
 conservan datos o fallan de forma visible. Estas fronteras merecen regresiones
 pequeñas sin añadir dependencias; el aprendizaje se incorpora al gate existente.
+
+## Promoción autorizada posterior a dev
+
+Tras la autorización del usuario («Dale»), `b3a5e93` se subió a `origin/develop`.
+La [CI de ese commit](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37138692151)
+terminó correctamente, incluyendo el gate completo y la integración PostgreSQL
+con su base efímera. Esta evidencia complementa la omisión de integración en la
+validación local descrita anteriormente.
+
+La configuración se promovió desde una copia estable de ese commit en
+`.config/deployments/ops-b3a5e93`, ignorada por Git. Los tres contratos privados
+se copiaron sin cambios ni salida de secretos. El preflight comparó las ocho
+imágenes, variables previstas y volúmenes con el runtime activo. El prefijo
+`/host_mnt` del bind de iCloud pertenece a Docker Desktop: se normalizó para
+compararlo con la ruta host, sin mover el repositorio de backup.
+
+Compose recreó los ocho servicios mediante `up --no-build --detach --wait`,
+con `DEV_API_IMAGE` fijado a la imagen ya activa
+`tournaments-manager-dev-api:git-8fe7be1d7f998557051cdbe1bf72fcc2b50630ce`.
+La rotación requiere recreación; se conservaron todas las imágenes por su ID y
+los mismos volúmenes. La web estática y el renderer conservaron sus artefactos;
+no se construyó otra API ni se ejecutaron migraciones.
+
+Verificación posterior:
+
+- Ocho servicios activos; montajes de configuración propios bajo el nuevo
+  checkout estable. Todos usan `json-file`, dos archivos de 5 MB y compresión.
+- Loki efectivo: `1d`, rechazo de muestras anteriores a `1d` y compactor activo;
+  se observa un ciclo de retención terminado correctamente. Tempo: `24h0m0s`.
+- Prometheus efectivo: `1d` y `128MiB`. Loki y Tempo responden correctamente en
+  `/ready` tras su periodo inicial de arranque; no basta con que el contenedor
+  aparezca como activo en Compose.
+- `curl` confirma HTTP `200` en la web dev y en `/healthz` de ambas APIs públicas.
+- El esquema 19 y los conteos de cuentas, torneos, partidos y aceptaciones
+  legales coinciden antes y después. `pgbackrest check` pasa antes y después;
+  el repositorio sigue sano y conserva la incremental ya restaurada.
+- El manifiesto privado `operational-promotion.json` registra commit de
+  configuración, imagen conservada, fecha y CI, sin secretos.
+
+El montaje estable anterior se conserva como referencia de rollback. La
+reversión de configuración no restaura telemetría que el compactor ya haya
+purgado. No se borraron volúmenes, datos de negocio ni backups, y no se
+publicó una versión nueva en producción.
+
+**Retrospectiva de promoción:** un commit de configuración y el SHA de la API
+activa pueden ser distintos sin deriva funcional cuando se conservan los IDs
+exactos de imagen. Registrar ambos evita atribuir un rebuild inexistente.
+Readiness y `pgbackrest check` cierran el arranque y la continuidad del WAL;
+la restauración previa sigue aportando una evidencia diferente.

@@ -48,6 +48,14 @@ make dev-public-bootstrap
 
 ## Actualización y reversión de dev
 
+La promoción operativa del 2026-10-03 usa la configuración de `b3a5e93` en
+`.config/deployments/ops-b3a5e93`, con las imágenes de runtime anteriores y sin
+rebuild de aplicación. Conserva la copia estable anterior como referencia.
+Para operar ese Compose, fija `DEV_API_IMAGE` a la imagen activa antes de
+cualquier `up`: este valor se suministró explícitamente durante la promoción.
+El manifiesto privado `operational-promotion.json` registra esa imagen y el
+commit de configuración. Véase la [evidencia de cierre](../../docs/operations/OPERATIONAL_BLOCK_REVIEW_2026-10-03.md#promoción-autorizada-posterior-a-dev).
+
 Tras pasar `make verify` y la CI del commit de `develop`, el despliegue manual
 es:
 
