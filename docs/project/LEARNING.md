@@ -3750,3 +3750,14 @@ retención/observabilidad no se incluyen en este release.
 Retrospectiva: aislar desde la base remota preservó seguridad publicada y
 trabajo pendiente. Probar migraciones sobre restauraciones reales evita
 confundir una base de fixtures con compatibilidad de los datos existentes.
+
+### Estabilización autorizada de los montajes de dev
+
+Con autorización explícita posterior del usuario, el checkout de despliegue
+se conserva en `.config/deployments/v1.9.0`, ignorado por Git. Se recrearon solo
+Prometheus, Loki, Promtail, Tempo, Alertmanager y Grafana con `--no-deps`,
+las mismas imágenes y sus volúmenes. Los seis servicios quedaron sanos y todos
+sus montajes propios apuntan a esa ubicación estable; no se reinició API ni
+PostgreSQL. Ambas APIs conservaron HTTPS 200. La revisión automática había
+bloqueado el traslado inicial; la operación se completó tras esa autorización,
+sin sobrescribir los archivos pendientes del workspace original.
