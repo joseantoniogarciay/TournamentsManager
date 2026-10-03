@@ -277,6 +277,12 @@ overrides:
   nanoid@5.0.9: 5.1.16
   undici@7.28.0: 7.29.1
   xcode>uuid: 11.1.1
+  metro@0.84.4>image-size: 2.0.4
+  query-string@7.1.3>decode-uri-component: 0.5.0
+
+patchedDependencies:
+  metro@0.84.4: b1c74fcde1b65529b91882d0a625958625e6ceadfa4e9af1a1c592510817b680
+  query-string@7.1.3: fe47b885269a14c517ab79b9f7e5d0b46666cf13e5a80856685262c20aa00da5
 
 importers:
 
@@ -2876,9 +2882,9 @@ packages:
   decode-named-character-reference@1.3.0:
     resolution: {integrity: sha512-GtpQYB283KrPp6nRw50q3U9/VfOutZOe103qlN7BPP6Ad27xYnOIWv4lPzo8HCAL+mMZofJ9KEy30fq6MfaK6Q==}
 
-  decode-uri-component@0.2.2:
-    resolution: {integrity: sha512-FqUYQ+8o158GyGTrMFJms9qh3CqTKvAqgqsTnkLI8sKu0028orqBhxNMFkFen0zGyg6epACD32pjVk58ngIErQ==}
-    engines: {node: '>=0.10'}
+  decode-uri-component@0.5.0:
+    resolution: {integrity: sha512-1BiQVoK8C9gUbQU6NzAtO/tkz2qOFpEObMWpcFvhx4fYnj4Oc5yzaJN/LD36ihkVUdXyh5ZekzX+yM+ty/SrPg==}
+    engines: {node: '>=14.16'}
 
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
@@ -3721,9 +3727,9 @@ packages:
     resolution: {integrity: sha512-BAg6QkE8W+TuQLrrw0Ugr7HegXduRuuj8/ti2kSOc+jz1dmx8/WNcjr6XGnq5YpDWxFwwaavqD0+jIUOKelTsw==}
     engines: {node: '>= 4'}
 
-  image-size@1.2.1:
-    resolution: {integrity: sha512-rH+46sQJ2dlwfjfhCyNx5thzrv+dtmBIhPHk0zgRUukHzZ/kRueTJXoYYsclBaKcSMBWuGbOFXtioLpzTb5euw==}
-    engines: {node: '>=16.x'}
+  image-size@2.0.4:
+    resolution: {integrity: sha512-QRUkFFsRV/6fuESxb9Vkq+a0LkSrgKXuc2NEqfikiXxxN/G3tjWt5EVUlMaImRBZRZK/jRBEbYvpPYZL8t08Zw==}
+    engines: {node: '>=18'}
     hasBin: true
 
   immer@9.0.21:
@@ -4920,9 +4926,6 @@ packages:
   query-string@7.1.3:
     resolution: {integrity: sha512-hh2WYhq4fi8+b+/2Kg9CEge4fDPvHS534aOOvOZeQ3+Vf2mCFsaFBYj0i+iXcAq6I9Vzp5fjMFBlONvayDC1qg==}
     engines: {node: '>=6'}
-
-  queue@6.0.2:
-    resolution: {integrity: sha512-iHZWu+q3IdFZFX36ro/lKBkSvfkztY5Y7HMiPlOUjhupPcG2JMfst2KKEpu5XndviX/3UhFbRngUPNKtgvtZiA==}
 
   quick-format-unescaped@4.0.4:
     resolution: {integrity: sha512-tYC1Q1hgyRuHgloV/YXs2w15unPVh8qfu/qCTfhTYamaw7fyhumKa2yGpdSo87vY32rIclj+4fWYQXUMs9EHvg==}
@@ -6925,7 +6928,7 @@ snapshots:
 
   '@expo/metro@56.0.0(supports-color@8.1.1)':
     dependencies:
-      metro: 0.84.4(supports-color@8.1.1)
+      metro: 0.84.4(patch_hash=b1c74fcde1b65529b91882d0a625958625e6ceadfa4e9af1a1c592510817b680)(supports-color@8.1.1)
       metro-babel-transformer: 0.84.4(supports-color@8.1.1)
       metro-cache: 0.84.4(supports-color@8.1.1)
       metro-cache-key: 0.84.4
@@ -7639,7 +7642,7 @@ snapshots:
       '@react-native/dev-middleware': 0.86.2(supports-color@8.1.1)
       debug: 4.4.3(supports-color@8.1.1)
       invariant: 2.2.4
-      metro: 0.84.4(supports-color@8.1.1)
+      metro: 0.84.4(patch_hash=b1c74fcde1b65529b91882d0a625958625e6ceadfa4e9af1a1c592510817b680)(supports-color@8.1.1)
       metro-config: 0.84.4(supports-color@8.1.1)
       metro-core: 0.84.4
       semver: 7.8.5
@@ -9175,7 +9178,7 @@ snapshots:
     dependencies:
       character-entities: 2.0.2
 
-  decode-uri-component@0.2.2: {}
+  decode-uri-component@0.5.0: {}
 
   deep-is@0.1.4: {}
 
@@ -9672,7 +9675,7 @@ snapshots:
       fast-deep-equal: 3.1.3
       invariant: 2.2.4
       nanoid: 3.3.18
-      query-string: 7.1.3
+      query-string: 7.1.3(patch_hash=fe47b885269a14c517ab79b9f7e5d0b46666cf13e5a80856685262c20aa00da5)
       react: 19.2.3
       react-fast-compare: 3.2.2
       react-is: 19.2.8
@@ -10278,9 +10281,7 @@ snapshots:
 
   ignore@7.0.6: {}
 
-  image-size@1.2.1:
-    dependencies:
-      queue: 6.0.2
+  image-size@2.0.4: {}
 
   immer@9.0.21: {}
 
@@ -10851,7 +10852,7 @@ snapshots:
       connect: 3.7.0(supports-color@8.1.1)
       flow-enums-runtime: 0.0.6
       jest-validate: 29.7.0
-      metro: 0.84.4(supports-color@8.1.1)
+      metro: 0.84.4(patch_hash=b1c74fcde1b65529b91882d0a625958625e6ceadfa4e9af1a1c592510817b680)(supports-color@8.1.1)
       metro-cache: 0.84.4(supports-color@8.1.1)
       metro-core: 0.84.4
       metro-runtime: 0.84.4
@@ -10938,7 +10939,7 @@ snapshots:
       '@babel/parser': 7.29.7
       '@babel/types': 7.29.7
       flow-enums-runtime: 0.0.6
-      metro: 0.84.4(supports-color@8.1.1)
+      metro: 0.84.4(patch_hash=b1c74fcde1b65529b91882d0a625958625e6ceadfa4e9af1a1c592510817b680)(supports-color@8.1.1)
       metro-babel-transformer: 0.84.4(supports-color@8.1.1)
       metro-cache: 0.84.4(supports-color@8.1.1)
       metro-cache-key: 0.84.4
@@ -10951,7 +10952,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  metro@0.84.4(supports-color@8.1.1):
+  metro@0.84.4(patch_hash=b1c74fcde1b65529b91882d0a625958625e6ceadfa4e9af1a1c592510817b680)(supports-color@8.1.1):
     dependencies:
       '@babel/code-frame': 7.29.7
       '@babel/core': 7.29.7(supports-color@8.1.1)
@@ -10968,7 +10969,7 @@ snapshots:
       flow-enums-runtime: 0.0.6
       graceful-fs: 4.2.11
       hermes-parser: 0.35.0
-      image-size: 1.2.1
+      image-size: 2.0.4
       invariant: 2.2.4
       jest-worker: 29.7.0
       jsc-safe-url: 0.2.4
@@ -11567,16 +11568,12 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  query-string@7.1.3:
+  query-string@7.1.3(patch_hash=fe47b885269a14c517ab79b9f7e5d0b46666cf13e5a80856685262c20aa00da5):
     dependencies:
-      decode-uri-component: 0.2.2
+      decode-uri-component: 0.5.0
       filter-obj: 1.1.0
       split-on-first: 1.1.0
       strict-uri-encode: 2.0.0
-
-  queue@6.0.2:
-    dependencies:
-      inherits: 2.0.4
 
   quick-format-unescaped@4.0.4: {}
 

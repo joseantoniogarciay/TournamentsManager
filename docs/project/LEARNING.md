@@ -3540,3 +3540,13 @@ Conservar consumidores compatibles, comprobar publicaciones oficiales y usar
 overrides precisos permite corregir el resto del grafo sin migrar Expo. Los
 overrides se retirarán cuando los rangos de consumidores incorporen el parche.
 La auditoría del lockfile debe acompañarse de CI y exportación antes de publicar.
+
+## 2026-10-03 — Adaptar consumidores de una corrección publicada
+
+Metro 0.84.4 necesita convertir rutas a bytes para image-size 2; query-string
+7.1.3 necesita el export default del decoder ESM. Dos parches de pnpm con
+hashes y overrides por consumidor evitan migrar el SDK completo. Las pruebas
+usan esos consumidores reales, verifican imágenes/escala y queries UTF-8
+malformadas, y se integran en make verify. El decoder conserva su sustitución
+por U+FFFD para %C2 incompleto; no se inventa una semántica distinta en el test.
+Los parches se retiran cuando el consumidor soporta la nueva interfaz.

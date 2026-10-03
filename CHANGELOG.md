@@ -6,6 +6,16 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.8.3] - 2026-10-03
+
+### Security
+
+- Actualiza image-size a 2.0.4 y decode-uri-component a 0.5.0 mediante
+  adaptaciones versionadas de Metro y query-string, sin cambiar Expo ni
+  React Native. Añade regresiones de imágenes y queries al gate de CI.
+- La auditoría prod conserva dos altos sin corrección publicada; quedan
+  cero moderados y cero críticos. Promoción primero en dev y después en prod.
+
 ## [1.8.2] - 2026-10-03
 
 ### Security
