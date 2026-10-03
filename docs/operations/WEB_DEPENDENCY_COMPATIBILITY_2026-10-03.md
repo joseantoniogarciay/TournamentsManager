@@ -1,5 +1,10 @@
 # Adaptación de dependencias web — 2026-10-03
 
+> Registro cronológico de los parches de seguridad de v1.8.1–v1.8.3.
+> La publicación posterior v1.9.0 y las revisiones activas están en
+> [DEPLOYMENT.md](DEPLOYMENT.md); las referencias a versiones anteriores
+> describen el momento de cada comprobación.
+
 ## Problema, evidencia y decisión
 
 La publicación v1.8.2 conserva cuatro avisos altos y uno moderado en el grafo
@@ -56,7 +61,31 @@ imágenes y ausencia de errores del bundle. Solo tras ese gate se integra en
 main y prepara/activa la exportación productiva. Los releases web anteriores
 se conservan para rollback; no se ejecutan migraciones por este cambio web.
 
-## Retrospectiva
+## Resultado operativo
+
+- PR #3 integró el cambio en develop tras CI `37122925939` aprobado para
+  ec731c2. Dev publica `1350514f39ef5750cadba0e02fb75cc4df16ff74` desde
+  2026-10-03 12:35:43 UTC. Su API estaba parada (502); se recuperaron únicamente
+  PostgreSQL, API y Tempo del entorno público, conservando el volumen y la
+  migración 14. Se promovió también el renderer de ese commit. El entorno local
+  retirado no se arrancó y no se ejecutaron migraciones.
+- Dev comprobó web/API 200, CORS 204 y sesión anónima 401 conforme al contrato
+  GET /v1/sessions. En navegador cargaron inicio, cuenta con consultas Unicode,
+  repetidas y malformadas y creación sin guardar. La imagen Google cargó 200×204
+  y no aparecieron errores de consola. El bundle usa exclusivamente la API dev.
+- PR #4 promovió develop a main después de ese gate y del CI `37123472114`
+  aprobado. Su código y lockfile coinciden con los comprobados en dev.
+- Producción publica v1.8.3, `91bcbcd24e6c7bb066f831045456f5a31d1bb740`,
+  construido el 2026-10-03 12:43:54 UTC. La API y su renderer conservan v1.8.1.
+  La web preparada conservó las entradas públicas y solo apunta a API prod.
+  Se verificaron identidad de deployment.json, navegación con consultas,
+  inicio/cuenta, imagen 200×204 y consola sin errores; API e imagen respondieron
+  200. La entrada del bundle publicada es entry-a7cc0a16c6740c0695603651178b40cc.js.
+- El rollback web productivo permanece en v1.8.2, SHA e86afeb, y el de dev en
+  ea837f8. La auditoría prod conserva dos altos, cero moderados y cero críticos.
+  No se declara que toda la infraestructura tenga cero avisos.
+
+## Retrospectiva de cierre
 
 Separar corrección y adaptación permitió retirar tres avisos sin migrar el SDK.
 Las pruebas deben ejercitar consumidores reales y archivos, no solo comprobar

@@ -1,7 +1,18 @@
 auth_enabled: false
 
 limits_config:
-  retention_period: 720h
+  retention_period: 24h
+  reject_old_samples: true
+  reject_old_samples_max_age: 24h
+  max_query_lookback: 24h
+
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 5m
+  retention_enabled: true
+  retention_delete_delay: 10m
+  retention_delete_worker_count: 10
+  delete_request_store: filesystem
 
 server:
   http_listen_port: 3100

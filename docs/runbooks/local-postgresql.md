@@ -2,8 +2,8 @@
 
 > **Estado:** procedimiento implementado y validado con Docker Compose local.
 >
-> **Última prueba:** 2026-07-26 — arranque, `healthcheck`, reinicio con volumen
-> persistente, reset confirmado y esquema inicial reescribible.
+> **Última prueba:** 2026-10-03 — Docker Desktop, migraciones hasta 17 sin
+> reset, API con Air, correo, métricas y observabilidad local.
 
 ## Alcance
 
@@ -45,14 +45,56 @@ make dev-logs
 
 ## Esquema inicial y migraciones
 
+### Retirada local del 2026-10-03
+
+Por petición del usuario, después de la validación se detuvieron Expo y Compose
+y se eliminaron los contenedores, imágenes y volúmenes de
+`tournaments-manager-local`, la caché de compilación creada en esta sesión,
+`node_modules`, `.pnpm-store`, `.expo`, los proyectos nativos generados y los
+temporales de pruebas. El código y los contratos locales se conservan. El perfil
+público `tournaments-manager-dev` no se modificó.
+
+Antes de retirar PostgreSQL se exportó una copia comprimida sin propietario ni
+ACL y se verificó con `pg_restore --list`. Está en
+`.config/local-backups/postgres-2026-10-03.dump`, ignorada por Git, con permisos
+600. Contiene datos privados: no se publica ni se añade al repositorio.
+
+Para recuperar esos datos en una nueva instancia local:
+
+```bash
+make db-up
+docker compose --env-file infra/local/.env -f infra/local/compose.dev.yaml exec -T postgres sh -ec 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --no-acl --exit-on-error' < .config/local-backups/postgres-2026-10-03.dump
+```
+
+La restauración necesita una base vacía y ya incluye el esquema y el historial
+Goose hasta la migración 17: no se aplica encima `db-schema-apply`. Para volver
+a usar el cliente hay que reinstalar con `pnpm install`; Compose reconstruye o
+descarga sus imágenes cuando se vuelva a arrancar.
+
 En una base vacía se aplica primero el esquema base de
 `apps/backend/db/schema/initial_schema.sql` y después las migraciones
 inmutables de `apps/backend/db/migrations/`. El esquema sigue siendo la entrada
 de `sqlc`; las migraciones no se reescriben tras aplicarse.
 
 ```bash
-make db-schema-apply
+make db-schema-apply  # solo una base vacía
+make dev-migrate
 ```
+
+`dev-migrate` ejecuta Goose en un contenedor efímero del perfil local y guarda
+su historial en PostgreSQL. Solo omite `SET ROLE` y los `GRANT` del perfil
+público en una copia temporal: conserva el DDL y los archivos versionados. La
+API local usa su administrador, mientras el perfil público mantiene separados
+propietario, migrador y runtime. No aplica migraciones al arrancar la API.
+
+Antes de actualizar una base existente, toma una copia con `pg_dump` y consulta
+su historial Goose. Una base antigua modificada manualmente no permite asumir
+que una migración está aplicada solo porque existe una tabla: hay que comparar
+columnas, defaults, restricciones e índices antes de registrar la equivalencia.
+El 2026-10-03 se verificaron y registraron así las migraciones 6 y 10 del volumen
+local previo; las demás se ejecutaron normalmente, hasta la 17. No se reseteó
+ni se sustituyó ningún volumen. Ese ajuste de historial es puntual y no forma
+parte del script de migración.
 
 En el entorno público de desarrollo, tras el bootstrap o ante una migración
 pendiente, ejecuta explícitamente:
@@ -65,9 +107,22 @@ El comando crea un contenedor efímero con Goose y la credencial de migración;
 la API no recibe esa credencial. Una contraseña de migración usada en la URL de
 PostgreSQL debe usar caracteres seguros para URL o estar codificada.
 
-El comando usa el PostgreSQL local de Compose; no inicia la API ni crea datos
-funcionales. Tras un cambio incompatible, elimina antes el volumen con
-`make db-reset`, vuelve a arrancar PostgreSQL y aplica de nuevo el esquema.
+El comando público usa exclusivamente `tournaments-manager-dev`; el local usa
+`tournaments-manager-local`. Las migraciones preservan los datos. Un reset exige
+aceptar explícitamente su pérdida y no es el procedimiento normal de actualización.
+
+## Telemetría y espacio en disco
+
+Los dos perfiles de desarrollo conservan señales técnicas de un día. La
+rotación de Docker limita la copia de consola a dos archivos de 5 MB, con
+compresión; su límite es por tamaño. La evidencia legal y los backups tienen
+sus propios plazos y no forman parte de esta limpieza.
+
+Con el entorno desmontado, `make dev-observability-clean` puede retirar solo
+volúmenes técnicos sin contenedores y sin archivos de las últimas 24 horas;
+`make dev-public-observability-clean` hace lo mismo para el perfil público.
+Ambos conservan datos recientes, PostgreSQL y su backup. Consulta los detalles,
+la purga asíncrona y los límites en [LOG_RETENTION.md](../operations/LOG_RETENTION.md).
 
 ## Parada, inspección y recuperación
 
@@ -76,9 +131,7 @@ make dev-down
 make db-status
 ```
 
-los datos locales, ejecuta:
 `dev-down` conserva el volumen y, por tanto, los datos. Para eliminar por completo
-los datos locales, ejecuta:
 los datos locales, ejecuta:
 
 ```bash

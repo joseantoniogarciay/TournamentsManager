@@ -5,7 +5,7 @@
 - **Decisor:** Usuario
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** ADR-0138, en la política de excepciones; el lockfile congelado sigue vigente
+- **Superado por:** ADR-0077 entre 2026-08-09 y 2026-10-03; ADR-0138 restablece la espera para Expo y admite solo vulnerabilidades críticas
 
 ## Problema
 

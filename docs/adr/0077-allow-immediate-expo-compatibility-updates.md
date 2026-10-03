@@ -5,7 +5,7 @@
 - **Decisor:** Usuario, mediante decisión explícita
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0075, solo en la excepción de edad para una actualización de compatibilidad de Expo
-- **Superado por:** ADR-0138
+- **Superado por:** ADR-0138 desde 2026-10-03; la compatibilidad de Expo espera siete días
 
 ## Problema
 

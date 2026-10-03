@@ -241,8 +241,16 @@ cerrar. No se enviaron correos ni se alteraron resultados reales de producción.
 Se tomaron backup incremental cifrado de producción y copias lógicas privadas;
 la restauración aislada y el ensayo de las cinco migraciones sobre datos de
 ambos entornos terminaron correctamente. El fallo de lectura de pgBackRest
-de dev en iCloud sigue pendiente: su copia lógica local probada permitió
-continuar, pero no sustituye reparar el repositorio cifrado.
+de dev en iCloud estaba pendiente al publicar: su copia lógica local probada
+permitió continuar. Posteriormente, el 2026-10-03, se recuperó la lectura de
+los metadatos desde macOS y se verificaron WAL, una copia completa nueva, la
+incremental mediante LaunchAgent (salida 0) y su restauración aislada con
+esquema 19 y agregados coincidentes. Véase el
+[incidente y la prueba reproducible](../runbooks/postgresql-backup-dev.md).
+Tras autorización explícita posterior del usuario, se activó Conservar en
+dispositivo únicamente para dev. Finder confirmó dev, archive y backup
+conservados en el dispositivo, sin descarga pendiente; repositorio cifrado y archivado WAL se volvieron a verificar
+correctamente desde Docker.
 
 Recuperación: web v1.8.3 `91bcbcd24e6c7bb066f831045456f5a31d1bb740`;
 API anterior `f6a199ad42bd7e535db9905b132cd75d69486396`. Las migraciones son

@@ -5,8 +5,27 @@ loki:
     reporting_enabled: false
   commonConfig:
     replication_factor: 1
+  compactor:
+    working_directory: /var/loki/compactor
+    compaction_interval: 5m
+    retention_enabled: true
+    retention_delete_delay: 2h
+    retention_delete_worker_count: 10
+    delete_request_store: filesystem
   limits_config:
-    retention_period: 24h
+    # Histórico sin categoría: preservar seguridad mezclada, con límite finito.
+    retention_period: 2160h
+    retention_stream:
+      # El canary upstream envía líneas sintéticas con su propia etiqueta pod.
+      - selector: '{pod=~"observability-loki-canary-.+"}'
+        priority: 1
+        period: 168h
+      - selector: '{retention_category="diagnostic"}'
+        priority: 1
+        period: 168h
+      - selector: '{retention_category="security"}'
+        priority: 2
+        period: 2160h
   schemaConfig:
     configs:
       - from: "2024-01-01"

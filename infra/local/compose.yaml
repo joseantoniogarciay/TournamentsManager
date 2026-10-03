@@ -1,9 +1,18 @@
 name: tournaments-manager-local
 
+# Rotación de la copia de consola; la ventana temporal la aplica Loki.
+x-development-logging: &development-logging
+  driver: json-file
+  options:
+    max-size: 5m
+    max-file: "2"
+    compress: "true"
+
 services:
   postgres:
     image: postgres:18.4-bookworm
     restart: unless-stopped
+    logging: *development-logging
     env_file:
       - .env
     ports:
@@ -20,6 +29,7 @@ services:
   mailpit:
     image: axllent/mailpit:v1.30.5
     restart: unless-stopped
+    logging: *development-logging
     ports:
       - "127.0.0.1:1025:1025"
       - "127.0.0.1:8025:8025"

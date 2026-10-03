@@ -60,12 +60,15 @@ La instalación local usa el lockfile congelado por defecto: no resuelve ni
 escribe nuevas versiones. `pnpm-workspace.yaml` también retrasa siete días toda
 versión nueva, directa o transitiva. Para cambiar dependencias deliberadamente,
 usa `pnpm add`, `pnpm update` o `pnpm install --no-frozen-lockfile` y revisa el
-diff de manifiestos y lockfile. Si Expo CLI detecta que el conjunto del SDK es
-incompatible, ADR-0077 autoriza de inmediato solo las versiones exactas que
-requiere `expo install --fix`; se anotan en `minimumReleaseAgeExclude`, se fijan
-los directos resultantes y se valida una build nativa limpia. No añadas
+diff de manifiestos y lockfile. Conforme a ADR-0138, Expo también espera siete
+días aunque CLI solicite corregir su conjunto compatible. Solo una
+vulnerabilidad crítica aplicable permite una excepción exacta y documentada a
+la edad mínima; los avisos no críticos conservan la espera. No añadas
 exclusiones generales. Si el registro no informa de la fecha de publicación o
 no existe una versión madura compatible, la resolución ordinaria falla.
+Para Go y herramientas sin un control automático de edad, comprueba la fecha
+oficial de publicación antes de actualizar. Las correcciones nativas de Expo
+siguen exigiendo versiones compatibles y una build limpia.
 
 Durante un cambio:
 

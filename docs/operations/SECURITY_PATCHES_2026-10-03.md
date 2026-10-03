@@ -1,6 +1,15 @@
 # Parches de seguridad de producción — 2026-10-03
 
+> Registro cronológico de los parches de seguridad de v1.8.1–v1.8.3.
+> La publicación posterior v1.9.0 y las revisiones activas están en
+> [DEPLOYMENT.md](DEPLOYMENT.md); las referencias a versiones anteriores
+> describen el momento de cada comprobación.
+
 El usuario autorizó completar la auditoría y aplicar las correcciones necesarias.
+
+La adaptación posterior de consumidores se publicó como v1.8.3 tras comprobar
+dev y prod. El grafo JavaScript queda en dos altos y cero moderados/críticos;
+su detalle y evidencia están en [Adaptación de dependencias web](WEB_DEPENDENCY_COMPATIBILITY_2026-10-03.md).
 El cambio de aplicación parte de v1.8.0 y contiene únicamente dependencias Go;
 no incorpora funcionalidad, migraciones ni cambios del cliente pendientes.
 
@@ -43,8 +52,9 @@ No se afirma que todos los contadores estén a cero.
 - Kernel Noble 6.8: cinco CVE críticos distintos en NFSD, NVMe/TCP, SCTP,
   SRP target y AMD SEV. Ubuntu aún no publica corrección para varios en esta
   línea. Los cuatro módulos de red/almacenamiento se encontraron descargados;
-  AMD SEV no corresponde a la arquitectura ARM64 de esta VM. Un bloqueo
-  persistente de módulos requiere autorización específica antes de aplicarse.
+  AMD SEV no corresponde a la arquitectura ARM64 de esta VM. Con autorización
+  específica posterior del usuario se bloqueó la carga normal de los cuatro
+  módulos; es una mitigación, no una corrección del paquete del kernel.
 - PostgreSQL Bookworm: quedan avisos de Perl, SQLite y libxml2 sin versión
   corregida en esa distribución. Debian considera algunos menores o aplazados.
   El aviso Perl CVE-2026-8376 requiere una build de 32 bits, distinta de esta
@@ -128,3 +138,54 @@ entorno local retirado: CI y el checkout aislado validan el artefacto de producc
 El manifiesto declarativo de API conserva ahora la imagen de v1.8.1 ya activa;
 se corrige su referencia anterior desactualizada para que una aplicación futura
 del YAML no revierta los parches. La publicación web no cambia esa imagen.
+
+## Cierre operativo de v1.8.2
+
+La web está publicada como v1.8.2, commit
+`e86afeb18cdadf45b41e827a4b4bb30385d40ec3`, construida el 3 de octubre
+a las 11:50:16 UTC. CI `make verify` aprobó el último commit de PR #2
+`ffdc99f`; typecheck y exportación web también pasaron en el checkout aislado.
+Se comprobaron las fechas de las 19 resoluciones JavaScript nuevas en npm.
+La web preparada conservó las entradas públicas previas, canonical y sitemap,
+y el bundle apunta a la API de producción. La activación mantuvo el release
+v1.8.0 como rollback web. Inicio y cuenta cargaron en navegador sin errores de
+consola; web, API y el renderer del torneo controlado respondieron HTTP 200.
+
+La API y su renderer permanecen en v1.8.1 (SHA f6a199a); no se ejecutaron
+migraciones. K3s está Ready, los Pods en ejecución están listos y PostgreSQL
+conserva 1/1. El manifiesto API del checkout conserva la imagen parcheada.
+
+La revisión automática rechazó inicialmente instalar el bloqueo persistente de
+nfsd, nvmet_tcp, sctp e ib_srpt por falta de autorización específica y posible
+impacto funcional. Después de explicar sus funciones y comprobar de nuevo su
+ausencia de uso, el usuario autorizó: «Pues bloqueemos sin problema». Con esa
+autorización se instaló el bloqueo y se verificó, como se detalla a continuación.
+
+Los cambios se integraron mediante PR #1 y #2 desde checkouts aislados. En aquel momento, el
+checkout develop conservaba cambios funcionales y debía incorporar el historial
+de los hotfixes. La conciliación del 2026-10-03 actualiza ahora su base a
+`6967457`, conserva el trabajo operativo y mantiene las pruebas ya integradas;
+no quedan cambios funcionales locales respecto de esa revisión.
+
+## Mitigación de módulos del kernel aplicada
+
+El 3 de octubre, con autorización explícita, se instaló
+`infra/k3s/host/fasttourney-unused-kernel-modules.conf` en
+`/etc/modprobe.d/fasttourney-unused-kernel-modules.conf`, propiedad root y modo
+0644. Cada módulo tiene `blacklist` y una regla `install … /bin/false`: la primera
+evita la selección automática por alias y la segunda rechaza su carga normal
+mediante modprobe. No se descargaron módulos ni se reinició el host.
+
+Antes de instalar se confirmó que ninguno de los cuatro módulos estaba cargado.
+La revisión adicional no encontró servicios asociados, montajes de red ni sockets
+SCTP; los volúmenes Kubernetes usan local-path y sus servicios usan TCP/UDP.
+Después de instalar, `modprobe --dry-run --verbose` mostró `install /bin/false`
+para los cuatro módulos. K3s siguió Ready, API 2/2, PostgreSQL 1/1 y web/API en
+HTTP 200.
+
+La mitigación es reversible retirando únicamente este archivo de modprobe.d.
+Debe revisarse antes de introducir un servidor NFS, un target NVMe/TCP,
+SCTP o un target SRP, y al disponer de un kernel corregido. No impide que un
+administrador privilegiado omita modprobe ni elimina los avisos de versión del
+scanner. La retrospectiva es reducir superficie no utilizada con evidencia y
+autorización, conservando pendiente la actualización que corrige el kernel.

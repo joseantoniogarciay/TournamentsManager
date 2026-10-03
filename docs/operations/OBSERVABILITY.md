@@ -143,6 +143,23 @@ ni SLOs generales **en local**: véanse
 [ADR-0098](../adr/0098-define-local-session-refresh-slo.md) y
 [ADR-0099](../adr/0099-route-local-alerts-through-alertmanager.md).
 
+## Espacio y retención de desarrollo
+
+ADR-0139 mantiene las señales técnicas de `local` y `dev` durante un día:
+Loki con borrado efectivo mediante compactor y Tempo a 24 horas; Prometheus
+con 24 horas y 128 MB de retención TSDB. Los contenedores rotan la copia de
+consola en dos archivos de 5 MB y comprimen el rotado. Ese límite es por tamaño,
+no un TTL, y la eliminación de bloques de los backends es asíncrona.
+
+Promtail excluye chequeos GET /healthz y GET /metrics correctos, conserva sus
+fallos y recoge solo la API del proyecto correspondiente. No añade PII ni
+etiquetas por petición. La configuración de producción y PostHog es independiente.
+
+`make dev-observability-clean` y `make dev-public-observability-clean` retiran
+solo volúmenes técnicos sin contenedores y sin archivos de las últimas 24 horas.
+PostgreSQL, evidencia legal, backups, Grafana y Alertmanager quedan fuera.
+Véase [LOG_RETENTION.md](LOG_RETENTION.md) para el procedimiento y los límites.
+
 ## Desarrollo público
 
 `tournaments-manager-dev` replica el stack local —Prometheus, Alertmanager,
@@ -161,7 +178,8 @@ empieza por `[DEV]`; el receptor inicial es `alerts@fasttourney.com`.
 Grafana (`127.0.0.1:3001`), Prometheus (`127.0.0.1:9091`) y Alertmanager
 (`127.0.0.1:9094`) no tienen ruta Caddy ni Cloudflare: una alerta se entrega por
 correo, pero la operación detallada conserva acceso solo en el Mac. Prometheus
-y Tempo retienen, respectivamente, 24 horas y 7 días; no hay HA, on-call ni
+y Tempo retienen 24 horas; Prometheus añade un límite de retención TSDB de
+128 MB. Loki también conserva un día con compactor activo. No hay HA, on-call ni
 alertas nuevas por completitud.
 Véase [ADR-0100](../adr/0100-deliver-public-development-alerts-through-resend.md).
 
@@ -173,6 +191,14 @@ y Alloy. Alloy recoge exclusivamente logs de Pods de `prod` mediante la API de
 Kubernetes y los entrega a Loki; no monta logs de host ni sustituye al Collector
 de OpenTelemetry, que sigue aplazado. Los charts, versiones fijadas, PVC,
 retención y límites están en [`infra/k3s/observability`](../../infra/k3s/observability/).
+
+El 2026-10-03 se aplicó ADR-0140: siete días de diagnóstico, noventa de
+seguridad, compactor persistente, rechazo únicamente de probes correctos y
+retención transitoria de noventa días para histórico mezclado. Prometheus mantiene
+un día o 128 MB TSDB. Alloy expone agregados de espacio mediante su collector
+textfile; solo monta en lectura el directorio generado por un timer del host.
+Las alertas cubren raíz, volúmenes técnicos, medición vencida y ciclos de retención
+Loki ausentes. Son umbrales de intervención, no cuotas físicas de local-path.
 
 El 2026-09-05 se instaló y validó el perfil en la VM. Prometheus hace scrape
 estático de `api.prod.svc.cluster.local:8080` y no recibe token ni RBAC para
@@ -235,7 +261,7 @@ Con esta evidencia se cumple el criterio de salida documentado en
 | `GET /v1/me/tournaments`, `GET /v1/me/recent-tournaments`                                                            | Consultas PostgreSQL estáticas de colecciones                                                             | Éxito devuelve las proyecciones; filtros, cursor y límite inválidos usan `validation.rejected`. No hay limitador específico. Un fallo del límite PostgreSQL o cancelación usa `database.*`, `request.cancelled` o `request.timeout` en el span HTTP; no se registran cuenta, cursor ni filtros.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `POST /v1/me/suggestions`                                                                                            | `postgresql.CreateProductSuggestion`; `smtp.send.suggestion` después del guardado                         | El éxito depende solo del insert. Entrada inválida usa `validation.rejected`; el cuarto envío por cuenta y hora usa `rate_limit.exceeded`; PostgreSQL usa las categorías técnicas comunes. Un fallo SMTP queda en su span hijo y no cambia el `201`. Texto, username, cuenta, destinatario e identificador quedan fuera de logs, trazas y analítica.                                                                                                                                                                                                                                                                                                                                                                                  |
 | `PUT` \| `DELETE /v1/me/tournaments/{tournamentId}/follow`                                                           | `postgresql.FollowVisibleTournament`, `postgresql.UnfollowTournament`                                     | Éxito es idempotente. ID inválido: `validation.rejected`; torneo no visible: `tournament.not_found`. No hay límite de tasa propio ni spans por las ramas de seguimiento.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `POST /v1/tournaments`, equipos, inicio, cancelación, resultado y finalización; `GET /v1/tournaments/{tournamentId}` | Operaciones PostgreSQL estáticas del ciclo del torneo                                                     | La entrada inválida —incluido deporte ausente/desconocido, `bestOfSets` incompatible, set imposible o posterior a la victoria, tanteo de baloncesto empatado o desempate incompatible de fútbol o balonmano— usa `validation.rejected`; los rechazos de negocio distinguen `tournament.forbidden`, `tournament.not_found`, y conflictos cerrados de inicio, equipos, retirada, resultado, cancelación o finalización. Deporte, configuración, sets, tanteos e IDs no se exportan como atributos. Sin limitador específico. Los fallos técnicos y cancelaciones conservan las categorías seguras comunes en el span raíz.                                                                                                                                                                                    |
+| `POST /v1/tournaments`, equipos, inicio, cancelación, resultado y finalización; `GET /v1/tournaments/{tournamentId}` | Operaciones PostgreSQL estáticas del ciclo del torneo                                                     | La entrada inválida —incluido deporte ausente/desconocido, `bestOfSets` incompatible, tanteo de set ausente o nulo, set imposible o posterior a la victoria, tanteo de baloncesto empatado o desempate incompatible de fútbol o balonmano— usa `validation.rejected`; los rechazos de negocio distinguen `tournament.forbidden`, `tournament.not_found`, y conflictos cerrados de inicio, equipos, retirada, resultado, cancelación o finalización. Deporte, configuración, sets, juegos de tenis de mesa, parciales de voleibol, tanteos e IDs no se exportan como atributos. Sin limitador específico. Los fallos técnicos y cancelaciones conservan las categorías seguras comunes en el span raíz.                                                                                                                                                                                    |
 | Inicio mixto y `POST /v1/tournaments/{tournamentId}/stages/elimination/start`                                        | Transacción PostgreSQL de composición, clasificación congelada, desempate condicional y generación del cuadro | El éxito crea la liga, abre atómicamente los desempates exactos del corte o, cuando todas las plazas están resueltas, inicia el cuadro. JSON o parámetros inválidos usan `validation.rejected`; una composición o plantilla incompatible usa `tournament.configuration_rejected`; una transición prematura, repetida o sin suficientes equipos no retirados usa `tournament.stage_transition_conflict`; autorización y ausencia conservan `tournament.forbidden` y `tournament.not_found`. Un resultado de desempate sin ganador usa `validation.rejected`, igual que cualquier resultado eliminatorio inválido. No se exportan equipos, grupos, ciclos, cantidades, resultados, retiradas ni IDs. No hay límite de tasa específico. Cada fallo técnico usa `database.*` o `request.failed`, el timeout `request.timeout` y la cancelación `request.cancelled`, sin error bruto y sin spans por validación, clasificación, desempate, CTE o generación de IDs. |
 | Invitaciones de equipo: crear, revocar, inspeccionar e inscribir                                                     | Operaciones PostgreSQL estáticas sobre invitación, equipo, vínculo y seguimiento                          | Éxito crea o revoca la capacidad, devuelve su proyección segura o confirma equipo y seguimiento. Entrada inválida usa `validation.rejected`; enlace desconocido, rotado o cerrado usa `tournament.invitation_not_found`; cuenta repetida, nombre duplicado o aforo completo usa `tournament.invitation_conflict`; autorización de la organizadora conserva `tournament.forbidden`. Token, hash, nombre, cuenta e IDs no se exportan. No hay span por aleatoriedad o SHA-256 ni limitador específico; fallos técnicos y cancelaciones usan las categorías comunes.                                                                                                                                                                     |
 | Administración de torneos: listar, asignar, eliminar y transferir                                                    | Operaciones PostgreSQL estáticas de administración                                                        | Éxito devuelve o modifica únicamente la proyección contractual. Entrada inválida: `validation.rejected`; negocio: `tournament.forbidden`, `tournament.not_found`, `tournament.administrator_conflict` o `tournament.ownership_transfer_conflict`. Nombres de usuario e IDs quedan fuera de atributos, logs y nombres de spans; no existe un límite de tasa específico.                                                                                                                                                                                                                                                                                                                                                                |

@@ -144,3 +144,18 @@ si está protegido por macOS.
 Después, `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.fasttourney.dev-account-purge.plist`
 la ejecuta al cargar la sesión y cada día a las 03:15. Como Docker Desktop es de
 usuario, se usa un LaunchAgent y no un LaunchDaemon.
+
+
+## Retención y limpieza técnica
+
+Logs, trazas y métricas de desarrollo conservan una ventana de 24 horas según
+ADR-0139. Loki tiene compactor de retención activo; Prometheus añade 128 MB de
+retención TSDB. La salida de cada contenedor rota en dos archivos de 5 MB con
+compresión del rotado; es un límite de tamaño, no una expiración por tiempo.
+
+`make dev-public-observability-clean` inspecciona exclusivamente Loki, Tempo,
+Prometheus y posiciones de Promtail. Solo elimina volúmenes sin contenedores
+ni archivos modificados en las últimas 24 horas. Si hay datos recientes o no
+puede comprobar la edad, conserva todo el volumen. PostgreSQL, Grafana,
+Alertmanager y evidencia legal/backup quedan fuera. El procedimiento no
+arranca de nuevo los servicios. Véase [retención de registros](../../docs/operations/LOG_RETENTION.md).
