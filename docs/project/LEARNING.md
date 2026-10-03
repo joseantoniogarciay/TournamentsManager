@@ -3698,3 +3698,22 @@ requiere preservar metadata al actualizar el cuadro y distinguir el parcial de
 los tantos administrativos. Las pruebas de corrección y de otro partido
 detectan pérdidas que una prueba aislada de guardar no cubre. No se amplían
 formatos deportivos ni se resuelve arbitrariamente la doble ausencia.
+
+## 2026-10-03 — Preparación del despliegue de deportes e incidencias
+
+Se conserva la base remota con los parches ya publicados y se aísla el trabajo
+funcional del árbol local pendiente de operación. Gate local completo y CI de
+la propuesta aprobados. Dev publica 8fe7be1d7f998557051cdbe1bf72fcc2b50630ce;
+Goose aplica 00015–00019, API/web/renderer usan la misma revisión. Trece torneos
+sintéticos por HTTPS verifican los ocho deportes, ambos perfiles de bádminton,
+ligas, abandono, incomparecencia, corrección y rechazo seguro. El navegador
+confirma ganadora y parcial de pádel en móvil. No se envían correos de prueba.
+
+La lectura de pgBackRest en iCloud falló con I/O; antes de migrar se creó un
+pg_dump privado local y se restauró en PostgreSQL desechable (versión 14,
+cuatro cuentas y diez torneos). El incidente del repositorio cifrado sigue
+pendiente de recuperación; la copia local no lo reemplaza.
+
+Retrospectiva: un SHA no puede formar parte de su propio commit. El wrapper
+recibe una revisión limpia explícita y verifica la igualdad del manifiesto de
+staging, sin debilitar la trazabilidad ni tocar el árbol pendiente original.

@@ -121,3 +121,17 @@ Deployment se identificará mediante `@sha256:...`, conforme a ADR-0024. En ese
 momento se reemplazarán los pasos de exportación, copia e importación por la
 descarga autenticada desde ECR, sin cambiar el contrato de configuración de la
 API ni la definición de sus probes.
+
+## Promoción desde una revisión limpia explícita
+
+El wrapper acepta un SHA como primer argumento. Se resuelve a commit y exige
+HEAD limpio con esa revisión. El manifiesto de staging, fuera de Git, se genera
+desde `infra/k3s/core/api.yaml` sustituyendo solo la etiqueta por
+`tournaments-manager-api:git-<SHA>`. El wrapper comprueba en la VM la igualdad
+antes de migrar y desplegar. No se escribe el hash de un commit dentro de sí
+mismo ni se omite la comprobación de limpieza. Sin argumento se conserva el
+procedimiento anterior.
+
+```sh
+bash infra/k3s/scripts/deploy-api-from-staged-images.sh <SHA-completo>
+```

@@ -30,10 +30,13 @@ for required_variable in SMTP_USERNAME SMTP_PASSWORD GOOGLE_CLIENT_IDS; do
 done
 unset SMTP_USERNAME SMTP_PASSWORD GOOGLE_CLIENT_IDS required_value
 
+image_revision=${1:-}
+if [ -z "$image_revision" ]; then
 image_revision=$(sed -n 's/^[[:space:]]*image: tournaments-manager-api:git-\([[:xdigit:]]\{7,40\}\)$/\1/p' "$repo_root/infra/k3s/core/api.yaml")
 if [ -z "$image_revision" ] || [ "$(printf '%s\n' "$image_revision" | wc -l | tr -d ' ')" -ne 1 ]; then
   echo "infra/k3s/core/api.yaml debe declarar exactamente una imagen API con SHA Git." >&2
   exit 1
+fi
 fi
 release_sha=$(git -C "$repo_root" rev-parse "$image_revision^{commit}")
 if [ -n "$(git -C "$repo_root" status --porcelain)" ] || [ "$(git -C "$repo_root" rev-parse HEAD)" != "$release_sha" ]; then
@@ -49,6 +52,7 @@ ssh "$K3S_SSH_USER@$K3S_SSH_HOST" \
 ssh "$K3S_SSH_USER@$K3S_SSH_HOST" \
   'cat > /tmp/tournaments-manager-deploy-api.sh && chmod 700 /tmp/tournaments-manager-deploy-api.sh' <<'REMOTE'
 set -euo pipefail
+expected_revision=${1:?release SHA is required}
 
 work_dir=/tmp/tournaments-manager-k3s
 secret_file=/tmp/api-runtime.env
@@ -70,6 +74,10 @@ sudo /usr/local/bin/k3s ctr images ls | grep tournaments-manager
 api_image="$(sed -n 's/^[[:space:]]*image: \(tournaments-manager-api:git-[[:alnum:]]*\)$/\1/p' "$work_dir/api.yaml")"
 if [ -z "$api_image" ] || [ "$(printf '%s\n' "$api_image" | wc -l | tr -d ' ')" -ne 1 ]; then
   echo 'api.yaml debe declarar exactamente una imagen tournaments-manager-api:git-<SHA>.' >&2
+  exit 1
+fi
+if [ "$api_image" != "tournaments-manager-api:git-$expected_revision" ]; then
+  echo "El manifiesto preparado no coincide con la revisión limpia autorizada." >&2
   exit 1
 fi
 migrator_image="${api_image/tournaments-manager-api:/tournaments-manager-migrator:}"
@@ -199,7 +207,7 @@ REMOTE
 # fichero no interactivo y sudo puede leer su contraseña desde el terminal sin
 # que el perfil interactivo de zsh/Warp altere el heredoc.
 ssh -tt "$K3S_SSH_USER@$K3S_SSH_HOST" \
-  'bash --noprofile --norc /tmp/tournaments-manager-deploy-api.sh; status=$?; rm -f /tmp/tournaments-manager-deploy-api.sh; exit "$status"'
+  "bash --noprofile --norc /tmp/tournaments-manager-deploy-api.sh '$release_sha'; status=\$?; rm -f /tmp/tournaments-manager-deploy-api.sh; exit \"\$status\""
 
 # El renderer vive en el borde del Mac pero consume el contrato de la API que
 # acaba de promocionarse. Se despliega después del rollout y con el mismo SHA.
