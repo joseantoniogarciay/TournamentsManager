@@ -15,4 +15,7 @@ export const PublicTournamentSport = {
   handball: "handball",
   tennis: "tennis",
   padel: "padel",
+  table_tennis: "table_tennis",
+  volleyball: "volleyball",
+  badminton: "badminton",
 } as const;

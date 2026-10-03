@@ -7,6 +7,7 @@
  */
 import type { TeamInput } from "./teamInput.js";
 import type { TournamentDraftInputBestOfSets } from "./tournamentDraftInputBestOfSets.js";
+import type { TournamentDraftInputPointsPerGame } from "./tournamentDraftInputPointsPerGame.js";
 import type { TournamentDraftInputSport } from "./tournamentDraftInputSport.js";
 
 export interface TournamentDraftInput {
@@ -18,7 +19,9 @@ export interface TournamentDraftInput {
    */
   name: string;
   sport: TournamentDraftInputSport;
-  /** Obligatorio para tenis; pádel exige 3. Debe omitirse en el resto de deportes. */
+  /** Obligatorio exclusivamente en bádminton; se conserva durante todo el torneo. Debe omitirse en otros deportes. */
+  pointsPerGame?: TournamentDraftInputPointsPerGame;
+  /** Tenis exige 3 o 5; pádel 3; tenis de mesa 3, 5 o 7; voleibol 5; bádminton 3. Debe omitirse en el resto de deportes. */
   bestOfSets?: TournamentDraftInputBestOfSets;
   /**
    * @minItems 1

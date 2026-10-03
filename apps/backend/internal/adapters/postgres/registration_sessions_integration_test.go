@@ -61,7 +61,7 @@ func TestIntegrationLocalLoginCreatesTournamentAndSessionAtomically(t *testing.T
 
 	draft := &registration.Draft{
 		ID:   "019abcde-1111-7111-8111-111111111112",
-		Name: "Torneo recuperado", Sport: tournaments.SportBasketball, Teams: []string{"Norte", "Sur"},
+		Name: "Torneo recuperado", Sport: tournaments.SportBadminton, BestOfSets: 3, PointsPerGame: 15, Teams: []string{"Norte", "Sur"},
 	}
 	result, err := service.Login(ctx, "login-draft@example.test", "correct password", draft)
 	if err != nil || result.Session.AccountID != accountID || result.Session.LastTeamName != "Norte" {
@@ -74,7 +74,7 @@ func TestIntegrationLocalLoginCreatesTournamentAndSessionAtomically(t *testing.T
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM sessions WHERE account_id = $1 AND revoked_at IS NULL`, accountID).Scan(&sessions); err != nil {
 		t.Fatalf("contar sesiones: %v", err)
 	}
-	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournaments WHERE organizer_account_id = $1 AND name = 'Torneo recuperado' AND sport = 'basketball'`, accountID).Scan(&tournamentsCount); err != nil {
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournaments WHERE organizer_account_id = $1 AND name = 'Torneo recuperado' AND sport = 'badminton' AND best_of_sets=3 AND points_per_game=15`, accountID).Scan(&tournamentsCount); err != nil {
 		t.Fatalf("contar torneos: %v", err)
 	}
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournament_teams JOIN tournaments ON tournaments.id = tournament_teams.tournament_id WHERE tournaments.organizer_account_id = $1`, accountID).Scan(&teams); err != nil {
@@ -102,7 +102,7 @@ func TestIntegrationGoogleLoginCreatesTournamentAndSessionAtomically(t *testing.
 
 	draft := &federated.Draft{
 		ID:   "019abcde-1111-7111-8111-111111111112",
-		Name: "Torneo Google", Sport: tournaments.SportFootball, Teams: []string{"Uno", "Dos"},
+		Name: "Torneo Google", Sport: tournaments.SportBadminton, BestOfSets: 3, PointsPerGame: 21, Teams: []string{"Uno", "Dos"},
 	}
 	result, err := service.Authenticate(ctx, challenge.ID, "google-token", nil, draft)
 	if err != nil || result.AccountID != accountID || result.LastTeamName != "Uno" {
@@ -120,7 +120,7 @@ func TestIntegrationGoogleLoginCreatesTournamentAndSessionAtomically(t *testing.
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM sessions WHERE account_id = $1 AND revoked_at IS NULL`, accountID).Scan(&sessions); err != nil {
 		t.Fatalf("contar sesiones: %v", err)
 	}
-	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournaments WHERE organizer_account_id = $1 AND name = 'Torneo Google'`, accountID).Scan(&tournamentsCount); err != nil {
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournaments WHERE organizer_account_id = $1 AND name = 'Torneo Google' AND best_of_sets=3 AND points_per_game=21`, accountID).Scan(&tournamentsCount); err != nil {
 		t.Fatalf("contar torneos: %v", err)
 	}
 	if sessions != 2 || tournamentsCount != 1 {

@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
 import { APIUnexpectedResponseError } from "@/api/fetch";
-import type { PublicTournament, SetResult } from "@/api/generated/models";
+import type { PublicTournament } from "@/api/generated/models";
 import {
   cancelTournamentRequest,
   completeTournamentRequest,
@@ -22,6 +22,13 @@ import { minimumTournamentTeamsToStart } from "@/features/league-creation/draft"
 import { useTournament, useTournamentStore } from "@/features/league-creation/league-store";
 import { TournamentTeamManagement } from "@/features/league-creation/team-management";
 import { isShareCancellation } from "@/features/league-creation/share";
+import {
+  editableScoreFromMatch,
+  getIncidentInput,
+  parseSetScores,
+  type EditableScore,
+} from "@/features/match-results/result-input";
+import { IncidentSummary } from "@/features/match-results/incident-summary";
 import { MatchResultConflictError, recordMatchResultRequest } from "@/features/match-results/api";
 import {
   type BracketHorizontalMetrics,
@@ -37,9 +44,11 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
+  getBadmintonScoreHelpKey,
   getShootoutKeys,
   getSportLabelKey,
   isRacketSport,
+  isSetSport,
   sportAllowsTiedLeagueResult,
   sportUsesShootout,
 } from "@/shared/tournaments/sport";
@@ -64,40 +73,6 @@ const minimumGroupCount = 2;
 const maximumGroupCount = 64;
 const minimumQualifiersPerGroup = 1;
 const maximumQualifiersPerGroup = 63;
-
-type EditableScore = {
-  home: string;
-  away: string;
-  homePenalties: string;
-  awayPenalties: string;
-  sets: Array<{ home: string; away: string }>;
-};
-
-function parseRacketSets(score: EditableScore, bestOfSets: number): SetResult[] | null {
-  let lastPlayedIndex = -1;
-  score.sets.forEach((set, index) => {
-    if (set.home !== "" || set.away !== "") lastPlayedIndex = index;
-  });
-  if (lastPlayedIndex < 0) return null;
-  const played = score.sets.slice(0, lastPlayedIndex + 1);
-  if (played.some((set) => !/^\d+$/.test(set.home) || !/^\d+$/.test(set.away))) return null;
-  const sets = played.map((set) => ({ homeScore: Number(set.home), awayScore: Number(set.away) }));
-  const needed = Math.floor(bestOfSets / 2) + 1;
-  let homeWins = 0;
-  let awayWins = 0;
-  for (const set of sets) {
-    if (homeWins === needed || awayWins === needed) return null;
-    const winner = Math.max(set.homeScore, set.awayScore);
-    const loser = Math.min(set.homeScore, set.awayScore);
-    const valid =
-      set.homeScore !== set.awayScore &&
-      ((winner === 6 && loser <= 4) || (winner === 7 && (loser === 5 || loser === 6)));
-    if (!valid) return null;
-    if (set.homeScore > set.awayScore) homeWins += 1;
-    else awayWins += 1;
-  }
-  return homeWins === needed || awayWins === needed ? sets : null;
-}
 
 function sanitizeIntegerInput(value: string) {
   return value.replace(/\D/g, "");
@@ -429,17 +404,23 @@ export default function TournamentScreen() {
     if (!id || savingMatchID) return;
     const score = scores[matchID];
     const match = league?.matches.find((candidate) => candidate.id === matchID);
-    const racket = league !== undefined && league !== null && isRacketSport(league.sport);
-    const racketSets = racket && score ? parseRacketSets(score, league.bestOfSets ?? 3) : null;
-    const homeScore = Number(score?.home);
-    const awayScore = Number(score?.away);
+    if (!score || !league) return;
+    const setSport = isSetSport(league.sport);
+    const incident = score.incidentType
+      ? getIncidentInput(score, league.sport, league.bestOfSets ?? 3, league.pointsPerGame)
+      : null;
+    const setScores =
+      setSport && !score.incidentType
+        ? parseSetScores(score, league.bestOfSets ?? 3, league.sport, league.pointsPerGame)
+        : null;
+    const homeScore = Number(score.home),
+      awayScore = Number(score.away);
     if (
-      racket
-        ? racketSets === null
-        : !Number.isInteger(homeScore) ||
-          !Number.isInteger(awayScore) ||
-          homeScore < 0 ||
-          awayScore < 0
+      score.incidentType
+        ? incident === null
+        : setSport
+          ? setScores === null
+          : !/^\d+$/.test(score.home) || !/^\d+$/.test(score.away)
     )
       return;
     setSavingMatchID(matchID);
@@ -456,18 +437,20 @@ export default function TournamentScreen() {
         await recordMatchResultRequest(
           id,
           matchID,
-          racket
-            ? { sets: racketSets ?? [] }
-            : {
-                homeScore,
-                awayScore,
-                ...(shootout
-                  ? {
-                      homePenalties: Number(score?.homePenalties),
-                      awayPenalties: Number(score?.awayPenalties),
-                    }
-                  : {}),
-              },
+          incident
+            ? { incident }
+            : setSport
+              ? { sets: setScores ?? [] }
+              : {
+                  homeScore,
+                  awayScore,
+                  ...(shootout
+                    ? {
+                        homePenalties: Number(score?.homePenalties),
+                        awayPenalties: Number(score?.awayPenalties),
+                      }
+                    : {}),
+                },
         ),
       );
       setEditingMatchID(undefined);
@@ -650,18 +633,10 @@ export default function TournamentScreen() {
   const teamsByID = new Map(league.teams.map((team) => [team.id, team.name]));
   const editingMatch = league.matches.find((match) => match.id === editingMatchID);
   const editingScore = editingMatch
-    ? (scores[editingMatch.id] ?? {
-        home: editingMatch.homeScore?.toString() ?? "",
-        away: editingMatch.awayScore?.toString() ?? "",
-        homePenalties: editingMatch.homePenalties?.toString() ?? "",
-        awayPenalties: editingMatch.awayPenalties?.toString() ?? "",
-        sets: Array.from({ length: league.bestOfSets ?? 3 }, (_, index) => ({
-          home: editingMatch.sets[index]?.homeScore.toString() ?? "",
-          away: editingMatch.sets[index]?.awayScore.toString() ?? "",
-        })),
-      })
+    ? (scores[editingMatch.id] ?? editableScoreFromMatch(editingMatch, league.bestOfSets ?? 3))
     : undefined;
   const needsShootout =
+    !editingScore?.incidentType &&
     sportUsesShootout(league.sport) &&
     ["single_elimination", "qualification_tiebreak"].includes(
       league.stages.find((stage) => stage.id === editingMatch?.stageId)?.type ?? "",
@@ -672,32 +647,35 @@ export default function TournamentScreen() {
     Number(editingScore.home) === Number(editingScore.away);
   const canSaveResult =
     editingScore !== undefined &&
-    (isRacketSport(league.sport)
-      ? parseRacketSets(editingScore, league.bestOfSets ?? 3) !== null
-      : /^\d+$/.test(editingScore.home) &&
-        /^\d+$/.test(editingScore.away) &&
-        (sportAllowsTiedLeagueResult(league.sport) ||
-          Number(editingScore.home) !== Number(editingScore.away)) &&
-        (!needsShootout ||
-          (/^\d+$/.test(editingScore.homePenalties) &&
-            /^\d+$/.test(editingScore.awayPenalties) &&
-            Number(editingScore.homePenalties) !== Number(editingScore.awayPenalties))));
+    (editingScore.incidentType
+      ? getIncidentInput(
+          editingScore,
+          league.sport,
+          league.bestOfSets ?? 3,
+          league.pointsPerGame,
+        ) !== null
+      : isSetSport(league.sport)
+        ? parseSetScores(
+            editingScore,
+            league.bestOfSets ?? 3,
+            league.sport,
+            league.pointsPerGame,
+          ) !== null
+        : /^\d+$/.test(editingScore.home) &&
+          /^\d+$/.test(editingScore.away) &&
+          (sportAllowsTiedLeagueResult(league.sport) ||
+            Number(editingScore.home) !== Number(editingScore.away)) &&
+          (!needsShootout ||
+            (/^\d+$/.test(editingScore.homePenalties) &&
+              /^\d+$/.test(editingScore.awayPenalties) &&
+              Number(editingScore.homePenalties) !== Number(editingScore.awayPenalties))));
   const hasRacketScoreInput = editingScore?.sets.some((set) => set.home !== "" || set.away !== "");
   const openResultEditor = (matchID: string) => {
     const match = league.matches.find((item) => item.id === matchID);
     if (!match) return;
     setScores((value) => ({
       ...value,
-      [matchID]: {
-        home: match.homeScore?.toString() ?? "",
-        away: match.awayScore?.toString() ?? "",
-        homePenalties: match.homePenalties?.toString() ?? "",
-        awayPenalties: match.awayPenalties?.toString() ?? "",
-        sets: Array.from({ length: league.bestOfSets ?? 3 }, (_, index) => ({
-          home: match.sets[index]?.homeScore.toString() ?? "",
-          away: match.sets[index]?.awayScore.toString() ?? "",
-        })),
-      },
+      [matchID]: editableScoreFromMatch(match, league.bestOfSets ?? 3),
     }));
     setEditingMatchID(matchID);
   };
@@ -822,15 +800,31 @@ export default function TournamentScreen() {
                 {t(getSportLabelKey(league.sport))}
               </Text>
             </View>
-            {isRacketSport(league.sport) ? (
+            {isSetSport(league.sport) ? (
               <View style={styles.summaryItem}>
                 <View
                   accessible={false}
                   style={[styles.bullet, { backgroundColor: colors.text.secondary }]}
                 />
                 <Text color="secondary" style={styles.summaryText}>
-                  <Text style={styles.summaryLabel}>{`${t("racket_best_of_label")}: `}</Text>
-                  {t(league.bestOfSets === 5 ? "racket_best_of_five" : "racket_best_of_three")}
+                  <Text
+                    style={styles.summaryLabel}
+                  >{`${t(league.sport === "table_tennis" || league.sport === "badminton" ? "table_tennis_best_of_label" : "racket_best_of_label")}: `}</Text>
+                  {t(
+                    league.sport === "badminton"
+                      ? league.pointsPerGame === 15
+                        ? "badminton_format_15"
+                        : "badminton_format_21"
+                      : league.sport === "table_tennis"
+                        ? league.bestOfSets === 7
+                          ? "table_tennis_best_of_seven"
+                          : league.bestOfSets === 5
+                            ? "table_tennis_best_of_five"
+                            : "table_tennis_best_of_three"
+                        : league.bestOfSets === 5
+                          ? "racket_best_of_five"
+                          : "racket_best_of_three",
+                  )}
                 </Text>
               </View>
             ) : null}
@@ -1233,24 +1227,28 @@ export default function TournamentScreen() {
                         </Text>
                         <Text style={styles.matchScore} variant="title">
                           {match.state === "completed"
-                            ? `${match.homeScore} – ${match.awayScore}${
-                                match.homePenalties !== undefined &&
-                                match.awayPenalties !== undefined
-                                  ? ` (${match.homePenalties}–${match.awayPenalties} ${t("bracket_penalties_short")})`
-                                  : ""
-                              }`
+                            ? match.incident
+                              ? t("result_mode_incident")
+                              : `${match.homeScore} – ${match.awayScore}${
+                                  match.homePenalties !== undefined &&
+                                  match.awayPenalties !== undefined
+                                    ? ` (${match.homePenalties}–${match.awayPenalties} ${t("bracket_penalties_short")})`
+                                    : ""
+                                }`
                             : "–"}
                         </Text>
                         <Text style={styles.teamName} variant="bodyLarge">
                           {teamsByID.get(match.awayTeamId)}
                         </Text>
                       </View>
-                      {match.sets.length > 0 ? (
+                      {match.sets.length > 0 && !match.incident ? (
                         <Text color="secondary" style={styles.setSummary}>
                           {match.sets.map((set) => `${set.homeScore}–${set.awayScore}`).join(" · ")}
                         </Text>
                       ) : null}
+                      <IncidentSummary match={match} teams={teamsByID} showAdministrativeScore />
                       {canManageResults &&
+                      !(league.sport === "volleyball" && match.resultType === "administrative") &&
                       league.state === "in_progress" &&
                       league.stages.find((stage) => stage.id === match.stageId)?.state ===
                         "in_progress" ? (
@@ -1405,163 +1403,339 @@ export default function TournamentScreen() {
             if (!savingMatchID) setEditingMatchID(undefined);
           }}
           visible={editingMatch !== undefined}
+          dialogStyle={styles.resultDialog}
+          avoidKeyboard
         >
           {editingMatch && editingScore ? (
-            <View style={styles.stack}>
-              <View style={styles.stack}>
-                <Text variant="title">
-                  {editingMatch.state === "completed"
-                    ? t("league_result_edit")
-                    : t("league_result_add")}
-                </Text>
-                <Text color="secondary">{`${teamsByID.get(editingMatch.homeTeamId)} — ${teamsByID.get(editingMatch.awayTeamId)}`}</Text>
-              </View>
-              {isRacketSport(league.sport) ? (
-                <View style={styles.stack}>
-                  <Text color="secondary">{t("racket_set_score_help")}</Text>
-                  {editingScore.sets.map((set, index) => (
-                    <View key={index} style={styles.stack}>
+            <>
+              <ScrollView
+                style={styles.resultScroll}
+                contentContainerStyle={styles.resultFields}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+              >
+                <View style={styles.resultFields}>
+                  <Text variant="title">
+                    {editingMatch.state === "completed"
+                      ? t("league_result_edit")
+                      : t("league_result_add")}
+                  </Text>
+                  <Text color="secondary">{`${teamsByID.get(editingMatch.homeTeamId)} — ${teamsByID.get(editingMatch.awayTeamId)}`}</Text>
+                </View>
+                <View style={styles.sportOptions}>
+                  <ConfigurationOption
+                    label={t("result_mode_score")}
+                    selected={!editingScore.incidentType}
+                    onPress={() =>
+                      setScores((value) => ({
+                        ...value,
+                        [editingMatch.id]: {
+                          ...editingScore,
+                          incidentType: undefined,
+                          incidentSide: undefined,
+                        },
+                      }))
+                    }
+                  />
+                  <ConfigurationOption
+                    label={t("result_mode_incident")}
+                    selected={!!editingScore.incidentType}
+                    onPress={() =>
+                      setScores((value) => ({
+                        ...value,
+                        [editingMatch.id]: {
+                          ...editingScore,
+                          incidentType: editingScore.incidentType ?? "no_show",
+                        },
+                      }))
+                    }
+                  />
+                </View>
+                {editingScore.incidentType ? (
+                  <>
+                    <View style={styles.resultFields}>
+                      <Text variant="bodyLarge">{t("result_incident_reason")}</Text>
+                      <View style={styles.sportOptions}>
+                        <ConfigurationOption
+                          label={t("result_incident_no_show")}
+                          selected={editingScore.incidentType === "no_show"}
+                          onPress={() =>
+                            setScores((value) => ({
+                              ...value,
+                              [editingMatch.id]: { ...editingScore, incidentType: "no_show" },
+                            }))
+                          }
+                        />
+                        <ConfigurationOption
+                          label={t("result_incident_retirement")}
+                          selected={editingScore.incidentType === "retirement"}
+                          onPress={() =>
+                            setScores((value) => ({
+                              ...value,
+                              [editingMatch.id]: { ...editingScore, incidentType: "retirement" },
+                            }))
+                          }
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.resultFields}>
                       <Text variant="bodyLarge">
-                        {t("racket_set_number").replace("{number}", String(index + 1))}
+                        {t(
+                          editingScore.incidentType === "no_show"
+                            ? "result_incident_no_show_side"
+                            : "result_incident_retirement_side",
+                        )}
                       </Text>
+                      <View style={styles.sportOptions}>
+                        {(["home", "away"] as const).map((side) => (
+                          <ConfigurationOption
+                            key={side}
+                            label={
+                              teamsByID.get(
+                                side === "home" ? editingMatch.homeTeamId : editingMatch.awayTeamId,
+                              ) ?? ""
+                            }
+                            selected={editingScore.incidentSide === side}
+                            onPress={() =>
+                              setScores((value) => ({
+                                ...value,
+                                [editingMatch.id]: { ...editingScore, incidentSide: side },
+                              }))
+                            }
+                          />
+                        ))}
+                      </View>
+                    </View>
+                    {editingScore.incidentType === "retirement" ? (
+                      <Text variant="bodyLarge">{t("result_incident_partial_optional")}</Text>
+                    ) : null}
+                  </>
+                ) : null}
+                {editingScore.incidentType !== "no_show" ? (
+                  <>
+                    {isSetSport(league.sport) ? (
+                      <View style={styles.resultFields}>
+                        <Text color="secondary">
+                          {t(
+                            editingScore.incidentType
+                              ? "result_incident_partial_help"
+                              : league.sport === "badminton"
+                                ? getBadmintonScoreHelpKey(league.pointsPerGame)
+                                : league.sport === "volleyball"
+                                  ? "volleyball_score_help"
+                                  : league.sport === "table_tennis"
+                                    ? "table_tennis_score_help"
+                                    : "racket_set_score_help",
+                          )}
+                        </Text>
+                        <View style={styles.setScoreRow}>
+                          <View style={styles.setScoreLabel} />
+                          <Text color="secondary" style={styles.scoreField} variant="caption">
+                            {t(
+                              ["table_tennis", "volleyball", "badminton"].includes(league.sport)
+                                ? "set_home_points"
+                                : "racket_home_games",
+                            )}
+                          </Text>
+                          <Text color="secondary" style={styles.scoreField} variant="caption">
+                            {t(
+                              ["table_tennis", "volleyball", "badminton"].includes(league.sport)
+                                ? "set_away_points"
+                                : "racket_away_games",
+                            )}
+                          </Text>
+                        </View>
+                        {editingScore.sets.map((set, index) => (
+                          <View key={index} style={styles.setScoreRow}>
+                            <Text style={styles.setScoreLabel} variant="caption">
+                              {t(
+                                league.sport === "table_tennis" || league.sport === "badminton"
+                                  ? "table_tennis_game_number"
+                                  : "racket_set_number",
+                              ).replace("{number}", String(index + 1))}
+                            </Text>
+                            <View style={styles.scoreField}>
+                              <TextField
+                                accessibilityLabel={`${t(
+                                  league.sport === "table_tennis" || league.sport === "badminton"
+                                    ? "table_tennis_game_number"
+                                    : "racket_set_number",
+                                ).replace("{number}", String(index + 1))}. ${t(
+                                  ["table_tennis", "volleyball", "badminton"].includes(league.sport)
+                                    ? "set_home_points"
+                                    : "racket_home_games",
+                                )}`}
+                                keyboardType="number-pad"
+                                maxLength={
+                                  ["table_tennis", "volleyball", "badminton"].includes(league.sport)
+                                    ? 5
+                                    : 1
+                                }
+                                onChangeText={(home) =>
+                                  setScores((value) => ({
+                                    ...value,
+                                    [editingMatch.id]: {
+                                      ...editingScore,
+                                      sets: editingScore.sets.map((current, setIndex) =>
+                                        setIndex === index
+                                          ? { ...current, home: sanitizeIntegerInput(home) }
+                                          : current,
+                                      ),
+                                    },
+                                  }))
+                                }
+                                value={set.home}
+                              />
+                            </View>
+                            <View style={styles.scoreField}>
+                              <TextField
+                                accessibilityLabel={`${t(
+                                  league.sport === "table_tennis" || league.sport === "badminton"
+                                    ? "table_tennis_game_number"
+                                    : "racket_set_number",
+                                ).replace("{number}", String(index + 1))}. ${t(
+                                  ["table_tennis", "volleyball", "badminton"].includes(league.sport)
+                                    ? "set_away_points"
+                                    : "racket_away_games",
+                                )}`}
+                                keyboardType="number-pad"
+                                maxLength={
+                                  ["table_tennis", "volleyball", "badminton"].includes(league.sport)
+                                    ? 5
+                                    : 1
+                                }
+                                onChangeText={(away) =>
+                                  setScores((value) => ({
+                                    ...value,
+                                    [editingMatch.id]: {
+                                      ...editingScore,
+                                      sets: editingScore.sets.map((current, setIndex) =>
+                                        setIndex === index
+                                          ? { ...current, away: sanitizeIntegerInput(away) }
+                                          : current,
+                                      ),
+                                    },
+                                  }))
+                                }
+                                value={set.away}
+                              />
+                            </View>
+                          </View>
+                        ))}
+                        {hasRacketScoreInput && !canSaveResult && !editingScore.incidentType ? (
+                          <Text color="error">{t("racket_result_invalid")}</Text>
+                        ) : null}
+                      </View>
+                    ) : (
                       <View style={styles.scoreFields}>
                         <View style={styles.scoreField}>
                           <TextField
-                            label={t("racket_home_games")}
+                            label={t(
+                              league.sport === "basketball"
+                                ? "basketball_home_score"
+                                : "league_home_score",
+                            )}
                             keyboardType="number-pad"
-                            maxLength={1}
                             onChangeText={(home) =>
                               setScores((value) => ({
                                 ...value,
-                                [editingMatch.id]: {
-                                  ...editingScore,
-                                  sets: editingScore.sets.map((current, setIndex) =>
-                                    setIndex === index
-                                      ? { ...current, home: sanitizeIntegerInput(home) }
-                                      : current,
-                                  ),
-                                },
+                                [editingMatch.id]: { ...editingScore, home },
                               }))
                             }
-                            value={set.home}
+                            value={editingScore.home}
                           />
                         </View>
                         <View style={styles.scoreField}>
                           <TextField
-                            label={t("racket_away_games")}
+                            label={t(
+                              league.sport === "basketball"
+                                ? "basketball_away_score"
+                                : "league_away_score",
+                            )}
                             keyboardType="number-pad"
-                            maxLength={1}
                             onChangeText={(away) =>
                               setScores((value) => ({
                                 ...value,
-                                [editingMatch.id]: {
-                                  ...editingScore,
-                                  sets: editingScore.sets.map((current, setIndex) =>
-                                    setIndex === index
-                                      ? { ...current, away: sanitizeIntegerInput(away) }
-                                      : current,
-                                  ),
-                                },
+                                [editingMatch.id]: { ...editingScore, away },
                               }))
                             }
-                            value={set.away}
+                            value={editingScore.away}
                           />
                         </View>
                       </View>
-                    </View>
-                  ))}
-                  {hasRacketScoreInput && !canSaveResult ? (
-                    <Text color="error">{t("racket_result_invalid")}</Text>
-                  ) : null}
-                </View>
-              ) : (
-                <View style={styles.scoreFields}>
-                  <View style={styles.scoreField}>
-                    <TextField
-                      label={t(
-                        league.sport === "basketball"
-                          ? "basketball_home_score"
-                          : "league_home_score",
+                    )}
+                    {!editingScore.incidentType &&
+                    league.sport === "basketball" &&
+                    /^\d+$/.test(editingScore.home) &&
+                    /^\d+$/.test(editingScore.away) &&
+                    Number(editingScore.home) === Number(editingScore.away) ? (
+                      <Text color="error">{t("basketball_tied_score_help")}</Text>
+                    ) : null}
+                    {needsShootout ? (
+                      <>
+                        <Text color="secondary">{t(getShootoutKeys(league.sport).help)}</Text>
+                        <View style={styles.scoreFields}>
+                          <View style={styles.scoreField}>
+                            <TextField
+                              label={t(getShootoutKeys(league.sport).home)}
+                              keyboardType="number-pad"
+                              value={editingScore.homePenalties}
+                              onChangeText={(homePenalties) =>
+                                setScores((value) => ({
+                                  ...value,
+                                  [editingMatch.id]: { ...editingScore, homePenalties },
+                                }))
+                              }
+                            />
+                          </View>
+                          <View style={styles.scoreField}>
+                            <TextField
+                              label={t(getShootoutKeys(league.sport).away)}
+                              keyboardType="number-pad"
+                              value={editingScore.awayPenalties}
+                              onChangeText={(awayPenalties) =>
+                                setScores((value) => ({
+                                  ...value,
+                                  [editingMatch.id]: { ...editingScore, awayPenalties },
+                                }))
+                              }
+                            />
+                          </View>
+                        </View>
+                      </>
+                    ) : null}
+                  </>
+                ) : null}
+                {editingScore.incidentType && editingScore.incidentSide ? (
+                  <View style={styles.resultFields}>
+                    <Text variant="bodyLarge">
+                      {t("result_incident_winner").replace(
+                        "{participant}",
+                        teamsByID.get(
+                          editingScore.incidentSide === "home"
+                            ? editingMatch.awayTeamId
+                            : editingMatch.homeTeamId,
+                        ) ?? "",
                       )}
-                      keyboardType="number-pad"
-                      onChangeText={(home) =>
-                        setScores((value) => ({
-                          ...value,
-                          [editingMatch.id]: { ...editingScore, home },
-                        }))
-                      }
-                      value={editingScore.home}
-                    />
+                    </Text>
+                    <Text color="secondary">{t("result_incident_effect")}</Text>
+                    {!canSaveResult ? (
+                      <Text color="error">{t("result_incident_partial_invalid")}</Text>
+                    ) : null}
                   </View>
-                  <View style={styles.scoreField}>
-                    <TextField
-                      label={t(
-                        league.sport === "basketball"
-                          ? "basketball_away_score"
-                          : "league_away_score",
-                      )}
-                      keyboardType="number-pad"
-                      onChangeText={(away) =>
-                        setScores((value) => ({
-                          ...value,
-                          [editingMatch.id]: { ...editingScore, away },
-                        }))
-                      }
-                      value={editingScore.away}
-                    />
-                  </View>
-                </View>
-              )}
-              {league.sport === "basketball" &&
-              /^\d+$/.test(editingScore.home) &&
-              /^\d+$/.test(editingScore.away) &&
-              Number(editingScore.home) === Number(editingScore.away) ? (
-                <Text color="error">{t("basketball_tied_score_help")}</Text>
-              ) : null}
-              {needsShootout ? (
-                <>
-                  <Text color="secondary">{t(getShootoutKeys(league.sport).help)}</Text>
-                  <View style={styles.scoreFields}>
-                    <View style={styles.scoreField}>
-                      <TextField
-                        label={t(getShootoutKeys(league.sport).home)}
-                        keyboardType="number-pad"
-                        value={editingScore.homePenalties}
-                        onChangeText={(homePenalties) =>
-                          setScores((value) => ({
-                            ...value,
-                            [editingMatch.id]: { ...editingScore, homePenalties },
-                          }))
-                        }
-                      />
-                    </View>
-                    <View style={styles.scoreField}>
-                      <TextField
-                        label={t(getShootoutKeys(league.sport).away)}
-                        keyboardType="number-pad"
-                        value={editingScore.awayPenalties}
-                        onChangeText={(awayPenalties) =>
-                          setScores((value) => ({
-                            ...value,
-                            [editingMatch.id]: { ...editingScore, awayPenalties },
-                          }))
-                        }
-                      />
-                    </View>
-                  </View>
-                </>
-              ) : null}
-              <Button
-                disabled={!canSaveResult}
-                label={t("league_result_save")}
-                loading={savingMatchID === editingMatch.id}
-                onPress={() => void saveResult(editingMatch.id)}
-              />
+                ) : null}
+                <Button
+                  disabled={!canSaveResult}
+                  label={t("league_result_save")}
+                  loading={savingMatchID === editingMatch.id}
+                  onPress={() => void saveResult(editingMatch.id)}
+                />
+              </ScrollView>
               <LoadingTransition
                 active={savingMatchID === editingMatch.id}
                 message={t("league_result_saving")}
               />
-            </View>
+            </>
           ) : null}
         </ModalDialog>
         <ModalDialog
@@ -1609,6 +1783,7 @@ export default function TournamentScreen() {
 }
 
 const styles = StyleSheet.create({
+  sportOptions: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   content: { paddingBottom: space[4] },
   listViewport: { flex: 1 },
   bracketHorizontalControl: {
@@ -1637,6 +1812,11 @@ const styles = StyleSheet.create({
   listHeader: { gap: space[5], paddingBottom: space[5] },
   phaseSelector: { paddingHorizontal: space[5] },
   stack: { flex: 1, gap: space[3] },
+  resultDialog: { maxHeight: "85%" },
+  resultScroll: { flexGrow: 0, flexShrink: 1, minHeight: 0 },
+  resultFields: { gap: space[3] },
+  setScoreRow: { alignItems: "center", flexDirection: "row", gap: space[3] },
+  setScoreLabel: { width: space[12] },
   bullet: {
     borderRadius: radius.pill,
     height: space[1],
@@ -1672,7 +1852,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   setSummary: { textAlign: "center" },
-  scoreField: { flex: 1 },
+  scoreField: { flex: 1, minWidth: 0 },
   scoreFields: { flexDirection: "row", gap: space[3] },
   teamName: { flex: 1, textAlign: "center" },
   roundHeader: { paddingBottom: space[3], paddingHorizontal: space[5], paddingTop: space[5] },

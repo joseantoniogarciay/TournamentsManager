@@ -127,3 +127,42 @@ func TestIntegrationTennisSetsAreValidatedPersistedAndHistorized(t *testing.T) {
 		t.Fatalf("history changes=%d set snapshots=%d, want 2 and 5", changes, snapshots)
 	}
 }
+
+func TestIntegrationTableTennisSevenGamesAndCorrection(t *testing.T) {
+	pool := integrationPool(t)
+	ctx := context.Background()
+	owner := createVerifiedLocalAccount(t, ctx, pool, "table_tennis@example.test", "table_tennis_owner", "correct horse battery staple")
+	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
+	value, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Table tennis", Sport: tournaments.SportTableTennis, BestOfSets: 7, Teams: []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = service.Start(ctx, owner, value.ID, tournaments.StartInput{Format: "league", RoundRobinLegs: 1}); !errors.Is(err, tournaments.ErrInvalidTournamentInput) {
+		t.Fatalf("league: %v", err)
+	}
+	value, err = service.Start(ctx, owner, value.ID, tournaments.StartInput{Format: "single_elimination"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	match := value.Matches[0]
+	sets := []tournaments.SetScore{{HomeScore: 11, AwayScore: 9}, {HomeScore: 10, AwayScore: 12}, {HomeScore: 13, AwayScore: 11}, {HomeScore: 9, AwayScore: 11}, {HomeScore: 11, AwayScore: 0}, {HomeScore: 5, AwayScore: 11}, {HomeScore: 12, AwayScore: 10}}
+	value, err = service.RecordResult(ctx, owner, value.ID, match.ID, tournaments.MatchResultInput{Sets: sets})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if *value.Matches[0].HomeScore != 4 || len(value.Matches[0].Sets) != 7 || value.Matches[2].HomeTeamID != match.HomeTeamID {
+		t.Fatal("seven games or winner not persisted")
+	}
+	corrected := []tournaments.SetScore{{HomeScore: 0, AwayScore: 11}, {HomeScore: 0, AwayScore: 11}, {HomeScore: 0, AwayScore: 11}, {HomeScore: 0, AwayScore: 11}}
+	value, err = service.RecordResult(ctx, owner, value.ID, match.ID, tournaments.MatchResultInput{Sets: corrected})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(value.Matches[0].Sets) != 4 || value.Matches[2].HomeTeamID != match.AwayTeamID {
+		t.Fatal("correction not propagated")
+	}
+	var count int
+	if err = pool.QueryRow(ctx, `SELECT count(*) FROM match_result_change_sets s JOIN match_result_changes c ON c.id=s.change_id WHERE c.match_id=$1`, match.ID).Scan(&count); err != nil || count != 11 {
+		t.Fatalf("history=%d %v", count, err)
+	}
+}

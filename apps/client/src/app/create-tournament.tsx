@@ -1,3 +1,4 @@
+import { isRacketSport, isSetSport } from "@/shared/tournaments/sport";
 import { router, Stack } from "expo-router";
 import { randomUUID } from "expo-crypto";
 import { useEffect, useState } from "react";
@@ -38,7 +39,8 @@ export default function CreateTournamentScreen() {
   const { colors } = usePreferences();
   const [name, setName] = useState("");
   const [sport, setSport] = useState<TournamentSport>("football");
-  const [bestOfSets, setBestOfSets] = useState<3 | 5>(3);
+  const [pointsPerGame, setPointsPerGame] = useState<15 | 21>(21);
+  const [bestOfSets, setBestOfSets] = useState<3 | 5 | 7>(3);
   const [team, setTeam] = useState("");
   const [draftId, setDraftId] = useState(() => randomUUID());
   const [draftLoaded, setDraftLoaded] = useState(false);
@@ -53,6 +55,7 @@ export default function CreateTournamentScreen() {
         setName(draft.name);
         setSport(draft.sport);
         setBestOfSets(draft.bestOfSets ?? 3);
+        setPointsPerGame(draft.pointsPerGame ?? 21);
         setTeam(draft.teams[0] ?? "");
         setTeamHasLocalValue(true);
       }
@@ -67,8 +70,15 @@ export default function CreateTournamentScreen() {
   }, [syncUser, user?.id]);
   useEffect(() => {
     if (draftLoaded)
-      void saveLocalTournamentDraft({ draftId, name, sport, bestOfSets, teams: [team] });
-  }, [bestOfSets, draftId, draftLoaded, name, sport, team]);
+      void saveLocalTournamentDraft({
+        draftId,
+        name,
+        sport,
+        bestOfSets,
+        ...(sport === "badminton" ? { pointsPerGame } : {}),
+        teams: [team],
+      });
+  }, [bestOfSets, pointsPerGame, draftId, draftLoaded, name, sport, team]);
 
   const normalizedTeam = team.trim();
   const nameError = !name.trim()
@@ -77,11 +87,7 @@ export default function CreateTournamentScreen() {
       ? t("league_name_too_long")
       : undefined;
   const teamError = !normalizedTeam
-    ? t(
-        sport === "tennis" || sport === "padel"
-          ? "racket_participant_required"
-          : "league_team_required",
-      )
+    ? t(isRacketSport(sport) ? "racket_participant_required" : "league_team_required")
     : undefined;
   const publish = async () => {
     setSubmitted(true);
@@ -95,7 +101,8 @@ export default function CreateTournamentScreen() {
       const league = await createTournamentRequest({
         name: name.trim(),
         sport,
-        ...(sport === "tennis" || sport === "padel" ? { bestOfSets } : {}),
+        ...(isSetSport(sport) ? { bestOfSets } : {}),
+        ...(sport === "badminton" ? { pointsPerGame } : {}),
         teams: [{ name: normalizedTeam }],
       });
       await rememberLastTeamName(normalizedTeam).catch(() => undefined);
@@ -187,6 +194,30 @@ export default function CreateTournamentScreen() {
                     selected={sport === "tennis"}
                   />
                   <ConfigurationOption
+                    label={t("tournament_sport_volleyball")}
+                    onPress={() => {
+                      setSport("volleyball");
+                      setBestOfSets(5);
+                    }}
+                    selected={sport === "volleyball"}
+                  />
+                  <ConfigurationOption
+                    label={t("tournament_sport_table_tennis")}
+                    onPress={() => {
+                      setSport("table_tennis");
+                      setBestOfSets(3);
+                    }}
+                    selected={sport === "table_tennis"}
+                  />
+                  <ConfigurationOption
+                    label={t("tournament_sport_badminton")}
+                    onPress={() => {
+                      setSport("badminton");
+                      setBestOfSets(3);
+                    }}
+                    selected={sport === "badminton"}
+                  />
+                  <ConfigurationOption
                     label={t("tournament_sport_padel")}
                     onPress={() => {
                       setSport("padel");
@@ -196,24 +227,65 @@ export default function CreateTournamentScreen() {
                   />
                 </View>
               </View>
-              {sport === "tennis" ? (
+              {sport === "badminton" ? (
                 <View style={styles.sportSelector}>
-                  <Text variant="bodyLarge">{t("racket_best_of_label")}</Text>
+                  <Text variant="bodyLarge">{t("badminton_points_per_game")}</Text>
                   <View style={styles.sportOptions}>
                     <ConfigurationOption
-                      label={t("racket_best_of_three")}
+                      label={t("badminton_points_21")}
+                      onPress={() => setPointsPerGame(21)}
+                      selected={pointsPerGame === 21}
+                    />
+                    <ConfigurationOption
+                      label={t("badminton_points_15")}
+                      onPress={() => setPointsPerGame(15)}
+                      selected={pointsPerGame === 15}
+                    />
+                  </View>
+                  <Text color="secondary">{t("badminton_best_of_three_help")}</Text>
+                </View>
+              ) : null}
+              {sport === "tennis" || sport === "table_tennis" ? (
+                <View style={styles.sportSelector}>
+                  <Text variant="bodyLarge">
+                    {t(
+                      sport === "table_tennis"
+                        ? "table_tennis_best_of_label"
+                        : "racket_best_of_label",
+                    )}
+                  </Text>
+                  <View style={styles.sportOptions}>
+                    <ConfigurationOption
+                      label={t(
+                        sport === "table_tennis"
+                          ? "table_tennis_best_of_three"
+                          : "racket_best_of_three",
+                      )}
                       onPress={() => setBestOfSets(3)}
                       selected={bestOfSets === 3}
                     />
                     <ConfigurationOption
-                      label={t("racket_best_of_five")}
+                      label={t(
+                        sport === "table_tennis"
+                          ? "table_tennis_best_of_five"
+                          : "racket_best_of_five",
+                      )}
                       onPress={() => setBestOfSets(5)}
                       selected={bestOfSets === 5}
                     />
+                    {sport === "table_tennis" ? (
+                      <ConfigurationOption
+                        label={t("table_tennis_best_of_seven")}
+                        onPress={() => setBestOfSets(7)}
+                        selected={bestOfSets === 7}
+                      />
+                    ) : null}
                   </View>
                 </View>
               ) : sport === "padel" ? (
                 <Text color="secondary">{t("padel_best_of_three_help")}</Text>
+              ) : sport === "volleyball" ? (
+                <Text color="secondary">{t("volleyball_best_of_five_help")}</Text>
               ) : null}
               <TextField
                 error={nameError}
@@ -227,14 +299,12 @@ export default function CreateTournamentScreen() {
               <View style={styles.teamIntroduction}>
                 <Text variant="bodyLarge">
                   {t(
-                    sport === "tennis" || sport === "padel"
-                      ? "racket_own_participant_title"
-                      : "league_own_team_title",
+                    isRacketSport(sport) ? "racket_own_participant_title" : "league_own_team_title",
                   )}
                 </Text>
                 <Text color="secondary">
                   {t(
-                    sport === "tennis" || sport === "padel"
+                    isRacketSport(sport)
                       ? "racket_own_participant_description"
                       : "league_own_team_description",
                   )}
@@ -243,9 +313,7 @@ export default function CreateTournamentScreen() {
               <TextField
                 error={teamError}
                 label={t(
-                  sport === "tennis" || sport === "padel"
-                    ? "racket_own_participant_label"
-                    : "league_own_team_label",
+                  isRacketSport(sport) ? "racket_own_participant_label" : "league_own_team_label",
                 )}
                 maxLength={maximumTeamNameLength}
                 onChangeText={(value) => {

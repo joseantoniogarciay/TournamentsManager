@@ -144,11 +144,12 @@ func joinTournamentTeamInvitation(service tournaments.CreationService) http.Hand
 }
 
 type leagueInput struct {
-	DraftID    string            `json:"draftId"`
-	Name       string            `json:"name"`
-	Sport      tournaments.Sport `json:"sport"`
-	BestOfSets int               `json:"bestOfSets"`
-	Teams      []struct {
+	DraftID       string            `json:"draftId"`
+	Name          string            `json:"name"`
+	Sport         tournaments.Sport `json:"sport"`
+	BestOfSets    int               `json:"bestOfSets"`
+	PointsPerGame int               `json:"pointsPerGame"`
+	Teams         []struct {
 		Name string `json:"name"`
 	} `json:"teams"`
 }
@@ -164,11 +165,26 @@ type teamInput struct {
 	Name string `json:"name"`
 }
 type matchResultInput struct {
-	HomePenalties *int                    `json:"homePenalties"`
-	AwayPenalties *int                    `json:"awayPenalties"`
-	HomeScore     *int                    `json:"homeScore"`
-	AwayScore     *int                    `json:"awayScore"`
-	Sets          *[]tournaments.SetScore `json:"sets"`
+	HomePenalties *int                `json:"homePenalties"`
+	AwayPenalties *int                `json:"awayPenalties"`
+	HomeScore     *int                `json:"homeScore"`
+	AwayScore     *int                `json:"awayScore"`
+	Sets          *[]setResultInput   `json:"sets"`
+	Incident      *matchIncidentInput `json:"incident"`
+}
+
+type matchIncidentInput struct {
+	Type             tournaments.ResultType `json:"type"`
+	Side             string                 `json:"side"`
+	PartialHomeScore *int                   `json:"partialHomeScore"`
+	PartialAwayScore *int                   `json:"partialAwayScore"`
+	PartialSets      *[]setResultInput      `json:"partialSets"`
+}
+
+// Pointers distinguish a declared zero from an absent or null score at the HTTP boundary.
+type setResultInput struct {
+	HomeScore *int `json:"homeScore"`
+	AwayScore *int `json:"awayScore"`
 }
 
 func createTournament(service tournaments.CreationService) http.HandlerFunc {
@@ -187,7 +203,7 @@ func createTournament(service tournaments.CreationService) http.HandlerFunc {
 		for i, team := range body.Teams {
 			teams[i] = tournaments.TeamInput{Name: team.Name}
 		}
-		league, err := service.Create(r.Context(), accountID, tournaments.CreateInput{Name: body.Name, Sport: body.Sport, BestOfSets: body.BestOfSets, Teams: teams})
+		league, err := service.Create(r.Context(), accountID, tournaments.CreateInput{Name: body.Name, Sport: body.Sport, BestOfSets: body.BestOfSets, PointsPerGame: body.PointsPerGame, Teams: teams})
 		recordTournamentFailure(r.Context(), err)
 		if errors.Is(err, tournaments.ErrInvalidTournamentInput) {
 			writeTournamentValidationProblem(w, r)
@@ -494,13 +510,43 @@ func recordMatchResult(service tournaments.CreationService) http.HandlerFunc {
 		hasSetResult := body.Sets != nil && len(*body.Sets) > 0
 		hasScoreResult := body.HomeScore != nil && body.AwayScore != nil
 		mixedResult := body.Sets != nil && (body.HomeScore != nil || body.AwayScore != nil || body.HomePenalties != nil || body.AwayPenalties != nil)
-		if mixedResult || hasSetResult == hasScoreResult {
+		hasIncident := body.Incident != nil
+		if hasIncident && (body.Sets != nil || body.HomeScore != nil || body.AwayScore != nil || body.HomePenalties != nil || body.AwayPenalties != nil) || !hasIncident && (mixedResult || hasSetResult == hasScoreResult) {
 			writeTournamentValidationProblem(w, r)
 			return
 		}
 		input := tournaments.MatchResultInput{HomePenalties: body.HomePenalties, AwayPenalties: body.AwayPenalties}
+		if body.Incident != nil {
+			i := body.Incident
+			input.Incident = &tournaments.MatchIncident{Type: i.Type, Side: i.Side, PartialHomeScore: i.PartialHomeScore, PartialAwayScore: i.PartialAwayScore}
+			if i.PartialSets != nil {
+				if len(*i.PartialSets) == 0 {
+					writeTournamentValidationProblem(w, r)
+					return
+				}
+				input.Incident.PartialSets = make([]tournaments.SetScore, len(*i.PartialSets))
+				for index, set := range *i.PartialSets {
+					if set.HomeScore == nil || set.AwayScore == nil {
+						writeTournamentValidationProblem(w, r)
+						return
+					}
+					input.Incident.PartialSets[index] = tournaments.SetScore{HomeScore: *set.HomeScore, AwayScore: *set.AwayScore}
+				}
+			}
+			if (i.Type != tournaments.ResultNoShow && i.Type != tournaments.ResultRetirement) || (i.Side != "home" && i.Side != "away") {
+				writeTournamentValidationProblem(w, r)
+				return
+			}
+		}
 		if body.Sets != nil {
-			input.Sets = *body.Sets
+			input.Sets = make([]tournaments.SetScore, len(*body.Sets))
+			for index, set := range *body.Sets {
+				if set.HomeScore == nil || set.AwayScore == nil {
+					writeTournamentValidationProblem(w, r)
+					return
+				}
+				input.Sets[index] = tournaments.SetScore{HomeScore: *set.HomeScore, AwayScore: *set.AwayScore}
+			}
 		}
 		if body.HomeScore != nil {
 			input.HomeScore = *body.HomeScore

@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.family.regular,
     fontSize: typography.size.bodyLarge,
     minHeight: control.minHeight,
+    minWidth: 0,
     outlineStyle: "solid",
     outlineWidth: 0,
   },

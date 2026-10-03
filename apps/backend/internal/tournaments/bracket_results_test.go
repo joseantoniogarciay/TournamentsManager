@@ -179,3 +179,36 @@ func TestBracketRejectsMalformedSourcesAndResults(t *testing.T) {
 		t.Fatalf("wrong source: %v", err)
 	}
 }
+
+func TestTableTennisPointGames(t *testing.T) {
+	for _, best := range []int{3, 5, 7} {
+		sets := make([]SetScore, best/2+1)
+		for i := range sets {
+			sets[i] = SetScore{HomeScore: 11, AwayScore: 9}
+		}
+		normalized, err := NormalizeSetResult(SportTableTennis, best, 0, MatchResultInput{Sets: sets})
+		if err != nil || normalized.HomeScore != best/2+1 || normalized.AwayScore != 0 {
+			t.Fatalf("best of %d: %#v %v", best, normalized, err)
+		}
+		if _, err := NormalizeSetResult(SportTableTennis, best, 0, MatchResultInput{Sets: append(sets, SetScore{HomeScore: 11, AwayScore: 0})}); err == nil {
+			t.Fatal("extra game accepted")
+		}
+	}
+	for _, test := range []struct {
+		home, away int
+		valid      bool
+	}{{11, 0, true}, {11, 9, true}, {12, 10, true}, {15, 13, true}, {0, 11, true}, {10, 8, false}, {11, 10, false}, {12, 9, false}, {11, 11, false}, {-1, 11, false}, {32768, 32766, false}} {
+		got := validSportSet(SportTableTennis, 0, 0, SetScore{HomeScore: test.home, AwayScore: test.away})
+		if got != test.valid {
+			t.Errorf("%d-%d valid=%v want %v", test.home, test.away, got, test.valid)
+		}
+	}
+	if _, err := NormalizeSetResult(SportTableTennis, 3, 0, MatchResultInput{Sets: []SetScore{{HomeScore: 11, AwayScore: 0}}}); err == nil {
+		t.Fatal("unfinished match accepted")
+	}
+	for _, best := range []int{0, 1, 2, 4, 6, 9} {
+		if ValidSetFormat(SportTableTennis, best) {
+			t.Errorf("invalid best of %d accepted", best)
+		}
+	}
+}

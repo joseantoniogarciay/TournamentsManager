@@ -44,7 +44,7 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | `federated_login_challenges`  | `id`, `provider`, `nonce_hash`, `expires_at`, `consumed_at`, `created_at`                                                                                       | Google únicamente; nonce de 5 min, de un solo uso y sin sesión asociada.                                                                                                                                                                                                                                                                                                   |
 | `email_verification_tokens`   | `id`, `account_id`, `token_hash`, `expires_at`, `consumed_at`, `invalidated_at`, `created_at`                                                                   | hash único por contexto; expira a 24 h; activo, consumido e invalidado son excluyentes; solo hay un token activo por cuenta.                                                                                                                                                                                                                                               |
 | `sessions`                    | `id`, `account_id`, `token_hash`, `created_at`, `last_seen_at`, `idle_expires_at`, `absolute_expires_at`, `revoked_at`                                          | hash único; válida solo si la cuenta está verificada, no revocada y ambos vencimientos son futuros.                                                                                                                                                                                                                                                                        |
-| `tournaments`                 | `id`, `organizer_account_id`, `source_draft_id`, `name`, `sport`, `best_of_sets`, `state`, `created_at`, `published_at`, `last_activity_at`                     | `source_draft_id` es opcional y único por organizador para deduplicar la transferencia; `sport` es el enum inmutable `football \| basketball \| handball \| tennis \| padel`. `best_of_sets` solo existe para tenis (`3` o `5`) y pádel (`3`).                                                                                                                              |
+| `tournaments`                 | `id`, `organizer_account_id`, `source_draft_id`, `name`, `sport`, `best_of_sets`, `state`, `created_at`, `published_at`, `last_activity_at`                     | `source_draft_id` es opcional y único por organizador para deduplicar la transferencia; `sport` es el enum inmutable `football \| basketball \| handball \| tennis \| padel \| table_tennis \| volleyball`. `best_of_sets` solo existe para tenis (`3` o `5`), pádel (`3`), tenis de mesa (`3`, `5` o `7`) y voleibol (`5`).                                                                                                                              |
 | `tournament_stages`           | `id`, `tournament_id`, `position`, `type`, `state`, configuración de liga y clasificación                                                                       | orden único dentro del torneo; `league` y `single_elimination` son tipos distintos. En el formato mixto la liga conserva estructura general o por grupos y la regla de clasificación.                                                                                                                                                                                      |
 | `tournament_stage_teams`      | `tournament_id`, `stage_id`, `team_id`, `seed_position`, `group_number`                                                                                         | congela la pertenencia y siembra de cada fase; el grupo solo existe en la liga por grupos. Una fase no repite equipo ni posición de siembra.                                                                                                                                                                                                                               |
 | `tournament_administrators`   | `tournament_id`, `account_id`, `assigned_at`                                                                                                                    | PK compuesta; el creador se conserva en `tournaments.organizer_account_id`, no se duplica.                                                                                                                                                                                                                                                                                 |
@@ -53,7 +53,7 @@ incluyen secretos ni hashes en DTOs, logs o métricas.
 | `tournament_team_invitations` | `tournament_id`, `token_hash`, `created_at`                                                                                                                     | como máximo una invitación activa por torneo; regenerarla sustituye el hash anterior y el inicio la elimina. El secreto solo se devuelve al crearlo.                                                                                                                                                                                                                       |
 | `tournament_team_accounts`    | `tournament_id`, `team_id`, `account_id`, `joined_at`                                                                                                           | una cuenta mantiene como máximo un equipo vinculado por torneo y un equipo se vincula como máximo a una cuenta; el vínculo no concede administración. Al eliminar el equipo o programar la baja de cuenta desaparece el vínculo, no el equipo deportivo.                                                                                                                   |
 | `matches`                     | `id`, `tournament_id`, `stage_id`, `group_number`, `round_number`, `sequence`, fuentes de local y visitante, `winner_team_id`, `state`, marcador, `result_type` | cada partido pertenece a una fase y, cuando procede, a un grupo. Un partido completado distingue resultado `played` o `administrative`; una plaza procede de equipo sembrado, ganadora previa o _bye_.                                                                                                                                                                     |
-| `match_sets`                  | `match_id`, `set_number`, `home_score`, `away_score`                                                                                                           | conserva en orden los sets del resultado vigente; la forma del tanteo se protege también en PostgreSQL y el dominio valida que el partido termine al alcanzar la mayoría configurada.                                                                                                                                                                                     |
+| `match_sets`                  | `match_id`, `set_number`, `home_score`, `away_score`                                                                                                           | conserva en orden los sets del resultado vigente; PostgreSQL protege orden de 1 a 7, no negatividad y ausencia de empate; el dominio aplica la forma de tanteo por deporte y valida que el partido termine al alcanzar la mayoría configurada.                                                                                                                                                                                     |
 | `match_result_changes`        | `id`, `match_id`, `changed_by_account_id` opcional, marcador anterior y nuevo, `result_type`, `changed_at`                                                      | cada registro o corrección conserva la administradora, el marcador previo y si el nuevo resultado fue jugado o administrativo; al purgar la cuenta, la autora pasa a `NULL`.                                                                                                                                                                                               |
 | `match_result_change_sets`    | `change_id`, `set_number`, `home_score`, `away_score`                                                                                                          | instantánea inmutable de los sets nuevos asociados a cada registro o corrección; desaparece únicamente con su entrada de historial.                                                                                                                                                                                                                                       |
 | `tournament_champions`        | `tournament_id`, `team_id`                                                                                                                                      | conserva una única campeona de eliminatoria o todas las co-campeonas de una liga al cerrar el torneo.                                                                                                                                                                                                                                                                      |
@@ -99,7 +99,7 @@ minúsculo antes de guardar.
    en fútbol admite empate de liga y exige penaltis para resolver una
    eliminatoria empatada; en baloncesto rechaza empate final y penaltis; en
    balonmano admite empate de liga y exige lanzamientos de siete metros tras un
-   marcador eliminatorio empatado. En tenis y pádel exige sets completos y
+   marcador eliminatorio empatado. En tenis, pádel y tenis de mesa exige sets completos y
    coherentes con `best_of_sets`, deriva el agregado y no permite liga. La
    eliminatoria propaga la ganadora solo a las plazas dependientes y rechaza
    corregirla si ya existe un resultado posterior. Conserva marcador anterior y
@@ -116,7 +116,8 @@ minúsculo antes de guardar.
 11. **Baja de equipo:** bloquea el torneo y el equipo, exige una fase de liga y
     estado `in_progress`; marca la baja y completa todos los partidos de ese
     equipo con resultado administrativo fijo para el rival: `3-0` en fútbol,
-    `20-0` en baloncesto o `10-0` en balonmano. No se aplica a eliminatorias. Cada cambio conserva el
+    `20-0` en baloncesto, `10-0` en balonmano o `3-0` con tres sets
+    `25-0` en voleibol. No se aplica a eliminatorias. Cada cambio conserva el
     marcador anterior, la autora y `result_type = administrative` en
     `match_result_changes`, todo en la misma transacción.
 12. **Inscripción por invitación:** la organizadora rota o revoca el único hash
@@ -137,3 +138,43 @@ datos temporales.
 No se persiste el borrador anónimo. Tampoco se añaden tablas genéricas de roles,
 proveedores o eventos: no son necesarias para esta entrega y adelantarían
 decisiones ya aplazadas.
+
+## Ampliación por sets: voleibol
+
+La migración incremental 00017 añade `volleyball` y exige explícitamente
+`best_of_sets = 5` no nulo; no modifica migraciones publicadas. Reutiliza
+`match_sets` y `match_result_change_sets` para liga, desempate y cuadro:
+orden, puntos no negativos y frontera `smallint`; el dominio valida el tanteo
+del deporte. Una corrección o retirada sustituye la proyección actual y añade
+su nueva instantánea atómicamente. La finalización lee la misma proyección con
+parciales que la clasificación pública para elegir los campeones por cocientes.
+
+No se guardan ratios redondeados ni otra tabla de clasificación. Los totales
+de sets y tantos se derivan de los resultados; la comparación usa productos
+cruzados `int64`, con casos explícitos positivo/0 y 0/0.
+
+## Perfil cerrado de puntos: bádminton
+
+La migración 00018 añade `tournaments.points_per_game smallint`. Exige 15 o 21
+no nulos exclusivamente para `badminton`, junto a `best_of_sets = 3`; en los
+demás deportes exige NULL. No reescribe torneos anteriores. Creación directa,
+borradores autenticados y lectura conservan el dato. El dominio valida las
+reglas y el inicio restringe bádminton a eliminatoria directa. Los juegos y sus
+correcciones reutilizan `match_sets` y `match_result_change_sets`; no se añade
+otra tabla ni se recalculan reglamentos por fecha.
+
+## Incidencias e instantáneas (ADR-0142)
+
+La migración incremental 00019 amplía `result_type` con `no_show` y
+`retirement`, y añade `matches.incident jsonb` para el objeto cerrado de motivo,
+lado y parcial opcional. El tanteo principal y `match_sets` siguen representando
+el resultado administrativo usado por clasificación y cuadro. No se inventan
+sets jugados en raqueta. El dominio valida todas las reglas deportivas; los
+CHECK garantizan coherencia básica entre estado, tipo y metadata.
+
+`match_result_changes` incorpora `incident`, `previous_incident` y
+`previous_result_type`. Una única transacción conserva el estado previo y el
+nuevo en liga, cuadro y desempate. Corregir a jugado elimina la metadata actual
+y conserva la anterior en historial; la retirada completa hace lo mismo.
+Actualizar otro partido del cuadro conserva su incidencia. No hay tablas
+polimórficas nuevas, cambios de roster ni reescritura de migraciones antiguas.

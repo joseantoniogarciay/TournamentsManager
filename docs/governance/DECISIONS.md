@@ -49,6 +49,10 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0141](../adr/0141-support-badminton-with-point-games.md) | Soportar bádminton con juegos por puntos | Aceptado | 2026-10-03 |
+| [0142](../adr/0142-record-match-incidents-across-sports.md) | Registrar incidencias por partido en todos los deportes | Aceptado | 2026-10-03 |
+| [0136](../adr/0136-support-table-tennis-with-point-games.md) | Soportar tenis de mesa con juegos por puntos | Aceptado | 2026-10-02 |
+| [0137](../adr/0137-support-volleyball-across-tournament-stages.md) | Soportar voleibol en liga, eliminatoria y formato mixto | Aceptado | 2026-10-02 |
 | [0135](../adr/0135-support-tennis-and-padel-with-set-results.md)                              | Soportar tenis y pádel con resultados por sets                                  | Aceptado              | 2026-09-23 |
 | [0134](../adr/0134-support-handball-with-an-explicit-sport-profile.md)                        | Soportar balonmano con un perfil deportivo explícito                            | Aceptado              | 2026-09-21 |
 | [0133](../adr/0133-compose-league-and-knockout-stages.md)                                     | Componer liga y eliminatoria en un mismo torneo                                 | Aceptado              | 2026-09-20 |

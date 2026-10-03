@@ -14,4 +14,6 @@ export type MatchResultType = (typeof MatchResultType)[keyof typeof MatchResultT
 export const MatchResultType = {
   played: "played",
   administrative: "administrative",
+  no_show: "no_show",
+  retirement: "retirement",
 } as const;

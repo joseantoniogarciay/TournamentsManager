@@ -26,7 +26,8 @@
     "openapi:ui": "scalar document serve contracts/openapi/v1/openapi.yaml --watch --port 8083",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run openapi:lint",
     "verify": "pnpm run check",
-    "test:dependencies": "node --test tests/dependency-compatibility.test.mjs"
+    "test:dependencies": "node --test tests/dependency-compatibility.test.mjs",
+    "test:match-incidents": "node --test tests/match-incidents.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

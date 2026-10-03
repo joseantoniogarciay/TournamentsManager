@@ -12,4 +12,5 @@ export type PublicTournamentBestOfSets =
 export const PublicTournamentBestOfSets = {
   NUMBER_3: 3,
   NUMBER_5: 5,
+  NUMBER_7: 7,
 } as const;

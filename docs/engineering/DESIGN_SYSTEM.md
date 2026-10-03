@@ -223,6 +223,17 @@ detección y la selección de catálogo se centralizan en `shared/i18n/locale.ts
 
 ## Errores de formulario
 
+El diálogo de resultados coloca campos y acción Guardar en el mismo contenido
+desplazable, limitado al 85 % de la altura disponible. Los sets se presentan
+como filas con dos columnas de tanteo y sus cabeceras una sola vez; cada campo
+conserva una etiqueta accesible localizada con número de set o juego y lado.
+Los campos flexibles permiten reducir su ancho con `minWidth: 0`, incluido el
+`TextInput`, para que su tamaño intrínseco web no desborde columnas estrechas.
+`ModalDialog` ofrece `avoidKeyboard` para formularios nativos: adapta el espacio
+al teclado mediante la primitiva compartida, sin alterar los diálogos que no
+solicitan ese comportamiento. En pantallas bajas se desplaza también Guardar;
+no se superpone a los últimos campos.
+
 La validación de formato se ejecuta al abandonar un campo y al intentar enviar.
 Como excepción acotada, `TextField` permite validarla al cambiar el texto cuando
 el feedback inmediato ayuda a completar un requisito, como la longitud mínima
@@ -258,3 +269,45 @@ La clasificación compartida solo distingue un rechazo de transporte marcado por
 antes los estados del contrato que cambian la recuperación de la persona (por
 ejemplo, un límite de solicitudes o un `404` que hace inútil reintentar); no se
 centralizan `status`, `type` ni copy de negocio que todavía no se repitan.
+
+Tenis de mesa añade elección de 3, 5 o 7 juegos y reutiliza el vocabulario de
+participantes. El editor etiqueta juegos y puntos, permite tanteos de hasta
+cinco dígitos y conserva la validación del encuentro completo y el feedback seguro.
+
+Voleibol reutiliza equipos, fases y editor de sets; muestra puntos y ayuda
+25/15, con mejor de cinco fijo. La clasificación conserva equipo y puntos
+fijos y desplaza nueve estadísticas (partidos, ganados, perdidos, sets,
+cociente de sets, tantos y cociente de tantos). Los cocientes visibles usan
+hasta tres decimales según locale; ∞ representa positivo/0. El orden procede
+siempre de la proyección del backend.
+
+La «i» abre el `ModalDialog` compartido con contenido desplazable y altura
+máxima relativa: título, deporte, significado exacto de las abreviaturas,
+tanteo, puntos, orden, igualdades y retirada. El formato mixto añade corte,
+siembra y ciclos de desempate. Todo el copy se mantiene en es/en/it/fr; la
+explicación de cada deporte corresponde a la regla vigente, sin fallback a
+fútbol para los perfiles por sets.
+
+### Selector de puntos de bádminton
+
+Creación reutiliza `ConfigurationOption` para 21/15 puntos y muestra la regla
+fija al mejor de tres. Los cuatro catálogos incluyen selector, resumen y ayudas
+según perfil. El resultado reutiliza las filas compactas del diálogo por sets,
+con puntos, juegos y etiquetas accesibles por lado. Guardar queda dentro del
+scroll y se habilita solo con dos victorias válidas según el perfil persistido.
+
+### Selector de incidencias de resultado
+
+El `ModalDialog` de resultado reutiliza `ConfigurationOption` para
+Marcador/Incidencia, motivo y participante afectado. Las opciones ajustan nombres
+largos con `maxWidth: "100%"`, conservando tokens, semántica y objetivo táctil.
+Abandono reutiliza los campos compactos de parcial y muestra la victoria antes
+de Guardar, que permanece dentro del scroll. `IncidentSummary` comparte la
+lectura en liga y cuadro, con parcial real y resultado administrativo etiquetado
+cuando afecta a clasificación. Todo el copy vive en es/en/fr/it.
+
+Revisión del JSX real en una ruta efímera sin envíos: 320×480 con nombre largo
+y parcial de pádel, y 390×844 para baloncesto. La secuencia de dos sets
+incompletos bloquea Guardar. La ruta se retira antes de exportar. El teclado
+nativo requiere validación posterior en dispositivo; el viewport web no lo
+acredita.

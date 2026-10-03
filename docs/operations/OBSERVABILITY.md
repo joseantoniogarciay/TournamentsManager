@@ -268,3 +268,74 @@ mínima sigue siendo una pregunta respondida de extremo a extremo y validada
 provocando un fallo. La desviación de retención de seguridad se registra en
 [LOG_RETENTION.md](LOG_RETENTION.md), no se disfraza ampliando señales sin un
 destino adecuado.
+
+### Recorrido de resultados por sets (ADR-0136 y ADR-0137)
+
+- Éxito: `200` conserva un único span HTTP con plantilla y el límite PostgreSQL;
+  corrección, retirada y avance mantienen historial atómico. Sin spans por set,
+  validación, rama ni comparación de cocientes.
+- Rechazo de entrada: `400` por campos ausentes/nulos, configuración o secuencia
+  inválidas; `validation.rejected` cerrado. Pruebas de forma HTTP y de dominio
+  comprueban los límites; cero explícito sigue siendo válido.
+- No hay limitador específico en estos endpoints. Un eventual límite común
+  conserva `rate_limit.exceeded`; no se inventa otro flujo de feature.
+- Sesión/autorización, ausencia y estado: `401/403/404/409` seguros, causas
+  cerradas existentes. El `409` de resultado cubre la fase congelada, dependencia
+  del cuadro y rechazo de sobrescribir un resultado administrativo de voleibol.
+- Límites técnicos: adquirir conexión, consulta y transacción/commit conservan
+  las categorías seguras de `RecordDatabaseEndpointFailure`, sin error bruto.
+  El `500` no expone cuerpos internos; cliente no mapea estos estados a negocio.
+- Cancelación: misma categoría segura común en raíz; una cancelación intencional
+  del cliente no muestra feedback. Sin diagnósticos con deporte, sets, ratios,
+  inputs, IDs o PII.
+
+Validación: forma de payload con span seguro; secuencias de sets y cocientes
+exactos en dominio; integración PostgreSQL para corrección, retirada, campeón
+por tantos, grupos, desempate repetido y final. Se reutiliza el mapeo cerrado del
+adaptador cliente de resultados y las pruebas existentes de fallbacks.
+
+### Recorrido de bádminton con perfil 15/21 (ADR-0141)
+
+- Éxito: creación `201`, lectura y resultado `200`; configuración persistida,
+  historial atómico y ganadora derivados. Se conservan span HTTP de plantilla y
+  límites PostgreSQL, sin span por perfil, juego, validación o rama.
+- Validación `400`: perfil ausente/ajeno, mejor de tres inválido, secuencia o
+  tope inválidos; `validation.rejected` en raíz, cerrado y sin valores de input.
+- Tasa: no hay limitador específico de creación/resultado; los límites de
+  autenticación al transferir borradores mantienen `rate_limit.exceeded`.
+- Negocio: `401/403/404/409` seguros y causas existentes de acceso, ausencia,
+  transición o dependencia del cuadro. No se crean causas por puntuación.
+- Fallos de adquisición de conexión, consulta y transacción/commit conservan
+  las categorías de `RecordDatabaseEndpointFailure`; `500` seguro sin error
+  bruto. No se añaden mappings cliente por estado técnico.
+- Cancelación: categoría segura común en raíz, sin feedback si el cliente
+  cancela intencionadamente; sin exportar puntos, nombres, IDs, secretos o PII.
+
+Validación añadida: HTTP rechaza configuración inválida con span seguro, creación
+y borradores conservan el perfil; dominio cubre ambos topes; integración
+PostgreSQL desechable verifica creación, lectura, restricciones, correcciones,
+historial, dependencia y campeón. Se reutilizan las pruebas existentes de
+fallos técnicos, cancelación y feedback común, sin nuevos límites técnicos.
+
+### Recorrido de incidencias por partido (ADR-0142)
+
+- Éxito `200`: resultado administrativo, parcial separado e historial atómico;
+  se conserva el span HTTP con plantilla de ruta y los límites PostgreSQL.
+- Validación `400`: variante mezclada, tipo/lado desconocido, campos no
+  admitidos o parcial imposible; `validation.rejected` seguro en raíz. No se
+  añade span por motivo, set, validación o rama.
+- Tasa: la operación no tiene un limitador específico; no se inventa una
+  salida `429`. Los límites de autenticación conservan su recorrido vigente.
+- Negocio `401/403/404/409`: permisos, ausencia, fase congelada, dependencia o
+  resultado administrativo bloqueado; se mantienen las causas cerradas
+  existentes, sin inferir reglas centrales por estado HTTP.
+- Límites técnicos: adquisición de conexión, consulta y transacción/commit
+  mantienen las categorías de `RecordDatabaseEndpointFailure`; respuesta
+  segura `500`, sin exportar error bruto, tanteos, nombres, IDs o PII.
+- Cancelación: conserva la categoría común segura en raíz; el cliente no
+  muestra feedback cuando la cancelación es intencional.
+
+HTTP comprueba formas cerradas, feedback y razón de validación; dominio cubre
+los ocho deportes; PostgreSQL desechable cubre correcciones, historial, lectura,
+clasificación, dependencias y ciclos de desempate. Los límites técnicos y
+cancelación reutilizan las pruebas existentes, sin nuevos límites ni causas.

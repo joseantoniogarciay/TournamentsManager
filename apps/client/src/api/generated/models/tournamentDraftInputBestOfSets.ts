@@ -7,7 +7,7 @@
  */
 
 /**
- * Obligatorio para tenis; pádel exige 3. Debe omitirse en el resto de deportes.
+ * Tenis exige 3 o 5; pádel 3; tenis de mesa 3, 5 o 7; voleibol 5; bádminton 3. Debe omitirse en el resto de deportes.
  */
 export type TournamentDraftInputBestOfSets =
   (typeof TournamentDraftInputBestOfSets)[keyof typeof TournamentDraftInputBestOfSets];
@@ -15,4 +15,5 @@ export type TournamentDraftInputBestOfSets =
 export const TournamentDraftInputBestOfSets = {
   NUMBER_3: 3,
   NUMBER_5: 5,
+  NUMBER_7: 7,
 } as const;

@@ -9,12 +9,12 @@
 export interface SetResult {
   /**
    * @minimum 0
-   * @maximum 7
+   * @maximum 32767
    */
   homeScore: number;
   /**
    * @minimum 0
-   * @maximum 7
+   * @maximum 32767
    */
   awayScore: number;
 }
