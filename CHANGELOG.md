@@ -6,6 +6,36 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.8.3] - 2026-10-03
+
+### Security
+
+- Actualiza image-size a 2.0.4 y decode-uri-component a 0.5.0 mediante
+  adaptaciones versionadas de Metro y query-string, sin cambiar Expo ni
+  React Native. Añade regresiones de imágenes y queries al gate de CI.
+- La auditoría prod conserva dos altos sin corrección publicada; quedan
+  cero moderados y cero críticos. Promoción primero en dev y después en prod.
+
+## [1.8.2] - 2026-10-03
+
+### Security
+
+- Corrige dependencias JavaScript transitivas compatibles mediante overrides
+  exactos y conserva la espera de siete días sin excepciones de Expo. La API
+  y el renderer mantienen el parche v1.8.1.
+
+## [1.8.1] - 2026-10-03
+
+### Security
+
+- Corrige las dependencias Go de la API con OpenTelemetry 1.45.0, x/crypto
+  0.56.0, x/net 0.58.0 y gRPC 1.83.2, sin cambios funcionales ni migraciones.
+- Parchea también el grafo independiente de Goose y herramientas, conservando
+  las versiones de las herramientas y la espera de siete días.
+- Documenta la auditoría de imágenes y Ubuntu, y fija Traefik 3.7.13 por digest
+  mediante HelmChartConfig. Se aplican K3s 1.36.4 y cinco parches Ubuntu maduros;
+  el informe conserva los avisos sin parche y las versiones aún en maduración.
+
 ## [1.8.0] - 2026-09-23
 
 ### Added

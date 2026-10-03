@@ -3523,3 +3523,30 @@ K3s y también que sus componentes base siguen sanos.
 - **Recuperación:** la promoción conserva el binario anterior hasta superar
   readiness; si el proceso nuevo no sirve el shell activo con el SHA esperado,
   restaura el ejecutable previo y termina con error visible.
+
+
+### 2026-10-03 — Parches productivos desde un release aislado
+
+- **Evidencia:** tests, race, build, tidy y govulncheck validan las dependencias Go parcheadas. Traefik 3.7.13 y K3s 1.36.4 completan rollout; web y API conservan HTTP 200.
+- **Aprendizaje:** Launchpad puede publicar días después de la fecha del changelog; la espera se calcula con la publicación real. Un CVE de una dependencia embebida tampoco demuestra ejecución de su función.
+- **Retrospectiva:** aislar el parche desde v1.8.0 evita publicar funcionalidad pendiente. La auditoría conserva avisos sin parche y no fuerza cambios de distribución o kernel para vaciar contadores.
+- **Registro:** [Parches de seguridad](../operations/SECURITY_PATCHES_2026-10-03.md).
+
+## 2026-10-03 — Correcciones transitivas y compatibilidad
+
+Un aviso no autoriza a sustituir la API de una dependencia: image-size 2 elimina
+la lectura síncrona por ruta usada por Metro, y query-string 6 necesita CommonJS.
+Conservar consumidores compatibles, comprobar publicaciones oficiales y usar
+overrides precisos permite corregir el resto del grafo sin migrar Expo. Los
+overrides se retirarán cuando los rangos de consumidores incorporen el parche.
+La auditoría del lockfile debe acompañarse de CI y exportación antes de publicar.
+
+## 2026-10-03 — Adaptar consumidores de una corrección publicada
+
+Metro 0.84.4 necesita convertir rutas a bytes para image-size 2; query-string
+7.1.3 necesita el export default del decoder ESM. Dos parches de pnpm con
+hashes y overrides por consumidor evitan migrar el SDK completo. Las pruebas
+usan esos consumidores reales, verifican imágenes/escala y queries UTF-8
+malformadas, y se integran en make verify. El decoder conserva su sustitución
+por U+FFFD para %C2 incompleto; no se inventa una semántica distinta en el test.
+Los parches se retiran cuando el consumidor soporta la nueva interfaz.
