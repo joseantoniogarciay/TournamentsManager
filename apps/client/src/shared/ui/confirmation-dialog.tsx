@@ -13,6 +13,7 @@ import { useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import {
   BackHandler,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -47,6 +48,7 @@ type ModalDialogProps = {
   onDismiss: () => void;
   children: ReactNode;
   dialogStyle?: StyleProp<ViewStyle>;
+  avoidKeyboard?: boolean;
 };
 
 type ConfirmationDialogContextValue = {
@@ -149,6 +151,7 @@ export function ModalDialog({
   onDismiss,
   children,
   dialogStyle,
+  avoidKeyboard = false,
 }: ModalDialogProps) {
   const { colors } = usePreferences();
   const [webScrimVisible, setWebScrimVisible] = useState(false);
@@ -181,7 +184,12 @@ export function ModalDialog({
       transparent
       visible={visible}
     >
-      <View accessibilityViewIsModal style={styles.backdrop}>
+      <KeyboardAvoidingView
+        accessibilityViewIsModal
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        enabled={avoidKeyboard && Platform.OS !== "web"}
+        style={styles.backdrop}
+      >
         {Platform.OS === "web" ? (
           <View
             pointerEvents="none"
@@ -217,7 +225,7 @@ export function ModalDialog({
         >
           {children}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

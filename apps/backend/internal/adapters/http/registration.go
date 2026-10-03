@@ -91,7 +91,7 @@ func toRegistrationDraft(draft *leagueInput) *registration.Draft {
 	for index, team := range draft.Teams {
 		teams[index] = team.Name
 	}
-	normalized := registration.NormalizeInput(registration.Input{Draft: &registration.Draft{ID: draft.DraftID, Name: draft.Name, Sport: draft.Sport, BestOfSets: draft.BestOfSets, Teams: teams}})
+	normalized := registration.NormalizeInput(registration.Input{Draft: &registration.Draft{ID: draft.DraftID, Name: draft.Name, Sport: draft.Sport, BestOfSets: draft.BestOfSets, PointsPerGame: draft.PointsPerGame, Teams: teams}})
 	return normalized.Draft
 }
 
@@ -127,7 +127,7 @@ func register(service registration.Service, limiter *requestLimiter, resolveClie
 			for index, team := range body.Draft.Teams {
 				teams[index] = team.Name
 			}
-			input.Draft = &registration.Draft{ID: body.Draft.DraftID, Name: body.Draft.Name, Sport: body.Draft.Sport, BestOfSets: body.Draft.BestOfSets, Teams: teams}
+			input.Draft = &registration.Draft{ID: body.Draft.DraftID, Name: body.Draft.Name, Sport: body.Draft.Sport, BestOfSets: body.Draft.BestOfSets, PointsPerGame: body.Draft.PointsPerGame, Teams: teams}
 		}
 		input = registration.NormalizeInput(input)
 		if !validRegistration(input) || input.TermsVersion != legal.CurrentTermsVersion || !validRegistrationDraft(input.Draft) {
@@ -156,7 +156,7 @@ func validRegistrationDraft(draft *registration.Draft) bool {
 	if !uuidPattern.MatchString(draft.ID) || !tournaments.ValidSport(draft.Sport) || len(strings.TrimSpace(draft.Name)) == 0 || utf8.RuneCountInString(draft.Name) > tournaments.MaximumTournamentNameLength || len(draft.Teams) < 1 || len(draft.Teams) > 64 {
 		return false
 	}
-	if draft.Sport == tournaments.SportTennis && draft.BestOfSets != 3 && draft.BestOfSets != 5 || draft.Sport == tournaments.SportPadel && draft.BestOfSets != 3 || !tournaments.RacketSport(draft.Sport) && draft.BestOfSets != 0 {
+	if !tournaments.ValidSetFormat(draft.Sport, draft.BestOfSets) || !tournaments.ValidPointsPerGame(draft.Sport, draft.PointsPerGame) {
 		return false
 	}
 	seen := map[string]bool{}

@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: "center",
     minHeight: control.minHeight,
+    maxWidth: "100%",
     paddingHorizontal: control.horizontalPadding,
   },
 });

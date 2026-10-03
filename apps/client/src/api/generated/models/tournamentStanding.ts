@@ -22,11 +22,27 @@ export interface TournamentStanding {
   drawn: number;
   /** @minimum 0 */
   lost: number;
-  /** @minimum 0 */
+  /**
+   * Sets a favor en voleibol; tanteo acumulado en otros perfiles.
+   * @minimum 0
+   */
   scoreFor: number;
-  /** @minimum 0 */
+  /**
+   * Sets en contra en voleibol; tanteo acumulado en otros perfiles.
+   * @minimum 0
+   */
   scoreAgainst: number;
   scoreDifference: number;
+  /**
+   * Tantos de voleibol a favor; cero en otros perfiles.
+   * @minimum 0
+   */
+  rallyPointsFor: number;
+  /**
+   * Tantos de voleibol en contra; cero en otros perfiles.
+   * @minimum 0
+   */
+  rallyPointsAgainst: number;
   /** @minimum 0 */
   points: number;
 }

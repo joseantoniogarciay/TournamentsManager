@@ -5,10 +5,11 @@
  * Contrato de diseño del primer incremento. No implica que los endpoints estén implementados. Los secretos de sesión y verificación son opacos.
  * OpenAPI spec version: 1.0.0-design
  */
+import type { MatchIncident } from "./matchIncident.js";
 import type { SetResult } from "./setResult.js";
 
 /**
- * En liga se admite el marcador final; baloncesto rechaza empates. En una eliminatoria de fútbol o balonmano, un empate exige ambos marcadores de desempate distintos; el cliente los presenta como penaltis o lanzamientos de siete metros según el deporte. Baloncesto exige un tanteo final no empatado y nunca envía desempate. Esos valores no se suman al marcador del partido. Tenis y pádel envían únicamente los sets; el servidor valida cada tanteo, deriva los sets ganados y rechaza juegos posteriores a la victoria.
+ * En liga se admite el marcador final; baloncesto rechaza empates. En una eliminatoria de fútbol o balonmano, un empate exige ambos marcadores de desempate distintos; el cliente los presenta como penaltis o lanzamientos de siete metros según el deporte. Baloncesto exige un tanteo final no empatado y nunca envía desempate. Esos valores no se suman al marcador del partido. Tenis, pádel, tenis de mesa, voleibol y bádminton envían únicamente los sets; el servidor valida cada tanteo, deriva los sets ganados y rechaza juegos posteriores a la victoria. Una incidencia es exclusiva del marcador jugado; el dominio concede el resultado administrativo al rival y conserva el tanteo parcial aparte, sin afectar con él a la clasificación.
  */
 export type MatchResultInput =
   | {
@@ -24,7 +25,10 @@ export type MatchResultInput =
   | {
       /**
        * @minItems 2
-       * @maxItems 5
+       * @maxItems 7
        */
       sets: SetResult[];
+    }
+  | {
+      incident: MatchIncident;
     };

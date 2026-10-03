@@ -8,6 +8,7 @@
 import type { Match } from "./match.js";
 import type { PublicTournamentBestOfSets } from "./publicTournamentBestOfSets.js";
 import type { PublicTournamentFormat } from "./publicTournamentFormat.js";
+import type { PublicTournamentPointsPerGame } from "./publicTournamentPointsPerGame.js";
 import type { PublicTournamentRoundRobinLegs } from "./publicTournamentRoundRobinLegs.js";
 import type { PublicTournamentSport } from "./publicTournamentSport.js";
 import type { PublicTournamentState } from "./publicTournamentState.js";
@@ -22,6 +23,8 @@ export interface PublicTournament {
   id: Uuid;
   name: string;
   sport: PublicTournamentSport;
+  /** Obligatorio exclusivamente en bádminton; se conserva durante todo el torneo. Debe omitirse en otros deportes. */
+  pointsPerGame?: PublicTournamentPointsPerGame;
   bestOfSets?: PublicTournamentBestOfSets;
   format: PublicTournamentFormat;
   stages: TournamentStage[];

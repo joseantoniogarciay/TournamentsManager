@@ -1,3 +1,4 @@
+import { isSetSport, isValidBestOfSets, isValidPointsPerGame } from "@/shared/tournaments/sport";
 import type { AccountTournament } from "@/api/generated/models/accountTournament";
 import { AccountTournamentRelationship } from "@/api/generated/models/accountTournamentRelationship";
 import { AccountTournamentState } from "@/api/generated/models/accountTournamentState";
@@ -168,7 +169,10 @@ function parseMatch(value: unknown): Match | null {
     if (key in value && !isIntegerAtLeast(value[key], 0)) return null;
   }
   if ("winnerTeamId" in value && !isUUID(value.winnerTeamId)) return null;
-  if ("resultType" in value && !["played", "administrative"].includes(String(value.resultType)))
+  if (
+    "resultType" in value &&
+    !["played", "administrative", "no_show", "retirement"].includes(String(value.resultType))
+  )
     return null;
   if (
     value.state === "completed" &&
@@ -178,6 +182,44 @@ function parseMatch(value: unknown): Match | null {
       !value.awayTeamId)
   )
     return null;
+  const incident = value.incident;
+  const hasIncident = value.resultType === "no_show" || value.resultType === "retirement";
+  if (hasIncident) {
+    if (
+      !isRecord(incident) ||
+      incident.type !== value.resultType ||
+      !["home", "away"].includes(String(incident.side))
+    )
+      return null;
+    const hasPartial = "partialHomeScore" in incident || "partialAwayScore" in incident;
+    if (
+      hasPartial &&
+      (!isIntegerAtLeast(incident.partialHomeScore, 0) ||
+        !isIntegerAtLeast(incident.partialAwayScore, 0) ||
+        incident.partialHomeScore > 2147483647 ||
+        incident.partialAwayScore > 2147483647)
+    )
+      return null;
+    if (
+      "partialSets" in incident &&
+      (!Array.isArray(incident.partialSets) ||
+        incident.partialSets.length < 1 ||
+        incident.partialSets.length > 7 ||
+        incident.partialSets.some(
+          (set) =>
+            !isRecord(set) ||
+            !isIntegerAtLeast(set.homeScore, 0) ||
+            !isIntegerAtLeast(set.awayScore, 0),
+        ))
+    )
+      return null;
+    if (
+      (hasPartial && "partialSets" in incident) ||
+      (incident.type === "no_show" && (hasPartial || "partialSets" in incident))
+    )
+      return null;
+    if (value.state !== "completed") return null;
+  } else if (incident !== undefined) return null;
   if (value.state === "bye" && !isUUID(value.winnerTeamId)) return null;
   if (value.state === "completed" && !("resultType" in value)) return null;
   return value as unknown as Match;
@@ -262,6 +304,8 @@ function parseTournamentStanding(value: unknown): TournamentStanding | null {
     !isIntegerAtLeast(value.scoreFor, 0) ||
     !isIntegerAtLeast(value.scoreAgainst, 0) ||
     !isIntegerAtLeast(value.points, 0) ||
+    !isIntegerAtLeast(value.rallyPointsFor, 0) ||
+    !isIntegerAtLeast(value.rallyPointsAgainst, 0) ||
     typeof value.scoreDifference !== "number" ||
     !Number.isInteger(value.scoreDifference)
   ) {
@@ -280,6 +324,8 @@ function parseTournamentStanding(value: unknown): TournamentStanding | null {
     scoreAgainst: value.scoreAgainst,
     scoreDifference: value.scoreDifference,
     points: value.points,
+    rallyPointsFor: value.rallyPointsFor,
+    rallyPointsAgainst: value.rallyPointsAgainst,
   };
 }
 
@@ -322,18 +368,18 @@ export function parsePublicTournament(value: unknown): PublicTournament | null {
   ) {
     return null;
   }
-  const racket = value.sport === "tennis" || value.sport === "padel";
+  const racket = isSetSport(String(value.sport));
   if (
-    (racket && value.bestOfSets !== 3 && value.bestOfSets !== 5) ||
-    (value.sport === "padel" && value.bestOfSets !== 3) ||
-    (!racket && value.bestOfSets !== undefined)
+    !isValidBestOfSets(String(value.sport), value.bestOfSets) ||
+    !isValidPointsPerGame(String(value.sport), value.pointsPerGame)
   )
     return null;
   return {
     id: value.id,
     name: value.name,
     sport: value.sport as PublicTournament["sport"],
-    ...(racket ? { bestOfSets: value.bestOfSets as 3 | 5 } : {}),
+    ...(racket ? { bestOfSets: value.bestOfSets as 3 | 5 | 7 } : {}),
+    ...(value.sport === "badminton" ? { pointsPerGame: value.pointsPerGame as 15 | 21 } : {}),
     format: value.format as PublicTournament["format"],
     state: value.state as PublicTournament["state"],
     roundRobinLegs: value.roundRobinLegs,
@@ -364,18 +410,18 @@ export function parsePublishedTournament(value: unknown): PublishedTournament | 
   ) {
     return null;
   }
-  const racket = value.sport === "tennis" || value.sport === "padel";
+  const racket = isSetSport(String(value.sport));
   if (
-    (racket && value.bestOfSets !== 3 && value.bestOfSets !== 5) ||
-    (value.sport === "padel" && value.bestOfSets !== 3) ||
-    (!racket && value.bestOfSets !== undefined)
+    !isValidBestOfSets(String(value.sport), value.bestOfSets) ||
+    !isValidPointsPerGame(String(value.sport), value.pointsPerGame)
   )
     return null;
   return {
     id: value.id,
     name: value.name,
     sport: value.sport as PublishedTournament["sport"],
-    ...(racket ? { bestOfSets: value.bestOfSets as 3 | 5 } : {}),
+    ...(racket ? { bestOfSets: value.bestOfSets as 3 | 5 | 7 } : {}),
+    ...(value.sport === "badminton" ? { pointsPerGame: value.pointsPerGame as 15 | 21 } : {}),
     state: value.state as PublishedTournament["state"],
     teams,
     matches,

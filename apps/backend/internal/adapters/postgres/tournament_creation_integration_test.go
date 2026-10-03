@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgconn"
+
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
@@ -97,5 +99,18 @@ func TestIntegrationTournamentCreationAndStartWithPostgres(t *testing.T) {
 	cancelledPublished, err := service.Cancel(ctx, accountID, published.ID)
 	if err != nil || cancelledPublished.State != "cancelled" {
 		t.Fatalf("cancelar liga publicada = %#v, %v; se esperaba cancelled", cancelledPublished, err)
+	}
+}
+
+func TestIntegrationSetSportConfigurationCannotBeNull(t *testing.T) {
+	pool := integrationPool(t)
+	ctx := context.Background()
+	owner := createVerifiedLocalAccount(t, ctx, pool, "set_config@example.test", "set_config_owner", "correct horse battery staple")
+	for _, sport := range []string{"tennis", "padel", "table_tennis", "volleyball"} {
+		_, err := pool.Exec(ctx, `INSERT INTO tournaments (organizer_account_id,name,sport,best_of_sets,published_at) VALUES ($1,'Missing set format',$2,NULL,now())`, owner, sport)
+		var violation *pgconn.PgError
+		if !errors.As(err, &violation) || violation.Code != "23514" || violation.ConstraintName != "tournaments_set_format_check" {
+			t.Fatalf("%s without configuration: %v, want set format constraint violation", sport, err)
+		}
 	}
 }

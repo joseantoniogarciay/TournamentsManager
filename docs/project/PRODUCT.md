@@ -28,9 +28,10 @@ reglas estén definidas.
 - Una misma cuenta admite credenciales locales y login con Google. Apple no está
   adoptado en v1 y se revisa antes de distribuir el cliente iOS.
 - El torneo declara un deporte inmutable elegido entre `football`, `basketball`,
-  `handball`, `tennis` y `padel`; «Fútbol» engloba fútbol sala en esta iteración.
+  `handball`, `tennis`, `padel`, `table_tennis` y `volleyball`; «Fútbol» engloba fútbol sala en esta iteración.
   Tenis permite partidos al mejor de tres o cinco sets y pádel fija tres
-  (ADR-0126, ADR-0134 y ADR-0135).
+  (ADR-0126, ADR-0134 y ADR-0135). Tenis de mesa elige 3, 5 o 7 juegos
+  (ADR-0136); voleibol usa cinco sets y admite los tres formatos (ADR-0137).
 - El recurso raíz es un torneo. La liga existente se conserva como formato
   `league`; también existe la eliminatoria directa a partido único como formato
   `single_elimination`; `league_then_single_elimination` encadena una liga
@@ -300,8 +301,8 @@ no bloquean el primer vertical slice.
 
 ### Incremento aceptado de liga más eliminatoria
 
-ADR-0133 acepta una composición de dos fases que todavía no forma parte del
-contrato ni de las aplicaciones vigentes. La organizadora podrá elegir liga
+ADR-0133 incorpora una composición de dos fases al contrato y las aplicaciones.
+La organizadora puede elegir liga
 general o grupos equilibrados, una o dos vueltas y las plazas clasificadas. El
 total de clasificadas formará un cuadro completo sin _byes_. Al terminar la
 primera fase, una confirmación explícita congelará su clasificación e iniciará
@@ -323,6 +324,22 @@ tres. Cada set normal con tie-break termina `6-0` a `6-4`, `7-5` o `7-6`, y el
 partido termina en cuanto una participante alcanza la mayoría. No se modelan
 super tie-break, advantage set, abandono ni incomparecencia. El nombre de cada
 participante puede representar una persona o pareja, sin plantilla individual.
+
+ADR-0137 incorpora `volleyball` en liga, eliminatoria directa y formato mixto
+(tabla única o grupos). Se juega al mejor de cinco: primeros cuatro sets a 25,
+quinto a 15, siempre con diferencia de dos, sin sets tras conseguir tres.
+El agregado se deriva de los parciales. Ganar 3–0/3–1 suma 3 puntos; ganar 3–2
+suma 2; perder 2–3 suma 1; otras derrotas suman 0. La tabla ordena por victorias,
+puntos, cociente de sets y cociente de tantos; compara fracciones exactas.
+Positivo/0 es infinito; 0/0 cuenta como cero. No añade enfrentamiento directo.
+Un empate exacto comparte posición; si cruza el corte de clasificación, la fase
+de desempate juega con las mismas reglas y puede repetir ciclos. Entre grupos
+se siembra por posición y esos criterios, con la semilla solo como orden estable.
+
+La «i» muestra las reglas del deporte del torneo: tanteo, puntos, significado
+de cada columna, orden, desempates y retirada. En voleibol diferencia puntos
+de clasificación de tantos, explica ambos cocientes y advierte que el redondeo
+de hasta tres decimales solo afecta a la presentación.
 
 En fútbol, una liga puntúa 3-1-0. En dos vueltas prioriza la
 mini-clasificación entre empatados y en una, diferencia de goles y goles a favor
@@ -356,7 +373,10 @@ los administradores delegados pueden registrar o corregir resultados. El creador
 solo puede finalizarla cuando todos sus partidos tienen resultado. Si un equipo abandona en
 `en_curso`, solo el creador puede declararlo: todos sus partidos, pendientes o
 ya jugados, pasan a resultado administrativo fijo a favor del rival (`3-0` en
-fútbol, `20-0` en baloncesto o `10-0` en balonmano) y la liga continúa. El valor
+fútbol, `20-0` en baloncesto, `10-0` en balonmano o `3-0` con tres sets `25-0`
+en voleibol) y la liga continúa. La baja conserva el historial anterior y excluye
+al equipo de la eliminatoria del formato mixto. Los resultados administrativos
+de voleibol no admiten sobrescritura manual. El valor
 no es configurable.
 
 ## Cancelación
@@ -427,3 +447,36 @@ solicitar una baja lógica de 30 días: se invalidan de inmediato sus sesiones y
 se retiran sus seguimientos y administraciones delegadas. Si organiza alguna
 liga, debe cancelarla o transferirla antes. La transferencia directa se define
 en ADR-0095.
+
+## Tenis de mesa — ADR-0136
+
+Tenis de mesa usa participantes individuales o parejas y solo eliminatoria
+directa. La creación elige al mejor de 3, 5 o 7 juegos. Cada juego se registra
+por puntos: 11 con diferencia de dos, continuando desde 10–10 hasta obtenerla.
+El encuentro termina al alcanzar 2, 3 o 4 juegos ganados respectivamente.
+No se incorporan ligas ni plantillas. Las incidencias se amplían en ADR-0142.
+
+## Bádminton — ADR-0141
+
+Bádminton admite personas o parejas en eliminatoria directa, al mejor de tres
+juegos. Al crear se eligen 21 o 15 puntos por juego (21 por defecto); la elección
+se conserva desde el borrador y no cambia por fecha. Ambos perfiles exigen
+diferencia de dos salvo en el tope: 30–29 para 21, y 21–20 para 15. No se
+admiten juegos parciales ni posteriores a la segunda victoria. Las correcciones
+conservan historial y las restricciones del cuadro. Ligas y mixto quedan fuera del incremento; ADR-0142 amplía las incidencias.
+
+## Incidencias por partido — ADR-0142
+
+Los ocho deportes admiten incomparecencia y abandono en sus formatos y fases
+vigentes. Añadir/Editar resultado ofrece Marcador o Incidencia; se eligen motivo
+y participante afectado. Su rival recibe la victoria. El abandono permite
+conservar el tanteo parcial real, que nunca determina la ganadora ni suma a la
+clasificación. No se retira al participante ni se modifican sus otros partidos.
+
+En liga y desempate se aplica el resultado administrativo aprobado: fútbol
+3–0, baloncesto 20–0, balonmano 10–0 y voleibol 3–0 con sets 25–0. En raqueta
+se adjudican los sets/juegos necesarios sin inventar parciales jugados. La
+lectura identifica motivo, participante, ganadora y parcial; en liga etiqueta
+además el resultado administrativo. Correcciones, permisos, congelación de
+fases, dependencias del cuadro e historial conservan las reglas existentes.
+Doble ausencia, suspensión y sanciones configurables siguen fuera del alcance.

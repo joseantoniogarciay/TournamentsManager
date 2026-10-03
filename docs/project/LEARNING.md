@@ -3550,3 +3550,151 @@ usan esos consumidores reales, verifican imágenes/escala y queries UTF-8
 malformadas, y se integran en make verify. El decoder conserva su sustitución
 por U+FFFD para %C2 incompleto; no se inventa una semántica distinta en el test.
 Los parches se retiran cuando el consumidor soporta la nueva interfaz.
+
+### 2026-10-02 — Ausencia y cero son estados distintos en una frontera
+
+- **Aprendido:** decodificar un entero JSON directamente en un `int` convierte
+  ausencia y `null` en cero. Un marcador parcial puede convertirse así en una
+  victoria válida aunque el contrato exija ambos tanteos.
+- **Regla reutilizable:** el adaptador HTTP comprueba presencia mediante punteros
+  antes de construir valores del dominio. Las pruebas cubren ausencia, `null`,
+  un elemento nulo y cero explícito, y verifican `validation.rejected` sin datos.
+- **PostgreSQL:** un `CHECK` solo rechaza `false`, no `NULL`; las condiciones
+  obligatorias necesitan `IS NOT NULL`. La reparación es una migración nueva.
+- **Retrospectiva:** las pruebas de dominio e integración del flujo válido no
+  sustituían los casos incompletos del contrato ni la restricción SQL directa.
+
+### 2026-10-02 — Compartir sets no implica compartir su tanteo
+
+- **Aprendido:** tenis de mesa reutiliza el orden, agregado e historial de sets,
+  pero necesita puntos y ventaja de dos en vez de juegos de tenis.
+- **Regla reutilizable:** un perfil cerrado selecciona la regla de tanteo en el
+  dominio. La configuración de sets se valida en un único punto reutilizado por
+  creación y borradores, sin inventar un motor configurable.
+- **Retrospectiva:** el límite de cinco sets de v1.8.0 existía en contrato, SQL
+  y UI; ampliar a siete exige revisar todas esas fronteras y conservar tests de
+  tenis y pádel para impedir regresiones.
+
+### 2026-10-02 — Clasificar por cocientes exige conservar los parciales
+
+- **Aprendido:** el marcador 3–2 permite calcular puntos y sets, pero no el
+  cociente de tantos. La lectura usada para finalizar debe incluir los mismos
+  parciales que la proyección pública, o puede elegir campeones distintos.
+- **Regla reutilizable:** reutilizar la lectura transaccional del torneo en
+  finalización; una corrección o baja sustituye los parciales actuales y conserva
+  la instantánea anterior en historial. Los cocientes se comparan por productos
+  cruzados, con positivo/0 y 0/0 explícitos; el redondeo solo presenta el valor.
+- **Interfaz:** una explicación por deporte define tanto columnas como reglas;
+  puntos de clasificación y tantos no son intercambiables. El contenido largo
+  y los editores de cinco/siete parciales necesitan desplazamiento con acciones
+  visibles. Un contenedor desplazable no reutiliza stacks con flex expansivo,
+  que separaban el título del formulario con un hueco grande.
+- **Retrospectiva:** se eligió un perfil cerrado, con coste medio de mantenimiento,
+  reutilizando fases, historial y transporte. No fue necesario crear un motor
+  configurable. Dominio, HTTP, integración real, carreras, lint Go, SQLC,
+  generación determinista, typecheck y exportación web validan el incremento.
+  La revisión visual web cubre selección 3/5/7 persistida, ayuda en ancho de
+  escritorio y 390 px, y corrección 3–2 → 3–0 con actualización de clasificación.
+  No se ha validado en binarios nativos ni desplegado.
+- **Límite del cierre:** govulncheck detectó GO-2026-6505 en la dependencia previa
+  otlptrace 1.43.0 (corrección indicada: 1.45.0). Los módulos no cambiaron con
+  los deportes; la comprobación de seguridad global sigue fallando y requiere
+  una actualización de dependencias separada. Las pruebas funcionales aprobadas
+  no se presentan como una verificación global verde.
+
+
+## 2026-10-03 — Resultados por sets en pantallas estrechas
+
+Problema: el formulario de pádel repetía dos etiquetas largas por set y separaba
+Guardar del scroll. La altura crecía con los sets y el teclado dejaba menos
+espacio. Un `TextInput` web flexible conservaba además su ancho intrínseco y
+podía desbordar el contenedor aunque el borde del campo pareciera correcto.
+
+Se eligió el arreglo local de menor mantenimiento: cabeceras una vez, filas
+compactas con etiquetas accesibles por set y lado, Guardar al final del mismo
+scroll y `minWidth: 0` en campo y entrada. La alternativa de un pie fijo exige
+reservar su altura y coordinar teclado y scroll; no aporta valor para tres sets.
+El popup comparte una opción de ajuste al teclado nativo. No se cambian reglas
+de resultado, transporte, feedback HTTP ni autorización.
+
+Revisión de cliente: primitivas y tokens existentes, textos de los cuatro
+catálogos existentes, objetivos de 44 px, semántica accesible, bloqueo de envío
+existente y ninguna dependencia nueva. No se tocaron adaptadores OpenAPI.
+La revisión visual se hizo con el JSX real del diálogo en una ruta efímera de
+datos de prueba, retirada después: 390×844, 320×480 y 1280×800. Se comprobó
+que el tercer set y Guardar no se superponen y que siete juegos permiten
+alcanzar Guardar por scroll. No se enviaron resultados a la API.
+Typecheck y exportación web aprobados después de retirar la ruta efímera;
+formato, lint de los tres archivos de cliente y diff sin errores.
+
+Retrospectiva: un borde bien dimensionado no demuestra que la entrada interna
+quepa; hay que medir también sus límites. Un único scroll para campos y acción
+evita compensaciones de altura. La revisión web responsive no valida el teclado
+real de iOS o Android; ese recorrido nativo queda por comprobar. Expo conserva
+la advertencia de matriz SDK ya documentada y aplazada por ADR-0138.
+
+## 2026-10-03 — Bádminton y perfil de puntos por torneo
+
+Problema: añadir bádminton requería representar dos reglamentos cerrados sin
+que el cambio internacional alterase torneos ya creados. La elección explícita
+del usuario autorizó 21/15; ADR-0141 se aceptó antes de implementar. Se comparó
+solo 21 (menor coste), elección persistida (coste moderado de contrato/borradores)
+y motor genérico (mantenimiento desproporcionado). Se implementó la segunda.
+
+La política vive en dominio: mejor de tres, dos victorias, diferencia de dos
+y excepción de un punto al llegar al tope. PostgreSQL conserva el perfil con
+restricción no nula para bádminton y NULL en los demás deportes. Creación,
+lectura, cuadro y borradores local/federado transportan el mismo valor. El
+cliente valida respuestas, muestra ayudas y bloquea tanteos imposibles; no
+sustituye la validación autoritativa ni calcula el reglamento por fecha.
+
+Cierre de cliente: tokens y primitivas compartidas, catálogos planos es/en/fr/it,
+controles de 44 px, cierre existente, etiquetas por juego/lado y bloqueo de
+envío duplicado. Los adaptadores siguen usando operaciones generadas y
+`apiFetch`; sin fetch, DTO, feedback bruto ni mapping HTTP nuevos. Revisión
+visual de creación a 390×844 y del JSX real del diálogo en una ruta efímera
+retirada: 390×844 y 320×480; se verificaron 21–20 y 30–29, exceso de ambos topes
+y acceso a Guardar por scroll. Sin envío de resultados desde la prueba visual.
+
+Suite Go completa e integración PostgreSQL desechable aprobadas, incluidos
+historial, dependencia, campeón, restricciones y borradores idempotentes.
+Lint Go y cliente, typecheck, lint OpenAPI, regeneración idempotente y exportación
+web aprobados. No hay despliegue ni migración en entornos persistentes. La
+comprobación de teclado nativo queda pendiente y se conserva la advertencia
+Expo aplazada por ADR-0138.
+
+Retrospectiva: reutilizar almacenamiento de juegos resulta suficiente, pero
+reutilizar el validador de tenis de mesa habría permitido puntos más allá del
+tope. Un perfil debe acompañar toda la vida del torneo y sus borradores. Dos
+valores cerrados evitan el coste de un motor configurable. Antes de sumar
+otros deportes conviene cubrir incidencias reales; las políticas de abandono
+e incomparecencia y las ligas de raqueta siguen pendientes de decisión.
+
+## 2026-10-03 — Incidencias en todos los deportes (ADR-0142)
+
+La decisión explícita cubre el flujo visual y la política de liga para ambas
+incidencias. Se separan tres conceptos: motivo, tanteo real parcial y resultado
+administrativo. Solo este último determina clasificación y avance. Un objeto
+JSONB cerrado y un normalizador de dominio independiente de PostgreSQL bastan;
+un motor configurable habría añadido coste innecesario. La corrección guarda
+instantáneas profundas, incluido tipo previo, y no afecta a otros partidos.
+
+Checklist cliente: primitivas/tokens compartidos, copy es/en/fr/it, controles
+44 px, cierre existente, Guardar en scroll y bloqueo de envío duplicado. El
+adaptador sigue invocando la operación generada con `apiFetch`. La validación
+parcial comparte lógica pura de formulario comprobada ejecutando el módulo
+real, sin dependencias nuevas. La revisión visual encontró y corrigió desborde
+de nombres largos en la opción compartida. La ruta efímera no envía resultados
+y se elimina antes de exportar. No acredita teclado nativo.
+
+Validación: suite Go completa, integración PostgreSQL desechable (ocho deportes
+en cuadro, cuatro en liga y resolución de ciclos mixtos), lint Go, pruebas de
+formulario/parser, lint cliente, typecheck, contrato y exportación web.
+Sin despliegue ni migración de entornos persistentes. Se mantiene la advertencia
+de compatibilidad Expo previamente aplazada por ADR-0138.
+
+Retrospectiva: reutilizar el resultado existente reduce mantenimiento, pero
+requiere preservar metadata al actualizar el cuadro y distinguir el parcial de
+los tantos administrativos. Las pruebas de corrección y de otro partido
+detectan pérdidas que una prueba aislada de guardar no cubre. No se amplían
+formatos deportivos ni se resuelve arbitrariamente la doble ausencia.

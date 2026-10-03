@@ -6,6 +6,36 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Added
+
+- Incomparecencia y abandono por partido en los ocho deportes y sus fases
+  admitidas: parcial real separado, victoria administrativa, historial y
+  selector localizado dentro del diálogo de resultados (ADR-0142).
+
+- Bádminton en eliminatoria directa al mejor de tres juegos, con elección
+  persistida de 21 o 15 puntos, topes deportivos, historial y ganadora derivada.
+
+- Tenis de mesa en eliminatoria directa al mejor de 3, 5 o 7 juegos, con puntos,
+  ventaja de dos, ganadora derivada y correcciones con historial.
+
+- Voleibol en liga, eliminatoria y formato mixto: partidos al mejor de cinco,
+  clasificación por victorias, puntos y cocientes exactos, y retirada 0–3 con
+  parciales e historial.
+- La «i» de clasificación explica por deporte el tanteo, las columnas, la
+  puntuación, los desempates, la retirada y el corte de clasificación.
+
+### Fixed
+
+- Formulario móvil de resultados por sets: filas compactas, etiquetas de columna
+  sin repetición y Guardar dentro del scroll. Los campos respetan columnas
+  estrechas y el diálogo nativo reserva espacio para el teclado.
+
+
+- Los resultados por sets rechazan tanteos ausentes o nulos y conservan el cero
+  explícito. PostgreSQL exige configuración de sets para tenis y pádel mediante
+  una migración incremental que no modifica la migración ya publicada.
+
+
 ## [1.8.3] - 2026-10-03
 
 ### Security
