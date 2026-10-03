@@ -3980,3 +3980,20 @@ efectiva, readiness, continuidad WAL y salud pública. Se registran por separado
 commit de configuración e imagen de API porque este cambio no reconstruye la
 aplicación. La [evidencia de promoción](../operations/OPERATIONAL_BLOCK_REVIEW_2026-10-03.md#promoción-autorizada-posterior-a-dev)
 completa el cierre anterior; no publica una versión de producción.
+
+
+## 2026-10-03 — Presupuesto y orden del apagado de la API
+
+Retirar un endpoint y detener el proceso son operaciones concurrentes. Esperar
+antes de SIGTERM permite atender el tráfico que todavía llega por propagación;
+Shutdown cierra después el listener y espera a las peticiones activas. El preStop
+consume el mismo periodo de gracia que el cierre, no un presupuesto adicional.
+PID 1 recibe señales si el binario es entrypoint directo y registra un handler.
+
+**Retrospectiva técnica:** ya había drenaje HTTP, pero sus diez segundos y otros
+diez de telemetría no cabían en quince de K3s. ADR-0145 mantiene la solución pequeña:
+5s de propagación, 10s HTTP, 5s trazas y 10s de margen. Al vencer HTTP, Close cancela
+sus conexiones antes de liberar dependencias. Pool.Close aún puede esperar una
+operación que ignore cancelación; el runtime conserva el límite duro. Las pruebas
+con sockets verifican comportamiento HTTP; la prueba de rollout en Traefik es
+otra evidencia y permanece pendiente de promoción desde una revisión limpia.

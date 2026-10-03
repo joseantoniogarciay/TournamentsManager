@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0145](../adr/0145-drain-api-before-container-termination.md) | Drenar la API antes de terminar el contenedor | Aceptado | 2026-10-03 |
 | [0142](../adr/0142-record-match-incidents-across-sports.md) | Registrar incidencias por partido en todos los deportes | Aceptado | 2026-10-03 |
 | [0141](../adr/0141-support-badminton-with-point-games.md) | Soportar bádminton con juegos por puntos | Aceptado | 2026-10-03 |
 | [0140](../adr/0140-bound-production-telemetry-retention.md) | Acotar diagnóstico y seguridad de producción con purga y alertas de espacio | Aceptado | 2026-10-03 |

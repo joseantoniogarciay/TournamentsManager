@@ -365,3 +365,20 @@ HTTP comprueba formas cerradas, feedback y razón de validación; dominio cubre
 los ocho deportes; PostgreSQL desechable cubre correcciones, historial, lectura,
 clasificación, dependencias y ciclos de desempate. Los límites técnicos y
 cancelación reutilizan las pruebas existentes, sin nuevos límites ni causas.
+
+
+### Recorrido de terminación de la API — 2026-10-03
+
+ADR-0145 no modifica las salidas de negocio, validación o tasa de los endpoints.
+El éxito HTTP en vuelo puede concluir durante diez segundos de drenaje. Si vence,
+Server.Close cancela las peticiones restantes: los límites técnicos mantienen sus
+categorías seguras existentes (`request.cancelled`, `request.timeout`, `database.*`),
+sin exportar errores brutos ni añadir spans por cierre. Los logs de ciclo de vida
+son mensajes cerrados sin inputs: inicio, finalización y plazo agotado. El cierre
+de trazas tiene un máximo independiente de cinco segundos después del pool.
+
+`cmd/api/shutdown_test.go` valida éxito en vuelo, listener cerrado y cancelación
+forzada con sockets reales. Las pruebas existentes de HTTP conservan el contrato
+de categorías seguras. La propagación de endpoints, pérdida de respuestas en el
+borde y terminación por SIGKILL requieren el recorrido de rollout del runbook;
+no quedan demostradas por los logs de drenaje ni por un rollout exitoso.

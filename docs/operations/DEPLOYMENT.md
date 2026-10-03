@@ -51,6 +51,22 @@ esquema PostgreSQL. Los cambios destructivos o incompatibles exigirán una
 estrategia explícita de migración (por ejemplo, expand/contract, forward-fix o
 restauración), no solo volver a una imagen anterior.
 
+### Apagado ordenado de la API
+
+ADR-0145 añade una espera `preStop.sleep.seconds: 5` ejecutada por kubelet, compatible
+con el K3s 1.36.3 documentado y la imagen scratch. La API sigue atendiendo mientras
+se propaga la retirada del endpoint. Después SIGTERM cierra el listener y drena
+HTTP hasta diez segundos; si vence, se cierran las conexiones y se cancelan los
+contextos pendientes. Se cierra PostgreSQL y se vacían trazas hasta cinco segundos.
+K3s concede treinta segundos incluyendo preStop; Compose dev usa también treinta.
+Los diez segundos restantes en K3s son margen, no un deadline propio de Pool.Close.
+Una operación que ignore la cancelación puede alcanzar SIGKILL.
+
+La espera es una hipótesis inicial, no una prueba de propagación de Traefik ni una
+garantía de disponibilidad. Validar el rollout bajo tráfico según el
+[runbook](../runbooks/k3s-api-image-import.md). No se añaden endpoints de drenaje,
+shell ni init al runtime. Eliminaciones forzadas y fallos del host quedan fuera.
+
 ## Límite de despliegue desde GitHub
 
 El repositorio es público, pero el acceso operativo no. CI verifica en runners

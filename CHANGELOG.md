@@ -8,6 +8,11 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- Apagado de la API (ADR-0145): espera preStop nativa de cinco segundos en K3s,
+  gracia de treinta segundos en K3s y Compose dev, telemetría acotada a cinco
+  segundos y cierre de conexiones restantes si HTTP agota diez segundos.
+  Pruebas con sockets reales; promoción y validación de tráfico pendientes.
+
 - Verificación de backups dev: restauración y consulta comparten un volumen
   temporal único, sin red ni montaje de datos activos. Se exige recuperación
   terminada y comparación de agregados; revalidada una incremental cifrada.

@@ -18,11 +18,17 @@ spec:
         app.kubernetes.io/part-of: tournaments-manager
     spec:
       automountServiceAccountToken: false
-      terminationGracePeriodSeconds: 15
+      # 5s propagation + 10s HTTP + 5s telemetry + 10s pool/scheduling margin.
+      terminationGracePeriodSeconds: 30
       containers:
         - name: api
           image: tournaments-manager-api:git-69533ac6cae53bf7245248221cf8143c13329f40
           imagePullPolicy: Never
+          lifecycle:
+            preStop:
+              # Kubelet sleeps; scratch contains neither a shell nor sleep.
+              sleep:
+                seconds: 5
           ports:
             - name: http
               containerPort: 8080
