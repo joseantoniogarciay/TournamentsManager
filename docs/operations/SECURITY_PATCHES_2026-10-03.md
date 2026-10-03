@@ -124,3 +124,7 @@ corrección publicada y madura o una actualización compatible de la matriz Expo
 La nueva matriz Expo sugerida todavía no cumple siete días; la web conserva
 el SDK y las dependencias nativas existentes. No se reinstala ni arranca el
 entorno local retirado: CI y el checkout aislado validan el artefacto de producción.
+
+El manifiesto declarativo de API conserva ahora la imagen de v1.8.1 ya activa;
+se corrige su referencia anterior desactualizada para que una aplicación futura
+del YAML no revierta los parches. La publicación web no cambia esa imagen.
