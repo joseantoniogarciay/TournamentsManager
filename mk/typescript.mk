@@ -34,3 +34,8 @@ openapi-generate-check:
 # Sirve Swagger UI exclusivamente en loopback para explorar el contrato local.
 openapi-ui:
 	$(PNPM) run openapi:ui
+
+# Regresiones de consumidores parcheados por mantenimiento de seguridad.
+.PHONY: test-dependencies
+test-dependencies:
+	$(PNPM) run test:dependencies

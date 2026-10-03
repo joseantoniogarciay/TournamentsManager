@@ -25,7 +25,8 @@
     "openapi:generate:check": "pnpm run openapi:generate && git diff --exit-code -- apps/client/src/api/generated",
     "openapi:ui": "scalar document serve contracts/openapi/v1/openapi.yaml --watch --port 8083",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run openapi:lint",
-    "verify": "pnpm run check"
+    "verify": "pnpm run check",
+    "test:dependencies": "node --test tests/dependency-compatibility.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
