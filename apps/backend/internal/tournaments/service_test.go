@@ -116,13 +116,13 @@ func TestValidCreateInputRequiresRacketSetFormat(t *testing.T) {
 	}
 }
 
-func TestNormalizeRacketResultRejectsIncoherentSets(t *testing.T) {
+func TestNormalizeSetResultRejectsIncoherentSets(t *testing.T) {
 	t.Parallel()
 
 	valid := MatchResultInput{Sets: []SetScore{{HomeScore: 6, AwayScore: 4}, {HomeScore: 5, AwayScore: 7}, {HomeScore: 7, AwayScore: 6}}}
-	normalized, err := NormalizeRacketResult(SportTennis, 3, valid)
+	normalized, err := NormalizeSetResult(SportTennis, 3, 0, valid)
 	if err != nil || normalized.HomeScore != 2 || normalized.AwayScore != 1 {
-		t.Fatalf("NormalizeRacketResult() = %#v, %v; want 2-1", normalized, err)
+		t.Fatalf("NormalizeSetResult() = %#v, %v; want 2-1", normalized, err)
 	}
 	invalid := []MatchResultInput{
 		{Sets: []SetScore{{HomeScore: 6, AwayScore: 4}}},
@@ -131,11 +131,11 @@ func TestNormalizeRacketResultRejectsIncoherentSets(t *testing.T) {
 		{Sets: []SetScore{{HomeScore: 7, AwayScore: 7}, {HomeScore: 6, AwayScore: 0}}},
 	}
 	for _, input := range invalid {
-		if _, err := NormalizeRacketResult(SportTennis, 3, input); !errors.Is(err, ErrInvalidBracketResult) {
+		if _, err := NormalizeSetResult(SportTennis, 3, 0, input); !errors.Is(err, ErrInvalidBracketResult) {
 			t.Errorf("incoherent sets accepted: %#v, %v", input.Sets, err)
 		}
 	}
-	if _, err := NormalizeRacketResult(SportPadel, 5, valid); !errors.Is(err, ErrInvalidBracketResult) {
+	if _, err := NormalizeSetResult(SportPadel, 5, 0, valid); !errors.Is(err, ErrInvalidBracketResult) {
 		t.Errorf("best-of-five padel accepted: %v", err)
 	}
 }

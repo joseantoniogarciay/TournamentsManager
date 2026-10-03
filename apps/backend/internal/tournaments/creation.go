@@ -29,15 +29,26 @@ const (
 	SportTennis Sport = "tennis"
 	// SportPadel applies padel set scoring.
 	SportPadel Sport = "padel"
+	// SportTableTennis applies point scoring to ordered games.
+	SportTableTennis Sport = "table_tennis"
+	// SportBadminton applies a frozen 15 or 21 point game profile.
+	SportBadminton Sport = "badminton"
+	// SportVolleyball applies set scoring across league and elimination stages.
+	SportVolleyball Sport = "volleyball"
 )
 
 // ValidSport reports whether the public value selects an implemented sporting policy.
 func ValidSport(sport Sport) bool {
-	return sport == SportFootball || sport == SportBasketball || sport == SportHandball || sport == SportTennis || sport == SportPadel
+	return sport == SportFootball || sport == SportBasketball || sport == SportHandball || sport == SportVolleyball || sport == SportTennis || sport == SportPadel || sport == SportTableTennis || sport == SportBadminton
 }
 
 // RacketSport reports whether results are expressed as ordered sets.
-func RacketSport(sport Sport) bool { return sport == SportTennis || sport == SportPadel }
+func RacketSport(sport Sport) bool {
+	return sport == SportTennis || sport == SportPadel || sport == SportTableTennis || sport == SportBadminton
+}
+
+// SetSport reports whether the result aggregate is derived from ordered sets.
+func SetSport(sport Sport) bool { return RacketSport(sport) || sport == SportVolleyball }
 
 var (
 	// ErrInvalidTournamentInput indicates invalid creation or start data.
@@ -73,10 +84,11 @@ type TeamInput struct{ Name string }
 
 // CreateInput contains the minimum data for a published league.
 type CreateInput struct {
-	Name       string
-	Sport      Sport
-	BestOfSets int
-	Teams      []TeamInput
+	Name          string
+	Sport         Sport
+	BestOfSets    int
+	PointsPerGame int
+	Teams         []TeamInput
 }
 
 // StartInput defines the rules frozen when the league starts.
@@ -94,9 +106,10 @@ type MatchResultInput struct {
 	HomeScore, AwayScore         int
 	HomePenalties, AwayPenalties *int
 	Sets                         []SetScore
+	Incident                     *MatchIncident
 }
 
-// SetScore is the game score of one ordered tennis or padel set.
+// SetScore is the score of one ordered set or point game.
 type SetScore struct {
 	HomeScore int `json:"homeScore"`
 	AwayScore int `json:"awayScore"`
@@ -136,6 +149,7 @@ type Match struct {
 	HomePenalties     *int           `json:"homePenalties,omitempty"`
 	AwayPenalties     *int           `json:"awayPenalties,omitempty"`
 	ResultType        ResultType     `json:"resultType,omitempty"`
+	Incident          *MatchIncident `json:"incident,omitempty"`
 	ID                string         `json:"id"`
 	RoundNumber       int            `json:"round"`
 	Sequence          int            `json:"sequence"`
@@ -156,6 +170,10 @@ const (
 	ResultPlayed ResultType = "played"
 	// ResultAdministrative identifies a score imposed by a sporting rule.
 	ResultAdministrative ResultType = "administrative"
+	// ResultNoShow identifies a match conceded before play.
+	ResultNoShow ResultType = "no_show"
+	// ResultRetirement identifies a match conceded during play.
+	ResultRetirement ResultType = "retirement"
 )
 
 // Tournament is the projection of a visible league.
@@ -167,6 +185,7 @@ type Tournament struct {
 	Name            string                      `json:"name"`
 	Sport           Sport                       `json:"sport"`
 	BestOfSets      int                         `json:"bestOfSets,omitempty"`
+	PointsPerGame   int                         `json:"pointsPerGame,omitempty"`
 	Format          string                      `json:"format"`
 	State           string                      `json:"state"`
 	RoundRobinLegs  int                         `json:"roundRobinLegs"`
@@ -209,18 +228,20 @@ type QualificationTieBreakPool struct {
 
 // Standing is a domain-calculated row, not data entered by clients.
 type Standing struct {
-	StageID         string `json:"stageId,omitempty"`
-	GroupNumber     int    `json:"groupNumber,omitempty"`
-	Position        int    `json:"position"`
-	TeamID          string `json:"teamId"`
-	Played          int    `json:"played"`
-	Won             int    `json:"won"`
-	Drawn           int    `json:"drawn"`
-	Lost            int    `json:"lost"`
-	ScoreFor        int    `json:"scoreFor"`
-	ScoreAgainst    int    `json:"scoreAgainst"`
-	ScoreDifference int    `json:"scoreDifference"`
-	Points          int    `json:"points"`
+	StageID            string `json:"stageId,omitempty"`
+	GroupNumber        int    `json:"groupNumber,omitempty"`
+	Position           int    `json:"position"`
+	TeamID             string `json:"teamId"`
+	Played             int    `json:"played"`
+	Won                int    `json:"won"`
+	Drawn              int    `json:"drawn"`
+	Lost               int    `json:"lost"`
+	ScoreFor           int    `json:"scoreFor"`
+	ScoreAgainst       int    `json:"scoreAgainst"`
+	ScoreDifference    int    `json:"scoreDifference"`
+	Points             int    `json:"points"`
+	RallyPointsFor     int    `json:"rallyPointsFor"`
+	RallyPointsAgainst int    `json:"rallyPointsAgainst"`
 }
 
 // CreationRepository persists and queries a league's initial lifecycle.
@@ -378,6 +399,9 @@ func (s CreationService) TransferOwnership(ctx context.Context, accountID, leagu
 
 // RecordResult immediately applies or corrects a score from an authorized account.
 func (s CreationService) RecordResult(ctx context.Context, accountID, leagueID, matchID string, input MatchResultInput) (Tournament, error) {
+	if input.Incident != nil && (!validIncidentShape(input.Incident) || input.HomeScore != 0 || input.AwayScore != 0 || input.HomePenalties != nil || input.AwayPenalties != nil || len(input.Sets) != 0) {
+		return Tournament{}, ErrInvalidTournamentInput
+	}
 	if input.HomeScore < 0 || input.AwayScore < 0 {
 		return Tournament{}, ErrInvalidTournamentInput
 	}
@@ -392,6 +416,13 @@ func (s CreationService) RecordResult(ctx context.Context, accountID, leagueID, 
 
 // ValidateLeagueResult keeps sport-specific scoring policy in the domain.
 func ValidateLeagueResult(sport Sport, input MatchResultInput) error {
+	if sport == SportVolleyball {
+		_, err := NormalizeSetResult(sport, 5, 0, input)
+		if err != nil {
+			return ErrInvalidTournamentInput
+		}
+		return nil
+	}
 	if !ValidSport(sport) || RacketSport(sport) || input.HomeScore < 0 || input.AwayScore < 0 || input.HomePenalties != nil || input.AwayPenalties != nil || len(input.Sets) != 0 {
 		return ErrInvalidTournamentInput
 	}
@@ -404,7 +435,7 @@ func ValidateLeagueResult(sport Sport, input MatchResultInput) error {
 // AdministrativeWinningScore returns the fixed score awarded to the opponent of a withdrawn team.
 func AdministrativeWinningScore(sport Sport) (int, error) {
 	switch sport {
-	case SportFootball:
+	case SportFootball, SportVolleyball:
 		return 3, nil
 	case SportBasketball:
 		return 20, nil
@@ -439,6 +470,9 @@ func (s CreationService) withStandings(league Tournament) Tournament {
 }
 
 func calculateStandings(league Tournament) []Standing {
+	if league.Sport == SportVolleyball {
+		return calculateVolleyballStandings(league)
+	}
 	byTeam := make(map[string]*Standing, len(league.Teams))
 	for _, team := range league.Teams {
 		byTeam[team.ID] = &Standing{TeamID: team.ID}
@@ -605,13 +639,7 @@ func validCreateInput(input CreateInput) bool {
 	if !ValidSport(input.Sport) || len(strings.TrimSpace(input.Name)) == 0 || utf8.RuneCountInString(input.Name) > MaximumTournamentNameLength || len(input.Teams) < 1 || len(input.Teams) > 64 {
 		return false
 	}
-	if input.Sport == SportTennis && input.BestOfSets != 3 && input.BestOfSets != 5 {
-		return false
-	}
-	if input.Sport == SportPadel && input.BestOfSets != 3 {
-		return false
-	}
-	if !RacketSport(input.Sport) && input.BestOfSets != 0 {
+	if !ValidSetFormat(input.Sport, input.BestOfSets) || !ValidPointsPerGame(input.Sport, input.PointsPerGame) {
 		return false
 	}
 	seen := map[string]bool{}

@@ -172,10 +172,12 @@ func TestIntegrationMixedTournamentRepeatsAnUnresolvedQualificationTieBreak(t *t
 	}
 	for _, match := range cycleTwo {
 		winner := cycleTwoWinners[orderedTeamPair(match.HomeTeamID, match.AwayTeamID)]
-		input := tournaments.MatchResultInput{HomeScore: 1}
+		side := "away"
 		if winner == match.AwayTeamID {
-			input = tournaments.MatchResultInput{AwayScore: 1}
+			side = "home"
 		}
+		input := tournaments.MatchResultInput{Incident: &tournaments.MatchIncident{Type: tournaments.ResultNoShow, Side: side}}
+
 		value, err = service.RecordResult(ctx, owner, value.ID, match.ID, input)
 		if err != nil {
 			t.Fatal(err)

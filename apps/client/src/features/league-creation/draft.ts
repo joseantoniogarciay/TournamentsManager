@@ -1,3 +1,5 @@
+import { isSetSport } from "@/shared/tournaments/sport";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { randomUUID } from "expo-crypto";
 
@@ -14,7 +16,8 @@ export type LocalTournamentDraft = {
   draftId: string;
   name: string;
   sport: TournamentSport;
-  bestOfSets?: 3 | 5;
+  bestOfSets?: 3 | 5 | 7;
+  pointsPerGame?: 15 | 21;
   teams: string[];
 };
 
@@ -44,16 +47,25 @@ export async function getLocalTournamentDraft(): Promise<LocalTournamentDraft | 
         draft.sport === TournamentInputSport.basketball ||
         draft.sport === TournamentInputSport.handball ||
         draft.sport === TournamentInputSport.tennis ||
-        draft.sport === TournamentInputSport.padel
+        draft.sport === TournamentInputSport.padel ||
+        draft.sport === TournamentInputSport.table_tennis ||
+        draft.sport === TournamentInputSport.badminton ||
+        draft.sport === TournamentInputSport.volleyball
           ? draft.sport
           : TournamentInputSport.football,
       bestOfSets:
-        draft.sport === TournamentInputSport.tennis && draft.bestOfSets === 5
+        draft.sport === "volleyball"
           ? 5
-          : draft.sport === TournamentInputSport.tennis ||
-              draft.sport === TournamentInputSport.padel
-            ? 3
-            : undefined,
+          : draft.sport === "table_tennis" && draft.bestOfSets === 7
+            ? 7
+            : (draft.sport === "tennis" || draft.sport === "table_tennis") && draft.bestOfSets === 5
+              ? 5
+              : isSetSport(draft.sport ?? "")
+                ? 3
+                : undefined,
+      ...(draft.sport === "badminton"
+        ? { pointsPerGame: draft.pointsPerGame === 15 ? 15 : 21 }
+        : {}),
       teams: draft.teams,
     };
     if (draft.draftId !== normalized.draftId) {
@@ -92,9 +104,10 @@ export function toTournamentDraftInput(
     draftId: draft.draftId,
     name,
     sport: draft.sport,
-    ...(draft.sport === TournamentInputSport.tennis || draft.sport === TournamentInputSport.padel
-      ? { bestOfSets: draft.bestOfSets ?? 3 }
+    ...(isSetSport(draft.sport)
+      ? { bestOfSets: draft.sport === "volleyball" ? 5 : (draft.bestOfSets ?? 3) }
       : {}),
+    ...(draft.sport === "badminton" ? { pointsPerGame: draft.pointsPerGame ?? 21 } : {}),
     teams: teams.map((name) => ({ name })),
   };
 }

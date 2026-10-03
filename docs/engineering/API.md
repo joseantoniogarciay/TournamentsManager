@@ -133,14 +133,15 @@ de cuenta organizadora y `draftId` es única: repetir la misma intención despu�
 de perder una respuesta puede emitir otra sesión, pero no otro torneo ni equipos.
 
 `TournamentInput` exige
-`sport: football | basketball | handball | tennis | padel`; no existe valor
+`sport: football | basketball | handball | tennis | padel | table_tennis | volleyball`; no existe valor
 implícito en el contrato nuevo. La proyección pública devuelve el mismo enum y
 métricas de clasificación neutrales (`scoreFor`, `scoreAgainst`,
 `scoreDifference`). Tenis exige `bestOfSets: 3 | 5` y pádel exige
-`bestOfSets: 3`; los otros perfiles no aceptan esa propiedad. Un partido
+`bestOfSets: 3`; tenis de mesa exige `3 | 5 | 7` y voleibol `5`. Fútbol,
+baloncesto y balonmano no aceptan esa propiedad. Un partido
 completado declara `resultType: played | administrative`: baloncesto rechaza
 tanteos finales empatados y penaltis; fútbol y balonmano conservan el empate de
-liga y exigen un desempate decisivo en una eliminatoria empatada. Tenis y pádel
+liga y exigen un desempate decisivo en una eliminatoria empatada. Tenis, pádel y tenis de mesa
 solo pueden iniciar una eliminatoria directa en este incremento. Las reglas
 pertenecen al dominio; OpenAPI expresa la forma de los datos y sus valores
 cerrados (ADR-0126, ADR-0134 y ADR-0135).
@@ -328,3 +329,67 @@ Las rutas autenticadas `GET /v1/me/access-methods`, `POST
 tipadas y fallos de transporte no divulgan detalles del backend; el cliente usa
 su feedback localizado común salvo que un caso de producto aporte recuperación
 específica.
+
+### Tenis de mesa
+
+`table_tennis` exige `bestOfSets: 3 | 5 | 7` también en borradores transferidos
+por registro o login. Solo inicia eliminatoria directa. `sets` representa juegos
+por puntos (11–0 a 11–9, o ventaja de dos desde 10–10), con hasta siete juegos.
+Cada objeto exige ambos tanteos enteros no nulos; cero es válido. El máximo
+32767 es una frontera técnica de almacenamiento, no una regla deportiva.
+
+### Voleibol y clasificación por deporte
+
+`volleyball` exige `bestOfSets: 5` al crear y transferir borradores. Liga,
+eliminatoria y mixto usan el mismo `sets`: primeros cuatro a 25 y quinto a 15,
+ventaja de dos, sin parciales posteriores a la tercera victoria. El backend
+deriva el agregado; enviarlo sin parciales es inválido. Las correcciones
+sustituyen los sets actuales y añaden una instantánea al historial.
+
+En `TournamentStanding`, `scoreFor/scoreAgainst` son sets de voleibol y tanteo
+agregado en los demás deportes. `rallyPointsFor/rallyPointsAgainst` son enteros
+obligatorios, suma de los parciales en voleibol y cero en los demás perfiles.
+El backend aplica victorias, puntos, cociente de sets y cociente de tantos;
+la app calcula solo los cocientes visibles desde esos totales, sin reordenar.
+
+Una retirada aplica tres sets 25–0 al rival, conserva el historial y rechaza
+su sobrescritura posterior con `409`. Resultados inválidos reciben `400`;
+sesión/autorización y ausencia conservan `401/403/404`; estados incompatibles
+reciben `409`. Fallos técnicos siguen el problema seguro `500`. No cambia el
+adaptador de resultados ni su transporte `apiFetch`: transporte usa
+`common_network_error`; solo el conflicto cambia la recuperación con copy
+específico; estados restantes/cuerpos inválidos usan `common_request_error`.
+
+### Bádminton y perfil persistido de puntos
+
+`badminton` exige `bestOfSets: 3` y `pointsPerGame: 15 | 21` en creación y
+borradores de registro/acceso local o federado. La lectura y la respuesta de
+creación devuelven el mismo perfil; otros deportes omiten `pointsPerGame`.
+Solo eliminatoria directa. `sets` contiene dos o tres juegos completos: ventaja
+de dos hasta el tope de 30 (perfil 21) o 21 (perfil 15), que admite un punto de
+diferencia. El agregado se deriva; no se envía configuración con el resultado.
+
+Se conserva el recorrido HTTP y el feedback seguro existentes: `201` al crear,
+`200` en lectura/resultado, `400` para configuración o tanteos inválidos,
+`401/403/404` para acceso/ausencia y `409` para transición o dependencia. Los
+fallos técnicos usan problema seguro; transporte, cuerpo inválido y cancelación
+siguen la política común. Las features invocan el cliente generado por sus
+adaptadores y `apiFetch`, sin transporte ni estados de negocio nuevos.
+
+### Incidencias de partido (ADR-0142)
+
+La operación existente de resultado acepta una tercera variante exclusiva:
+`{"incident":{"type":"no_show"|"retirement","side":"home"|"away"}}`.
+No se mezcla con marcador, sets ni penaltis. `retirement` admite opcionalmente
+`partialHomeScore` y `partialAwayScore` juntos, o `partialSets` (1–7 elementos).
+`no_show` no admite parcial. El dominio valida el perfil deportivo persistido,
+la secuencia y que el encuentro no estuviera ya ganado; solo el último set
+puede estar incompleto. La respuesta incluye `incident` y `resultType` del mismo
+tipo, además del agregado administrativo derivado. El parcial permanece aparte.
+
+No cambia la ruta ni el adaptador generado con `apiFetch`. Éxito `200`; payload
+o parcial inválido `400`; acceso/ausencia `401/403/404`; fase, dependencia o
+resultado bloqueado `409`. Solo el conflicto conserva feedback específico;
+resto de HTTP, `5xx`, cuerpo inválido y problemas desconocidos usan
+`common_request_error`, transporte `common_network_error`, cancelación
+intencional sin aviso. Nunca se muestra texto bruto del backend.

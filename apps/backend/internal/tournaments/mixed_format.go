@@ -322,7 +322,11 @@ func orderQualifiedTeamIDs(tournament Tournament, candidates []Standing, poolRan
 		if left.Position != right.Position {
 			return left.Position < right.Position
 		}
-		if comparison := compareStanding(left, right); comparison != 0 {
+		comparison := compareStanding(left, right)
+		if tournament.Sport == SportVolleyball {
+			comparison = compareVolleyballStanding(left, right)
+		}
+		if comparison != 0 {
 			return comparison > 0
 		}
 		leftPool, leftHasPool := poolRanks[left.TeamID]
@@ -416,6 +420,28 @@ func calculateTieBreakStandings(tournament Tournament, pool QualificationTieBrea
 		return nil, false, ErrTournamentStageTransitionConflict
 	}
 	order := tieBreakStageTeamIDs(tournament, pool)
+	if tournament.Sport == SportVolleyball {
+		projection := Tournament{Sport: SportVolleyball, Matches: matches}
+		for _, teamID := range order {
+			if participants[teamID] {
+				projection.Teams = append(projection.Teams, Team{ID: teamID})
+			}
+		}
+		if len(projection.Teams) != len(participants) {
+			return nil, false, ErrTournamentStageTransitionConflict
+		}
+		for _, match := range matches {
+			if match.State == "completed" && (match.HomeScore == nil || match.AwayScore == nil || match.WinnerTeamID != match.HomeTeamID && match.WinnerTeamID != match.AwayTeamID) {
+				return nil, false, ErrTournamentStageTransitionConflict
+			}
+		}
+		standings := calculateVolleyballStandings(projection)
+		for index := range standings {
+			standings[index].StageID = pool.StageID
+			standings[index].GroupNumber = pool.PoolNumber
+		}
+		return standings, complete, nil
+	}
 	standingsByTeam := map[string]*Standing{}
 	for _, teamID := range order {
 		if participants[teamID] {

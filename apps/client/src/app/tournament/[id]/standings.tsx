@@ -8,7 +8,12 @@ import type { PublicTournament } from "@/api/generated/models";
 import { TournamentUnavailableError } from "@/features/league-creation/api";
 import { useTournament, useTournamentStore } from "@/features/league-creation/league-store";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
-import { getTranslator } from "@/shared/i18n/locale";
+import { getCurrentLanguage, getTranslator, type TranslationKey } from "@/shared/i18n/locale";
+import {
+  getBadmintonScoreHelpKey,
+  getSportLabelKey,
+  isRacketSport,
+} from "@/shared/tournaments/sport";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import {
   Button,
@@ -25,16 +30,16 @@ import {
 
 const leftColumnWidth = 144;
 const pointsColumnWidth = 44;
-const statisticsColumnCount = 7;
 const statisticsColumnWidth = 36;
-const standingsTableMinimumWidth =
-  leftColumnWidth + pointsColumnWidth + statisticsColumnCount * statisticsColumnWidth;
 
 export default function TournamentStandingsScreen() {
   const t = getTranslator();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
   const league = useTournament(id);
+  const statisticsColumnCount = league?.sport === "volleyball" ? 9 : 7;
+  const standingsTableMinimumWidth =
+    leftColumnWidth + pointsColumnWidth + statisticsColumnCount * statisticsColumnWidth;
   const { loadTournament, refreshTournament } = useTournamentStore();
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
   const [leagueUnavailable, setTournamentUnavailable] = useState(false);
@@ -253,7 +258,9 @@ export default function TournamentStandingsScreen() {
                   { backgroundColor: colors.surface.canvas },
                 ]}
               >
-                <View style={[styles.table, tableFitsViewport && styles.tableFitted]}>
+                <View
+                  style={[styles.table, tableFitsViewport && { width: standingsTableMinimumWidth }]}
+                >
                   <View style={styles.tableColumns}>
                     <View style={styles.leftColumn}>
                       <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
@@ -310,7 +317,9 @@ export default function TournamentStandingsScreen() {
             ) : null}
             {displayedStandings.length > 0 ? (
               <View style={styles.tableViewport}>
-                <View style={[styles.table, tableFitsViewport && styles.tableFitted]}>
+                <View
+                  style={[styles.table, tableFitsViewport && { width: standingsTableMinimumWidth }]}
+                >
                   <View style={styles.tableColumns}>
                     <View style={styles.leftColumn}>
                       {displayedStandings.map((standing) => (
@@ -359,7 +368,7 @@ export default function TournamentStandingsScreen() {
                               key={standing.teamId}
                               style={[styles.row, { borderColor: colors.border.default }]}
                             >
-                              <StatisticsValues standing={standing} />
+                              <StatisticsValues sport={league.sport} standing={standing} />
                             </View>
                           ))}
                         </View>
@@ -393,8 +402,11 @@ export default function TournamentStandingsScreen() {
         dismissAccessibilityLabel={t("common_close")}
         onDismiss={() => setInformationVisible(false)}
         visible={informationVisible}
+        dialogStyle={styles.informationDialog}
       >
-        <StandingsRulesContent league={league} />
+        <ScrollView style={styles.informationScroll} contentContainerStyle={styles.stack}>
+          <StandingsRulesContent league={league} />
+        </ScrollView>
         <Button label={t("common_ok")} onPress={() => setInformationVisible(false)} />
       </ModalDialog>
     </>
@@ -403,109 +415,186 @@ export default function TournamentStandingsScreen() {
 
 function StatisticsHeader({ sport }: { sport: PublicTournament["sport"] }) {
   const t = getTranslator();
-
-  return (
-    <View style={styles.statisticsRow}>
-      <Text color="secondary" style={styles.stat}>
-        {t("league_standings_played")}
-      </Text>
-      <Text color="secondary" style={styles.stat}>
-        {t("league_standings_won")}
-      </Text>
-      <Text color="secondary" style={styles.stat}>
-        {t("league_standings_drawn")}
-      </Text>
-      <Text color="secondary" style={styles.stat}>
-        {t("league_standings_lost")}
-      </Text>
-      <Text color="secondary" style={styles.stat}>
-        {t(
+  const keys: TranslationKey[] =
+    sport === "volleyball"
+      ? [
+          "league_standings_played",
+          "league_standings_won",
+          "league_standings_lost",
+          "volleyball_standings_sets_for",
+          "volleyball_standings_sets_against",
+          "volleyball_standings_set_ratio",
+          "volleyball_standings_rallies_for",
+          "volleyball_standings_rallies_against",
+          "volleyball_standings_rally_ratio",
+        ]
+      : [
+          "league_standings_played",
+          "league_standings_won",
+          "league_standings_drawn",
+          "league_standings_lost",
           sport === "basketball" ? "basketball_standings_score_for" : "league_standings_goals_for",
-        )}
-      </Text>
-      <Text color="secondary" style={styles.stat}>
-        {t(
           sport === "basketball"
             ? "basketball_standings_score_against"
             : "league_standings_goals_against",
-        )}
-      </Text>
-      <Text color="secondary" style={styles.stat}>
-        {t(
           sport === "basketball"
             ? "basketball_standings_score_difference"
             : "league_standings_goal_difference",
-        )}
-      </Text>
+        ];
+  return (
+    <View style={styles.statisticsRow}>
+      {keys.map((key) => (
+        <Text key={key} color="secondary" style={styles.stat}>
+          {t(key)}
+        </Text>
+      ))}
     </View>
   );
 }
 
 function StatisticsValues({
   standing,
+  sport,
 }: {
   standing: NonNullable<PublicTournament["standings"]>[number];
+  sport: PublicTournament["sport"];
 }) {
   const t = getTranslator();
-
+  const locale = getCurrentLanguage();
+  const ratio = (numerator: number, denominator: number) =>
+    denominator === 0
+      ? numerator > 0
+        ? "∞"
+        : "0"
+      : (numerator / denominator).toLocaleString(locale, { maximumFractionDigits: 3 });
+  const values =
+    sport === "volleyball"
+      ? [
+          standing.played,
+          standing.won,
+          standing.lost,
+          standing.scoreFor,
+          standing.scoreAgainst,
+          ratio(standing.scoreFor, standing.scoreAgainst),
+          standing.rallyPointsFor,
+          standing.rallyPointsAgainst,
+          ratio(standing.rallyPointsFor, standing.rallyPointsAgainst),
+        ]
+      : [
+          standing.played,
+          standing.won,
+          standing.drawn,
+          standing.lost,
+          standing.scoreFor,
+          standing.scoreAgainst,
+          standing.scoreDifference > 0
+            ? t("league_standings_positive_goal_difference").replace(
+                "{value}",
+                standing.scoreDifference.toString(),
+              )
+            : standing.scoreDifference,
+        ];
   return (
     <View style={styles.statisticsRow}>
-      <Text style={styles.stat}>{standing.played}</Text>
-      <Text style={styles.stat}>{standing.won}</Text>
-      <Text style={styles.stat}>{standing.drawn}</Text>
-      <Text style={styles.stat}>{standing.lost}</Text>
-      <Text style={styles.stat}>{standing.scoreFor}</Text>
-      <Text style={styles.stat}>{standing.scoreAgainst}</Text>
-      <Text style={styles.stat}>
-        {standing.scoreDifference > 0
-          ? t("league_standings_positive_goal_difference").replace(
-              "{value}",
-              standing.scoreDifference.toString(),
-            )
-          : standing.scoreDifference}
-      </Text>
+      {values.map((value, index) => (
+        <Text key={index} style={styles.stat}>
+          {value}
+        </Text>
+      ))}
     </View>
   );
 }
 
 function StandingsRulesContent({ league }: { league: PublicTournament | null | undefined }) {
   const t = getTranslator();
-
-  if (league?.sport === "basketball") {
-    return (
-      <View style={styles.stack}>
-        <Text variant="title">{t("league_standings_rules_title")}</Text>
-        <Text color="secondary">{t("basketball_standings_rule_points")}</Text>
-        <Text color="secondary">{t("basketball_standings_rule_head_to_head")}</Text>
-        <Text color="secondary">{t("basketball_standings_rule_general")}</Text>
-        <Text color="secondary">{t("league_standings_rule_shared")}</Text>
-      </View>
+  if (!league) return null;
+  const sport = league.sport;
+  let keys: TranslationKey[];
+  if (isRacketSport(sport)) {
+    keys = [
+      sport === "badminton"
+        ? getBadmintonScoreHelpKey(league.pointsPerGame)
+        : sport === "table_tennis"
+          ? "table_tennis_score_help"
+          : "racket_set_score_help",
+      "standings_rules_elimination",
+      "standings_rules_racket_only",
+    ];
+  } else {
+    keys = [
+      sport === "volleyball"
+        ? "volleyball_score_help"
+        : sport === "basketball"
+          ? "basketball_standings_match_rule"
+          : sport === "handball"
+            ? "handball_standings_match_rule"
+            : "goal_standings_match_rule",
+    ];
+    keys.push(
+      sport === "volleyball"
+        ? "volleyball_standings_columns"
+        : sport === "basketball"
+          ? "basketball_standings_columns"
+          : "goal_standings_columns",
     );
-  }
-
-  if (league?.sport === "handball") {
-    return (
-      <View style={styles.stack}>
-        <Text variant="title">{t("league_standings_rules_title")}</Text>
-        <Text color="secondary">{t("handball_standings_rule_points")}</Text>
-        <Text color="secondary">{t("handball_standings_rule_head_to_head")}</Text>
-        <Text color="secondary">{t("handball_standings_rule_general")}</Text>
-        <Text color="secondary">{t("league_standings_rule_shared")}</Text>
-      </View>
+    if (sport === "volleyball") {
+      keys.push(
+        "volleyball_standings_rule_points",
+        "volleyball_standings_rule_order",
+        "volleyball_standings_rule_ratios",
+      );
+    } else {
+      keys.push(
+        sport === "basketball"
+          ? "basketball_standings_rule_points"
+          : sport === "handball"
+            ? "handball_standings_rule_points"
+            : "league_standings_rule_points",
+      );
+      keys.push(
+        sport === "basketball"
+          ? "basketball_standings_rule_head_to_head"
+          : sport === "handball"
+            ? "handball_standings_rule_head_to_head"
+            : league.roundRobinLegs === 2
+              ? "league_standings_rule_two_legs"
+              : "league_standings_rule_one_leg",
+      );
+      keys.push(
+        sport === "basketball"
+          ? "basketball_standings_rule_general"
+          : sport === "handball"
+            ? "handball_standings_rule_general"
+            : "league_standings_rule_general",
+        "standings_rules_mini_table",
+      );
+    }
+    keys.push(
+      "standings_rules_shared",
+      sport === "volleyball"
+        ? "volleyball_standings_withdrawal"
+        : sport === "basketball"
+          ? "basketball_standings_withdrawal"
+          : sport === "handball"
+            ? "handball_standings_withdrawal"
+            : "football_standings_withdrawal",
     );
+    if (league.format === "league_then_single_elimination")
+      keys.push(
+        "standings_rules_qualification",
+        sport === "volleyball" ? "volleyball_standings_tiebreak" : "standings_rules_tiebreak",
+      );
+    if (league.format !== "league") keys.push("standings_rules_elimination");
   }
-
   return (
     <View style={styles.stack}>
       <Text variant="title">{t("league_standings_rules_title")}</Text>
-      <Text color="secondary">{t("league_standings_rule_points")}</Text>
-      <Text color="secondary">
-        {league?.roundRobinLegs === 2
-          ? t("league_standings_rule_two_legs")
-          : t("league_standings_rule_one_leg")}
-      </Text>
-      <Text color="secondary">{t("league_standings_rule_general")}</Text>
-      <Text color="secondary">{t("league_standings_rule_shared")}</Text>
+      <Text variant="title">{t(getSportLabelKey(sport))}</Text>
+      {keys.map((key) => (
+        <Text key={key} color="secondary">
+          {t(key)}
+        </Text>
+      ))}
     </View>
   );
 }
@@ -554,7 +643,8 @@ const styles = StyleSheet.create({
   },
   statisticsViewport: { flex: 1, minWidth: 0, overflow: "hidden" },
   table: { width: "100%" },
-  tableFitted: { width: standingsTableMinimumWidth },
+  informationDialog: { maxHeight: "85%" },
+  informationScroll: { flexShrink: 1 },
   tableColumns: { flexDirection: "row" },
   tableViewport: { alignItems: "center", width: "100%" },
   team: { flex: 1, minWidth: 0, paddingHorizontal: space[2] },

@@ -1,3 +1,4 @@
+import { IncidentSummary } from "./incident-summary";
 import { SymbolView } from "expo-symbols";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
@@ -229,7 +230,7 @@ export const BracketView = forwardRef<
                         <WinnerCrown accessibilityLabel={t("bracket_winner")} />
                       ) : null}
                     </View>
-                    {score !== undefined ? (
+                    {score !== undefined && !match.incident ? (
                       <Text variant="title">
                         {score}
                         {penalty !== undefined ? ` (${penalty})` : ""}
@@ -242,11 +243,12 @@ export const BracketView = forwardRef<
             {match.homePenalties !== undefined ? (
               <Text color="secondary">{t("bracket_penalties_caption")}</Text>
             ) : null}
-            {match.sets.length > 0 ? (
+            {match.sets.length > 0 && !match.incident ? (
               <Text color="secondary">
                 {match.sets.map((set) => `${set.homeScore}–${set.awayScore}`).join(" · ")}
               </Text>
             ) : null}
+            <IncidentSummary match={match} teams={teams} />
             {match.state === "bye" ? (
               <Text color="secondary">{t("bracket_auto_advance")}</Text>
             ) : null}

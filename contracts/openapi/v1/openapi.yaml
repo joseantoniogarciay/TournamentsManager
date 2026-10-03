@@ -1250,12 +1250,21 @@ components:
       required: [name, sport, teams]
       properties:
         name: { type: string, minLength: 1, maxLength: 56 }
-        sport: { type: string, enum: [football, basketball, handball, tennis, padel] }
+        sport:
+          {
+            type: string,
+            enum:
+              [football, basketball, handball, tennis, padel, table_tennis, volleyball, badminton],
+          }
+        pointsPerGame:
+          type: integer
+          enum: [15, 21]
+          description: Obligatorio exclusivamente en bádminton; se conserva durante todo el torneo. Debe omitirse en otros deportes.
         bestOfSets:
           type: integer
-          enum: [3, 5]
+          enum: [3, 5, 7]
           description: >-
-            Obligatorio para tenis; pádel exige 3. Debe omitirse en fútbol,
+            Tenis exige 3 o 5; pádel 3; tenis de mesa 3, 5 o 7; voleibol 5; bádminton 3. Debe omitirse en fútbol,
             baloncesto y balonmano.
         teams:
           type: array
@@ -1272,12 +1281,21 @@ components:
           format: uuid
           description: Identidad estable del borrador usada para deduplicar reintentos por cuenta.
         name: { type: string, minLength: 1, maxLength: 56 }
-        sport: { type: string, enum: [football, basketball, handball, tennis, padel] }
+        sport:
+          {
+            type: string,
+            enum:
+              [football, basketball, handball, tennis, padel, table_tennis, volleyball, badminton],
+          }
+        pointsPerGame:
+          type: integer
+          enum: [15, 21]
+          description: Obligatorio exclusivamente en bádminton; se conserva durante todo el torneo. Debe omitirse en otros deportes.
         bestOfSets:
           type: integer
-          enum: [3, 5]
+          enum: [3, 5, 7]
           description: >-
-            Obligatorio para tenis; pádel exige 3. Debe omitirse en el resto de deportes.
+            Tenis exige 3 o 5; pádel 3; tenis de mesa 3, 5 o 7; voleibol 5; bádminton 3. Debe omitirse en el resto de deportes.
         teams:
           type: array
           minItems: 1
@@ -1501,8 +1519,8 @@ components:
       additionalProperties: false
       required: [homeScore, awayScore]
       properties:
-        homeScore: { type: integer, minimum: 0, maximum: 7 }
-        awayScore: { type: integer, minimum: 0, maximum: 7 }
+        homeScore: { type: integer, minimum: 0, maximum: 32767 }
+        awayScore: { type: integer, minimum: 0, maximum: 32767 }
     MatchResultInput:
       oneOf:
         - type: object
@@ -1520,25 +1538,60 @@ components:
             sets:
               type: array
               minItems: 2
-              maxItems: 5
+              maxItems: 7
               items: { $ref: "#/components/schemas/SetResult" }
+        - type: object
+          additionalProperties: false
+          required: [incident]
+          properties:
+            incident: { $ref: "#/components/schemas/MatchIncident" }
       description: >-
         En liga se admite el marcador final; baloncesto rechaza empates. En una
         eliminatoria de fútbol o balonmano, un empate exige ambos marcadores de
         desempate distintos; el cliente los presenta como penaltis o
         lanzamientos de siete metros según el deporte. Baloncesto exige un
         tanteo final no empatado y nunca envía desempate. Esos valores no se
-        suman al marcador del partido. Tenis y pádel envían únicamente los sets;
+        suman al marcador del partido. Tenis, pádel, tenis de mesa, voleibol y bádminton envían únicamente los sets;
         el servidor valida cada tanteo, deriva los sets ganados y rechaza juegos
-        posteriores a la victoria.
+        posteriores a la victoria. Una incidencia es exclusiva del marcador jugado;
+        el dominio concede el resultado administrativo al rival y conserva el
+        tanteo parcial aparte, sin afectar con él a la clasificación.
+    MatchIncident:
+      type: object
+      additionalProperties: false
+      required: [type, side]
+      properties:
+        type: { type: string, enum: [no_show, retirement] }
+        side: { type: string, enum: [home, away] }
+        partialHomeScore: { type: integer, minimum: 0, maximum: 2147483647 }
+        partialAwayScore: { type: integer, minimum: 0, maximum: 2147483647 }
+        partialSets:
+          type: array
+          minItems: 1
+          maxItems: 7
+          items: { $ref: "#/components/schemas/SetResult" }
+      description: >-
+        Lado que no comparece o abandona. no_show no admite parciales.
+        retirement admite ambos marcadores parciales para deportes sin sets o
+        una secuencia de sets/juegos con solo el último incompleto. Los parciales
+        son opcionales y no determinan ganador ni clasificación.
     PublishedTournament:
       type: object
       required: [id, name, sport, state, teams, matches]
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
-        sport: { type: string, enum: [football, basketball, handball, tennis, padel] }
-        bestOfSets: { type: integer, enum: [3, 5] }
+        sport:
+          {
+            type: string,
+            enum:
+              [football, basketball, handball, tennis, padel, table_tennis, volleyball, badminton],
+          }
+        pointsPerGame:
+          type: integer
+          enum: [15, 21]
+          description: Obligatorio exclusivamente en bádminton; se conserva durante todo el torneo. Debe omitirse en otros deportes.
+        bestOfSets: { type: integer, enum: [3, 5, 7] }
         state: { type: string, enum: [published] }
         teams: { type: array, items: { $ref: "#/components/schemas/TournamentTeam" } }
         matches: { type: array, items: { $ref: "#/components/schemas/Match" } }
@@ -1563,8 +1616,17 @@ components:
       properties:
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
-        sport: { type: string, enum: [football, basketball, handball, tennis, padel] }
-        bestOfSets: { type: integer, enum: [3, 5] }
+        sport:
+          {
+            type: string,
+            enum:
+              [football, basketball, handball, tennis, padel, table_tennis, volleyball, badminton],
+          }
+        pointsPerGame:
+          type: integer
+          enum: [15, 21]
+          description: Obligatorio exclusivamente en bádminton; se conserva durante todo el torneo. Debe omitirse en otros deportes.
+        bestOfSets: { type: integer, enum: [3, 5, 7] }
         format: { type: string, enum: [league, single_elimination, league_then_single_elimination] }
         stages:
           type: array
@@ -1606,6 +1668,8 @@ components:
           scoreFor,
           scoreAgainst,
           scoreDifference,
+          rallyPointsFor,
+          rallyPointsAgainst,
           points,
         ]
       properties:
@@ -1617,9 +1681,31 @@ components:
         won: { type: integer, minimum: 0 }
         drawn: { type: integer, minimum: 0 }
         lost: { type: integer, minimum: 0 }
-        scoreFor: { type: integer, minimum: 0 }
-        scoreAgainst: { type: integer, minimum: 0 }
+        scoreFor:
+          {
+            type: integer,
+            minimum: 0,
+            description: Sets a favor en voleibol; tanteo acumulado en otros perfiles.,
+          }
+        scoreAgainst:
+          {
+            type: integer,
+            minimum: 0,
+            description: Sets en contra en voleibol; tanteo acumulado en otros perfiles.,
+          }
         scoreDifference: { type: integer }
+        rallyPointsFor:
+          {
+            type: integer,
+            minimum: 0,
+            description: Tantos de voleibol a favor; cero en otros perfiles.,
+          }
+        rallyPointsAgainst:
+          {
+            type: integer,
+            minimum: 0,
+            description: Tantos de voleibol en contra; cero en otros perfiles.,
+          }
         points: { type: integer, minimum: 0 }
     TournamentStage:
       type: object
@@ -1697,9 +1783,10 @@ components:
         homeSourceMatchId: { $ref: "#/components/schemas/UUID" }
         awaySourceMatchId: { $ref: "#/components/schemas/UUID" }
         winnerTeamId: { $ref: "#/components/schemas/UUID" }
+        incident: { $ref: "#/components/schemas/MatchIncident" }
         resultType:
           type: string
-          enum: [played, administrative]
+          enum: [played, administrative, no_show, retirement]
           description: Ausente mientras el partido no tenga un resultado registrado o sea un bye.
         state: { type: string, enum: [pending, completed, bye] }
         homeScore: { type: integer, minimum: 0 }

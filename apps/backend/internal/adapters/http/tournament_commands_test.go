@@ -56,7 +56,7 @@ func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
 		loginSession: registration.Session{AccountID: "019abcde-1111-7111-8111-111111111111", Username: "person", IdleExpiresAt: "2026-08-09T12:00:00Z", RefreshExpiresAt: "2026-09-01T12:00:00Z"},
 	}
 	handler := NewHandler(registration.NewService(repository, nil), nil, testAuthenticator{}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins)
-	request := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/v1/sessions", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","sessionTransport":"bearer","draft":{"draftId":"019abcde-1111-7111-8111-111111111112","name":" Copa ","sport":"football","teams":[{"name":" Norte "},{"name":"Sur"}]}}`))
+	request := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/v1/sessions", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","sessionTransport":"bearer","draft":{"draftId":"019abcde-1111-7111-8111-111111111112","name":" Copa ","sport":"badminton","bestOfSets":3,"pointsPerGame":15,"teams":[{"name":" Norte "},{"name":"Sur"}]}}`))
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
 
@@ -68,7 +68,7 @@ func TestCreateLocalSessionReturnsBearerSession(t *testing.T) {
 	if !strings.Contains(recorder.Body.String(), `"delivery":"bearer"`) || !strings.Contains(recorder.Body.String(), `"sessionToken"`) || !strings.Contains(recorder.Body.String(), `"refreshToken"`) {
 		t.Errorf("body = %s, want bearer session tokens", recorder.Body.String())
 	}
-	if receivedDraft == nil || receivedDraft.ID != "019abcde-1111-7111-8111-111111111112" || receivedDraft.Name != "Copa" || receivedDraft.Teams[0] != "Norte" {
+	if receivedDraft == nil || receivedDraft.ID != "019abcde-1111-7111-8111-111111111112" || receivedDraft.Name != "Copa" || receivedDraft.Teams[0] != "Norte" || receivedDraft.PointsPerGame != 15 {
 		t.Errorf("draft = %#v, want normalized tournament", receivedDraft)
 	}
 }
@@ -80,7 +80,7 @@ func TestCreateGoogleSessionPassesDraftForExistingIdentity(t *testing.T) {
 	service := federated.NewService(repository, testGoogleVerifier{identity: federated.Identity{
 		Issuer: federated.GoogleIssuer, Subject: "subject", Email: "person@example.test", Nonce: "nonce", EmailVerified: true,
 	}})
-	request := httptest.NewRequest(http.MethodPost, "/v1/google-sessions", strings.NewReader(`{"challengeId":"019abcde-1111-7111-8111-111111111111","idToken":"google-token","sessionTransport":"bearer","draft":{"draftId":"019abcde-1111-7111-8111-111111111112","name":"Copa Google","sport":"basketball","teams":[{"name":"Uno"},{"name":"Dos"}]}}`))
+	request := httptest.NewRequest(http.MethodPost, "/v1/google-sessions", strings.NewReader(`{"challengeId":"019abcde-1111-7111-8111-111111111111","idToken":"google-token","sessionTransport":"bearer","draft":{"draftId":"019abcde-1111-7111-8111-111111111112","name":"Copa Google","sport":"badminton","bestOfSets":3,"pointsPerGame":21,"teams":[{"name":"Uno"},{"name":"Dos"}]}}`))
 	recorder := httptest.NewRecorder()
 
 	createGoogleSession(service, sessionCookies(false)).ServeHTTP(recorder, request)
@@ -88,8 +88,11 @@ func TestCreateGoogleSessionPassesDraftForExistingIdentity(t *testing.T) {
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("status = %d, body = %s", recorder.Code, recorder.Body.String())
 	}
-	if receivedDraft == nil || receivedDraft.ID != "019abcde-1111-7111-8111-111111111112" || receivedDraft.Name != "Copa Google" || receivedDraft.Sport != tournaments.SportBasketball {
-		t.Fatalf("draft = %#v, want basketball tournament", receivedDraft)
+	if receivedDraft == nil || receivedDraft.ID != "019abcde-1111-7111-8111-111111111112" || receivedDraft.Name != "Copa Google" || receivedDraft.Sport != tournaments.SportBadminton {
+		t.Fatalf("draft = %#v, want badminton tournament", receivedDraft)
+	}
+	if receivedDraft == nil || receivedDraft.PointsPerGame != 21 || receivedDraft.BestOfSets != 3 {
+		t.Fatalf("Google lost badminton config: %+v", receivedDraft)
 	}
 }
 
@@ -489,18 +492,35 @@ func TestRecordMatchResultEnforcesExclusiveResultShapes(t *testing.T) {
 		body   string
 		status int
 	}{
-		"sets":          {body: `{"sets":[{"homeScore":6,"awayScore":4},{"homeScore":7,"awayScore":5}]}`, status: http.StatusOK},
-		"mixed":         {body: `{"homeScore":2,"awayScore":0,"sets":[{"homeScore":6,"awayScore":4},{"homeScore":7,"awayScore":5}]}`, status: http.StatusBadRequest},
-		"empty sets":    {body: `{"sets":[]}`, status: http.StatusBadRequest},
-		"partial score": {body: `{"homeScore":2}`, status: http.StatusBadRequest},
+		"sets":               {body: `{"sets":[{"homeScore":6,"awayScore":4},{"homeScore":7,"awayScore":5}]}`, status: http.StatusOK},
+		"mixed":              {body: `{"homeScore":2,"awayScore":0,"sets":[{"homeScore":6,"awayScore":4},{"homeScore":7,"awayScore":5}]}`, status: http.StatusBadRequest},
+		"zero games":         {body: `{"sets":[{"homeScore":6,"awayScore":0},{"homeScore":6,"awayScore":0}]}`, status: http.StatusOK},
+		"missing away games": {body: `{"sets":[{"homeScore":6},{"homeScore":6}]}`, status: http.StatusBadRequest},
+		"missing home games": {body: `{"sets":[{"awayScore":6},{"awayScore":6}]}`, status: http.StatusBadRequest},
+		"null away games":    {body: `{"sets":[{"homeScore":6,"awayScore":null},{"homeScore":6,"awayScore":null}]}`, status: http.StatusBadRequest},
+		"null home games":    {body: `{"sets":[{"homeScore":null,"awayScore":6},{"homeScore":null,"awayScore":6}]}`, status: http.StatusBadRequest},
+		"null set":           {body: `{"sets":[null,{"homeScore":6,"awayScore":0}]}`, status: http.StatusBadRequest},
+		"empty sets":         {body: `{"sets":[]}`, status: http.StatusBadRequest},
+		"partial score":      {body: `{"homeScore":2}`, status: http.StatusBadRequest},
 	} {
 		t.Run(name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodPut, "/v1/tournaments/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(test.body))
+			exporter := tracetest.NewInMemoryExporter()
+			provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+			t.Cleanup(func() { _ = provider.Shutdown(context.Background()) })
+			ctx, span := provider.Tracer("test").Start(context.Background(), "result")
+			request := httptest.NewRequestWithContext(ctx, http.MethodPut, "/v1/tournaments/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(test.body))
 			request.Header.Set("Authorization", "Bearer session-token")
 			request.Header.Set("Content-Type", "application/json")
 			recorder := httptest.NewRecorder()
 
 			handler.ServeHTTP(recorder, request)
+			span.End()
+			if test.status == http.StatusBadRequest {
+				spans := exporter.GetSpans()
+				if len(spans) != 1 || testSpanAttribute(spans[0].Attributes, "tournaments_manager.failure.reason") != "validation.rejected" {
+					t.Fatal("invalid shape must record only the safe validation reason")
+				}
+			}
 
 			if recorder.Code != test.status {
 				t.Errorf("status = %d, want %d; body = %s", recorder.Code, test.status, recorder.Body.String())
@@ -551,4 +571,156 @@ func (r testRegistrationRepository) RenewLoginVerification(context.Context, stri
 
 func testHandler() http.Handler {
 	return NewHandler(registration.Service{}, nil, testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins)
+}
+
+func TestTableTennisDraftAndCreationShareSetFormat(t *testing.T) {
+	for _, best := range []int{3, 5, 7} {
+		draft := &registration.Draft{ID: "019abcde-1111-7111-8111-111111111111", Name: "Table tennis", Sport: tournaments.SportTableTennis, BestOfSets: best, Teams: []string{"A"}}
+		if !validRegistrationDraft(draft) {
+			t.Errorf("draft best of %d rejected", best)
+		}
+	}
+	for _, best := range []int{0, 2, 6, 9} {
+		draft := &registration.Draft{ID: "019abcde-1111-7111-8111-111111111111", Name: "Table tennis", Sport: tournaments.SportTableTennis, BestOfSets: best, Teams: []string{"A"}}
+		if validRegistrationDraft(draft) {
+			t.Errorf("draft best of %d accepted", best)
+		}
+	}
+}
+
+func TestVolleyballDraftRequiresBestOfFive(t *testing.T) {
+	for _, best := range []int{0, 3, 5, 7} {
+		draft := &registration.Draft{ID: "019abcde-1111-7111-8111-111111111111", Name: "Volleyball", Sport: tournaments.SportVolleyball, BestOfSets: best, Teams: []string{"A"}}
+		if got := validRegistrationDraft(draft); got != (best == 5) {
+			t.Errorf("best=%d valid=%v", best, got)
+		}
+	}
+}
+
+func TestBadmintonDraftAndHTTPConfiguration(t *testing.T) {
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	for _, points := range []int{0, 11, 15, 21, 30} {
+		draft := &registration.Draft{ID: accountID, Name: "Badminton", Sport: tournaments.SportBadminton, BestOfSets: 3, PointsPerGame: points, Teams: []string{"A"}}
+		valid := points == 15 || points == 21
+		if validRegistrationDraft(draft) != valid {
+			t.Errorf("draft points=%d", points)
+		}
+		created := tournaments.Tournament{ID: accountID, Name: "Badminton", Sport: tournaments.SportBadminton, BestOfSets: 3, PointsPerGame: points, State: "published", Teams: []tournaments.Team{}, Matches: []tournaments.Match{}}
+		var received tournaments.CreateInput
+		repository := captureBadmintonCreation{testCreationRepository: testCreationRepository{created: created}, input: &received}
+		handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(repository))
+		payload, _ := json.Marshal(map[string]any{"name": "Badminton", "sport": "badminton", "bestOfSets": 3, "pointsPerGame": points, "teams": []map[string]string{{"name": "A"}}})
+		exporter := tracetest.NewInMemoryExporter()
+		provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+		ctx, span := provider.Tracer("test").Start(context.Background(), "POST /v1/tournaments")
+		request := httptest.NewRequestWithContext(ctx, http.MethodPost, "/v1/tournaments", strings.NewReader(string(payload)))
+		request.Header.Set("Authorization", "Bearer session-token")
+		request.Header.Set("Content-Type", "application/json")
+		recorder := httptest.NewRecorder()
+		handler.ServeHTTP(recorder, request)
+		span.End()
+		if valid {
+			if recorder.Code != http.StatusCreated || received.PointsPerGame != points {
+				t.Fatalf("points=%d status=%d received=%+v", points, recorder.Code, received)
+			}
+			var response tournaments.Tournament
+			if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil || response.PointsPerGame != points {
+				t.Fatalf("response=%+v %v", response, err)
+			}
+		} else {
+			if recorder.Code != http.StatusBadRequest {
+				t.Fatalf("points=%d status=%d", points, recorder.Code)
+			}
+			spans := exporter.GetSpans()
+			if len(spans) != 1 || testSpanAttribute(spans[0].Attributes, "tournaments_manager.failure.reason") != "validation.rejected" {
+				t.Fatal("unsafe or missing validation diagnostic")
+			}
+		}
+	}
+}
+
+type captureBadmintonCreation struct {
+	testCreationRepository
+	input *tournaments.CreateInput
+}
+
+func (r captureBadmintonCreation) Create(_ context.Context, _ string, input tournaments.CreateInput) (tournaments.Tournament, error) {
+	*r.input = input
+	return r.created, nil
+}
+
+func TestMatchIncidentHTTPShapesAndSafeFeedback(t *testing.T) {
+	const accountID = "019abcde-1111-7111-8111-111111111111"
+	cases := []struct {
+		name, payload string
+		sport         tournaments.Sport
+		status        int
+	}{
+		{"no show", `{"incident":{"type":"no_show","side":"away"}}`, tournaments.SportFootball, 200},
+		{"retirement score", `{"incident":{"type":"retirement","side":"home","partialHomeScore":52,"partialAwayScore":48}}`, tournaments.SportBasketball, 200},
+		{"partial set", `{"incident":{"type":"retirement","side":"home","partialSets":[{"homeScore":6,"awayScore":4},{"homeScore":2,"awayScore":1}]}}`, tournaments.SportPadel, 200},
+		{"both absent", `{"incident":{"type":"no_show","side":"both"}}`, tournaments.SportFootball, 400},
+		{"unknown reason", `{"incident":{"type":"injury","side":"home"}}`, tournaments.SportFootball, 400},
+		{"missing side", `{"incident":{"type":"no_show"}}`, tournaments.SportFootball, 400},
+		{"mixed result", `{"incident":{"type":"no_show","side":"home"},"homeScore":0,"awayScore":0}`, tournaments.SportFootball, 400},
+		{"mixed sets", `{"incident":{"type":"no_show","side":"home"},"sets":[]}`, tournaments.SportFootball, 400},
+		{"no show partial", `{"incident":{"type":"no_show","side":"home","partialHomeScore":0,"partialAwayScore":0}}`, tournaments.SportFootball, 400},
+		{"one partial", `{"incident":{"type":"retirement","side":"home","partialHomeScore":0}}`, tournaments.SportFootball, 400},
+		{"negative partial", `{"incident":{"type":"retirement","side":"home","partialHomeScore":-1,"partialAwayScore":0}}`, tournaments.SportFootball, 400},
+		{"empty sets", `{"incident":{"type":"retirement","side":"home","partialSets":[]}}`, tournaments.SportPadel, 400},
+		{"null set", `{"incident":{"type":"retirement","side":"home","partialSets":[{"homeScore":null,"awayScore":0}]}}`, tournaments.SportPadel, 400},
+		{"mixed partial types", `{"incident":{"type":"retirement","side":"home","partialHomeScore":1,"partialAwayScore":0,"partialSets":[{"homeScore":1,"awayScore":0}]}}`, tournaments.SportPadel, 400},
+		{"invalid cap", `{"incident":{"type":"retirement","side":"home","partialSets":[{"homeScore":31,"awayScore":29}]}}`, tournaments.SportBadminton, 400},
+		{"medical free text", `{"incident":{"type":"retirement","side":"home","detail":"private reason"}}`, tournaments.SportFootball, 400},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var received tournaments.MatchResultInput
+			repository := incidentHTTPRepository{testCreationRepository: testCreationRepository{}, sport: c.sport, input: &received}
+			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(repository))
+			exporter := tracetest.NewInMemoryExporter()
+			provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+			ctx, span := provider.Tracer("test").Start(context.Background(), "PUT /v1/tournaments/{tournamentId}/matches/{matchId}/result")
+			request := httptest.NewRequestWithContext(ctx, http.MethodPut, "/v1/tournaments/"+accountID+"/matches/"+accountID+"/result", strings.NewReader(c.payload))
+			request.Header.Set("Authorization", "Bearer session-token")
+			request.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+			handler.ServeHTTP(recorder, request)
+			span.End()
+			if recorder.Code != c.status {
+				t.Fatalf("status=%d body=%s", recorder.Code, recorder.Body.String())
+			}
+			if c.status == 200 && received.Incident == nil {
+				t.Fatal("lost incident")
+			}
+			if c.status == 400 {
+				spans := exporter.GetSpans()
+				if len(spans) != 1 || testSpanAttribute(spans[0].Attributes, "tournaments_manager.failure.reason") != "validation.rejected" {
+					t.Fatal("unsafe validation diagnostic")
+				}
+				if strings.Contains(recorder.Body.String(), "private reason") {
+					t.Fatal("leaked raw input")
+				}
+			}
+		})
+	}
+}
+
+type incidentHTTPRepository struct {
+	testCreationRepository
+	sport tournaments.Sport
+	input *tournaments.MatchResultInput
+}
+
+func (r incidentHTTPRepository) RecordResult(_ context.Context, _ string, _ string, _ string, input tournaments.MatchResultInput) (tournaments.Tournament, error) {
+	*r.input = input
+	best, points := 0, 0
+	if tournaments.SetSport(r.sport) {
+		best = 3
+	}
+	if r.sport == tournaments.SportBadminton {
+		points = 21
+	}
+	_, err := tournaments.NormalizeIncidentResult(r.sport, best, points, input)
+	return tournaments.Tournament{ID: "019abcde-1111-7111-8111-111111111111", Sport: r.sport, State: "in_progress"}, err
 }
