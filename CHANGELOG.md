@@ -6,6 +6,14 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.8.2] - 2026-10-03
+
+### Security
+
+- Corrige dependencias JavaScript transitivas compatibles mediante overrides
+  exactos y conserva la espera de siete días sin excepciones de Expo. La API
+  y el renderer mantienen el parche v1.8.1.
+
 ## [1.8.1] - 2026-10-03
 
 ### Security

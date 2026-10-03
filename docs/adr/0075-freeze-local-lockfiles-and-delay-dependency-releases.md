@@ -5,7 +5,7 @@
 - **Decisor:** Usuario
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** ADR-0077, solo para actualizaciones de compatibilidad de Expo solicitadas por Expo CLI
+- **Superado por:** ADR-0138, en la política de excepciones; el lockfile congelado sigue vigente
 
 ## Problema
 

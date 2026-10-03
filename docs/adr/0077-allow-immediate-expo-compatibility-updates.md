@@ -1,11 +1,11 @@
 # ADR-0077: Permitir actualizaciones inmediatas del conjunto compatible de Expo
 
-- **Estado:** Aceptado
+- **Estado:** Superado
 - **Fecha:** 2026-08-09
 - **Decisor:** Usuario, mediante decisión explícita
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0075, solo en la excepción de edad para una actualización de compatibilidad de Expo
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0138
 
 ## Problema
 

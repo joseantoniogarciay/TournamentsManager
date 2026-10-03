@@ -35,3 +35,5 @@ de esa decisión en el campo correspondiente.
 
 Usa [template.md](template.md) y el
 [playbook de decisiones](../playbooks/decision-process.md).
+
+- [ADR-0138: Esperar siete días salvo vulnerabilidades críticas](0138-wait-seven-days-except-critical-vulnerabilities.md) — Aceptado.
