@@ -19,37 +19,9 @@ minimumReleaseAge: 10080
 minimumReleaseAgeIgnoreMissingTime: false
 minimumReleaseAgeStrict: true
 
-# ADR-0077 permite añadir aquí solo excepciones exactas `paquete@versión` cuando
-# Expo CLI exija actualizar su conjunto compatible. No se usan comodines ni
-# exclusiones persistentes por familia de paquetes.
-minimumReleaseAgeExclude:
-  - "@expo/cli@57.0.17"
-  - "@expo/config-plugins@57.0.8"
-  - "@expo/config@57.0.8"
-  - "@expo/fingerprint@0.20.9"
-  - "@expo/inline-modules@0.1.6"
-  - "@expo/local-build-cache-provider@57.0.7"
-  - "@expo/metro-config@57.0.9"
-  - "@expo/prebuild-config@57.0.13"
-  - "@expo/router-server@57.0.7"
-  - "@expo/ui@57.0.12"
-  - "agent-cli-detector@0.1.6"
-  - "babel-preset-expo@57.0.7"
-  - "expo-asset@57.0.13"
-  - "expo-auth-session@57.0.8"
-  - "expo-constants@57.0.13"
-  - "expo-dev-client@57.0.14"
-  - "expo-dev-launcher@57.0.14"
-  - "expo-dev-menu@57.0.14"
-  - "expo-file-system@57.0.5"
-  - "expo-linking@57.0.7"
-  - "expo-modules-autolinking@57.0.10"
-  - "expo-modules-core@57.0.12"
-  - "expo-modules-jsi@57.0.5"
-  - "expo-router@57.0.15"
-  - "expo-server@57.0.3"
-  - "expo-splash-screen@57.0.7"
-  - "expo@57.0.15"
+# ADR-0138: solo una vulnerabilidad crítica aplicable permite una excepción
+# exacta y documentada; la compatibilidad de Expo conserva la espera de siete días.
+minimumReleaseAgeExclude: []
 
 # Los rangos de Expo Router admiten revisiones más nuevas que aún no han
 # madurado. Se fijan a las últimas revisiones anteriores compatibles para que el
@@ -57,6 +29,27 @@ minimumReleaseAgeExclude:
 overrides:
   "@expo/log-box": 57.0.1
   "@expo/metro-runtime": 57.0.4
+  "@faker-js/faker@10.4.0": 10.6.0
+  "@scalar/cli>@fastify/static": 10.1.2
+  "@hono/node-server@2.0.1": 2.0.10
+  "@xmldom/xmldom@0.8.13": 0.8.15
+  "@xmldom/xmldom@0.9.10": 0.9.12
+  "brace-expansion@1.1.16": 1.1.21
+  "brace-expansion@5.0.8": 5.0.12
+  "fast-uri@3.1.4": 3.1.8
+  "fast-uri@4.1.1": 4.1.5
+  "fastify@5.8.5": 5.12.5
+  "hono@4.12.32": 4.13.7
+  "js-yaml@4.3.0": 4.3.2
+  "markdown-it@14.3.0": 14.3.1
+  "nanoid@3.3.16": 3.3.18
+  "nanoid@5.0.9": 5.1.16
+  "undici@7.28.0": 7.29.1
+  "xcode>uuid": 11.1.1
 
+# Correcciones de seguridad verificadas el 2026-10-03. Los selectores conservan
+# cada rama compatible; xcode solo consume uuid.v4 y Scalar usa Fastify 5.
+# No se fuerza image-size 2: Metro consume rutas de archivo en la API síncrona eliminada.
+# Los paquetes sin corrección publicada quedan inventariados en DEVELOPMENT.md.
 nodeLinker: isolated
 storeDir: .pnpm-store

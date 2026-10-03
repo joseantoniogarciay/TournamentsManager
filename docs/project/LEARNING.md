@@ -3531,3 +3531,12 @@ K3s y también que sus componentes base siguen sanos.
 - **Aprendizaje:** Launchpad puede publicar días después de la fecha del changelog; la espera se calcula con la publicación real. Un CVE de una dependencia embebida tampoco demuestra ejecución de su función.
 - **Retrospectiva:** aislar el parche desde v1.8.0 evita publicar funcionalidad pendiente. La auditoría conserva avisos sin parche y no fuerza cambios de distribución o kernel para vaciar contadores.
 - **Registro:** [Parches de seguridad](../operations/SECURITY_PATCHES_2026-10-03.md).
+
+## 2026-10-03 — Correcciones transitivas y compatibilidad
+
+Un aviso no autoriza a sustituir la API de una dependencia: image-size 2 elimina
+la lectura síncrona por ruta usada por Metro, y query-string 6 necesita CommonJS.
+Conservar consumidores compatibles, comprobar publicaciones oficiales y usar
+overrides precisos permite corregir el resto del grafo sin migrar Expo. Los
+overrides se retirarán cuando los rangos de consumidores incorporen el parche.
+La auditoría del lockfile debe acompañarse de CI y exportación antes de publicar.

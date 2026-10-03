@@ -90,3 +90,37 @@ decisión adicional, con pruebas y mantenimiento propios.
 - [Debian: Perl en 32 bits](https://security-tracker.debian.org/tracker/CVE-2026-8376).
 - [Debian: SQLite](https://security-tracker.debian.org/tracker/CVE-2025-7458).
 - [Debian: zlib y MiniZip](https://security-tracker.debian.org/tracker/CVE-2023-45853).
+
+## Promoción de aplicación y correcciones JavaScript
+
+La API y el renderer productivos ejecutan v1.8.1, commit
+`f6a199ad42bd7e535db9905b132cd75d69486396`. Las dos réplicas están listas,
+con imageID `sha256:341a9cca2cb09b72992c2a7cfe7f6d53f4c976b226eadbbb9f1b209a57e7d12d`;
+web y API devuelven 200 y PostgreSQL conserva 1/1 listo. Goose queda importado
+para el próximo uso; no se ejecutaron migraciones. CI `make verify` pasó para
+`eaa9705`. Las imágenes finales de API y migrador presentan solo el aviso
+OpenPGP sin gravedad, sin uso identificado por el análisis de fuentes.
+
+El lockfile JavaScript se corrige conservando las dependencias directas de Expo
+y React Native. Los overrides seleccionan ramas compatibles de xmldom,
+brace-expansion, js-yaml y nanoid, y consumidores concretos como uuid de xcode
+(que usa v4) y Fastify de Scalar (línea 5). También corrigen avisos de herramientas
+del workspace. El diff se limita a configuración de suministro y resoluciones;
+no cambia código de interfaz ni contratos. Las nuevas resoluciones se verifican
+contra las fechas del registro npm; no hay exclusiones por edad. ADR-0138
+registra la decisión de maduración ya aceptada por el usuario.
+
+`pnpm audit --prod` del lockfile corregido pasa de 29 altos y 7 moderados a
+4 altos y 1 moderado, con cero críticos. Es un recuento de avisos, no de
+funciones explotables. La exportación web se debe reconstruir con este lockfile
+para llevar sus correcciones a producción.
+
+Persisten node-forge 1.4.0 y braces 3.0.3, cuyas correcciones indicadas por el
+auditor no están publicadas; decode-uri-component 0.2.2, cuya alternativa
+publicada cambia CommonJS por ESM y requiere actualizar query-string; e
+image-size 1.2.1, cuya versión 2 cambia la lectura de rutas que usa Metro.
+Forzar esos overrides rompería consumidores. Se mantienen pendientes hasta una
+corrección publicada y madura o una actualización compatible de la matriz Expo.
+La nueva matriz Expo sugerida todavía no cumple siete días; la web conserva
+el SDK y las dependencias nativas existentes. No se reinstala ni arranca el
+entorno local retirado: CI y el checkout aislado validan el artefacto de producción.
