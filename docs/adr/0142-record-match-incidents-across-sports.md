@@ -91,3 +91,11 @@ Retrospectiva: un normalizador puro y metadata cerrada cubren la necesidad sin
 motor de sanciones. Separar tanteo parcial evita contaminar clasificación;
 preservar instantáneas y metadata al resolver otros partidos del cuadro exige
 pruebas de corrección y persistencia, además del primer guardado.
+
+### Despliegue posterior — 2026-10-03
+
+Tras la autorización explícita de desplegar dev y luego producción si el gate
+pasa, v1.9.0 publica API, esquema 19, web y renderer. CI, backup/restauración,
+trece recorridos controlados de dev y verificaciones HTTPS productivas
+aprobados; sin distribución nativa. Evidencia y recuperación en
+`docs/operations/DEPLOYMENT.md`.

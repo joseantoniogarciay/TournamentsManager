@@ -222,3 +222,36 @@ de toda la plataforma.
 Terraform, cuenta AWS, identidad, bootstrap y laboratorio EKS no se activarán
 en este proyecto. Este material se conserva como referencia histórica y solo se
 reabrirá mediante la decisión explícita y el análisis de coste de ADR-0128.
+
+## Publicación de deportes e incidencias — 2026-10-03
+
+El release v1.9.0 publica en producción el SHA
+`69533ac6cae53bf7245248221cf8143c13329f40`. Dev conserva la revisión funcional
+verificada `8fe7be1d7f998557051cdbe1bf72fcc2b50630ce`. CI de la propuesta,
+develop y main terminó en verde. Goose aplicó 00015–00019 antes de cada API;
+producción tiene dos réplicas listas, web y renderer del mismo SHA y el secreto
+efímero de migración eliminado. Web/API de ambos entornos devuelven HTTPS 200;
+CORS productivo devuelve 204 con su origen. Los diez torneos preexistentes de
+producción siguen legibles y sus conteos de cuentas/torneos permanecen 3/10.
+La pantalla productiva muestra los ocho deportes y bádminton 21/15 en móvil.
+
+Dev verificó trece torneos sintéticos por HTTP y la lectura de abandono de
+pádel en navegador; la cuenta y los torneos se eliminaron exclusivamente al
+cerrar. No se enviaron correos ni se alteraron resultados reales de producción.
+Se tomaron backup incremental cifrado de producción y copias lógicas privadas;
+la restauración aislada y el ensayo de las cinco migraciones sobre datos de
+ambos entornos terminaron correctamente. El fallo de lectura de pgBackRest
+de dev en iCloud sigue pendiente: su copia lógica local probada permitió
+continuar, pero no sustituye reparar el repositorio cifrado.
+
+Recuperación: web v1.8.3 `91bcbcd24e6c7bb066f831045456f5a31d1bb740`;
+API anterior `f6a199ad42bd7e535db9905b132cd75d69486396`. Las migraciones son
+forward-only. Una vez registradas incidencias, el cliente antiguo no las
+interpreta; se prefiere corrección hacia delante, sin restaurar datos de forma
+automática ni perder escrituras posteriores. No se distribuyen apps nativas;
+el teclado nativo sigue pendiente en dispositivo. Los cambios locales de
+retención/observabilidad no se incluyen en este release.
+
+Retrospectiva: aislar desde la base remota preservó seguridad publicada y
+trabajo pendiente. Probar migraciones sobre restauraciones reales evita
+confundir una base de fixtures con compatibilidad de los datos existentes.
