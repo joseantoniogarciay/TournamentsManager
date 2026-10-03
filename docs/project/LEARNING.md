@@ -3523,3 +3523,11 @@ K3s y también que sus componentes base siguen sanos.
 - **Recuperación:** la promoción conserva el binario anterior hasta superar
   readiness; si el proceso nuevo no sirve el shell activo con el SHA esperado,
   restaura el ejecutable previo y termina con error visible.
+
+
+### 2026-10-03 — Parches productivos desde un release aislado
+
+- **Evidencia:** tests, race, build, tidy y govulncheck validan las dependencias Go parcheadas. Traefik 3.7.13 y K3s 1.36.4 completan rollout; web y API conservan HTTP 200.
+- **Aprendizaje:** Launchpad puede publicar días después de la fecha del changelog; la espera se calcula con la publicación real. Un CVE de una dependencia embebida tampoco demuestra ejecución de su función.
+- **Retrospectiva:** aislar el parche desde v1.8.0 evita publicar funcionalidad pendiente. La auditoría conserva avisos sin parche y no fuerza cambios de distribución o kernel para vaciar contadores.
+- **Registro:** [Parches de seguridad](../operations/SECURITY_PATCHES_2026-10-03.md).
