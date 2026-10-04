@@ -191,3 +191,67 @@ la matriz, sin cerrar los casos abiertos de los ADR.
 
 Metro temporal apagado al cerrar; no se han arrancado backend, dev ni
 observabilidad.
+
+### Ampliación con sesión real local
+
+Por petición del usuario se crearon y verificaron dos cuentas ficticias en la
+API local: `qa_visual_owner@example.test` y `qa_visual_player@example.test`.
+Se usa registro, correo capturado por Mailpit y verificación reales. No hay
+login hardcodeado, bypass de autorización ni cuentas en producción. Las
+contraseñas aleatorias y sesiones viven exclusivamente en
+`apps/client/.env.qa-review.json`, ignorado por Git y con permisos `0600`.
+No copiar ese archivo a documentación, bundles ni variables `EXPO_PUBLIC_*`.
+Las cuentas permanecen en el volumen local al detener Compose.
+
+En una base local nueva, aplicar primero `make db-schema-apply` y después
+`make dev-migrate`; ejecutar migraciones sobre una base sin esquema inicial
+falla por ausencia de `accounts`. Esto no autoriza reinicializar una base existente.
+
+Se verificaron 17 respuestas HTTP esperadas: login y sesión de ambas cuentas,
+métodos de acceso, creación, invitación e inspección pública, inscripción del
+participante, rechazo de una segunda inscripción (409), seguimiento y biblioteca,
+lectura de administradores y notificaciones, rechazo del inicio por participante
+(403) e inicio por organizador. No se modifica contrato, endpoint ni adaptadores
+cliente con esta revisión. Esta muestra no sustituye la suite de salidas de
+observabilidad ni cubre todos los errores técnicos de cada endpoint.
+
+Fixture local: `01a10743-eafc-713f-9dc4-c8660ea5581f`, «QA Liga de equipos con
+acentos y nombres largos», fútbol/liga en curso, tres equipos. El participante
+está vinculado a «Peñas del Mediterráneo». No tiene administración delegada.
+
+| Recorrido visual                             | iOS 27 / iPhone 18 Pro                                                                        | Android 14 / Pixel API 34                                                          |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Login real y cuenta del organizador          | Acceso confirmado; Datos de acceso muestra el correo                                          | Acceso confirmado; nombre, campana y Datos de acceso visibles                      |
+| Biblioteca Administro                        | Título largo en dos líneas y relación Creador                                                 | Título largo en dos líneas y relación Creador                                      |
+| Detalle de liga en curso                     | Permisos, equipos y resultados presentes                                                      | Cabecera de dos líneas, card y partidos sin desbordamiento                         |
+| Equipos con acentos y nombres largos         | Filas de dos líneas y retirada visible                                                        | Filas de dos líneas y retirada visible                                             |
+| Diálogo de resultado sobre pantalla completa | Centrado con fondo desenfocado; guardado 2–1 confirmado                                       | Centrado con oscurecimiento; teclado no oculta campos/CTA; guardado 3–0 confirmado |
+| Clasificación                                | Orden y tres puntos del primer resultado confirmados; nombres truncados en columnas estrechas | Orden y puntos de los dos resultados confirmados; nombres truncados en columnas estrechas                                                |
+
+Se detectó que `DisclosureIndicator` enviaba exclusivamente `chevron.right`:
+Expo Symbols 57 requiere el nombre Material explícito en Android, por lo que la
+flecha de apertura no se dibujaba allí. Se añade `chevron_right` manteniendo SF
+Symbols en iOS y WebIcon en web. La misma omisión de `xmark` en
+`DialogCloseButton` se corrige con `close` para Android. Es una reparación de
+las primitivas existentes, no una nueva decisión de diseño ni una dependencia.
+
+La vista Android del diálogo mostró el fondo oscurecido pero sin desenfoque
+apreciable, frente al blur claro de iOS. Mantener como punto abierto la
+verificación del blur Android en una build nativa y su superficie de captura;
+no dar por cumplida esa parte de la homogeneidad a partir del scrim solamente.
+OAuth real, cambios de credenciales, eliminación de cuenta, transferencia,
+retirada/cancelación/finalización, todos los deportes y estados, rol delegado,
+lectores de pantalla e idiomas siguen fuera de esta ejecución. La revisión
+automática exige confirmación específica antes de asignar delegación a la
+segunda cuenta. Las comprobaciones API no acreditan la presentación UI de ese rol.
+
+Retrospectiva: una sesión real descubre componentes que el recorrido anónimo
+no monta. Mantener cuentas y fixtures en local permite revisar permisos reales
+con coste menor que introducir un acceso especial y evita que una simulación
+de sesión oculte problemas de autorización.
+
+Cierre de esta ampliación: pasan typecheck, exportación web y formato de los
+componentes modificados. Tras cargar el bundle nuevo, Pixel muestra la flecha
+Material en Actividad reciente. Metro y Compose local se apagan conservando
+volúmenes, cuentas y fixture; se retira el puente temporal de API Android.
+No se activa observabilidad ni se modifica dev público o producción.

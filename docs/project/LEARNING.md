@@ -4354,3 +4354,22 @@ Retrospectiva: compartir componentes no elimina las métricas nativas. Probar
 la escala del contenido junto a las cajas de los iconos descubre fallos que el
 recorrido con tamaño habitual no muestra; conservar las adaptaciones nativas
 no exige permitir que un glifo se recorte.
+
+### 2026-10-04 — Revisión visual con cuentas reales locales
+
+Crear cuentas ficticias mediante registro y Mailpit permite revisar sesión,
+relaciones y permisos sin añadir un bypass al cliente. Las credenciales deben
+quedar en un archivo privado ignorado, nunca en `EXPO_PUBLIC_*` ni en bundles.
+En una base nueva, el esquema inicial precede a las migraciones incrementales.
+
+La revisión autenticada encontró una flecha ausente en Android: un nombre de
+SF Symbols como `chevron.right` no aporta automáticamente un Material Symbol en
+Expo Symbols 57. Las primitivas compartidas deben declarar ambos nombres; se
+corrigen `DisclosureIndicator` y `DialogCloseButton` conservando la presentación
+iOS y web. Pasan typecheck y exportación web. Se verificaron 17 respuestas de la
+API local y guardados de resultados desde ambos simuladores. La matriz distingue
+cobertura API y visual, y deja explícitos el rol delegado y el blur Android.
+
+Retrospectiva: paridad funcional no exige iconos idénticos, pero sí que la misma
+intención tenga representación visible en cada sistema. Una prueba con sesión
+real aporta evidencia que una home anónima o el typecheck no pueden dar.

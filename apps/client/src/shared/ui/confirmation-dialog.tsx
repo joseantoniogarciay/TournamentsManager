@@ -251,7 +251,11 @@ export function DialogCloseButton({ accessibilityLabel, onPress }: DialogCloseBu
       {Platform.OS === "web" ? (
         <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
       ) : (
-        <SymbolView name="xmark" size={control.iconSize} tintColor={colors.text.primary} />
+        <SymbolView
+          name={{ android: "close", ios: "xmark", web: "close" }}
+          size={control.iconSize}
+          tintColor={colors.text.primary}
+        />
       )}
     </Pressable>
   );
