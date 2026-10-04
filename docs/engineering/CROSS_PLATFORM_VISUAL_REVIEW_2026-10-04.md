@@ -171,13 +171,23 @@ un adaptador nuevo, pero exige revisión y retirada al actualizar la dependencia
 Pasan typecheck, exportación web y las cinco pruebas de compatibilidad de
 dependencias. El parche se aplica reproduciblemente mediante pnpm y ambos
 bundles nativos se regeneraron tras reiniciar Metro con caché vacía.
-No se acredita aún la comprobación visual del icono corregido: el Mac quedó
-bloqueado y el control de pantalla confirmó que no podía desbloquearlo.
+Tras desbloquear el Mac, se cargó el bundle corregido en Pixel API 34:
+con fuente máxima, la X completa queda centrada en el control circular y su
+borde exterior mantiene la alineación con la card. El texto del formulario
+conserva su escala ampliada. Se confirma visualmente la regresión corregida.
 
-Tema iOS restaurado a Sistema. La restauración del tamaño de fuente sigue
-pendiente: iOS al extremo superior habitual (slider 100 %, tamaños adicionales
-desactivados), Android al extremo superior (posición 7 de 7; original 2 de 7,
-tamaño de visualización conservado). Las tentativas de restaurar iOS no
-confirmaron el valor original de 50 %. Retomar esos dos ajustes y la regresión
-visual cuando el usuario desbloquee el Mac. Metro temporal apagado al cerrar;
-no se han arrancado backend, dev ni observabilidad.
+Se restauraron y verificaron los ajustes originales: iOS Dynamic Type al 50 %
+y tamaños adicionales desactivados; Android fuente en posición 2 de 7 y tamaño
+de visualización conservado en posición 2 de 5. La restauración se completó con
+los menús de accesibilidad de Device Hub y Device UI Shortcuts de Android Studio,
+tras respuestas irregulares de los gestos sobre los sliders. La captura de
+teclado y el zoom habitual de Device Hub quedaron restaurados.
+
+Crear torneo en iOS, después de recargar y restaurar el tamaño, conserva la X
+nativa, los márgenes y la CTA «Inicia sesión para crearlo». Android recupera
+Inicio y Crear torneo con su tipografía habitual, X completa y CTA sin recorte. Tema iOS restaurado a Sistema; tema Android
+sin cambios. La revisión sigue limitada a la cobertura sin sesión descrita en
+la matriz, sin cerrar los casos abiertos de los ADR.
+
+Metro temporal apagado al cerrar; no se han arrancado backend, dev ni
+observabilidad.

@@ -4341,10 +4341,14 @@ incluidos sesión, idiomas, lectores de pantalla y rango extra de Dynamic Type.
 No se modifican operaciones HTTP ni decisiones funcionales.
 
 Validación automatizada: typecheck, exportación web y cinco regresiones de
-compatibilidad de dependencias pasan. La validación visual posterior del parche
-y la restauración de tamaño de texto siguen pendientes mientras el control de
-simuladores devuelve `noWindowsAvailable`; no se confunde la aplicación del
-parche con una prueba visual terminada.
+compatibilidad de dependencias pasan. Tras desbloquear el Mac, el bundle
+corregido muestra la X completa y centrada en Android con fuente máxima, sin
+reducir el texto del formulario. iOS conserva su cierre nativo y la CTA
+«Inicia sesión para crearlo». Los tamaños originales se restauraron y
+verificaron: iOS 50 % del slider habitual, Android posición 2 de 7, con tamaño
+de visualización 2 de 5 conservado. Los menús nativos de accesibilidad permiten
+restaurar pasos exactos cuando los gestos sobre sliders responden de forma
+irregular. Metro temporal apagado al terminar.
 
 Retrospectiva: compartir componentes no elimina las métricas nativas. Probar
 la escala del contenido junto a las cajas de los iconos descubre fallos que el
