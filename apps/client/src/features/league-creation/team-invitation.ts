@@ -10,6 +10,17 @@ export function isTeamInvitationToken(value: string | null | undefined): value i
   return typeof value === "string" && invitationTokenPattern.test(value);
 }
 
+export function invitationTokenFromURL(url: string | null): {
+  present: boolean;
+  token: string | null;
+} {
+  if (!url) return { present: false, token: null };
+  const hashIndex = url.indexOf("#");
+  if (hashIndex === -1) return { present: false, token: null };
+  const value = url.slice(hashIndex + 1);
+  return { present: true, token: isTeamInvitationToken(value) ? value : null };
+}
+
 export async function rememberPendingTeamInvitation(token: string) {
   if (!isTeamInvitationToken(token)) return false;
   if (Platform.OS === "web") await AsyncStorage.setItem(pendingInvitationKey, token);

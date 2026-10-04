@@ -25,7 +25,7 @@ posteriores conservaron archivos privados de evidencia enumerados más abajo.
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `go test -json ./...`                      | 483 tests/subtests aprobados, 56 omitidos, ningún fallo. Las integraciones opt-in están omitidas en esta ejecución.                   |
 | PostgreSQL opt-in en BD desechable         | 58 tests/subtests aprobados, sin fallos. `tm_product_qa_20261004` separada de la BD persistente de fixtures: la suite trunca cuentas. |
-| `node --test tests/*.test.mjs`             | 34 aprobados en la pasada final, sin omitidos ni fallos (30 anteriores + 4 de borrador de invitación).                                                                                                 |
+| `node --test tests/*.test.mjs`             | 41 aprobados, sin omitidos ni fallos (30 anteriores + 4 de borrador + 7 de entrada nativa).                                                                                                 |
 | `python3 tests/operational-safety.test.py` | 11 aprobados.                                                                                                                         |
 | Cliente                                    | `pnpm run check` aprobado (formato, lint, TypeScript y OpenAPI); exportación web completada; cliente generado actualizado.                                   |
 
@@ -43,7 +43,7 @@ a cobertura de líneas ni al número de casuísticas del producto.
 | Google / Apple                                       | Challenges, validación, errores seguros, atomicidad y concurrencia con dobles de prueba                         | No se acredita acceso real a proveedores                                                                                                               | Orden de botones comprobado en ambos; OAuth real aplazado por el usuario a futuras pruebas en dev/prod                       |
 | Biblioteca, recientes, seguir/dejar de seguir        | HTTP, persistencia y relaciones sin duplicar                                                                    | Paginación, seguimiento idempotente y consultas                                                                                                        | Administro/Sigo en web y ambos SO; recientes; paginación y seguir/dejar de seguir UI pendientes |
 | Administradores y exclusividad del creador           | HTTP y persistencia                                                                                             | Asignación autorizada/idempotente, delegado puede editar; listar admins, cancelar, completar y transferir rechazados 403                               | Delegado edita en iOS; menú y URL directa 403 revisados en web, búsqueda con creador; Android delegado pendiente |
-| Invitación de equipo                                 | HTTP y persistencia                                                                                             | Crear/regenerar, anterior inválida, inspección anónima, inscripción 201, duplicado 409, sin sesión 401, revocación idempotente, después de empezar 409 | Web anónimo → login conserva nombre e inscribe; conflicto del ya inscrito; recorrido nativo pendiente |
+| Invitación de equipo                                 | HTTP y persistencia                                                                                             | Crear/regenerar, anterior inválida, inspección anónima, inscripción 201, duplicado 409, sin sesión 401, revocación idempotente, después de empezar 409 | Web anónimo → login conserva nombre e inscribe; conflicto del ya inscrito. iOS: entrada corregida, login conserva nombre, inscripción confirmada, duplicado recuperable y segundo enlace con app abierta; Android nativo pendiente |
 | Composición de equipos                               | HTTP, persistencia                                                                                              | Último equipo 409, añadir, duplicado normalizado 409, eliminar antes de empezar                                                                        | Creación web, primer equipo, duplicado y segundo válido; nombres largos en ambos; bajas UI pendientes |
 | Ocho deportes × tres formatos                        | Dominio, HTTP y persistencia                                                                                    | 16 combinaciones admitidas terminadas con campeón; 8 rechazadas 400 según contrato                                                                     | Ocho formularios guardados en web; formatos largos y desempates. Nativo parcial: fútbol, bádminton, tenis de mesa y voleibol; no acredita todos los formatos |
 | Liga y mixto                                         | Grupos, dos vueltas, composición impar, retirada de clasificado, desempate repetido, congelación y concurrencia | Una vuelta y mixto tabla única; empate de corte con liguilla de desempate resuelto                                                                     | Clasificación fútbol parcial en ambos; mixto y desempates en pantalla pendientes                    |
@@ -89,6 +89,9 @@ esperado. No se suman estos contadores como cobertura exhaustiva.
 9. Sugerencias no explicaba visualmente la longitud mínima tras abandonar el
    campo. Se conecta el error localizado al `TextField` compartido; al guardar
    se reinicia también su estado de interacción para no señalar el campo vacío.
+10. iOS rechazaba una invitación válida al abrir la app ya iniciada: el listener
+    de la pantalla se montaba después del evento. La entrada nativa captura y
+    persiste el fragmento antes de navegar; iOS confirma formulario, login e inscripción.
 
 ## Diferencias y cobertura visual abierta
 
@@ -338,3 +341,51 @@ Retrospectiva: el botón correctamente deshabilitado no explica por sí solo có
 recuperarse. Una prueba de formulario debe cerrar también el éxito y comprobar
 que no persiste una validación de la edición anterior; compartir cuenta entre
 SO permite revisar que el límite no depende del dispositivo.
+
+## Entrada nativa de invitación: evento previo al montaje
+
+Dos fixtures nuevos locales, uno por SO, permiten revisar la inscripción tras
+login sin reutilizar el equipo web ya inscrito. Tras logout confirmado, Safari
+en iPhone abrió el esquema local de la app con fragmento válido. La pantalla
+mostró «Esta invitación ya no está disponible», aunque la inspección anónima
+por API real respondió 200 con ese mismo torneo. La captura privada
+`invitation-ios-unavailable.jpg` conserva la reproducción.
+
+Evidencia de causa: el `useURL` instalado empieza su listener al montar y lee
+`getInitialURL`, que no recupera ese evento posterior al arranque. Expo Router
+recibe el enlace antes de montar la ruta. Su extensión `+native-intent` permite
+esperar la persistencia y devolver `/join-team` sin secreto; se usa ese punto
+para enlaces de esquema, universales y Expo Go. La pantalla nativa restaura el
+almacenamiento; web conserva la captura de fragmento previa. Un fragmento
+inválido limpia token y borrador anteriores; un fallo de almacenamiento vuelve
+a Inicio sin propagar la URL secreta. El parser existente se mueve al módulo
+de la feature, sin cambiar el contrato de token.
+
+Siete regresiones del módulo real cubren arranque/app abierta por cada adaptador
+nativo, formatos de enlace, invalidación del borrador, espera del guardado,
+fallo seguro, conservación del gate inicial y retorno OAuth. La suite Node
+completa pasa 41 casos; `pnpm run check` y exportación web terminan con éxito.
+
+La recarga completa en iOS cargó la extensión existente `+native-intent.ts`.
+Un primer experimento duplicó esa extensión con `.tsx`; se retiró al comprobar
+que Expo Router seleccionaba la original. No queda extensión duplicada ni
+logging de diagnóstico. Hot refresh no sustituye la recarga del punto de entrada.
+
+Repetición real iOS: formulario del torneo correcto sin sesión; «Cóndores
+invitados iOS» se conserva al autenticar la cuenta ficticia existente; inscripción
+abre el torneo y mantiene Iniciar deshabilitado para el participante. El detalle
+público confirma ambos equipos. Reabrir el enlace y repetir la inscripción
+muestra conflicto localizado conservando el formulario. Un enlace del segundo
+fixture recibido con la ruta de invitación ya abierta cambia al torneo correcto
+sin reiniciar. Evidencias: `invitation-ios-restored-name.jpg` y
+`invitation-ios-warm-second.jpg`.
+
+Android: la prueba desde Chrome requiere aceptar sus términos iniciales; se
+solicitó autorización específica y queda pendiente. Las regresiones del
+adaptador Android no sustituyen este recorrido visual. No se acreditan
+asociaciones reales de enlaces universales de dev/prod mediante un esquema local.
+
+Retrospectiva: probar almacenamiento y retorno del login no detecta un evento
+que llegó antes de existir la pantalla. La captura del enlace pertenece al
+punto de entrada de navegación; la vista conserva formulario, inspección y
+recuperación, sin inventar validez a partir de una URL.

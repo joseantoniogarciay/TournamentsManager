@@ -4429,3 +4429,14 @@ el campo; después del éxito se reinicia su interacción junto al valor para no
 mostrar un error nuevo sobre un formulario recién limpiado. El rechazo conserva
 el borrador. La prueba real combinó tres envíos web/Android y un rechazo por
 límite en iOS, mostrando que la cuota pertenece a la cuenta y no al dispositivo.
+
+Una invitación válida falló visualmente en iOS con la app ya abierta: un
+listener montado dentro de la pantalla llega después del evento que provocó
+su navegación. La extensión de entrada nativa de Expo Router guarda el
+fragmento antes de devolver la ruta limpia; la pantalla restaura el token y
+web conserva su lectura del fragmento. Regresiones prueban inicio, app abierta,
+invalidación y espera de almacenamiento. La repetición iOS confirma nombre
+conservado tras login, inscripción, conflicto recuperable y otro enlace con
+la app viva. El punto de entrada exige recarga completa: hot refresh puede
+conservar la extensión anterior. No se equivale esquema local a asociación
+real de enlaces universales ni adaptador probado a recorrido visual Android.
