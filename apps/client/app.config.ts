@@ -51,7 +51,13 @@ function getGoogleRedirectSchemes() {
   return [
     ...new Set(
       clientIDs
-        .filter((clientID): clientID is string => Boolean(clientID))
+        .filter((clientID): clientID is string =>
+          Boolean(
+            clientID &&
+            !/placeholder|replace[_-]|change-me|[<>]/i.test(clientID) &&
+            /^\d+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/.test(clientID),
+          ),
+        )
         .map(
           (clientID) =>
             `com.googleusercontent.apps.${clientID.replace(/\.apps\.googleusercontent\.com$/, "")}`,
@@ -85,13 +91,33 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         action: "VIEW",
         autoVerify: true,
         category: ["BROWSABLE", "DEFAULT"],
-        data: [{ scheme: "https", host: appLinkDomain, pathPrefix: "/link/" }],
+        data: [
+          { scheme: "https", host: appLinkDomain, pathPrefix: "/link/" },
+          { scheme: "https", host: appLinkDomain, path: "/join-team" },
+          { scheme: "https", host: appLinkDomain, pathPrefix: "/tournament/" },
+        ],
       },
     ],
   },
   userInterfaceStyle: "automatic",
   plugins: [
     "expo-router",
+    ...(appEnvironment !== "production"
+      ? []
+      : [
+          [
+            "posthog-react-native/expo",
+            {
+              uploadNativeSymbols: { includeSource: false },
+              disableSandboxing: false,
+              skipOnConflict: true,
+              ...(process.env.POSTHOG_CLI_DOTENV_FILE
+                ? { dotenvFile: process.env.POSTHOG_CLI_DOTENV_FILE }
+                : {}),
+            },
+          ] as [string, Record<string, unknown>],
+        ]),
+    "./plugins/with-ios-scene-lifecycle.cjs",
     [
       "expo-build-properties",
       {

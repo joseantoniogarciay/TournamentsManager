@@ -6,7 +6,46 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Added
+
+- ADR-0147: acceso Apple mediante navegador del sistema en web, iOS y Android,
+  con challenge de un solo uso, validación backend y migración PostgreSQL.
+  Configuración real, builds firmadas y revisión de distribución pendientes.
+
+### Changed
+
+- Cierre de ramas temporales: eliminación local y remota tras comprobar su
+  integración en `develop`; promoción a `main` reservada al ciclo de producción
+  autorizado. Regla de colaboración y aclaración de ADR-0013 actualizadas.
+
+- ADR-0149: proyecto PostHog UE 255144 reservado a fiabilidad mínima de producción;
+  beta/local y analítica de uso apagados. Clave pública existente migrada a prod,
+  controles de analítica retirados de Inicio/Ajustes y preparación de símbolos
+  Metro/Expo/staging web. Clave CLI, reconstrucción y prueba real pendientes.
+
 ### Fixed
+
+- Controles de cabecera Android: el margen compartido complementa el inset
+  nativo de 16 px hasta alcanzar los 20 px de las cards. Cierre de Crear torneo
+  alineado y comprobado en Pixel API 34, conservando el objetivo táctil de 44 px.
+
+- Desarrollo bajo petición (ADR-0146): local/dev apagados fuera de pruebas;
+  observabilidad optativa y sin exportador hacia Tempo cuando esté apagado.
+  Perfiles y comandos explícitos, sin reinicio Docker ni pérdida de volúmenes;
+  agentes dev suspendidos durante el apagado. Producción se mantiene activa.
+
+- Preparación de asociaciones HTTPS: dev copia AASA/DAL por release y comparte
+  con prod la validación de identidad, rutas y huellas. Caddy sirve JSON sin
+  fallback SPA; AASA y filtros Android cubren invitaciones y torneos además de
+  `/link/*`. Publicación y verificación firmada pendientes de datos reales.
+
+- Formularios nativos: scroll automático al campo enfocado y espacio temporal
+  de teclado en la primitiva compartida, sin duplicar el resize Android.
+  Comprobado en Crear torneo con Android 14 e iOS 27.
+
+- Apariencia Android: la barra de pestañas nativa usa los tokens del tema de la
+  app para evitar que permanezca clara al elegir oscuro. Verificado en Pixel
+  Android 14; typecheck y exportación web pasan.
 
 - Apagado de la API (ADR-0145): espera preStop nativa de cinco segundos en K3s,
   gracia de treinta segundos en K3s y Compose dev, telemetría acotada a cinco
@@ -14,6 +53,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   Pruebas con sockets reales; desplegado en prod el 2026-10-04 (11138a1):
   dos réplicas listas y 168 respuestas esperadas sin errores durante el rollout
   de verificación.
+
+- Arranque iOS con SDK 27: config plugin CNG para una escena UIKit, sin cambiar
+  dependencias. Los metadatos SEO de Inicio se montan exclusivamente en web.
+  Arranque observado en iOS 27 y 18.5; enlaces de esquema y persistencia de tema
+  comprobados en iOS 27. Sesión autenticada, Universal Links y distribución
+  pendientes, registrados en la auditoría nativa (ADR-0144).
 
 - Verificación de backups dev: restauración y consulta comparten un volumen
   temporal único, sin red ni montaje de datos activos. Se exige recuperación
@@ -698,3 +743,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   ligas organizadas.
 - Añadida la gestión de métodos de acceso de ADR-0068: consulta de métodos,
   logout local silencioso, reautenticación de un solo uso y contraseña local.
+
+## 2026-10-04 — Acceso social Apple preparado
+
+- ADR-0147 incorpora acceso y alta Apple en web/iOS/Android mediante sesión de navegador del sistema, callback HTTPS, state/nonce y prueba ligada al cliente.
+- Comparte sesión/borrador/evidencia legal con Google; añade migración 00020 y lectura del método Apple sin vinculación automática por email.
+- Google aplica límites de intentos y ambos flujos rechazan placeholders/cuerpos inválidos y conservan cancelación silenciosa.
+- Configuración real, builds firmadas y revocación Apple al borrar cuenta siguen gates explícitos de distribución; no se ha desplegado.

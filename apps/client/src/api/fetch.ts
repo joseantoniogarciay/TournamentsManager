@@ -117,7 +117,7 @@ export function captureProductIntent(event: string) {
 export function captureProductOutcome(
   event: string,
   headers: Headers,
-  properties?: { method: "google" | "password" },
+  properties?: { method: "google" | "apple" | "password" },
 ) {
   const interactionID = interactionIDsByResponseHeaders.get(headers);
   if (!interactionID) return;

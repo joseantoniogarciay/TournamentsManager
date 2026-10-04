@@ -3,6 +3,8 @@
 - **Estado:** Aceptado
 - **Fecha:** 2026-07-28
 - **Decisor:** Usuario
+- **Superado parcialmente por:** [ADR-0143](0143-detect-client-language-from-system-and-browser.md),
+  solo en la elección de idioma web.
 - **Propietario del análisis:** Codex como mentor técnico
 
 ## Problema

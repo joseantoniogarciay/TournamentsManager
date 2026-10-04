@@ -1,5 +1,40 @@
 # Registro de aprendizaje
 
+## 2026-10-04 — Cierre del trabajo pendiente en develop
+
+El usuario solicita commitear y publicar el conjunto pendiente para alinear el
+workspace con `origin/develop`. Se revisan 149 archivos de implementación,
+contratos, pruebas, configuración de ejemplo y documentación; los ADR aplicables
+están aceptados (ADR-0148 superado por ADR-0149). No se incluyen secretos privados.
+
+Pasan `make verify`, generación determinista OpenAPI/sqlc, `make test-race` y
+`make test-integration` sobre PostgreSQL 18.4 desechable desde esquema vacío,
+incluida la migración 00020. La instancia de pruebas se elimina al terminar,
+sin arrancar local/dev ni observabilidad. La auditoría no detecta vulnerabilidades
+alcanzables; conserva el aviso del módulo no usado ya documentado.
+
+Retrospectiva: un cambio validado debe cerrar también su trazabilidad en Git;
+dejar implementación y decisiones sin publicar dificulta conocer el estado real.
+La integración en develop conserva los gates explícitos de configuración social,
+asociaciones firmadas y recepción/simbolización PostHog. No equivale a un despliegue
+de producción ni a una validación de proveedores con credenciales reales.
+
+## 2026-10-04 — Cierre de ramas temporales tras integración
+
+El usuario confirma la limpieza local y remota de ramas temporales después de
+integrarlas en `develop`. Se comprueba ascendencia respecto de `origin/develop`
+actualizado, ausencia de PR abiertos y worktrees que usen esas ramas; se eliminan
+cinco ramas locales y cuatro remotas ya integradas. Solo quedan `develop` y
+`main`, ambas en `fee7827`. El workspace conserva sus cambios sin commitear.
+
+La regla queda en AGENTS.md, CONTRIBUTING.md y una aclaración de ADR-0013.
+La promoción a `main` se reserva al ciclo de producción autorizado, con tag y
+despliegue del SHA conforme a ADR-0119; esta limpieza no publica una versión.
+
+Retrospectiva: borrar una referencia ya integrada conserva sus commits en la
+rama de integración. La comprobación de ascendencia permite una limpieza de
+bajo mantenimiento sin confundir una rama antigua con trabajo abandonado.
+
 ## 2026-09-23 — Un resultado multidimensional necesita una única fuente de verdad
 
 - **Aprendido:** reutilizar el marcador agregado para tenis o pádel permitiría
@@ -3981,6 +4016,51 @@ commit de configuración e imagen de API porque este cambio no reconstruye la
 aplicación. La [evidencia de promoción](../operations/OPERATIONAL_BLOCK_REVIEW_2026-10-03.md#promoción-autorizada-posterior-a-dev)
 completa el cierre anterior; no publica una versión de producción.
 
+### 2026-10-03 — Revisión visual web con datos ficticios
+
+La [auditoría visual](../engineering/WEB_VISUAL_AUDIT_2026-10-03.md) combina
+capturas, pulsaciones y dimensiones DOM. A 320×480 se detectó una cabecera sobre
+Volver; un username válido invadió las acciones de Cuenta. También se confirmó
+una ruta que heredaba una cabecera oculta, un estado terminal sin margen,
+objetivos pulsables pequeños y semántica de selección ausente en el DOM.
+
+**Aprendizaje:** validar textos y tipos no valida la geometría ni la interacción.
+Los nombres largos deben respetar el contrato de negocio y los estados de error
+deben formar parte de la revisión visual. Los mocks autorizados permiten revisar
+presentación sin mutar datos reales, pero no acreditan reglas de negocio ni
+integración con el backend. Esta fase registra problemas; no implementa un
+rediseño ni cierra las correcciones pendientes.
+
+
+## 2026-10-03 — Correcciones de la auditoría visual
+
+El título de Cuenta web reserva el espacio de los botones y 20 px de separación;
+el nombre accesible completo se conserva aunque el username visual se trunque.
+Registrar una ruta en el stack raíz evita heredar headerShown false y perder su
+cierre. Los estados terminales también necesitan margen y una salida útil.
+
+Un objetivo ampliado de switch debe exponer un único control accesible; la
+representación interna se oculta y no recibe foco. aria-checked se verificó en
+DOM para los radios de tema: accessibilityState por sí solo no bastaba en web.
+El usuario decidió idioma automático en todas las plataformas (ADR-0143).
+No se añadieron dependencias ni se modificaron contratos/API.
+
+## 2026-10-03 — Arranque nativo y escenas de iOS
+
+Una build puede compilar e instalarse y aun así ser rechazada por UIKit antes de
+ejecutar React. La auditoría detectó que el SDK de iOS 27 exige UIScene mientras
+la plantilla Expo fijada crea su ventana en AppDelegate. La solución vive en un
+config plugin CNG: la escena recibe la ventana y entrega enlaces y eventos a las
+integraciones existentes. No basta añadir una clave al plist ni modificar una
+salida generada. La validación debe separar regeneración, compilación, arranque,
+enlaces en frío/caliente y regreso desde segundo plano.
+
+En simulador, la firma Xcode y los entitlements simulados incorporados al enlazar
+son piezas distintas. Un `.xcent` de firma vacío no demuestra su ausencia.
+Añadir entitlements a mano impidió el arranque; reconstruir con la firma generada
+por Xcode restauró la ejecución. La ausencia de un error de lectura Keychain no
+acredita escritura ni restauración de una sesión autenticada.
+
 
 ## 2026-10-03 — Presupuesto y orden del apagado de la API
 
@@ -4010,3 +4090,175 @@ y esa medición se descartó. Una prueba de continuidad debe alcanzar la API y
 validar su respuesta; no basta contar respuestas del proxy. El resultado acota
 el riesgo del rollout probado, sin garantizar disponibilidad del host ni carga
 transaccional.
+
+
+## 2026-10-04 — Apariencia nativa Android y alcance de la auditoría
+
+Los colores dinámicos Material de NativeTabs siguen el tema del SO. Una
+preferencia explícita de la app requiere propagar también fondo, etiquetas,
+iconos e indicador desde los tokens compartidos; el colorScheme del host que
+resolvió iOS no bastó en el Android probado. La corrección no necesita otro
+provider ni una dependencia.
+
+**Retrospectiva técnica:** separar ANR del sistema, carga de la development build
+y funcionamiento del producto evitó atribuir el arranque lento a FastTourney.
+El recorrido inicial detectó y corrigió la barra clara en oscuro, pero reveló
+que el campo inferior de Crear torneo queda parcialmente bajo el teclado.
+La primitiva compartida solo ajusta insets en iOS; el comportamiento Android
+sigue pendiente. Segundo plano no acredita persistencia tras muerte del proceso.
+Véase la [auditoría Android](../engineering/ANDROID_VISUAL_AUDIT_2026-10-03.md).
+
+
+## 2026-10-04 — Visibilidad del foco y espacio de teclado
+
+- **Hecho:** un formulario desplazable y un inset de teclado no garantizan por
+  sí solos que el control enfocado quede visible. Se reprodujo en Crear torneo
+  Android con el campo inferior parcialmente cubierto.
+- **Corrección autorizada:** mantener en `KeyboardAwareScrollView` la medición
+  del campo/viewport, el scroll mínimo y el espacio temporal. iOS conserva sus
+  insets nativos; Android compensa solo la oclusión restante después del resize.
+  Se reutilizan los tokens y los eventos React Native, sin dependencia nueva.
+- **Alternativas y coste:** padding fijo por pantalla duplica reglas y puede
+  compensar dos veces el teclado; una librería nativa requiere configuración,
+  builds y mantenimiento adicionales. La primitiva existente cubre el defecto
+  observado con un cambio compartido.
+- **Foco:** desplazar automáticamente el campo es distinto de `autoFocus`.
+  Este último abre el teclado al entrar y debe seguir siendo contextual.
+  Arrastrar no debería cerrar por defecto el teclado mientras se completa un
+  formulario ni provocar validación por un blur accidental.
+- **Validación:** Pixel Android 14 e iPhone 18 Pro/iOS 27, campo inferior visible,
+  cambio de foco y recuperación al ocultar teclado; scroll manual hasta la
+  acción final en Android y escritura mediante teclado software en iOS.
+  Typecheck, lint y exportación web pasan. Las rutas autenticadas con autofocus
+  comparten la corrección, pero no se acreditan con el recorrido sin sesión.
+- **Retrospectiva:** comprobar que Metro está activo y que el dispositivo cargó
+  el nuevo bundle antes de evaluar una corrección. En iOS desactivar la ausencia
+  de teclado software del simulador como falsa evidencia de éxito. Conservar
+  los límites de cobertura en cada auditoría.
+
+## 2026-10-04 — Asociaciones HTTPS por entorno
+
+- Hecho: un esquema propio que abre una pantalla solo prueba recepción y routing;
+  HTTPS exige además asociación pública y coincidencia con la firma instalada.
+- Implementación: dev/prod comparten validación de AASA y DAL e incorporan el par
+  dentro del release. Los archivos ausentes no pasan por el fallback HTML.
+- Seguridad: validar un SHA-256 bien formado no demuestra propiedad del
+  certificado. App ID Prefix y certificados se obtienen de artefactos firmados
+  o cuentas de distribución; Play App Signing puede diferir de la clave de subida.
+- Retrospectiva: aprovechar el staging existente conserva rollback y evita
+  mantener una publicación paralela. La evidencia pública y nativa queda pendiente
+  de los datos reales y de los gates de despliegue, sin inventarlos.
+
+Validación del incremento: cinco tests de asociaciones pasan y quedan en
+`make verify`; lint de archivos afectados, typecheck, exportación web y enlaces
+documentales locales pasan. Expo config confirma ambas variantes y sus filtros.
+Caddy se prueba con archivos temporales, sin modificar el servicio activo: dos
+recursos JSON con 200 y una ausencia con 404 en cada host. Esta evidencia
+no sustituye la publicación HTTPS ni la validación con firma y dispositivos.
+
+## 2026-10-04 — Desarrollo apagado y diagnóstico explícito
+
+ADR-0146 recoge la decisión del usuario de reducir actividad continua del SSD:
+retención limita espacio ocupado, mientras detener escritores reduce actividad.
+Perfiles Compose y política de reinicio son controles diferentes. El endpoint
+OTLP vacío evita reintentos hacia un Tempo apagado. Cambiar el exportador exige
+recrear brevemente API, preservando la imagen pública activa. Los agentes dev
+(renderer y tareas programadas) deben acompañar al ciclo de pruebas.
+
+Retrospectiva: se reutilizan Compose, Make y los plist instalados; no se cambia
+runtime, durabilidad ni producción. Once pruebas de seguridad operacional pasan;
+la resolución de Compose confirma core únicamente por defecto y perfil técnico
+solo explícito. El apagado conserva datos y backups; no demuestra por sí solo
+un aumento cuantificable de vida del SSD. Verificar tareas de backup/purga al
+reanudar pruebas y recordar que la retención no purga mientras el stack esté parado.
+
+## 2026-10-04 — Acceso Apple en Android y presentación OAuth dentro de la app
+
+ADR-0147 añade Apple sobre navegador del sistema, compartiendo las invariantes
+transaccionales Google. La decisión explícita pide Apple también en Android y
+placeholders mientras no existan cuentas/identificadores reales. Google ya estaba
+implementado; se endurecen placeholders, tasa, cuerpos de sesión y cancelación.
+
+ASWebAuthenticationSession y Custom Tabs presentan OAuth sobre la aplicación y
+conservan la seguridad del proveedor. Una WebView propia no sustituye esa sesión.
+El router no debe navegar por su cuenta al recibir un retorno caliente: desmontar
+el modal iniciador perdería su secreto/borrador. Un inicio en frío sin esa prueba
+reinicia el acceso, nunca crea sesión a partir de parámetros de URL.
+
+La prueba cliente independiente evita convertir un callback interceptado en una
+sesión. State/nonce/código no son intercambiables. Los tokens Apple nunca vuelven
+por URL y la clave .p8 solo firma client secrets en servidor. La transacción
+comparte sesión, términos y torneo sin acoplar negocio a Apple ni PostgreSQL.
+
+Retrospectiva: la integración real detectó una segunda restricción de issuer en
+el esquema, además de provider: ampliar solo provider no permite insertar Apple.
+Se mantiene una restricción del par provider/issuer y se prueba la migración desde
+cero. La revocación Apple al eliminar cuenta y las pruebas firmadas siguen gates
+explícitos de publicación, no quedan acreditadas por el login sintético.
+
+El gate ESLint encontró una copia privada de despliegue bajo `.config/deployments`;
+se excluye ese artefacto y se fija tsconfigRootDir a la raíz del config. Esto evita
+que snapshots locales cambien la resolución del proyecto sin tocar las copias.
+Expo install --check propone versiones más recientes, pero no se actualiza el
+SDK ni módulos nativos en este incremento; se conserva la política de lockfile.
+Android comprueba y selecciona un paquete compatible con Custom Tabs antes de
+abrir OAuth. La aclaración posterior del usuario prioriza la presentación interna,
+pero permite el navegador del sistema si no hay Custom Tabs para conservar acceso.
+
+Evidencia: `make check`, tidy de ambos módulos Go, build y govulncheck pasan;
+no hay vulnerabilidades alcanzables detectadas. La integración PostgreSQL desde
+cero verifica alta, rollback, conflicto de email, replay, expiración y consumo
+concurrente; race pasa en identidad, proveedor, HTTP y configuración. Seis pruebas
+cliente cubren placeholders, Custom Tabs, retornos y respuestas malformadas. La
+generación OpenAPI/sqlc es determinista, la web se revisa visualmente y los bundles
+iOS/Android se exportan. La compilación de JavaScript no sustituye la prueba OAuth
+en dispositivos con firma y cuentas reales. Se elimina la base de pruebas efímera
+y se cierra el preview estático; local/dev y observabilidad no se arrancan.
+
+
+## 2026-10-04 — Proyecto único de PostHog reservado a producción
+
+El usuario confirma el límite de un proyecto de su cuenta y acepta reservarlo
+para prod, apagando beta. Safari acredita ID 255144, EU Cloud y coincidencia del
+token con la configuración previa. La separación por hosts no implica separación
+de datos SaaS; apagar la captura beta evita mezclas nuevas sin añadir gasto.
+
+El entorno runtime se obtiene de Expo Constants: APP_ENV privado decide el build,
+pero no se da por sustituido dentro de JavaScript. La clave pública existente se
+migra a una variable exclusiva de producción. Las preferencias previas no activan
+analítica ni SDK en beta/local. Inicio/Ajustes no ofrecen un switch sin capacidad.
+
+Retrospectiva: captura, transporte y simbolización requieren evidencia distinta.
+Metro añade debug IDs; Expo prepara Hermes/dSYM/R8 sin desactivar sandboxing desde
+el plugin; staging web usa proyecto/credencial explícitos, bloquea fallos de subida
+y retira mapas públicos. El filtro JS no prueba el contenido de un crash nativo.
+La clave CLI aún falta; la reconstrucción y prueba real se difieren expresamente.
+No se han desplegado cambios ni iniciado stacks local/dev u observabilidad.
+
+Validación del cierre: lint, tipos y formato pasan; ocho pruebas de telemetría
+comprueban entorno, eventos mínimos, descarte de secretos reconocidos, destino
+255144, fallo de upload y retirada de mapas públicos. Pasan las regresiones de
+OAuth, dependencias Metro, escenas iOS y seguridad operacional. Exportaciones
+web/iOS/Android con source maps e introspección Expo pasan; el plugin se limita
+a prod y no modifica carpetas nativas durante la introspección. Inicio/Ajustes
+exportados no contienen el control de analítica. No se han enviado crashes ni
+símbolos reales, y la clave CLI continúa pendiente.
+## 2026-10-04 — Alineación de controles de cabecera en Android
+
+El cierre de Crear torneo sumaba el margen de 20 px de la primitiva al inset
+de 16 px de la toolbar Android. Se corrige `NavigationHeaderButton` compartido:
+en Android añade solo 4 px por lateral para completar los 20 px exteriores de
+las cards; web conserva 20 px y iOS su comportamiento existente. No cambia
+el objetivo táctil de 44 px ni se introduce una excepción local en la ruta.
+
+Validación: en Pixel API 34, densidad 420 dpi, el borde izquierdo del botón
+pasa de x=95 a x=53 píxeles físicos (36 a 20 unidades de layout), alineado con
+la card. Pasan typecheck, lint y formato del componente y exportación web.
+Se revisan tokens, accesibilidad, localización y navegación contra la checklist
+del cliente; no se modifican operaciones HTTP ni quedan partes de ADR pendientes
+por este ajuste. Metro temporal se cierra al terminar; no se arrancan backend
+ni observabilidad.
+
+Retrospectiva: el margen relevante es la suma del inset del contenedor nativo y
+el margen React Native. Revalidar esa suma al actualizar la navegación evita
+compensaciones duplicadas; corregir la primitiva mantiene el coste bajo.

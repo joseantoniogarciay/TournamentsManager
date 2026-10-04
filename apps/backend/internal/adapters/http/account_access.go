@@ -219,7 +219,7 @@ func getAccessMethods(authenticator sessionAuthenticator) http.HandlerFunc {
 		}
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{"email": access.Email, "username": access.Username, "methods": map[string]bool{"password": access.HasPassword, "google": access.HasGoogle}})
+		_ = json.NewEncoder(w).Encode(map[string]any{"email": access.Email, "username": access.Username, "methods": map[string]bool{"password": access.HasPassword, "google": access.HasGoogle, "apple": access.HasApple}})
 	}
 }
 

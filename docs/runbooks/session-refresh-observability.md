@@ -15,6 +15,8 @@ la operación tarda más de lo esperado.
 - contratos locales preparados con `make dev-init`;
 - esquema inicial aplicado y una sesión web válida creada;
 - `make dev-up` en ejecución;
+- Observabilidad solicitada y activada explícitamente con `make dev-observability-up`
+  (`make dev-public-observability-up` en público), con API previamente en marcha.
 - Grafana disponible en `http://127.0.0.1:3000`.
 
 ## Diagnóstico seguro
@@ -114,3 +116,8 @@ sesión bearer, se detuvo únicamente `postgres` y se renovó la sesión. La API
 respondió `500`, el log JSON correlacionado registró
 `failure_reason=database.query_failed` y Tempo confirmó la misma causa en el
 span HTTP raíz. PostgreSQL se inició de nuevo antes de cerrar la prueba.
+
+Al terminar, `make dev-observability-down` (o `dev-public-observability-down`)
+cierra el diagnóstico; `make dev-down` (o `dev-public-down`) cierra la sesión de
+pruebas completa. Mantener el stack encendido fuera de esa sesión contradice
+ADR-0146.

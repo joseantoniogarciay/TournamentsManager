@@ -25,8 +25,10 @@ reglas estén definidas.
 - Preparar un borrador de torneo no exige una cuenta; persistirlo y publicar el
   torneo exige una cuenta verificada.
 - La cuenta incluye registro, inicio de sesión y recuperación de contraseña.
-- Una misma cuenta admite credenciales locales y login con Google. Apple no está
-  adoptado en v1 y se revisa antes de distribuir el cliente iOS.
+- Una misma cuenta admite credenciales locales y login con Google. ADR-0147
+  incorpora además acceso y alta con Apple en web, iOS y Android; la gestión de
+  vínculos Apple permanece fuera de este incremento. La activación requiere
+  configuración real y validación antes de distribuir.
 - El torneo declara un deporte inmutable elegido entre `football`, `basketball`,
   `handball`, `tennis`, `padel`, `table_tennis` y `volleyball`; «Fútbol» engloba fútbol sala en esta iteración.
   Tenis permite partidos al mejor de tres o cinco sets y pádel fija tres

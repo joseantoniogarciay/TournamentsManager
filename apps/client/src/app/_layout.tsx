@@ -173,6 +173,13 @@ function RootNavigator() {
         }}
       />
       <Stack.Screen
+        name="tournament/[id]/transfer"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
         name="tournament/[id]/administrators"
         options={{
           headerShown: true,

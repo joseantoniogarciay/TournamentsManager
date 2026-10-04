@@ -99,7 +99,8 @@ dev-public-config-check:
 	done
 
 dev-public-up: dev-public-config-check
-	$(PUBLIC_DEV_COMPOSE) up --build --detach --wait --remove-orphans
+	COMPOSE_PROFILES= DEV_OTEL_TRACES_ENDPOINT= $(PUBLIC_DEV_COMPOSE) up --build --detach --wait --remove-orphans api postgres
+	sh infra/home/dev-launch-agents.sh up
 
 # Despliegue manual y recuperable de origin/develop: conserva dos artefactos.
 dev-public-deploy: dev-public-config-check
@@ -110,7 +111,8 @@ dev-public-rollback: dev-public-config-check
 	./infra/home/rollback-dev.sh "$(SHA)"
 
 dev-public-down: dev-public-config-check
-	$(PUBLIC_DEV_COMPOSE) down --remove-orphans
+	sh infra/home/dev-launch-agents.sh down
+	$(PUBLIC_DEV_COMPOSE) --profile observability down --remove-orphans
 
 # Acción destructiva acotada al volumen PostgreSQL de tournaments-manager-dev.
 # No afecta a tournaments-manager-local ni a sus datos.
@@ -206,3 +208,17 @@ db-reset: db-env-check
 db-schema-apply: db-env-check
 	@sed '/^--/d' $(BACKEND_DIR)/db/schema/initial_schema.sql | \
 		$(POSTGRES_COMPOSE) exec -T postgres sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1'
+
+# Solo activar cuando la sesión de pruebas necesite diagnóstico correlacionado.
+.PHONY: dev-observability-up dev-observability-down dev-public-observability-up dev-public-observability-down
+dev-observability-up:
+	sh infra/observability/development-stack.sh local up
+
+dev-observability-down:
+	sh infra/observability/development-stack.sh local down
+
+dev-public-observability-up:
+	sh infra/observability/development-stack.sh dev up
+
+dev-public-observability-down:
+	sh infra/observability/development-stack.sh dev down

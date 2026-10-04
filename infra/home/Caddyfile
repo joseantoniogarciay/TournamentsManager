@@ -28,6 +28,7 @@
 	}
 	header @non_indexable_web_routes X-Robots-Tag "noindex, nofollow, noarchive"
 	handle /.well-known/* {
+		header Content-Type application/json
 		root * /opt/homebrew/var/www/fasttourney/prod/current
 		file_server
 	}
@@ -61,6 +62,11 @@ http://dev.fasttourney.com {
 	import security_headers
 	header X-Robots-Tag "noindex, nofollow, noarchive"
 	header Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data: https://fonts.scalar.com; connect-src 'self' https://dev-api.fasttourney.com https://accounts.google.com https://www.googleapis.com"
+	handle /.well-known/* {
+		header Content-Type application/json
+		root * /opt/homebrew/var/www/fasttourney/dev/current
+		file_server
+	}
 	handle_path /api-docs* {
 		root * /opt/homebrew/var/www/fasttourney/dev/current/api-docs
 		try_files {path} /index.html

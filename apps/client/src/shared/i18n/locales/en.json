@@ -223,7 +223,7 @@
   "privacy_policy_purposes_title": "Purposes and legal basis",
   "privacy_policy_purposes_body": "We use data to create and verify an account, provide access, manage leagues and results, keep the service secure and handle requests. The main basis is performance of the requested service; security relies on legitimate interests and applicable legal obligations.",
   "privacy_policy_sharing_title": "Recipients and transfers",
-  "privacy_policy_sharing_body": "We do not sell data or show personalised advertising. Google is involved if you choose that sign-in method. A Google mailbox receives suggestions, and Resend delivers those email alerts. Cloudflare may process technical connection data while protecting the public connection. To keep the service reliable, PostHog may process minimum technical crash and failure data in the EU region; we do not send credentials, tokens, form values or HTTP bodies. With your explicit consent, it may additionally process app-use analytics; you can withdraw that from Settings.",
+  "privacy_policy_sharing_body": "We do not sell data or show personalised advertising. Google is involved if you choose that sign-in method. A Google mailbox receives suggestions, and Resend delivers those email alerts. Cloudflare may process technical connection data while protecting the public connection. To keep the service reliable, PostHog may process minimum technical crash and failure data in the EU region; we do not send credentials, tokens, form values or HTTP bodies.",
   "privacy_policy_retention_title": "Retention and deletion",
   "privacy_policy_retention_body": "An account and its private suggestions are kept while active. Unverified accounts are deleted under the service technical cycle. When deletion is requested, it remains pending for 30 days and is then deleted automatically; retained results no longer show the deleted author. An email copy of a suggestion is deleted when it is no longer needed for review. Minimum terms-acceptance evidence is restricted for five years after deletion.",
   "privacy_policy_public_title": "Visible information",
@@ -512,5 +512,11 @@
   "result_incident_no_show_description": "{participant} did not attend.",
   "result_incident_retirement_description": "{participant} retired from the match.",
   "result_incident_partial": "Partial score: {score}",
-  "result_incident_administrative": "Administrative result: {score}"
+  "result_incident_administrative": "Administrative result: {score}",
+  "account_apple_continue": "Continue with Apple",
+  "account_apple_unavailable": "Continue with Apple (coming soon)",
+  "account_apple_create_account": "Create account with Apple",
+  "account_social_rate_limited": "Too many attempts. Wait a moment and try again.",
+  "account_social_return_description": "Return to the screen where you started signing in. If you closed the app, start signing in again.",
+  "account_apple_linked": "Signed in with Apple"
 }

@@ -160,7 +160,7 @@ export default function AccountAccessScreen() {
                 variant="secondary"
               />
             </View>
-          ) : (
+          ) : accessMethods?.methods.password || accessMethods?.methods.google ? (
             <AccessNavigationRow
               label={t(
                 accessMethods?.methods.password
@@ -169,7 +169,12 @@ export default function AccountAccessScreen() {
               )}
               onPress={() => router.push("/account/password" as never)}
             />
-          )}
+          ) : null}
+          {accessMethods?.methods.apple ? (
+            <View style={[styles.row, { borderColor: colors.border.default }]}>
+              <Text variant="bodyLarge">{t("account_apple_linked")}</Text>
+            </View>
+          ) : null}
           {accessMethods?.methods.google ? (
             <View style={[styles.row, { borderColor: colors.border.default }]}>
               <Text variant="bodyLarge">{t("account_google_linked")}</Text>
@@ -180,12 +185,12 @@ export default function AccountAccessScreen() {
                 variant="secondary"
               />
             </View>
-          ) : (
+          ) : accessMethods?.methods.password ? (
             <AccessNavigationRow
               label={t("account_access_google_action")}
               onPress={() => setGoogleLinkVisible(true)}
             />
-          )}
+          ) : null}
         </View>
         <Pressable
           accessibilityLabel={t("account_delete")}

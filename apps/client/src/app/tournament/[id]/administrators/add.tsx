@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -17,6 +17,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
+  KeyboardAwareScrollView,
   NavigationHeaderButton,
   Screen,
   Text,
@@ -149,9 +150,8 @@ export default function AddTournamentAdministratorScreen() {
         <Stack.Screen options={{ headerLeft: () => closeButton }} />
       ) : null}
       <Screen topInset="navigation-bar">
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.content}
-          keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
         >
           <TextField
@@ -180,7 +180,7 @@ export default function AddTournamentAdministratorScreen() {
               ) : null}
             </Pressable>
           ))}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </Screen>
     </>
   );

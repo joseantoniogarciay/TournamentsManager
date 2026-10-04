@@ -5,7 +5,7 @@
 - **Decisor:** Usuario, mediante decisión explícita
 - **Propietario del análisis:** Codex como mentor técnico
 - **Complementa a:** ADR-0102 y ADR-0103
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0149 en el alcance activo: proyecto único reservado para fiabilidad de producción; analítica de uso y beta apagadas
 
 ## Problema
 

@@ -1,3 +1,4 @@
+import { isNativeSocialAuthReturn } from "@/features/social-authentication/config";
 import { deferInitialDeepLink, toInternalPath } from "@/shared/navigation/deep-link-gate";
 
 /**
@@ -6,6 +7,12 @@ import { deferInitialDeepLink, toInternalPath } from "@/shared/navigation/deep-l
  */
 export function redirectSystemPath({ path, initial }: { path: string | null; initial: boolean }) {
   if (!path) return path;
+
+  // AuthSession owns warm OAuth returns; the router must not unmount the
+  // initiating modal and lose its proof/draft while the browser is closing.
+  if (isNativeSocialAuthReturn(path)) {
+    return initial ? "/account" : null;
+  }
 
   const internalPath = toInternalPath(path);
   if (!initial) return internalPath;

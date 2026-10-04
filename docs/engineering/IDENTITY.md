@@ -33,8 +33,9 @@ Google.
 ADR-0044 fija sesiones opacas persistidas y revocables, y ADR-0062 las completa
 con access y refresh opacos rotatorios. La web conserva ambos secretos en cookies
 persistentes `HttpOnly`; móvil usa Bearer en almacenamiento seguro. [ADR-0050](../adr/0050-include-google-federated-login-in-first-increment.md)
-incorpora Google como único proveedor federado inicial. No se introducen JWT ni
-Apple en este incremento.
+incorpora Google como proveedor federado inicial. ADR-0147 añade Apple mediante
+navegador y callback HTTPS; sus JWT pertenecen al límite del proveedor, mientras
+las sesiones propias siguen siendo opacas.
 
 ```text
 Email / password ──> local_credentials ─┐
@@ -246,3 +247,21 @@ con cinco minutos de vida, ligado a su sesión y consumido por una única
 mutación: establecer la contraseña local o vincular Google. La reautenticación
 acepta la contraseña Argon2id vigente o una identidad Google ya vinculada a la
 misma cuenta; nunca usa el email para unir cuentas.
+
+## Apple mediante navegador — ADR-0147
+
+El backend intercambia el código Apple, firma su client secret ES256 y valida
+el ID token RS256 con claves Apple, emisor/audiencia/expiración y nonce. El callback
+se reclama una vez antes del intercambio. Un secreto independiente del cliente
+protege el consumo final aunque otra app intercepte el esquema de vuelta. El
+retorno contiene únicamente un ID opaco de intento y un estado cerrado.
+
+Apple comparte alta, sesión y borrador atómico con Google. El alta requiere email
+verificado y términos; un acceso ya vinculado usa issuer/subject aunque no llegue
+email. No se fusionan cuentas ni se acepta el objeto `user` sin firma de Apple.
+La cuenta Apple aparece entre sus métodos; no se ofrecen controles de vinculación
+o creación de contraseña que no tengan todavía reautenticación Apple.
+
+El [runbook](../runbooks/social-login.md) contiene las variables, placeholders,
+callback, relay y comprobaciones reales de distribución. La revocación de la
+autorización Apple al borrar cuenta sigue siendo un gate pendiente de tienda.

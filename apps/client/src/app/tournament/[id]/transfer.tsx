@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
 
 import { control, space } from "@tournaments-manager/design-tokens";
 
@@ -15,6 +15,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
+  KeyboardAwareScrollView,
   NavigationHeaderButton,
   Screen,
   Text,
@@ -124,9 +125,8 @@ export default function TransferTournamentScreen() {
         </Stack.Toolbar>
       ) : null}
       <Screen topInset="navigation-bar">
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={styles.content}
-          keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
         >
           <Text color="secondary">{t("league_transfer_description")}</Text>
@@ -154,7 +154,7 @@ export default function TransferTournamentScreen() {
               ) : null}
             </Pressable>
           ))}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </Screen>
     </>
   );

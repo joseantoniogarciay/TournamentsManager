@@ -180,7 +180,8 @@ func (q *Queries) FollowVisibleTournament(ctx context.Context, arg FollowVisible
 const getAccessMethods = `-- name: GetAccessMethods :one
 SELECT accounts.email, accounts.username,
   EXISTS (SELECT 1 FROM local_credentials WHERE account_id = accounts.id) AS has_password,
-  EXISTS (SELECT 1 FROM external_identities WHERE account_id = accounts.id AND provider = 'google') AS has_google
+  EXISTS (SELECT 1 FROM external_identities WHERE account_id = accounts.id AND provider = 'google') AS has_google,
+  EXISTS (SELECT 1 FROM external_identities WHERE account_id = accounts.id AND provider = 'apple') AS has_apple
 FROM accounts
 WHERE accounts.id = $1 AND accounts.state = 'verified'
 `
@@ -190,6 +191,7 @@ type GetAccessMethodsRow struct {
 	Username    string
 	HasPassword bool
 	HasGoogle   bool
+	HasApple    bool
 }
 
 func (q *Queries) GetAccessMethods(ctx context.Context, id pgtype.UUID) (GetAccessMethodsRow, error) {
@@ -200,6 +202,7 @@ func (q *Queries) GetAccessMethods(ctx context.Context, id pgtype.UUID) (GetAcce
 		&i.Username,
 		&i.HasPassword,
 		&i.HasGoogle,
+		&i.HasApple,
 	)
 	return i, err
 }

@@ -102,14 +102,14 @@ api-up: local-api-up
 
 local-api-up: local-config-check db-up
 	@set -a; . $(BACKEND_ENV); set +a; \
-	$(GO_BACKEND) run ./cmd/api
+	OTEL_TRACES_ENDPOINT= $(GO_BACKEND) run ./cmd/api
 
 # Entorno diario: dependencias y API en Compose; Air recompila la API al guardar.
 dev-up: dev-config-check
-	$(DEV_COMPOSE) up --build --remove-orphans
+	COMPOSE_PROFILES= DEV_OTEL_TRACES_ENDPOINT= $(DEV_COMPOSE) up --build --remove-orphans api postgres mailpit
 
 dev-down: dev-config-check
-	$(DEV_COMPOSE) down --remove-orphans
+	$(DEV_COMPOSE) --profile observability down --remove-orphans
 
 dev-logs: dev-config-check
 	$(DEV_COMPOSE) logs --tail=200

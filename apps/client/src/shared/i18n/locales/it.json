@@ -223,7 +223,7 @@
   "privacy_policy_purposes_title": "Finalità e base giuridica",
   "privacy_policy_purposes_body": "Usiamo i dati per creare e verificare l'account, consentire l'accesso, gestire leghe e risultati, mantenere la sicurezza e gestire richieste. La base principale è l'esecuzione del servizio richiesto; la sicurezza si basa sul legittimo interesse e sugli obblighi applicabili.",
   "privacy_policy_sharing_title": "Destinatari e trasferimenti",
-  "privacy_policy_sharing_body": "Non vendiamo dati né mostriamo pubblicità personalizzata. Google interviene se scegli quell'accesso. Una casella Google riceve i suggerimenti e Resend consegna questi avvisi email. Cloudflare può trattare dati tecnici di connessione per proteggere la connessione pubblica. Per mantenere affidabile il servizio, PostHog può trattare nella regione UE dati tecnici minimi di crash e guasti; non inviamo credenziali, token, moduli o corpi HTTP. Con il tuo consenso esplicito può inoltre trattare analisi dell'uso dell'app; puoi revocarle dalle Impostazioni.",
+  "privacy_policy_sharing_body": "Non vendiamo dati né mostriamo pubblicità personalizzata. Google interviene se scegli quell'accesso. Una casella Google riceve i suggerimenti e Resend consegna questi avvisi email. Cloudflare può trattare dati tecnici di connessione per proteggere la connessione pubblica. Per mantenere affidabile il servizio, PostHog può trattare nella regione UE dati tecnici minimi di crash e guasti; non inviamo credenziali, token, moduli o corpi HTTP.",
   "privacy_policy_retention_title": "Conservazione ed eliminazione",
   "privacy_policy_retention_body": "L'account e i suoi suggerimenti privati sono conservati finché è attivo. Le richieste di eliminazione restano in attesa 30 giorni e poi sono eliminate automaticamente; i risultati conservati non mostrano più l'autore eliminato. La copia email di un suggerimento viene eliminata quando non è più necessaria per esaminarlo. La prova minima di accettazione dei termini resta limitata per cinque anni dopo l’eliminazione.",
   "privacy_policy_public_title": "Informazioni visibili",
@@ -512,5 +512,11 @@
   "result_incident_no_show_description": "{participant} non si è presentato.",
   "result_incident_retirement_description": "{participant} si è ritirato dalla partita.",
   "result_incident_partial": "Punteggio parziale: {score}",
-  "result_incident_administrative": "Risultato amministrativo: {score}"
+  "result_incident_administrative": "Risultato amministrativo: {score}",
+  "account_apple_continue": "Continua con Apple",
+  "account_apple_unavailable": "Continua con Apple (prossimamente)",
+  "account_apple_create_account": "Crea account con Apple",
+  "account_social_rate_limited": "Troppi tentativi. Attendi un momento e riprova.",
+  "account_social_return_description": "Torna alla schermata dove hai iniziato l’accesso. Se hai chiuso l’app, avvia di nuovo l’accesso.",
+  "account_apple_linked": "Accesso con Apple"
 }

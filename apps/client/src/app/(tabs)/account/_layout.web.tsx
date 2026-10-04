@@ -1,7 +1,7 @@
 import { Stack, router } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
 
-import { space, typography } from "@tournaments-manager/design-tokens";
+import { control, space, typography } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
@@ -13,6 +13,11 @@ export default function AccountLayout() {
   const t = getTranslator();
   const { colors } = usePreferences();
   const { user } = useSession();
+  const { width } = useWindowDimensions();
+  // Reserve the 44 px control, outer margin and 20 px gap on both sides.
+  const titleWidth = Math.max(0, width - 2 * (control.minHeight + 2 * space[5]));
+  const actionsWidth =
+    (user ? 2 * control.minHeight + space[3] + space[5] : control.minHeight) + space[5];
   const goBackToAccount = () => {
     // Tras recargar una ruta de Cuenta, el historial del navegador puede
     // pertenecer a otra tab. El cierre de este flujo siempre vuelve a su raíz.
@@ -34,6 +39,16 @@ export default function AccountLayout() {
     headerStyle: { backgroundColor: colors.surface.canvas },
     headerTintColor: colors.text.primary,
     headerTitleAlign: "center" as const,
+    headerTitle: ({ children }: { children: string }) => (
+      <Text
+        accessibilityRole="header"
+        variant="title"
+        numberOfLines={2}
+        style={{ maxWidth: titleWidth, textAlign: "center" }}
+      >
+        {children}
+      </Text>
+    ),
     headerTitleStyle: { color: colors.text.primary, fontFamily: typography.family.semibold },
   };
 
@@ -43,8 +58,15 @@ export default function AccountLayout() {
         name="index"
         options={{
           headerLeft: () => (
-            <View style={styles.username}>
-              <Text variant="title">{user?.username}</Text>
+            <View
+              style={[
+                styles.username,
+                { maxWidth: Math.max(0, width - actionsWidth - 2 * space[5]) },
+              ]}
+            >
+              <Text variant="title" numberOfLines={1} accessibilityLabel={user?.username}>
+                {user?.username}
+              </Text>
             </View>
           ),
           headerRight: () => (

@@ -13,16 +13,31 @@ export default function TabLayout() {
   const { colors, resolvedTheme } = usePreferences();
   const { revision } = useSession();
   const { count } = useNotifications();
+  const usesAndroidAppearance = Platform.OS === "android";
   const usesLegacyIOSAppearance = Platform.OS === "ios" && Number(Platform.Version) < 26;
 
   return (
     <NativeTabs
       key={revision}
       labelStyle={{
-        default: { fontFamily: typography.family.medium },
-        selected: { fontFamily: typography.family.semibold },
+        default: {
+          fontFamily: typography.family.medium,
+          color: usesAndroidAppearance ? colors.text.secondary : undefined,
+        },
+        selected: {
+          fontFamily: typography.family.semibold,
+          color: usesAndroidAppearance ? color.brand.primary : undefined,
+        },
       }}
-      backgroundColor={usesLegacyIOSAppearance ? colors.surface.default : undefined}
+      backgroundColor={
+        usesLegacyIOSAppearance || usesAndroidAppearance ? colors.surface.default : undefined
+      }
+      iconColor={
+        usesAndroidAppearance
+          ? { default: colors.text.secondary, selected: color.brand.primary }
+          : undefined
+      }
+      indicatorColor={usesAndroidAppearance ? colors.surface.subtle : undefined}
       blurEffect={usesLegacyIOSAppearance ? "none" : undefined}
       disableTransparentOnScrollEdge={usesLegacyIOSAppearance}
       minimizeBehavior="never"

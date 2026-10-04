@@ -1,0 +1,5 @@
+# This file instructs Redocly's linter to ignore the rules contained for specific parts of your API.
+# See https://redocly.com/docs/cli/ for more information.
+contracts/openapi/v1/openapi.yaml:
+  operation-2xx-response:
+    - "#/paths/~1apple-callback/post/responses"

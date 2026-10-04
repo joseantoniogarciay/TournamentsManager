@@ -55,9 +55,14 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   viewport visual, también al aparecer el teclado. El padding inferior de un
   formulario web no toma el safe-area inset, porque puede variar al aparecer el
   teclado. Solo Safari recibe además una segunda medida del viewport al terminar
-  de ocultar el teclado para descartar la altura intermedia. En iOS, los
-  `ScrollView` de formularios ajustan su inset de teclado para que el campo
-  activo pueda desplazarse por encima de la barra y el teclado.
+  de ocultar el teclado para descartar la altura intermedia. Los formularios
+  nativos usan `KeyboardAwareScrollView`: al enfocar un campo o aparecer el
+  teclado, desplaza solo lo necesario para dejar el control completo visible
+  con 20 px de separación. En iOS conserva el ajuste nativo de insets; en
+  Android añade únicamente la oclusión restante tras el resize de la ventana.
+  El espacio temporal desaparece al ocultar el teclado y el arrastre no lo
+  descarta por defecto. `autoFocus` sigue siendo una elección de cada ruta;
+  mantener visible el foco no exige abrir el teclado en todos los formularios.
 - **Web en iPhone:** el viewport web usa `viewport-fit=cover` para que la
   superficie `canvas` alcance las zonas superior e inferior del navegador. Los
   insets existentes siguen reservando esas zonas al contenido; el documento web
@@ -75,10 +80,16 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 - **Botonera web:** web usa la barra inferior estándar de `Tabs`, no el fallback
   de `NativeTabs`. Conserva las tres rutas, iconos y colores semánticos; Cuenta
   ofrece en su cabecera el mismo acceso localizado a Ajustes que las apps.
+- **Botonera Android:** `NativeTabs` recibe fondo, colores de etiquetas e iconos
+  y superficie del indicador desde los tokens del tema resuelto. Los colores
+  dinámicos Material por defecto siguen el tema del SO y no garantizan que una
+  preferencia explícita de la app se aplique a la barra.
 - **Controles de cabecera:** toda acción de navegación que no use Liquid Glass
   —web, Android e iOS anterior a 26— usa un objetivo circular de 44 px,
   superficie por defecto y borde semántico mediante `NavigationHeaderButton`.
-  Web y Android lo separan 20 px del lateral; en iOS anterior a 26 el botón no
+  Web y Android lo separan 20 px del lateral. Web añade los 20 px completos;
+  Android añade solo 4 px porque la toolbar nativa ya aporta 16 px por lateral.
+  El margen del botón complementa ese inset, no lo duplica. En iOS anterior a 26 el botón no
   añade margen porque la cabecera ya aplica su inset nativo, alineándolo con el
   control de `Stack.Toolbar.Button` de iOS 26. iOS 26 o superior conserva
   `Stack.Toolbar.Button` para respetar Liquid Glass. Cuando una ruta muestra en
@@ -311,3 +322,15 @@ y parcial de pádel, y 390×844 para baloncesto. La secuencia de dos sets
 incompletos bloquea Guardar. La ruta se retira antes de exportar. El teclado
 nativo requiere validación posterior en dispositivo; el viewport web no lo
 acredita.
+
+## Idioma automático
+
+Según ADR-0143, el idioma se obtiene del sistema en móvil y del navegador en
+web. No se ofrece selector de idioma. Se mantienen los catálogos es/en/it/fr
+y el fallback inglés.
+
+
+La decisión ADR-0149 retira temporalmente los controles de analítica de uso de
+Inicio/Ajustes: no hay captura de producto activa. La fiabilidad mínima prod
+no se presenta como una preferencia de uso; las preferencias antiguas no activan
+SDK en beta/local ni eventos de producto.

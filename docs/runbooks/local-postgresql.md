@@ -158,3 +158,12 @@ el único esquema `initial_schema.sql` antes de este reset. Después repite
 - No añadas Redis/Valkey, MinIO u observabilidad sin una decisión posterior.
 - `make api-image-build` valida el empaquetado mínimo, pero este procedimiento no
   sustituye una restauración de backup ni decide el despliegue real.
+
+## Sesiones de pruebas bajo petición — ADR-0146
+
+`make dev-up` levanta solo API, PostgreSQL y Mailpit. Para diagnóstico solicitado,
+con la API ya activa, ejecuta `make dev-observability-up`; al terminar usa
+`make dev-observability-down`. Cierra todas las pruebas con `make dev-down`.
+No se reinician servicios con Docker Desktop y no se elimina ningún volumen al
+apagar. Para público usa los equivalentes `dev-public-*`. Las tareas programadas
+dev se suspenden mientras ese carril está apagado.

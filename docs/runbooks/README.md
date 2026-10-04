@@ -6,6 +6,8 @@ entorno local; su estado de prueba se declara dentro del propio runbook.
 
 ## Runbooks disponibles
 
+- [Crashes de cliente en producción](client-error-tracking.md)
+
 - [PostgreSQL local con Docker Compose](local-postgresql.md)
 - [Backup y restauración PostgreSQL de dev](postgresql-backup-dev.md)
 - [PostgreSQL de prod en K3s](k3s-postgresql.md)
@@ -30,3 +32,5 @@ entorno local; su estado de prueba se declara dentro del propio runbook.
 
 Usa [template.md](template.md). Un runbook no se considera válido hasta haber sido
 ejecutado en un entorno apropiado.
+
+- [Acceso social Google y Apple](social-login.md): placeholders, presentación móvil, callback y gates de publicación.

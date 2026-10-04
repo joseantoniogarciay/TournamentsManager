@@ -5,7 +5,7 @@
 - **Decisor:** Usuario, mediante decisión explícita
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0060 y ADR-0102, solo en el requisito de consentimiento para excepciones y crashes del cliente
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0149 en el alcance activo: proyecto único reservado para fiabilidad de producción; analítica de uso y beta apagadas
 
 ## Problema
 

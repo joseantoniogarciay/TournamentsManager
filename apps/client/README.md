@@ -109,34 +109,20 @@ públicas de producto y privacidad.
 
 ## Observabilidad de producto
 
-En la beta pública `development`, PostHog Cloud se inicializa para capturar solo
-excepciones no controladas y crashes nativos mínimos, conforme a ADR-0105. La
-analítica de producto sigue activa únicamente después de que la persona la
-consienta desde Inicio o Ajustes. La clave de proyecto pública se
-declara como `EXPO_PUBLIC_POSTHOG_API_KEY` en `.env`; no se versiona y no es una
-credencial de administración. Mientras el plan Free solo permita un proyecto,
-el cliente solo lo inicializa con `APP_ENV=development`, que corresponde a la
-beta pública; `local` y `production` quedan bloqueados aunque exista una clave.
-El cliente apunta siempre al endpoint de la región UE y no identifica cuentas.
-Tras el consentimiento registra la vista con un nombre canónico y seguro, y el
-resultado técnico de cada petición API. Además, las features declaran un
-catálogo corto de resultados de producto confirmados (registro, acceso,
-recuperación, ciclo de liga, resultados y administración); nunca deriva esos
-eventos automáticamente desde rutas o endpoints. No envía rutas, parámetros,
-cuerpos, credenciales ni IDs de entidades.
-Cada petición recibe un `interaction_id` UUID efímero que también viaja como
-`X-Interaction-ID`, para localizar su log junto al `trace_id` del backend.
-Los resultados semánticos exitosos reutilizan el ID de su respuesta HTTP, sin
-pasar metadatos por el cliente OpenAPI generado.
+El proyecto UE **255144** se reserva para fallos mínimos de producción, conforme
+al ADR-0149. `local` y beta `development` no inicializan PostHog, aunque conserven
+una clave o preferencia de uso antigua. La variable pública de producción es
+`EXPO_PUBLIC_POSTHOG_PRODUCTION_API_KEY`; se ha migrado la clave existente a ella.
+La analítica de uso queda apagada en todos los entornos y sus controles se retiran
+de Inicio/Ajustes. No hay vistas, resultados ni correlación API; la fachada de
+producto permanece sin cliente activo. No se identifican cuentas ni se habilitan
+replay, flags, GeoIP, interacción automática, logs o push.
 
-La captura mínima recoge excepciones no controladas, rechazos de promesa y
-crashes nativos sin depender del switch de analítica. Vistas, resultados de
-producto, eventos de red y `X-Interaction-ID` requieren ese consentimiento.
-Replay, autocapture de interacción y breadcrumbs permanecen desactivados hasta
-que su configuración de privacidad y exclusiones se valide.
-Los símbolos y source maps necesarios para que los crashes nativos sean legibles
-requieren una clave personal de PostHog configurada fuera de Git durante builds
-nativas. Nunca se introduce esa clave en `.env.example`, el código o el chat.
+Metro añade debug IDs únicamente en producción y el plugin Expo prepara source
+maps Hermes, dSYM y R8. Las claves personales CLI son solo de build, fuera de Git
+y del bundle. La reconstrucción nativa y la prueba de entrega/simbolización se
+harán después; esta configuración no acredita que un crash ya llegue legible.
+Véase el [runbook de crashes](../../docs/runbooks/client-error-tracking.md).
 
 ## Estructura
 
@@ -187,3 +173,20 @@ make verify
 
 No sustituye una revisión visual manual en las plataformas afectadas. Consulta
 [AGENTS.md](AGENTS.md) antes de modificar pantallas, rutas, copy o estilos.
+
+## Acceso Apple y Google
+
+ADR-0147 añade Apple en web, iOS y Android. Ambos proveedores se presentan con
+ASWebAuthenticationSession en iOS y Custom Tabs en Android; no se abre un navegador
+externo ni se usa una WebView. Expo Router deja el retorno caliente a AuthSession
+para conservar el modal y su borrador. Un inicio en frío reinicia el acceso.
+
+El Services ID Apple público se declara en `EXPO_PUBLIC_APPLE_SERVICE_ID`; el
+placeholder no activa el botón. Team ID, Key ID y clave .p8 pertenecen únicamente
+al backend. La feature invoca operaciones generadas mediante `apiFetch`; el
+callback Apple es una navegación del proveedor, no una petición de la feature.
+Los conflictos permiten usar el acceso ya existente, la tasa pide esperar, el
+transporte usa feedback de conexión y los demás fallos conservan el mensaje
+común seguro. Cancelar no muestra un banner.
+
+Preparación y gates pendientes: [runbook de acceso social](../../docs/runbooks/social-login.md).

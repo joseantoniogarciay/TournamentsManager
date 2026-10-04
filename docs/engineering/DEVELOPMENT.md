@@ -187,6 +187,13 @@ Véase ADR-0096.
   de enlazado y modulemaps. Una build limpia es más lenta, pero reproducible.
 - No se edita a mano un directorio generado. Las necesidades nativas se declaran
   en configuración o config plugins.
+- El config plugin local `with-ios-scene-lifecycle.cjs` incorpora el ciclo de vida
+  UIScene requerido al compilar con el SDK de iOS 27. Crea una sola ventana
+  asociada a su escena y conserva la integración de Expo/React Native para
+  enlaces y eventos. No se copia la corrección a Xcode: `expo prebuild` debe
+  reproducirla. ADR-0144 registra el coste de mantenerla hasta que una plantilla
+  oficial madura la sustituya. Su regresión se comprueba con
+  `node --test tests/ios-scene-lifecycle.test.mjs` y arranque de una build nativa.
 - Las diferencias web/native se aíslan en componentes, adaptadores o archivos
   específicos de plataforma cuando exista una razón concreta.
 
@@ -436,3 +443,26 @@ para comprobar el hash del documento legal versionado.
 
 Fuentes de compatibilidad: [Fastify Static](https://github.com/fastify/fastify-static#compatibility),
 [cambio de API de image-size 2](https://github.com/image-size/image-size/releases/tag/v2.0.0).
+
+### Continuidad de enlaces HTTPS — 2026-10-04
+
+Las asociaciones cubren `/link/*`, `/join-team` y `/tournament/:id` (incluidas
+sus subrutas). La recepción de esquema propio de la build `.local` no valida
+la confianza HTTPS de `com.fasttourney.app.dev` ni `com.fasttourney.app`.
+Después de ampliar los intent filters Android hay que reconstruir la variante
+nativa antes de probarlos. El [procedimiento de asociaciones](../../infra/app-links/README.md)
+recoge las fuentes de firma, el gate de release móvil y la matriz de pruebas.
+Publicación y apertura HTTPS en builds firmadas permanecen pendientes de datos
+reales; no se generan identificadores de firma de ejemplo para publicarlos.
+
+### Desarrollo y observabilidad bajo petición — ADR-0146
+
+Local/dev permanecen apagados fuera de pruebas. Los comandos ordinarios de
+arranque, despliegue y rollback no activan los seis servicios de observabilidad;
+Compose los agrupa en `observability`, sin reinicio automático, y la API no
+exporta trazas mientras estén apagados. Solo una petición explícita autoriza
+`make dev-observability-up` o `make dev-public-observability-up`, con API ya activa.
+Los comandos `*-observability-down` cierran el diagnóstico y `dev-down` /
+`dev-public-down` cierran las pruebas conservando datos. Público suspende sus
+LaunchAgents de renderer, purga y backups y los rehabilita al arrancar pruebas.
+Producción/K3s conserva sus servicios y controles.

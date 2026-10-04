@@ -16,10 +16,12 @@ gateway `172.19.0.1` como el único proxy de confianza. Caddy traduce
 `CF-Connecting-IP` a `X-Client-IP`; la API usa esta última exclusivamente desde
 esa gateway para sus límites de abuso.
 
-Los servicios usan `restart: unless-stopped`. Cuando Docker Desktop se inicia
-al abrir sesión, recupera el proyecto que estuviera en marcha antes de apagar el
-Mac. Una parada explícita con `docker compose stop` conserva esa intención y no
-lo reinicia automáticamente.
+Según ADR-0146, dev solo se usa durante pruebas y permanece apagado el resto del
+tiempo. Los servicios usan `restart: "no"`: reiniciar Docker Desktop no abre una
+sesión de pruebas. `make dev-public-up` arranca únicamente API y PostgreSQL;
+`make dev-public-down` apaga todos los perfiles, conserva los volúmenes y suspende
+los LaunchAgents dev instalados (renderer, purga y backups). El próximo `up`
+reactiva esos mismos plist, sin generar ni sustituir su configuración.
 
 ## Primer arranque
 
@@ -107,17 +109,27 @@ en una terminal, un log o Git: revócala y crea otra.
 
 ## Observabilidad y alertas
 
-`dev` ejecuta el mismo stack correlacionado que local, pero con volúmenes propios.
-Antes del primer `make dev-public-deploy`, crea en Resend una segunda API key de
-tipo _Sending access_, restringida al dominio remitente y exclusiva para
-Alertmanager. No reutilices `SMTP_PASSWORD`, que sigue reservado al correo
-transaccional de la API.
+`dev` dispone del mismo stack correlacionado que local, con volúmenes propios,
+pero solo se activa por petición explícita mientras la API ya está en marcha:
 
 ```bash
-cp infra/dev/alertmanager.smtp-password.example infra/dev/alertmanager.smtp-password
-# Edita el archivo y deja únicamente la nueva clave de Resend.
-make dev-public-deploy
+make dev-public-observability-up
+# Al terminar el diagnóstico, conservando datos:
+make dev-public-observability-down
+# Al terminar todas las pruebas:
+make dev-public-down
 ```
+
+Antes de activar la observabilidad, configura `infra/dev/alertmanager.smtp-password`
+con una API key Resend _Sending access_ exclusiva para Alertmanager. No reutilices
+`SMTP_PASSWORD`, reservado al correo transaccional. Un despliegue ordinario no
+requiere esa clave ni activa los seis servicios técnicos.
+
+El comando de diagnóstico conserva la imagen actual de la API pública al
+recrearla para cambiar su exportador. Sin observabilidad el endpoint OTLP es vacío
+(incluso si el contrato privado conserva la URL anterior); con ella apunta solo a
+Tempo interno. La recreación breve de API puede interrumpir peticiones de prueba.
+No arranca una API apagada ni construye/promueve una imagen nueva.
 
 El archivo real está ignorado por Git y se monta como secreto de Docker, no como
 variable de entorno. Alertmanager conecta a `smtp.resend.com:587` con STARTTLS
@@ -150,7 +162,9 @@ invoca directamente `docker exec` sobre `tournaments-manager-dev-api-1`: no
 depende del directorio de trabajo del repositorio, que `launchd` no puede usar
 si está protegido por macOS.
 Después, `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.fasttourney.dev-account-purge.plist`
-la ejecuta al cargar la sesión y cada día a las 03:15. Como Docker Desktop es de
+la ejecuta al cargar la sesión y cada día a las 03:15 cuando el agente está habilitado.
+ADR-0146 suspende los agentes durante el apagado de dev; el siguiente arranque
+explícito los rehabilita. Comprueba backups y purgas al volver a usar el entorno. Como Docker Desktop es de
 usuario, se usa un LaunchAgent y no un LaunchDaemon.
 
 
@@ -167,3 +181,12 @@ ni archivos modificados en las últimas 24 horas. Si hay datos recientes o no
 puede comprobar la edad, conserva todo el volumen. PostgreSQL, Grafana,
 Alertmanager y evidencia legal/backup quedan fuera. El procedimiento no
 arranca de nuevo los servicios. Véase [retención de registros](../../docs/operations/LOG_RETENTION.md).
+
+## Estado operativo — 2026-10-04
+
+Apagados los ocho contenedores públicos y suspendidos los agentes dev conocidos;
+local no tenía contenedores activos. No se borraron datos ni backups. Para
+reanudar pruebas, usa `make dev-public-up` con la imagen correcta
+(`DEV_API_IMAGE`) según el release conservado. No usar `docker start` global:
+activaría también el stack técnico antiguo y no aplicaría el endpoint vacío de
+la configuración nueva. El próximo arranque ordinario aplica la configuración nueva.

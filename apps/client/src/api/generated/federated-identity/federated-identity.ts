@@ -6,12 +6,16 @@
  * OpenAPI spec version: 1.0.0-design
  */
 import type {
+  AppleAuthenticationRequest,
+  AppleLoginChallenge,
+  AppleLoginChallengeRequest,
   AuthenticationProblemResponse,
   GoogleAuthenticationRequest,
   GoogleIdentityLinkRequest,
   GoogleLoginChallenge,
   RateLimitProblemResponse,
   ReauthenticationTicketRequest,
+  ReceiveAppleCallbackBody,
   RequestProblemResponse,
   ServiceUnavailableProblemResponse,
   SessionEstablishment,
@@ -150,6 +154,11 @@ export type createGoogleLoginChallengeResponse429 = {
   status: 429;
 };
 
+export type createGoogleLoginChallengeResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
 export type createGoogleLoginChallengeResponse503 = {
   data: ServiceUnavailableProblemResponse;
   status: 503;
@@ -159,7 +168,9 @@ export type createGoogleLoginChallengeResponseSuccess = createGoogleLoginChallen
   headers: Headers;
 };
 export type createGoogleLoginChallengeResponseError = (
-  createGoogleLoginChallengeResponse429 | createGoogleLoginChallengeResponse503
+  | createGoogleLoginChallengeResponse429
+  | createGoogleLoginChallengeResponse500
+  | createGoogleLoginChallengeResponse503
 ) & {
   headers: Headers;
 };
@@ -209,6 +220,11 @@ export type createGoogleSessionResponse409 = {
   status: 409;
 };
 
+export type createGoogleSessionResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
 export type createGoogleSessionResponse500 = {
   data: RequestProblemResponse;
   status: 500;
@@ -227,6 +243,7 @@ export type createGoogleSessionResponseSuccess = (
 export type createGoogleSessionResponseError = (
   | createGoogleSessionResponse400
   | createGoogleSessionResponse409
+  | createGoogleSessionResponse429
   | createGoogleSessionResponse500
   | createGoogleSessionResponse503
 ) & {
@@ -259,4 +276,222 @@ export const createGoogleSession = async (
 
   const data: createGoogleSessionResponse["data"] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as createGoogleSessionResponse;
+};
+
+export type createAppleLoginChallengeResponse201 = {
+  data: AppleLoginChallenge;
+  status: 201;
+};
+
+export type createAppleLoginChallengeResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type createAppleLoginChallengeResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
+export type createAppleLoginChallengeResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type createAppleLoginChallengeResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
+export type createAppleLoginChallengeResponseSuccess = createAppleLoginChallengeResponse201 & {
+  headers: Headers;
+};
+export type createAppleLoginChallengeResponseError = (
+  | createAppleLoginChallengeResponse400
+  | createAppleLoginChallengeResponse429
+  | createAppleLoginChallengeResponse500
+  | createAppleLoginChallengeResponse503
+) & {
+  headers: Headers;
+};
+
+export type createAppleLoginChallengeResponse =
+  createAppleLoginChallengeResponseSuccess | createAppleLoginChallengeResponseError;
+
+export const getCreateAppleLoginChallengeUrl = () => {
+  return `/apple-login-challenges`;
+};
+
+/**
+ * @summary Prepara Apple en navegador con una prueba ligada al cliente
+ */
+export const createAppleLoginChallenge = async (
+  appleLoginChallengeRequest: AppleLoginChallengeRequest,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<createAppleLoginChallengeResponse> => {
+  const res = await (fetchFn ?? fetch)(getCreateAppleLoginChallengeUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(appleLoginChallengeRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createAppleLoginChallengeResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as createAppleLoginChallengeResponse;
+};
+
+export type receiveAppleCallbackResponse303 = {
+  data: void;
+  status: 303;
+};
+
+export type receiveAppleCallbackResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type receiveAppleCallbackResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
+export type receiveAppleCallbackResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type receiveAppleCallbackResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
+export type receiveAppleCallbackResponseError = (
+  | receiveAppleCallbackResponse303
+  | receiveAppleCallbackResponse400
+  | receiveAppleCallbackResponse429
+  | receiveAppleCallbackResponse500
+  | receiveAppleCallbackResponse503
+) & {
+  headers: Headers;
+};
+
+export type receiveAppleCallbackResponse = receiveAppleCallbackResponseError;
+
+export const getReceiveAppleCallbackUrl = () => {
+  return `/apple-callback`;
+};
+
+/**
+ * Navegación exclusiva del proveedor; no la invoca la feature cliente. El retorno fijo transporta solo challengeId y status ready/cancelled/failed. No emite cookies, sesión ni tokens. Un fallo tras reclamar un state válido retorna status failed; un state inválido nunca redirige.
+ * @summary Recibe form_post de Apple y verifica el código en servidor
+ */
+export const receiveAppleCallback = async (
+  receiveAppleCallbackBody: ReceiveAppleCallbackBody,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<receiveAppleCallbackResponse> => {
+  const formUrlEncoded = new URLSearchParams();
+  formUrlEncoded.append(`state`, receiveAppleCallbackBody.state);
+  if (receiveAppleCallbackBody.code !== undefined) {
+    formUrlEncoded.append(`code`, receiveAppleCallbackBody.code);
+  }
+  if (receiveAppleCallbackBody.error !== undefined) {
+    formUrlEncoded.append(`error`, receiveAppleCallbackBody.error);
+  }
+  if (receiveAppleCallbackBody.user !== undefined) {
+    formUrlEncoded.append(`user`, receiveAppleCallbackBody.user);
+  }
+
+  const res = await (fetchFn ?? fetch)(getReceiveAppleCallbackUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", ...options?.headers },
+    body: formUrlEncoded,
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: receiveAppleCallbackResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as receiveAppleCallbackResponse;
+};
+
+export type createAppleSessionResponse200 = {
+  data: SessionEstablishment;
+  status: 200;
+};
+
+export type createAppleSessionResponse202 = {
+  data: void;
+  status: 202;
+};
+
+export type createAppleSessionResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type createAppleSessionResponse409 = {
+  data: VerificationConflictProblemResponse;
+  status: 409;
+};
+
+export type createAppleSessionResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
+export type createAppleSessionResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type createAppleSessionResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
+export type createAppleSessionResponseSuccess = (
+  createAppleSessionResponse200 | createAppleSessionResponse202
+) & {
+  headers: Headers;
+};
+export type createAppleSessionResponseError = (
+  | createAppleSessionResponse400
+  | createAppleSessionResponse409
+  | createAppleSessionResponse429
+  | createAppleSessionResponse500
+  | createAppleSessionResponse503
+) & {
+  headers: Headers;
+};
+
+export type createAppleSessionResponse =
+  createAppleSessionResponseSuccess | createAppleSessionResponseError;
+
+export const getCreateAppleSessionUrl = () => {
+  return `/apple-sessions`;
+};
+
+/**
+ * @summary Consume la prueba Apple y abre sesión o solicita datos de alta
+ */
+export const createAppleSession = async (
+  appleAuthenticationRequest: AppleAuthenticationRequest,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<createAppleSessionResponse> => {
+  const res = await (fetchFn ?? fetch)(getCreateAppleSessionUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(appleAuthenticationRequest),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createAppleSessionResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as createAppleSessionResponse;
 };

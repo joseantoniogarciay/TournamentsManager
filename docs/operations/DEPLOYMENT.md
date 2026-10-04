@@ -1,5 +1,11 @@
 # Despliegue e infraestructura
 
+Los símbolos y source maps de fiabilidad PostHog para releases de producción
+siguen el [runbook cliente](../runbooks/client-error-tracking.md). El proyecto
+255144 se reserva a prod; beta/local permanecen sin SDK. El staging web requiere
+subida cuando hay clave pública y elimina mapas públicos. La reconstrucción
+móvil y prueba real de entrega/simbolización permanecen pendientes.
+
 > Estado: Fase 4 completada en K3s doméstico; Fase 5 AWS cancelada por ADR-0128.
 
 ## Progresión
@@ -339,3 +345,39 @@ rama para mantener alineados código y producción.
 **Aprendizaje:** una respuesta del borde no prueba que el backend atendiera la
 petición. Validar primero ruta y respuesta esperada; el primer rollout instala
 el nuevo hook, y para observarlo hay que retirar después un pod que ya lo tenga.
+
+### Gate de asociaciones HTTPS para releases móviles
+
+`FASTTOURNEY_REQUIRE_APP_LINKS=1` exige el par AASA/DAL al preparar la web dev o
+prod. Se valida su identidad de entorno, cobertura AASA y formato de cada
+huella antes de exportar; se copia dentro del release para conservar el rollback.
+La propiedad de firma se comprueba contra las apps realmente distribuidas.
+Caddy sirve los recursos como JSON fuera del fallback SPA. El [procedimiento](../../infra/app-links/README.md)
+detalla carpetas, consultas HTTPS y validación en iOS/Android; no se considera
+completado el lanzamiento móvil hasta superar las tres comprobaciones.
+
+### Desarrollo y observabilidad bajo petición — ADR-0146
+
+Local/dev permanecen apagados fuera de pruebas. Los comandos ordinarios de
+arranque, despliegue y rollback no activan los seis servicios de observabilidad;
+Compose los agrupa en `observability`, sin reinicio automático, y la API no
+exporta trazas mientras estén apagados. Solo una petición explícita autoriza
+`make dev-observability-up` o `make dev-public-observability-up`, con API ya activa.
+Los comandos `*-observability-down` cierran el diagnóstico y `dev-down` /
+`dev-public-down` cierran las pruebas conservando datos. Público suspende sus
+LaunchAgents de renderer, purga y backups y los rehabilita al arrancar pruebas.
+Producción/K3s conserva sus servicios y controles.
+
+### Acceso Apple preparado — ADR-0147
+
+La migración 00020 admite identidades Apple y evidencia legal de su alta, y crea
+challenges cortos con state/nonce/prueba ligados al cliente. Se aplica antes de
+promover la API y fuera de su arranque; no se ha desplegado en esta sesión.
+Las plantillas API/cliente contienen placeholders inertes. La clave .p8 se monta
+solo en el servidor como archivo de lectura; el bundle cliente recibe únicamente
+el Services ID. El callback HTTPS por entorno es `/v1/apple-callback`.
+
+No basta con rellenar Team ID: se registran Services ID/App ID, dominios, callback,
+relay de email y Google OAuth móvil, y se validan builds reales. El [runbook](../runbooks/social-login.md)
+conserva los gates, incluida revocación Apple al eliminar cuenta. La preparación
+no activa Apple, no despliega dev/prod y no autoriza distribución.

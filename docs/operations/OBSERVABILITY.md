@@ -7,6 +7,12 @@
 
 ## Resultado buscado
 
+La fiabilidad de cliente reserva el proyecto PostHog UE 255144 a producción,
+según [ADR-0149](../adr/0149-reserve-the-single-posthog-project-for-production.md).
+Beta/local no inicializan SDK y la analítica de uso queda apagada. Símbolos y
+prueba de entrega/simbolización siguen el [runbook cliente](../runbooks/client-error-tracking.md);
+la prueba real se difiere y no se acredita por configurar el SDK.
+
 La observabilidad debe permitir responder:
 
 - ¿está funcionando el servicio para el usuario?
@@ -61,7 +67,9 @@ sesión web?** La ruta observada es `POST /v1/sessions/refresh`; atraviesa HTTP,
 la protección CSRF y PostgreSQL sin incorporar todavía SMTP, Google ni lógica de
 ligas.
 
-`make dev-up` inicia, además de API, PostgreSQL y Mailpit, el stack local:
+ADR-0146 separa ejecución y diagnóstico: `make dev-up` inicia API, PostgreSQL y
+Mailpit solo para pruebas. Únicamente por petición explícita,
+`make dev-observability-up` activa el stack local con la API ya en marcha:
 
 - Grafana en `http://127.0.0.1:3000`;
 - Prometheus en `http://127.0.0.1:9090`;
@@ -166,7 +174,9 @@ Véase [LOG_RETENTION.md](LOG_RETENTION.md) para el procedimiento y los límites
 Loki, Tempo, Promtail y Grafana— con volúmenes y red propios. Reutiliza reglas,
 dashboard y fuentes de datos versionadas; Promtail filtra explícitamente el
 proyecto Compose `tournaments-manager-dev` para no mezclar los logs de local.
-La API exporta OTLP/HTTP a `tempo:4318` por la red interna.
+Solo `make dev-public-observability-up` lo activa bajo petición explícita;
+`make dev-public-up`, despliegue y rollback arrancan API/PostgreSQL sin él.
+La API exporta OTLP/HTTP a Tempo interno únicamente durante ese diagnóstico.
 
 Alertmanager entrega los mismos avisos mediante Resend SMTP en
 `smtp.resend.com:587`, con STARTTLS obligatorio. Usa una clave _Sending access_
@@ -382,3 +392,34 @@ forzada con sockets reales. Las pruebas existentes de HTTP conservan el contrato
 de categorías seguras. La propagación de endpoints, pérdida de respuestas en el
 borde y terminación por SIGKILL requieren el recorrido de rollout del runbook;
 no quedan demostradas por los logs de drenaje ni por un rollout exitoso.
+
+## Apagado fuera de pruebas — ADR-0146
+
+`make dev-observability-down` y `make dev-public-observability-down` desactivan
+el exportador y detienen los seis servicios técnicos conservando volúmenes. No
+levantan una API que ya esté apagada. `make dev-down` y `make dev-public-down`
+apagan todo el carril, incluidos perfiles técnicos; público suspende además sus
+LaunchAgents. Ningún servicio dev reinicia automáticamente con Docker Desktop.
+Mientras la observabilidad está apagada no hay histórico central ni alertas dev;
+la API conserva su consola JSON segura y métricas internas durante las pruebas.
+La retención de 24 h se aplica cuando los servicios técnicos están activos; la
+purga no avanza con Loki/Tempo apagados. Producción conserva su funcionamiento.
+
+### Recorridos sociales revisados — ADR-0147
+
+| Endpoint | Éxito y negocio | Rechazos y límites técnicos seguros |
+| --- | --- | --- |
+| `POST /v1/apple-login-challenges` | 201; solo digests en persistencia | 400 `validation.rejected`/`credential.apple_challenge_invalid`; 429 `rate_limit.exceeded`; configuración ausente 503 `identity.apple_unavailable`; PostgreSQL usa categorías técnicas existentes. |
+| `POST /v1/apple-callback` | 303 `ready`; denegación 303 `cancelled` sin causa de fallo ni sesión | State inválido 400 `credential.apple_challenge_invalid`; formulario 400 `validation.rejected`; 429 `rate_limit.exceeded`; intercambio/JWKS 303 `failed` con `identity.provider_unavailable`; token/nonce rechazado con `credential.apple_challenge_invalid`; fallos DB con categorías existentes. Nunca se redirige sin state reclamado. |
+| `POST /v1/apple-sessions` | 200; 202 pide alta y no consume prueba; 409 `identity.email_conflict` | 400 validación/prueba; 429 tasa; configuración ausente 503; fallo DB 500 seguro. La transacción abarca prueba, cuenta, evidencia legal, borrador y sesión. |
+| `POST /v1/google-login-challenges`, `POST /v1/google-sessions` | Conservan sus recorridos | Se aplica el 429 declarado con `rate_limit.exceeded`; no exporta IP. El contrato challenge añade 500 real de persistencia. |
+| `GET /v1/me/access-methods` | Incluye presencia booleana de Apple | No exporta issuer, subject ni email como atributos; conserva autenticación y fallos técnicos anteriores. |
+
+`identity.provider_unavailable` es la categoría técnica cerrada del límite HTTP
+Apple (intercambio de código y claves públicas): no contiene el error remoto.
+Los spans raíz conservan las plantillas de ruta; no hay spans por hash, rama,
+aleatoriedad o JWT. Ninguna salida exporta state, nonce, proof, código, tokens,
+email, subject, clave privada ni cuerpos Apple. Los callbacks y las sesiones usan
+no-store. Cancelar una petición no escribe feedback; cancelar en Apple vuelve con
+un estado cerrado, sin fallo. Pruebas HTTP verifican todos estos recorridos y
+atributos seguros; la integración comprueba consumo concurrente y rollback de 202.

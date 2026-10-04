@@ -60,7 +60,7 @@ func (r AccountTournamentRepository) GetAccessMethods(ctx context.Context, accou
 	if err != nil {
 		return tournaments.AccessMethods{}, err
 	}
-	return tournaments.AccessMethods{Email: row.Email, Username: row.Username, HasPassword: row.HasPassword, HasGoogle: row.HasGoogle}, nil
+	return tournaments.AccessMethods{Email: row.Email, Username: row.Username, HasPassword: row.HasPassword, HasGoogle: row.HasGoogle, HasApple: row.HasApple}, nil
 }
 
 // CurrentPasswordHash gets the verifier associated with an active session.

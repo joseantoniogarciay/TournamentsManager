@@ -16,16 +16,19 @@ import (
 
 // HandlerConfig contains transport concerns that do not belong to a use case.
 type HandlerConfig struct {
-	CORSAllowedOrigins []string
-	CookieSecure       bool
-	TrustedProxyCIDRs  []netip.Prefix
-	EdgeProxyAuthToken string
+	CORSAllowedOrigins   []string
+	AppleWebReturnURL    string
+	AppleNativeReturnURL string
+	CookieSecure         bool
+	TrustedProxyCIDRs    []netip.Prefix
+	EdgeProxyAuthToken   string
 }
 
 // HandlerDependencies contains the application services exposed over HTTP.
 type HandlerDependencies struct {
 	Registration       registration.Service
 	Federated          *federated.Service
+	Apple              *federated.AppleService
 	Authenticator      sessionAuthenticator
 	TournamentList     tournaments.Service
 	TournamentCreation *tournaments.CreationService
@@ -79,9 +82,11 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 	mux.HandleFunc("GET /v1/users", searchUsers(registrationService, userSearchLimiter, resolveClientIP))
 	mux.HandleFunc("POST /v1/registrations", register(registrationService, registrationLimiter, resolveClientIP))
 	mux.HandleFunc("POST /v1/sessions", createLocalSession(registrationService, localLoginLimiter, cookies, resolveClientIP))
+	googleChallengeLimiter := newRequestLimiter(20, time.Minute)
+	googleSessionLimiter := newRequestLimiter(10, time.Minute)
 	if federatedService != nil {
-		mux.HandleFunc("POST /v1/google-login-challenges", createGoogleChallenge(*federatedService))
-		mux.HandleFunc("POST /v1/google-sessions", createGoogleSession(*federatedService, cookies))
+		mux.HandleFunc("POST /v1/google-login-challenges", socialRateLimit(createGoogleChallenge(*federatedService), googleChallengeLimiter, resolveClientIP))
+		mux.HandleFunc("POST /v1/google-sessions", socialRateLimit(createGoogleSession(*federatedService, cookies), googleSessionLimiter, resolveClientIP))
 		mux.Handle("POST /v1/me/google-identities", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createGoogleIdentity(*federatedService)))))
 		mux.Handle("DELETE /v1/me/google-identities", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteGoogleIdentity(*federatedService)))))
 	} else {
@@ -89,6 +94,18 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 		mux.HandleFunc("POST /v1/google-sessions", unavailableFederatedLogin)
 		mux.HandleFunc("POST /v1/me/google-identities", unavailableFederatedLogin)
 		mux.HandleFunc("DELETE /v1/me/google-identities", unavailableFederatedLogin)
+	}
+	if dependencies.Apple != nil {
+		challengeLimiter := newRequestLimiter(20, time.Minute)
+		sessionLimiter := newRequestLimiter(10, time.Minute)
+		callbackLimiter := newRequestLimiter(30, time.Minute)
+		mux.HandleFunc("POST /v1/apple-login-challenges", socialRateLimit(createAppleChallenge(*dependencies.Apple, config), challengeLimiter, resolveClientIP))
+		mux.HandleFunc("POST /v1/apple-sessions", socialRateLimit(createAppleSession(*dependencies.Apple, cookies), sessionLimiter, resolveClientIP))
+		mux.HandleFunc("POST /v1/apple-callback", socialRateLimit(receiveAppleCallback(*dependencies.Apple, config), callbackLimiter, resolveClientIP))
+	} else {
+		mux.HandleFunc("POST /v1/apple-login-challenges", unavailableAppleLogin)
+		mux.HandleFunc("POST /v1/apple-sessions", unavailableAppleLogin)
+		mux.HandleFunc("POST /v1/apple-callback", unavailableAppleLogin)
 	}
 	passwordResetLimiter := newRequestLimiter(10, time.Minute)
 	mux.HandleFunc("POST /v1/password-resets", requestPasswordReset(registrationService, passwordResetLimiter, resolveClientIP))
@@ -147,5 +164,14 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 		// it for the outer observability middleware after adding request context.
 		r.Pattern = routedRequest.Pattern
 	})
-	return requireAllowedOrigin(config.CORSAllowedOrigins, withCookieName)
+	allowedOrigin := requireAllowedOrigin(config.CORSAllowedOrigins, withCookieName)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Apple form_post is a provider-to-callback navigation, not a cookie API.
+		// Only this exact route bypasses CORS; state, nonce and client proof protect it.
+		if r.Method == http.MethodPost && r.URL.Path == "/v1/apple-callback" {
+			withCookieName.ServeHTTP(w, r)
+			return
+		}
+		allowedOrigin.ServeHTTP(w, r)
+	})
 }

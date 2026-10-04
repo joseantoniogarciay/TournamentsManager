@@ -29,8 +29,9 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   estables como `common_cancel` u `home_create_tournament`. Los idiomas
   iniciales son `es`, `en`, `it` y `fr`; cualquier locale no soportado usa
   inglés.
-- El selector web persistente y las preferencias de tema e idioma pertenecen a
-  un provider compartido, nunca a una pantalla. La raíz propaga el tema resuelto
+- Las preferencias de tema pertenecen a un provider compartido, nunca a una
+  pantalla. Según ADR-0143, el idioma depende del SO en móvil y del navegador
+  en web; no se ofrece selector en ninguna plataforma. La raíz propaga el tema resuelto
   también a React Navigation mediante el `ThemeProvider` de Expo Router; es
   obligatorio para que las transiciones nativas no muestren un destello del tema
   contrario. `NativeTabs` recibe además el tema resuelto en su host mediante

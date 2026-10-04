@@ -223,7 +223,7 @@
   "privacy_policy_purposes_title": "Finalidades y base jurídica",
   "privacy_policy_purposes_body": "Usamos los datos para crear y verificar la cuenta, permitir el acceso, gestionar ligas y resultados, mantener la seguridad y atender solicitudes. La base principal es la ejecución del servicio solicitado; la seguridad se apoya en el interés legítimo y las obligaciones legales aplicables.",
   "privacy_policy_sharing_title": "Destinatarios y transferencias",
-  "privacy_policy_sharing_body": "No vendemos datos ni mostramos publicidad personalizada. Google interviene si eliges ese acceso. Un buzón de Google recibe las sugerencias y Resend entrega esos avisos por correo. Cloudflare puede tratar datos técnicos de conexión al proteger la conexión pública. Para mantener el servicio fiable, PostHog puede tratar en la región UE datos técnicos mínimos de fallos y crashes; no enviamos credenciales, tokens, formularios ni cuerpos HTTP. Con tu consentimiento explícito puede tratar además analítica de uso de la aplicación; puedes retirarla desde Ajustes.",
+  "privacy_policy_sharing_body": "No vendemos datos ni mostramos publicidad personalizada. Google interviene si eliges ese acceso. Un buzón de Google recibe las sugerencias y Resend entrega esos avisos por correo. Cloudflare puede tratar datos técnicos de conexión al proteger la conexión pública. Para mantener el servicio fiable, PostHog puede tratar en la región UE datos técnicos mínimos de fallos y crashes; no enviamos credenciales, tokens, formularios ni cuerpos HTTP.",
   "privacy_policy_retention_title": "Conservación y eliminación",
   "privacy_policy_retention_body": "La cuenta y sus sugerencias privadas se conservan mientras esté activa. Las cuentas no verificadas se eliminan según el ciclo técnico del servicio. Al solicitar la eliminación, la cuenta queda pendiente 30 días y después se elimina automáticamente; los resultados conservados dejan de mostrar al autor eliminado. La copia de correo de una sugerencia se elimina cuando deja de ser necesaria para revisarla. La evidencia mínima de aceptación de los términos queda bloqueada durante cinco años tras la eliminación.",
   "privacy_policy_public_title": "Información visible",
@@ -512,5 +512,11 @@
   "result_incident_no_show_description": "Incomparecencia de {participant}.",
   "result_incident_retirement_description": "Abandono de {participant}.",
   "result_incident_partial": "Tanteo parcial: {score}",
-  "result_incident_administrative": "Resultado administrativo: {score}"
+  "result_incident_administrative": "Resultado administrativo: {score}",
+  "account_apple_continue": "Continuar con Apple",
+  "account_apple_unavailable": "Continuar con Apple (próximamente)",
+  "account_apple_create_account": "Crear cuenta con Apple",
+  "account_social_rate_limited": "Has hecho demasiados intentos. Espera un momento e inténtalo de nuevo.",
+  "account_social_return_description": "Vuelve a la pantalla donde empezaste el acceso. Si cerraste la app, inicia el acceso de nuevo.",
+  "account_apple_linked": "Acceso con Apple"
 }

@@ -106,6 +106,11 @@ aceptado está registrado en
 - después de la integración, el trabajo continúa en `develop`;
 - hotfixes, experimentos arriesgados o trabajo paralelo pueden usar ramas
   temporales cuando aporten aislamiento real;
+- tras integrar una rama temporal en `develop`, se elimina tanto en local como
+  en el remoto, verificando antes que no conserva commits sin integrar, trabajo
+  pendiente ni un worktree activo que la use; `main` y `develop` se conservan;
+- la integración diaria permanece en `develop`; la promoción a `main` se reserva
+  para una publicación de producción autorizada, con el orden de ADR-0119;
 - cada commit debe representar un cambio coherente;
 - el mensaje explica la intención, no solo los archivos modificados;
 - no se reescribe el historial compartido de `main` ni `develop`;

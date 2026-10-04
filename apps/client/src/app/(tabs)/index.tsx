@@ -1,7 +1,7 @@
 import { router, type Href, useFocusEffect } from "expo-router";
 import Head from "expo-router/head";
 import { useCallback, useEffect, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
@@ -15,7 +15,6 @@ import { TournamentCard } from "@/features/league-creation/components/league-car
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { ProductAnalyticsPreferenceCard } from "@/shared/preferences/product-analytics-preference-card";
 import { SuggestionCard } from "@/features/suggestions/components/suggestion-card";
 import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
@@ -143,8 +142,6 @@ export default function HomeScreen() {
           ) : null}
 
           {showGuestHome ? <GuestOnboarding t={t} /> : null}
-
-          <ProductAnalyticsCard />
         </ScrollView>
       </Screen>
     </>
@@ -152,6 +149,8 @@ export default function HomeScreen() {
 }
 
 function HomeMetadata() {
+  if (Platform.OS !== "web") return null;
+
   const t = getTranslator();
   const title = t("home_web_title");
   const description = t("home_web_description");
@@ -181,20 +180,6 @@ function HomeMetadata() {
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={previewImageURL} />
     </Head>
-  );
-}
-
-function ProductAnalyticsCard() {
-  const t = getTranslator();
-  const { productAnalyticsEnabled } = usePreferences();
-  const { show } = useFeedback();
-
-  if (productAnalyticsEnabled) return null;
-
-  return (
-    <ProductAnalyticsPreferenceCard
-      onEnabled={() => show({ kind: "success", message: t("product_analytics_enabled_feedback") })}
-    />
   );
 }
 

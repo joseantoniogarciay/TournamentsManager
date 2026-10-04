@@ -49,12 +49,17 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0149](../adr/0149-reserve-the-single-posthog-project-for-production.md) | Reservar proyecto PostHog 255144 para producción; beta/local apagados | Aceptado | 2026-10-04 |
+| [0148](../adr/0148-prepare-production-error-tracking-with-separated-posthog-projects.md) | Preparar fiabilidad de producción con proyectos PostHog separados | Superado por ADR-0149 | 2026-10-04 |
+| [0147](../adr/0147-add-apple-browser-login-on-all-clients.md) | Acceso Apple mediante navegador en web, iOS y Android | Aceptado | 2026-10-04 |
+| [0146](../adr/0146-run-development-and-observability-on-demand.md) | Desarrollo apagado fuera de pruebas y observabilidad bajo petición | Aceptado | 2026-10-04 |
 | [0145](../adr/0145-drain-api-before-container-termination.md) | Drenar la API antes de terminar el contenedor | Aceptado | 2026-10-03 |
 | [0142](../adr/0142-record-match-incidents-across-sports.md) | Registrar incidencias por partido en todos los deportes | Aceptado | 2026-10-03 |
 | [0141](../adr/0141-support-badminton-with-point-games.md) | Soportar bádminton con juegos por puntos | Aceptado | 2026-10-03 |
 | [0140](../adr/0140-bound-production-telemetry-retention.md) | Acotar diagnóstico y seguridad de producción con purga y alertas de espacio | Aceptado | 2026-10-03 |
 | [0139](../adr/0139-limit-development-telemetry-to-one-day.md) | Limitar la telemetría de desarrollo a un día | Aceptado | 2026-10-03 |
 | [0138](../adr/0138-wait-seven-days-except-critical-vulnerabilities.md) | Esperar siete días salvo vulnerabilidades críticas | Aceptado | 2026-10-03 |
+| [0144](../adr/0144-adopt-ios-scene-lifecycle-through-cng.md) | Adoptar UIScene mediante config plugin CNG | Aceptado | 2026-10-03 |
 | [0137](../adr/0137-support-volleyball-across-tournament-stages.md) | Soportar voleibol en liga, eliminatoria y formato mixto | Aceptado | 2026-10-02 |
 | [0136](../adr/0136-support-table-tennis-with-point-games.md) | Soportar tenis de mesa con juegos por puntos | Aceptado | 2026-10-02 |
 | [0135](../adr/0135-support-tennis-and-padel-with-set-results.md)                              | Soportar tenis y pádel con resultados por sets                                  | Aceptado              | 2026-09-23 |
@@ -200,3 +205,9 @@ Toda propuesta importante debe enlazar:
 `problema → análisis → decisión → cambio → prueba → documentación → aprendizaje`
 
 Si falta un eslabón, el cambio no está terminado.
+
+## Desarrollo bajo petición — 2026-10-04
+
+[ADR-0146](../adr/0146-run-development-and-observability-on-demand.md), aceptado
+por instrucción explícita del usuario: local/dev apagados fuera de pruebas y
+observabilidad únicamente bajo petición. Producción conserva su operación.

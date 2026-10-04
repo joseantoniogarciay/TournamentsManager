@@ -70,7 +70,14 @@ export default function PasswordResetScreen() {
   if (failed)
     return (
       <Screen>
-        <Text>{t("password_recovery_link_invalid")}</Text>
+        <KeyboardAwareScrollView>
+          <Card>
+            <View style={styles.form}>
+              <Text>{t("password_recovery_link_invalid")}</Text>
+              <Button label={t("link_confirmation_action")} onPress={() => router.replace("/")} />
+            </View>
+          </Card>
+        </KeyboardAwareScrollView>
       </Screen>
     );
   return (

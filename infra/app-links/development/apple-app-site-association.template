@@ -2,12 +2,26 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["APPLE_TEAM_ID.com.fasttourney.app.dev"],
-        "components": [{ "/": "/link/*" }]
+        "appIDs": [
+          "APPLE_TEAM_ID.com.fasttourney.app.dev"
+        ],
+        "components": [
+          {
+            "/": "/link/*"
+          },
+          {
+            "/": "/join-team"
+          },
+          {
+            "/": "/tournament/*"
+          }
+        ]
       }
     ]
   },
   "webcredentials": {
-    "apps": ["APPLE_TEAM_ID.com.fasttourney.app.dev"]
+    "apps": [
+      "APPLE_TEAM_ID.com.fasttourney.app.dev"
+    ]
   }
 }
