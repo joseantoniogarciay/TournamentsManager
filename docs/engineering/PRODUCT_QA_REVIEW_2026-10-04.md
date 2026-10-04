@@ -224,3 +224,21 @@ Retrospectiva: variar el número de sets y el punto final descubre límites de
 formulario que una captura con el formato por defecto no cubre. La comprobación
 de cierre requiere ver tanto la validación como el dato persistido al volver a
 la ficha; comprobar una sola plataforma no acredita la otra.
+
+## Margen del estado vacío de clasificación
+
+La comparación del torneo cancelado en iPhone y Pixel reveló un margen exterior
+doble: el contenedor de la tabla añadía 20 px y `Card` añadía otros 20 px. El
+estado sin filas elimina ahora únicamente el padding horizontal del contenedor;
+la card conserva sus 20 px. La tabla con filas conserva su layout.
+
+Se confirmó visualmente el margen corregido y el copy de cancelación en iOS,
+Android y web; se abrió después la clasificación web con tres equipos para
+verificar que sus filas y columnas seguían visibles. Capturas privadas:
+`cancelled-standings-ios-margin.jpg`, `cancelled-standings-android-margin.jpg` y
+`cancelled-standings-web-margin.jpg`.
+
+Retrospectiva: revisar solo tablas con datos no detecta la duplicación de margen
+de una card vacía. Las reglas de `apps/client/AGENTS.md` distinguen explícitamente
+el margen de `Card` del de un bloque sin superficie; la corrección aplica esa
+regla existente y no introduce otro token o un ajuste exclusivo de plataforma.

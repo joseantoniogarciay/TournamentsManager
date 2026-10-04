@@ -4416,3 +4416,9 @@ Se conserva un borrador temporal por token, separado de la preferencia de cuenta
 aceptada en ADR-0131 y limpiado al cerrar o confirmar. La regresión real web
 inscribió el nombre conservado; pruebas del módulo real cubren ambos adaptadores
 de almacenamiento, aislamiento entre invitaciones y limpieza.
+
+La comparación del estado vacío de clasificación en iOS y Android detectó 40 px
+de margen donde las reglas aceptadas exigen 20: el contenedor de tabla y `Card`
+lo sumaban. La corrección quita solo el padding horizontal del contenedor sin
+filas; se verificaron ambos SO y web, además de una tabla con datos. Los estados
+vacíos necesitan su propia revisión visual aunque reutilicen la ruta principal.

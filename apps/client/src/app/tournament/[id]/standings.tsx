@@ -223,7 +223,10 @@ export default function TournamentStandingsScreen() {
           )
         ) : (
           <ScrollView
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[
+              styles.content,
+              displayedStandings.length === 0 && styles.emptyContent,
+            ]}
             onLayout={(event) => setTableViewportWidth(event.nativeEvent.layout.width)}
             ref={statisticsTimelineScopeRef}
             showsVerticalScrollIndicator={false}
@@ -607,6 +610,7 @@ function StandingsRulesContent({ league }: { league: PublicTournament | null | u
 
 const styles = StyleSheet.create({
   content: { paddingBottom: space[5], paddingHorizontal: space[5] },
+  emptyContent: { paddingHorizontal: 0 },
   groupSelector: { flexDirection: "row", flexWrap: "wrap", gap: space[2], paddingBottom: space[4] },
   headerRow: {
     alignItems: "center",
