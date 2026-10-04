@@ -12,9 +12,11 @@ El iPhone 18 Pro mostraba un bundle anterior con solo Google. Se reconecta al
 Metro actual por LAN: el localhost anunciado como 127.0.0.1 no alcanzaba el
 listener IPv6. Pasan typecheck, lint de la ruta, exportación web y las seis
 regresiones de autenticación social. La checklist cliente confirma catálogo,
-tokens, objetivos táctiles, presentación y API intactos. La comprobación visual
-de la fila permanece pendiente mientras la herramienta de UI esté bloqueada por
-el bloqueo del Mac; no se presenta la compilación como prueba visual.
+tokens, objetivos táctiles, presentación y API intactos. Tras desbloquear el Mac,
+se confirma visualmente la fila en iPhone 18 Pro/iOS 27 y Pixel API 34/Android 14:
+Apple a la izquierda, Google a la derecha, círculos iguales e iconos visibles.
+Metro permanece activo hasta que ambas pantallas cargan sus assets locales y se
+apaga al terminar. No se inicia backend ni observabilidad.
 
 Retrospectiva: el código compartido no garantiza que dos simuladores carguen la
 misma versión. La configuración incompleta conserva el botón visible pero
