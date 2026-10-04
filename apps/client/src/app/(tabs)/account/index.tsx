@@ -53,6 +53,9 @@ import {
   useTabContentBottomPadding,
 } from "@/shared/ui";
 
+const socialProviderOrder =
+  Platform.OS === "android" ? (["google", "apple"] as const) : (["apple", "google"] as const);
+
 type AccountScreenProps = {
   sessionReplacementDestination?: "/account" | "/create-tournament" | "/join-team";
   transferTournamentDraft?: boolean;
@@ -342,59 +345,66 @@ export function AccountScreen({
           <View style={styles.form}>
             <Text variant="title">{t("account_social_title")}</Text>
             <View style={styles.socialButtons}>
-              <Pressable
-                accessibilityLabel={t(
-                  apple.isConfigured ? "account_apple_continue" : "account_apple_unavailable",
-                )}
-                accessibilityRole="button"
-                accessibilityState={{
-                  busy: apple.isPreparing || apple.isAuthenticating,
-                  disabled: !apple.isConfigured || apple.isPreparing || socialBusy,
-                }}
-                disabled={!apple.isConfigured || apple.isPreparing || socialBusy}
-                onPress={() => void apple.start()}
-                style={[
-                  styles.socialButton,
-                  { borderColor: colors.border.default },
-                  !apple.isConfigured || apple.isPreparing || socialBusy
-                    ? styles.socialButtonDisabled
-                    : undefined,
-                ]}
-              >
-                {apple.isPreparing || apple.isAuthenticating ? (
-                  <ActivityIndicator color={colors.indicator.default} />
+              {socialProviderOrder.map((provider) =>
+                provider === "apple" ? (
+                  <Pressable
+                    key="apple"
+                    accessibilityLabel={t(
+                      apple.isConfigured ? "account_apple_continue" : "account_apple_unavailable",
+                    )}
+                    accessibilityRole="button"
+                    accessibilityState={{
+                      busy: apple.isPreparing || apple.isAuthenticating,
+                      disabled: !apple.isConfigured || apple.isPreparing || socialBusy,
+                    }}
+                    disabled={!apple.isConfigured || apple.isPreparing || socialBusy}
+                    onPress={() => void apple.start()}
+                    style={[
+                      styles.socialButton,
+                      { borderColor: colors.border.default },
+                      !apple.isConfigured || apple.isPreparing || socialBusy
+                        ? styles.socialButtonDisabled
+                        : undefined,
+                    ]}
+                  >
+                    {apple.isPreparing || apple.isAuthenticating ? (
+                      <ActivityIndicator color={colors.indicator.default} />
+                    ) : (
+                      <Image
+                        source={appleLogo}
+                        style={[styles.appleLogo, { tintColor: colors.text.primary }]}
+                      />
+                    )}
+                  </Pressable>
                 ) : (
-                  <Image
-                    source={appleLogo}
-                    style={[styles.appleLogo, { tintColor: colors.text.primary }]}
-                  />
-                )}
-              </Pressable>
-              <Pressable
-                accessibilityLabel={t(
-                  isGoogleConfigured ? "account_google_continue" : "account_google_unavailable",
-                )}
-                accessibilityRole="button"
-                accessibilityState={{
-                  busy: isGooglePreparing || isGoogleAuthenticating,
-                  disabled: !isGoogleConfigured || isGooglePreparing || socialBusy,
-                }}
-                disabled={!isGoogleConfigured || isGooglePreparing || socialBusy}
-                onPress={() => void startGoogleAuthentication()}
-                style={[
-                  styles.socialButton,
-                  { borderColor: colors.border.default },
-                  !isGoogleConfigured || isGooglePreparing || socialBusy
-                    ? styles.socialButtonDisabled
-                    : undefined,
-                ]}
-              >
-                {isGooglePreparing || isGoogleAuthenticating ? (
-                  <ActivityIndicator color={colors.indicator.default} />
-                ) : (
-                  <Image source={googleLogo} style={styles.googleLogo} />
-                )}
-              </Pressable>
+                  <Pressable
+                    key="google"
+                    accessibilityLabel={t(
+                      isGoogleConfigured ? "account_google_continue" : "account_google_unavailable",
+                    )}
+                    accessibilityRole="button"
+                    accessibilityState={{
+                      busy: isGooglePreparing || isGoogleAuthenticating,
+                      disabled: !isGoogleConfigured || isGooglePreparing || socialBusy,
+                    }}
+                    disabled={!isGoogleConfigured || isGooglePreparing || socialBusy}
+                    onPress={() => void startGoogleAuthentication()}
+                    style={[
+                      styles.socialButton,
+                      { borderColor: colors.border.default },
+                      !isGoogleConfigured || isGooglePreparing || socialBusy
+                        ? styles.socialButtonDisabled
+                        : undefined,
+                    ]}
+                  >
+                    {isGooglePreparing || isGoogleAuthenticating ? (
+                      <ActivityIndicator color={colors.indicator.default} />
+                    ) : (
+                      <Image source={googleLogo} style={styles.googleLogo} />
+                    )}
+                  </Pressable>
+                ),
+              )}
             </View>
           </View>
         </Card>

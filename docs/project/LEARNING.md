@@ -1,5 +1,19 @@
 # Registro de aprendizaje
 
+## 2026-10-04 — Orden de proveedores por plataforma
+
+El usuario confirma Apple → Google en iOS y Google → Apple en Android; web
+conserva Apple → Google. Se ordenan los elementos renderizados para mantener
+coherentes la presentación y el recorrido de accesibilidad, sin invertir la fila
+solo mediante estilos. Se mantienen los controles circulares y sus estados.
+
+Pasan typecheck, lint de la ruta y exportación web. Se comprueba visualmente el
+orden en iPhone 18 Pro/iOS 27 y Pixel API 34/Android 14 con el bundle actualizado.
+Metro se apaga al terminar; no se inicia backend ni observabilidad.
+
+Retrospectiva: una preferencia visual por plataforma debe reflejarse en el orden
+real de los elementos; el código compartido permite hacerlo sin duplicar pantallas.
+
 ## 2026-10-04 — Fila de acceso social universal
 
 Apple deja de ser una acción con texto bajo Google y pasa a un círculo de 48 px,

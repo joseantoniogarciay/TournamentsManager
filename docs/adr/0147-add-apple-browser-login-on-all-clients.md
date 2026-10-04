@@ -85,8 +85,10 @@ del sistema en caso contrario, conservando el mismo retorno y prueba de sesión.
 ### Aclaración visual — 2026-10-04
 
 El usuario solicita que Apple y Google aparezcan en todas las plataformas como
-iconos dentro de controles circulares contiguos, con Apple a la izquierda de
-Google. La fila conserva etiquetas accesibles localizadas, estados de carga y
+iconos dentro de controles circulares contiguos. En la confirmación posterior
+concreta el orden por plataforma: Apple primero en iOS y Google primero en
+Android; web conserva Apple primero. La fila conserva etiquetas accesibles
+localizadas, estados de carga y
 deshabilitado; la ausencia de configuración real no oculta el proveedor ni lo
 habilita. No cambia el flujo de autenticación aceptado.
 

@@ -213,8 +213,9 @@ mantienen el `Modal` nativo para presentar el aviso por encima de la navegación
 Una acción externa que se represente solo con un icono de marca, como Google,
 conserva un objetivo táctil de al menos 44 px, forma circular y `accessibilityLabel`
 localizado. El asset se guarda localmente: no se descarga durante el uso de la app.
-En Cuenta, Apple y Google comparten una fila centrada, con Apple primero y Google
-después en todas las plataformas. Ambos controles son círculos de 48 px separados
+En Cuenta, Apple y Google comparten una fila centrada: iOS y web muestran Apple
+primero, Android muestra Google primero. El orden de renderizado y accesibilidad
+coincide con el visual. Ambos controles son círculos de 48 px separados
 16 px, sin texto visible y con etiqueta accesible localizada. Apple usa un asset
 local monocromo teñido con el color de texto; Google conserva su marca multicolor.
 Los proveedores sin configuración permanecen visibles y deshabilitados.
