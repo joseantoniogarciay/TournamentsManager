@@ -5,6 +5,7 @@
 - [DATABASE.md](DATABASE.md): persistencia y datos.
 - [INITIAL_DATA_MODEL.md](INITIAL_DATA_MODEL.md): entidades y transacciones del primer incremento.
 - [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md): fundaciones visuales y contratos de componentes compartidos.
+- [Coherencia entre plataformas 2026-10-04](CROSS_PLATFORM_VISUAL_REVIEW_2026-10-04.md): base común, adaptaciones nativas, cobertura y casos prioritarios de comparación.
 - [Revisión visual web 2026-10-03](WEB_VISUAL_AUDIT_2026-10-03.md): cobertura, evidencias y defectos de layout pendientes.
 - [Auditoría nativa iOS 2026-10-03](IOS_VISUAL_AUDIT_2026-10-03.md): preparación, compatibilidad de arranque y cobertura pendiente.
 - [Auditoría inicial Android 2026-10-03](ANDROID_VISUAL_AUDIT_2026-10-03.md): recorrido inicial en Android 14, corrección de tema de tabs e incidencia de teclado.

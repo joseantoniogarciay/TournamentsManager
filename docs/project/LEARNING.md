@@ -1,5 +1,18 @@
 # Registro de aprendizaje
 
+## 2026-10-04 — Investigación de coherencia entre sistemas operativos
+
+Se contrasta el código de primitivas y navegación con las auditorías previas.
+Se documenta una matriz de contenido común, adaptaciones nativas y huecos de
+cobertura: texto ampliado, orientación, idiomas y recorridos nativos con sesión.
+Los riesgos de botones largos, métricas de campos y reservas de espacio se
+registran como casos a reproducir, sin declararlos defectos por inspección.
+
+Retrospectiva: las capturas con distinta densidad necesitan contexto de tamaño
+lógico y estado. Compartir tokens no certifica el renderizado; una auditoría
+anterior tampoco acredita cambios posteriores ni todas las variantes del SO.
+Esta fase documental no arranca servicios ni cambia el cliente.
+
 ## 2026-10-04 — Orden de proveedores por plataforma
 
 El usuario confirma Apple → Google en iOS y Google → Apple en Android; web
