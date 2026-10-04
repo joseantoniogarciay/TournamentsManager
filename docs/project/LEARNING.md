@@ -4422,3 +4422,10 @@ de margen donde las reglas aceptadas exigen 20: el contenedor de tabla y `Card`
 lo sumaban. La corrección quita solo el padding horizontal del contenedor sin
 filas; se verificaron ambos SO y web, además de una tabla con datos. Los estados
 vacíos necesitan su propia revisión visual aunque reutilicen la ruta principal.
+
+La sugerencia corta solo comunicaba su mínimo mediante accessibilityHint. El
+error localizado bajo `TextField` explica la acción deshabilitada al abandonar
+el campo; después del éxito se reinicia su interacción junto al valor para no
+mostrar un error nuevo sobre un formulario recién limpiado. El rechazo conserva
+el borrador. La prueba real combinó tres envíos web/Android y un rechazo por
+límite en iOS, mostrando que la cuota pertenece a la cuenta y no al dispositivo.

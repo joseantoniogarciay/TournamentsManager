@@ -50,7 +50,7 @@ a cobertura de líneas ni al número de casuísticas del producto.
 | Eliminatoria                                         | Bracket, byes, correcciones, desempate fútbol/balonmano, todos los deportes                                     | Cuadro de cuatro participantes en ocho deportes                                                                                                        | Bádminton semifinal/final en ambos; ocho finales web, corrección fútbol iOS; byes visuales pendientes |
 | Resultados e incidencias                             | Marcadores, sets, límites, formas exclusivas, historia                                                          | Resultado inválido 400, no comparecencia, abandono con parcial, corrección jugada y permisos 403                                                       | Ocho deportes web; fútbol editado iOS; no comparecencia y abandono parcial guardados Android; combinaciones restantes pendientes |
 | Retirada, cancelación y finalización                 | Dominio, HTTP y persistencia; co-campeones y concurrencia                                                       | Retirada, repetición 409, cancelación conserva lectura pública, edición/completar cancelado 409, finalización anticipada 409                           | Creación web hasta campeón; bádminton finalizado y fútbol cancelado en ambos; retirada en ficha de equipo pendiente |
-| Notificaciones y sugerencias                         | HTTP y persistencia                                                                                             | Lista, marcar todas leídas, contador 0, sugerencia 201, corta 400                                                                                      | Notificación de delegación visible en web; lista extensa, vacíos, borrar y sugerencia enviada UI pendientes |
+| Notificaciones y sugerencias                         | HTTP y persistencia                                                                                             | Lista, marcar todas leídas, contador 0, sugerencia 201, corta 400                                                                                      | Notificación web y destino comprobados; confirmación de borrar cancelada. Sugerencia: corto/corrección/éxito web y Android, límite con borrador conservado iOS; lista extensa, vacíos y borrar pendientes |
 | Cuenta: transferencia, baja y purga                  | Transferencia, ticket, baja/purga y anonimización                                                               | Baja del creador con torneos rechazada 409                                                                                                             | Formularios, transferencia y baja UI pendientes                                                     |
 | Errores de transporte y fallback                     | Suite cliente/HTTP; nuevo reset 500 seguro                                                                      | Rechazos de negocio reales                                                                                                                             | Corte real de API, mensaje seguro y reintento exitoso en web/iOS/Android; 5xx, timeout y cancelación de navegación visual pendientes |
 
@@ -86,6 +86,9 @@ esperado. No se suman estos contadores como cobertura exhaustiva.
    al cerrar o confirmar; regresiones de ambos adaptadores y recorrido real web.
 8. La card de clasificación vacía duplicaba el margen horizontal. La corrección
    del contenedor sin filas se comprobó en iOS, Android y web.
+9. Sugerencias no explicaba visualmente la longitud mínima tras abandonar el
+   campo. Se conecta el error localizado al `TextField` compartido; al guardar
+   se reinicia también su estado de interacción para no señalar el campo vacío.
 
 ## Diferencias y cobertura visual abierta
 
@@ -299,3 +302,39 @@ Notificaciones web mostró el aviso ficticio de delegación y la confirmación d
 Eliminar todas, con advertencia de irreversibilidad y Cancelar. No se ha ejecutado
 el borrado: queda pendiente la confirmación específica solicitada al usuario.
 La captura privada es `qa-notifications-delete-confirmation.jpg`.
+
+## Sugerencias: longitud, éxito y límite entre plataformas
+
+Con `QA`, web deshabilitaba Enviar sin mensaje visible incluso después del blur:
+el requisito solo existía como accessibilityHint. La corrección usa la clave ya
+localizada en los cuatro idiomas y `validationTrigger="blur"` de `TextField`.
+La revisión de éxito detectó además que vaciar el texto conservaba la interacción
+del campo y mostraba el error junto al agradecimiento: después de persistir se
+remonta únicamente el campo para reiniciar esa interacción. Los fallos no
+reinician el campo ni pierden el borrador. No cambia contrato, adaptador ni
+transportes de ADR-0125.
+
+Web y Pixel confirmaron texto corto, error tras blur, corrección que habilita
+Enviar y limpieza tras éxito. Dos envíos web y uno Android de la misma cuenta
+ficticia alcanzaron el límite; el cuarto desde iPhone mostró el mensaje
+específico de espera conservando el texto y permitiendo editarlo. En iOS la
+entrada con teclado del ordenador y el envío quedaron revisados; no se acredita
+el blur del texto corto ni el recorrido con teclado táctil: pulsar la descripción
+no terminó la edición en esta configuración del simulador.
+
+Evidencias privadas: `suggestion-short-web.jpg`, `suggestion-short-android.jpg`,
+`suggestion-success-web.jpg`, `suggestion-success-android.jpg` y
+`suggestion-rate-limit-ios.jpg`. `pnpm run check` y exportación web completados
+con éxito. El reinicio de Metro reescribió `expo-env.d.ts`; se normalizó el archivo
+y no quedó diferencia de contenido. No se añadieron pruebas que repitan estas
+cinco líneas de presentación; la validación usa recorridos reales y checks del
+cliente. Checklist: primitiva, locales existentes, tokens/márgenes intactos,
+error por campo, acción sin duplicados y adaptador generado con apiFetch.
+
+Notificaciones web: se canceló el diálogo de borrado, se conservó el aviso y se
+abrió el torneo original desde él. El borrado irreversible sigue sin ejecutar.
+
+Retrospectiva: el botón correctamente deshabilitado no explica por sí solo cómo
+recuperarse. Una prueba de formulario debe cerrar también el éxito y comprobar
+que no persiste una validación de la edición anterior; compartir cuenta entre
+SO permite revisar que el límite no depende del dispositivo.

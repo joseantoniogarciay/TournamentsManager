@@ -16,6 +16,7 @@ export function SuggestionCard() {
   const t = getTranslator();
   const { show } = useFeedback();
   const [body, setBody] = useState("");
+  const [fieldRevision, setFieldRevision] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const normalizedLength = useMemo(() => Array.from(body.trim()).length, [body]);
   const canSubmit = normalizedLength >= minimumLength && normalizedLength <= maximumLength;
@@ -26,6 +27,7 @@ export function SuggestionCard() {
     try {
       await submitSuggestion(body.trim());
       setBody("");
+      setFieldRevision((revision) => revision + 1);
       show({ kind: "success", message: t("home_suggestion_thanks") });
     } catch (error) {
       if (error instanceof SuggestionRateLimitedError) {
@@ -44,13 +46,16 @@ export function SuggestionCard() {
       <View style={styles.content}>
         <Text color="secondary">{t("home_suggestion_description")}</Text>
         <TextField
+          key={fieldRevision}
           accessibilityHint={t("home_suggestion_requirement")}
           accessibilityLabel={t("home_suggestion_accessibility_label")}
           editable={!isSubmitting}
+          error={!canSubmit ? t("home_suggestion_requirement") : undefined}
           multiline
           numberOfLines={4}
           onChangeText={(value) => setBody(Array.from(value).slice(0, maximumLength).join(""))}
           placeholder={t("home_suggestion_placeholder")}
+          validationTrigger="blur"
           value={body}
         />
         <Button
