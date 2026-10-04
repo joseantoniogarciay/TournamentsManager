@@ -4439,4 +4439,7 @@ invalidación y espera de almacenamiento. La repetición iOS confirma nombre
 conservado tras login, inscripción, conflicto recuperable y otro enlace con
 la app viva. El punto de entrada exige recarga completa: hot refresh puede
 conservar la extensión anterior. No se equivale esquema local a asociación
-real de enlaces universales ni adaptador probado a recorrido visual Android.
+real de enlaces universales. Android confirma formulario con sesión, error
+obligatorio y recuperación; el equipo inscrito consta en API, pero la captura
+del destino quedó pendiente al bloquearse el Mac de nuevo. Se conserva esa
+diferencia entre validación de persistencia y evidencia visual.

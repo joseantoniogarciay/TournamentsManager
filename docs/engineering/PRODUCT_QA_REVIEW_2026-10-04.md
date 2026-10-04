@@ -43,7 +43,7 @@ a cobertura de líneas ni al número de casuísticas del producto.
 | Google / Apple                                       | Challenges, validación, errores seguros, atomicidad y concurrencia con dobles de prueba                         | No se acredita acceso real a proveedores                                                                                                               | Orden de botones comprobado en ambos; OAuth real aplazado por el usuario a futuras pruebas en dev/prod                       |
 | Biblioteca, recientes, seguir/dejar de seguir        | HTTP, persistencia y relaciones sin duplicar                                                                    | Paginación, seguimiento idempotente y consultas                                                                                                        | Administro/Sigo en web y ambos SO; recientes; paginación y seguir/dejar de seguir UI pendientes |
 | Administradores y exclusividad del creador           | HTTP y persistencia                                                                                             | Asignación autorizada/idempotente, delegado puede editar; listar admins, cancelar, completar y transferir rechazados 403                               | Delegado edita en iOS; menú y URL directa 403 revisados en web, búsqueda con creador; Android delegado pendiente |
-| Invitación de equipo                                 | HTTP y persistencia                                                                                             | Crear/regenerar, anterior inválida, inspección anónima, inscripción 201, duplicado 409, sin sesión 401, revocación idempotente, después de empezar 409 | Web anónimo → login conserva nombre e inscribe; conflicto del ya inscrito. iOS: entrada corregida, login conserva nombre, inscripción confirmada, duplicado recuperable y segundo enlace con app abierta; Android nativo pendiente |
+| Invitación de equipo                                 | HTTP y persistencia                                                                                             | Crear/regenerar, anterior inválida, inspección anónima, inscripción 201, duplicado 409, sin sesión 401, revocación idempotente, después de empezar 409 | Web anónimo → login conserva nombre e inscribe; conflicto del ya inscrito. iOS: entrada corregida, login conserva nombre, inscripción confirmada, duplicado recuperable y segundo enlace con app abierta; Android: entrada con sesión, nombre obligatorio/corrección e inscripción confirmada por API; captura del destino pendiente |
 | Composición de equipos                               | HTTP, persistencia                                                                                              | Último equipo 409, añadir, duplicado normalizado 409, eliminar antes de empezar                                                                        | Creación web, primer equipo, duplicado y segundo válido; nombres largos en ambos; bajas UI pendientes |
 | Ocho deportes × tres formatos                        | Dominio, HTTP y persistencia                                                                                    | 16 combinaciones admitidas terminadas con campeón; 8 rechazadas 400 según contrato                                                                     | Ocho formularios guardados en web; formatos largos y desempates. Nativo parcial: fútbol, bádminton, tenis de mesa y voleibol; no acredita todos los formatos |
 | Liga y mixto                                         | Grupos, dos vueltas, composición impar, retirada de clasificado, desempate repetido, congelación y concurrencia | Una vuelta y mixto tabla única; empate de corte con liguilla de desempate resuelto                                                                     | Clasificación fútbol parcial en ambos; mixto y desempates en pantalla pendientes                    |
@@ -380,10 +380,20 @@ fixture recibido con la ruta de invitación ya abierta cambia al torneo correcto
 sin reiniciar. Evidencias: `invitation-ios-restored-name.jpg` y
 `invitation-ios-warm-second.jpg`.
 
-Android: la prueba desde Chrome requiere aceptar sus términos iniciales; se
-solicitó autorización específica y queda pendiente. Las regresiones del
-adaptador Android no sustituyen este recorrido visual. No se acreditan
-asociaciones reales de enlaces universales de dev/prod mediante un esquema local.
+Android: autorización específica del usuario para términos iniciales de Chrome,
+usado sin cuenta. Una página ficticia servida solo en loopback entregó el enlace;
+tras recarga completa de Expo, la app ya viva mostró el torneo correcto con
+sesión. El nombre vacío muestra «Introduce el nombre de tu equipo»; corregirlo
+retira el error. La inscripción de «Condores invitados Android» se confirma en
+el detalle público de API con ambos equipos. El Mac se bloqueó de nuevo justo
+antes de capturar el destino; esa última verificación visual y el recorrido
+Android sin sesión permanecen pendientes. Evidencia privada:
+`invitation-android-required-name.jpg`.
+
+Web confirma que el equipo inscrito desde iOS aparece en Equipos y el torneo
+en Sigo con permisos de participante; evidencia `invitation-ios-teams-web.jpg`.
+No se acreditan asociaciones reales de enlaces universales de dev/prod mediante
+un esquema local ni una terminación fría real mediante una recarga de Expo.
 
 Retrospectiva: probar almacenamiento y retorno del login no detecta un evento
 que llegó antes de existir la pantalla. La captura del enlace pertenece al
