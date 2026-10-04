@@ -1,5 +1,16 @@
 # Registro de aprendizaje
 
+## 2026-10-04 — Concordancia del CTA de Crear torneo
+
+Se corrige el catálogo español de «Inicia sesión para crearla» a «Inicia sesión
+para crearlo». La ruta ya consume esa clave; italiano y francés conservan
+concordancia masculina e inglés no requiere cambio. Se revisa la checklist del
+cliente: texto en catálogo, sin cambios de layout, navegación ni API. Pasan
+typecheck y exportación web.
+
+Retrospectiva: al cambiar el nombre de una entidad también se revisan los
+pronombres de las acciones asociadas, aunque no repitan el nombre.
+
 ## 2026-10-04 — Cierre del trabajo pendiente en develop
 
 El usuario solicita commitear y publicar el conjunto pendiente para alinear el

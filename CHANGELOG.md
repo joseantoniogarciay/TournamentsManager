@@ -25,6 +25,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- Crear torneo sin sesión: el CTA español usa «Inicia sesión para crearlo»,
+  concordando con torneo.
+
 - Controles de cabecera Android: el margen compartido complementa el inset
   nativo de 16 px hasta alcanzar los 20 px de las cards. Cierre de Crear torneo
   alineado y comprobado en Pixel API 34, conservando el objetivo táctil de 44 px.

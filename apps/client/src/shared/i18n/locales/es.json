@@ -289,7 +289,7 @@
   "league_add_team": "Añadir equipo",
   "league_team_limit_reached": "Un torneo admite un máximo de 64 equipos.",
   "league_publish": "Crear torneo",
-  "league_sign_in_to_publish": "Inicia sesión para crearla",
+  "league_sign_in_to_publish": "Inicia sesión para crearlo",
   "league_name_required": "Introduce el nombre del torneo.",
   "league_name_too_long": "El nombre del torneo no puede superar los 56 caracteres.",
   "league_team_required": "Introduce el nombre de tu equipo.",
