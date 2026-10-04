@@ -423,3 +423,30 @@ email, subject, clave privada ni cuerpos Apple. Los callbacks y las sesiones usa
 no-store. Cancelar una petición no escribe feedback; cancelar en Apple vuelve con
 un estado cerrado, sin fallo. Pruebas HTTP verifican todos estos recorridos y
 atributos seguros; la integración comprueba consumo concurrente y rollback de 202.
+
+## Revisión de rotación de enlaces — 2026-10-04
+
+Se revisan `POST /v1/sessions` y `POST /v1/password-resets` al corregir las
+colisiones de tokens activos. Los locks de cuenta y las consultas de rotación
+son límites PostgreSQL; no se añaden spans de validación, CTE, hash ni generación
+de secreto. No cambian las categorías ni se exportan email, cuenta, token o SQL.
+
+| Salida                                                                  | Evidencia y tratamiento                                                                                                                                                                                                                                                           |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Login verificado 200 / pendiente 202                                    | HTTP real; el pendiente rota email y conserva cero sesiones en las regresiones de persistencia.                                                                                                                                                                                   |
+| Recuperación elegible/desconocida 202                                   | Cuerpo vacío idéntico; la cuenta desconocida no invoca SMTP. Prueba HTTP contractual y recorrido Mailpit local.                                                                                                                                                                   |
+| Validación 400 / tasa 429                                               | Pruebas HTTP; `validation.rejected` / `rate_limit.exceeded`; 429 conserva Retry-After.                                                                                                                                                                                            |
+| Credenciales de login rechazadas 401                                    | Recorrido HTTP y suite `access_observability_test.go`; `authentication.credentials_rejected`, sin distinguir cuenta o contraseña. Recuperación no tiene rechazo de negocio revelador.                                                                                             |
+| Adquisición de conexión, lock, invalidación/inserción o commit fallidos | El span de PostgreSQL conserva su categoría `database.*`; la raíz de estos recorridos usa `request.failed` como diagnóstico común sin exportar el error. Respuesta 500 segura. Las regresiones de persistencia prueban la transición y la cancelación sin dejar tokens parciales. |
+| SMTP fallido                                                            | El span SMTP conserva `smtp.delivery_failed`; la raíz usa `request.failed`. Respuesta 500 sin mensaje del proveedor. Prueba HTTP con un error privado centinela.                                                                                                                  |
+| Timeout o cancelación de PostgreSQL/SMTP                                | Categorías comunes `request.timeout` / `request.cancelled` en el span raíz y en los límites instrumentados; pruebas HTTP comprueban que sus errores no aparecen en el cuerpo. El cliente no muestra feedback por una cancelación intencionada.                                    |
+
+`password_recovery_contract_test.go` comprueba las diez salidas de recuperación:
+éxito elegible/desconocido, validación, tasa y fallo/cancelación/timeout de cada
+una de sus dos dependencias. Las pruebas no activan exporters ni observabilidad
+local/dev. No se afirma haber inducido cada fallo técnico en un servidor vivo:
+esa evidencia procede de inyección de dependencias y de la suite de observabilidad.
+
+Aprendizaje: revisar únicamente el primer envío ocultaba un 500 al repetirlo.
+Probar transiciones consecutivas y simultáneas descubre orden de CTE y relojes
+de transacción que una prueba aislada de éxito no ejercita.

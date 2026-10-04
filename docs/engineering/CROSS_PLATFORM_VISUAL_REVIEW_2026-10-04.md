@@ -255,3 +255,27 @@ componentes modificados. Tras cargar el bundle nuevo, Pixel muestra la flecha
 Material en Actividad reciente. Metro y Compose local se apagan conservando
 volúmenes, cuentas y fixture; se retira el puente temporal de API Android.
 No se activa observabilidad ni se modifica dev público o producción.
+
+## Ampliación autenticada y matriz de producto
+
+La [matriz de producto](PRODUCT_QA_REVIEW_2026-10-04.md) distingue pruebas
+automatizadas, API real y observación nativa. Se amplía la sesión con los ocho
+deportes y 24 combinaciones de formato: 16 admitidas completadas y 8 rechazadas
+según contrato. No acredita sus 24 recorridos visuales.
+
+La delegación de `qa_visual_player` en el torneo local original fue autorizada
+explícitamente por el usuario y aplicada por API; el estado previo sin delegación
+de esta revisión es histórico. En iOS se comprobó login, biblioteca Administro,
+apertura del torneo y formulario de edición. El resumen de permisos se corrigió
+en los cuatro catálogos y se observó en español tras recargar.
+
+El torneo de bádminton finalizado se abrió en ambos simuladores: semifinales,
+final, ganador y parciales legibles. En iOS también se comprobó el retorno al
+partido de origen. Los diálogos mantienen una diferencia abierta de blur; los
+experimentos que daban desenfoque parcial o fondo vacío en Android se retiraron.
+Los detalles, causas y cobertura que falta constan en la matriz enlazada.
+
+El delegado guardó un 5–1 en iOS y lo vio al volver al torneo. El fixture de
+fútbol cancelado se abrió en ambos sistemas: partidos conservados, marcadores
+administrativos y ningún botón de edición visible. La cancelación y retirada
+se realizaron antes por API; no se acredita su envío mediante UI.

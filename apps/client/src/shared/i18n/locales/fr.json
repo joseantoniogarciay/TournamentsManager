@@ -299,7 +299,7 @@
   "league_state_cancelled": "Tournoi annulé",
   "league_creator": "Créateur",
   "league_creator_label": "Créateur : ",
-  "league_creator_permissions": "seul le créateur peut ajouter d’autres administrateurs ou annuler le tournoi ; vous pouvez aussi gérer les résultats et le terminer une fois que tous les matchs ont été joués.",
+  "league_creator_permissions": "seul le créateur peut ajouter des administrateurs, annuler ou terminer le tournoi. Le créateur et les administrateurs peuvent gérer les résultats.",
   "league_status_label": "Statut : ",
   "league_teams": "Équipes",
   "league_standings": "Classement",

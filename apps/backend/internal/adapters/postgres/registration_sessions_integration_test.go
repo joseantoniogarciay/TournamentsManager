@@ -194,3 +194,137 @@ func TestIntegrationGoogleLoginDraftFailureRollsBackChallengeAndSession(t *testi
 		t.Fatalf("rollback dejó sesiones/torneos/challenge consumido = %d/%d/%v", sessions, tournamentsCount, challengeConsumed)
 	}
 }
+
+func TestIntegrationPendingLoginRotatesVerificationWithoutCreatingSession(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	repository := NewRegistrationRepository(pool)
+	input := registration.Input{Email: "pending@example.test", Username: "pending_login", Password: "correct password", Locale: registration.LocaleSpanish, TermsVersion: "2026-08-22"}
+	initialHash := make([]byte, 32)
+	initialHash[0] = 1
+	created, err := repository.CreatePending(ctx, input, "unused hash", initialHash)
+	if err != nil || !created {
+		t.Fatalf("create pending = %v, %v", created, err)
+	}
+	var accountID string
+	if err := pool.QueryRow(ctx, `SELECT id::text FROM accounts WHERE username=$1`, input.Username).Scan(&accountID); err != nil {
+		t.Fatal(err)
+	}
+	for cycle := 2; cycle <= 3; cycle++ {
+		hash := make([]byte, 32)
+		hash[0] = byte(cycle)
+		email, locale, err := repository.RenewLoginVerification(ctx, accountID, hash)
+		if err != nil || email != input.Email || locale != input.Locale {
+			t.Fatalf("renew cycle %d = %q, %q, %v", cycle, email, locale, err)
+		}
+		var active, invalidated, sessions int
+		if err := pool.QueryRow(ctx, `SELECT count(*) FILTER (WHERE consumed_at IS NULL AND invalidated_at IS NULL), count(*) FILTER (WHERE invalidated_at IS NOT NULL) FROM email_verification_tokens WHERE account_id=$1`, accountID).Scan(&active, &invalidated); err != nil {
+			t.Fatal(err)
+		}
+		if err := pool.QueryRow(ctx, `SELECT count(*) FROM sessions WHERE account_id=$1`, accountID).Scan(&sessions); err != nil {
+			t.Fatal(err)
+		}
+		if active != 1 || invalidated != cycle-1 || sessions != 0 {
+			t.Fatalf("active/invalidated/sessions = %d/%d/%d", active, invalidated, sessions)
+		}
+	}
+}
+
+func TestIntegrationConcurrentPendingLoginsKeepOneActiveVerification(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	repository := NewRegistrationRepository(pool)
+	input := registration.Input{Email: "parallel@example.test", Username: "parallel_login", Locale: registration.LocaleSpanish, TermsVersion: "2026-08-22"}
+	hash := make([]byte, 32)
+	hash[0] = 1
+	if created, err := repository.CreatePending(ctx, input, "unused hash", hash); err != nil || !created {
+		t.Fatalf("create pending = %v, %v", created, err)
+	}
+	var accountID string
+	if err := pool.QueryRow(ctx, `SELECT id::text FROM accounts WHERE username=$1`, input.Username).Scan(&accountID); err != nil {
+		t.Fatal(err)
+	}
+	const renewals = 8
+	start := make(chan struct{})
+	results := make(chan error, renewals)
+	for i := range renewals {
+		go func() {
+			<-start
+			next := make([]byte, 32)
+			next[0] = byte(i + 2)
+			_, _, err := repository.RenewLoginVerification(ctx, accountID, next)
+			results <- err
+		}()
+	}
+	close(start)
+	for range renewals {
+		if err := <-results; err != nil {
+			t.Fatalf("concurrent renewal: %v", err)
+		}
+	}
+	cancelled, cancel := context.WithCancel(ctx)
+	cancel()
+	if _, _, err := repository.RenewLoginVerification(cancelled, accountID, hash); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancelled renewal = %v", err)
+	}
+	var active, invalidated, sessions int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FILTER (WHERE consumed_at IS NULL AND invalidated_at IS NULL), count(*) FILTER (WHERE invalidated_at IS NOT NULL) FROM email_verification_tokens WHERE account_id=$1`, accountID).Scan(&active, &invalidated); err != nil {
+		t.Fatal(err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM sessions WHERE account_id=$1`, accountID).Scan(&sessions); err != nil {
+		t.Fatal(err)
+	}
+	if active != 1 || invalidated != renewals || sessions != 0 {
+		t.Fatalf("active/invalidated/sessions = %d/%d/%d", active, invalidated, sessions)
+	}
+}
+
+func TestIntegrationRepeatedPasswordResetRequestsInvalidatePreviousLinks(t *testing.T) {
+	ctx := context.Background()
+	pool := integrationPool(t)
+	accountID := createVerifiedLocalAccount(t, ctx, pool, "reset-repeat@example.test", "reset_repeat", "correct password")
+	repository := NewRegistrationRepository(pool)
+	hashes := [][]byte{make([]byte, 32), make([]byte, 32)}
+	for i, hash := range hashes {
+		hash[0] = byte(i + 1)
+		email, _, eligible, err := repository.CreatePasswordReset(ctx, "reset-repeat@example.test", hash)
+		if err != nil || !eligible || email != "reset-repeat@example.test" {
+			t.Fatalf("request %d = %q, %v, %v", i, email, eligible, err)
+		}
+	}
+	if _, err := repository.InspectPasswordReset(ctx, hashes[0]); !errors.Is(err, registration.ErrPasswordResetInvalid) {
+		t.Fatalf("previous link = %v", err)
+	}
+	if _, err := repository.InspectPasswordReset(ctx, hashes[1]); err != nil {
+		t.Fatalf("new link = %v", err)
+	}
+	const renewals = 8
+	start, results := make(chan struct{}), make(chan error, renewals)
+	for i := range renewals {
+		go func() {
+			<-start
+			hash := make([]byte, 32)
+			hash[0] = byte(i + 3)
+			_, _, _, err := repository.CreatePasswordReset(ctx, "reset-repeat@example.test", hash)
+			results <- err
+		}()
+	}
+	close(start)
+	for range renewals {
+		if err := <-results; err != nil {
+			t.Fatalf("concurrent reset: %v", err)
+		}
+	}
+	cancelled, cancel := context.WithCancel(ctx)
+	cancel()
+	if _, _, _, err := repository.CreatePasswordReset(cancelled, "reset-repeat@example.test", hashes[0]); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancelled reset = %v", err)
+	}
+	var active, invalidated int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FILTER (WHERE consumed_at IS NULL AND invalidated_at IS NULL), count(*) FILTER (WHERE invalidated_at IS NOT NULL) FROM password_reset_tokens WHERE account_id=$1`, accountID).Scan(&active, &invalidated); err != nil {
+		t.Fatal(err)
+	}
+	if active != 1 || invalidated != renewals+1 {
+		t.Fatalf("active/invalidated = %d/%d", active, invalidated)
+	}
+}

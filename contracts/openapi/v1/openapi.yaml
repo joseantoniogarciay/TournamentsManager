@@ -230,6 +230,7 @@ paths:
         "202": { description: "Solicitud aceptada, exista o no una credencial local elegible." }
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
   /password-reset-links:
     post:
       tags: [Password recovery]

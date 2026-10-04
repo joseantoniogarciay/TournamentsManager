@@ -265,3 +265,19 @@ o creación de contraseña que no tengan todavía reautenticación Apple.
 El [runbook](../runbooks/social-login.md) contiene las variables, placeholders,
 callback, relay y comprobaciones reales de distribución. La revocación de la
 autorización Apple al borrar cuenta sigue siendo un gate pendiente de tienda.
+
+## Rotación de enlaces de email: revisión del 4 de octubre de 2026
+
+El login pendiente y la solicitud de recuperación bloquean la cuenta elegible
+antes de rotar su enlace dentro de una transacción. La consulta de rotación hace
+explícita la dependencia entre invalidar el token anterior e insertar el nuevo;
+CTE independientes no garantizan ese orden y pueden infringir el índice de un
+único token activo. Las marcas temporales usan `statement_timestamp()` después
+de adquirir el bloqueo: `now()` conserva el inicio de la transacción y, tras
+esperar otra renovación, podría preceder a la creación del token que invalida.
+
+Se conservan ADR-0048 y ADR-0064: solo el último enlace queda activo; el login
+pendiente no crea sesión; la solicitud de recuperación responde 202 tanto para
+cuentas elegibles como desconocidas. Fallos técnicos de recuperación conservan
+el 500 seguro, ahora explícito también en OpenAPI. Tres regresiones PostgreSQL
+cubren reenvíos, ocho renovaciones simultáneas, enlaces anteriores y cancelación.

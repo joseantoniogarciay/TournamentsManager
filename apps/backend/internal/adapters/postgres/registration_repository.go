@@ -152,11 +152,27 @@ func (r RegistrationRepository) RenewLoginVerification(ctx context.Context, acco
 	if err != nil {
 		return "", "", err
 	}
-	row, err := r.queries.RenewLoginVerification(ctx, sqlc.RenewLoginVerificationParams{ID: id, TokenHash: tokenHash})
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return "", "", err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	queries := r.queries.WithTx(tx)
+	if _, err := queries.LockPendingLoginVerification(ctx, id); errors.Is(err, pgx.ErrNoRows) {
+		return "", "", registration.ErrLoginInvalid
+	} else if err != nil {
+		return "", "", err
+	}
+	// The account lock serializes renewals; the next statement sees the token
+	// committed by a preceding renewal before invalidating it.
+	row, err := queries.RenewLoginVerification(ctx, sqlc.RenewLoginVerificationParams{ID: id, TokenHash: tokenHash})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", "", registration.ErrLoginInvalid
 	}
 	if err != nil {
+		return "", "", err
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return "", "", err
 	}
 	return row.Email, registration.Locale(row.Locale), nil
@@ -207,11 +223,25 @@ func (r RegistrationRepository) CreatePending(ctx context.Context, input registr
 
 // CreatePasswordReset persists a token only for a verified local account.
 func (r RegistrationRepository) CreatePasswordReset(ctx context.Context, email string, tokenHash []byte) (string, registration.Locale, bool, error) {
-	row, err := r.queries.CreatePasswordReset(ctx, sqlc.CreatePasswordResetParams{Lower: email, TokenHash: tokenHash})
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return "", "", false, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	queries := r.queries.WithTx(tx)
+	if _, err := queries.LockPasswordResetAccount(ctx, email); errors.Is(err, pgx.ErrNoRows) {
+		return "", "", false, nil
+	} else if err != nil {
+		return "", "", false, err
+	}
+	row, err := queries.CreatePasswordReset(ctx, sqlc.CreatePasswordResetParams{Lower: email, TokenHash: tokenHash})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", "", false, nil
 	}
 	if err != nil {
+		return "", "", false, err
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return "", "", false, err
 	}
 	return row.Email, registration.Locale(row.Locale), true, nil

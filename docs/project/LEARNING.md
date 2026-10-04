@@ -4373,3 +4373,33 @@ cobertura API y visual, y deja explícitos el rol delegado y el blur Android.
 Retrospectiva: paridad funcional no exige iconos idénticos, pero sí que la misma
 intención tenga representación visible en cada sistema. Una prueba con sesión
 real aporta evidencia que una home anónima o el typecheck no pueden dar.
+
+## 2026-10-04 — QA del producto y enlaces repetidos
+
+La revisión real de login pendiente y recuperación consecutiva encontró dos
+500 por el índice de un único token activo. Las consultas usaban CTE de
+invalidación e inserción sin dependencia. Se fuerza el orden y se bloquea la
+cuenta para serializar renovaciones. La prueba simultánea detectó además que
+`now()` precedía al token creado por una transacción que acababa de liberar el
+lock; las marcas de rotación pasan a `statement_timestamp()` tras el bloqueo.
+Tres regresiones PostgreSQL protegen secuencia, concurrencia y cancelación;
+el contrato de recuperación declara el 500 seguro existente y se regenera Orval.
+
+La matriz real recorre ocho deportes por tres formatos: dieciséis combinaciones
+admitidas completadas con campeón y ocho rechazos para formatos de raqueta no
+admitidos. Se concede la delegación local explícitamente autorizada y se validan
+sus límites, sin confundir respuestas API con revisión visual del rol.
+
+Retrospectiva: una suite verde y un solo happy path no acreditan todo el producto.
+Conservar una matriz por capacidad, tipo de evidencia y plataforma evita dar
+por probadas las UI a partir de reglas de dominio. En el blur Android, añadir
+una ref produjo captura parcial o vacía al atravesar navegación y ventanas de
+Modal; se retiró el experimento y se mantiene el hallazgo abierto.
+
+La revisión del delegado también detectó copy que atribuía la finalización a
+cualquier lector del torneo. Se corrigió en los cuatro idiomas indicando que
+el creador finaliza y que creador/administradores gestionan resultados, sin
+cambiar autorización. Invitaciones, incidencias, baja y cancelación añadieron
+33 respuestas API verificadas. La matriz viva está en
+[la revisión de producto](../engineering/PRODUCT_QA_REVIEW_2026-10-04.md);
+una combinación deportiva API no sustituye su prueba visual.
