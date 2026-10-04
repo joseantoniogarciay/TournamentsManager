@@ -25,6 +25,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- Acceso social: Apple y Google aparecen como iconos circulares en una fila,
+  Apple a la izquierda, con etiquetas accesibles y estados de carga/deshabilitado.
+
 - Crear torneo sin sesión: el CTA español usa «Inicia sesión para crearlo»,
   concordando con torneo.
 

@@ -1,5 +1,25 @@
 # Registro de aprendizaje
 
+## 2026-10-04 — Fila de acceso social universal
+
+Apple deja de ser una acción con texto bajo Google y pasa a un círculo de 48 px,
+con su icono local monocromo, seguido de Google en una fila centrada. Ambos usan
+tokens, separación de 16 px, etiquetas localizadas, estados accesibles de carga
+y deshabilitado y los hooks de autenticación existentes. El PNG Apple se rasteriza
+desde el símbolo `apple.logo` del sistema a 96 px; no introduce módulos nativos.
+
+El iPhone 18 Pro mostraba un bundle anterior con solo Google. Se reconecta al
+Metro actual por LAN: el localhost anunciado como 127.0.0.1 no alcanzaba el
+listener IPv6. Pasan typecheck, lint de la ruta, exportación web y las seis
+regresiones de autenticación social. La checklist cliente confirma catálogo,
+tokens, objetivos táctiles, presentación y API intactos. La comprobación visual
+de la fila permanece pendiente mientras la herramienta de UI esté bloqueada por
+el bloqueo del Mac; no se presenta la compilación como prueba visual.
+
+Retrospectiva: el código compartido no garantiza que dos simuladores carguen la
+misma versión. La configuración incompleta conserva el botón visible pero
+deshabilitado; no se simula un proveedor operativo para validar su aspecto.
+
 ## 2026-10-04 — Concordancia del CTA de Crear torneo
 
 Se corrige el catálogo español de «Inicia sesión para crearla» a «Inicia sesión

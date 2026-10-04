@@ -13,6 +13,7 @@ import {
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
+import appleLogo from "../../../../assets/apple-logo.png";
 import googleLogo from "../../../../assets/google-g.png";
 
 import { AppleAuthenticationError } from "@/features/federated-apple/api";
@@ -340,38 +341,61 @@ export function AccountScreen({
         <Card>
           <View style={styles.form}>
             <Text variant="title">{t("account_social_title")}</Text>
-            <Pressable
-              accessibilityLabel={t(
-                isGoogleConfigured ? "account_google_continue" : "account_google_unavailable",
-              )}
-              accessibilityRole="button"
-              accessibilityState={{
-                busy: isGooglePreparing || isGoogleAuthenticating,
-                disabled: !isGoogleConfigured || isGooglePreparing || socialBusy,
-              }}
-              disabled={!isGoogleConfigured || isGooglePreparing || socialBusy}
-              onPress={() => void startGoogleAuthentication()}
-              style={[
-                styles.googleButton,
-                { borderColor: colors.border.default },
-                !isGoogleConfigured || isGooglePreparing || socialBusy
-                  ? styles.googleButtonDisabled
-                  : undefined,
-              ]}
-            >
-              {isGooglePreparing || isGoogleAuthenticating ? (
-                <ActivityIndicator color={colors.indicator.default} />
-              ) : (
-                <Image source={googleLogo} style={styles.googleLogo} />
-              )}
-            </Pressable>
-            <Button
-              label={t(apple.isConfigured ? "account_apple_continue" : "account_apple_unavailable")}
-              variant="secondary"
-              disabled={!apple.isConfigured || apple.isPreparing || socialBusy}
-              loading={apple.isPreparing || apple.isAuthenticating}
-              onPress={() => void apple.start()}
-            />
+            <View style={styles.socialButtons}>
+              <Pressable
+                accessibilityLabel={t(
+                  apple.isConfigured ? "account_apple_continue" : "account_apple_unavailable",
+                )}
+                accessibilityRole="button"
+                accessibilityState={{
+                  busy: apple.isPreparing || apple.isAuthenticating,
+                  disabled: !apple.isConfigured || apple.isPreparing || socialBusy,
+                }}
+                disabled={!apple.isConfigured || apple.isPreparing || socialBusy}
+                onPress={() => void apple.start()}
+                style={[
+                  styles.socialButton,
+                  { borderColor: colors.border.default },
+                  !apple.isConfigured || apple.isPreparing || socialBusy
+                    ? styles.socialButtonDisabled
+                    : undefined,
+                ]}
+              >
+                {apple.isPreparing || apple.isAuthenticating ? (
+                  <ActivityIndicator color={colors.indicator.default} />
+                ) : (
+                  <Image
+                    source={appleLogo}
+                    style={[styles.appleLogo, { tintColor: colors.text.primary }]}
+                  />
+                )}
+              </Pressable>
+              <Pressable
+                accessibilityLabel={t(
+                  isGoogleConfigured ? "account_google_continue" : "account_google_unavailable",
+                )}
+                accessibilityRole="button"
+                accessibilityState={{
+                  busy: isGooglePreparing || isGoogleAuthenticating,
+                  disabled: !isGoogleConfigured || isGooglePreparing || socialBusy,
+                }}
+                disabled={!isGoogleConfigured || isGooglePreparing || socialBusy}
+                onPress={() => void startGoogleAuthentication()}
+                style={[
+                  styles.socialButton,
+                  { borderColor: colors.border.default },
+                  !isGoogleConfigured || isGooglePreparing || socialBusy
+                    ? styles.socialButtonDisabled
+                    : undefined,
+                ]}
+              >
+                {isGooglePreparing || isGoogleAuthenticating ? (
+                  <ActivityIndicator color={colors.indicator.default} />
+                ) : (
+                  <Image source={googleLogo} style={styles.googleLogo} />
+                )}
+              </Pressable>
+            </View>
           </View>
         </Card>
 
@@ -450,7 +474,8 @@ const styles = StyleSheet.create({
     marginBottom: space[2],
   },
   forgotPasswordText: { textDecorationLine: "underline" },
-  googleButton: {
+  socialButtons: { flexDirection: "row", gap: space[4], justifyContent: "center" },
+  socialButton: {
     alignItems: "center",
     alignSelf: "center",
     borderRadius: radius.pill,
@@ -459,8 +484,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight + space[1],
   },
-  googleButtonDisabled: { opacity: 0.55 },
-  googleLogo: { height: 22, width: 22 },
+  socialButtonDisabled: { opacity: 0.55 },
+  googleLogo: { height: control.iconSize, width: control.iconSize },
+  appleLogo: { height: control.iconSize, width: control.iconSize, resizeMode: "contain" },
   legalDocument: { flexShrink: 1, gap: space[3] },
   legalDocumentContent: { gap: space[4] },
   legalDocumentHeader: { alignItems: "center", flexDirection: "row", gap: space[2] },

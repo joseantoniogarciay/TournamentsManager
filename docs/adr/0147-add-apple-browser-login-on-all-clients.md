@@ -82,6 +82,14 @@ del sistema en caso contrario, conservando el mismo retorno y prueba de sesión.
 
 ## Consecuencias y revisión
 
+### Aclaración visual — 2026-10-04
+
+El usuario solicita que Apple y Google aparezcan en todas las plataformas como
+iconos dentro de controles circulares contiguos, con Apple a la izquierda de
+Google. La fila conserva etiquetas accesibles localizadas, estados de carga y
+deshabilitado; la ausencia de configuración real no oculta el proveedor ni lo
+habilita. No cambia el flujo de autenticación aceptado.
+
 Se incorpora golang-jwt/jwt/v5 5.3.1 para firma/verificación JWT mantenida;
 la criptografía no se reimplementa. JWKS utiliza host Apple fijo, timeout y caché
 con límite de refresco ante kids desconocidos. La pérdida del proceso cliente
