@@ -3997,3 +3997,16 @@ sus conexiones antes de liberar dependencias. Pool.Close aún puede esperar una
 operación que ignore cancelación; el runtime conserva el límite duro. Las pruebas
 con sockets verifican comportamiento HTTP; la prueba de rollout en Traefik es
 otra evidencia y permanece pendiente de promoción desde una revisión limpia.
+
+
+### Cierre de promoción — 2026-10-04
+
+La rama ops/api-graceful-shutdown conserva el SHA 11138a1 desplegado sin incluir
+los cambios de interfaz en curso. K3s valida el hook nativo y confirma dos pods
+listos con cero reinicios. Se verificó la retirada de pods que ya tenían preStop:
+ambos completaron drenaje y curl observó 168 respuestas 401 esperadas a sesiones
+sin autenticar, sin errores, durante 45,61 segundos. urllib devolvía 403 del borde
+y esa medición se descartó. Una prueba de continuidad debe alcanzar la API y
+validar su respuesta; no basta contar respuestas del proxy. El resultado acota
+el riesgo del rollout probado, sin garantizar disponibilidad del host ni carga
+transaccional.

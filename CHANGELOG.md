@@ -11,7 +11,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 - Apagado de la API (ADR-0145): espera preStop nativa de cinco segundos en K3s,
   gracia de treinta segundos en K3s y Compose dev, telemetría acotada a cinco
   segundos y cierre de conexiones restantes si HTTP agota diez segundos.
-  Pruebas con sockets reales; promoción y validación de tráfico pendientes.
+  Pruebas con sockets reales; desplegado en prod el 2026-10-04 (11138a1):
+  dos réplicas listas y 168 respuestas esperadas sin errores durante el rollout
+  de verificación.
 
 - Verificación de backups dev: restauración y consulta comparten un volumen
   temporal único, sin red ni montaje de datos activos. Se exige recuperación

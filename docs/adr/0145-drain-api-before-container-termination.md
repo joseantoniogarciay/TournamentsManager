@@ -70,3 +70,34 @@ Deployment, runbook K3s, LEARNING, CHANGELOG e índice de decisiones.
 - [Kubernetes: terminación de pods](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination)
 - [Kubernetes: hooks y presupuesto compartido](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/)
 - [Go: Server.Shutdown](https://pkg.go.dev/net/http#Server.Shutdown)
+
+
+## Promoción y retrospectiva — 2026-10-04
+
+Se despliega la revisión limpia `11138a1100db853d04a2e388bae029c013f55843`,
+conservada localmente en la rama `ops/api-graceful-shutdown`. Se aisló el cambio
+sin incluir las modificaciones en curso del cliente. El wrapper existente
+importó runtime/migrator ARM64 y verificó API y renderer del mismo SHA. Goose
+confirmó versión 19 sin migraciones pendientes; el Secret efímero fue eliminado.
+K3s aceptó el manifiesto en dry-run server-side y el Deployment aplicado confirma
+30s de gracia, preStop.sleep 5s y dos réplicas listas con cero reinicios.
+
+Se realizó un reinicio gradual controlado para verificar pods que ya tenían el
+hook nuevo. Una primera medición con urllib recibió 403 del borde y se descartó:
+no acreditaba acceso a la API. Se repitió con curl y GET /v1/sessions sin sesión,
+que devuelve el 401 esperado. Durante 45,61 segundos se observaron 168 respuestas
+401, cero errores de transporte y cero respuestas inesperadas, incluido el
+rollout de verificación. Ambos pods salientes registraron inicio y finalización
+del drenaje, sin timeout ni eventos FailedPreStopHook. La web HTTPS devuelve 200;
+el renderer local publica el SHA desplegado.
+
+La prueba es muestreo de una ruta sin autenticar, no una garantía de downtime
+cero ni una prueba de transacciones largas bajo carga. Estas últimas están
+cubiertas para HTTP por la prueba local con sockets; PostgreSQL bajo carga y un
+fallo del host conservan sus límites documentados. No se publicó una nueva web,
+un tag, un PR ni una GitHub Release. El siguiente merge debe incorporar esta
+rama para mantener alineados código y producción.
+
+**Aprendizaje:** una respuesta del borde no prueba que el backend atendiera la
+petición. Validar primero ruta y respuesta esperada; el primer rollout instala
+el nuevo hook, y para observarlo hay que retirar después un pod que ya lo tenga.
