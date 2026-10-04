@@ -294,3 +294,8 @@ ni todas las cancelaciones de navegación.
 Retrospectiva: el fallo de transporte debe comprobarse con la dependencia
 realmente inaccesible y cerrarse con un reintento exitoso. El estado correcto de
 error por sí solo no acredita que la persona pueda continuar su tarea.
+
+Notificaciones web mostró el aviso ficticio de delegación y la confirmación de
+Eliminar todas, con advertencia de irreversibilidad y Cancelar. No se ha ejecutado
+el borrado: queda pendiente la confirmación específica solicitada al usuario.
+La captura privada es `qa-notifications-delete-confirmation.jpg`.
