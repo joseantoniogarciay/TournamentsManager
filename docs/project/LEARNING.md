@@ -4403,3 +4403,16 @@ cambiar autorización. Invitaciones, incidencias, baja y cancelación añadieron
 33 respuestas API verificadas. La matriz viva está en
 [la revisión de producto](../engineering/PRODUCT_QA_REVIEW_2026-10-04.md);
 una combinación deportiva API no sustituye su prueba visual.
+
+En la segunda pasada web se completó un torneo desde creación hasta campeón y
+se reprodujeron dos defectos de presentación: acción Añadir administrador tras
+403 y clasificación cancelada que prometía aparecer cuando empezase. Se corrigió
+la evidencia de carga autorizada y el mensaje terminal, respectivamente; las
+reglas de permisos y clasificación del backend se conservaron. La prueba de URL
+directa complementa recorrer únicamente los menús.
+
+La invitación sin sesión perdía el nombre ya editado al retornar del login.
+Se conserva un borrador temporal por token, separado de la preferencia de cuenta
+aceptada en ADR-0131 y limpiado al cerrar o confirmar. La regresión real web
+inscribió el nombre conservado; pruebas del módulo real cubren ambos adaptadores
+de almacenamiento, aislamiento entre invitaciones y limpieza.

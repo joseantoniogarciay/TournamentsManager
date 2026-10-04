@@ -310,6 +310,7 @@
   "league_standings_rule_one_leg": "2. En aller simple, la différence de buts et les buts marqués au total priment.",
   "league_standings_rule_general": "3. La différence de buts et les buts marqués au total, ou les confrontations directes, s'appliquent ensuite selon le nombre de manches.",
   "league_standings_rule_shared": "4. Si l'égalité persiste, les équipes partagent la position.",
+  "league_standings_cancelled_unavailable": "Ce tournoi est annulé et aucun classement n’est disponible.",
   "league_standings_unavailable": "Le classement sera disponible au début de la ligue.",
   "league_standings_position": "Pos.",
   "league_standings_team": "Équipe",

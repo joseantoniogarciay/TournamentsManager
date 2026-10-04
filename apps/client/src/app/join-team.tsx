@@ -15,8 +15,10 @@ import { maximumTeamNameLength } from "@/features/league-creation/draft";
 import {
   clearPendingTeamInvitation,
   getPendingTeamInvitation,
+  getPendingTeamInvitationName,
   isTeamInvitationToken,
   rememberPendingTeamInvitation,
+  rememberPendingTeamInvitationName,
 } from "@/features/league-creation/team-invitation";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -60,6 +62,20 @@ export default function JoinTeamScreen() {
   useEffect(() => {
     if (user) void syncUser().catch(() => undefined);
   }, [syncUser, user?.id]);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    void getPendingTeamInvitationName(token)
+      .then((draftName) => {
+        if (!active || draftName === null) return;
+        setNameEdited(true);
+        setName(draftName);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   useEffect(() => {
     let active = true;
@@ -131,12 +147,20 @@ export default function JoinTeamScreen() {
       : undefined;
   const join = async () => {
     setSubmitted(true);
-    if (nameError || !token || !invitation) return;
+    if (nameError || !token || !invitation || isSubmitting) return;
+    setIsSubmitting(true);
     if (!user) {
-      router.push("/account-authentication?destination=join-team" as never);
+      try {
+        await rememberPendingTeamInvitationName(token, normalizedName);
+        router.push("/account-authentication?destination=join-team" as never);
+      } catch (error) {
+        const failure = getRequestFailure(error);
+        show({ kind: failure.kind, message: t(failure.messageKey) });
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
-    setIsSubmitting(true);
     try {
       const registration = await joinTournamentWithTeamInvitationRequest(token, normalizedName);
       await rememberLastTeamName(normalizedName).catch(() => undefined);

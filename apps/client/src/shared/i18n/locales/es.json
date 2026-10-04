@@ -310,6 +310,7 @@
   "league_standings_rule_one_leg": "2. A una vuelta, decide primero la diferencia de goles y los goles a favor generales.",
   "league_standings_rule_general": "3. Después se aplican la diferencia de goles y los goles a favor generales o el enfrentamiento directo, según las vueltas.",
   "league_standings_rule_shared": "4. Si continúa el empate, los equipos comparten posición.",
+  "league_standings_cancelled_unavailable": "Este torneo está cancelado y no tiene una clasificación disponible.",
   "league_standings_unavailable": "La clasificación estará disponible cuando empiece la liga.",
   "league_standings_position": "Pos.",
   "league_standings_team": "Equipo",

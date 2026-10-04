@@ -310,6 +310,7 @@
   "league_standings_rule_one_leg": "2. With one leg, overall goal difference and goals scored come first.",
   "league_standings_rule_general": "3. Overall goal difference and goals scored, or head-to-head, apply next depending on the number of legs.",
   "league_standings_rule_shared": "4. If teams are still tied, they share the position.",
+  "league_standings_cancelled_unavailable": "This tournament is cancelled and has no standings available.",
   "league_standings_unavailable": "Standings will be available when the league starts.",
   "league_standings_position": "Pos.",
   "league_standings_team": "Team",

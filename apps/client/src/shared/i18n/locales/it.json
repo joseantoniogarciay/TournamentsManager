@@ -310,6 +310,7 @@
   "league_standings_rule_one_leg": "2. Con un solo girone, contano prima la differenza reti e i gol segnati complessivi.",
   "league_standings_rule_general": "3. Seguono la differenza reti e i gol segnati complessivi, oppure gli scontri diretti, secondo il numero di gironi.",
   "league_standings_rule_shared": "4. Se la parità resta, le squadre condividono la posizione.",
+  "league_standings_cancelled_unavailable": "Questo torneo è annullato e non ha una classifica disponibile.",
   "league_standings_unavailable": "La classifica sarà disponibile quando inizierà la lega.",
   "league_standings_position": "Pos.",
   "league_standings_team": "Squadra",
