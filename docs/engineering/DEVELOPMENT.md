@@ -466,3 +466,16 @@ Los comandos `*-observability-down` cierran el diagnóstico y `dev-down` /
 `dev-public-down` cierran las pruebas conservando datos. Público suspende sus
 LaunchAgents de renderer, purga y backups y los rehabilita al arrancar pruebas.
 Producción/K3s conserva sus servicios y controles.
+
+### Iconos Material y escala de texto (2026-10-04)
+
+`patches/expo-symbols@57.0.2.patch` mantiene fijo el glifo Material dentro de su
+caja declarada. El fallo se reprodujo en Pixel API 34/Android 14 con el tamaño
+de fuente máximo: la X de Crear torneo se recortaba hasta parecer una flecha.
+El parche cambia solo `allowFontScaling` del texto del icono en fuente y build
+JavaScript; no añade módulos nativos ni cambia el escalado de los textos de la
+app. Se aplica con `pnpm install` a través de `patchedDependencies` y el lockfile.
+Al actualizar Expo Symbols, contrastar este caso y retirar el parche cuando
+esté resuelto upstream. No compensar por pantalla ni dividir por `fontScale`,
+porque Android admite escalado no lineal. La matriz y el alcance visual están en
+[la revisión entre plataformas](CROSS_PLATFORM_VISUAL_REVIEW_2026-10-04.md).

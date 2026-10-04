@@ -4322,3 +4322,31 @@ ni observabilidad.
 Retrospectiva: el margen relevante es la suma del inset del contenedor nativo y
 el margen React Native. Revalidar esa suma al actualizar la navegación evita
 compensaciones duplicadas; corregir la primitiva mantiene el coste bajo.
+
+
+## 2026-10-04 — Texto ampliado y glifos Material entre plataformas
+
+La revisión nativa sin sesión de Inicio, Torneos, Cuenta, Registro y Crear torneo
+se amplió a Dynamic Type habitual máximo en iOS 27 y fuente máxima en Android 14.
+En Android la X se recortaba: Expo Symbols 57.0.2 permite escalar el `Text` del
+glifo, aunque la caja mantiene tamaño fijo. El parche pnpm versionado desactiva
+ese escalado únicamente en el icono, en fuente y build JS. Los textos de la app
+mantienen el ajuste de accesibilidad y SF Symbols conserva su ruta nativa.
+
+Se eligió el parche mínimo frente a compensaciones de fontScale por pantalla
+(escalado no lineal Android) o una copia del renderer (mayor mantenimiento).
+Al actualizar Expo Symbols se debe reproducir el caso y retirar el parche si
+está corregido upstream. La matriz registra los estados observados y los huecos,
+incluidos sesión, idiomas, lectores de pantalla y rango extra de Dynamic Type.
+No se modifican operaciones HTTP ni decisiones funcionales.
+
+Validación automatizada: typecheck, exportación web y cinco regresiones de
+compatibilidad de dependencias pasan. La validación visual posterior del parche
+y la restauración de tamaño de texto siguen pendientes mientras el control de
+simuladores devuelve `noWindowsAvailable`; no se confunde la aplicación del
+parche con una prueba visual terminada.
+
+Retrospectiva: compartir componentes no elimina las métricas nativas. Probar
+la escala del contenido junto a las cajas de los iconos descubre fallos que el
+recorrido con tamaño habitual no muestra; conservar las adaptaciones nativas
+no exige permitir que un glifo se recorte.
