@@ -1,0 +1,15 @@
+[Unit]
+Description=Aggregate disk usage for FastTourney production telemetry
+After=k3s.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/fasttourney/observability-disk-metrics.py
+User=root
+UMask=0022
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/fasttourney/observability-metrics
+TimeoutStartSec=90

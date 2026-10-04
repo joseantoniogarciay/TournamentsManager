@@ -49,10 +49,14 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
-| [0141](../adr/0141-support-badminton-with-point-games.md) | Soportar bádminton con juegos por puntos | Aceptado | 2026-10-03 |
+| [0145](../adr/0145-drain-api-before-container-termination.md) | Drenar la API antes de terminar el contenedor | Aceptado | 2026-10-03 |
 | [0142](../adr/0142-record-match-incidents-across-sports.md) | Registrar incidencias por partido en todos los deportes | Aceptado | 2026-10-03 |
-| [0136](../adr/0136-support-table-tennis-with-point-games.md) | Soportar tenis de mesa con juegos por puntos | Aceptado | 2026-10-02 |
+| [0141](../adr/0141-support-badminton-with-point-games.md) | Soportar bádminton con juegos por puntos | Aceptado | 2026-10-03 |
+| [0140](../adr/0140-bound-production-telemetry-retention.md) | Acotar diagnóstico y seguridad de producción con purga y alertas de espacio | Aceptado | 2026-10-03 |
+| [0139](../adr/0139-limit-development-telemetry-to-one-day.md) | Limitar la telemetría de desarrollo a un día | Aceptado | 2026-10-03 |
+| [0138](../adr/0138-wait-seven-days-except-critical-vulnerabilities.md) | Esperar siete días salvo vulnerabilidades críticas | Aceptado | 2026-10-03 |
 | [0137](../adr/0137-support-volleyball-across-tournament-stages.md) | Soportar voleibol en liga, eliminatoria y formato mixto | Aceptado | 2026-10-02 |
+| [0136](../adr/0136-support-table-tennis-with-point-games.md) | Soportar tenis de mesa con juegos por puntos | Aceptado | 2026-10-02 |
 | [0135](../adr/0135-support-tennis-and-padel-with-set-results.md)                              | Soportar tenis y pádel con resultados por sets                                  | Aceptado              | 2026-09-23 |
 | [0134](../adr/0134-support-handball-with-an-explicit-sport-profile.md)                        | Soportar balonmano con un perfil deportivo explícito                            | Aceptado              | 2026-09-21 |
 | [0133](../adr/0133-compose-league-and-knockout-stages.md)                                     | Componer liga y eliminatoria en un mismo torneo                                 | Aceptado              | 2026-09-20 |
@@ -107,7 +111,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0013](../adr/0013-use-develop-as-integration-branch.md)                                      | Usar `develop` como rama de integración                                         | Aceptado              | 2026-07-24 |
 | [0014](../adr/0014-use-node-pnpm-and-strict-typescript.md)                                    | Usar Node LTS, pnpm y TypeScript estricto                                       | Aceptado              | 2026-07-24 |
 | [0075](../adr/0075-freeze-local-lockfiles-and-delay-dependency-releases.md)                   | Congelar el lockfile local y retrasar versiones nuevas                          | Aceptado              | 2026-08-04 |
-| [0077](../adr/0077-allow-immediate-expo-compatibility-updates.md)                             | Permitir actualizaciones inmediatas del conjunto compatible de Expo             | Aceptado              | 2026-08-09 |
+| [0077](../adr/0077-allow-immediate-expo-compatibility-updates.md)                             | Permitir actualizaciones inmediatas del conjunto compatible de Expo             | Superado por ADR-0138  | 2026-08-09 |
 | [0015](../adr/0015-use-expo-router-and-continuous-native-generation.md)                       | Usar Expo, Expo Router y CNG                                                    | Aceptado              | 2026-07-24 |
 | [0016](../adr/0016-use-client-side-web-rendering-initially.md)                                | Usar rendering web client-side inicialmente                                     | Superado por ADR-0120 | 2026-07-24 |
 | [0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md)                         | Usar contratos de entorno, GitHub Environments y OIDC                           | Aceptado              | 2026-07-24 |

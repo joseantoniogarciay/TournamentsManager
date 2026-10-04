@@ -117,10 +117,12 @@ workspace y formatea JavaScript, TypeScript y sus variantes JSX al guardar.
 - pnpm exige que cada versión nueva, directa o transitiva, tenga al menos siete
   días (10 080 minutos). Si faltan metadatos temporales o no hay una versión
   madura compatible, falla en lugar de instalar una versión más reciente. La
-  única excepción es una corrección de compatibilidad solicitada por Expo CLI:
-  ADR-0077 registra versiones exactas en `minimumReleaseAgeExclude`, ejecuta
-  `expo install --fix`, fija los directos actualizados y exige una build nativa
-  limpia. No se usan comodines de paquetes Expo ni se omite la revisión del diff.
+  única excepción, conforme a ADR-0138, es una vulnerabilidad crítica aplicable
+  con versión corregida publicada: se registra el aviso y únicamente las versiones
+  exactas necesarias. Expo también espera siete días cuando solicite corregir su
+  matriz; después se fijan los directos y se valida una build nativa limpia.
+  Para módulos Go y herramientas sin este control nativo se comprueba la fecha
+  oficial antes de actualizar. No se usan comodines ni se omite la revisión.
 - El linker aislado exige que cada workspace declare sus dependencias directas.
 - TypeScript 6.0.3 usa `strict`, `noUncheckedIndexedAccess`,
   `exactOptionalPropertyTypes`, `noImplicitOverride` y `noEmit`.
@@ -372,3 +374,65 @@ La web pública no ejecuta Expo Metro: se exporta estática con
 `https://dev.fasttourney.com`. La API queda en
 `https://dev-api.fasttourney.com`. Mailpit solo es accesible en el ciclo local;
 el runtime público usa Resend SMTP autenticado con STARTTLS conforme a ADR-0093.
+
+
+## Mantenimiento de dependencias — 2026-10-03
+
+La actualización de seguridad se ha ejecutado dentro del contenedor local para
+los dos módulos Go: OpenTelemetry/OTLP 1.45.0, gRPC 1.83.2 y x/crypto 0.56.0,
+con x/net 0.58.0 y x/text 0.41.0 requeridos por el grafo. En herramientas se
+corrigen además cel-go 0.30.0, x/mod 0.40.0 y compress 1.18.7; x/tools sube
+a 0.49.0 por esa resolución. La auditoría de los seis ejecutables Go tampoco
+detecta avisos en sus paquetes importados. Se conservan Go
+1.26.6, las herramientas fijadas y el esquema de módulos separado. `govulncheck`
+ya no detecta vulnerabilidades en paquetes importados por la aplicación ni en
+funciones alcanzables. Conserva el aviso GO-2026-5932 sobre `openpgp`, paquete
+obsoleto dentro de x/crypto que la aplicación no importa y sin versión corregida.
+
+El árbol JavaScript se ha actualizado con overrides exactos, por rama o por
+consumidor, conservando el lockfile y la política de siete días. La auditoría
+pasa de 94 a 5 avisos (cuatro altos y uno moderado; conteos de pnpm, no de
+funciones alcanzables). Los overrides deben retirarse cuando los consumidores
+incorporen las revisiones corregidas por sus propios rangos. No se modifican
+las dependencias directas nativas para forzar una auditoría a cero.
+
+| Paquete pendiente | Motivo y siguiente paso |
+| --- | --- |
+| node-forge 1.4.0 | La corrección indicada 1.4.1 no está publicada en npm al comprobarla. Esperar una revisión oficial publicada y madura. |
+| braces 3.0.3 | La corrección indicada 3.0.4 no está publicada en npm. Esperar una revisión oficial publicada y madura. |
+
+La promoción posterior v1.8.3 corrige los otros tres avisos con image-size 2.0.4
+y decode-uri-component 0.5.0. Dos parches versionados adaptan Metro 0.84.4 a
+bytes y query-string 7.1.3 al export ESM. La auditoría prod queda en dos altos y
+cero moderados/críticos. Cinco regresiones se incorporan a make verify; se
+validaron CI y exportaciones JS web/iOS/Android, primero dev y después prod.
+Los parches se retirarán al actualizar consumidores compatibles. Véase el
+[cierre operativo](../operations/WEB_DEPENDENCY_COMPATIBILITY_2026-10-03.md).
+
+Expo CLI pide una nueva matriz del SDK 57, incluida Expo 57.0.26 y React Native
+0.86.3. La operación de instalación se detuvo por la edad de Expo 57.0.26,
+expo-constants 57.0.20 y expo-modules-core 57.0.20. La revisión automática
+rechazó añadir sus excepciones y se solicitó autorización explícita. No se
+aplicó esa matriz ni esas excepciones; el cliente mantiene el conjunto previo.
+`expo install --check` conserva por tanto su advertencia de compatibilidad.
+El usuario decidió después mantener la espera salvo vulnerabilidad crítica
+(ADR-0138): esta matriz queda aplazada hasta cumplir siete días, sin excepción
+por compatibilidad. Al actualizarla se fijarán los directos y se validarán build
+nativa limpia, arranque y flujo, además de typecheck y exportación web.
+
+Para mantener los servicios en segundo plano en Docker Desktop:
+
+```bash
+docker compose --env-file infra/local/.env -f infra/local/compose.dev.yaml up --build --detach --wait
+make dev-migrate
+pnpm --filter @tournaments-manager/client start:local
+```
+
+Expo se ejecuta en el host y usa la API local; API, PostgreSQL, Mailpit y
+observabilidad se ejecutan en Docker. Las pruebas de integración nunca usan
+el volumen persistente local: su preparación y suite truncan datos y necesitan
+una base desechable. El contenedor API monta también `docs/legal` en lectura
+para comprobar el hash del documento legal versionado.
+
+Fuentes de compatibilidad: [Fastify Static](https://github.com/fastify/fastify-static#compatibility),
+[cambio de API de image-size 2](https://github.com/image-size/image-size/releases/tag/v2.0.0).

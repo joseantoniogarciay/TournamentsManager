@@ -51,6 +51,22 @@ esquema PostgreSQL. Los cambios destructivos o incompatibles exigirán una
 estrategia explícita de migración (por ejemplo, expand/contract, forward-fix o
 restauración), no solo volver a una imagen anterior.
 
+### Apagado ordenado de la API
+
+ADR-0145 añade una espera `preStop.sleep.seconds: 5` ejecutada por kubelet, compatible
+con el K3s 1.36.3 documentado y la imagen scratch. La API sigue atendiendo mientras
+se propaga la retirada del endpoint. Después SIGTERM cierra el listener y drena
+HTTP hasta diez segundos; si vence, se cierran las conexiones y se cancelan los
+contextos pendientes. Se cierra PostgreSQL y se vacían trazas hasta cinco segundos.
+K3s concede treinta segundos incluyendo preStop; Compose dev usa también treinta.
+Los diez segundos restantes en K3s son margen, no un deadline propio de Pool.Close.
+Una operación que ignore la cancelación puede alcanzar SIGKILL.
+
+La espera es una hipótesis inicial, no una prueba de propagación de Traefik ni una
+garantía de disponibilidad. Validar el rollout bajo tráfico según el
+[runbook](../runbooks/k3s-api-image-import.md). No se añaden endpoints de drenaje,
+shell ni init al runtime. Eliminaciones forzadas y fallos del host quedan fuera.
+
 ## Límite de despliegue desde GitHub
 
 El repositorio es público, pero el acceso operativo no. CI verifica en runners
@@ -222,3 +238,104 @@ de toda la plataforma.
 Terraform, cuenta AWS, identidad, bootstrap y laboratorio EKS no se activarán
 en este proyecto. Este material se conserva como referencia histórica y solo se
 reabrirá mediante la decisión explícita y el análisis de coste de ADR-0128.
+
+## Publicación de deportes e incidencias — 2026-10-03
+
+El release v1.9.0 publica en producción el SHA
+`69533ac6cae53bf7245248221cf8143c13329f40`. Dev conserva la revisión funcional
+verificada `8fe7be1d7f998557051cdbe1bf72fcc2b50630ce`. CI de la propuesta,
+develop y main terminó en verde. Goose aplicó 00015–00019 antes de cada API;
+producción tiene dos réplicas listas, web y renderer del mismo SHA y el secreto
+efímero de migración eliminado. Web/API de ambos entornos devuelven HTTPS 200;
+CORS productivo devuelve 204 con su origen. Los diez torneos preexistentes de
+producción siguen legibles y sus conteos de cuentas/torneos permanecen 3/10.
+La pantalla productiva muestra los ocho deportes y bádminton 21/15 en móvil.
+
+Dev verificó trece torneos sintéticos por HTTP y la lectura de abandono de
+pádel en navegador; la cuenta y los torneos se eliminaron exclusivamente al
+cerrar. No se enviaron correos ni se alteraron resultados reales de producción.
+Se tomaron backup incremental cifrado de producción y copias lógicas privadas;
+la restauración aislada y el ensayo de las cinco migraciones sobre datos de
+ambos entornos terminaron correctamente. El fallo de lectura de pgBackRest
+de dev en iCloud estaba pendiente al publicar: su copia lógica local probada
+permitió continuar. Posteriormente, el 2026-10-03, se recuperó la lectura de
+los metadatos desde macOS y se verificaron WAL, una copia completa nueva, la
+incremental mediante LaunchAgent (salida 0) y su restauración aislada con
+esquema 19 y agregados coincidentes. Véase el
+[incidente y la prueba reproducible](../runbooks/postgresql-backup-dev.md).
+Tras autorización explícita posterior del usuario, se activó Conservar en
+dispositivo únicamente para dev. Finder confirmó dev, archive y backup
+conservados en el dispositivo, sin descarga pendiente; repositorio cifrado y archivado WAL se volvieron a verificar
+correctamente desde Docker.
+
+Recuperación: web v1.8.3 `91bcbcd24e6c7bb066f831045456f5a31d1bb740`;
+API anterior `f6a199ad42bd7e535db9905b132cd75d69486396`. Las migraciones son
+forward-only. Una vez registradas incidencias, el cliente antiguo no las
+interpreta; se prefiere corrección hacia delante, sin restaurar datos de forma
+automática ni perder escrituras posteriores. No se distribuyen apps nativas;
+el teclado nativo sigue pendiente en dispositivo. Los cambios locales de
+retención/observabilidad no se incluyen en este release.
+
+Retrospectiva: aislar desde la base remota preservó seguridad publicada y
+trabajo pendiente. Probar migraciones sobre restauraciones reales evita
+confundir una base de fixtures con compatibilidad de los datos existentes.
+
+### Estabilización autorizada de los montajes de dev
+
+Con autorización explícita posterior del usuario, el checkout de despliegue
+se conserva en `.config/deployments/v1.9.0`, ignorado por Git. Se recrearon solo
+Prometheus, Loki, Promtail, Tempo, Alertmanager y Grafana con `--no-deps`,
+las mismas imágenes y sus volúmenes. Los seis servicios quedaron sanos y todos
+sus montajes propios apuntan a esa ubicación estable; no se reinició API ni
+PostgreSQL. Ambas APIs conservaron HTTPS 200. La revisión automática había
+bloqueado el traslado inicial; la operación se completó tras esa autorización,
+sin sobrescribir los archivos pendientes del workspace original.
+
+### Promoción del bloque operativo de dev — 2026-10-03
+
+Tras autorización del usuario, `b3a5e93` se publicó en `origin/develop` y pasó
+[la CI completa](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37138692151),
+incluida integración PostgreSQL. Su configuración operativa se promovió desde
+`.config/deployments/ops-b3a5e93`, ignorado por Git, conservando la copia anterior.
+Se recrearon los ocho servicios para aplicar rotación y retención de ADR-0139,
+con las mismas imágenes y volúmenes; la API conserva
+`tournaments-manager-dev-api:git-8fe7be1d7f998557051cdbe1bf72fcc2b50630ce`.
+No hubo rebuild de aplicación, migración ni cambio de web estática o renderer.
+
+La retención efectiva es de 24 h en Loki y Tempo, y de un día o 128 MiB TSDB
+para Prometheus; Loki completó un ciclo de retención. Los ocho servicios están
+activos, Loki y Tempo listos y ambas APIs públicas y la web dev devuelven `200`.
+Los agregados de PostgreSQL coinciden antes/después y `pgbackrest check` pasa.
+La [revisión operativa](OPERATIONAL_BLOCK_REVIEW_2026-10-03.md) recoge los límites
+y el manifiesto privado. No cambia el release v1.9.0 de producción.
+
+
+## Promoción y retrospectiva — 2026-10-04
+
+Se despliega la revisión limpia `11138a1100db853d04a2e388bae029c013f55843`,
+conservada localmente en la rama `ops/api-graceful-shutdown`. Se aisló el cambio
+sin incluir las modificaciones en curso del cliente. El wrapper existente
+importó runtime/migrator ARM64 y verificó API y renderer del mismo SHA. Goose
+confirmó versión 19 sin migraciones pendientes; el Secret efímero fue eliminado.
+K3s aceptó el manifiesto en dry-run server-side y el Deployment aplicado confirma
+30s de gracia, preStop.sleep 5s y dos réplicas listas con cero reinicios.
+
+Se realizó un reinicio gradual controlado para verificar pods que ya tenían el
+hook nuevo. Una primera medición con urllib recibió 403 del borde y se descartó:
+no acreditaba acceso a la API. Se repitió con curl y GET /v1/sessions sin sesión,
+que devuelve el 401 esperado. Durante 45,61 segundos se observaron 168 respuestas
+401, cero errores de transporte y cero respuestas inesperadas, incluido el
+rollout de verificación. Ambos pods salientes registraron inicio y finalización
+del drenaje, sin timeout ni eventos FailedPreStopHook. La web HTTPS devuelve 200;
+el renderer local publica el SHA desplegado.
+
+La prueba es muestreo de una ruta sin autenticar, no una garantía de downtime
+cero ni una prueba de transacciones largas bajo carga. Estas últimas están
+cubiertas para HTTP por la prueba local con sockets; PostgreSQL bajo carga y un
+fallo del host conservan sus límites documentados. No se publicó una nueva web,
+un tag, un PR ni una GitHub Release. El siguiente merge debe incorporar esta
+rama para mantener alineados código y producción.
+
+**Aprendizaje:** una respuesta del borde no prueba que el backend atendiera la
+petición. Validar primero ruta y respuesta esperada; el primer rollout instala
+el nuevo hook, y para observarlo hay que retirar después un pod que ya lo tenga.

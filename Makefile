@@ -29,4 +29,8 @@ lint: lint-go lint-ts
 check: format-check lint typecheck openapi-lint test
 
 # Verificación completa local y de CI.
-verify: check test-dependencies test-match-incidents test-integration client-web-export openapi-generate-check sqlc-generate-check tidy-check tidy-tools-check build vuln
+verify: check test-dependencies test-match-incidents test-operational-safety test-integration client-web-export openapi-generate-check sqlc-generate-check tidy-check tidy-tools-check build vuln
+
+.PHONY: test-operational-safety
+test-operational-safety:
+	python3 tests/operational-safety.test.py

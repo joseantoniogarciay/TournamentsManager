@@ -14,6 +14,29 @@ data:
         static_configs:
           - targets:
               - api.prod.svc.cluster.local:8080
+      - job_name: fasttourney-disk
+        metrics_path: /api/v0/component/prometheus.exporter.unix.disk/metrics
+        static_configs:
+          - targets:
+              - observability-alloy:12345
+      - job_name: fasttourney-loki-retention
+        metrics_path: /metrics
+        static_configs:
+          - targets:
+              - observability-loki:3100
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: loki_compactor_apply_retention_last_successful_run_timestamp_seconds
+            action: keep
+      - job_name: fasttourney-prometheus-retention
+        metrics_path: /metrics
+        static_configs:
+          - targets:
+              - observability-prometheus-server:80
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: prometheus_tsdb_lowest_timestamp_seconds
+            action: keep
     rule_files:
       - /etc/config/recording_rules.yml
       - /etc/config/alerting_rules.yml
@@ -71,3 +94,54 @@ data:
             annotations:
               summary: La API de Tournaments Manager no se puede monitorizar.
               description: Prometheus no logra recopilar métricas de la API desde hace dos minutos.
+      - name: production-storage
+        rules:
+          - alert: FastTourneyDiskSpaceLow
+            expr: fasttourney_host_disk_available_bytes / fasttourney_host_disk_size_bytes < 0.25 or fasttourney_host_disk_available_bytes < 5 * 1024 * 1024 * 1024
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: El disco de producción tiene poco espacio libre.
+          - alert: FastTourneyDiskSpaceCritical
+            expr: fasttourney_host_disk_available_bytes / fasttourney_host_disk_size_bytes < 0.15 or fasttourney_host_disk_available_bytes < 3 * 1024 * 1024 * 1024
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: El disco de producción necesita intervención inmediata.
+          - alert: FastTourneyTelemetryStorageGrowing
+            expr: fasttourney_telemetry_storage_bytes{service=~"loki|tempo|prometheus"} > 512 * 1024 * 1024
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: Un volumen de telemetría supera 512 MiB.
+          - alert: FastTourneyTelemetryStorageLarge
+            expr: fasttourney_telemetry_storage_bytes{service=~"loki|tempo|prometheus"} > 1024 * 1024 * 1024
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: Un volumen de telemetría supera 1 GiB.
+          - alert: FastTourneyDiskMonitoringUnavailable
+            expr: absent(fasttourney_disk_check_timestamp_seconds) or time() - fasttourney_disk_check_timestamp_seconds > 900 or up{job="fasttourney-disk"} == 0
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: La medición del disco de producción no está disponible.
+          - alert: FastTourneyLokiRetentionInactive
+            expr: absent(loki_compactor_apply_retention_last_successful_run_timestamp_seconds) or time() - loki_compactor_apply_retention_last_successful_run_timestamp_seconds > 1800 or up{job="fasttourney-loki-retention"} == 0
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: La purga de Loki no ha completado un ciclo reciente.
+          - alert: FastTourneyMetricsRetentionLate
+            expr: absent(prometheus_tsdb_lowest_timestamp_seconds) or time() - prometheus_tsdb_lowest_timestamp_seconds > 30 * 60 * 60
+            for: 3h
+            labels:
+              severity: warning
+            annotations:
+              summary: Prometheus conserva bloques vencidos o no informa de su antigüedad.

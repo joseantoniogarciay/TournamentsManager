@@ -11,7 +11,7 @@ server:
     enabled: true
     size: 5Gi
   retention: 24h
-  retentionSize: 4GB
+  retentionSize: 128MB
   resources:
     requests:
       cpu: 200m

@@ -1,0 +1,44 @@
+[
+  {
+    "case": "0",
+    "line": "{\"msg\": \"HTTP request completed\", \"method\": \"GET\", \"route\": \"GET /v1/tournaments\", \"status\": 200, \"fixture_case\": \"0\"}",
+    "expected_category": "diagnostic",
+    "expected_drop": false
+  },
+  {
+    "case": "1",
+    "line": "{\"msg\": \"HTTP request completed\", \"method\": \"POST\", \"route\": \"POST /v1/sessions\", \"status\": 201, \"fixture_case\": \"1\"}",
+    "expected_category": "security",
+    "expected_drop": false
+  },
+  {
+    "case": "2",
+    "line": "{\"msg\": \"HTTP request completed\", \"method\": \"GET\", \"route\": \"GET /v1/tournaments\", \"status\": 429, \"failure_reason\": \"rate_limit.exceeded\", \"fixture_case\": \"2\"}",
+    "expected_category": "security",
+    "expected_drop": false
+  },
+  {
+    "case": "3",
+    "line": "{\"msg\": \"HTTP request completed\", \"method\": \"GET\", \"route\": \"GET /healthz\", \"status\": 503, \"failure_reason\": \"request.failed\", \"fixture_case\": \"3\"}",
+    "expected_category": "diagnostic",
+    "expected_drop": false
+  },
+  {
+    "case": "4",
+    "line": "{\"msg\": \"HTTP request completed\", \"method\": \"GET\", \"route\": \"GET /healthz\", \"status\": 200, \"fixture_case\": \"4\"}",
+    "expected_category": null,
+    "expected_drop": true
+  },
+  {
+    "case": "5",
+    "line": "{\"msg\": \"RISC security event rejected\", \"reason\": \"jwt.invalid\", \"fixture_case\": \"5\"}",
+    "expected_category": "security",
+    "expected_drop": false
+  },
+  {
+    "case": "6",
+    "line": "fixture malformed JSON",
+    "expected_category": "security",
+    "expected_drop": false
+  }
+]

@@ -1,9 +1,18 @@
 name: tournaments-manager-local
 
+# Rotación de la copia de consola; la ventana temporal la aplica Loki.
+x-development-logging: &development-logging
+  driver: json-file
+  options:
+    max-size: 5m
+    max-file: "2"
+    compress: "true"
+
 services:
   postgres:
     image: postgres:18.4-bookworm
     restart: unless-stopped
+    logging: *development-logging
     env_file:
       - .env
     ports:
@@ -20,6 +29,7 @@ services:
   mailpit:
     image: axllent/mailpit:v1.30.5
     restart: unless-stopped
+    logging: *development-logging
     ports:
       - "127.0.0.1:1025:1025"
       - "127.0.0.1:8025:8025"
@@ -35,12 +45,15 @@ services:
       context: ../../apps/backend
       target: dev
     restart: unless-stopped
+    logging: *development-logging
     env_file:
       - api.docker.env
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
       - ../../apps/backend:/app
+      # La prueba del hash legal lee el documento versionado desde /docs/legal.
+      - ../../docs/legal:/docs/legal:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -50,11 +63,13 @@ services:
   prometheus:
     image: prom/prometheus:v3.5.0
     restart: unless-stopped
+    logging: *development-logging
     command:
       [
         --config.file=/etc/prometheus/prometheus.yml,
         --storage.tsdb.path=/prometheus,
         --storage.tsdb.retention.time=24h,
+        --storage.tsdb.retention.size=128MB,
       ]
     ports:
       - "127.0.0.1:9090:9090"
@@ -66,6 +81,7 @@ services:
   alertmanager:
     image: prom/alertmanager:v0.33.1
     restart: unless-stopped
+    logging: *development-logging
     command: [--config.file=/etc/alertmanager/alertmanager.yml, --storage.path=/alertmanager]
     ports:
       - "127.0.0.1:9093:9093"
@@ -76,12 +92,8 @@ services:
   loki:
     image: grafana/loki:3.5.1
     restart: unless-stopped
+    logging: *development-logging
     command: -config.file=/etc/loki/config.yml
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: "3"
     volumes:
       - ../observability/loki.yml:/etc/loki/config.yml:ro
       - loki-data:/loki
@@ -89,6 +101,7 @@ services:
   promtail:
     image: grafana/promtail:3.5.0
     restart: unless-stopped
+    logging: *development-logging
     command: -config.file=/etc/promtail/config.yml
     volumes:
       - ../observability/promtail.yml:/etc/promtail/config.yml:ro
@@ -100,6 +113,7 @@ services:
   tempo:
     image: grafana/tempo:2.8.2
     restart: unless-stopped
+    logging: *development-logging
     command: -config.file=/etc/tempo/config.yml
     ports:
       - "127.0.0.1:4318:4318"
@@ -110,6 +124,7 @@ services:
   grafana:
     image: grafana/grafana:12.0.2
     restart: unless-stopped
+    logging: *development-logging
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin

@@ -92,6 +92,89 @@ Comprobar que Prometheus obtiene el target `tournaments-manager-api`, que una
 petición de refresh deja logs correlacionados en Loki y una traza en Tempo, y
 que Grafana muestra el dashboard SLO.
 
+### Auditoría de retención y almacenamiento
+
+Auditoría y corrección del 2026-10-03 conforme a ADR-0140: siete días de
+logs diagnósticos, noventa de seguridad y del histórico sin categoría. El
+compactor debe estar habilitado; Tempo mantiene siete días y Prometheus un día
+o 128 MB TSDB. Evidencia completa en `docs/operations/LOG_RETENTION.md`.
+
+Consultar únicamente metadatos y configuración técnica; no imprimir Secrets,
+valores Helm completos, cuerpos de logs ni el kubeconfig. Desde el Mac:
+
+```sh
+set -a
+. infra/k3s/.env
+set +a
+ssh -o BatchMode=yes -o ConnectTimeout=10 \
+  -i ~/.ssh/fasttourney_k3s_operator "$K3S_SSH_USER@$K3S_SSH_HOST" \
+  'sudo -n /usr/local/bin/k3s kubectl -n prod get pods,pvc,svc;
+   df -h /;
+   sudo -n du -sh /var/lib/rancher/k3s/storage /var/log/pods /var/log/journal;
+   sudo -n journalctl --disk-usage'
+```
+
+Una vez accesible el host, completar y registrar estas evidencias:
+
+- Loki: configuración activa de retención y compactor, directorio persistente
+  de marcadores, estado del borrado y antigüedad de los datos conservados.
+- Tempo: retención efectiva de bloques de siete días, compactación y antigüedad
+  de bloques completados.
+- Prometheus: argumentos efectivos de 24 horas y 128 MB, antigüedad de bloques,
+  espacio de TSDB, WAL y head. La retención por tamaño no es una cuota de disco.
+- Host: rotación efectiva del kubelet y límites del journal; esas copias son
+  independientes de Loki. Comprobar también espacio libre y crecimiento.
+- Seguridad: comprobar categorías de autenticación, credenciales, RISC y límite
+  de tasa, con noventa días conforme a ADR-0140; diagnóstico nuevo tiene siete
+  días. El histórico mezclado sin categoría mantiene noventa días.
+
+No borrar PVC ni cambiar reglas durante esta auditoría. Un PVC de 5 GiB no
+demuestra por sí mismo que el almacenamiento imponga esa cuota. Si el host no
+responde, registrar la comprobación como pendiente, nunca como conforme.
+
+### Instalar los controles de espacio de ADR-0140
+
+Copiar a un directorio temporal privado de la VM los archivos versionados:
+`infra/k3s/host/observability-disk-metrics.py`,
+`fasttourney-disk-metrics.service`, `fasttourney-disk-metrics.timer` y
+`fasttourney-journald.conf`. Como administrador, instalar el Python en
+`/usr/local/lib/fasttourney/observability-disk-metrics.py`, las unidades en
+`/etc/systemd/system/` y el drop-in en
+`/etc/systemd/journald.conf.d/fasttourney-retention.conf`. Crear primero
+`/var/lib/fasttourney/observability-metrics` con modo 755. Archivos modo 644,
+propiedad root; no contienen credenciales.
+
+Validar las unidades con `systemd-analyze verify`, ejecutar `systemctl daemon-reload`,
+arrancar `fasttourney-disk-metrics.service` y habilitar su timer. Reiniciar
+`systemd-journald` para aplicar sus límites. No ejecutar un vacuum indiscriminado:
+la propia política se encarga de sus archivos vencidos y rotados.
+
+Renderizar primero Alloy mediante Helm y validar el `config.alloy` del ConfigMap
+resultante con `/bin/alloy validate`: su plantilla interna debe sobrevivir a
+`tpl` de Helm. Validar los valores sin renderizar no prueba ese comportamiento.
+Aplicar Alloy antes de habilitar compactor y probar eventos sintéticos: diagnóstico,
+autenticación, límite, salud fallida, salud correcta, RISC y JSON inválido.
+La salud correcta debe descartarse; seguridad, RISC y JSON inválido se preservan.
+Los casos están versionados en `production-retention-fixtures.json` y las pruebas
+Prometheus en `production-storage-rules.test.yaml`; para estas últimas, extraer
+el grupo `production-storage` del ConfigMap como `production-storage-rules.yml`
+en el mismo directorio y ejecutar `promtool test rules`.
+Usar imágenes ya instaladas con `imagePullPolicy: Never`, sin credenciales ni
+ServiceAccount, y retirar los Pods de fixtures al terminar.
+
+Comprobar el endpoint privado del collector:
+`http://observability-alloy:12345/api/v0/component/prometheus.exporter.unix.disk/metrics`.
+Debe emitir tamaños de los tres volúmenes, capacidad y espacio libre de raíz,
+y `fasttourney_disk_check_timestamp_seconds`. Prometheus debe mostrar
+`up{job="fasttourney-disk"}=1`, las reglas de espacio y de retención Loki cargadas y una muestra
+con menos de quince minutos de antigüedad. No se comprueba el correo provocando
+falta real de espacio: las condiciones de alerta se validan con fixtures.
+
+Si falla el timer, el archivo anterior conserva su timestamp y se alerta por
+medición vencida. Si el Service o exporter falla, se alerta por target caído o
+métrica ausente. Un PVC local-path no impone cuota; atender las alertas antes de
+que se agote la raíz y revisar aislamiento de almacenamiento si crece el volumen.
+
 ### Acceso privado a Grafana
 
 Grafana es un `Service` `ClusterIP`: solo existe dentro de la red de K3s. Un

@@ -37,3 +37,5 @@ Usa [template.md](template.md) y el
 [playbook de decisiones](../playbooks/decision-process.md).
 
 - [ADR-0138: Esperar siete días salvo vulnerabilidades críticas](0138-wait-seven-days-except-critical-vulnerabilities.md) — Aceptado.
+
+- [ADR-0145: Drenaje de la API antes de terminar el contenedor](0145-drain-api-before-container-termination.md) — Aceptado.

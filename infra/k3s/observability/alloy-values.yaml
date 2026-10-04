@@ -3,6 +3,10 @@ alloy:
   mounts:
     varlog: false
     dockercontainers: false
+    extra:
+      - name: disk-metrics
+        mountPath: /var/lib/fasttourney/observability-metrics
+        readOnly: true
   resources:
     requests:
       cpu: 50m
@@ -30,9 +34,42 @@ alloy:
         stage.static_labels {
           values = {
             environment = "prod",
+            retention_category = "diagnostic",
+          }
+        }
+        stage.match {
+          selector = `{instance=~"prod/api-[^:]+:api"}`
+          stage.json {
+            expressions = {
+              message = "msg",
+              route = "route",
+              method = "method",
+              status = "status",
+              failure_reason = "failure_reason",
+            }
+          }
+          // Helm tpl debe emitir esta plantilla, no evaluarla como Helm.
+          stage.template {
+            source = "retention_category"
+            template = {{ "{{ if or (ne .message \"HTTP request completed\") (regexMatch \"^(GET|POST|PUT|DELETE) /v1/(registrations|registration-verifications|sessions(/refresh)?|google-login-challenges|google-sessions|password-resets|password-reset-links|password-reset-confirmations|risc/events|me/(google-identities|reauthentication-tickets|local-credential|account))$\" (default \"\" .route)) (regexMatch \"^(authentication|authorization|credential|reauthentication|session|csrf)[.].*|^rate_limit[.]exceeded$\" (default \"\" .failure_reason)) }}security{{ else }}diagnostic{{ end }}" | quote }}
+          }
+          stage.labels {
+            values = { retention_category = "" }
+          }
+          stage.drop {
+            source = "message,method,route,status"
+            separator = ";"
+            expression = "^HTTP request completed;GET;GET /(healthz|metrics);2[0-9]{2}$"
+            drop_counter_reason = "successful_probe"
           }
         }
         forward_to = [loki.write.default.receiver]
+      }
+      prometheus.exporter.unix "disk" {
+        set_collectors = ["textfile"]
+        textfile {
+          directory = "/var/lib/fasttourney/observability-metrics"
+        }
       }
       loki.write "default" {
         endpoint {
@@ -47,5 +84,13 @@ rbac:
       resources: ["pods", "pods/log", "namespaces"]
       verbs: ["get", "list", "watch"]
   clusterRules: []
+controller:
+  volumes:
+    extra:
+      - name: disk-metrics
+        hostPath:
+          path: /var/lib/fasttourney/observability-metrics
+          type: Directory
 service:
-  enabled: false
+  enabled: true
+  type: ClusterIP

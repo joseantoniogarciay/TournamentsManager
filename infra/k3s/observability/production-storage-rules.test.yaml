@@ -1,0 +1,169 @@
+rule_files:
+  - production-storage-rules.yml
+evaluation_interval: 1m
+tests:
+  - name: healthy storage remains quiet
+    interval: 1m
+    input_series:
+      - series: fasttourney_host_disk_size_bytes
+        values: 17179869184x30
+      - series: fasttourney_host_disk_available_bytes
+        values: 8589934592x30
+      - series: fasttourney_telemetry_storage_bytes{service="loki"}
+        values: 134217728x30
+      - series: fasttourney_disk_check_timestamp_seconds
+        values: 0+60x30
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: FastTourneyDiskSpaceLow
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: FastTourneyDiskSpaceCritical
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: FastTourneyTelemetryStorageGrowing
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: FastTourneyTelemetryStorageLarge
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: FastTourneyDiskMonitoringUnavailable
+        exp_alerts: []
+  - name: warning before critical
+    interval: 1m
+    input_series:
+      - series: fasttourney_host_disk_size_bytes
+        values: 17179869184x30
+      - series: fasttourney_host_disk_available_bytes
+        values: 4294967296x30
+      - series: fasttourney_telemetry_storage_bytes{service="loki"}
+        values: 629145600x30
+      - series: fasttourney_disk_check_timestamp_seconds
+        values: 0+60x30
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: FastTourneyDiskSpaceLow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: El disco de producción tiene poco espacio libre.
+      - eval_time: 15m
+        alertname: FastTourneyDiskSpaceCritical
+        exp_alerts: []
+      - eval_time: 15m
+        alertname: FastTourneyTelemetryStorageGrowing
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              service: loki
+            exp_annotations:
+              summary: Un volumen de telemetría supera 512 MiB.
+      - eval_time: 15m
+        alertname: FastTourneyTelemetryStorageLarge
+        exp_alerts: []
+  - name: critical storage pressure
+    interval: 1m
+    input_series:
+      - series: fasttourney_host_disk_size_bytes
+        values: 17179869184x30
+      - series: fasttourney_host_disk_available_bytes
+        values: 2147483648x30
+      - series: fasttourney_telemetry_storage_bytes{service="tempo"}
+        values: 1288490188x30
+      - series: fasttourney_disk_check_timestamp_seconds
+        values: 0+60x30
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: FastTourneyDiskSpaceCritical
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+            exp_annotations:
+              summary: El disco de producción necesita intervención inmediata.
+      - eval_time: 15m
+        alertname: FastTourneyTelemetryStorageLarge
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: tempo
+            exp_annotations:
+              summary: Un volumen de telemetría supera 1 GiB.
+  - name: stale or missing measurements trigger an alert
+    interval: 1m
+    input_series:
+      - series: fasttourney_disk_check_timestamp_seconds
+        values: "0x30"
+    alert_rule_test:
+      - eval_time: 21m
+        alertname: FastTourneyDiskMonitoringUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: La medición del disco de producción no está disponible.
+  - name: missing exporter is detected
+    interval: 1m
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: FastTourneyDiskMonitoringUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: La medición del disco de producción no está disponible.
+  - name: expired metrics are detected after startup grace
+    interval: 1m
+    input_series:
+      - series: prometheus_tsdb_lowest_timestamp_seconds
+        values: "0x2100"
+    alert_rule_test:
+      - eval_time: 32h
+        alertname: FastTourneyMetricsRetentionLate
+        exp_alerts: []
+      - eval_time: 34h
+        alertname: FastTourneyMetricsRetentionLate
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: Prometheus conserva bloques vencidos o no informa de su antigüedad.
+  - name: healthy retention stays quiet
+    interval: 1m
+    input_series:
+      - series: loki_compactor_apply_retention_last_successful_run_timestamp_seconds
+        values: 0+60x40
+      - series: prometheus_tsdb_lowest_timestamp_seconds
+        values: 0+60x40
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: FastTourneyLokiRetentionInactive
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: FastTourneyMetricsRetentionLate
+        exp_alerts: []
+  - name: missing Loki retention is detected
+    interval: 1m
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: FastTourneyLokiRetentionInactive
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations: &a1
+              summary: La purga de Loki no ha completado un ciclo reciente.
+  - name: stalled Loki compactor is detected
+    interval: 1m
+    input_series:
+      - series: loki_compactor_apply_retention_last_successful_run_timestamp_seconds
+        values: "0x50"
+    alert_rule_test:
+      - eval_time: 29m
+        alertname: FastTourneyLokiRetentionInactive
+        exp_alerts: []
+      - eval_time: 46m
+        alertname: FastTourneyLokiRetentionInactive
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations: *a1

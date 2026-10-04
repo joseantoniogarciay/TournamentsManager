@@ -135,3 +135,32 @@ procedimiento anterior.
 ```sh
 bash infra/k3s/scripts/deploy-api-from-staged-images.sh <SHA-completo>
 ```
+
+
+## Validación del apagado bajo tráfico (ADR-0145)
+
+Antes de promover, ejecutar `go -C apps/backend test -race ./cmd/api` y validar
+el manifiesto con el API server de K3s mediante `kubectl apply --dry-run=server`.
+Comprobar la versión del servidor y soporte de `lifecycle.preStop.sleep`: el
+runtime documentado es K3s 1.36.3. La imagen scratch no contiene `/bin/sh` ni sleep;
+no sustituir el hook nativo por una orden exec.
+
+Promover una revisión limpia con el procedimiento existente. Durante un rollout
+controlado, mantener peticiones GET de lectura a través de Caddy/Traefik, conservar
+recuento de respuestas, fallos de conexión y 5xx, y observar EndpointSlices, eventos
+y logs de los pods antiguos. No usar mutaciones de negocio como generador de carga.
+Para simular una petición larga, usar un servicio de prueba aislado; no añadir
+una ruta lenta pública a la API. Contrastar solicitudes activas al terminar el pod,
+no solo el resultado de `rollout status` o probes sanas.
+
+Confirmar en el Deployment aplicado `terminationGracePeriodSeconds: 30` y
+`preStop.sleep.seconds: 5`, sin eventos FailedPreStopHook, y en logs la secuencia
+«drenaje HTTP iniciado» → «drenaje HTTP completado». En la vía de timeout aparece
+«drenaje HTTP agotado; cerrando conexiones restantes»; no acredita cierre normal.
+Revisar terminaciones por señal 9/exit 137 y distinguirlas de OOMKilled.
+Si hay errores durante la propagación, medir su ventana antes de ajustar cinco
+segundos; si hay timeout de HTTP o SIGKILL, revisar dependencias y presupuesto.
+
+El rollback debe recuperar tanto imagen como manifiesto anterior, conservando
+compatibilidad con PostgreSQL. La validación automatizada local no acredita este
+recorrido en el cluster; registrar la evidencia al ejecutar la promoción.

@@ -25,7 +25,10 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
-const shutdownTimeout = 10 * time.Second
+const (
+	shutdownTimeout          = 10 * time.Second
+	telemetryShutdownTimeout = 5 * time.Second
+)
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -54,7 +57,7 @@ func run(args []string) error {
 		return fmt.Errorf("configurar observabilidad: %w", err)
 	}
 	defer func() {
-		shutdownContext, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		shutdownContext, cancel := context.WithTimeout(context.Background(), telemetryShutdownTimeout)
 		defer cancel()
 		if err := shutdownTelemetry(shutdownContext); err != nil {
 			slog.Error("no se pudo cerrar la telemetría", "error", err)
@@ -129,7 +132,7 @@ func run(args []string) error {
 		shutdownContext, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 
-		if err := server.Shutdown(shutdownContext); err != nil {
+		if err := shutdownHTTP(shutdownContext, server); err != nil {
 			return fmt.Errorf("detener HTTP: %w", err)
 		}
 		return nil

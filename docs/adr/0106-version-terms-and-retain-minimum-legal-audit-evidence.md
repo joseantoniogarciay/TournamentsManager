@@ -3,6 +3,7 @@
 - **Estado:** Aceptado
 - **Fecha:** 2026-08-22
 - **Decisor:** Usuario
+- **Superado parcialmente por:** ADR-0139 solo para telemetría técnica de desarrollo; evidencia legal conserva esta decisión; ADR-0140 revisa solo los plazos técnicos de producción
 
 ## Problema
 

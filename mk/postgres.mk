@@ -1,5 +1,5 @@
 # PostgreSQL local: Docker Compose, ciclo de vida y esquema inicial explícito.
-# API Go y cliente Expo se ejecutan en el host durante desarrollo.
+# API Go en Compose con Air; cliente Expo en el host durante desarrollo.
 
 POSTGRES_LOCAL_DIR := infra/local
 POSTGRES_LOCAL_ENV := $(POSTGRES_LOCAL_DIR)/.env
@@ -16,6 +16,24 @@ PUBLIC_DEV_COMPOSE := docker compose --env-file $(PUBLIC_DEV_ENV) -f $(PUBLIC_DE
 	db-init dev-init db-env-check db-backend-env-check dev-api-env-check local-config-check dev-config-check \
 	dev-public-init dev-public-config-check dev-public-up dev-public-deploy dev-public-rollback dev-public-down dev-public-reset dev-public-status dev-public-logs dev-public-bootstrap dev-public-migrate dev-public-runtime-verify dev-public-purge dev-public-backup-init dev-public-backup-full dev-public-backup-incremental dev-public-backup-status dev-public-backup-restore-verify \
 	db-up db-wait db-down db-status db-logs db-reset db-schema-apply
+
+.PHONY: dev-migrate
+
+.PHONY: dev-observability-clean dev-public-observability-clean
+
+# Borra exclusivamente telemetría desechable; no reinicia servicios ni borra
+# PostgreSQL, evidencia legal, backups, Grafana o configuración de alertas.
+dev-observability-clean:
+	sh infra/observability/clean-development-data.sh local
+
+dev-public-observability-clean:
+	sh infra/observability/clean-development-data.sh dev
+
+# Migraciones explícitas del perfil local, conservando los datos y el historial
+# Goose. El perfil público mantiene su propietario y migrador separados.
+dev-migrate: dev-config-check
+	$(DEV_COMPOSE) up --detach --wait postgres
+	$(DEV_COMPOSE) run --rm --no-deps api sh scripts/local-migrate.sh
 
 # Crea los contratos locales sin sobrescribir una configuración ya existente.
 db-init:
@@ -155,14 +173,11 @@ dev-public-backup-incremental: dev-public-config-check
 dev-public-backup-status: dev-public-config-check
 	$(PUBLIC_DEV_COMPOSE) exec -T --user postgres postgres pgbackrest --stanza=fasttourney-dev info
 
-# BACKUP es una etiqueta devuelta por `dev-public-backup-status`. La operación
-# restaura solo en postgres-restore-data y no toca postgres-data.
+# BACKUP es una etiqueta devuelta por `dev-public-backup-status`.
+# Usa un volumen temporal único, repositorio de solo lectura y ninguna red;
+# nunca monta postgres-data ni modifica postgres-restore-data.
 dev-public-backup-restore-verify: dev-public-config-check
-	@test -n "$(BACKUP)" || { echo "Uso: make dev-public-backup-restore-verify BACKUP=<etiqueta>"; exit 1; }
-	$(PUBLIC_DEV_COMPOSE) run --rm --no-deps --entrypoint sh postgres -ec 'mkdir -p /restore; chown postgres:postgres /restore; exec gosu postgres pgbackrest --stanza=fasttourney-dev --pg1-path=/restore --set="$(BACKUP)" --delta restore'
-	$(PUBLIC_DEV_COMPOSE) --profile backup-restore up --detach --wait postgres-restore
-	$(PUBLIC_DEV_COMPOSE) exec -T postgres-restore sh -ec 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "SELECT current_database(), pg_is_in_recovery()"'
-	$(PUBLIC_DEV_COMPOSE) --profile backup-restore rm --force --stop postgres-restore
+	python3 infra/dev/verify-backup-restore.py --backup "$(BACKUP)"
 
 # Arranca PostgreSQL y espera a que el health check confirme que acepta conexiones.
 db-up: db-env-check

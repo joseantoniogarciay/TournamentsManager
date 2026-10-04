@@ -3524,7 +3524,6 @@ K3s y también que sus componentes base siguen sanos.
   readiness; si el proceso nuevo no sirve el shell activo con el SHA esperado,
   restaura el ejecutable previo y termina con error visible.
 
-
 ### 2026-10-03 — Parches productivos desde un release aislado
 
 - **Evidencia:** tests, race, build, tidy y govulncheck validan las dependencias Go parcheadas. Traefik 3.7.13 y K3s 1.36.4 completan rollout; web y API conservan HTTP 200.
@@ -3540,16 +3539,6 @@ Conservar consumidores compatibles, comprobar publicaciones oficiales y usar
 overrides precisos permite corregir el resto del grafo sin migrar Expo. Los
 overrides se retirarán cuando los rangos de consumidores incorporen el parche.
 La auditoría del lockfile debe acompañarse de CI y exportación antes de publicar.
-
-## 2026-10-03 — Adaptar consumidores de una corrección publicada
-
-Metro 0.84.4 necesita convertir rutas a bytes para image-size 2; query-string
-7.1.3 necesita el export default del decoder ESM. Dos parches de pnpm con
-hashes y overrides por consumidor evitan migrar el SDK completo. Las pruebas
-usan esos consumidores reales, verifican imágenes/escala y queries UTF-8
-malformadas, y se integran en make verify. El decoder conserva su sustitución
-por U+FFFD para %C2 incompleto; no se inventa una semántica distinta en el test.
-Los parches se retiran cuando el consumidor soporta la nueva interfaz.
 
 ### 2026-10-02 — Ausencia y cero son estados distintos en una frontera
 
@@ -3602,6 +3591,154 @@ Los parches se retiran cuando el consumidor soporta la nueva interfaz.
   una actualización de dependencias separada. Las pruebas funcionales aprobadas
   no se presentan como una verificación global verde.
 
+
+## 2026-10-03 — Actualizar dependencias requiere comprobar al consumidor
+
+- **Hechos:** Docker Desktop ejecuta el entorno local con sus volúmenes previos
+  y migración 17. OpenTelemetry 1.45.0 elimina GO-2026-6505; gRPC y x/crypto
+  se actualizan también en los dos módulos Go. Las herramientas corrigen cel-go,
+  x/mod y compress, con lint, Goose y generación SQLC comprobados. La auditoría
+  de aplicación y la de paquetes de los seis ejecutables de herramientas queda
+  sin avisos de paquetes importados o funciones alcanzables. El aviso residual
+  de openpgp no tiene corrección y corresponde a un paquete no importado.
+- **Aprendido:** un rango de versión corregido en la auditoría no garantiza que
+  esa versión esté publicada, ni que la API del paquete sea compatible con su
+  consumidor. Un override de image-size 2 rompería la lectura síncrona por ruta que Metro
+  espera;
+  uno de decode-uri-component 0.5 introduciría ESM donde query-string espera una
+  función CommonJS. Conservar un aviso documentado tiene menos coste que una
+  adaptación local de herramientas sin apoyo de su matriz.
+- **Regla reutilizable:** verificar publicación, edad, API consumida y flujo
+  real. Los overrides son exactos y acotados al consumidor; no se elimina el
+  gate de seguridad ni la espera para aparentar un cierre verde.
+- **Retrospectiva técnica:** se reutilizó Compose y Goose sin crear otro entorno
+  ni perder datos. Una base antigua sin historial Goose incluía ya los cambios
+  6 y 10; se comparó su DDL antes de registrar esas equivalencias puntuales.
+  La suite de integración se ejecuta en otro PostgreSQL desechable. La matriz
+  Expo quedó pendiente de autorización; la decisión posterior del usuario
+  (ADR-0138) conserva siete días salvo vulnerabilidad crítica. No se presenta
+  como actualizada ni validada en binario nativo.
+- **Cierre del pendiente anterior:** la incidencia de OpenTelemetry registrada
+  el 2026-10-02 queda resuelta en este cambio de mantenimiento separado.
+
+
+## 2026-10-03 — La compatibilidad no justifica saltar la maduración
+
+- **Decisión:** el usuario prefiere siete días salvo vulnerabilidad crítica;
+  ADR-0138 supera la excepción anterior de Expo y se retiran sus exclusiones.
+- **Regla reutilizable:** distinguir severidad de seguridad y compatibilidad.
+  Una matriz solicitada por CLI no constituye por sí misma una urgencia crítica;
+  una excepción requiere evidencia, versiones exactas y validación del consumidor.
+- **Retrospectiva técnica:** la capacidad ya configurada en pnpm es suficiente.
+  Se actualizan configuración y fuentes de autoridad sin reinstalar dependencias
+  ni recrear el entorno local, y sin inventar un control automático para Go.
+
+
+## 2026-10-03 — Una retención configurada necesita un proceso de borrado
+
+- **Hecho:** Loki tenía 720 horas sin compactor de retención activo. Cambiar el
+  número no bastaba para liberar chunks. Docker tenía rotación solo en Loki;
+  sus copias de consola y el almacén de señales son almacenamientos distintos.
+- **Decisión:** ADR-0139 aplica 24 horas a la monitorización técnica de dev,
+  con controles existentes; evidencia legal y sus backups mantienen sus plazos.
+  El usuario confirmó que PostHog queda fuera de este cambio.
+- **Regla reutilizable:** verificar el proceso de purga y distinguir ventana de
+  consulta, retención, límite por tamaño y espacio transitorio. Un límite TSDB
+  no constituye una cuota del volumen; json-file no tiene un TTL.
+- **Retrospectiva técnica:** se activó el compactor, se redujo Tempo y se acotó
+  la consola de todos los contenedores. Un filtro estructurado elimina solo
+  chequeos correctos, conservando fallos y eventos útiles. La revisión automática
+  rechazó la purga general: se sustituyó por inspección de solo lectura y retirada
+  únicamente de volúmenes sin escritores ni archivos recientes. No se añadieron
+  jobs de borrado sobre archivos internos de Docker ni se recreó el stack completo.
+- **Validación:** Compose valida los tres archivos; todos los servicios tienen
+  rotación. Loki valida y arranca, rechaza una entrada de 25 horas con 400 y
+  acepta una actual con 204; Tempo verifica su configuración. Los dos pipelines
+  descartan éxitos técnicos y conservan fallo, negocio, arranque y JSON inválido.
+  Una fixture reciente sobrevive a la limpieza. La retirada liberó unos 56 MB;
+  PostgreSQL, restore, Grafana y Alertmanager conservan sus volúmenes.
+
+
+### Auditoría de retención real de producción — 2026-10-03
+
+- **Problema y evidencia:** declarar 24 h en Loki no activaba la purga. La VM
+  confirmó compactor desactivado y chunks almacenados desde septiembre. Tempo
+  sí borra; Prometheus tiene límites activos, pero conserva bloques anteriores
+  a la parada y requiere comprobar el siguiente ciclo. El disco está al 41 %.
+- **Regla reutilizable:** contrastar valores Helm con configuración HTTP activa,
+  contadores de purga y metadatos del almacenamiento. Separar también las copias
+  de consola y el journal; un PVC local-path no impone una cuota de capacidad.
+- **Retrospectiva:** la auditoría se completó sin leer eventos de usuarios ni
+  modificar producción. Antes de habilitar la purga global de Loki hay que
+  resolver la conservación diferenciada de seguridad aceptada en ADR-0106.
+
+
+### Retención y alertas de espacio en producción — 2026-10-03
+
+- **Decisión:** ADR-0140 acepta siete días de diagnóstico y noventa de seguridad,
+  revisando los plazos operativos anteriores sin modificar evidencia legal.
+- **Implementación mínima:** un Loki con categorías, histórico mezclado acotado,
+  compactor persistente; límites de journal; Prometheus un día o 128 MB; timer
+  de cinco minutos que exporta solo tamaños y espacio libre mediante textfile
+  de Alloy. Sin nuevo servicio, permisos para Secrets ni montaje de raíz.
+- **Aprendizaje:** Helm `tpl` puede evaluar una plantilla destinada a otra
+  herramienta. Validar el archivo fuente no valida el resultado que consume
+  Alloy: hay que renderizar y después verificar categorías de extremo a extremo.
+- **Validación:** siete fixtures de logs pasan, alertas probadas con promtool,
+  métricas de disco reales, primer ciclo de retención Loki exitoso y 21 archivos
+  de marcadores. Journal bajó unos 245 MB; API conserva salud 200.
+- **Retrospectiva:** los marcadores no equivalen a chunks borrados: la demora es
+  de dos horas. Prometheus necesita su siguiente ciclo tras una parada larga.
+  Retención y alertas son controles útiles, pero local-path no da cuotas físicas;
+  no se promete un techo de disco ni se borra seguridad antes de plazo.
+
+### 2026-10-03 — Auditar la revisión activa y distinguir presencia de exposición
+
+- **Evidencia:** web y API ejecutan v1.8.0; sus binarios usan Go 1.26.6. El
+  análisis de fuentes productivas encuentra un aviso OpenTelemetry bajo; el
+  checkout local ya lo corrige. npm informa cero críticos y avisos altos y
+  moderados, con varias rutas de herramientas de build.
+- **Aprendizaje:** el modo binario es conservador; confirmar llamadas en las
+  fuentes y condiciones del aviso antes de afirmar explotación. `--prod` de
+  npm tampoco demuestra presencia en un bundle web. La base Go no proporciona
+  etiquetas de gravedad: deben contrastarse con el aviso del mantenedor.
+- **Retrospectiva:** consultar el inventario real evitó confundir el manifiesto
+  antiguo o los cambios locales con producción. La auditoría no desplegó ni
+  cambió dependencias; no certifica Ubuntu ni las otras imágenes del clúster.
+- **Registro:** [Auditoría de dependencias de aplicación](../operations/DEPENDENCY_AUDIT_2026-10-03.md).
+
+## 2026-10-03 — Auditoría ampliada y parche productivo aislado
+
+Se revisaron imágenes activas, Ubuntu y binarios del borde además del código.
+La API y el renderer se promovieron desde v1.8.0 a un commit aislado de seguridad,
+sin incluir los cambios funcionales del checkout. K3s, Traefik y paquetes Ubuntu
+con correcciones maduras se actualizaron y comprobaron. Un scanner puede seguir
+señalando módulos no usados o paquetes sin parche; eliminar esos contadores no
+justifica cambiar distribución, matriz Expo o API de dependencias a ciegas.
+La revisión automática bloqueó inicialmente una mitigación persistente de módulos
+del kernel; se aplicó después de comprobar su ausencia de uso y obtener la
+autorización específica del usuario. Se verificó la resolución de modprobe y la
+salud productiva, conservando el parche del kernel como trabajo pendiente.
+
+La promoción web v1.8.2 conserva la API y renderer v1.8.1: la identidad de cada
+componente puede diferir en un hotfix exclusivamente web y debe registrarse
+explícitamente. La exportación productiva, CI y la carga anónima en navegador
+verificaron el parche; la auditoría prod queda en cuatro altos y un moderado.
+
+## 2026-10-03 — Adaptar consumidores de una corrección publicada
+
+Metro 0.84.4 necesita convertir rutas a bytes para image-size 2; query-string
+7.1.3 necesita el export default del decoder ESM. Dos parches de pnpm con
+hashes y overrides por consumidor evitan migrar el SDK completo. Las pruebas
+usan esos consumidores reales, verifican imágenes/escala y queries UTF-8
+malformadas, y se integran en make verify. El decoder conserva su sustitución
+por U+FFFD para %C2 incompleto; no se inventa una semántica distinta en el test.
+Los parches se retiran cuando el consumidor soporta la nueva interfaz.
+
+La promoción siguió develop → dev → main → prod, con CI y comprobación del
+bundle en navegador en ambos entornos. El rollback conserva las exportaciones
+anteriores; no se ejecutaron migraciones ni se incluyó funcionalidad pendiente.
+La auditoría JavaScript final conserva únicamente dos altos sin parche publicado.
 
 ## 2026-10-03 — Resultados por sets en pantallas estrechas
 
@@ -3717,3 +3854,159 @@ pendiente de recuperación; la copia local no lo reemplaza.
 Retrospectiva: un SHA no puede formar parte de su propio commit. El wrapper
 recibe una revisión limpia explícita y verifica la igualdad del manifiesto de
 staging, sin debilitar la trazabilidad ni tocar el árbol pendiente original.
+
+## Publicación de deportes e incidencias — 2026-10-03
+
+El release v1.9.0 publica en producción el SHA
+`69533ac6cae53bf7245248221cf8143c13329f40`. Dev conserva la revisión funcional
+verificada `8fe7be1d7f998557051cdbe1bf72fcc2b50630ce`. CI de la propuesta,
+develop y main terminó en verde. Goose aplicó 00015–00019 antes de cada API;
+producción tiene dos réplicas listas, web y renderer del mismo SHA y el secreto
+efímero de migración eliminado. Web/API de ambos entornos devuelven HTTPS 200;
+CORS productivo devuelve 204 con su origen. Los diez torneos preexistentes de
+producción siguen legibles y sus conteos de cuentas/torneos permanecen 3/10.
+La pantalla productiva muestra los ocho deportes y bádminton 21/15 en móvil.
+
+Dev verificó trece torneos sintéticos por HTTP y la lectura de abandono de
+pádel en navegador; la cuenta y los torneos se eliminaron exclusivamente al
+cerrar. No se enviaron correos ni se alteraron resultados reales de producción.
+Se tomaron backup incremental cifrado de producción y copias lógicas privadas;
+la restauración aislada y el ensayo de las cinco migraciones sobre datos de
+ambos entornos terminaron correctamente. El fallo de lectura de pgBackRest
+de dev en iCloud sigue pendiente: su copia lógica local probada permitió
+continuar, pero no sustituye reparar el repositorio cifrado.
+
+Recuperación: web v1.8.3 `91bcbcd24e6c7bb066f831045456f5a31d1bb740`;
+API anterior `f6a199ad42bd7e535db9905b132cd75d69486396`. Las migraciones son
+forward-only. Una vez registradas incidencias, el cliente antiguo no las
+interpreta; se prefiere corrección hacia delante, sin restaurar datos de forma
+automática ni perder escrituras posteriores. No se distribuyen apps nativas;
+el teclado nativo sigue pendiente en dispositivo. Los cambios locales de
+retención/observabilidad no se incluyen en este release.
+
+Retrospectiva: aislar desde la base remota preservó seguridad publicada y
+trabajo pendiente. Probar migraciones sobre restauraciones reales evita
+confundir una base de fixtures con compatibilidad de los datos existentes.
+
+### Estabilización autorizada de los montajes de dev
+
+Con autorización explícita posterior del usuario, el checkout de despliegue
+se conserva en `.config/deployments/v1.9.0`, ignorado por Git. Se recrearon solo
+Prometheus, Loki, Promtail, Tempo, Alertmanager y Grafana con `--no-deps`,
+las mismas imágenes y sus volúmenes. Los seis servicios quedaron sanos y todos
+sus montajes propios apuntan a esa ubicación estable; no se reinició API ni
+PostgreSQL. Ambas APIs conservaron HTTPS 200. La revisión automática había
+bloqueado el traslado inicial; la operación se completó tras esa autorización,
+sin sobrescribir los archivos pendientes del workspace original.
+
+## Recuperación de backups dev e iCloud — 2026-10-03
+
+El error EIO de pgBackRest provenía de lecturas desde el montaje Docker de
+archivos que Finder mostraba sin descargar. La lectura de metadatos desde macOS
+permitió volver a abrir el repositorio cifrado sin recrear la stanza ni cambiar
+clave o permisos. WAL y copia completa volvieron a funcionar; la incremental
+mediante LaunchAgent terminó con código 0.
+
+La restauración aislada de `20261003-154848F_20261003-155132I` terminó la
+recuperación y coincidió con los agregados activos: esquema 19, cuatro cuentas,
+diez torneos, 57 partidos, 17 cambios de resultado y tres aceptaciones legales.
+El comando Make corregido usa un volumen único, repositorio de solo lectura y
+ninguna red; elimina sus recursos temporales. No reinicia dev ni monta sus datos
+activos. La comparación por conteos es una comprobación acotada, no igualdad
+integral ni demostración de PITR de todo el periodo anterior.
+
+Retrospectiva: distinguir descarga actual y conservación local persistente;
+verificar bytes, archivado y restauración, además del listado de backups.
+`pg_isready` no demuestra que la recuperación haya terminado. Tras autorización
+explícita posterior del usuario, se activó Conservar en dispositivo únicamente
+para dev; Finder confirmó dev, archive y backup conservados en el dispositivo,
+sin descarga pendiente en la barra de estado.
+El repositorio y WAL se comprobaron de nuevo correctamente desde Docker.
+Conservar una copia local y confirmar sincronización remota son comprobaciones
+distintas; este ajuste no acredita por sí solo la segunda.
+
+## Conciliación de la base local con v1.9.0 — 2026-10-03
+
+El checkout seguía en v1.8.0, 16 commits detrás de origin/develop. La comparación
+por contenido encontró 97 de 148 archivos locales ya idénticos a la revisión
+integrada. Se guardaron copia recuperable y stash, se avanzó develop a 6967457 y
+main a 69533ac sin reescribir historia, y se conservó únicamente el trabajo
+operativo pendiente. El cliente, contrato y lógica de producto coinciden con la
+base integrada. Las pruebas de incidencias, ausentes del gate local antiguo,
+vuelven a formar parte de make verify; las nueve regresiones de dependencias e
+incidencias pasan.
+
+Retrospectiva: no reaplicar una copia antigua completa sobre un release. La imagen
+API declarativa podía retroceder y las pruebas integradas podían desaparecer.
+Distinguir código integrado, publicación y configuración aplicada permite
+mantener cambios operativos sin presentarlos como funcionalidad sin entregar.
+El changelog conserva v1.9.0 y reserva Unreleased para el bloque operativo aún
+sin integrar. [Inventario y límites de la revisión](../operations/WORKSPACE_RECONCILIATION_2026-10-03.md).
+
+## Validación de pádel en móvil por el usuario — 2026-10-03
+
+El usuario informa: «Comprobé un torneo de padel entero en movil y 0 problema».
+Se registra como recorrido completo de pádel sin incidencias reportadas, realizado
+por el usuario. No se especificaron navegador/app, sistema operativo, entorno
+ni casos particulares; no se deduce validación nativa, de incidencias o de otros
+deportes. No se requiere repetir este recorrido por defecto.
+
+Retrospectiva: la experiencia directa complementa las pruebas automatizadas y
+permite cerrar esta exploración acotada. Registrar quién valida y el alcance
+observado evita convertir una experiencia satisfactoria en una afirmación de
+cobertura global. El siguiente bloque recomendado es la revisión y validación
+proporcional del trabajo operativo pendiente antes de integrarlo.
+
+## 2026-10-03 — Cierre del bloque operativo pendiente
+
+La [revisión operativa](../operations/OPERATIONAL_BLOCK_REVIEW_2026-10-03.md)
+valida configuración y comportamiento por separado: pipeline Alloy renderizado,
+retención de admisión Loki, alertas Prometheus, migración local idempotente y
+restauración aislada. Las alertas de producción están sanas e inactivas y TSDB
+ya no informa de los bloques vencidos observados por la mañana.
+
+**Retrospectiva:** fallo de inspección no significa volumen vacío, y fallo de
+medición no significa cero bytes. Se añaden seis regresiones a `make verify`
+para conservar estas fronteras sin un framework adicional. Integración en Git,
+promoción al checkout estable y aplicación al runtime conservan evidencias
+separadas. La integración no afirma que local/dev ya use el nuevo plazo.
+
+### Promoción posterior del bloque operativo a dev
+
+Con autorización del usuario, el commit operativo pasó la CI con integración
+PostgreSQL y su configuración se promovió a un checkout estable nuevo.
+La recreación conserva las ocho imágenes y volúmenes; verifica retención
+efectiva, readiness, continuidad WAL y salud pública. Se registran por separado
+commit de configuración e imagen de API porque este cambio no reconstruye la
+aplicación. La [evidencia de promoción](../operations/OPERATIONAL_BLOCK_REVIEW_2026-10-03.md#promoción-autorizada-posterior-a-dev)
+completa el cierre anterior; no publica una versión de producción.
+
+
+## 2026-10-03 — Presupuesto y orden del apagado de la API
+
+Retirar un endpoint y detener el proceso son operaciones concurrentes. Esperar
+antes de SIGTERM permite atender el tráfico que todavía llega por propagación;
+Shutdown cierra después el listener y espera a las peticiones activas. El preStop
+consume el mismo periodo de gracia que el cierre, no un presupuesto adicional.
+PID 1 recibe señales si el binario es entrypoint directo y registra un handler.
+
+**Retrospectiva técnica:** ya había drenaje HTTP, pero sus diez segundos y otros
+diez de telemetría no cabían en quince de K3s. ADR-0145 mantiene la solución pequeña:
+5s de propagación, 10s HTTP, 5s trazas y 10s de margen. Al vencer HTTP, Close cancela
+sus conexiones antes de liberar dependencias. Pool.Close aún puede esperar una
+operación que ignore cancelación; el runtime conserva el límite duro. Las pruebas
+con sockets verifican comportamiento HTTP; la prueba de rollout en Traefik es
+otra evidencia y permanece pendiente de promoción desde una revisión limpia.
+
+
+### Cierre de promoción — 2026-10-04
+
+La rama ops/api-graceful-shutdown conserva el SHA 11138a1 desplegado sin incluir
+los cambios de interfaz en curso. K3s valida el hook nativo y confirma dos pods
+listos con cero reinicios. Se verificó la retirada de pods que ya tenían preStop:
+ambos completaron drenaje y curl observó 168 respuestas 401 esperadas a sesiones
+sin autenticar, sin errores, durante 45,61 segundos. urllib devolvía 403 del borde
+y esa medición se descartó. Una prueba de continuidad debe alcanzar la API y
+validar su respuesta; no basta contar respuestas del proxy. El resultado acota
+el riesgo del rollout probado, sin garantizar disponibilidad del host ni carga
+transaccional.

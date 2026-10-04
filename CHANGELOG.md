@@ -6,6 +6,43 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Fixed
+
+- Apagado de la API (ADR-0145): espera preStop nativa de cinco segundos en K3s,
+  gracia de treinta segundos en K3s y Compose dev, telemetría acotada a cinco
+  segundos y cierre de conexiones restantes si HTTP agota diez segundos.
+  Pruebas con sockets reales; desplegado en prod el 2026-10-04 (11138a1):
+  dos réplicas listas y 168 respuestas esperadas sin errores durante el rollout
+  de verificación.
+
+- Verificación de backups dev: restauración y consulta comparten un volumen
+  temporal único, sin red ni montaje de datos activos. Se exige recuperación
+  terminada y comparación de agregados; revalidada una incremental cifrada.
+- Configuración operativa de producción (ADR-0140): diagnóstico siete días y
+  seguridad noventa, compactor Loki, journal acotado, métricas de disco y alertas.
+  Aplicada al runtime; configuración y evidencia incorporadas en este bloque.
+  Comprobación posterior: siete alertas sanas e inactivas y bloques Prometheus
+  vencidos ya ausentes según la antigüedad TSDB.
+
+### Changed
+
+- Telemetría técnica de local/dev a 24 horas con compactor Loki, Tempo,
+  límite TSDB adicional de Prometheus y rotación comprimida de contenedores.
+  Configuración promovida a dev desde el checkout estable `ops-b3a5e93`, tras
+  pasar la CI. Se conservan las imágenes de aplicación y todos los volúmenes.
+- Limpieza selectiva de volúmenes de telemetría vencida mediante
+  `make dev-observability-clean` y `make dev-public-observability-clean`.
+- `make dev-migrate` aplica migraciones locales con Goose sin reset ni cambios
+  en privilegios públicos; permite probar el documento legal dentro de Docker.
+- `make test-operational-safety`, incluido en `make verify`, protege el alcance
+  de limpieza de telemetría y el fallo seguro de medición de disco. Fixtures
+  Prometheus ampliadas para compactor ausente, detenido y retención sana.
+
+### Security
+
+- Mitigación operativa de módulos de kernel no utilizados, aplicada con
+  autorización explícita y comprobación de salud; no corrige el kernel.
+
 ## [1.9.0] - 2026-10-03
 
 ### Added
@@ -32,11 +69,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   sin repetición y Guardar dentro del scroll. Los campos respetan columnas
   estrechas y el diálogo nativo reserva espacio para el teclado.
 
-
 - Los resultados por sets rechazan tanteos ausentes o nulos y conservan el cero
   explícito. PostgreSQL exige configuración de sets para tenis y pádel mediante
   una migración incremental que no modifica la migración ya publicada.
-
 
 ## [1.8.3] - 2026-10-03
 
