@@ -50,6 +50,11 @@ export default function AccountAccessScreen() {
   const refreshAccessMethods = useCallback(() => {
     return getAccountAccessMethods().then(setAccessMethods);
   }, []);
+  const dismissGoogleLink = useCallback(() => setGoogleLinkVisible(false), []);
+  const completeGoogleLink = useCallback(() => {
+    setGoogleLinkVisible(false);
+    void refreshAccessMethods();
+  }, [refreshAccessMethods]);
   const confirmAccountDeletion = () =>
     confirm({
       acceptLabel: t("account_delete"),
@@ -202,11 +207,8 @@ export default function AccountAccessScreen() {
         </Pressable>
       </ScrollView>
       <GoogleLinkDialog
-        onDismiss={() => setGoogleLinkVisible(false)}
-        onLinked={() => {
-          setGoogleLinkVisible(false);
-          void refreshAccessMethods();
-        }}
+        onDismiss={dismissGoogleLink}
+        onLinked={completeGoogleLink}
         visible={googleLinkVisible}
       />
       <ModalDialog

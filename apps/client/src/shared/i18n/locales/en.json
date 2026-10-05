@@ -412,7 +412,7 @@
   "league_result_saving": "Saving result…",
   "league_result_correct": "Correct result",
   "league_result_pending": "Pending",
-  "racket_elimination_only_help": "In this version, tennis, padel and table tennis only support single elimination.",
+  "racket_elimination_only_help": "In this version, tennis, padel, table tennis and badminton only support single elimination.",
   "racket_set_score_help": "Enter the games in each set. Valid scores are 6–0 to 6–4, 7–5 and 7–6; leave unplayed sets empty.",
   "racket_set_number": "Set {number}",
   "racket_home_games": "First participant games",

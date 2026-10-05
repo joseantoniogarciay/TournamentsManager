@@ -412,7 +412,7 @@
   "league_result_saving": "Guardando resultado…",
   "league_result_correct": "Corregir resultado",
   "league_result_pending": "Pendiente",
-  "racket_elimination_only_help": "En esta versión, tenis, pádel y tenis de mesa solo admiten eliminatoria directa.",
+  "racket_elimination_only_help": "En esta versión, tenis, pádel, tenis de mesa y bádminton solo admiten eliminatoria directa.",
   "racket_set_score_help": "Introduce los juegos de cada set. Son válidos 6–0 a 6–4, 7–5 y 7–6; deja vacíos los sets que no se jugaron.",
   "racket_set_number": "Set {number}",
   "racket_home_games": "Juegos del primer participante",

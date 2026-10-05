@@ -25,7 +25,7 @@ posteriores conservaron archivos privados de evidencia enumerados más abajo.
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `go test -json ./...`                      | 483 tests/subtests aprobados, 56 omitidos, ningún fallo. Las integraciones opt-in están omitidas en esta ejecución.                   |
 | PostgreSQL opt-in en BD desechable         | 58 tests/subtests aprobados, sin fallos. `tm_product_qa_20261004` separada de la BD persistente de fixtures: la suite trunca cuentas. |
-| `node --test tests/*.test.mjs`             | 67 aprobados, sin omitidos ni fallos; última ejecución del 2026-10-05, incluido seguimiento y paginación.                             |
+| `node --test tests/*.test.mjs`             | 72 aprobados, sin omitidos ni fallos; última ejecución del 2026-10-06, incluida reautenticación asíncrona.                             |
 | `python3 tests/operational-safety.test.py` | 11 aprobados.                                                                                                                         |
 | Cliente                                    | `pnpm run check` aprobado (formato, lint, TypeScript y OpenAPI); exportación web completada; cliente generado actualizado.            |
 
@@ -39,20 +39,20 @@ a cobertura de líneas ni al número de casuísticas del producto.
 | Registro, verificación, duplicados, enlace consumido | Dominio, HTTP y persistencia                                                                                    | Cuenta ficticia, verificación y reutilización 409                                                                                                      | Registro sin envío en ambos; activación y enlace consumido comprobados en web; enlace nativo pendiente                                                                                                                                                                                                                                          |
 | Login pendiente y reenvío                            | Secuencial, 8 solicitudes concurrentes, cancelación, sin crear sesión                                           | Reproducción del 500 y 202 tras corregir                                                                                                               | Login verificado en ambos; login pendiente y reenvío comprobados en web; pendiente en móvil                                                                                                                                                                                                                                                     |
 | Login verificado, logout y refresh                   | HTTP, cookies, CSRF, persistencia                                                                               | 200/204, sesión revocada 401 y refresh reutilizado 401                                                                                                 | Creador y participante en ambos; logout confirmado y nuevo login Android; refresh visual pendiente                                                                                                                                                                                                                                              |
-| Recuperación y reautenticación                       | Persistencia, ticket de un uso, fallos DB/SMTP, timeout/cancelación y respuestas seguras                        | Solicitud, inspección, cambio, repetición 409, credencial vieja 401, nueva 200, solicitudes consecutivas 202/202                                       | Cambio de credencial por UI requiere intervención humana; pantallas y enlaces pendientes                                                                                                                                                                                                                                                        |
+| Recuperación y reautenticación                       | Persistencia, ticket de un uso, fallos DB/SMTP, timeout/cancelación y respuestas seguras                        | Solicitud, inspección, cambio, repetición 409, credencial vieja 401, nueva 200, solicitudes consecutivas 202/202                                       | Web: solicitud inválida/válida, enlace real y formulario preparados; cambio de credencial espera intervención humana. Reautenticación correcta/incorrecta, doble clic y cierre durante espera comprobados; móvil pendiente                                                                                                                                                                                                                                                        |
 | Google / Apple                                       | Challenges, validación, errores seguros, atomicidad y concurrencia con dobles de prueba                         | No se acredita acceso real a proveedores                                                                                                               | Orden de botones comprobado en ambos; OAuth real aplazado por el usuario a futuras pruebas en dev/prod                                                                                                                                                                                                                                          |
 | Biblioteca, recientes, seguir/dejar de seguir        | HTTP, persistencia y relaciones sin duplicar                                                                    | Paginación, seguimiento idempotente y consultas                                                                                                        | Administro/Sigo y recientes en web y ambos SO; paginación de 52 en web/iOS, pendiente Android; seguimiento manual web/Android/iOS, retorno a biblioteca web/iOS; vacíos web                                                                                                                                                                     |
 | Administradores y exclusividad del creador           | HTTP y persistencia                                                                                             | Asignación autorizada/idempotente, delegado puede editar; listar admins, cancelar, completar y transferir rechazados 403                               | Delegado edita en ambos SO; menú solo Compartir en web/iOS/Android; URL directa 403 revisada en web y búsqueda con creador                                                                                                                                                                                                                      |
 | Invitación de equipo                                 | HTTP y persistencia                                                                                             | Crear/regenerar, anterior inválida, inspección anónima, inscripción 201, duplicado 409, sin sesión 401, revocación idempotente, después de empezar 409 | Web anónimo → login conserva nombre e inscribe; conflicto del ya inscrito. iOS: entrada corregida, login conserva nombre, inscripción confirmada, duplicado recuperable y segundo enlace con app abierta; Android: entrada con/sin sesión, nombre obligatorio/corrección, login conserva nombre e inscripción con destino y equipos comprobados |
 | Composición de equipos                               | HTTP, persistencia                                                                                              | Último equipo 409, añadir, duplicado normalizado 409, eliminar antes de empezar                                                                        | Creación web, primer equipo, duplicado y segundo válido; nombres largos en ambos; bajas UI pendientes                                                                                                                                                                                                                                           |
-| Ocho deportes × tres formatos                        | Dominio, HTTP y persistencia                                                                                    | 16 combinaciones admitidas terminadas con campeón; 8 rechazadas 400 según contrato                                                                     | Ocho formularios guardados en web; formatos largos y desempates. Nativo parcial: fútbol, bádminton, tenis de mesa y voleibol; no acredita todos los formatos                                                                                                                                                                                    |
-| Liga y mixto                                         | Grupos, dos vueltas, composición impar, retirada de clasificado, desempate repetido, congelación y concurrencia | Una vuelta y mixto tabla única; empate de corte con liguilla de desempate resuelto                                                                     | Clasificación fútbol parcial en ambos; mixto y desempates en pantalla pendientes                                                                                                                                                                                                                                                                |
-| Eliminatoria                                         | Bracket, byes, correcciones, desempate fútbol/balonmano, todos los deportes                                     | Cuadro de cuatro participantes en ocho deportes                                                                                                        | Bádminton semifinal/final en ambos; ocho finales web, corrección fútbol iOS; byes visuales pendientes                                                                                                                                                                                                                                           |
-| Resultados e incidencias                             | Marcadores, sets, límites, formas exclusivas, historia                                                          | Resultado inválido 400, no comparecencia, abandono con parcial, corrección jugada y permisos 403                                                       | Ocho deportes web; fútbol editado por delegado en ambos SO; no comparecencia y abandono parcial guardados Android; combinaciones restantes pendientes                                                                                                                                                                                           |
+| Ocho deportes × tres formatos                        | Dominio, HTTP y persistencia                                                                                    | 16 combinaciones admitidas terminadas con campeón; 8 rechazadas 400 según contrato                                                                     | Web: 16 formatos admitidos completados por UI; preparación de fixtures por API. Nativo parcial: fútbol, bádminton, tenis de mesa y voleibol; no acredita todos los formatos                                                                                                                                                                                    |
+| Liga y mixto                                         | Grupos, dos vueltas, composición impar, retirada de clasificado, desempate repetido, congelación y concurrencia | Una vuelta y mixto tabla única; empate de corte con liguilla de desempate resuelto                                                                     | Web: dos vueltas con co-campeones, grupos, empate de corte, segundo ciclo, clasificación congelada y transición hasta campeón; ligas y mixtos de baloncesto/balonmano/voleibol terminados. Nativo parcial                                                                                                                                                                                                                                                                |
+| Eliminatoria                                         | Bracket, byes, correcciones, desempate fútbol/balonmano, todos los deportes                                     | Cuadro de cuatro participantes en ocho deportes                                                                                                        | Bádminton semifinal/final en ambos; ocho finales web; cuadro de cinco equipos con tres pases directos hasta campeón web; corrección fútbol iOS; byes móvil pendiente                                                                                                                                                                                                                                           |
+| Resultados e incidencias                             | Marcadores, sets, límites, formas exclusivas, historia                                                          | Resultado inválido 400, no comparecencia, abandono con parcial, corrección jugada y permisos 403                                                       | Web: no comparecencia y abandono parcial en ocho deportes; corrección a marcador con penaltis fútbol. Fútbol editado por delegado en ambos SO; incidencias Android parciales; resto nativo pendiente                                                                                                                                                                                           |
 | Retirada, cancelación y finalización                 | Dominio, HTTP y persistencia; co-campeones y concurrencia                                                       | Retirada, repetición 409, cancelación conserva lectura pública, edición/completar cancelado 409, finalización anticipada 409                           | Creación web hasta campeón; bádminton finalizado y fútbol cancelado en ambos; retirada web, cancelación y persistencia comprobadas; móvil pendiente                                                                                                                                                                                                                             |
-| Notificaciones y sugerencias                         | HTTP y persistencia                                                                                             | Lista, marcar todas leídas, contador 0, sugerencia 201, corta 400                                                                                      | Notificación web y destino comprobados; confirmación de borrar cancelada. Sugerencia: corto/corrección/éxito web y Android, límite con borrador conservado iOS; vacío comprobado en web; lista extensa, vacío móvil y borrar pendientes                                                                                                         |
-| Cuenta: transferencia, baja y purga                  | Transferencia, ticket, baja/purga y anonimización                                                               | Baja del creador con torneos rechazada 409                                                                                                             | Datos de acceso, formulario vacío de contraseña y cancelación de baja comprobados en web; transferencia, baja efectiva y móvil pendientes                                                                                                                                                                                                       |
-| Errores de transporte y fallback                     | Suite cliente/HTTP; nuevo reset 500 seguro                                                                      | Rechazos de negocio reales                                                                                                                             | Corte real de API, mensaje seguro y reintento exitoso en web/iOS/Android; 5xx, timeout y cancelación de navegación visual pendientes                                                                                                                                                                                                            |
+| Notificaciones y sugerencias                         | HTTP y persistencia                                                                                             | Lista, marcar todas leídas, contador 0, sugerencia 201, corta 400                                                                                      | Web: 31 notificaciones, desplazamiento hasta la última y destino comprobados; borrado preparado y pendiente de confirmación específica. Sugerencia: corto/corrección/éxito web y Android, límite con borrador conservado iOS; vacío comprobado en web; vacío móvil y borrado pendientes                                                                                                         |
+| Cuenta: transferencia, baja y purga                  | Transferencia, ticket, baja/purga y anonimización                                                               | Baja del creador con torneos rechazada 409                                                                                                             | Web: datos de acceso y cancelación de baja; transferencia ficticia preparada y pendiente de confirmación; cambio de contraseña requiere intervención humana; baja efectiva/purga y móvil pendientes                                                                                                                                                                                                       |
+| Errores de transporte y fallback                     | Suite cliente/HTTP; nuevo reset 500 seguro                                                                      | Rechazos de negocio reales                                                                                                                             | Corte real de API y reintento en web/iOS/Android; web adicional con 500, cuerpo 200 inválido, demora/504, navegación durante espera y recuperación. Fallos inyectados en proxy; no acredita timeout propio del cliente                                                                                                                                                                                                            |
 
 La pasada deportiva registró 208 peticiones: 205 coincidieron con la expectativa
 inicial; tres expectativas del script eran incorrectas (formato prohibido o
@@ -908,3 +908,129 @@ nuevos, navegación intacta, host de diálogo en cada Screen, adaptador generado
 y feedback seguro; blur real Android y los recorridos móviles siguen pendientes.
 Metro se detiene; Compose confirma que API, PostgreSQL y Mailpit están apagados
 y no quedan servicios locales en ejecución, sin eliminar volúmenes ni evidencia.
+
+
+## Continuación web — formatos, incidencias y recuperación (2026-10-06)
+
+El alcance sigue en curso: OAuth real está aplazado por decisión del usuario;
+transferencia del torneo ficticio original y borrado de sus 31 avisos esperan
+confirmación específica, y el restablecimiento de contraseña está preparado
+para intervención humana. No se presentan estos pasos como ejecutados. La
+prioridad acordada es agotar web antes de continuar las apps.
+
+### Recorridos deportivos por interfaz
+
+La eliminatoria de cinco equipos se completa jugando sus cuatro partidos reales;
+los tres pases directos no ofrecen editor. Finalizar muestra Equipo 1 campeón
+(web-byes-completed.jpg). Los grupos de ocho equipos completan sus doce partidos
+0–0 y generan dos liguillas de desempate de cuatro equipos. La primera necesita
+un segundo ciclo entre tres equipos por empate en el corte; el ya clasificado no
+vuelve a jugar. Tras resolver ambos cortes, se inician semifinales y final y se
+finaliza el torneo (web-tiebreak-resolved.jpg, web-mixed-completed.jpg).
+
+Se reproduce una incoherencia: el primer ciclo cerrado aún ofrecía Editar
+resultado; el backend devuelve 409 sin cambiar el 2–0 existente. La interfaz
+comprueba ahora fase activa, estado del pool y ciclo actual antes de ofrecer o
+abrir edición. Se verifica que desaparecen los controles cerrados, permanecen
+los actuales y los pools resueltos no permiten editar. La autoridad sigue en el
+backend; no cambia el contrato ni la regla aceptada de congelación.
+
+En la final de fútbol se guarda no comparecencia, se corrige a abandono del
+visitante con parcial 1–2 (vence el rival aunque vaya por detrás), y después a
+marcador 1–1 con penaltis 4–3. Sin penaltis o con 4–4, Guardar permanece
+deshabilitado. Una semifinal con final dependiente tampoco admite corrección.
+Evidencia adicional: web-mixed-retirement.jpg.
+
+Siete fixtures nuevos preparados por API permiten cerrar por UI los formatos
+restantes: fútbol liga a ida y vuelta con dos 2–2 termina con co-campeones;
+baloncesto y balonmano completan liga y mixto; voleibol completa liga y mixto.
+Los mixtos juegan seis encuentros de fase inicial y final entre clasificados.
+En baloncesto, 80–80 bloquea Guardar; 80–70 es válido. En voleibol, el quinto
+set 15–14 bloquea Guardar; 16–14 permite guardar y terminar. Junto a las ocho
+eliminatorias ya revisadas y el mixto de fútbol, esto acredita las 16
+combinaciones admitidas en web, sin atribuir la creación de fixtures a la UI.
+Evidencia: web-cochampions-two-legs.jpg, web-volleyball-league-completed.jpg y
+web-{basketball,handball,volleyball}-mixed-completed.jpg.
+
+Otros siete fixtures de eliminatoria de dos participantes comprueban no
+comparecencia y abandono en baloncesto, balonmano, tenis, pádel, tenis de mesa,
+bádminton y voleibol. Primero falta Web Visitante y gana Web Local; corregir a
+abandono de Web Local con parcial 3–2 hace ganar Web Visitante. Se finaliza cada
+torneo y se comprueba ese campeón. No se convierte el parcial en un marcador
+jugado ni se exige completar sets tras el abandono. Fútbol cubre el octavo
+deporte en el recorrido anterior. Capturas web-tennis-incident-completed.jpg y
+web-{basketball,handball,padel,table_tennis,badminton,volleyball}-retirement.jpg.
+El texto que explica los deportes limitados a eliminatoria incorpora bádminton
+en los cuatro idiomas, según ADR-0141.
+
+### Fallos y continuidad
+
+Un proxy local temporal conserva las peticiones reales y altera únicamente la
+lectura del fixture de pases directos. Un 500 con title/detail sintéticos y un
+200 de cuerpo inválido muestran common_request_error, sin publicar el contenido
+interno. Una respuesta retrasada doce segundos y terminada en 504 muestra la
+carga centrada y después el fallback. Volver a Cuenta durante otra espera no
+muestra un aviso tardío. Retirar el fallo y pulsar Reintentar recupera el torneo
+persistido. Esto prueba demora y fallo de gateway, no un timeout implementado
+por el cliente. Captura web-500-safe.jpg; no se cambian endpoints, observabilidad
+ni datos del torneo para inducir estos fallos.
+
+La reautenticación de Vincular Google enviaba dos tickets con doble clic. Un
+contador que registra solo el número de peticiones, con demora de un segundo,
+reproduce dos antes de corregir y una después. Se bloquea sincrónicamente la
+operación y se muestra loading; cerrar/inactivar el diálogo invalida su
+generación y descarta respuestas tardías. Contraseña incorrecta conserva sesión
+y muestra el fallback seguro; cerrar antes de esa respuesta no muestra feedback.
+Las callbacks del diálogo son estables y cada error de proveedor se procesa una
+vez: la prueba había descubierto un ciclo de renders que agotaba React. Sin
+Google configurado no se solicita un challenge; tras confirmar identidad se
+muestra Continuar con Google deshabilitado. No acredita vinculación real.
+Evidencias: web-reauth-single-request.jpg y web-reauth-wrong-password-safe.jpg.
+La feature conserva el adaptador generado y apiFetch para esta comprobación:
+un 401 por contraseña incorrecta no debe invalidar la sesión existente.
+
+### Listas, cuenta y accesibilidad
+
+La lista del participante contiene 31 notificaciones: treinta avisos sintéticos
+preparados por SQL sin cambiar permisos y el aviso original de delegación. Se
+alcanza el último, que abre el torneo correcto. La lectura real posterior del contador devuelve 200 y cero avisos sin leer. El diálogo irreversible de
+borrar se cancela; no se ejecuta aún ese borrado. Capturas
+web-notifications-long-bottom.jpg y web-delete-notifications-prepared.jpg.
+
+Recuperación valida correo mal formado, bloqueo del envío vacío y solicitud
+válida con mensaje que no revela existencia de cuenta. El enlace real de
+Mailpit abre el formulario de nueva contraseña, email no editable y Guardar
+deshabilitado sin nueva credencial. La pestaña queda preparada para el usuario;
+no se introduce ni se confirma una contraseña nueva por el agente. Un enlace
+sin token muestra el estado inválido y salida a Inicio.
+
+La pasada actual usa 702×756 px efectivos: el override solicitado de 390 px no
+se aplicó y se retiró. No se acredita un viewport de 390 en esta pasada. Crear
+torneo no desborda horizontalmente; controles de cierre e inputs/botones tienen
+44 px y Tab alcanza cierre y deporte. Validar nombre vacío conserva el borrador
+de equipo. Ajustes refleja Sistema sin modificar la preferencia. Términos y
+privacidad permiten llegar al final y cerrar; sus textos legales versionados
+conservan menciones a ligas, que no se editan silenciosamente en esta revisión.
+Una ruta desconocida vuelve a Inicio y un UUID válido ausente muestra el estado
+localizado de no disponible con cierre.
+
+Retrospectiva: terminar una fase deportiva incluye volver a sus resultados
+anteriores y tratar de corregirlos. Una operación rápida oculta duplicados y
+respuestas tardías: retrasarla permite comprobar exclusión y cierre con evidencia
+observable. Contar peticiones sin registrar cuerpos evita guardar credenciales.
+La preparación por API, la ejecución por UI y la intervención humana mantienen
+alcances distintos; ninguna suma equivale a cobertura exhaustiva del producto.
+
+
+Verificación de esta continuación: cinco regresiones de comportamiento del
+diálogo prueban doble evento antes del render, respuesta correcta/incorrecta
+tras cierre, error de proveedor único y error tardío sin cerrar la reapertura.
+La suite Node completa suma 72 aprobados. Check (incluido TypeScript) y
+exportación de las 36 rutas web pasan; no se añaden dependencias ni se cambia
+OpenAPI. Checklist cliente: se conservan primitivas, tokens, objetivos de 44 px,
+localización en cuatro catálogos, host de diálogos por Screen, navegación y
+adaptadores generados. Los permisos y resultados siguen siendo del backend.
+Los aspectos nativos pendientes no se acreditan con esta exportación.
+
+El intento de reanudar iOS encuentra el Mac bloqueado según el control nativo;
+se solicita desbloqueo manual, sin sustituir la interacción por comandos de UI.

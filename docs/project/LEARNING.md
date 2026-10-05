@@ -4535,3 +4535,25 @@ sin mover el host de confirmación fuera de cada Screen por comodidad.
 Retrospectiva: las pruebas de comportamiento deben intentar invalidar una
 regla después de su éxito inicial; las advertencias de un SDK requieren leer
 su implementación antes de rediseñar el árbol de vistas.
+
+
+### Ciclos cerrados y reautenticación lenta (2026-10-06)
+
+Una proyección puede conservar partidos de un ciclo de desempate cerrado. La
+acción de editar necesita comprobar fase activa, estado del pool y ciclo actual,
+además del permiso general. Probar una escritura y observar 409 demuestra la
+protección del backend; ocultar el editor obsoleto evita una recuperación inútil.
+
+El estado React de loading no excluye por sí solo dos eventos antes del render.
+Un ref bloquea la petición de reautenticación inmediatamente; una generación
+invalida sus resultados al cerrar o desmontar. Se comprueba éxito, error,
+doble clic y cierre con demora real del transporte y un contador sin cuerpos.
+Callbacks estables y consumo único del error evitan que el feedback reactive un
+ciclo de efectos. Un proveedor no configurado conserva la acción deshabilitada
+sin intentar preparar su challenge. No se añade una abstracción global para una
+operación local ni se invalida sesión por una contraseña de reautenticación
+incorrecta.
+
+Retrospectiva: un fixture que devuelve 504 tras esperar comprueba demora y fallo
+de gateway, no demuestra un timeout propio del cliente. Una dimensión solicitada
+al navegador tampoco acredita un viewport hasta observar sus medidas efectivas.

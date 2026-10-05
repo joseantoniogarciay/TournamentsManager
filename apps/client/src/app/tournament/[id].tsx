@@ -651,6 +651,18 @@ export default function TournamentScreen() {
     match.resultType === "administrative" ||
     withdrawnTeamIDs.has(match.homeTeamId) ||
     withdrawnTeamIDs.has(match.awayTeamId);
+  const canEditMatchResult = (match: PublicTournament["matches"][number]) => {
+    if (!canManageResults || league.state !== "in_progress" || hasFixedWithdrawalResult(match)) {
+      return false;
+    }
+    const stage = league.stages.find((item) => item.id === match.stageId);
+    if (stage?.state !== "in_progress") return false;
+    if (stage.type !== "qualification_tiebreak") return true;
+    const pool = league.tieBreakPools.find(
+      (item) => item.stageId === match.stageId && item.poolNumber === match.groupNumber,
+    );
+    return pool?.state === "in_progress" && pool.currentCycle === match.round;
+  };
   const editingMatch = league.matches.find((match) => match.id === editingMatchID);
   const editingScore = editingMatch
     ? (scores[editingMatch.id] ?? editableScoreFromMatch(editingMatch, league.bestOfSets ?? 3))
@@ -692,7 +704,7 @@ export default function TournamentScreen() {
   const hasRacketScoreInput = editingScore?.sets.some((set) => set.home !== "" || set.away !== "");
   const openResultEditor = (matchID: string) => {
     const match = league.matches.find((item) => item.id === matchID);
-    if (!match || hasFixedWithdrawalResult(match)) return;
+    if (!match || !canEditMatchResult(match)) return;
     setScores((value) => ({
       ...value,
       [matchID]: editableScoreFromMatch(match, league.bestOfSets ?? 3),
@@ -1281,11 +1293,7 @@ export default function TournamentScreen() {
                         </Text>
                       ) : null}
                       <IncidentSummary match={match} teams={teamsByID} showAdministrativeScore />
-                      {canManageResults &&
-                      !hasFixedWithdrawalResult(match) &&
-                      league.state === "in_progress" &&
-                      league.stages.find((stage) => stage.id === match.stageId)?.state ===
-                        "in_progress" ? (
+                      {canEditMatchResult(match) ? (
                         <Button
                           label={
                             match.state === "completed"
