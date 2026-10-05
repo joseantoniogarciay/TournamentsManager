@@ -51,7 +51,7 @@ a cobertura de líneas ni al número de casuísticas del producto.
 | Resultados e incidencias                             | Marcadores, sets, límites, formas exclusivas, historia                                                          | Resultado inválido 400, no comparecencia, abandono con parcial, corrección jugada y permisos 403                                                       | Ocho deportes web; fútbol editado por delegado en ambos SO; no comparecencia y abandono parcial guardados Android; combinaciones restantes pendientes                                                                                                                                                                                           |
 | Retirada, cancelación y finalización                 | Dominio, HTTP y persistencia; co-campeones y concurrencia                                                       | Retirada, repetición 409, cancelación conserva lectura pública, edición/completar cancelado 409, finalización anticipada 409                           | Creación web hasta campeón; bádminton finalizado y fútbol cancelado en ambos; retirada en ficha de equipo pendiente                                                                                                                                                                                                                             |
 | Notificaciones y sugerencias                         | HTTP y persistencia                                                                                             | Lista, marcar todas leídas, contador 0, sugerencia 201, corta 400                                                                                      | Notificación web y destino comprobados; confirmación de borrar cancelada. Sugerencia: corto/corrección/éxito web y Android, límite con borrador conservado iOS; vacío comprobado en web; lista extensa, vacío móvil y borrar pendientes                                                                                                         |
-| Cuenta: transferencia, baja y purga                  | Transferencia, ticket, baja/purga y anonimización                                                               | Baja del creador con torneos rechazada 409                                                                                                             | Formularios, transferencia y baja UI pendientes                                                                                                                                                                                                                                                                                                 |
+| Cuenta: transferencia, baja y purga                  | Transferencia, ticket, baja/purga y anonimización                                                               | Baja del creador con torneos rechazada 409                                                                                                             | Datos de acceso, formulario vacío de contraseña y cancelación de baja comprobados en web; transferencia, baja efectiva y móvil pendientes                                                                                                                                                                                                       |
 | Errores de transporte y fallback                     | Suite cliente/HTTP; nuevo reset 500 seguro                                                                      | Rechazos de negocio reales                                                                                                                             | Corte real de API, mensaje seguro y reintento exitoso en web/iOS/Android; 5xx, timeout y cancelación de navegación visual pendientes                                                                                                                                                                                                            |
 
 La pasada deportiva registró 208 peticiones: 205 coincidieron con la expectativa
@@ -765,3 +765,57 @@ segundo uso de un enlace de un solo uso. Preparar un fixture por API permite
 continuar una revisión, pero debe quedar separado de la evidencia de UI. Un
 problema de memoria del host mantiene pendientes sus casos nativos, sin
 invalidar las comprobaciones independientes de web e iOS.
+
+## Continuación — recuperación de memoria y acceso web (2026-10-05)
+
+El usuario solicita liberar memoria y continuar. La inspección de procesos
+identifica Android Studio con aproximadamente 2,4 GB residentes y 580–650 %
+de CPU; el Monitor de Actividad confirma No responde. No queda Metro de la
+sesión anterior. Tras desbloqueo manual se apaga iOS por Shut Down en Device
+Hub y se fuerza la salida de Android Studio desde Monitor de Actividad. Se
+confirma por procesos que Studio y el emulador terminaron; swap pasa de unos
+6,6 a 4,8 GB tras ese cierre, sin limpiar cachés ni eliminar datos.
+
+Se relanzan API, PostgreSQL, Mailpit y Metro sin observabilidad. Android Studio
+abre Welcome y consume unos 400 MB; se arranca Pixel desde Virtual Device
+Manager, pero no se obtiene su pantalla controlable hasta abrir el proyecto y
+reiniciar el dispositivo desde Running Devices. Los puertos 8080/8082 se
+restablecen. Power Save Mode muestra explícitamente On; la pausa de indexación
+se intenta, pero el análisis C++ sigue avanzando y no queda acreditada.
+
+FastTourney abre Inicio con recientes, conserva qa_visual_player y permite
+cerrar sesión con su confirmación. El primer intento de escribir correo pierde
+caracteres; se corrige por tramos y se observa completo antes de continuar.
+No se acredita el envío de login del propietario ni la paginación Android.
+Studio vuelve a unos 2,3 GB y 650–700 % de CPU, con fallo de captura de pantalla.
+Se cierra de nuevo por Monitor de Actividad y se verifica la ausencia de sus
+procesos y del emulador. iOS queda apagado. No se atribuye este bloqueo al
+producto ni se da por resuelta la estabilidad del IDE al reiniciarlo.
+
+Web, con qa_lifecycle_682d52: Datos de acceso muestra el correo de la cuenta y
+sus acciones. Eliminar cuenta abre el diálogo que explica cierre de sesiones,
+seguimientos, delegaciones y eliminación definitiva tras 30 días; Cancelar
+cierra el diálogo y conserva Datos de acceso. Evidencia privada:
+web-account-delete-confirmation.jpg y web-account-access-after-cancel.jpg.
+No se ejecuta baja, transferencia ni purga. Cambiar contraseña abre los campos
+de contraseña actual y nueva con Guardar deshabilitado cuando están vacíos;
+Volver regresa a Datos de acceso (web-password-form-empty.jpg). No se introduce
+una credencial nueva ni se acredita cambio o reautenticación por este recorrido.
+
+Se conservan los pendientes de la matriz, incluido OAuth real diferido. Este
+corte solo añade documentación y evidencia; se comprueban formato y diff y se
+apagan servicios locales y Metro al cerrar, conservando volúmenes y fixtures.
+Power Save Mode del IDE se mantiene activo para limitar tareas del entorno.
+
+Retrospectiva: comparar memoria y CPU antes y después del cierre ayuda a
+identificar un proceso bloqueado. El arranque de Welcome no acredita el coste
+del proyecto cargado; la indexación puede reproducir la presión aunque el
+modo de ahorro esté activo. Verificar destino y cancelación mantiene separados
+los formularios revisados y las operaciones de cuenta todavía no ejecutadas.
+
+
+Al cerrar Metro aparece un aviso de expo-blur: se usa
+`dimezisBlurViewSdk31Plus` sin `blurTarget` y el módulo anuncia fallback sin
+blur. `shared/ui/confirmation-dialog.tsx` declara ese método sin target. Queda
+pendiente revisar el contrato del SDK y el fondo del diálogo en Android; no se
+interpreta este aviso como causa de la falta de memoria del IDE.

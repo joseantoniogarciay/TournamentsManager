@@ -4503,3 +4503,13 @@ observación y la documentación debe distinguir ambas cosas.
 
 Retrospectiva: mantener un inventario actual por plataforma evita que un
 pendiente histórico o una prueba de API oculten el alcance real de la revisión.
+
+### Recuperación del entorno de QA bajo presión de memoria (2026-10-05)
+
+El coste del IDE en Welcome no predice el coste del proyecto tras importar
+Gradle y analizar C++. Comprobar No responde, CPU y memoria residente permite
+atribuir el bloqueo al proceso observado; cerrar simuladores que no se usan
+reduce carga. Power Save Mode no acredita por sí solo que la indexación haya
+parado: hay que observar su estado y verificar la estabilidad tras cargar el
+proyecto. La recuperación no elimina volúmenes, fixtures ni cachés y no convierte
+un recorrido nativo incompleto en un caso aprobado.
