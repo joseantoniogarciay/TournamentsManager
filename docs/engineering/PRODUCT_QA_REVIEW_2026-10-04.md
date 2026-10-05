@@ -591,3 +591,27 @@ Retrospectiva: un título con dos líneas no garantiza que el host nativo reserv
 su ancho. El nombre largo y el texto aumentado descubren problemas diferentes;
 la corrección debe respetar la reserva de controles y el ancho del contenido,
 sin introducir tamaños fijos por nombre o idioma.
+
+## Biblioteca: huecos identificados en el cliente
+
+En iOS, Sigo muestra cinco torneos de la cuenta participante. Abrir «QA invitacion
+nativa iOS» mantiene la espera del creador y el inicio deshabilitado; su menú
+contiene únicamente Compartir. La búsqueda de código confirma que las operaciones
+generadas de seguir/dejar de seguir no tienen un adaptador ni controles de
+feature. La API ya probada y el seguimiento automático al inscribirse no acreditan
+esas acciones manuales en pantalla. Quedan como funcionalidad cliente pendiente,
+no como una casuística visual aprobada.
+
+`listRelatedTournaments` y `getTournamentRelationship` solicitan una sola página
+con límite 50 e ignoran `nextCursor`. ADR-0058 exige solicitar páginas posteriores.
+Por inspección, un torneo administrado fuera de la primera página no se encuentra
+al resolver la relación, además de quedar fuera de la biblioteca. Se trata de una
+limitación comprobada en código; la reproducción visual con más de 50 relaciones
+queda pendiente. Una lectura real devuelve 31 torneos administrados del propietario
+y nueve del participante, sin cursor posterior: esos fixtures no reproducen
+todavía el umbral. No se interpreta la ausencia de acciones de ese caso como
+una regla de autorización del backend.
+
+Retrospectiva: registrar un endpoint como probado no implica que esté conectado
+al producto. Separar una acción inexistente, un límite estático y una reproducción
+visual evita inflar la cobertura de la matriz.
