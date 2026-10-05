@@ -496,3 +496,65 @@ Retrospectiva: para acreditar un rol hay que comprobar una mutación permitida,
 su persistencia y la ausencia de acciones exclusivas; mostrar Administro no basta.
 La lectura de clasificación y equipos complementa esa evidencia sin ampliar
 permisos ni alterar los demás partidos.
+
+## Reanudación del 5 de octubre: apariencia Android
+
+Se relanzaron API, PostgreSQL y Mailpit locales, sin observabilidad. Metro y el
+servidor auxiliar seguían activos. El Pixel restaurado no respondía a toques;
+al reiniciar aparecieron ANR de Pixel Launcher y UI del sistema antes de abrir
+Fast Tourney. Se pausó el análisis del IDE y se apagó temporalmente iOS; después
+se recuperó la navegación Android. Es evidencia de una limitación del entorno,
+no una causa demostrada ni un defecto atribuido al producto.
+
+Se cambió la preferencia del producto de Sistema a Oscuro. Ajustes, Cuenta,
+Inicio y Crear torneo mostraron fondos y textos del tema; la barra de estado
+usó iconos claros. El diálogo de logout mantuvo título, explicación, confirmar
+y cancelar legibles; Cancelar conservó la sesión. El envío vacío de Crear torneo
+mostró ambos mensajes obligatorios junto a sus campos, sin ocultar la acción
+ni desalinear el cierre respecto a la tarjeta. Se restauró Sistema y se confirmó
+el retorno a claro con iconos oscuros.
+
+Capturas privadas: `android-dark-settings.jpg`, `android-dark-session-dialog.jpg`,
+`android-dark-create.jpg` y `android-dark-create-required.jpg`. No acreditan
+contraste WCAG medido, todas las pantallas oscuras, tipografía aumentada ni la
+paridad iOS.
+
+Retrospectiva: recuperar una sesión de emulador no garantiza que su sistema
+responda. Verificar primero el launcher y separar las pruebas por SO permite
+registrar evidencia sin confundir un ANR del entorno con navegación de la app.
+
+## Apariencia y texto aumentado iOS — 5 de octubre
+
+Con solo iOS activo, el arranque de Fast Tourney Local recuperó la sesión del
+participante. Se seleccionó Oscuro desde Ajustes: tarjetas, texto y cierre
+adoptaron el tema y la barra de estado mostró iconos claros. Inicio mantuvo las
+tarjetas recientes legibles. El diálogo de logout mostró sus dos acciones y
+Cancelar conservó la sesión. Enviar Crear torneo vacío mostró los dos errores
+obligatorios completos junto a sus campos, con la acción visible. Se restauró
+Sistema antes de continuar, recuperando el tema claro.
+
+Se aumentó Text Size del simulador de 3 a 7. Cuenta mantuvo sus acciones; el
+header nativo agrupó sus controles en More. En Crear torneo, las ocho opciones
+de deporte se redistribuyeron sin recortar sus etiquetas. El desplazamiento
+permitió alcanzar el campo de equipo y Crear torneo; enviar sin nombre de torneo
+mostró su error, legible al volver mediante desplazamiento. El campo de equipo
+contenía el nombre sugerido existente; no se creó un torneo. Se restauró Text
+Size a 3 y se verificó el valor del simulador.
+
+Capturas privadas: `ios-dark-settings.jpg`, `ios-dark-session-dialog.jpg`,
+`ios-dark-create-required.jpg` y `ios-large-text-create-error.jpg`. Esta pasada
+no acredita contraste WCAG medido, todos los tamaños de accesibilidad, lector
+de pantalla, teclado con texto aumentado ni todas las pantallas del producto.
+
+Se repitió el corte de la API local desde Inicio. Abrir un torneo mostró en el
+árbol nativo «No hemos podido conectarnos. Revisa tu conexión e inténtalo de
+nuevo.» y Reintentar. El Mac se bloqueó antes de capturar la pantalla o repetir
+la recuperación; esa repetición queda pendiente, sin invalidar la evidencia de
+recuperación ya registrada en la matriz. Se apagaron API, PostgreSQL, Mailpit,
+Metro y el servidor auxiliar conservando los datos. El análisis de Android
+Studio había quedado pausado y no pudo restaurarse por UI con el Mac bloqueado.
+
+Retrospectiva: aumentar el texto cambia tanto el flujo del contenido como los
+controles nativos del header. Comprobar que las acciones y los errores siguen
+siendo alcanzables aporta evidencia más útil que una captura inicial aislada;
+no sustituye una revisión completa de accesibilidad.
