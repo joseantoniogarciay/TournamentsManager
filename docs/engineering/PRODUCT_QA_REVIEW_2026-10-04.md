@@ -1034,3 +1034,18 @@ Los aspectos nativos pendientes no se acreditan con esta exportación.
 
 El intento de reanudar iOS encuentra el Mac bloqueado según el control nativo;
 se solicita desbloqueo manual, sin sustituir la interacción por comandos de UI.
+
+
+Cierre de sesión: se detiene el proxy, se restaura la publicación original de
+API en 8080 y se apagan API, PostgreSQL y Mailpit. Metro queda detenido. Compose
+no devuelve servicios locales en ejecución y no quedan listeners en 8080,
+8082 ni 8084. Se conservan volúmenes, fixtures, capturas y formulario de
+restablecimiento; al reanudar habrá que arrancar el entorno y comprobar si su
+enlace sigue vigente. No se toca producción ni observabilidad.
+
+Al vaciar la salida acumulada de Metro aparece también un aviso de animación
+nativa por ausencia de RCTAnimation. La salida contiene logs de la sesión y no
+identifica por sí sola una pantalla o un arranque actual; no se atribuye a esta
+corrección web. Antes de validar animaciones iOS hay que verificar el binario y
+sus módulos, y recompilar si se reproduce la ausencia, según la checklist de
+cliente. El bloqueo del Mac impide esa comprobación en este cierre.
