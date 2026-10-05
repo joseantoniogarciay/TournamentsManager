@@ -435,6 +435,8 @@
   "tournaments_administered": "Administro",
   "tournaments_administered_empty": "Todavía no administras ningún torneo.",
   "tournaments_followed": "Sigo",
+  "tournament_follow": "Seguir torneo",
+  "tournament_unfollow": "Dejar de seguir",
   "tournaments_load_more": "Cargar más",
   "tournaments_loaded_count": "{count}{more}",
   "tournaments_followed_empty": "Todavía no sigues ningún torneo.",

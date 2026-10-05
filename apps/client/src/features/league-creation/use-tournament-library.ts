@@ -8,6 +8,7 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getTranslator, type TranslationKey } from "@/shared/i18n/locale";
 import { useSession } from "@/shared/session/session-provider";
 import { listRelatedTournaments } from "./api";
+import { getTournamentLibraryRevision } from "./tournament-library-revision";
 
 export type TournamentRelationship = "administered" | "followed";
 
@@ -25,6 +26,7 @@ export function useTournamentLibrary() {
   const [selectedRelationship, setSelectedRelationship] =
     useState<TournamentRelationship>("administered");
   const loadedAccountID = useRef<string | null>(null);
+  const loadedRevision = useRef(-1);
   const generation = useRef(0);
   const refreshInFlight = useRef(false);
   const appendInFlight = useRef(false);
@@ -118,10 +120,13 @@ export function useTournamentLibrary() {
         setHasLoadedTournaments(false);
         return;
       }
-      if (loadedAccountID.current === user.id) return;
+      const currentRevision = getTournamentLibraryRevision();
+      const sameAccount = loadedAccountID.current === user.id;
+      if (sameAccount && loadedRevision.current === currentRevision) return;
       loadedAccountID.current = user.id;
-      setHasLoadedTournaments(false);
-      void loadTournaments();
+      loadedRevision.current = currentRevision;
+      if (!sameAccount) setHasLoadedTournaments(false);
+      void loadTournaments(sameAccount);
     }, [loadTournaments, user]),
   );
 

@@ -4477,3 +4477,18 @@ no conoce el total. Un error de append conserva el cursor; una generación de
 peticiones evita que respuestas anteriores a refresh, logout o desmontaje
 sobrescriban la vista. Consultar una relación en una colección paginada requiere
 buscar hasta hallarla o agotar la colección; la primera página no demuestra ausencia.
+
+
+### Seguimiento y proyecciones locales (2026-10-05)
+
+Confirmar PUT/DELETE de seguimiento no basta si la tab conserva la biblioteca
+cargada. Una revisión local, sin datos de cuenta ni persistencia, permite releer
+la proyección al recuperar foco. La invalidación pertenece al éxito de la
+mutación, incluso cuando su pantalla se desmontó; la actualización visual sí
+se descarta por generación tras cambiar cuenta, ruta o desmontar. El rol sigue
+siendo dato del servidor: seguir no concede administración ni altera equipos.
+
+Retrospectiva: comprobar la etiqueta del botón y el contador al regresar detecta
+fallos que una prueba aislada del adaptador no ve. La lentitud del launcher y
+un ANR de System UI deben registrarse como evidencia del entorno, sin atribuirlos
+a una feature que todavía no se ha podido recorrer.

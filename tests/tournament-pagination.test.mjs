@@ -115,7 +115,7 @@ test("cursor regressions and HTTP failures never become absent permissions", asy
 });
 
 // A small React hook harness lets requests resolve in deliberately different orders.
-function harness(respond) {
+function harness(respond, getRevision = () => 0) {
   const slots = [];
   let index = 0;
   let user = { id: "owner" };
@@ -163,6 +163,7 @@ function harness(respond) {
     "@/shared/i18n/locale": { getTranslator: () => (key) => key },
     "@/shared/session/session-provider": { useSession: () => ({ user }) },
     "./api": { listRelatedTournaments: respond },
+    "./tournament-library-revision": { getTournamentLibraryRevision: getRevision },
   });
   return {
     feedback,
@@ -287,4 +288,46 @@ test("initial load failure exposes safe retry state without an empty library or 
   state = h.render();
   assert.equal(state.loadError, null);
   assert.equal(state.hasLoadedTournaments, true);
+});
+
+test("confirmed follow invalidation refreshes the library while preserving its selected segment", async () => {
+  let revision = 0;
+  let followed = [];
+  let calls = 0;
+  const h = harness(
+    async (relationship) => {
+      calls++;
+      return { items: relationship === "followed" ? followed : [item(10)] };
+    },
+    () => revision,
+  );
+  h.render();
+  await settle();
+  h.render().setSelectedRelationship("followed");
+  h.render();
+  assert.equal(calls, 2);
+  followed = [item(9, "follower")];
+  revision++;
+  h.render();
+  await settle();
+  const state = h.render();
+  assert.equal(calls, 4);
+  assert.equal(state.selectedRelationship, "followed");
+  assert.equal(state.followed.items.length, 1);
+});
+
+test("follower lookup traverses the followed collection beyond its first page", async () => {
+  const api = apiFor(async (params) => {
+    assert.equal(params.relationship, "followed");
+    return {
+      status: 200,
+      data: params.cursor
+        ? { items: [item(50, "follower")] }
+        : {
+            items: first.items.map((value) => ({ ...value, relationship: "follower" })),
+            nextCursor: first.nextCursor,
+          },
+    };
+  });
+  assert.equal(await api.getTournamentRelationship(id(50), "followed"), "follower");
 });

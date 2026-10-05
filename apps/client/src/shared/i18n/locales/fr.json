@@ -435,6 +435,8 @@
   "tournaments_administered": "Je gère",
   "tournaments_administered_empty": "Vous ne gérez encore aucun tournoi.",
   "tournaments_followed": "Je suis",
+  "tournament_follow": "Suivre le tournoi",
+  "tournament_unfollow": "Ne plus suivre",
   "tournaments_load_more": "Charger plus",
   "tournaments_loaded_count": "{count}{more}",
   "tournaments_followed_empty": "Vous ne suivez encore aucun tournoi.",

@@ -372,3 +372,13 @@ solo muestra un número definitivo al agotar la colección. La carga parcial viv
 en el botón y conserva las cards existentes. Los fallos iniciales usan
 RequestErrorCard; los parciales, el feedback seguro compartido con reintento
 sin perder datos. Actualizar conserva el segmento y reinicia la paginación.
+
+
+### Seguimiento manual (2026-10-05)
+
+La ficha reutiliza el menú ModalDialog y Button secundario para Seguir torneo o
+Dejar de seguir. El control aparece solo tras resolver la relación de una cuenta
+con sesión, sin rol de creador ni delegado. La carga vive en el botón y bloquea
+pulsaciones repetidas. El texto cambia al confirmar la operación; no se añade
+banner de éxito. Una mutación confirmada invalida la biblioteca para releer las
+colecciones al volver, conservando el segmento cuando la tab sigue montada.

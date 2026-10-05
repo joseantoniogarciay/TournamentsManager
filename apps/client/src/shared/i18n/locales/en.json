@@ -435,6 +435,8 @@
   "tournaments_administered": "I manage",
   "tournaments_administered_empty": "You are not managing any tournaments yet.",
   "tournaments_followed": "I follow",
+  "tournament_follow": "Follow tournament",
+  "tournament_unfollow": "Unfollow tournament",
   "tournaments_load_more": "Load more",
   "tournaments_loaded_count": "{count}{more}",
   "tournaments_followed_empty": "You are not following any tournaments yet.",

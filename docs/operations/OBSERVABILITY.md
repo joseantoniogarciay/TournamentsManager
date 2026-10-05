@@ -450,3 +450,14 @@ esa evidencia procede de inyección de dependencias y de la suite de observabili
 Aprendizaje: revisar únicamente el primer envío ocultaba un 500 al repetirlo.
 Probar transiciones consecutivas y simultáneas descubre orden de CTE y relojes
 de transacción que una prueba aislada de éxito no ejercita.
+
+
+Revisión cliente de seguimiento (2026-10-05): PUT/DELETE usan sus operaciones
+generadas con authenticatedApiFetch. Se recorren 204 idempotente, validación 400,
+sesión 401, CSRF 403, PUT no visible 404, fallo PostgreSQL y cancelación; no hay
+limitador propio. PUT 404 aporta recuperación con league_unavailable; otros
+HTTP/5xx/problemas desconocidos conservan common_request_error, transporte usa
+common_network_error y sesión invalidada no duplica feedback. Se conservan
+plantilla de ruta y categorías seguras del inventario, sin spans ni atributos
+por seguimiento, inputs o IDs. Las pruebas cliente y el ciclo visual web/Android
+complementan el contrato sin exportar cuerpos ni activar observabilidad local.

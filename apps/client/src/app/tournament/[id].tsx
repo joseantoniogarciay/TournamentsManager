@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
 import { APIUnexpectedResponseError } from "@/api/fetch";
+import { useTournamentFollow } from "@/features/league-creation/use-tournament-follow";
 import type { PublicTournament } from "@/api/generated/models";
 import {
   cancelTournamentRequest,
@@ -142,6 +143,7 @@ export default function TournamentScreen() {
   const league = useTournament(id);
   const { loadTournament, putTournament, refreshTournament } = useTournamentStore();
   const [relationship, setRelationship] = useState<string | null>();
+  const following = useTournamentFollow(id, relationship, setRelationship);
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
   const [leagueUnavailable, setTournamentUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -233,8 +235,10 @@ export default function TournamentScreen() {
       setRelationship(undefined);
       try {
         await (force ? refreshTournament(id) : loadTournament(id));
-        if (user) setRelationship(await getTournamentRelationship(id));
-        else setRelationship(null);
+        if (user) {
+          const administered = await getTournamentRelationship(id);
+          setRelationship(administered ?? (await getTournamentRelationship(id, "followed")));
+        } else setRelationship(null);
       } catch (error) {
         const unavailable = error instanceof TournamentUnavailableError;
         setTournamentUnavailable(unavailable);
@@ -1357,6 +1361,14 @@ export default function TournamentScreen() {
               }}
               variant="secondary"
             />
+            {following.canFollow ? (
+              <Button
+                label={t(following.isFollowed ? "tournament_unfollow" : "tournament_follow")}
+                loading={following.isSaving}
+                onPress={() => void following.toggleFollow()}
+                variant="secondary"
+              />
+            ) : null}
             {isOrganizer ? (
               <>
                 <Button

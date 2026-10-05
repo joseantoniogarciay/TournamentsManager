@@ -13,6 +13,8 @@ import {
   createTournamentTeamInvitation,
   createTournament,
   getPublicTournament,
+  followTournament,
+  unfollowTournament,
   listTournamentAdministrators,
   listCurrentAccountTournaments,
   listRecentAccountTournaments,
@@ -258,10 +260,13 @@ export async function getTournament(leagueID: string) {
   if (status === 404) throw new TournamentUnavailableError();
   throw new APIUnexpectedResponseError(status);
 }
-export async function getTournamentRelationship(leagueID: string) {
+export async function getTournamentRelationship(
+  leagueID: string,
+  relationship: "administered" | "followed" = "administered",
+) {
   let cursor: string | undefined;
   do {
-    const page = await listRelatedTournaments("administered", cursor);
+    const page = await listRelatedTournaments(relationship, cursor);
     const match = page.items.find((league) => league.id === leagueID);
     if (match) return match.relationship;
     cursor = page.nextCursor;
@@ -290,4 +295,14 @@ export async function listRecentRelatedTournaments() {
   const leagues = parseRecentAccountTournaments(response.data);
   if (!leagues) throw new APIUnexpectedResponseError(response.status);
   return leagues;
+}
+
+export async function followTournamentRequest(id: string) {
+  const response = await followTournament(id, undefined, authenticatedApiFetch);
+  if (response.status === 404) throw new TournamentUnavailableError();
+  if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
+}
+export async function unfollowTournamentRequest(id: string) {
+  const response = await unfollowTournament(id, undefined, authenticatedApiFetch);
+  if (response.status !== 204) throw new APIUnexpectedResponseError(response.status);
 }

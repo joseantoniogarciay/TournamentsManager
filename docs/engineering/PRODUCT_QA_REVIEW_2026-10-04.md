@@ -672,3 +672,54 @@ ni la paginación Android. Al intentar revisar el arranque en frío el Mac se
 bloqueó. Este caso sigue pendiente: no se atribuye el retraso a la paginación ni
 se presenta Android como aprobado. Se cierran los servicios locales conservando
 volúmenes, fixtures, base aislada y evidencia.
+
+
+## Continuación — seguimiento manual (2026-10-05)
+
+Se completa el control cliente de ADR-0034, reutilizando el menú del torneo y
+las operaciones PUT/DELETE de seguimiento ya existentes. Solo se ofrece con
+sesión y relación resuelta sin administración; no modifica equipos, inscripción
+ni permisos. La consulta de seguidores también recorre toda la paginación.
+La biblioteca se invalida al confirmar una mutación y se actualiza al volver.
+
+Web: la cuenta ficticia participante deja de seguir QA invitacion nativa iOS;
+Sigo pasa de cinco a cuatro y desaparece su card. Desde la ficha pública lo
+sigue de nuevo y Sigo vuelve a cinco con la card restaurada. Evidencia privada:
+web-unfollow-library.jpg y web-follow-library.jpg. Android: el menú de QA
+invitacion nativa Android cambia de Dejar de seguir a Seguir torneo tras DELETE,
+y vuelve a Dejar de seguir tras PUT; android-unfollow-menu.jpg y
+android-follow-menu.jpg. El ciclo conserva la participación existente.
+
+La continuación del Pixel reprodujo UI del sistema no responde en el launcher
+tras arranque en frío (android-system-anr.jpg); cerrar System UI permitió abrir
+la app. Se restablecieron los puertos. Android Studio también mostró Low memory
+mientras indexaba C++. Se intentó pausar la indexación, pero no se acreditó el
+cambio. La comprobación visual iOS del seguimiento y la paginación Android de
+52 torneos siguen pendientes; el arranque iOS llegó a abrir Fast Tourney, sin
+acreditar aún el recorrido. No se presentan como aprobados.
+
+Checklist cliente: adaptadores generados con authenticatedApiFetch; lógica en
+hook de feature; ModalDialog y Button compartidos; copy en es/en/it/fr; controles
+sin envíos duplicados; feedback seguro y ausencia de banner de éxito redundante.
+67 pruebas Node, pnpm run check y exportación web pasan. Se cubren respuestas
+204, 404 de PUT, rechazos HTTP y transporte, bloqueo de doble envío, respuestas
+tardías tras logout/ruta/desmontaje y recarga de biblioteca por invalidación.
+
+Revisión de salidas PUT/DELETE: éxito idempotente, UUID inválido 400, sesión 401,
+CSRF 403, PUT no visible 404, PostgreSQL 5xx y cancelación; no hay rate limit
+propio. PUT 404 usa el mensaje localizado de torneo no disponible; los estados
+restantes no tratados y problemas desconocidos usan fallback seguro, transporte
+usa common_network_error y sesión invalidada no duplica feedback. No se activa
+observabilidad. La matriz general sigue en curso, con OAuth real diferido por
+el usuario y los demás recorridos pendientes expresados en su inventario.
+
+Retrospectiva: una proyección en caché necesita invalidación tras la mutación.
+El contador y la presencia de la card al volver son la evidencia del resultado;
+el cambio de etiqueta por sí solo no acredita esa actualización.
+
+
+Al cerrar este corte, las capturas y acciones de coordenadas sobre simuladores
+empezaron a devolver ausencia de ventana incluso tras recuperar sus bindings;
+las lecturas AX seguían disponibles y Back del Pixel sí se procesaba. No se
+supone un bloqueo de pantalla sin evidencia. Se conserva el pendiente nativo
+y se apagan API, PostgreSQL, Mailpit y Metro sin eliminar volúmenes.
