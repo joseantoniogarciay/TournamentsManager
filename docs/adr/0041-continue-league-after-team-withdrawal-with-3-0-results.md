@@ -98,6 +98,9 @@ generar partidos ni aplicar esta regla.
 - Todos y solo los partidos del retirado pasan a `3-0` para el rival.
 - Los cambios conservan actor, instante y valores previos.
 - La liga continúa y los demás partidos no se modifican.
+- Una corrección posterior no puede sobrescribir el resultado administrativo
+  ni los partidos de un equipo retirado, incluso si una versión anterior perdió
+  la marca administrativa; el rechazo conserva marcador e historial.
 
 ## Disparadores de revisión
 

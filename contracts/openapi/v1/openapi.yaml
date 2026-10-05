@@ -1015,6 +1015,7 @@ paths:
         posterior.
         El resultado se aplica inmediatamente; una corrección conserva su
         historial interno de valores y autora.
+        Los resultados administrativos por baja de un equipo no admiten correcciones.
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       parameters:
         - name: tournamentId
@@ -1043,7 +1044,8 @@ paths:
         "409":
           description: >-
             El torneo no está en curso, faltan participantes o un partido
-            posterior ya consumió el resultado.
+            posterior ya consumió el resultado, o el resultado es administrativo
+            por baja de un equipo.
   /tournaments/{tournamentId}/administrators:
     get:
       tags: [Tournaments]

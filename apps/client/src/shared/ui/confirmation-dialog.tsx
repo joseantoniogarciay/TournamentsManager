@@ -197,7 +197,7 @@ export function ModalDialog({
           />
         ) : (
           <BlurView
-            blurMethod="dimezisBlurViewSdk31Plus"
+            blurMethod="none"
             intensity={45}
             pointerEvents="none"
             style={styles.scrim}

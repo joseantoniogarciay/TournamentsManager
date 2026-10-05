@@ -644,6 +644,13 @@ export default function TournamentScreen() {
     }
   })();
   const teamsByID = new Map(league.teams.map((team) => [team.id, team.name]));
+  const withdrawnTeamIDs = new Set(
+    league.teams.filter((team) => team.withdrawn).map((team) => team.id),
+  );
+  const hasFixedWithdrawalResult = (match: PublicTournament["matches"][number]) =>
+    match.resultType === "administrative" ||
+    withdrawnTeamIDs.has(match.homeTeamId) ||
+    withdrawnTeamIDs.has(match.awayTeamId);
   const editingMatch = league.matches.find((match) => match.id === editingMatchID);
   const editingScore = editingMatch
     ? (scores[editingMatch.id] ?? editableScoreFromMatch(editingMatch, league.bestOfSets ?? 3))
@@ -685,7 +692,7 @@ export default function TournamentScreen() {
   const hasRacketScoreInput = editingScore?.sets.some((set) => set.home !== "" || set.away !== "");
   const openResultEditor = (matchID: string) => {
     const match = league.matches.find((item) => item.id === matchID);
-    if (!match) return;
+    if (!match || hasFixedWithdrawalResult(match)) return;
     setScores((value) => ({
       ...value,
       [matchID]: editableScoreFromMatch(match, league.bestOfSets ?? 3),
@@ -1275,7 +1282,7 @@ export default function TournamentScreen() {
                       ) : null}
                       <IncidentSummary match={match} teams={teamsByID} showAdministrativeScore />
                       {canManageResults &&
-                      !(league.sport === "volleyball" && match.resultType === "administrative") &&
+                      !hasFixedWithdrawalResult(match) &&
                       league.state === "in_progress" &&
                       league.stages.find((stage) => stage.id === match.stageId)?.state ===
                         "in_progress" ? (

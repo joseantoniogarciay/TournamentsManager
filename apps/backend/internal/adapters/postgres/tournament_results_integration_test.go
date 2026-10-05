@@ -54,12 +54,39 @@ func TestIntegrationWithdrawTournamentTeamAppliesUniformResultsAndKeepsHistory(t
 	if !updated.Teams[0].Withdrawn {
 		t.Fatalf("equipo retirado = %#v, se esperaba marcado", updated.Teams[0])
 	}
+	if _, err := service.RecordResult(ctx, organizerID, created.ID, match.ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1}); !errors.Is(err, tournaments.ErrMatchResultConflict) {
+		t.Fatalf("corregir resultado administrativo = %v, se esperaba conflicto", err)
+	}
+	persisted, err := service.GetPublic(ctx, created.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, saved := range persisted.Matches {
+		if saved.ID == match.ID && (saved.ResultType != tournaments.ResultAdministrative || saved.HomeScore == nil || saved.AwayScore == nil || (saved.HomeTeamID == withdrawn.ID && (*saved.HomeScore != 0 || *saved.AwayScore != 3)) || (saved.AwayTeamID == withdrawn.ID && (*saved.HomeScore != 3 || *saved.AwayScore != 0))) {
+			t.Fatalf("resultado administrativo alterado = %#v", saved)
+		}
+	}
 	var historyCount, playedCount, administrativeCount int
 	if err := pool.QueryRow(ctx, `SELECT count(*), count(*) FILTER (WHERE result_type = 'played'), count(*) FILTER (WHERE result_type = 'administrative') FROM match_result_changes WHERE match_id = $1`, match.ID).Scan(&historyCount, &playedCount, &administrativeCount); err != nil || historyCount != 2 || playedCount != 1 || administrativeCount != 1 {
 		t.Fatalf("historial del resultado sustituido = total %d, jugado %d, administrativo %d, %v", historyCount, playedCount, administrativeCount, err)
 	}
 	if _, err := service.WithdrawTeam(ctx, organizerID, created.ID, withdrawn.ID); !errors.Is(err, tournaments.ErrTournamentWithdrawalConflict) {
 		t.Fatalf("segunda baja = %v, se esperaba conflicto", err)
+	}
+	// Older versions could overwrite administrative metadata; a withdrawn team
+	// must still protect the match even when that marker has already been lost.
+	if _, err := pool.Exec(ctx, `UPDATE matches SET result_type='played' WHERE id=$1`, match.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.RecordResult(ctx, organizerID, created.ID, match.ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1}); !errors.Is(err, tournaments.ErrMatchResultConflict) {
+		t.Fatalf("corregir partido de retirado sin marcador administrativo = %v", err)
+	}
+	other, found := leagueMatchBetweenTeams(started.Matches, started.Teams[1].ID, started.Teams[2].ID)
+	if !found {
+		t.Fatal("faltaba partido entre equipos activos")
+	}
+	if _, err := service.RecordResult(ctx, organizerID, created.ID, other.ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1}); err != nil {
+		t.Fatalf("registrar partido entre equipos activos = %v", err)
 	}
 }
 

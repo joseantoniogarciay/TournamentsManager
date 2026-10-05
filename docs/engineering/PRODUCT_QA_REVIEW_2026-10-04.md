@@ -49,7 +49,7 @@ a cobertura de líneas ni al número de casuísticas del producto.
 | Liga y mixto                                         | Grupos, dos vueltas, composición impar, retirada de clasificado, desempate repetido, congelación y concurrencia | Una vuelta y mixto tabla única; empate de corte con liguilla de desempate resuelto                                                                     | Clasificación fútbol parcial en ambos; mixto y desempates en pantalla pendientes                                                                                                                                                                                                                                                                |
 | Eliminatoria                                         | Bracket, byes, correcciones, desempate fútbol/balonmano, todos los deportes                                     | Cuadro de cuatro participantes en ocho deportes                                                                                                        | Bádminton semifinal/final en ambos; ocho finales web, corrección fútbol iOS; byes visuales pendientes                                                                                                                                                                                                                                           |
 | Resultados e incidencias                             | Marcadores, sets, límites, formas exclusivas, historia                                                          | Resultado inválido 400, no comparecencia, abandono con parcial, corrección jugada y permisos 403                                                       | Ocho deportes web; fútbol editado por delegado en ambos SO; no comparecencia y abandono parcial guardados Android; combinaciones restantes pendientes                                                                                                                                                                                           |
-| Retirada, cancelación y finalización                 | Dominio, HTTP y persistencia; co-campeones y concurrencia                                                       | Retirada, repetición 409, cancelación conserva lectura pública, edición/completar cancelado 409, finalización anticipada 409                           | Creación web hasta campeón; bádminton finalizado y fútbol cancelado en ambos; retirada en ficha de equipo pendiente                                                                                                                                                                                                                             |
+| Retirada, cancelación y finalización                 | Dominio, HTTP y persistencia; co-campeones y concurrencia                                                       | Retirada, repetición 409, cancelación conserva lectura pública, edición/completar cancelado 409, finalización anticipada 409                           | Creación web hasta campeón; bádminton finalizado y fútbol cancelado en ambos; retirada web, cancelación y persistencia comprobadas; móvil pendiente                                                                                                                                                                                                                             |
 | Notificaciones y sugerencias                         | HTTP y persistencia                                                                                             | Lista, marcar todas leídas, contador 0, sugerencia 201, corta 400                                                                                      | Notificación web y destino comprobados; confirmación de borrar cancelada. Sugerencia: corto/corrección/éxito web y Android, límite con borrador conservado iOS; vacío comprobado en web; lista extensa, vacío móvil y borrar pendientes                                                                                                         |
 | Cuenta: transferencia, baja y purga                  | Transferencia, ticket, baja/purga y anonimización                                                               | Baja del creador con torneos rechazada 409                                                                                                             | Datos de acceso, formulario vacío de contraseña y cancelación de baja comprobados en web; transferencia, baja efectiva y móvil pendientes                                                                                                                                                                                                       |
 | Errores de transporte y fallback                     | Suite cliente/HTTP; nuevo reset 500 seguro                                                                      | Rechazos de negocio reales                                                                                                                             | Corte real de API, mensaje seguro y reintento exitoso en web/iOS/Android; 5xx, timeout y cancelación de navegación visual pendientes                                                                                                                                                                                                            |
@@ -818,3 +818,93 @@ Al cerrar Metro aparece un aviso de expo-blur: se usa
 blur. `shared/ui/confirmation-dialog.tsx` declara ese método sin target. Queda
 pendiente revisar el contrato del SDK y el fondo del diálogo en Android; no se
 interpreta este aviso como causa de la falta de memoria del IDE.
+
+
+## Continuación — grupos, pases directos y resultados de baja (2026-10-05)
+
+Se reanudan únicamente API, PostgreSQL, Mailpit y Metro locales; no se activa
+observabilidad ni se arrancan simuladores mientras sigue pendiente resolver la
+presión de memoria del IDE. Web inicia sesión con el propietario ficticio.
+Se preparan por API dos torneos nuevos (cinco y ocho equipos): esta preparación
+no acredita creación por interfaz y eleva la colección del propietario de 52 a
+54; la prueba histórica de paginación con 52 conserva su alcance original.
+
+Por interfaz web se selecciona e inicia la eliminatoria de cinco equipos. El
+cuadro presenta un partido de cuartos y tres pases directos, sin acción de
+resultado en esos pases, y conserva enlaces a semifinales y final. Evidencia:
+web-byes-bracket.jpg. No acredita todavía el recorrido hasta campeón ni móvil.
+
+El torneo mixto de ocho equipos se configura en Grupos: cuatro grupos y dos
+clasificados muestran que faltan equipos y deshabilitan Iniciar torneo. Cambiar
+a dos grupos permite iniciar; se observan doce partidos repartidos en dos
+grupos y tres jornadas. Clasificación permite alternar entre ambos grupos,
+cada uno con sus cuatro equipos correctos y valores iniciales cero. Evidencia:
+web-group-standings.jpg. La transición a eliminatorias y los desempates por
+el corte siguen pendientes de validación visual en este fixture.
+
+En la liga ficticia original, Retirar Peñas del Mediterráneo abre confirmación;
+Cancelar conserva el equipo. Aceptar mantiene el equipo como Retirado y cambia
+ambos partidos al 3–0 para sus rivales. Recargar conserva la baja. Se reproduce
+un defecto: Editar resultado seguía disponible y guardar 2–0 sobrescribía el
+resultado administrativo, incumpliendo ADR-0041. Antes de reiniciar el backend
+se restaura el 3–0 por API, conservando historial; esa corrección pierde la
+marca administrativa en la versión anterior, por lo que también sirve como
+fixture de compatibilidad con datos afectados por el defecto.
+
+La protección existente de voleibol se extiende a todos los resultados
+administrativos y, además, a partidos con un participante retirado aunque una
+versión anterior haya perdido esa marca. La transacción ya serializa cambios
+sobre el torneo. La interfaz oculta la edición y protege la apertura del editor;
+el backend conserva la autoridad y rechaza la escritura con 409. OpenAPI
+explicita este caso sin crear un estado nuevo. Tras reiniciar API, un intento
+HTTP real de guardar 2–0 recibe 409 y la lectura conserva 3–0. Web muestra ambos
+3–0 sin edición, mientras el partido de los dos equipos activos conserva Añadir
+resultado (web-withdrawal-fixed.jpg). No se reparan automáticamente datos
+históricos: fuera de este fixture requerirían una revisión específica.
+
+La regresión PostgreSQL aislada verifica rechazo, marcador e historial intactos,
+compatibilidad sin marca administrativa y edición de equipos activos. El test
+de incidencias comprueba la protección tras baja para todos sus deportes.
+Dominio y HTTP pasan; 67 tests Node pasan; check de cliente pasa. La exportación
+web se completa con 36 rutas. Se actualiza el comentario generado desde OpenAPI.
+El cierre de servicios se comprueba al terminar esta fase.
+
+El aviso de expo-blur se debe a que el SDK instalado requiere blurTarget para
+los métodos Android de Dimezis, pero el Modal compartido no lo declara. El
+módulo ya deshabilitaba el blur y usaba su tinte de respaldo. Se declara
+blurMethod="none" explícitamente, conservando esa atenuación y el blur nativo
+iOS (el método es una propiedad Android). No se añade un target que atraviese
+ventanas nativas ni se presenta como restauración del blur Android. La
+comparación visual nativa sigue pendiente; se documenta esta limitación en el
+diseño compartido.
+
+Retrospectiva: una baja no termina al ver Retirado. Hay que intentar corregir
+sus partidos, verificar igualdad de trato entre rivales y comprobar que la
+protección sigue funcionando con datos previamente afectados. Separar la
+preparación de fixtures de acciones de interfaz evita exagerar la cobertura.
+
+
+Revisión del endpoint de resultado: éxito 200 conserva edición e historial en
+partidos de equipos activos; entrada inválida 400 usa validation.rejected;
+sesión inválida 401, autorización 403, ausencia 404 y conflicto 409 mantienen
+sus contratos. No hay límite de tasa específico en esta operación. El rechazo
+de baja usa tournament.result_conflict en el span HTTP raíz con plantilla de
+ruta; no incorpora atributos por deporte, partido, equipo o resultado ni spans
+por la subconsulta. Fallos de adquisición/transacción, lectura, escritura,
+historial, actualización y commit, timeout y cancelación conservan las
+categorías técnicas existentes y la respuesta segura; no cambia la frontera
+instrumentada. El adaptador cliente sigue usando recordMatchResult generado y
+authenticatedApiFetch, con recuperación localizada para 409, mensaje común de
+red para rechazo de transporte y fallback seguro para 5xx, cuerpo inválido o
+estado no tratado. Cancelaciones intencionadas no muestran feedback.
+
+
+Cierre de fase: check del cliente (formato, lint, TypeScript y OpenAPI),
+exportación web, 67 tests Node, regresiones aisladas de bajas/incidencias,
+tests de dominio y HTTP, golangci-lint (0 incidencias) y goimports pasan.
+OpenAPI genera únicamente la actualización esperada del comentario de la
+operación. Checklist cliente: primitivas y tokens compartidos, sin textos
+nuevos, navegación intacta, host de diálogo en cada Screen, adaptador generado
+y feedback seguro; blur real Android y los recorridos móviles siguen pendientes.
+Metro se detiene; Compose confirma que API, PostgreSQL y Mailpit están apagados
+y no quedan servicios locales en ejecución, sin eliminar volúmenes ni evidencia.

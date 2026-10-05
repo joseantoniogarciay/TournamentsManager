@@ -164,10 +164,8 @@ func TestIntegrationLeagueIncidentCorrectionAndWithdrawal(t *testing.T) {
 			if err = pool.QueryRow(ctx, `SELECT count(*) FROM match_result_changes WHERE match_id=$1 AND result_type='administrative' AND previous_incident->>'type'='retirement'`, match.ID).Scan(&count); err != nil || count != 1 {
 				t.Fatalf("withdrawal history %d %v", count, err)
 			}
-			if sport == tournaments.SportVolleyball {
-				if _, err = service.RecordResult(ctx, owner, value.ID, match.ID, input); !errors.Is(err, tournaments.ErrMatchResultConflict) {
-					t.Fatalf("withdrawn volleyball result overwritten: %v", err)
-				}
+			if _, err = service.RecordResult(ctx, owner, value.ID, match.ID, input); !errors.Is(err, tournaments.ErrMatchResultConflict) {
+				t.Fatalf("withdrawn result overwritten: %v", err)
 			}
 		})
 	}

@@ -4513,3 +4513,25 @@ reduce carga. Power Save Mode no acredita por sí solo que la indexación haya
 parado: hay que observar su estado y verificar la estabilidad tras cargar el
 proyecto. La recuperación no elimina volúmenes, fixtures ni cachés y no convierte
 un recorrido nativo incompleto en un caso aprobado.
+
+
+### Resultados administrativos y límites nativos del blur (2026-10-05)
+
+La comprobación de una baja incluye intentar editar un partido afectado. La
+regla uniforme de ADR-0041 pierde sentido si el resultado automático se puede
+sobrescribir después. El backend protege también partidos cuyo participante
+está retirado: así una marca administrativa perdida por una versión anterior
+no reabre la edición. La prueba conserva marcador e historial y demuestra que
+los partidos entre equipos activos siguen aceptando resultados. Ocultar el
+control en cliente mejora la recuperación, pero no sustituye la autorización
+transaccional. No se reparan resultados históricos sin revisarlos.
+
+En el SDK instalado, seleccionar Dimezis sin blurTarget ya produce fallback.
+Declarar explícitamente el respaldo elimina la configuración contradictoria;
+no acredita blur real en Android ni una comparación visual nueva. Integrar un
+target de una ventana detrás de un Modal nativo requiere validar esa frontera,
+sin mover el host de confirmación fuera de cada Screen por comodidad.
+
+Retrospectiva: las pruebas de comportamiento deben intentar invalidar una
+regla después de su éxito inicial; las advertencias de un SDK requieren leer
+su implementación antes de rediseñar el árbol de vistas.

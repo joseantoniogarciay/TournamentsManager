@@ -202,14 +202,15 @@ func (r AccountTournamentRepository) RecordResult(ctx context.Context, accountID
 	}
 	var previousHome, previousAway *int
 	var administrative bool
+	var withdrawnParticipant bool
 	var previousType tournaments.ResultType
 	var previousIncident *tournaments.MatchIncident
-	if err := tx.QueryRow(ctx, `SELECT home_score,away_score,COALESCE(result_type='administrative',false),COALESCE(result_type,''),incident FROM matches WHERE id=$1 AND tournament_id=$2 FOR UPDATE`, matchID, leagueID).Scan(&previousHome, &previousAway, &administrative, &previousType, &previousIncident); errors.Is(err, pgx.ErrNoRows) {
+	if err := tx.QueryRow(ctx, `SELECT home_score,away_score,COALESCE(result_type='administrative',false),COALESCE(result_type,''),incident,EXISTS(SELECT 1 FROM tournament_teams t WHERE t.tournament_id=matches.tournament_id AND t.id IN (matches.home_team_id,matches.away_team_id) AND t.withdrawn_at IS NOT NULL) FROM matches WHERE id=$1 AND tournament_id=$2 FOR UPDATE`, matchID, leagueID).Scan(&previousHome, &previousAway, &administrative, &previousType, &previousIncident, &withdrawnParticipant); errors.Is(err, pgx.ErrNoRows) {
 		return tournaments.Tournament{}, tournaments.ErrTournamentNotFound
 	} else if err != nil {
 		return tournaments.Tournament{}, err
 	}
-	if sport == tournaments.SportVolleyball && administrative {
+	if administrative || withdrawnParticipant {
 		return tournaments.Tournament{}, tournaments.ErrMatchResultConflict
 	}
 	if _, err := tx.Exec(ctx, `UPDATE matches SET state = 'completed', home_score = $3, away_score = $4, result_type=$5,incident=$6 WHERE id = $1 AND tournament_id = $2`, matchID, leagueID, input.HomeScore, input.AwayScore, tournaments.MatchResultType(input), input.Incident); err != nil {
