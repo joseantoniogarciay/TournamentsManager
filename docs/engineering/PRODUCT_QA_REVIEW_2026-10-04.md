@@ -43,7 +43,7 @@ a cobertura de líneas ni al número de casuísticas del producto.
 | Google / Apple                                       | Challenges, validación, errores seguros, atomicidad y concurrencia con dobles de prueba                         | No se acredita acceso real a proveedores                                                                                                               | Orden de botones comprobado en ambos; OAuth real aplazado por el usuario a futuras pruebas en dev/prod                       |
 | Biblioteca, recientes, seguir/dejar de seguir        | HTTP, persistencia y relaciones sin duplicar                                                                    | Paginación, seguimiento idempotente y consultas                                                                                                        | Administro/Sigo en web y ambos SO; recientes; paginación y seguir/dejar de seguir UI pendientes |
 | Administradores y exclusividad del creador           | HTTP y persistencia                                                                                             | Asignación autorizada/idempotente, delegado puede editar; listar admins, cancelar, completar y transferir rechazados 403                               | Delegado edita en iOS; menú y URL directa 403 revisados en web, búsqueda con creador; Android delegado pendiente |
-| Invitación de equipo                                 | HTTP y persistencia                                                                                             | Crear/regenerar, anterior inválida, inspección anónima, inscripción 201, duplicado 409, sin sesión 401, revocación idempotente, después de empezar 409 | Web anónimo → login conserva nombre e inscribe; conflicto del ya inscrito. iOS: entrada corregida, login conserva nombre, inscripción confirmada, duplicado recuperable y segundo enlace con app abierta; Android: entrada con sesión, nombre obligatorio/corrección e inscripción confirmada por API; captura del destino pendiente |
+| Invitación de equipo                                 | HTTP y persistencia                                                                                             | Crear/regenerar, anterior inválida, inspección anónima, inscripción 201, duplicado 409, sin sesión 401, revocación idempotente, después de empezar 409 | Web anónimo → login conserva nombre e inscribe; conflicto del ya inscrito. iOS: entrada corregida, login conserva nombre, inscripción confirmada, duplicado recuperable y segundo enlace con app abierta; Android: entrada con/sin sesión, nombre obligatorio/corrección, login conserva nombre e inscripción con destino y equipos comprobados |
 | Composición de equipos                               | HTTP, persistencia                                                                                              | Último equipo 409, añadir, duplicado normalizado 409, eliminar antes de empezar                                                                        | Creación web, primer equipo, duplicado y segundo válido; nombres largos en ambos; bajas UI pendientes |
 | Ocho deportes × tres formatos                        | Dominio, HTTP y persistencia                                                                                    | 16 combinaciones admitidas terminadas con campeón; 8 rechazadas 400 según contrato                                                                     | Ocho formularios guardados en web; formatos largos y desempates. Nativo parcial: fútbol, bádminton, tenis de mesa y voleibol; no acredita todos los formatos |
 | Liga y mixto                                         | Grupos, dos vueltas, composición impar, retirada de clasificado, desempate repetido, congelación y concurrencia | Una vuelta y mixto tabla única; empate de corte con liguilla de desempate resuelto                                                                     | Clasificación fútbol parcial en ambos; mixto y desempates en pantalla pendientes                    |
@@ -385,10 +385,10 @@ usado sin cuenta. Una página ficticia servida solo en loopback entregó el enla
 tras recarga completa de Expo, la app ya viva mostró el torneo correcto con
 sesión. El nombre vacío muestra «Introduce el nombre de tu equipo»; corregirlo
 retira el error. La inscripción de «Condores invitados Android» se confirma en
-el detalle público de API con ambos equipos. El Mac se bloqueó de nuevo justo
-antes de capturar el destino; esa última verificación visual y el recorrido
-Android sin sesión permanecen pendientes. Evidencia privada:
-`invitation-android-required-name.jpg`.
+el detalle público de API con ambos equipos. Tras desbloquear, el destino
+muestra el torneo correcto, Iniciar deshabilitado y los dos equipos sin acciones
+de administración. Evidencias privadas: `invitation-android-required-name.jpg`,
+`invitation-android-destination.jpg` e `invitation-android-teams.jpg`.
 
 Web confirma que el equipo inscrito desde iOS aparece en Equipos y el torneo
 en Sigo con permisos de participante; evidencia `invitation-ios-teams-web.jpg`.
@@ -399,3 +399,72 @@ Retrospectiva: probar almacenamiento y retorno del login no detecta un evento
 que llegó antes de existir la pantalla. La captura del enlace pertenece al
 punto de entrada de navegación; la vista conserva formulario, inspección y
 recuperación, sin inventar validez a partir de una URL.
+
+
+## Continuación 2026-10-05: invitación anónima y retorno nativo
+
+Un fixture nuevo local, «QA invitacion Android sin sesion», evita confundir el
+conflicto del participante ya inscrito con un éxito nuevo. Tras logout confirmado,
+Chrome entrega el enlace y la app muestra el torneo correcto sin sesión. El campo
+vacío no reutiliza el último nombre de la cuenta anterior. «Halcones Android sin
+sesion», escrito antes del login, se conserva al volver e inscribirse abre el
+detalle correcto con Iniciar deshabilitado; la consulta pública confirma ambos
+equipos. Evidencias privadas: `invitation-android-anonymous-name.jpg` e
+`invitation-android-restored-name.jpg`. Esa primera prueba mostró iconos blancos
+sobre canvas claro al regresar.
+
+### Corrección de apariencia y navegación
+
+Inicio era la única pantalla que montaba `StatusBar`. Ahora la raíz controla
+su estilo con el tema resuelto y lo renueva por revisión de sesión. Es aplicación
+de ADR-0056 aceptado; no cambia preferencias del SO, binario ni contratos.
+No se usa `screenOptions.statusBarStyle`: el binario iOS actual requiere control
+global y aquella alternativa produjo una excepción de configuración nativa.
+
+La repetición contextual Android reprodujo `ScreenStackFragment added into a
+non-stack container` incluso sin esa opción; traza privada `android-stack-crash.log`.
+Separar actualización de tabs, dismiss, replace y fin de transición en frames
+cancelables permitió volver con el nombre conservado. En iOS apareció pantalla
+negra tras autenticar. El aislamiento confirmó que persistía con su secuencia
+anterior y sin el nuevo StatusBar; no se atribuye a la espera Android ni a la
+apariencia. Recargar JS y «Go home» no recuperaban el presentador, pero terminar
+el proceso y cargar de nuevo Metro sí.
+
+La solución conserva el stack raíz sin `key={revision}`: no se destruye el
+contenedor nativo que presenta un modal mientras se solicita el destino nuevo.
+`NativeTabs` mantiene su revisión de sesión y dismiss/replace eliminan las rutas
+anteriores. Android conserva sus operaciones separadas en frames cancelables;
+iOS y web conservan la secuencia inmediata. No se añaden librerías ni se cambian
+las reglas de sesión o permisos.
+
+### Evidencia de la versión final
+
+- iOS: Safari → invitación anónima → nombre «Halcones iOS stack estable» → login
+  vuelve al torneo correcto con el nombre conservado e iconos oscuros; cerrar
+  vuelve a Inicio. El aviso nativo «Guardar contraseña» se descarta con «Ahora no».
+  Evidencia privada: `invitation-ios-stable-stack-return.jpg`.
+- Android: recarga completa → logout → Chrome → invitación → login vuelve al
+  torneo correcto con «Halcones Android repeticion» e iconos oscuros, sin la
+  excepción anterior. Evidencia: `invitation-android-stable-stack-return.jpg`.
+- La entrada host de `@` se convirtió en `²`; los envíos masivos de contraseña
+  perdían caracteres. Se corrigió mediante tecla táctil y escritura individual;
+  no se atribuye ese comportamiento al producto.
+- Diez regresiones ejecutan el efecto real de `SessionNavigator`: destino
+  contextual, logout, sesión idle, conservación del contenedor raíz y cancelación
+  antes/después de dismiss y replace. El conjunto Node completo pasa 51 pruebas.
+  No sustituyen la evidencia UIKit/Fabric.
+- `pnpm run check` y exportación web pasan para el stack estable; logs privados
+  `check-stable-session-navigator.log` y `export-stable-session-navigator.log`.
+
+Checklist cliente: tema compartido, apariencia raíz, tokens/márgenes/localización
+intactos, cierre existente y URL canónica conservados, ninguna operación OpenAPI
+modificada. La matriz general sigue abierta: contraste oscuro, accesibilidad,
+varios formatos/roles y OAuth real aplazado por el usuario no quedan acreditados
+por estos recorridos. El arranque en frío de una development build llevó primero
+al launcher; cargar después Metro no acredita un arranque directo de producción
+ni asociaciones universales reales.
+
+Retrospectiva: conservar datos y resetear tabs no exige destruir su presentador
+nativo. Un check estático no detecta una carrera UIKit ni incompatibilidad del
+binario; aislar variables y repetir el recorrido original evita convertir una
+hipótesis de apariencia en una causa no demostrada.

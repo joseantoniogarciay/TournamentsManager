@@ -2,7 +2,6 @@ import { router, type Href, useFocusEffect } from "expo-router";
 import Head from "expo-router/head";
 import { useCallback, useEffect, useState } from "react";
 import { Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
-import { StatusBar } from "expo-status-bar";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
 
@@ -21,7 +20,7 @@ import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-ga
 import { Button, Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
 export default function HomeScreen() {
-  const { colors, resolvedTheme } = usePreferences();
+  const { colors } = usePreferences();
   const { isRestoring, revision, user } = useSession();
   const { show } = useFeedback();
   const tabContentBottomPadding = useTabContentBottomPadding();
@@ -76,7 +75,6 @@ export default function HomeScreen() {
     <>
       <HomeMetadata />
       <Screen bottomInset="none">
-        <StatusBar style={resolvedTheme === "dark" ? "light" : "dark"} />
         <ScrollView
           automaticallyAdjustKeyboardInsets
           key={revision}

@@ -4440,6 +4440,27 @@ conservado tras login, inscripción, conflicto recuperable y otro enlace con
 la app viva. El punto de entrada exige recarga completa: hot refresh puede
 conservar la extensión anterior. No se equivale esquema local a asociación
 real de enlaces universales. Android confirma formulario con sesión, error
-obligatorio y recuperación; el equipo inscrito consta en API, pero la captura
-del destino quedó pendiente al bloquearse el Mac de nuevo. Se conserva esa
-diferencia entre validación de persistencia y evidencia visual.
+obligatorio y recuperación; la continuación confirmó también el destino y los
+equipos en pantalla. Con otro fixture, Android sin sesión conserva un nombre
+distinto del último de la cuenta tras login y completa la inscripción. Se
+conserva la diferencia entre validación de persistencia y evidencia visual.
+
+
+La sustitución de sesión desmontaba Inicio, único lugar que montaba `StatusBar`:
+el retorno Android dejó iconos blancos sobre canvas claro. La raíz controla ahora
+la apariencia desde el tema compartido. No se usa statusBarStyle del stack porque
+el binario iOS actual requiere control global.
+
+Android reprodujo una actualización de fragmento retirado; separar operaciones
+en frames cancelables permitió volver. iOS quedó negro incluso con su secuencia
+anterior y sin el nuevo StatusBar: aquellas atribuciones eran hipótesis. Conservar
+el stack raíz sin key de sesión permite volver a la invitación con el nombre y
+cerrar hacia Inicio; NativeTabs sigue renovando el estado por sesión. Android
+repite con la versión final y también conserva nombre y contraste claro.
+
+Regla reutilizable: no desmontar el contenedor nativo que presenta un modal
+mientras se reemplaza su ruta; separar el reinicio de datos/tabs de la identidad
+del presentador. Diez pruebas del efecto protegen destino y cancelación, pero la
+carrera UIKit/Fabric se acredita recorriendo login contextual en ambos sistemas.
+Las 51 pruebas Node, check y exportación web complementan la revisión; no
+acreditan contraste oscuro ni cobertura completa del producto.

@@ -91,6 +91,17 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   y superficie del indicador desde los tokens del tema resuelto. Los colores
   dinámicos Material por defecto siguen el tema del SO y no garantizan que una
   preferencia explícita de la app se aplique a la barra.
+- **Barra de estado nativa:** la raíz consume el tema resuelto para el estilo
+  de `StatusBar`, renovado con la revisión de sesión. Los iconos deben ser
+  oscuros en claro y claros en oscuro; ninguna pantalla controla por separado
+  esta apariencia. No se configura `statusBarStyle` en el stack: el binario iOS
+  actual usa control global de apariencia. La revisión de QA del 2026-10-04
+  registra el contraste de los retornos contextuales por plataforma.
+- **Sustitución de sesión:** el stack raíz conserva su identidad nativa mientras
+  se cierran rutas anteriores y se abre el destino contextual. La revisión de
+  sesión renueva tabs y apariencia; no desmonta el presentador raíz de modales.
+  Android separa las operaciones en frames cancelables para evitar actualizar
+  fragmentos retirados. iOS/web mantienen su secuencia de navegación inmediata.
 - **Controles de cabecera:** toda acción de navegación que no use Liquid Glass
   —web, Android e iOS anterior a 26— usa un objetivo circular de 44 px,
   superficie por defecto y borde semántico mediante `NavigationHeaderButton`.
