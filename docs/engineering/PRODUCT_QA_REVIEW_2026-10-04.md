@@ -615,3 +615,60 @@ una regla de autorización del backend.
 Retrospectiva: registrar un endpoint como probado no implica que esté conectado
 al producto. Separar una acción inexistente, un límite estático y una reproducción
 visual evita inflar la cobertura de la matriz.
+
+## Biblioteca: paginación y límite de permisos — 5 de octubre
+
+La reproducción local con más de 50 torneos encontró además un error de frontera
+backend: el servicio devolvía como cursor el primer elemento no entregado, mientras
+SQL usa `id < cursor`. Ese elemento desaparecía de todas las páginas. El cursor
+ahora es el último ID entregado, conforme a ADR-0058; la fila adicional solo
+confirma que hay otra página. La colección real de QA contiene 52 torneos: 50 en
+la primera página y dos en la segunda, todos únicos, sin cursor terminal.
+
+La biblioteca conserva cada colección y su cursor. «Cargar más», localizado en
+los cuatro idiomas, pide solo la página siguiente; `50+` indica el mínimo cargado
+y se convierte en `52` al agotar la colección. Actualizar vuelve a la primera
+página conservando el segmento seleccionado. Un fallo parcial conserva los datos
+y el cursor para reintentar; uno inicial usa RequestErrorCard sin banner duplicado.
+Se bloquean envíos duplicados y se descartan respuestas anteriores a un refresh,
+cambio de cuenta o desmontaje. La consulta de relación recorre páginas hasta
+hallar el torneo o agotar la colección; no declara ausencia desde la primera página.
+
+Web e iOS mostraron `50+`, permitieron Cargar más y terminaron con `52`. Abrir en
+iOS el torneo original de la segunda página mantuvo Editar resultado y Añadir
+resultado para su creador. Capturas privadas: `web-pagination-complete.jpg` e
+`ios-pagination-complete.jpg`; evidencia HTTP: `pagination-evidence.json`.
+
+La regresión PostgreSQL aislada recorre cinco torneos en tres páginas y exige
+que no haya omisiones ni duplicados. Las pruebas cliente cubren búsqueda de un
+administrador delegado después de 50, agotamiento, páginas inválidas y cursores
+que no avanzan, fallos HTTP, reintento, doble pulsación, cambio de segmento,
+refresh frente a append tardío, logout y recuperación de la carga inicial.
+
+Checklist cliente: adaptador generado con authenticatedApiFetch, estado en hook
+de feature, tokens y Button compartidos, márgenes de 20 px, reserva de tabs,
+locales es/en/it/fr y errores seguros. No hay nueva dependencia ni decisión
+funcional; se completa el comportamiento aceptado en ADR-0058. Seguir y dejar de
+seguir manualmente permanecen pendientes. La matriz general continúa en curso.
+
+Retrospectiva: probar una sola página no acredita paginación. Hay que contrastar
+el cursor con la desigualdad SQL y exigir que la unión de páginas recupere todos
+los elementos, además de comprobar la UI y los permisos fuera de la primera.
+
+Validación automatizada del corte: `pnpm run check`, exportación web, 59 pruebas
+Node y tests Go de dominio/HTTP pasan. La nueva regresión PostgreSQL pasa con
+`TM_RUN_INTEGRATION=1` en `tm_product_qa_20261004`, separada del producto local.
+Se revisaron las salidas de GET /v1/me/tournaments: éxito paginado y vacío,
+validación, sesión inválida, ausencia de limitador o rechazo de negocio propio,
+fallos PostgreSQL y cancelación. Se conservan las categorías seguras del span
+raíz y el fallback localizado del cliente; cursor, cuenta y errores internos
+quedan fuera del feedback y de atributos. No se activó observabilidad.
+
+El Pixel se relanzó y se restablecieron los puertos 8080/8082. La build conservaba
+Ajustes y respondía con retrasos; también el launcher tardó en procesar Home y el
+cajón de aplicaciones. Se apagó iOS para liberar recursos. Volver a abrir Fast
+Tourney Local restauró la pantalla anterior; no se logró verificar una recarga
+ni la paginación Android. Al intentar revisar el arranque en frío el Mac se
+bloqueó. Este caso sigue pendiente: no se atribuye el retraso a la paginación ni
+se presenta Android como aprobado. Se cierran los servicios locales conservando
+volúmenes, fixtures, base aislada y evidencia.

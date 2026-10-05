@@ -362,3 +362,13 @@ La decisión ADR-0149 retira temporalmente los controles de analítica de uso de
 Inicio/Ajustes: no hay captura de producto activa. La fiabilidad mínima prod
 no se presenta como una preferencia de uso; las preferencias antiguas no activan
 SDK en beta/local ni eventos de producto.
+
+### Biblioteca paginada (2026-10-05)
+
+Administro y Sigo cargan páginas independientes bajo demanda mediante un Button
+secundario localizado «Cargar más» al final de la lista, con margen horizontal
+space[5]. El contador muestra el número cargado más `+` mientras hay cursor;
+solo muestra un número definitivo al agotar la colección. La carga parcial vive
+en el botón y conserva las cards existentes. Los fallos iniciales usan
+RequestErrorCard; los parciales, el feedback seguro compartido con reintento
+sin perder datos. Actualizar conserva el segmento y reinicia la paginación.

@@ -435,6 +435,8 @@
   "tournaments_administered": "Je gère",
   "tournaments_administered_empty": "Vous ne gérez encore aucun tournoi.",
   "tournaments_followed": "Je suis",
+  "tournaments_load_more": "Charger plus",
+  "tournaments_loaded_count": "{count}{more}",
   "tournaments_followed_empty": "Vous ne suivez encore aucun tournoi.",
   "tournaments_open_league": "Ouvrir {name}",
   "notifications_title": "Notifications",

@@ -37,8 +37,8 @@ func TestListUsesExtraItemToBuildNextCursor(t *testing.T) {
 	if repository.limit != 3 {
 		t.Errorf("repository limit = %d, want 3", repository.limit)
 	}
-	if len(page.Items) != 2 || page.NextCursor != "third" {
-		t.Errorf("page = %#v, want two items and third cursor", page)
+	if len(page.Items) != 2 || page.NextCursor != "second" {
+		t.Errorf("page = %#v, want two items and last returned item as cursor", page)
 	}
 }
 

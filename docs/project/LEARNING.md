@@ -4465,3 +4465,15 @@ Con texto aumentado, repartir dos botones con `flex: 1` partía Clasificación
 antes de agotar el espacio total. Mantener su ancho de contenido, crecimiento
 y posibilidad de envolver la fila conserva la etiqueta completa. La evidencia
 nativa valida el layout; TypeScript y exportación no detectan estas colisiones.
+
+### Paginación de biblioteca y consulta de relación (2026-10-05)
+
+Con orden UUIDv7 descendente y predicado `id < cursor`, el cursor debe ser el
+último elemento entregado. El elemento `limit + 1` detecta continuación; usar
+su ID como cursor omite una fila. Una prueba de integración debe recorrer varias
+páginas y comparar su unión con todas las filas preparadas. El cliente conserva
+items y cursor juntos, carga por demanda y muestra un mínimo (`50+`) mientras
+no conoce el total. Un error de append conserva el cursor; una generación de
+peticiones evita que respuestas anteriores a refresh, logout o desmontaje
+sobrescriban la vista. Consultar una relación en una colección paginada requiere
+buscar hasta hallarla o agotar la colección; la primera página no demuestra ausencia.

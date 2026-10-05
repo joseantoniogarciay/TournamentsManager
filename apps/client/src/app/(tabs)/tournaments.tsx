@@ -1,93 +1,69 @@
-import { router, type Href, useFocusEffect } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { router, type Href } from "expo-router";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 import { color, control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
-import { APISessionInvalidatedError } from "@/api/fetch";
 import { getTranslator } from "@/shared/i18n/locale";
-import { listRelatedTournaments } from "@/features/league-creation/api";
+import type { AccountTournamentPage } from "@/api/generated/models";
+import {
+  useTournamentLibrary,
+  type TournamentRelationship,
+} from "@/features/league-creation/use-tournament-library";
 import { TournamentCard } from "@/features/league-creation/components/league-card";
-import { getRequestFailure } from "@/shared/feedback/request-failure";
-import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
-import { Card, LoadingTransition, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  LoadingTransition,
+  RequestErrorCard,
+  Screen,
+  Text,
+  useTabContentBottomPadding,
+} from "@/shared/ui";
 
-type TournamentRelationship = "administered" | "followed";
 const floatingActionButtonSize = control.minHeight + 12;
 
 export default function TournamentsScreen() {
   const t = getTranslator();
   const { isRestoring, revision, user } = useSession();
-  const { show } = useFeedback();
   const tabContentBottomPadding = useTabContentBottomPadding();
-  const [administered, setAdministered] = useState<
-    Awaited<ReturnType<typeof listRelatedTournaments>>
-  >([]);
-  const [followed, setFollowed] = useState<Awaited<ReturnType<typeof listRelatedTournaments>>>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasLoadedTournaments, setHasLoadedTournaments] = useState(false);
-  const [selectedRelationship, setSelectedRelationship] =
-    useState<TournamentRelationship>("administered");
-  const loadedAccountID = useRef<string | null>(null);
+  const {
+    administered,
+    followed,
+    isLoading,
+    isRefreshing,
+    isLoadingMore,
+    loadError,
+    hasLoadedTournaments,
+    selectedRelationship,
+    setSelectedRelationship,
+    loadTournaments,
+    loadMore,
+  } = useTournamentLibrary();
   const isInitialLoad = !isRestoring && Boolean(user) && !hasLoadedTournaments;
   const showFloatingAction = !isRestoring && (!user || !isInitialLoad);
 
-  const loadTournaments = useCallback(
-    async (isManualRefresh = false) => {
-      if (!user) return;
-      if (isManualRefresh) setIsRefreshing(true);
-      else setIsLoading(true);
-      try {
-        const [nextAdministered, nextFollowed] = await Promise.all([
-          listRelatedTournaments("administered"),
-          listRelatedTournaments("followed"),
-        ]);
-        setAdministered(nextAdministered);
-        setFollowed(nextFollowed);
-        setSelectedRelationship(
-          nextAdministered.length > 0 || nextFollowed.length === 0 ? "administered" : "followed",
-        );
-      } catch (error) {
-        if (error instanceof APISessionInvalidatedError) return;
-        const failure = getRequestFailure(error);
-        show({ kind: failure.kind, message: t(failure.messageKey) });
-      } finally {
-        setHasLoadedTournaments(true);
-        if (isManualRefresh) setIsRefreshing(false);
-        else setIsLoading(false);
-      }
-    },
-    [show, t, user],
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!user) {
-        loadedAccountID.current = null;
-        setAdministered([]);
-        setFollowed([]);
-        setIsLoading(false);
-        setIsRefreshing(false);
-        setHasLoadedTournaments(false);
-        return;
-      }
-      if (loadedAccountID.current === user.id) return;
-      loadedAccountID.current = user.id;
-      void loadTournaments();
-    }, [loadTournaments, user]),
-  );
-
   return (
     <Screen bottomInset="none">
-      {!isRestoring && user && hasLoadedTournaments && !isLoading ? (
+      {!isRestoring && user && hasLoadedTournaments && loadError && !isLoading ? (
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
+        >
+          <RequestErrorCard
+            message={t(loadError)}
+            actionLabel={t("common_retry")}
+            onRetry={() => void loadTournaments()}
+          />
+        </ScrollView>
+      ) : !isRestoring && user && hasLoadedTournaments && !isLoading ? (
         <TournamentLibrary
           administered={administered}
           bottomPadding={tabContentBottomPadding + floatingActionButtonSize + space[5]}
           followed={followed}
           isRefreshing={isRefreshing}
+          isLoadingMore={isLoadingMore}
+          onLoadMore={() => void loadMore()}
           onRefresh={() => void loadTournaments(true)}
           onSelectRelationship={setSelectedRelationship}
           selectedRelationship={selectedRelationship}
@@ -112,7 +88,9 @@ export default function TournamentsScreen() {
           ) : null}
         </ScrollView>
       )}
-      {isInitialLoad ? <LoadingTransition active message={t("common_loading")} /> : null}
+      {isInitialLoad || isLoading ? (
+        <LoadingTransition active message={t("common_loading")} />
+      ) : null}
       {showFloatingAction ? (
         <View style={[styles.floatingAction, { bottom: tabContentBottomPadding - space[4] }]}>
           <CreateTournamentButton />
@@ -127,21 +105,26 @@ function TournamentLibrary({
   bottomPadding,
   followed,
   isRefreshing,
+  isLoadingMore,
+  onLoadMore,
   onRefresh,
   selectedRelationship,
   onSelectRelationship,
 }: {
-  administered: Awaited<ReturnType<typeof listRelatedTournaments>>;
+  administered: AccountTournamentPage;
   bottomPadding: number;
-  followed: Awaited<ReturnType<typeof listRelatedTournaments>>;
+  followed: AccountTournamentPage;
   isRefreshing: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => void;
   onRefresh: () => void;
   selectedRelationship: TournamentRelationship;
   onSelectRelationship: (relationship: TournamentRelationship) => void;
 }) {
   const t = getTranslator();
   const { colors } = usePreferences();
-  const leagues = selectedRelationship === "administered" ? administered : followed;
+  const page = selectedRelationship === "administered" ? administered : followed;
+  const leagues = page.items;
   const empty =
     selectedRelationship === "administered"
       ? t("tournaments_administered_empty")
@@ -154,13 +137,17 @@ function TournamentLibrary({
         style={[styles.segmentedBar, { backgroundColor: colors.surface.subtle }]}
       >
         <Segment
-          count={administered.length}
+          count={t("tournaments_loaded_count")
+            .replace("{count}", String(administered.items.length))
+            .replace("{more}", administered.nextCursor ? "+" : "")}
           label={t("tournaments_administered")}
           selected={selectedRelationship === "administered"}
           onPress={() => onSelectRelationship("administered")}
         />
         <Segment
-          count={followed.length}
+          count={t("tournaments_loaded_count")
+            .replace("{count}", String(followed.items.length))
+            .replace("{more}", followed.nextCursor ? "+" : "")}
           label={t("tournaments_followed")}
           selected={selectedRelationship === "followed"}
           onPress={() => onSelectRelationship("followed")}
@@ -186,6 +173,17 @@ function TournamentLibrary({
         ) : (
           leagues.map((league) => <TournamentCard key={league.id} league={league} />)
         )}
+        {page.nextCursor ? (
+          <View style={styles.pagination}>
+            <Button
+              label={t("tournaments_load_more")}
+              loading={isLoadingMore}
+              disabled={isRefreshing}
+              onPress={onLoadMore}
+              variant="secondary"
+            />
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -197,7 +195,7 @@ function Segment({
   selected,
   onPress,
 }: {
-  count: number;
+  count: string;
   label: string;
   selected: boolean;
   onPress: () => void;
@@ -250,6 +248,7 @@ const styles = StyleSheet.create({
     width: floatingActionButtonSize,
   },
   library: { flex: 1, minHeight: 0, overflow: "hidden" },
+  pagination: { marginHorizontal: space[5] },
   libraryContent: { flexGrow: 1, gap: space[5] },
   segment: {
     alignItems: "center",

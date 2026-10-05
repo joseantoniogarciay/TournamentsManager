@@ -35,7 +35,7 @@ import type {
 } from "@/api/generated/models";
 import { searchUsers } from "@/api/generated/users/users";
 import {
-  parseAccountTournamentPageItems,
+  parseAccountTournamentPage,
   parseTournamentTeam,
   parsePublicTournament,
   parsePublishedTournament,
@@ -259,26 +259,29 @@ export async function getTournament(leagueID: string) {
   throw new APIUnexpectedResponseError(status);
 }
 export async function getTournamentRelationship(leagueID: string) {
-  const response = await listCurrentAccountTournaments(
-    { relationship: "administered", limit: 50 },
-    undefined,
-    authenticatedApiFetch,
-  );
-  if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  const items = parseAccountTournamentPageItems(response.data);
-  if (!items) throw new APIUnexpectedResponseError(response.status);
-  return items.find((league) => league.id === leagueID)?.relationship ?? null;
+  let cursor: string | undefined;
+  do {
+    const page = await listRelatedTournaments("administered", cursor);
+    const match = page.items.find((league) => league.id === leagueID);
+    if (match) return match.relationship;
+    cursor = page.nextCursor;
+  } while (cursor);
+  return null;
 }
-export async function listRelatedTournaments(relationship: "administered" | "followed") {
+export async function listRelatedTournaments(
+  relationship: "administered" | "followed",
+  cursor?: string,
+) {
   const response = await listCurrentAccountTournaments(
-    { relationship, limit: 50 },
+    { relationship, limit: 50, ...(cursor ? { cursor } : {}) },
     undefined,
     authenticatedApiFetch,
   );
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
-  const items = parseAccountTournamentPageItems(response.data);
-  if (!items) throw new APIUnexpectedResponseError(response.status);
-  return items;
+  const page = parseAccountTournamentPage(response.data);
+  if (!page || (cursor && page.items.some((item) => item.id.toLowerCase() >= cursor.toLowerCase())))
+    throw new APIUnexpectedResponseError(response.status);
+  return page;
 }
 
 export async function listRecentRelatedTournaments() {
