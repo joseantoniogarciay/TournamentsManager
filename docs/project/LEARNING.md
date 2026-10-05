@@ -4478,7 +4478,6 @@ peticiones evita que respuestas anteriores a refresh, logout o desmontaje
 sobrescriban la vista. Consultar una relación en una colección paginada requiere
 buscar hasta hallarla o agotar la colección; la primera página no demuestra ausencia.
 
-
 ### Seguimiento y proyecciones locales (2026-10-05)
 
 Confirmar PUT/DELETE de seguimiento no basta si la tab conserva la biblioteca
@@ -4492,3 +4491,15 @@ Retrospectiva: comprobar la etiqueta del botón y el contador al regresar detect
 fallos que una prueba aislada del adaptador no ve. La lentitud del launcher y
 un ANR de System UI deben registrarse como evidencia del entorno, sin atribuirlos
 a una feature que todavía no se ha podido recorrer.
+
+### Evidencia de activación y preparación de fixtures (2026-10-05)
+
+Un login pendiente debe comprobar el reenvío sin sesión; abrir la verificación
+debe comprobar el usuario en el destino y reutilizar el enlace debe producir
+el rechazo localizado sin perder la sesión válida. Los tokens solo se conservan
+en evidencia privada. Restaurar un fixture por API para reabrir una pantalla
+no acredita una acción de UI: el recorrido posterior necesita su propia
+observación y la documentación debe distinguir ambas cosas.
+
+Retrospectiva: mantener un inventario actual por plataforma evita que un
+pendiente histórico o una prueba de API oculten el alcance real de la revisión.
