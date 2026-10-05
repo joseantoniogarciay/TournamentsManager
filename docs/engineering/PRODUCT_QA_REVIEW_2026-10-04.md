@@ -813,7 +813,6 @@ del proyecto cargado; la indexación puede reproducir la presión aunque el
 modo de ahorro esté activo. Verificar destino y cancelación mantiene separados
 los formularios revisados y las operaciones de cuenta todavía no ejecutadas.
 
-
 Al cerrar Metro aparece un aviso de expo-blur: se usa
 `dimezisBlurViewSdk31Plus` sin `blurTarget` y el módulo anuncia fallback sin
 blur. `shared/ui/confirmation-dialog.tsx` declara ese método sin target. Queda
