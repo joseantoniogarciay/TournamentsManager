@@ -114,6 +114,11 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   cabecera el nombre de una entidad,
   este se centra, reserva 20 px frente a los controles laterales y puede ocupar
   dos líneas; no se impone un ancho fijo que lo trunque antes de agotar ese espacio.
+  En la ficha de torneo iOS, el título personalizado limita su ancho con el ancho
+  actual de ventana, los insets seguros y la reserva de controles y separación;
+  su tamaño intrínseco no debe extenderse detrás de la toolbar. Las acciones de
+  Equipos y Clasificación conservan su ancho de contenido y pueden pasar a otra
+  fila cuando el texto aumentado agota el espacio.
 - **Tipografía:** Figtree local en web, iOS y Android, con los pesos 400, 500,
   600 y 700 cargados antes de montar la interfaz. Los tokens seleccionan la
   familia real de cada peso, en vez de sintetizarlo con `fontWeight`. La escala
@@ -352,7 +357,6 @@ acredita.
 Según ADR-0143, el idioma se obtiene del sistema en móvil y del navegador en
 web. No se ofrece selector de idioma. Se mantienen los catálogos es/en/it/fr
 y el fallback inglés.
-
 
 La decisión ADR-0149 retira temporalmente los controles de analítica de uso de
 Inicio/Ajustes: no hay captura de producto activa. La fiabilidad mínima prod

@@ -558,3 +558,36 @@ Retrospectiva: aumentar el texto cambia tanto el flujo del contenido como los
 controles nativos del header. Comprobar que las acciones y los errores siguen
 siendo alcanzables aporta evidencia más útil que una captura inicial aislada;
 no sustituye una revisión completa de accesibilidad.
+
+## Reanudación: recuperación y cabecera de torneo iOS
+
+Tras desbloquear el Mac se relanzaron API, PostgreSQL, Mailpit y Metro sin
+observabilidad. Reintentar desde el error conservado cargó el torneo original
+y sus marcadores 5–2 y 3–0. Se completó así la repetición interrumpida del corte.
+Se reanudó el análisis de Android Studio; el Pixel siguió apagado.
+
+Se reprodujo una colisión del nombre largo de torneo con los controles de la
+toolbar iOS. La ficha limita ahora el título con el ancho de ventana, insets
+seguros y reserva semántica de controles y separación. Con tamaño estándar se
+ve completo en dos líneas sin invadirlos. Con Text Size 7 conserva la separación
+y aparece truncado por el espacio nativo de la cabecera; no se acredita lectura
+completa del título a ese tamaño. También se corrigió la división de
+Clasificación en una línea y una letra: las acciones conservan su ancho de
+contenido y permiten envolver la fila. Text Size volvió a 3.
+
+Evidencia privada: `ios-long-title-bounded.jpg`,
+`ios-long-title-large-text.jpg` y `ios-large-text-summary-actions.jpg`.
+Checklist: se mantienen tokens, margen exterior, cierre nativo, tema,
+localización y ruta canónica; ninguna operación OpenAPI ni permiso cambia.
+La revisión visual del ancho nativo se realizó en iOS; web también mostró el
+nombre largo y ambas acciones completas a tamaño estándar en 702 × 762
+(`web-summary-actions.jpg`). El menú iOS siguió abriendo únicamente Compartir
+y se cerró sin enviar datos. Android queda pendiente de una nueva pasada visual.
+`pnpm run check` y exportación web pasan con la versión final; los logs privados
+son `check-bounded-title.log` y `export-bounded-title.log`. Metro regeneró
+`expo-env.d.ts` sin el formato esperado; normalizarlo dejó ese archivo sin diff.
+
+Retrospectiva: un título con dos líneas no garantiza que el host nativo reserve
+su ancho. El nombre largo y el texto aumentado descubren problemas diferentes;
+la corrección debe respetar la reserva de controles y el ancho del contenido,
+sin introducir tamaños fijos por nombre o idioma.

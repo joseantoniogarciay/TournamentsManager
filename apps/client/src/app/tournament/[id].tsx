@@ -1,7 +1,15 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Platform, ScrollView, SectionList, Share, StyleSheet, View } from "react-native";
+import {
+  Platform,
+  ScrollView,
+  SectionList,
+  Share,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
@@ -128,6 +136,7 @@ export default function TournamentScreen() {
   const { user } = useSession();
   const { colors } = usePreferences();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
   const league = useTournament(id);
@@ -721,7 +730,21 @@ export default function TournamentScreen() {
     headerTintColor: colors.text.primary,
     headerTitleAlign: "center" as const,
     headerTitle: () => (
-      <Text numberOfLines={2} style={styles.navigationTitle} variant="bodyLarge">
+      <Text
+        numberOfLines={2}
+        style={[
+          styles.navigationTitle,
+          Platform.OS === "ios" && {
+            maxWidth: Math.max(
+              0,
+              windowWidth -
+                2 * (Math.max(insets.left, insets.right) + space[5] + control.minHeight + space[5]),
+            ),
+            marginHorizontal: 0,
+          },
+        ]}
+        variant="bodyLarge"
+      >
         {league.name}
       </Text>
     ),
@@ -1823,8 +1846,13 @@ const styles = StyleSheet.create({
     marginTop: space[2],
     width: space[1],
   },
-  summaryAction: { flex: 1 },
-  summaryActions: { flexDirection: "row", gap: space[3], marginHorizontal: space[5] },
+  summaryAction: { flexGrow: 1 },
+  summaryActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space[3],
+    marginHorizontal: space[5],
+  },
   summaryItem: { alignItems: "flex-start", flexDirection: "row", gap: space[2] },
   summaryLabel: { fontFamily: typography.family.bold },
   summaryList: { gap: space[2] },

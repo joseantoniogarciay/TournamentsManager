@@ -3686,7 +3686,6 @@ La auditoría del lockfile debe acompañarse de CI y exportación antes de publi
   una actualización de dependencias separada. Las pruebas funcionales aprobadas
   no se presentan como una verificación global verde.
 
-
 ## 2026-10-03 — Actualizar dependencias requiere comprobar al consumidor
 
 - **Hechos:** Docker Desktop ejecuta el entorno local con sus volúmenes previos
@@ -3716,7 +3715,6 @@ La auditoría del lockfile debe acompañarse de CI y exportación antes de publi
 - **Cierre del pendiente anterior:** la incidencia de OpenTelemetry registrada
   el 2026-10-02 queda resuelta en este cambio de mantenimiento separado.
 
-
 ## 2026-10-03 — La compatibilidad no justifica saltar la maduración
 
 - **Decisión:** el usuario prefiere siete días salvo vulnerabilidad crítica;
@@ -3727,7 +3725,6 @@ La auditoría del lockfile debe acompañarse de CI y exportación antes de publi
 - **Retrospectiva técnica:** la capacidad ya configurada en pnpm es suficiente.
   Se actualizan configuración y fuentes de autoridad sin reinstalar dependencias
   ni recrear el entorno local, y sin inventar un control automático para Go.
-
 
 ## 2026-10-03 — Una retención configurada necesita un proceso de borrado
 
@@ -3753,7 +3750,6 @@ La auditoría del lockfile debe acompañarse de CI y exportación antes de publi
   Una fixture reciente sobrevive a la limpieza. La retirada liberó unos 56 MB;
   PostgreSQL, restore, Grafana y Alertmanager conservan sus volúmenes.
 
-
 ### Auditoría de retención real de producción — 2026-10-03
 
 - **Problema y evidencia:** declarar 24 h en Loki no activaba la purga. La VM
@@ -3766,7 +3762,6 @@ La auditoría del lockfile debe acompañarse de CI y exportación antes de publi
 - **Retrospectiva:** la auditoría se completó sin leer eventos de usuarios ni
   modificar producción. Antes de habilitar la purga global de Loki hay que
   resolver la conservación diferenciada de seguridad aceptada en ADR-0106.
-
 
 ### Retención y alertas de espacio en producción — 2026-10-03
 
@@ -4091,7 +4086,6 @@ presentación sin mutar datos reales, pero no acreditan reglas de negocio ni
 integración con el backend. Esta fase registra problemas; no implementa un
 rediseño ni cierra las correcciones pendientes.
 
-
 ## 2026-10-03 — Correcciones de la auditoría visual
 
 El título de Cuenta web reserva el espacio de los botones y 20 px de separación;
@@ -4121,7 +4115,6 @@ Añadir entitlements a mano impidió el arranque; reconstruir con la firma gener
 por Xcode restauró la ejecución. La ausencia de un error de lectura Keychain no
 acredita escritura ni restauración de una sesión autenticada.
 
-
 ## 2026-10-03 — Presupuesto y orden del apagado de la API
 
 Retirar un endpoint y detener el proceso son operaciones concurrentes. Esperar
@@ -4138,7 +4131,6 @@ operación que ignore cancelación; el runtime conserva el límite duro. Las pru
 con sockets verifican comportamiento HTTP; la prueba de rollout en Traefik es
 otra evidencia y permanece pendiente de promoción desde una revisión limpia.
 
-
 ### Cierre de promoción — 2026-10-04
 
 La rama ops/api-graceful-shutdown conserva el SHA 11138a1 desplegado sin incluir
@@ -4150,7 +4142,6 @@ y esa medición se descartó. Una prueba de continuidad debe alcanzar la API y
 validar su respuesta; no basta contar respuestas del proxy. El resultado acota
 el riesgo del rollout probado, sin garantizar disponibilidad del host ni carga
 transaccional.
-
 
 ## 2026-10-04 — Apariencia nativa Android y alcance de la auditoría
 
@@ -4167,7 +4158,6 @@ que el campo inferior de Crear torneo queda parcialmente bajo el teclado.
 La primitiva compartida solo ajusta insets en iOS; el comportamiento Android
 sigue pendiente. Segundo plano no acredita persistencia tras muerte del proceso.
 Véase la [auditoría Android](../engineering/ANDROID_VISUAL_AUDIT_2026-10-03.md).
-
 
 ## 2026-10-04 — Visibilidad del foco y espacio de teclado
 
@@ -4275,7 +4265,6 @@ iOS/Android se exportan. La compilación de JavaScript no sustituye la prueba OA
 en dispositivos con firma y cuentas reales. Se elimina la base de pruebas efímera
 y se cierra el preview estático; local/dev y observabilidad no se arrancan.
 
-
 ## 2026-10-04 — Proyecto único de PostHog reservado a producción
 
 El usuario confirma el límite de un proyecto de su cuenta y acepta reservarlo
@@ -4303,6 +4292,7 @@ web/iOS/Android con source maps e introspección Expo pasan; el plugin se limita
 a prod y no modifica carpetas nativas durante la introspección. Inicio/Ajustes
 exportados no contienen el control de analítica. No se han enviado crashes ni
 símbolos reales, y la clave CLI continúa pendiente.
+
 ## 2026-10-04 — Alineación de controles de cabecera en Android
 
 El cierre de Crear torneo sumaba el margen de 20 px de la primitiva al inset
@@ -4322,7 +4312,6 @@ ni observabilidad.
 Retrospectiva: el margen relevante es la suma del inset del contenedor nativo y
 el margen React Native. Revalidar esa suma al actualizar la navegación evita
 compensaciones duplicadas; corregir la primitiva mantiene el coste bajo.
-
 
 ## 2026-10-04 — Texto ampliado y glifos Material entre plataformas
 
@@ -4445,7 +4434,6 @@ equipos en pantalla. Con otro fixture, Android sin sesión conserva un nombre
 distinto del último de la cuenta tras login y completa la inscripción. Se
 conserva la diferencia entre validación de persistencia y evidencia visual.
 
-
 La sustitución de sesión desmontaba Inicio, único lugar que montaba `StatusBar`:
 el retorno Android dejó iconos blancos sobre canvas claro. La raíz controla ahora
 la apariencia desde el tema compartido. No se usa statusBarStyle del stack porque
@@ -4464,3 +4452,16 @@ del presentador. Diez pruebas del efecto protegen destino y cancelación, pero l
 carrera UIKit/Fabric se acredita recorriendo login contextual en ambos sistemas.
 Las 51 pruebas Node, check y exportación web complementan la revisión; no
 acreditan contraste oscuro ni cobertura completa del producto.
+
+## 2026-10-05 — Ancho intrínseco en cabeceras nativas
+
+Un título React personalizado en la toolbar iOS puede ocupar más ancho que el
+espacio entre sus controles aunque tenga `flexShrink` y margen. La ficha con un
+nombre largo lo reprodujo: el texto pasaba por detrás de cerrar y del menú.
+Limitarlo con el ancho actual de ventana, insets seguros y tokens de controles
+y separación conserva la adaptación sin fijar un ancho arbitrario.
+
+Con texto aumentado, repartir dos botones con `flex: 1` partía Clasificación
+antes de agotar el espacio total. Mantener su ancho de contenido, crecimiento
+y posibilidad de envolver la fila conserva la etiqueta completa. La evidencia
+nativa valida el layout; TypeScript y exportación no detectan estas colisiones.
