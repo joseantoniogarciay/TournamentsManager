@@ -5402,3 +5402,17 @@ Tres arranques y enlaces correctos en release son evidencia acotada. No cierran
 una caída de DevLauncher en development ni las pruebas de distribución o lector.
 El corte/reintento debe contrastarse con la proyección previa para comprobar
 recuperación real y conservación de datos, además del mensaje seguro.
+
+
+## 2026-10-08 — Entrada táctil y evidencia de lector
+
+En este emulador, la inyección shell input no avanzaba de forma fiable el foco
+TalkBack. La entrada táctil del emulador, comprobada con getevent, sí permitió
+recorrer y activar controles. Mantener UIAutomator fuera de la sesión de lector
+y comprobar el borde de foco antes de cada doble pulsación. Una recreación de
+Activity puede consumir una URL y volver a Inicio: esperar una pantalla estable
+y descartar evidencia de la ruta incorrecta antes de reintentar.
+
+Un recorrido satisfactorio de foco no acredita locución ni toda la matriz.
+Registrar por separado controles alcanzados, activaciones, campos sin enviar y
+restauración exacta de preferencias, APK y recursos propios al cerrar la tanda.

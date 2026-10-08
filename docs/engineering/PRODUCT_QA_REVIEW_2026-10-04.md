@@ -4320,3 +4320,49 @@ Retrospectiva: un bundle release puede arrancar correctamente y fallar por la
 política de transporte del entorno local. Separar ambos hechos permite probar
 navegación y recuperación con una excepción estrecha, sin debilitar la
 configuración distribuible ni presentar un binario de QA como producción.
+
+
+#### 2026-10-08 — TalkBack con entrada táctil del emulador y enlaces negativos
+
+Se resuelve el bloqueo instrumental de la muestra anterior con `adb emu event
+mouse`: los eventos atraviesan el dispositivo táctil del emulador, acreditado
+con getevent. No se ejecuta UIAutomator mientras TalkBack está activo. Capturas
+sucesivas muestran avance real del borde de foco y la doble pulsación activa
+el elemento previamente verificado. Esto amplía la evidencia anterior; no
+convierte sus intentos fallidos en pruebas aprobadas.
+
+- Inicio: foco en descripción, Crear torneo y Actividad reciente. Crear abre
+  el formulario; el recorrido alcanza deportes y el campo Nombre vacío. La
+  activación abre el teclado, sin escribir ni crear un torneo.
+- Cuenta: Cerrar sesión abre su diálogo. El recorrido alcanza título, cuerpo,
+  confirmación y Cancelar; activar Cancelar conserva la cuenta autenticada.
+- Datos de acceso → Cambiar contraseña: el foco alcanza cabecera y campo
+  actual. Al 200 %, alcanza además el campo nuevo y Guardar deshabilitado;
+  la cabecera conserva sus dos líneas y separación. No se introducen ni
+  cambian credenciales.
+- Enlaces a torneo: UUID inexistente devuelve 404 y muestra «Este torneo ya
+  no está disponible» con Cerrar. Identificador malformado devuelve 400 y
+  muestra common_request_error con Reintentar, sin exponer el cuerpo interno.
+
+La muestra acredita foco y activación, no calidad de locución, todas las rutas
+ni dispositivos físicos. Un primer toque no adquirió el foco esperado y una
+URL enviada durante recreación por font_scale terminó en Inicio: se descartan
+esas capturas como prueba de contraseña y se repite después de verificar foco
+y pantalla estables. No se atribuyen estos fallos del harness al producto.
+
+Al cerrar Android se restauran exactamente los tres valores de accesibilidad,
+font_scale=1 y locales vacíos; se reinstala la APK debug guardada con install -r,
+se retiran los reverses propios y se apaga el emulador iniciado para esta tanda.
+La proyección completa del torneo sigue idéntica. El log release desde las
+20:43 registra cero FATAL nuevos y cero ANR observados: no cierra incidencias
+históricas ni el fallo de DevLauncher. Metro queda apagado; la API local se
+conserva únicamente para continuar el QA iOS. Producción continúa apagada.
+
+Evidencia privada: android-release-negative-links-20261008.json,
+android-talkback-hardware-*-20261008, android-release-cleanup-20261008.json,
+android-release-complete-logcat-20261008.log y scripts qa-talkback-hardware y
+qa-android-release-cleanup asociados. El directorio privado tiene modo 700.
+
+Retrospectiva: verificar el foco antes de activar evita confundir navegación
+por coordenadas con uso del lector. Comprobar respuestas HTTP junto al mensaje
+visible distingue el rechazo de negocio recuperable del fallback común seguro.
