@@ -5307,3 +5307,12 @@ make verify y 78 pruebas Node pasan para el conjunto. Registrar por separado
 la integración opt-in omitida y la vulnerabilidad de módulo sin llamadas
 alcanzables que govulncheck informa, sin presentar el resultado como cobertura
 universal. Mantener main, tags y despliegue dentro del ciclo autorizado aparte.
+
+
+## 2026-10-08 — Regresiones de sesión dentro del gate
+
+Revisar el workflow y los prerrequisitos de make verify antes de dar por
+acreditada la ejecución continua de un test nuevo. Las seis regresiones de
+renovación web estaban en la pasada local tests/*.test.mjs, pero faltaban en
+el gate compartido. El target test-session-refresh las incorpora a make verify
+y, por tanto, al workflow existente, sin otra infraestructura.

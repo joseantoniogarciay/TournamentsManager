@@ -4052,3 +4052,18 @@ No se arranca local/dev, observabilidad ni tareas durante esta verificación.
 Retrospectiva: cerrar bloques validados con código, ADR y evidencia juntos reduce
 el riesgo de perder contexto; excluir outputs de módulos locales es necesario
 aunque los directorios nativos generados principales ya estén ignorados.
+
+
+#### 2026-10-08 — Regresión de renovación web incorporada a CI
+
+Tras subir 14d3edd a origin/develop, se revisa el workflow Verify: ejecuta
+make verify con PostgreSQL efímero para las integraciones. La nueva suite
+session-refresh.test.mjs estaba acreditada por la pasada local de 78 pruebas,
+pero no era prerrequisito de verify. Se añade test-session-refresh al gate
+existente. Sus seis pruebas pasan: red y reintento, 429, 500, cuerpo inválido,
+401 con invalidación única y lecturas concurrentes con una renovación.
+La comprobación en seco confirma que el gate incluye la suite.
+
+Retrospectiva: tener un test versionado y aprobado no asegura que CI lo ejecute.
+Mantener la nueva regresión en la entrada compartida evita perder esa protección
+en futuras subidas; no requiere otro workflow ni una herramienta nueva.
