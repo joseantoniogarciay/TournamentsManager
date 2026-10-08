@@ -5316,3 +5316,12 @@ acreditada la ejecución continua de un test nuevo. Las seis regresiones de
 renovación web estaban en la pasada local tests/*.test.mjs, pero faltaban en
 el gate compartido. El target test-session-refresh las incorpora a make verify
 y, por tanto, al workflow existente, sin otra infraestructura.
+
+
+## 2026-10-08 — Preflight de publicación y estado real del runtime
+
+Comprobar web y API por separado antes del deploy: un shell estático con 200
+puede coexistir con una API 502 porque la VM esté detenida. Recuperar primero
+la instancia existente permite distinguir disponibilidad previa de regresiones
+de la versión nueva. Conservar backups y ensayar migraciones sobre datos
+restaurados, sin usar la base productiva como banco de pruebas.

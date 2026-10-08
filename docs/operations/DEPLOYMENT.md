@@ -381,3 +381,25 @@ No basta con rellenar Team ID: se registran Services ID/App ID, dominios, callba
 relay de email y Google OAuth móvil, y se validan builds reales. El [runbook](../runbooks/social-login.md)
 conserva los gates, incluida revocación Apple al eliminar cuenta. La preparación
 no activa Apple, no despliega dev/prod y no autoriza distribución.
+
+
+## Preparación autorizada de v1.10.0 — 2026-10-08
+
+El usuario autoriza actualizar dev y prod con el bloque acumulado. La revisión
+de develop a651864 tiene CI completa aprobada, incluidas integraciones PostgreSQL,
+y make verify local aprobado con 78 pruebas Node adicionales. El alcance es web
+y API; no distribución móvil ni activación de proveedores OAuth pendientes.
+
+Antes de promover se detecta la VM UTM de producción detenida: API pública 502
+y web 200. Arrancar la instancia existente recupera K3s, dos réplicas API y
+healthz 200 sin cambiar la versión instalada. Se conservan las versiones
+anteriores de web, API y manifiestos para rollback. Las copias incrementales
+pgBackRest y copias lógicas privadas preceden a la migración 20. El ensayo sobre
+restauraciones aisladas verifica la nueva tabla, grants runtime y conservación
+de cuentas, torneos, equipos y partidos. La migración es forward-only: un
+rollback de aplicación no elimina identidades ni evidencia legal.
+
+Dev se enciende para desplegar y probar y volverá a apagarse al cerrar, conforme
+a ADR-0146; observabilidad dev permanece apagada. Producción conserva sus
+servicios operativos. La release productiva sigue ADR-0119: merge no-ff a main,
+tag anotado, GitHub Release y artefactos del SHA etiquetado.

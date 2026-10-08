@@ -6,7 +6,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-08
+
 ### Added
+
+- Seguimiento manual de torneos, biblioteca paginada y actualización explícita de
+  fichas, con recuperación segura ante fallos de sesión o transporte.
 
 - ADR-0147: acceso Apple mediante navegador del sistema en web, iOS y Android,
   con challenge de un solo uso, validación backend y migración PostgreSQL.
