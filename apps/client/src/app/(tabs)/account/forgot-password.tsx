@@ -5,6 +5,7 @@ import { space } from "@tournaments-manager/design-tokens";
 import { requestRecovery } from "@/features/password-recovery/api";
 import { APIUnexpectedResponseError } from "@/api/fetch";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
+import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import {
   Button,
@@ -31,12 +32,13 @@ export default function ForgotPasswordScreen() {
       show({ kind: "success", message: t("password_recovery_sent") });
       router.replace("/account");
     } catch (error) {
+      const failure = getRequestFailure(error);
       show({
-        kind: "generic-error",
+        kind: failure.kind,
         message:
           error instanceof APIUnexpectedResponseError && error.status === 429
             ? t("account_rate_limited")
-            : t("common_request_error"),
+            : t(failure.messageKey),
       });
     } finally {
       setSending(false);

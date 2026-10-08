@@ -25,6 +25,7 @@ import {
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
+import { FeedbackWindowAnchor } from "@/shared/feedback/android-feedback-host";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 import { Button } from "./button";
@@ -190,6 +191,7 @@ export function ModalDialog({
         enabled={avoidKeyboard && Platform.OS !== "web"}
         style={styles.backdrop}
       >
+        {Platform.OS === "android" ? <FeedbackWindowAnchor /> : null}
         {Platform.OS === "web" ? (
           <View
             pointerEvents="none"
@@ -197,7 +199,7 @@ export function ModalDialog({
           />
         ) : (
           <BlurView
-            blurMethod="dimezisBlurViewSdk31Plus"
+            blurMethod="none"
             intensity={45}
             pointerEvents="none"
             style={styles.scrim}
@@ -251,7 +253,11 @@ export function DialogCloseButton({ accessibilityLabel, onPress }: DialogCloseBu
       {Platform.OS === "web" ? (
         <WebIcon color={colors.text.primary} name="close" size={control.iconSize} />
       ) : (
-        <SymbolView name="xmark" size={control.iconSize} tintColor={colors.text.primary} />
+        <SymbolView
+          name={{ android: "close", ios: "xmark", web: "close" }}
+          size={control.iconSize}
+          tintColor={colors.text.primary}
+        />
       )}
     </Pressable>
   );

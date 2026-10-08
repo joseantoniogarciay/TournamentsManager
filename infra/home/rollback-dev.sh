@@ -32,8 +32,10 @@ fi
 
 repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 cd "$repository_root"
-DEV_API_IMAGE="$api_image" \
-  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml up --detach --wait --remove-orphans
+DEV_API_IMAGE="$api_image" COMPOSE_PROFILES= DEV_OTEL_TRACES_ENDPOINT= \
+  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml up --detach --wait --remove-orphans api postgres
+
+./infra/home/dev-launch-agents.sh up
 
 next_link="$current_link.next"
 ln -s "releases/$release_sha" "$next_link"

@@ -87,6 +87,7 @@ func toFederatedDraft(draft *registration.Draft) *federated.Draft {
 }
 
 func writeFederatedSession(w http.ResponseWriter, transport string, established federated.EstablishedSession, cookies sessionCookieSettings) {
+	w.Header().Set("Cache-Control", "no-store")
 	response := map[string]any{"user": sessionUserResponse(established.AccountID, established.Username, established.LastTeamName), "delivery": transport, "expiresAt": established.IdleExpiresAt, "refreshExpiresAt": established.RefreshExpiresAt}
 	if transport == "cookie" {
 		cookies.setSession(w, established.AccessToken, established.RefreshToken, registration.Session{AccountID: established.AccountID, Username: established.Username, LastTeamName: established.LastTeamName, IdleExpiresAt: established.IdleExpiresAt, RefreshExpiresAt: established.RefreshExpiresAt})

@@ -223,7 +223,10 @@ export default function TournamentStandingsScreen() {
           )
         ) : (
           <ScrollView
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[
+              styles.content,
+              displayedStandings.length === 0 && styles.emptyContent,
+            ]}
             onLayout={(event) => setTableViewportWidth(event.nativeEvent.layout.width)}
             ref={statisticsTimelineScopeRef}
             showsVerticalScrollIndicator={false}
@@ -247,7 +250,13 @@ export default function TournamentStandingsScreen() {
             ) : null}
             {displayedStandings.length === 0 ? (
               <Card>
-                <Text color="secondary">{t("league_standings_unavailable")}</Text>
+                <Text color="secondary">
+                  {t(
+                    league.state === "cancelled"
+                      ? "league_standings_cancelled_unavailable"
+                      : "league_standings_unavailable",
+                  )}
+                </Text>
               </Card>
             ) : null}
             {displayedStandings.length > 0 ? (
@@ -601,6 +610,7 @@ function StandingsRulesContent({ league }: { league: PublicTournament | null | u
 
 const styles = StyleSheet.create({
   content: { paddingBottom: space[5], paddingHorizontal: space[5] },
+  emptyContent: { paddingHorizontal: 0 },
   groupSelector: { flexDirection: "row", flexWrap: "wrap", gap: space[2], paddingBottom: space[4] },
   headerRow: {
     alignItems: "center",

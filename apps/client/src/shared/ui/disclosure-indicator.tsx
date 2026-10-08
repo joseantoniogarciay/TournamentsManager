@@ -20,7 +20,7 @@ export function DisclosureIndicator() {
         <WebIcon color={colors.text.secondary} name="chevronRight" size={disclosureIconSize} />
       ) : (
         <SymbolView
-          name="chevron.right"
+          name={{ android: "chevron_right", ios: "chevron.right", web: "chevron_right" }}
           size={disclosureIconSize}
           tintColor={colors.text.secondary}
         />

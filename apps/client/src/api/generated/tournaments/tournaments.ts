@@ -1164,7 +1164,7 @@ export const getRecordMatchResultUrl = (tournamentId: Uuid, matchId: Uuid) => {
 };
 
 /**
- * Exige sesión válida de la organizadora o una administradora delegada y un torneo en curso. En eliminatoria ambos participantes deben estar resueltos y no puede corregirse un resultado ya consumido por un partido posterior. El resultado se aplica inmediatamente; una corrección conserva su historial interno de valores y autora.
+ * Exige sesión válida de la organizadora o una administradora delegada y un torneo en curso. En eliminatoria ambos participantes deben estar resueltos y no puede corregirse un resultado ya consumido por un partido posterior. El resultado se aplica inmediatamente; una corrección conserva su historial interno de valores y autora. Los resultados administrativos por baja de un equipo no admiten correcciones.
  * @summary Registra o corrige el resultado de un partido
  */
 export const recordMatchResult = async (

@@ -138,6 +138,16 @@ paralelo o necesidad de seleccionar funcionalidades por entrega, permite ramas
 de feature y `release/*` temporales para componer un candidato de `staging` sin
 detener `develop`. No crea una rama permanente `staging`.
 
+## Aclaración posterior — 2026-10-04
+
+El usuario confirma que las ramas temporales se eliminan en local y en remoto
+al terminar su integración en `develop`. Antes de borrarlas se comprueba que
+no conservan commits sin integrar, trabajo pendiente ni worktrees activos que
+las usen. No se fuerza el borrado para ocultar una integración incompleta.
+`develop` y `main` son las ramas permanentes. El trabajo integrado permanece en
+`develop` hasta una publicación de producción autorizada; la promoción a `main`,
+tag, Release y despliegue siguen el orden aceptado en ADR-0119.
+
 ## Documentación afectada
 
 - [CONTRIBUTING.md](../../CONTRIBUTING.md)

@@ -101,7 +101,7 @@ func (s Service) List(ctx context.Context, accountID string, relationship Relati
 	}
 	page := Page{Items: items}
 	if len(page.Items) > limit {
-		page.NextCursor = page.Items[limit].ID
+		page.NextCursor = page.Items[limit-1].ID
 		page.Items = page.Items[:limit]
 	}
 	return page, nil

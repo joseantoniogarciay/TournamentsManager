@@ -1,3 +1,5 @@
+import { configuredGoogleClientID } from "@/features/social-authentication/config";
+import { androidAuthBrowserOptions } from "@/features/social-authentication/browser";
 import * as Google from "expo-auth-session/providers/google";
 import { makeRedirectUri } from "expo-auth-session";
 import type { User } from "@/api/generated/models";
@@ -19,9 +21,9 @@ import {
 type PendingGoogleAccount = { challenge: GoogleLoginChallenge; idToken: string };
 
 const googleClientIDs = {
-  android: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  ios: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-  web: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  android: configuredGoogleClientID(process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID),
+  ios: configuredGoogleClientID(process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID),
+  web: configuredGoogleClientID(process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID),
 } as const;
 
 function getPlatformClientID() {
@@ -153,8 +155,11 @@ export function useGoogleAuthentication({
     }
     setIsPrompting(true);
     try {
-      const result = await promptAsync();
+      const result = await promptAsync(
+        Platform.OS === "android" ? await androidAuthBrowserOptions() : undefined,
+      );
       if (result.type !== "success") setIsPrompting(false);
+      if (result.type === "error") setError(new Error("Google authentication failed"));
     } catch (nextError) {
       setError(nextError);
       setIsPrompting(false);

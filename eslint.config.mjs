@@ -9,6 +9,7 @@ export default defineConfig(
   {
     ignores: [
       "**/node_modules/**",
+      ".config/deployments/**",
       "**/dist/**",
       "**/build/**",
       "**/.expo/**",
@@ -18,6 +19,11 @@ export default defineConfig(
   },
   {
     files: ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}"],
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: /** @type {ImportMeta & { dirname: string }} */ (import.meta).dirname,
+      },
+    },
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,

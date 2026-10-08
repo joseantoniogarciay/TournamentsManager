@@ -16,6 +16,9 @@ func (r AccountTournamentRepository) PurgeExpired(ctx context.Context, limit int
 	if _, err := r.pool.Exec(ctx, `DELETE FROM google_risc_events WHERE expires_at <= now()`); err != nil {
 		return 0, err
 	}
+	if _, err := r.pool.Exec(ctx, `DELETE FROM apple_login_challenges WHERE expires_at <= now()`); err != nil {
+		return 0, err
+	}
 	command, err := r.pool.Exec(ctx, `
 		WITH candidates AS (
 			SELECT id

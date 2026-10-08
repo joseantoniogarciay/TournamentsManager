@@ -31,33 +31,9 @@ LEGAL_AUDIT_BACKUP_DESTINATION=$host_legal_audit_backup_destination
 LEGAL_AUDIT_BACKUP_KEY_PATH=$host_legal_audit_backup_key_path
 export LEGAL_AUDIT_BACKUP_DESTINATION LEGAL_AUDIT_BACKUP_KEY_PATH
 
-if [ ! -s infra/dev/alertmanager.smtp-password ]; then
-  echo "Falta infra/dev/alertmanager.smtp-password con la clave SMTP exclusiva de Alertmanager." >&2
-  exit 1
-fi
-
-if grep -Fqx 'replace-with-resend-alerts-sending-access-key' infra/dev/alertmanager.smtp-password; then
-  echo "infra/dev/alertmanager.smtp-password conserva el valor de ejemplo." >&2
-  exit 1
-fi
-
-if ! awk '
-  NR != 1 || $0 !~ /^re_[A-Za-z0-9_-]+$/ { valid = 0; next }
-  { valid = 1 }
-  END { exit !(valid && NR == 1) }
-' infra/dev/alertmanager.smtp-password; then
-  echo "infra/dev/alertmanager.smtp-password debe contener solo una clave Resend re_... en una unica linea." >&2
-  exit 1
-fi
-
 expected_database_url="postgres://${POSTGRES_APP_USER}:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
 if [ "${DATABASE_URL:-}" != "$expected_database_url" ]; then
   echo "DATABASE_URL de dev debe usar exactamente POSTGRES_APP_USER y POSTGRES_APP_PASSWORD." >&2
-  exit 1
-fi
-
-if [ "${OTEL_TRACES_ENDPOINT:-}" != "http://tempo:4318/v1/traces" ]; then
-  echo "OTEL_TRACES_ENDPOINT de dev debe dirigir las trazas a Tempo interno." >&2
   exit 1
 fi
 
@@ -94,10 +70,12 @@ make dev-public-migrate
 ./infra/home/deploy-dev-web.sh "$release_sha"
 
 if ! DEV_API_IMAGE="$api_image" \
-  docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml up --detach --wait --remove-orphans; then
+  COMPOSE_PROFILES= DEV_OTEL_TRACES_ENDPOINT= docker compose --env-file infra/dev/.env -f infra/dev/compose.yaml up --detach --wait --remove-orphans api postgres; then
   diagnose_compose_start_failure
   exit 1
 fi
+
+./infra/home/dev-launch-agents.sh up
 
 # El renderer consume el contrato HTTP de esta misma API. Promoverlo con el
 # mismo SHA evita que sobreviva una ruta compilada de una versión anterior.

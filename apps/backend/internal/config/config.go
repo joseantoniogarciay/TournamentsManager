@@ -7,6 +7,7 @@ import (
 	"net/netip"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -27,6 +28,12 @@ const (
 	otelTracesEndpointEnv  = "OTEL_TRACES_ENDPOINT"
 )
 
+// AppleConfig is inactive until every real server-side Apple value is supplied.
+type AppleConfig struct {
+	ServiceID, TeamID, KeyID, PrivateKeyFile, RedirectURI, NativeScheme string
+	Enabled                                                             bool
+}
+
 // Config contains only the configuration needed to start the API.
 type Config struct {
 	DatabaseURL         string
@@ -41,6 +48,7 @@ type Config struct {
 	CookieSecure        bool
 	CORSAllowedOrigins  []string
 	GoogleClientIDs     []string
+	Apple               AppleConfig
 	TrustedProxyCIDRs   []netip.Prefix
 	EdgeProxyAuthToken  string
 	OTELTracesEndpoint  string
@@ -105,6 +113,17 @@ func load(getenv func(string) string) (Config, error) {
 		return Config{}, err
 	}
 	googleClientIDs := parseCommaSeparated(getenv(googleClientIDsEnv))
+	filtered := googleClientIDs[:0]
+	for _, id := range googleClientIDs {
+		if configuredValue(id) {
+			filtered = append(filtered, id)
+		}
+	}
+	googleClientIDs = filtered
+	apple, err := loadApple(getenv)
+	if err != nil {
+		return Config{}, err
+	}
 	trustedProxyCIDRs, err := parseTrustedProxyCIDRs(getenv(trustedProxyCIDRsEnv))
 	if err != nil {
 		return Config{}, err
@@ -131,6 +150,7 @@ func load(getenv func(string) string) (Config, error) {
 		CookieSecure:        parsedPublicURL.Scheme == "https",
 		CORSAllowedOrigins:  corsAllowedOrigins,
 		GoogleClientIDs:     googleClientIDs,
+		Apple:               apple,
 		TrustedProxyCIDRs:   trustedProxyCIDRs,
 		EdgeProxyAuthToken:  edgeProxyAuthToken,
 		OTELTracesEndpoint:  otelTracesEndpoint,
@@ -209,4 +229,32 @@ func parseAllowedOrigins(raw string) ([]string, error) {
 		return nil, fmt.Errorf("%s debe contener al menos un origen", corsAllowedOriginsEnv)
 	}
 	return origins, nil
+}
+
+// configuredValue ensures example placeholders never enable a live provider.
+func configuredValue(value string) bool {
+	value = strings.TrimSpace(value)
+	upper := strings.ToUpper(value)
+	return value != "" && !strings.Contains(upper, "PLACEHOLDER") && !strings.Contains(upper, "REPLACE_") && !strings.Contains(upper, "REPLACE-WITH-") && !strings.Contains(upper, "CHANGE-ME") && !strings.ContainsAny(value, "<>")
+}
+
+func loadApple(getenv func(string) string) (AppleConfig, error) {
+	apple := AppleConfig{ServiceID: strings.TrimSpace(getenv("APPLE_SERVICE_ID")), TeamID: strings.TrimSpace(getenv("APPLE_TEAM_ID")), KeyID: strings.TrimSpace(getenv("APPLE_KEY_ID")), PrivateKeyFile: strings.TrimSpace(getenv("APPLE_PRIVATE_KEY_FILE")), RedirectURI: strings.TrimSpace(getenv("APPLE_REDIRECT_URI")), NativeScheme: strings.TrimSpace(getenv("APPLE_NATIVE_SCHEME"))}
+	for _, value := range []string{apple.ServiceID, apple.TeamID, apple.KeyID, apple.PrivateKeyFile, apple.RedirectURI, apple.NativeScheme} {
+		if !configuredValue(value) {
+			return apple, nil
+		}
+	}
+	parsed, err := url.Parse(apple.RedirectURI)
+	if err != nil || parsed.Scheme != "https" || parsed.Host == "" || parsed.User != nil || parsed.Path != "/v1/apple-callback" || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return AppleConfig{}, fmt.Errorf("APPLE_REDIRECT_URI debe ser un callback HTTPS /v1/apple-callback")
+	}
+	if apple.NativeScheme != "fasttourney-dev" && apple.NativeScheme != "fasttourney" {
+		return AppleConfig{}, fmt.Errorf("APPLE_NATIVE_SCHEME debe ser la variante dev o prod")
+	}
+	if !regexp.MustCompile(`^[A-Z0-9]{10}$`).MatchString(apple.TeamID) || !regexp.MustCompile(`^[A-Z0-9]{10}$`).MatchString(apple.KeyID) || !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9.-]+$`).MatchString(apple.ServiceID) {
+		return AppleConfig{}, fmt.Errorf("identificadores Apple no válidos")
+	}
+	apple.Enabled = true
+	return apple, nil
 }

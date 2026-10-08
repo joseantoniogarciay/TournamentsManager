@@ -39,6 +39,7 @@ func requestPasswordReset(service registration.Service, limiter *requestLimiter,
 			return
 		}
 		if err := service.RequestPasswordReset(r.Context(), body.Email); err != nil {
+			recordAuthenticationTechnicalFailure(r.Context(), err)
 			writeProblem(w, http.StatusInternalServerError, "Could not request password reset")
 			return
 		}

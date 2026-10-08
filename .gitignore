@@ -11,8 +11,10 @@ infra/k3s/secrets/*.env
 infra/k3s/secrets/alertmanager-resend-sending-key
 infra/home/secrets/production-web.env
 infra/home/secrets/development-web.env
+infra/home/secrets/posthog-*.env
 infra/home/secrets/app-links/apple-app-site-association
 infra/home/secrets/app-links/assetlinks.json
+infra/home/secrets/app-links-development/
 infra/home/fasttourney-api-edge-token.caddy
 !.env.example
 *.pem
@@ -49,6 +51,7 @@ pnpm-debug.log*
 /apps/client/ios/
 android/.gradle/
 android/app/build/
+/apps/client/modules/*/android/build/
 ios/Pods/
 ios/build/
 

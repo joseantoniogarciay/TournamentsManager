@@ -12,7 +12,6 @@ import {
 import {
   AccessibilityInfo,
   Animated,
-  Modal,
   PanResponder,
   Platform,
   Pressable,
@@ -20,8 +19,11 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FullWindowOverlay } from "react-native-screens";
 
 import { banner, motion, radius, space } from "@tournaments-manager/design-tokens";
+
+import { AndroidFeedbackHost } from "./android-feedback-host";
 
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { Text } from "@/shared/ui/text";
@@ -68,7 +70,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
       if (id === null || id !== activeFeedbackId.current) return;
 
       clearAutoDismiss();
-      if (reducedMotion) {
+      if (reducedMotion || Platform.OS === "android") {
         activeFeedbackId.current = null;
         setFeedback(null);
         return;
@@ -89,34 +91,41 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     [clearAutoDismiss, reducedMotion, visibility],
   );
 
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gesture) =>
-          gesture.dy < -space[2] && Math.abs(gesture.dy) > Math.abs(gesture.dx),
-        onPanResponderMove: (_, gesture) => dragY.setValue(Math.min(gesture.dy, 0)),
-        onPanResponderRelease: (_, gesture) => {
-          if (gesture.dy <= -space[10] || gesture.vy <= -0.5) {
-            dismiss();
-            return;
-          }
+  const panResponder = useMemo(() => {
+    let grantDy = 0;
+    return PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) => {
+        const shouldClaim = gesture.dy < -space[2] && Math.abs(gesture.dy) > Math.abs(gesture.dx);
+        // PanResponder resets dy on grant. Preserve the movement that claimed it,
+        // including a fast swipe whose only move event precedes that grant.
+        if (shouldClaim) grantDy = gesture.dy;
+        return shouldClaim;
+      },
+      onPanResponderMove: (_, gesture) => dragY.setValue(Math.min(grantDy + gesture.dy, 0)),
+      onPanResponderRelease: (_, gesture) => {
+        const totalDy = grantDy + gesture.dy;
+        grantDy = 0;
+        if (totalDy <= -space[10] || gesture.vy <= -0.5) {
+          dismiss();
+          return;
+        }
 
-          Animated.timing(dragY, {
-            duration: motion.feedback,
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        },
-        onPanResponderTerminate: () => {
-          Animated.timing(dragY, {
-            duration: motion.feedback,
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        },
-      }),
-    [dismiss, dragY],
-  );
+        Animated.timing(dragY, {
+          duration: motion.feedback,
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      },
+      onPanResponderTerminate: () => {
+        grantDy = 0;
+        Animated.timing(dragY, {
+          duration: motion.feedback,
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      },
+    });
+  }, [dismiss, dragY]);
 
   useEffect(() => {
     if (!feedback) return;
@@ -207,7 +216,16 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   return (
     <FeedbackContext.Provider value={contextValue}>
       {children}
-      {Platform.OS !== "web" ? <FeedbackBanner /> : null}
+      {Platform.OS === "android" ? (
+        <AndroidFeedbackHost
+          feedback={feedback}
+          onDismiss={dismiss}
+          reducedMotion={reducedMotion}
+          topInset={insets.top}
+        />
+      ) : Platform.OS === "ios" ? (
+        <FeedbackBanner />
+      ) : null}
     </FeedbackContext.Provider>
   );
 }
@@ -219,7 +237,7 @@ export function useFeedback() {
 }
 
 export function FeedbackBanner() {
-  const { banner: feedbackBanner, dismiss } = useFeedback();
+  const { banner: feedbackBanner } = useFeedback();
   if (!feedbackBanner) return null;
 
   // En web el Modal de react-native-web crea un portal de viewport completo.
@@ -233,20 +251,17 @@ export function FeedbackBanner() {
     );
   }
 
-  return (
-    <Modal
-      animationType="none"
-      onRequestClose={() => dismiss()}
-      presentationStyle="overFullScreen"
-      statusBarTranslucent
-      transparent
-      visible
-    >
-      <View pointerEvents="box-none" style={styles.modalHost}>
-        {feedbackBanner}
-      </View>
-    </Modal>
-  );
+  if (Platform.OS === "ios") {
+    return (
+      <FullWindowOverlay>
+        <View pointerEvents="box-none" style={styles.modalHost}>
+          {feedbackBanner}
+        </View>
+      </FullWindowOverlay>
+    );
+  }
+
+  return null;
 }
 
 const styles = StyleSheet.create({

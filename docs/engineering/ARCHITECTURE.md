@@ -39,8 +39,9 @@ los DTOs y el código generado permanecerán fuera del dominio. Véase
 [ADR-0009](../adr/0009-use-rest-and-openapi-contract-first.md).
 
 El backend es autoridad de usuarios, credenciales locales, sesiones y
-autorización. Google es el adaptador federado activo; Apple conserva la misma
-frontera para un futuro incremento móvil. Sus
+autorización. Google y Apple son adaptadores federados sobre la misma
+frontera; Apple se activa solo al completar su configuración de servidor
+(ADR-0147). Sus
 identificadores no entrarán en el dominio como identificador de usuario. Véase
 [ADR-0010](../adr/0010-own-identity-with-federated-login.md).
 

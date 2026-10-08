@@ -1,3 +1,5 @@
+import { configuredGoogleClientID } from "@/features/social-authentication/config";
+import { androidAuthBrowserOptions } from "@/features/social-authentication/browser";
 import * as Google from "expo-auth-session/providers/google";
 import { makeRedirectUri } from "expo-auth-session";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,9 +9,9 @@ import type { GoogleLoginChallenge } from "@/api/generated/models";
 import { beginGoogleAuthentication } from "@/features/federated-google/api";
 
 const clientIDs = {
-  android: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  ios: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-  web: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  android: configuredGoogleClientID(process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID),
+  ios: configuredGoogleClientID(process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID),
+  web: configuredGoogleClientID(process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID),
 } as const;
 
 function clientID() {
@@ -87,8 +89,10 @@ export function useGoogleIdentityProof(
       return;
     }
     try {
-      const result = await promptAsync();
-      if (result.type !== "success") setError(new Error("Google authentication was cancelled"));
+      const result = await promptAsync(
+        Platform.OS === "android" ? await androidAuthBrowserOptions() : undefined,
+      );
+      if (result.type === "error") setError(new Error("Google authentication failed"));
     } catch (nextError) {
       setError(nextError);
     }

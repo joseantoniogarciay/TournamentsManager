@@ -1,3 +1,4 @@
+import { isSocialSession } from "@/features/social-authentication/session";
 import {
   captureProductOutcome,
   APIUnexpectedResponseError,
@@ -59,8 +60,11 @@ export async function finishGoogleAuthentication(input: {
   );
 
   if (response.status === 202) return { kind: "username-required" as const };
+  if (response.status === 429) throw new GoogleAuthenticationError("rate-limited");
   if (response.status === 409) throw new GoogleAuthenticationError("conflict");
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
+  if (!isSocialSession(response.data, input.sessionTransport))
+    throw new APIUnexpectedResponseError(response.status);
   if (input.sessionTransport === "bearer") await saveMobileSession(response.data);
   captureProductOutcome("account_signed_in", response.headers, { method: "google" });
   return { kind: "session" as const, session: response.data };

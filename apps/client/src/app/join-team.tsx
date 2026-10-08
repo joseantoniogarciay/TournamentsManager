@@ -1,7 +1,7 @@
 import * as Linking from "expo-linking";
-import { router, Stack } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
 import { space } from "@tournaments-manager/design-tokens";
 
@@ -15,8 +15,10 @@ import { maximumTeamNameLength } from "@/features/league-creation/draft";
 import {
   clearPendingTeamInvitation,
   getPendingTeamInvitation,
-  isTeamInvitationToken,
+  getPendingTeamInvitationName,
+  invitationTokenFromURL,
   rememberPendingTeamInvitation,
+  rememberPendingTeamInvitationName,
 } from "@/features/league-creation/team-invitation";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
@@ -40,7 +42,9 @@ type Invitation = { tournamentId: string; tournamentName: string };
 
 export default function JoinTeamScreen() {
   const t = getTranslator();
-  const url = Linking.useURL();
+  const linkingURL = Linking.useURL();
+  const url = Platform.OS === "web" ? linkingURL : null;
+  const { invitationRevision } = useLocalSearchParams<{ invitationRevision?: string }>();
   const { colors } = usePreferences();
   const { show } = useFeedback();
   const { rememberLastTeamName, syncUser, user } = useSession();
@@ -60,6 +64,20 @@ export default function JoinTeamScreen() {
   useEffect(() => {
     if (user) void syncUser().catch(() => undefined);
   }, [syncUser, user?.id]);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    void getPendingTeamInvitationName(token)
+      .then((draftName) => {
+        if (!active || draftName === null) return;
+        setNameEdited(true);
+        setName(draftName);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   useEffect(() => {
     let active = true;
@@ -84,11 +102,12 @@ export default function JoinTeamScreen() {
       if (!active) return;
       setToken(pendingToken ?? undefined);
       setInitialized(true);
+      if (Platform.OS !== "web" && invitationRevision) router.replace("/join-team" as never);
     })();
     return () => {
       active = false;
     };
-  }, [url]);
+  }, [invitationRevision, url]);
 
   const load = useCallback(async () => {
     if (!token) {
@@ -131,12 +150,20 @@ export default function JoinTeamScreen() {
       : undefined;
   const join = async () => {
     setSubmitted(true);
-    if (nameError || !token || !invitation) return;
+    if (nameError || !token || !invitation || isSubmitting) return;
+    setIsSubmitting(true);
     if (!user) {
-      router.push("/account-authentication?destination=join-team" as never);
+      try {
+        await rememberPendingTeamInvitationName(token, normalizedName);
+        router.push("/account-authentication?destination=join-team" as never);
+      } catch (error) {
+        const failure = getRequestFailure(error);
+        show({ kind: failure.kind, message: t(failure.messageKey) });
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
-    setIsSubmitting(true);
     try {
       const registration = await joinTournamentWithTeamInvitationRequest(token, normalizedName);
       await rememberLastTeamName(normalizedName).catch(() => undefined);
@@ -242,14 +269,6 @@ export default function JoinTeamScreen() {
       </Screen>
     </>
   );
-}
-
-function invitationTokenFromURL(url: string | null): { present: boolean; token: string | null } {
-  if (!url) return { present: false, token: null };
-  const hashIndex = url.indexOf("#");
-  if (hashIndex === -1) return { present: false, token: null };
-  const value = url.slice(hashIndex + 1);
-  return { present: true, token: isTeamInvitationToken(value) ? value : null };
 }
 
 const styles = StyleSheet.create({

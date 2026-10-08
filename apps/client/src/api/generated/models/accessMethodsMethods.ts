@@ -9,4 +9,5 @@
 export type AccessMethodsMethods = {
   password: boolean;
   google: boolean;
+  apple: boolean;
 };

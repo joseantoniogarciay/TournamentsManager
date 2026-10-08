@@ -4,7 +4,6 @@ import { color, control, radius, space } from "@tournaments-manager/design-token
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { type ThemePreference, usePreferences } from "@/shared/preferences/preferences-provider";
-import { ProductAnalyticsPreferenceCard } from "@/shared/preferences/product-analytics-preference-card";
 import { Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
 const themeOptions: ThemePreference[] = ["system", "light", "dark"];
@@ -31,6 +30,7 @@ export default function AccountSettingsScreen() {
                   <Pressable
                     accessibilityRole="radio"
                     accessibilityState={{ checked: selected }}
+                    aria-checked={selected}
                     key={theme}
                     onPress={() => setThemePreference(theme)}
                     style={[
@@ -47,7 +47,6 @@ export default function AccountSettingsScreen() {
             </View>
           </View>
         </Card>
-        <ProductAnalyticsPreferenceCard />
         {Platform.OS !== "web" ? (
           <Card>
             <View style={styles.notificationRow}>

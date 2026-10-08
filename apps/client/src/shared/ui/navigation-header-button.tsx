@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight,
   },
-  left: { marginLeft: space[5] },
-  right: { marginRight: space[5] },
+  // Android's native toolbar already contributes space[4] at either edge.
+  left: { marginLeft: Platform.OS === "android" ? space[5] - space[4] : space[5] },
+  right: { marginRight: Platform.OS === "android" ? space[5] - space[4] : space[5] },
 });

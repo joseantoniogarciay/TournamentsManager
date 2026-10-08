@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { space } from "@tournaments-manager/design-tokens";
@@ -34,17 +34,31 @@ export function GoogleLinkDialog({
   const [password, setPassword] = useState("");
   const [ticket, setTicket] = useState<string | null>(null);
   const [stage, setStage] = useState<Stage>("reauthenticate");
+  const [reauthenticating, setReauthenticating] = useState(false);
+  const reauthentication = useRef({ generation: 0, busy: false });
+  const handledProofError = useRef<unknown>(null);
 
   useEffect(() => {
     if (!visible) return;
+    const operation = reauthentication.current;
+    const generation = ++operation.generation;
+    operation.busy = false;
+    setReauthenticating(false);
+    setHasPassword(null);
     setPassword("");
     setTicket(null);
     setStage("reauthenticate");
     void getAccountAccessMethods()
-      .then((access) => setHasPassword(access.methods.password))
+      .then((access) => {
+        if (operation.generation === generation) setHasPassword(access.methods.password);
+      })
       .catch(() => {
-        onDismiss();
+        if (operation.generation === generation) onDismiss();
       });
+    return () => {
+      operation.generation++;
+      operation.busy = false;
+    };
   }, [onDismiss, visible]);
 
   const onProof = useCallback(
@@ -64,7 +78,9 @@ export function GoogleLinkDialog({
   const proof = useGoogleIdentityProof(onProof);
 
   useEffect(() => {
-    if (!proof.error) return;
+    if (!proof.error || proof.error === handledProofError.current) return;
+    handledProofError.current = proof.error;
+    if (!visible) return;
     const message =
       proof.error instanceof GoogleLinkError
         ? t(
@@ -77,18 +93,25 @@ export function GoogleLinkDialog({
         : t(getRequestFailure(proof.error).messageKey);
     show({ kind: "generic-error", message });
     onDismiss();
-  }, [onDismiss, proof.error, show, t]);
+  }, [onDismiss, proof.error, show, t, visible]);
 
   useEffect(() => {
-    if (visible && stage === "prepare-google") proof.prepare();
-  }, [proof.prepare, stage, visible]);
+    if (visible && stage === "prepare-google" && proof.isConfigured) proof.prepare();
+  }, [proof.isConfigured, proof.prepare, stage, visible]);
 
   const confirmPassword = async () => {
-    if (password.length < 8) return;
+    const operation = reauthentication.current;
+    if (password.length < 8 || operation.busy) return;
+    const generation = operation.generation;
+    operation.busy = true;
+    setReauthenticating(true);
     try {
-      setTicket(await reauthenticateWithPassword(password, "link-google"));
+      const nextTicket = await reauthenticateWithPassword(password, "link-google");
+      if (operation.generation !== generation) return;
+      setTicket(nextTicket);
       setStage("prepare-google");
     } catch (error) {
+      if (operation.generation !== generation) return;
       show({
         kind: "generic-error",
         message: t(
@@ -98,6 +121,11 @@ export function GoogleLinkDialog({
         ),
       });
       onDismiss();
+    } finally {
+      if (operation.generation === generation) {
+        operation.busy = false;
+        setReauthenticating(false);
+      }
     }
   };
 
@@ -136,8 +164,9 @@ export function GoogleLinkDialog({
               value={password}
             />
             <Button
-              disabled={password.length < 8}
+              disabled={password.length < 8 || reauthenticating}
               label={t("account_google_link_reauthenticate")}
+              loading={reauthenticating}
               onPress={() => void confirmPassword()}
             />
           </>
@@ -159,8 +188,7 @@ export function GoogleLinkDialog({
 }
 
 export default function GoogleLinkScreen() {
-  return (
-    <GoogleLinkDialog onDismiss={() => router.back()} onLinked={() => router.back()} visible />
-  );
+  const dismiss = useCallback(() => router.back(), []);
+  return <GoogleLinkDialog onDismiss={dismiss} onLinked={dismiss} visible />;
 }
 const styles = StyleSheet.create({ form: { gap: space[4] } });

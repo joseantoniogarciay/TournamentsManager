@@ -18,7 +18,7 @@ tags:
   - name: Session
     description: Creación, consulta y revocación de sesiones propias.
   - name: Federated identity
-    description: Autenticación con Google y vinculación explícita de identidades.
+    description: Autenticación con Google y Apple; vinculación explícita de Google.
   - name: Drafts
     description: Borrador local transferido junto al alta.
   - name: Tournaments
@@ -230,6 +230,7 @@ paths:
         "202": { description: "Solicitud aceptada, exista o no una credencial local elegible." }
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
   /password-reset-links:
     post:
       tags: [Password recovery]
@@ -469,6 +470,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/GoogleLoginChallenge" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
         "429": { $ref: "#/components/responses/RateLimitProblem" }
         "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
   /google-sessions:
@@ -494,6 +496,90 @@ paths:
         "409":
           description: La identidad es nueva, pero su email ya pertenece a otra cuenta; no se vincula ni se crea sesión.
           $ref: "#/components/responses/VerificationConflictProblem"
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
+  /apple-login-challenges:
+    post:
+      tags: [Federated identity]
+      operationId: createAppleLoginChallenge
+      summary: Prepara Apple en navegador con una prueba ligada al cliente
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AppleLoginChallengeRequest" }
+      responses:
+        "201":
+          description: Challenge creado; expira en cinco minutos.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AppleLoginChallenge" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
+  /apple-callback:
+    post:
+      tags: [Federated identity]
+      operationId: receiveAppleCallback
+      summary: Recibe form_post de Apple y verifica el código en servidor
+      description: >-
+        Navegación exclusiva del proveedor; no la invoca la feature cliente.
+        El retorno fijo transporta solo challengeId y status ready/cancelled/failed.
+        No emite cookies, sesión ni tokens. Un fallo tras reclamar un state válido
+        retorna status failed; un state inválido nunca redirige.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [state]
+              properties:
+                state: { type: string, minLength: 43, maxLength: 43 }
+                code: { type: string, maxLength: 4096 }
+                error: { type: string }
+                user:
+                  type: string
+                  description: Ignorado; no se confía en los datos sin firma del proveedor.
+      responses:
+        "303":
+          description: Vuelve al cliente iniciador; no acredita una sesión.
+          headers:
+            Location:
+              schema: { type: string, format: uri }
+              description: Retorno configurado por entorno y plataforma.
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
+  /apple-sessions:
+    post:
+      tags: [Federated identity]
+      operationId: createAppleSession
+      summary: Consume la prueba Apple y abre sesión o solicita datos de alta
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AppleAuthenticationRequest" }
+      responses:
+        "200":
+          description: Sesión propia creada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionEstablishment" }
+        "202":
+          description: Identidad nueva; requiere username, locale y términos. No hay sesión.
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "409":
+          description: El email ya pertenece a otra cuenta; usa su método de acceso existente.
+          $ref: "#/components/responses/VerificationConflictProblem"
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
         "500": { $ref: "#/components/responses/RequestProblem" }
         "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
   /me/tournaments:
@@ -929,6 +1015,7 @@ paths:
         posterior.
         El resultado se aplica inmediatamente; una corrección conserva su
         historial interno de valores y autora.
+        Los resultados administrativos por baja de un equipo no admiten correcciones.
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       parameters:
         - name: tournamentId
@@ -957,7 +1044,8 @@ paths:
         "409":
           description: >-
             El torneo no está en curso, faltan participantes o un partido
-            posterior ya consumió el resultado.
+            posterior ya consumió el resultado, o el resultado es administrativo
+            por baja de un equipo.
   /tournaments/{tournamentId}/administrators:
     get:
       tags: [Tournaments]
@@ -1379,10 +1467,11 @@ components:
         username: { $ref: "#/components/schemas/Username" }
         methods:
           type: object
-          required: [password, google]
+          required: [password, google, apple]
           properties:
             password: { type: boolean }
             google: { type: boolean }
+            apple: { type: boolean }
     ReauthenticationRequest:
       type: object
       required: [purpose]
@@ -1453,6 +1542,37 @@ components:
         nextCursor:
           description: Ausente cuando no hay más elementos.
           allOf: [{ $ref: "#/components/schemas/UUID" }]
+    AppleLoginChallengeRequest:
+      type: object
+      required: [platform, proofChallenge]
+      properties:
+        platform: { type: string, enum: [web, ios, android] }
+        proofChallenge:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+          description: SHA-256 hexadecimal de apple-login-proof seguido de dos puntos y el secreto del cliente.
+    AppleLoginChallenge:
+      type: object
+      required: [id, authorizationUrl, returnUrl, expiresAt]
+      properties:
+        id: { type: string, format: uuid }
+        authorizationUrl: { type: string, format: uri }
+        returnUrl: { type: string, format: uri }
+        expiresAt: { type: string, format: date-time }
+    AppleAuthenticationRequest:
+      type: object
+      required: [challengeId, proof, sessionTransport]
+      properties:
+        challengeId: { type: string, format: uuid }
+        proof:
+          type: string
+          pattern: "^[A-Za-z0-9_-]{43}$"
+          description: Secreto aleatorio de 32 bytes del cliente iniciador; nunca se incluye en URLs.
+        sessionTransport: { $ref: "#/components/schemas/Transport" }
+        username: { $ref: "#/components/schemas/Username" }
+        locale: { $ref: "#/components/schemas/Locale" }
+        termsVersion: { type: string, enum: ["2026-08-22"] }
+        draft: { $ref: "#/components/schemas/TournamentDraftInput" }
     GoogleLoginChallenge:
       type: object
       required: [id, nonce, expiresAt]

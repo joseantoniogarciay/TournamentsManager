@@ -41,7 +41,7 @@ exportación nunca lee el `.env` genérico del repositorio. Los ficheros de asoc
 móvil reales viven, cuando exista el lanzamiento nativo, junto a él en
 `infra/home/secrets/app-links/`; las plantillas de referencia están en
 `infra/app-links/`. Sin esos ficheros el script prepara un release web válido
-sin `/.well-known`; si se aporta solo uno o sus valores no son reales, lo
+sin `/.well-known`; si se aporta solo uno o su estructura no es válida, lo
 rechaza. En todos los casos rechaza marcadores de ejemplo, árbol Git sucio o un
 SHA que no sea el `HEAD` actual.
 
@@ -150,3 +150,25 @@ ADR-0115; la fuente y el procedimiento siguen versionados en el repositorio.
 Consulta el
 [runbook PostgreSQL de K3s](../../docs/runbooks/k3s-postgresql.md) para la
 verificación posterior.
+
+### Asociaciones móviles por release
+
+Dev incorpora su par JSON desde `infra/home/secrets/app-links-development/`;
+prod conserva `infra/home/secrets/app-links/`. Ambos scripts usan el validador
+compartido de `infra/app-links/prepare.mjs`. Para un release móvil ejecuta el
+procedimiento habitual con `FASTTOURNEY_REQUIRE_APP_LINKS=1`; sin asociaciones
+solo se admite el carril web. La validación de formato no acredita la propiedad
+de los certificados. Caddy excluye `/.well-known/*` del fallback SPA en los dos
+hosts y fija `application/json`. Véase el [procedimiento y validación nativa](../app-links/README.md).
+
+### Desarrollo y observabilidad bajo petición — ADR-0146
+
+Local/dev permanecen apagados fuera de pruebas. Los comandos ordinarios de
+arranque, despliegue y rollback no activan los seis servicios de observabilidad;
+Compose los agrupa en `observability`, sin reinicio automático, y la API no
+exporta trazas mientras estén apagados. Solo una petición explícita autoriza
+`make dev-observability-up` o `make dev-public-observability-up`, con API ya activa.
+Los comandos `*-observability-down` cierran el diagnóstico y `dev-down` /
+`dev-public-down` cierran las pruebas conservando datos. Público suspende sus
+LaunchAgents de renderer, purga y backups y los rehabilita al arrancar pruebas.
+Producción/K3s conserva sus servicios y controles.

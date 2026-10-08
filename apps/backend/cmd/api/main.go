@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/accounts"
+	appleadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/apple"
 	googleadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/google"
 	httpadapter "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/http"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres"
@@ -91,20 +92,36 @@ func run(args []string) error {
 		federatedService = &service
 		riscReceiver = httpadapter.NewRISCEventReceiver(googleadapter.NewRISCVerifier(appConfig.GoogleClientIDs), service)
 	}
+	var appleService *federated.AppleService
+	if appConfig.Apple.Enabled {
+		privatePEM, err := os.ReadFile(appConfig.Apple.PrivateKeyFile)
+		if err != nil {
+			return fmt.Errorf("read Apple signing key: %w", err)
+		}
+		provider, err := appleadapter.NewProvider(appConfig.Apple.ServiceID, appConfig.Apple.TeamID, appConfig.Apple.KeyID, appConfig.Apple.RedirectURI, privatePEM)
+		if err != nil {
+			return err
+		}
+		service := federated.NewAppleService(postgres.NewFederatedRepository(pool), provider)
+		appleService = &service
+	}
 	tournamentCreation := tournaments.NewCreationService(accountTournaments)
 
 	server := &http.Server{
 		Addr: appConfig.HTTPAddr,
 		Handler: observability.HTTPHandler(httpadapter.NewHandlerWithConfig(
 			httpadapter.HandlerConfig{
-				CORSAllowedOrigins: appConfig.CORSAllowedOrigins,
-				CookieSecure:       appConfig.CookieSecure,
-				TrustedProxyCIDRs:  appConfig.TrustedProxyCIDRs,
-				EdgeProxyAuthToken: appConfig.EdgeProxyAuthToken,
+				CORSAllowedOrigins:   appConfig.CORSAllowedOrigins,
+				AppleWebReturnURL:    appConfig.PublicBaseURL + "/oauth/apple-complete",
+				AppleNativeReturnURL: appConfig.Apple.NativeScheme + "://oauth/apple-complete",
+				CookieSecure:         appConfig.CookieSecure,
+				TrustedProxyCIDRs:    appConfig.TrustedProxyCIDRs,
+				EdgeProxyAuthToken:   appConfig.EdgeProxyAuthToken,
 			},
 			httpadapter.HandlerDependencies{
 				Registration:       registrationService,
 				Federated:          federatedService,
+				Apple:              appleService,
 				Authenticator:      accountTournaments,
 				TournamentList:     tournaments.NewService(accountTournaments),
 				TournamentCreation: &tournamentCreation,

@@ -137,14 +137,16 @@ WITH eligible_account AS (
       AND accounts.state = 'verified'
 ), invalidated_tokens AS (
     UPDATE password_reset_tokens
-    SET invalidated_at = now()
+    SET invalidated_at = statement_timestamp()
     WHERE account_id = (SELECT id FROM eligible_account)
       AND consumed_at IS NULL
       AND invalidated_at IS NULL
+    RETURNING account_id
 )
-INSERT INTO password_reset_tokens (account_id, token_hash, expires_at)
-SELECT id, $2, now() + interval '30 minutes'
+INSERT INTO password_reset_tokens (account_id, token_hash, created_at, expires_at)
+SELECT id, $2, statement_timestamp(), statement_timestamp() + interval '30 minutes'
 FROM eligible_account
+CROSS JOIN (SELECT count(*) FROM invalidated_tokens) AS invalidation_complete
 RETURNING (SELECT email FROM eligible_account) AS email,
           (SELECT locale FROM eligible_account) AS locale
 `
@@ -266,19 +268,57 @@ func (q *Queries) IsUsernameAvailable(ctx context.Context, username string) (boo
 	return available, err
 }
 
+const lockPasswordResetAccount = `-- name: LockPasswordResetAccount :one
+SELECT accounts.id
+FROM accounts
+JOIN local_credentials ON local_credentials.account_id = accounts.id
+WHERE lower(accounts.email) = lower($1) AND accounts.state = 'verified'
+FOR UPDATE OF accounts
+`
+
+func (q *Queries) LockPasswordResetAccount(ctx context.Context, lower string) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, lockPasswordResetAccount, lower)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const lockPendingLoginVerification = `-- name: LockPendingLoginVerification :one
+SELECT email, locale
+FROM accounts
+WHERE id = $1 AND state = 'pending_verification'
+FOR UPDATE
+`
+
+type LockPendingLoginVerificationRow struct {
+	Email  string
+	Locale string
+}
+
+func (q *Queries) LockPendingLoginVerification(ctx context.Context, id pgtype.UUID) (LockPendingLoginVerificationRow, error) {
+	row := q.db.QueryRow(ctx, lockPendingLoginVerification, id)
+	var i LockPendingLoginVerificationRow
+	err := row.Scan(&i.Email, &i.Locale)
+	return i, err
+}
+
 const renewLoginVerification = `-- name: RenewLoginVerification :one
 WITH invalidated_tokens AS (
     UPDATE email_verification_tokens
-    SET invalidated_at = now()
+    SET invalidated_at = statement_timestamp()
     WHERE account_id = $1
       AND consumed_at IS NULL
       AND invalidated_at IS NULL
+    RETURNING account_id
 ), created_token AS (
-    INSERT INTO email_verification_tokens (account_id, token_hash, expires_at)
-    VALUES ($1, $2, now() + interval '24 hours')
+    INSERT INTO email_verification_tokens (account_id, token_hash, created_at, expires_at)
+    SELECT $1, $2, statement_timestamp(), statement_timestamp() + interval '24 hours'
+    FROM (SELECT count(*) FROM invalidated_tokens) AS invalidation_complete
+    RETURNING account_id
 )
 SELECT accounts.email, accounts.locale
 FROM accounts
+JOIN created_token ON created_token.account_id = accounts.id
 WHERE accounts.id = $1 AND accounts.state = 'pending_verification'
 `
 

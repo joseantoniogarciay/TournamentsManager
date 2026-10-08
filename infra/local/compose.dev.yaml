@@ -11,7 +11,7 @@ x-development-logging: &development-logging
 services:
   postgres:
     image: postgres:18.4-bookworm
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
     env_file:
       - .env
@@ -28,7 +28,7 @@ services:
 
   mailpit:
     image: axllent/mailpit:v1.30.5
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
     ports:
       - "127.0.0.1:1025:1025"
@@ -44,8 +44,11 @@ services:
     build:
       context: ../../apps/backend
       target: dev
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
+    environment:
+      # Overrides the env_file: no exporter retries while Tempo is off.
+      OTEL_TRACES_ENDPOINT: ${DEV_OTEL_TRACES_ENDPOINT:-}
     env_file:
       - api.docker.env
     ports:
@@ -61,8 +64,9 @@ services:
         condition: service_healthy
 
   prometheus:
+    profiles: [observability]
     image: prom/prometheus:v3.5.0
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
     command:
       [
@@ -79,8 +83,9 @@ services:
       - prometheus-data:/prometheus
 
   alertmanager:
+    profiles: [observability]
     image: prom/alertmanager:v0.33.1
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
     command: [--config.file=/etc/alertmanager/alertmanager.yml, --storage.path=/alertmanager]
     ports:
@@ -90,8 +95,9 @@ services:
       - alertmanager-data:/alertmanager
 
   loki:
+    profiles: [observability]
     image: grafana/loki:3.5.1
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
     command: -config.file=/etc/loki/config.yml
     volumes:
@@ -99,8 +105,9 @@ services:
       - loki-data:/loki
 
   promtail:
+    profiles: [observability]
     image: grafana/promtail:3.5.0
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
     command: -config.file=/etc/promtail/config.yml
     volumes:
@@ -111,8 +118,9 @@ services:
       - loki
 
   tempo:
+    profiles: [observability]
     image: grafana/tempo:2.8.2
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
     command: -config.file=/etc/tempo/config.yml
     ports:
@@ -122,8 +130,9 @@ services:
       - tempo-data:/var/tempo
 
   grafana:
+    profiles: [observability]
     image: grafana/grafana:12.0.2
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"

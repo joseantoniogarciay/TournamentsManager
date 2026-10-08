@@ -60,26 +60,7 @@ if [ "$configured_tip_links" -ne 0 ] && [ "$configured_tip_links" -ne 3 ]; then
   exit 1
 fi
 
-has_app_links=false
-if [ -e "$app_links_directory/apple-app-site-association" ] || \
-  [ -e "$app_links_directory/assetlinks.json" ]; then
-  if [ ! -r "$app_links_directory/apple-app-site-association" ] || \
-    [ ! -r "$app_links_directory/assetlinks.json" ]; then
-    echo "Las asociaciones móviles deben aportar ambos ficheros en $app_links_directory." >&2
-    exit 1
-  fi
-  if ! jq -e '.applinks.details[0].appIDs[0] | test("^[A-Z0-9]+\\.com\\.fasttourney\\.app$")' \
-    "$app_links_directory/apple-app-site-association" >/dev/null; then
-    echo "apple-app-site-association no contiene el Team ID real de producción." >&2
-    exit 1
-  fi
-  if ! jq -e '.[]?.target | select(.package_name == "com.fasttourney.app") | .sha256_cert_fingerprints[] | test("^[A-F0-9:]{95}$")' \
-    "$app_links_directory/assetlinks.json" >/dev/null; then
-    echo "assetlinks.json no contiene una huella SHA-256 real de producción." >&2
-    exit 1
-  fi
-  has_app_links=true
-fi
+node "$repository_root/infra/app-links/prepare.mjs" production "$app_links_directory"
 
 cd "$repository_root"
 if [ -n "$(git status --porcelain)" ]; then
@@ -103,15 +84,11 @@ EXPO_NO_DOTENV=1 \
   APP_ENV=production \
   EXPO_PUBLIC_API_BASE_URL=https://api.fasttourney.com/v1 \
   EXPO_PUBLIC_APP_LINK_URL=https://fasttourney.com \
-  pnpm --filter @tournaments-manager/client exec expo export --platform web --clear --output-dir "$staging_directory"
+  pnpm --filter @tournaments-manager/client exec expo export --platform web --source-maps --clear --output-dir "$staging_directory"
 
-if [ "$has_app_links" = true ]; then
-  install -d -m 755 "$staging_directory/.well-known"
-  install -m 644 "$app_links_directory/apple-app-site-association" \
-    "$staging_directory/.well-known/apple-app-site-association"
-  install -m 644 "$app_links_directory/assetlinks.json" \
-    "$staging_directory/.well-known/assetlinks.json"
-fi
+node "$repository_root/infra/home/prepare-web-telemetry.mjs" production "$staging_directory" "$release_sha"
+
+node "$repository_root/infra/app-links/prepare.mjs" production "$app_links_directory" "$staging_directory"
 
 deployed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 printf '{\n  "commit": "%s",\n  "builtAt": "%s"\n}\n' \
@@ -119,8 +96,4 @@ printf '{\n  "commit": "%s",\n  "builtAt": "%s"\n}\n' \
 
 mv "$staging_directory" "$release_directory"
 trap - EXIT
-if [ "$has_app_links" = true ]; then
-  printf 'Release web de prod preparado con asociaciones móviles, sin activar: %s\n' "$release_sha"
-else
-  printf 'Release web de prod preparado sin asociaciones móviles, sin activar: %s\n' "$release_sha"
-fi
+printf 'Release web de prod preparado, sin activar: %s\n' "$release_sha"

@@ -46,6 +46,10 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 		return federated.Session{}, err
 	}
 
+	return resolveFederatedSession(ctx, tx, queries, "google", identity, registration, draft, accessHash, refreshHash)
+}
+
+func resolveFederatedSession(ctx context.Context, tx pgx.Tx, queries *sqlc.Queries, provider string, identity federated.Identity, registration *federated.Registration, draft *federated.Draft, accessHash, refreshHash []byte) (federated.Session, error) {
 	account, err := queries.FindGoogleIdentityAccount(ctx, sqlc.FindGoogleIdentityAccountParams{Issuer: identity.Issuer, Subject: identity.Subject})
 	if err == nil {
 		lastTeamName := nullableText(account.LastTeamName)
@@ -62,6 +66,9 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return federated.Session{}, err
 	}
+	if !identity.EmailVerified || strings.TrimSpace(identity.Email) == "" {
+		return federated.Session{}, federated.ErrChallengeInvalid
+	}
 	if exists, err := queries.AccountEmailExists(ctx, identity.Email); err != nil {
 		return federated.Session{}, err
 	} else if exists {
@@ -75,11 +82,16 @@ func (r FederatedRepository) AuthenticateGoogle(ctx context.Context, challengeID
 	if err != nil {
 		return federated.Session{}, err
 	}
-	if err := queries.CreateGoogleExternalIdentity(ctx, sqlc.CreateGoogleExternalIdentityParams{AccountID: accountID, Issuer: identity.Issuer, Subject: identity.Subject}); err != nil {
+	if provider == "apple" {
+		err = queries.CreateAppleExternalIdentity(ctx, sqlc.CreateAppleExternalIdentityParams{AccountID: accountID, Issuer: identity.Issuer, Subject: identity.Subject})
+	} else {
+		err = queries.CreateGoogleExternalIdentity(ctx, sqlc.CreateGoogleExternalIdentityParams{AccountID: accountID, Issuer: identity.Issuer, Subject: identity.Subject})
+	}
+	if err != nil {
 		return federated.Session{}, err
 	}
 	emailHash := sha256.Sum256([]byte("legal-account-email:" + strings.ToLower(identity.Email)))
-	if _, err := tx.Exec(ctx, `INSERT INTO legal_account_acceptances (account_id, email_hash, terms_version, terms_content_hash, source) VALUES ($1, $2, $3, $4, 'google_registration')`, accountID, emailHash[:], registration.TermsVersion, legal.CurrentTermsContentHash()); err != nil {
+	if _, err := tx.Exec(ctx, `INSERT INTO legal_account_acceptances (account_id, email_hash, terms_version, terms_content_hash, source) VALUES ($1, $2, $3, $4, $5)`, accountID, emailHash[:], registration.TermsVersion, legal.CurrentTermsContentHash(), provider+"_registration"); err != nil {
 		return federated.Session{}, err
 	}
 	if draft != nil {

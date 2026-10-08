@@ -10,6 +10,13 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 
 ## Fundaciones
 
+- **Iconos y texto ampliado:** los glifos de iconos mantienen el tamaño del token
+  dentro de su caja; el texto de la interfaz conserva el escalado de accesibilidad.
+  `expo-symbols` 57.0.2 dibuja Material Symbols mediante `Text` en Android/web:
+  un parche pnpm desactiva `allowFontScaling` únicamente en ese glifo para evitar
+  su recorte al ampliar la letra. SF Symbols en iOS mantiene su implementación
+  nativa. Revalidar y retirar el parche cuando la dependencia corrija este caso.
+
 - **Color:** azul como acción primaria; violeta como acento; superficies claras;
   verde, ámbar y rojo reservados para estado y feedback.
 - **Indicadores informativos:** un número de paso o un marcador no interactivo
@@ -55,9 +62,14 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   viewport visual, también al aparecer el teclado. El padding inferior de un
   formulario web no toma el safe-area inset, porque puede variar al aparecer el
   teclado. Solo Safari recibe además una segunda medida del viewport al terminar
-  de ocultar el teclado para descartar la altura intermedia. En iOS, los
-  `ScrollView` de formularios ajustan su inset de teclado para que el campo
-  activo pueda desplazarse por encima de la barra y el teclado.
+  de ocultar el teclado para descartar la altura intermedia. Los formularios
+  nativos usan `KeyboardAwareScrollView`: al enfocar un campo o aparecer el
+  teclado, desplaza solo lo necesario para dejar el control completo visible
+  con 20 px de separación. En iOS conserva el ajuste nativo de insets; en
+  Android añade únicamente la oclusión restante tras el resize de la ventana.
+  El espacio temporal desaparece al ocultar el teclado y el arrastre no lo
+  descarta por defecto. `autoFocus` sigue siendo una elección de cada ruta;
+  mantener visible el foco no exige abrir el teclado en todos los formularios.
 - **Web en iPhone:** el viewport web usa `viewport-fit=cover` para que la
   superficie `canvas` alcance las zonas superior e inferior del navegador. Los
   insets existentes siguen reservando esas zonas al contenido; el documento web
@@ -75,16 +87,38 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 - **Botonera web:** web usa la barra inferior estándar de `Tabs`, no el fallback
   de `NativeTabs`. Conserva las tres rutas, iconos y colores semánticos; Cuenta
   ofrece en su cabecera el mismo acceso localizado a Ajustes que las apps.
+- **Botonera Android:** `NativeTabs` recibe fondo, colores de etiquetas e iconos
+  y superficie del indicador desde los tokens del tema resuelto. Los colores
+  dinámicos Material por defecto siguen el tema del SO y no garantizan que una
+  preferencia explícita de la app se aplique a la barra.
+- **Barra de estado nativa:** la raíz consume el tema resuelto para el estilo
+  de `StatusBar`, renovado con la revisión de sesión. Los iconos deben ser
+  oscuros en claro y claros en oscuro; ninguna pantalla controla por separado
+  esta apariencia. No se configura `statusBarStyle` en el stack: el binario iOS
+  actual usa control global de apariencia. La revisión de QA del 2026-10-04
+  registra el contraste de los retornos contextuales por plataforma.
+- **Sustitución de sesión:** el stack raíz conserva su identidad nativa mientras
+  se cierran rutas anteriores y se abre el destino contextual. La revisión de
+  sesión renueva tabs y apariencia; no desmonta el presentador raíz de modales.
+  Android separa las operaciones en frames cancelables para evitar actualizar
+  fragmentos retirados. iOS/web mantienen su secuencia de navegación inmediata.
 - **Controles de cabecera:** toda acción de navegación que no use Liquid Glass
   —web, Android e iOS anterior a 26— usa un objetivo circular de 44 px,
   superficie por defecto y borde semántico mediante `NavigationHeaderButton`.
-  Web y Android lo separan 20 px del lateral; en iOS anterior a 26 el botón no
+  Web y Android lo separan 20 px del lateral. Web añade los 20 px completos;
+  Android añade solo 4 px porque la toolbar nativa ya aporta 16 px por lateral.
+  El margen del botón complementa ese inset, no lo duplica. En iOS anterior a 26 el botón no
   añade margen porque la cabecera ya aplica su inset nativo, alineándolo con el
   control de `Stack.Toolbar.Button` de iOS 26. iOS 26 o superior conserva
   `Stack.Toolbar.Button` para respetar Liquid Glass. Cuando una ruta muestra en
   cabecera el nombre de una entidad,
   este se centra, reserva 20 px frente a los controles laterales y puede ocupar
   dos líneas; no se impone un ancho fijo que lo trunque antes de agotar ese espacio.
+  En la ficha de torneo iOS, el título personalizado limita su ancho con el ancho
+  actual de ventana, los insets seguros y la reserva de controles y separación;
+  su tamaño intrínseco no debe extenderse detrás de la toolbar. Las acciones de
+  Equipos y Clasificación conservan su ancho de contenido y pueden pasar a otra
+  fila cuando el texto aumentado agota el espacio.
 - **Tipografía:** Figtree local en web, iOS y Android, con los pesos 400, 500,
   600 y 700 cargados antes de montar la interfaz. Los tokens seleccionan la
   familia real de cada peso, en vez de sintetizarlo con `fontWeight`. La escala
@@ -107,19 +141,19 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 
 ## Componentes a implementar
 
-| Componente         | Estados mínimos                                            | Regla de interacción                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ------------------ | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Button             | primary, secondary, ghost, destructive, disabled, loading  | `loading` deshabilita el control y reserva el ancho del texto para el loader. `destructive` conserva la superficie transparente, borde y texto de error; no existe una variante destructiva rellena para mantener la misma jerarquía en menús y confirmaciones.                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Selector de opción | default, selected, disabled                                | Las alternativas de una misma configuración comparten forma y estados aunque seleccionen dimensiones distintas. La opción elegida usa superficie primaria sólida y la no elegida, superficie y borde neutros; no se reutiliza la jerarquía visual de un botón de acción para representar selección.                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| TextField          | default, focus, filled, error, disabled                    | El foco usa el borde azul primario del perímetro completo del campo; en web no se muestra un anillo interno adicional. El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. Un campo de contraseña que ofrece visibilidad muestra ojo u ojo tachado según su estado y mantiene un objetivo táctil de 44 px.                                                                                                                                                                                                                                                                                                                                                                          |
-| Picker             | default, focus, selected, error, disabled                  | Abre un selector adaptado a plataforma y conserva etiqueta visible.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Checkbox / Switch  | default, selected, disabled, error                         | Objetivo táctil mínimo de 44 px. Si su texto contiene documentos legales, sus enlaces se integran en ese texto y no duplican acciones independientes; pulsarlos abren la ruta legal sin modificar la selección.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Card               | standard, compact, actionable, selected                    | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado. La densidad `compact` se reserva para filas de una sola línea con una acción de 44 px; conserva borde, radio y margen exterior.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Banner             | network-error, generic-error, success                      | Gestor global de aviso único: sustituye el actual, se coloca arriba del área segura como una card y tiene autocierre, toque o arrastre vertical hacia arriba para descartarlo.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ConfirmationDialog | visible, cerrado                                           | El estado y la API son compartidos, pero su host se monta en cada `Screen` activa. Así un diálogo de una ruta nativa se presenta sobre esa ruta y no detrás de su modal o de la tab bar. Usa el blur oscuro clásico de iOS, sin la tinta dinámica de Liquid Glass, para conservar un scrim neutro y legible. Su borde usa `border.default` en ambos temas para separar el diálogo sin crear una variante exclusiva de oscuro. Android añade una atenuación neutra leve si el blur no está disponible. En web, el scrim transiciona simultáneamente desde `blur(0px)` hasta el blur final; el `Modal` no aplica `fade` para que el filtro pueda muestrear la página durante toda la entrada. Tocar fuera equivale a cancelar. |
-| LoadingTransition  | active, mensaje localizado, movimiento reducido            | Capa opaca modal con mensaje y loader; bloquea interacción y solo entra o sale con `fade`. Toda carga inicial que impida mostrar el contenido de una ruta la usa centrada sobre la pantalla; los indicadores locales se reservan para contenido parcial o acciones en curso.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| RequestErrorCard   | error de red, genérico o no disponible; reintento o cierre | Estado terminal de una carga sin contenido. Recibe el mensaje seguro ya clasificado; reintenta cuando esa acción puede recuperar la carga y ofrece cierre cuando la feature conoce un estado terminal, como un recurso que devuelve `404`. Sustituye al banner para no duplicar el aviso en una pantalla vacía.                                                                                                                                                                                                                                                                                                                                                                                                              |
-| InlineMessage      | error, help, success                                       | Bajo el control asociado; texto claro y disponible para lector de pantalla.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Componente         | Estados mínimos                                            | Regla de interacción                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Button             | primary, secondary, ghost, destructive, disabled, loading  | `loading` deshabilita el control y reserva el ancho del texto para el loader. `destructive` conserva la superficie transparente, borde y texto de error; no existe una variante destructiva rellena para mantener la misma jerarquía en menús y confirmaciones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Selector de opción | default, selected, disabled                                | Las alternativas de una misma configuración comparten forma y estados aunque seleccionen dimensiones distintas. La opción elegida usa superficie primaria sólida y la no elegida, superficie y borde neutros; no se reutiliza la jerarquía visual de un botón de acción para representar selección.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| TextField          | default, focus, filled, error, disabled                    | El foco usa el borde azul primario del perímetro completo del campo; en web no se muestra un anillo interno adicional. El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. Un campo de contraseña que ofrece visibilidad muestra ojo u ojo tachado según su estado y mantiene un objetivo táctil de 44 px.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Picker             | default, focus, selected, error, disabled                  | Abre un selector adaptado a plataforma y conserva etiqueta visible.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Checkbox / Switch  | default, selected, disabled, error                         | Objetivo táctil mínimo de 44 px. Si su texto contiene documentos legales, sus enlaces se integran en ese texto y no duplican acciones independientes; pulsarlos abren la ruta legal sin modificar la selección.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Card               | standard, compact, actionable, selected                    | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado. La densidad `compact` se reserva para filas de una sola línea con una acción de 44 px; conserva borde, radio y margen exterior.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Banner             | network-error, generic-error, success                      | Gestor global de aviso único: sustituye el actual, se coloca arriba del área segura como una card y tiene autocierre, toque o arrastre vertical hacia arriba para descartarlo.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ConfirmationDialog | visible, cerrado                                           | El estado y la API son compartidos, pero su host se monta en cada `Screen` activa. Así un diálogo de una ruta nativa se presenta sobre esa ruta y no detrás de su modal o de la tab bar. Usa el blur oscuro clásico de iOS, sin la tinta dinámica de Liquid Glass, para conservar un scrim neutro y legible. Su borde usa `border.default` en ambos temas para separar el diálogo sin crear una variante exclusiva de oscuro. Android usa explícitamente `blurMethod="none"` con el tinte de respaldo y una atenuación neutra leve: el `Modal` compartido no proporciona un `blurTarget` al SDK. El blur real Android y su comparación nativa siguen pendientes; iOS conserva su blur nativo. En web, el scrim transiciona simultáneamente desde `blur(0px)` hasta el blur final; el `Modal` no aplica `fade` para que el filtro pueda muestrear la página durante toda la entrada. Tocar fuera equivale a cancelar. |
+| LoadingTransition  | active, mensaje localizado, movimiento reducido            | Capa opaca modal con mensaje y loader; bloquea interacción y solo entra o sale con `fade`. Toda carga inicial que impida mostrar el contenido de una ruta la usa centrada sobre la pantalla; los indicadores locales se reservan para contenido parcial o acciones en curso.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| RequestErrorCard   | error de red, genérico o no disponible; reintento o cierre | Estado terminal de una carga sin contenido. Recibe el mensaje seguro ya clasificado; reintenta cuando esa acción puede recuperar la carga y ofrece cierre cuando la feature conoce un estado terminal, como un recurso que devuelve `404`. Sustituye al banner para no duplicar el aviso en una pantalla vacía.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| InlineMessage      | error, help, success                                       | Bajo el control asociado; texto claro y disponible para lector de pantalla.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 El deporte del torneo usa el «Selector de opción» al principio del formulario de
 creación, antes de los campos que pueda condicionar. Sus valores son «Fútbol»,
@@ -202,6 +236,17 @@ mantienen el `Modal` nativo para presentar el aviso por encima de la navegación
 Una acción externa que se represente solo con un icono de marca, como Google,
 conserva un objetivo táctil de al menos 44 px, forma circular y `accessibilityLabel`
 localizado. El asset se guarda localmente: no se descarga durante el uso de la app.
+En Cuenta, Apple y Google comparten una fila centrada: iOS y web muestran Apple
+primero, Android muestra Google primero. El orden de renderizado y accesibilidad
+coincide con el visual. Ambos controles son círculos de 48 px separados
+16 px, sin texto visible y con etiqueta accesible localizada. Apple usa un asset
+local monocromo teñido con el color de texto; Google conserva su marca multicolor.
+Los proveedores sin configuración permanecen visibles y deshabilitados.
+La casilla compartida `TermsAcceptance` comunica el mismo booleano mediante
+`accessibilityState.checked` nativo y `aria-checked` en web. La comprobación web
+incluye los estados `true` y `false` del nodo, además de la habilitación del
+envío; la versión instalada de react-native-web no transforma por sí sola
+`accessibilityState.checked` en ese atributo.
 El nonce requerido por un proveedor se precarga al enfocar la ruta que muestra
 su acción, nunca al montar una tab que permanece oculta. Mientras se prepara,
 el icono se sustituye por un loader sin bloquear el resto de la pantalla; un
@@ -311,3 +356,63 @@ y parcial de pádel, y 390×844 para baloncesto. La secuencia de dos sets
 incompletos bloquea Guardar. La ruta se retira antes de exportar. El teclado
 nativo requiere validación posterior en dispositivo; el viewport web no lo
 acredita.
+
+## Idioma automático
+
+Según ADR-0143, el idioma se obtiene del sistema en móvil y del navegador en
+web. No se ofrece selector de idioma. Se mantienen los catálogos es/en/it/fr
+y el fallback inglés.
+
+La decisión ADR-0149 retira temporalmente los controles de analítica de uso de
+Inicio/Ajustes: no hay captura de producto activa. La fiabilidad mínima prod
+no se presenta como una preferencia de uso; las preferencias antiguas no activan
+SDK en beta/local ni eventos de producto.
+
+### Biblioteca paginada (2026-10-05)
+
+Administro y Sigo cargan páginas independientes bajo demanda mediante un Button
+secundario localizado «Cargar más» al final de la lista, con margen horizontal
+space[5]. El contador muestra el número cargado más `+` mientras hay cursor;
+solo muestra un número definitivo al agotar la colección. La carga parcial vive
+en el botón y conserva las cards existentes. Los fallos iniciales usan
+RequestErrorCard; los parciales, el feedback seguro compartido con reintento
+sin perder datos. Actualizar conserva el segmento y reinicia la paginación.
+
+### Seguimiento manual (2026-10-05)
+
+La ficha reutiliza el menú ModalDialog y Button secundario para Seguir torneo o
+Dejar de seguir. El control aparece solo tras resolver la relación de una cuenta
+con sesión, sin rol de creador ni delegado. La carga vive en el botón y bloquea
+pulsaciones repetidas. El texto cambia al confirmar la operación; no se añade
+banner de éxito. Una mutación confirmada invalida la biblioteca para releer las
+colecciones al volver, conservando el segmento cuando la tab sigue montada.
+
+### Refresco explícito de una ficha (2026-10-06)
+
+Según ADR-0085, Actualizar vive en el menú de acciones compartido de la ficha,
+con ModalDialog y Button secundario localizados. Fuerza la lectura en el almacén
+canónico existente y actualiza la relación de la cuenta. Conserva el contenido
+mientras espera y al fallar transporte o recibir una respuesta inesperada;
+solo el torneo no disponible reemplaza la ficha por su estado seguro de error.
+No añade banner de éxito. Evita duplicados y descarta feedback/relaciones de una
+ruta o cuenta anterior. No habilita sincronización remota automática. Android
+acredita cambio externo, fallo de conexión/reintento, fallback 500, cuerpo inválido,
+429, estado no disponible 404 y salida durante espera sin feedback tardío; la revisión
+visual del control queda acreditada también en web e iOS; el inventario de QA
+detalla las comprobaciones y los pendientes de cada plataforma.
+
+
+### Alcance del banner por plataforma (2026-10-07)
+
+El banner de las apps pertenece al provider raíz y se presenta por encima de la
+jerarquía de pantallas, incluidas las rutas modales. Navegar o desmontar la
+pantalla que originó el aviso no termina su vida: conserva el temporizador y el
+cierre explícito comunes. En web, el host pertenece a Screen. Esta distinción
+conserva el comportamiento decidido y reafirmado por el usuario.
+
+En iOS, FeedbackBanner usa FullWindowOverlay de react-native-screens para elevar
+el host global sobre la ventana nativa. Android usa el módulo Expo local
+TMGlobalFeedback (ADR-0150): una ventana hija no modal de WindowManager limitada al rectángulo del
+aviso. ModalDialog aporta solo un anclaje de ventana; el provider raíz sigue
+siendo dueño del aviso y su plazo. Web conserva su host de pantalla. No se trasladan los banners nativos al patrón por Screen de
+ConfirmationDialogHost: las confirmaciones tienen otro ciclo de vida.

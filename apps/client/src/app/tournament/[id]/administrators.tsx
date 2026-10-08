@@ -110,7 +110,11 @@ export default function TournamentAdministratorsScreen() {
       onCancel: () => undefined,
     });
   const canAddAdministrator =
-    league !== undefined && league.state !== "completed" && league.state !== "cancelled";
+    administrators !== undefined &&
+    !loadErrorMessage &&
+    league !== undefined &&
+    league.state !== "completed" &&
+    league.state !== "cancelled";
   const navigationButton = (
     onPress: () => void,
     label: string,

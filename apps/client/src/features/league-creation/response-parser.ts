@@ -1,5 +1,6 @@
 import { isSetSport, isValidBestOfSets, isValidPointsPerGame } from "@/shared/tournaments/sport";
 import type { AccountTournament } from "@/api/generated/models/accountTournament";
+import type { AccountTournamentPage } from "@/api/generated/models/accountTournamentPage";
 import { AccountTournamentRelationship } from "@/api/generated/models/accountTournamentRelationship";
 import { AccountTournamentState } from "@/api/generated/models/accountTournamentState";
 import type { TournamentStanding } from "@/api/generated/models/tournamentStanding";
@@ -76,10 +77,29 @@ function parseAccountTournaments(value: unknown): AccountTournament[] | null {
   });
 }
 
-/** Devuelve `null` cuando el contenedor paginado no cumple el contrato. */
-export function parseAccountTournamentPageItems(value: unknown): AccountTournament[] | null {
+/** Valida la página completa y su frontera, sin omitir silenciosamente elementos. */
+export function parseAccountTournamentPage(value: unknown): AccountTournamentPage | null {
   if (!isRecord(value)) return null;
-  return parseAccountTournaments(value.items);
+  const items = parseAccountTournaments(value.items);
+  if (!items || !Array.isArray(value.items) || items.length !== value.items.length) return null;
+  if (
+    items.some(
+      (item, index) =>
+        item.id[14] !== "7" ||
+        (index > 0 && item.id.toLowerCase() >= items[index - 1].id.toLowerCase()),
+    )
+  )
+    return null;
+  if (value.nextCursor !== undefined) {
+    if (
+      !isUUID(value.nextCursor) ||
+      value.nextCursor !== items.at(-1)?.id ||
+      value.nextCursor[14] !== "7"
+    )
+      return null;
+    return { items, nextCursor: value.nextCursor };
+  }
+  return { items };
 }
 
 /** Devuelve `null` cuando la respuesta de lista no cumple el contrato. */

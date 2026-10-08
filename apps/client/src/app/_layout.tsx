@@ -7,6 +7,7 @@ import { Figtree_700Bold } from "@expo-google-fonts/figtree/700Bold";
 import { useFonts } from "expo-font";
 import * as WebBrowser from "expo-web-browser";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import { type PropsWithChildren, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
@@ -86,26 +87,65 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
+  const { resolvedTheme } = usePreferences();
+  const { revision } = useSession();
+
+  return (
+    <>
+      <StatusBar
+        key={`status-bar-${revision}`}
+        style={resolvedTheme === "dark" ? "light" : "dark"}
+      />
+      <SessionNavigator />
+    </>
+  );
+}
+
+function SessionNavigator() {
   const { finishSessionReplacement, replacementDestination, revision, transition } = useSession();
 
   useEffect(() => {
     if (transition !== "resetting" && transition !== "signing-out") return;
 
-    if (router.canDismiss()) router.dismissAll();
-    router.replace((transition === "signing-out" ? "/account" : replacementDestination) as never);
+    if (Platform.OS !== "android") {
+      if (router.canDismiss()) router.dismissAll();
+      router.replace((transition === "signing-out" ? "/account" : replacementDestination) as never);
+      let completionFrame: number | undefined;
+      const navigationFrame = requestAnimationFrame(() => {
+        completionFrame = requestAnimationFrame(finishSessionReplacement);
+      });
+      return () => {
+        cancelAnimationFrame(navigationFrame);
+        if (completionFrame !== undefined) cancelAnimationFrame(completionFrame);
+      };
+    }
+
+    // Fabric debe renovar el host de tabs antes de actualizar los fragmentos.
+    // Separar dismiss y replace evita actualizar una cabecera ya retirada.
     let secondFrame: number | undefined;
+    let thirdFrame: number | undefined;
+    let fourthFrame: number | undefined;
     const firstFrame = requestAnimationFrame(() => {
-      secondFrame = requestAnimationFrame(finishSessionReplacement);
+      secondFrame = requestAnimationFrame(() => {
+        if (router.canDismiss()) router.dismissAll();
+        thirdFrame = requestAnimationFrame(() => {
+          router.replace(
+            (transition === "signing-out" ? "/account" : replacementDestination) as never,
+          );
+          fourthFrame = requestAnimationFrame(finishSessionReplacement);
+        });
+      });
     });
     return () => {
       cancelAnimationFrame(firstFrame);
       if (secondFrame !== undefined) cancelAnimationFrame(secondFrame);
+      if (thirdFrame !== undefined) cancelAnimationFrame(thirdFrame);
+      if (fourthFrame !== undefined) cancelAnimationFrame(fourthFrame);
     };
   }, [finishSessionReplacement, replacementDestination, revision, transition]);
 
   return (
     <Stack
-      key={revision}
       screenOptions={{
         headerShown: false,
         headerTitleStyle: { fontFamily: typography.family.semibold },
@@ -167,6 +207,13 @@ function RootNavigator() {
       />
       <Stack.Screen
         name="tournament/[id]/standings"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
+        name="tournament/[id]/transfer"
         options={{
           headerShown: true,
           presentation: Platform.OS === "web" ? "card" : "fullScreenModal",

@@ -117,7 +117,7 @@ export function captureProductIntent(event: string) {
 export function captureProductOutcome(
   event: string,
   headers: Headers,
-  properties?: { method: "google" | "password" },
+  properties?: { method: "google" | "apple" | "password" },
 ) {
   const interactionID = interactionIDsByResponseHeaders.get(headers);
   if (!interactionID) return;
@@ -276,8 +276,11 @@ async function getMobileAccessToken() {
 async function refreshWebSession() {
   if (!refreshingWebSession) {
     refreshingWebSession = refreshSession(undefined, fetchWithAPIBase)
-      .then((response) => response.status === 200)
-      .catch(() => false)
+      .then((response) => {
+        if (response.status === 200) return true;
+        if (response.status === 401) return false;
+        throw new APIUnexpectedResponseError((response as { status: number }).status);
+      })
       .finally(() => {
         refreshingWebSession = null;
       });

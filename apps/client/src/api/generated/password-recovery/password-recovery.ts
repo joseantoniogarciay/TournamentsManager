@@ -11,6 +11,7 @@ import type {
   PasswordResetLink,
   PasswordResetRequest,
   RateLimitProblemResponse,
+  RequestProblemResponse,
   SessionEstablishment,
   ValidationProblemResponse,
   VerificationConflictProblemResponse,
@@ -32,11 +33,18 @@ export type requestPasswordResetResponse429 = {
   status: 429;
 };
 
+export type requestPasswordResetResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
 export type requestPasswordResetResponseSuccess = requestPasswordResetResponse202 & {
   headers: Headers;
 };
 export type requestPasswordResetResponseError = (
-  requestPasswordResetResponse400 | requestPasswordResetResponse429
+  | requestPasswordResetResponse400
+  | requestPasswordResetResponse429
+  | requestPasswordResetResponse500
 ) & {
   headers: Headers;
 };

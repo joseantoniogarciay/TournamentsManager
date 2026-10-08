@@ -1,12 +1,21 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Platform, ScrollView, SectionList, Share, StyleSheet, View } from "react-native";
+import {
+  Platform,
+  ScrollView,
+  SectionList,
+  Share,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
-import { APIUnexpectedResponseError } from "@/api/fetch";
+import { APISessionInvalidatedError, APIUnexpectedResponseError } from "@/api/fetch";
+import { useTournamentFollow } from "@/features/league-creation/use-tournament-follow";
 import type { PublicTournament } from "@/api/generated/models";
 import {
   cancelTournamentRequest,
@@ -128,14 +137,19 @@ export default function TournamentScreen() {
   const { user } = useSession();
   const { colors } = usePreferences();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
   const league = useTournament(id);
   const { loadTournament, putTournament, refreshTournament } = useTournamentStore();
   const [relationship, setRelationship] = useState<string | null>();
+  const following = useTournamentFollow(id, relationship, setRelationship);
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
   const [leagueUnavailable, setTournamentUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshInFlight = useRef(false);
+  const refreshGeneration = useRef(0);
   const [isStarting, setIsStarting] = useState(false);
   const [roundRobinLegs, setRoundRobinLegs] = useState<1 | 2>(1);
   const [format, setFormat] = useState<
@@ -224,8 +238,10 @@ export default function TournamentScreen() {
       setRelationship(undefined);
       try {
         await (force ? refreshTournament(id) : loadTournament(id));
-        if (user) setRelationship(await getTournamentRelationship(id));
-        else setRelationship(null);
+        if (user) {
+          const administered = await getTournamentRelationship(id);
+          setRelationship(administered ?? (await getTournamentRelationship(id, "followed")));
+        } else setRelationship(null);
       } catch (error) {
         const unavailable = error instanceof TournamentUnavailableError;
         setTournamentUnavailable(unavailable);
@@ -243,6 +259,49 @@ export default function TournamentScreen() {
       void load();
     }, [load]),
   );
+  useEffect(() => {
+    setIsRefreshing(false);
+    return () => {
+      refreshGeneration.current += 1;
+      refreshInFlight.current = false;
+    };
+  }, [id, user?.id]);
+  const refresh = async () => {
+    if (!id || refreshInFlight.current) return;
+    const generation = refreshGeneration.current;
+    refreshInFlight.current = true;
+    setIsRefreshing(true);
+    try {
+      await refreshTournament(id);
+      if (generation !== refreshGeneration.current) return;
+      if (user) {
+        const administered = await getTournamentRelationship(id);
+        const nextRelationship = administered ?? (await getTournamentRelationship(id, "followed"));
+        if (generation !== refreshGeneration.current) return;
+        setRelationship(nextRelationship);
+      } else setRelationship(null);
+    } catch (error) {
+      if (generation !== refreshGeneration.current) return;
+      if (
+        error instanceof APISessionInvalidatedError ||
+        (error instanceof Error && error.name === "AbortError")
+      ) {
+        return;
+      }
+      if (error instanceof TournamentUnavailableError) {
+        setTournamentUnavailable(true);
+        setLoadErrorMessage(t("league_unavailable"));
+        return;
+      }
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    } finally {
+      if (generation === refreshGeneration.current) {
+        refreshInFlight.current = false;
+        setIsRefreshing(false);
+      }
+    }
+  };
   const isOrganizer = relationship === "organizer";
   const canManageResults = relationship === "organizer" || relationship === "delegated";
   const start = async () => {
@@ -631,6 +690,25 @@ export default function TournamentScreen() {
     }
   })();
   const teamsByID = new Map(league.teams.map((team) => [team.id, team.name]));
+  const withdrawnTeamIDs = new Set(
+    league.teams.filter((team) => team.withdrawn).map((team) => team.id),
+  );
+  const hasFixedWithdrawalResult = (match: PublicTournament["matches"][number]) =>
+    match.resultType === "administrative" ||
+    withdrawnTeamIDs.has(match.homeTeamId) ||
+    withdrawnTeamIDs.has(match.awayTeamId);
+  const canEditMatchResult = (match: PublicTournament["matches"][number]) => {
+    if (!canManageResults || league.state !== "in_progress" || hasFixedWithdrawalResult(match)) {
+      return false;
+    }
+    const stage = league.stages.find((item) => item.id === match.stageId);
+    if (stage?.state !== "in_progress") return false;
+    if (stage.type !== "qualification_tiebreak") return true;
+    const pool = league.tieBreakPools.find(
+      (item) => item.stageId === match.stageId && item.poolNumber === match.groupNumber,
+    );
+    return pool?.state === "in_progress" && pool.currentCycle === match.round;
+  };
   const editingMatch = league.matches.find((match) => match.id === editingMatchID);
   const editingScore = editingMatch
     ? (scores[editingMatch.id] ?? editableScoreFromMatch(editingMatch, league.bestOfSets ?? 3))
@@ -672,7 +750,7 @@ export default function TournamentScreen() {
   const hasRacketScoreInput = editingScore?.sets.some((set) => set.home !== "" || set.away !== "");
   const openResultEditor = (matchID: string) => {
     const match = league.matches.find((item) => item.id === matchID);
-    if (!match) return;
+    if (!match || !canEditMatchResult(match)) return;
     setScores((value) => ({
       ...value,
       [matchID]: editableScoreFromMatch(match, league.bestOfSets ?? 3),
@@ -721,7 +799,21 @@ export default function TournamentScreen() {
     headerTintColor: colors.text.primary,
     headerTitleAlign: "center" as const,
     headerTitle: () => (
-      <Text numberOfLines={2} style={styles.navigationTitle} variant="bodyLarge">
+      <Text
+        numberOfLines={2}
+        style={[
+          styles.navigationTitle,
+          Platform.OS === "ios" && {
+            maxWidth: Math.max(
+              0,
+              windowWidth -
+                2 * (Math.max(insets.left, insets.right) + space[5] + control.minHeight + space[5]),
+            ),
+            marginHorizontal: 0,
+          },
+        ]}
+        variant="bodyLarge"
+      >
         {league.name}
       </Text>
     ),
@@ -1247,11 +1339,7 @@ export default function TournamentScreen() {
                         </Text>
                       ) : null}
                       <IncidentSummary match={match} teams={teamsByID} showAdministrativeScore />
-                      {canManageResults &&
-                      !(league.sport === "volleyball" && match.resultType === "administrative") &&
-                      league.state === "in_progress" &&
-                      league.stages.find((stage) => stage.id === match.stageId)?.state ===
-                        "in_progress" ? (
+                      {canEditMatchResult(match) ? (
                         <Button
                           label={
                             match.state === "completed"
@@ -1327,6 +1415,15 @@ export default function TournamentScreen() {
         >
           <View style={styles.menuActions}>
             <Button
+              label={t("common_refresh")}
+              loading={isRefreshing}
+              onPress={() => {
+                closeWebMenu();
+                void refresh();
+              }}
+              variant="secondary"
+            />
+            <Button
               label={t("league_share")}
               onPress={() => {
                 closeWebMenu();
@@ -1334,6 +1431,14 @@ export default function TournamentScreen() {
               }}
               variant="secondary"
             />
+            {following.canFollow ? (
+              <Button
+                label={t(following.isFollowed ? "tournament_unfollow" : "tournament_follow")}
+                loading={following.isSaving}
+                onPress={() => void following.toggleFollow()}
+                variant="secondary"
+              />
+            ) : null}
             {isOrganizer ? (
               <>
                 <Button
@@ -1720,7 +1825,13 @@ export default function TournamentScreen() {
                     </Text>
                     <Text color="secondary">{t("result_incident_effect")}</Text>
                     {!canSaveResult ? (
-                      <Text color="error">{t("result_incident_partial_invalid")}</Text>
+                      <Text color="error">
+                        {t(
+                          isSetSport(league.sport)
+                            ? "result_incident_partial_invalid"
+                            : "result_incident_partial_score_invalid",
+                        )}
+                      </Text>
                     ) : null}
                   </View>
                 ) : null}
@@ -1823,8 +1934,13 @@ const styles = StyleSheet.create({
     marginTop: space[2],
     width: space[1],
   },
-  summaryAction: { flex: 1 },
-  summaryActions: { flexDirection: "row", gap: space[3], marginHorizontal: space[5] },
+  summaryAction: { flexGrow: 1 },
+  summaryActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space[3],
+    marginHorizontal: space[5],
+  },
   summaryItem: { alignItems: "flex-start", flexDirection: "row", gap: space[2] },
   summaryLabel: { fontFamily: typography.family.bold },
   summaryList: { gap: space[2] },

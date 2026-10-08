@@ -11,7 +11,7 @@ x-development-logging: &development-logging
 services:
   postgres:
     image: postgres:18.4-bookworm
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
     env_file:
       - .env
@@ -28,7 +28,7 @@ services:
 
   mailpit:
     image: axllent/mailpit:v1.30.5
-    restart: unless-stopped
+    restart: "no"
     logging: *development-logging
     ports:
       - "127.0.0.1:1025:1025"

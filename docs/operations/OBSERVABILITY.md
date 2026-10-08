@@ -7,6 +7,12 @@
 
 ## Resultado buscado
 
+La fiabilidad de cliente reserva el proyecto PostHog UE 255144 a producción,
+según [ADR-0149](../adr/0149-reserve-the-single-posthog-project-for-production.md).
+Beta/local no inicializan SDK y la analítica de uso queda apagada. Símbolos y
+prueba de entrega/simbolización siguen el [runbook cliente](../runbooks/client-error-tracking.md);
+la prueba real se difiere y no se acredita por configurar el SDK.
+
 La observabilidad debe permitir responder:
 
 - ¿está funcionando el servicio para el usuario?
@@ -61,7 +67,9 @@ sesión web?** La ruta observada es `POST /v1/sessions/refresh`; atraviesa HTTP,
 la protección CSRF y PostgreSQL sin incorporar todavía SMTP, Google ni lógica de
 ligas.
 
-`make dev-up` inicia, además de API, PostgreSQL y Mailpit, el stack local:
+ADR-0146 separa ejecución y diagnóstico: `make dev-up` inicia API, PostgreSQL y
+Mailpit solo para pruebas. Únicamente por petición explícita,
+`make dev-observability-up` activa el stack local con la API ya en marcha:
 
 - Grafana en `http://127.0.0.1:3000`;
 - Prometheus en `http://127.0.0.1:9090`;
@@ -166,7 +174,9 @@ Véase [LOG_RETENTION.md](LOG_RETENTION.md) para el procedimiento y los límites
 Loki, Tempo, Promtail y Grafana— con volúmenes y red propios. Reutiliza reglas,
 dashboard y fuentes de datos versionadas; Promtail filtra explícitamente el
 proyecto Compose `tournaments-manager-dev` para no mezclar los logs de local.
-La API exporta OTLP/HTTP a `tempo:4318` por la red interna.
+Solo `make dev-public-observability-up` lo activa bajo petición explícita;
+`make dev-public-up`, despliegue y rollback arrancan API/PostgreSQL sin él.
+La API exporta OTLP/HTTP a Tempo interno únicamente durante ese diagnóstico.
 
 Alertmanager entrega los mismos avisos mediante Resend SMTP en
 `smtp.resend.com:587`, con STARTTLS obligatorio. Usa una clave _Sending access_
@@ -258,10 +268,10 @@ Con esta evidencia se cumple el criterio de salida documentado en
 | `DELETE /v1/me/account`                                                                                              | `postgresql.ScheduleAccountDeletion`                                                                      | Una cuenta con ligas propias no puede programar su borrado y se marca como `account.deletion_owned_leagues`; el ID y la fecha efectiva no son atributos.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `GET /v1/usernames/{username}/availability`                                                                          | `postgresql.IsUsernameAvailable`                                                                          | La plantilla de ruta y el nombre de consulta son estáticos; username e IP quedan fuera de los atributos; rechazos: `validation.rejected` y `rate_limit.exceeded`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `GET /v1/users`                                                                                                      | `postgresql.SearchPublicUsernames`                                                                        | La búsqueda conserva la query string fuera de HTTP y el texto buscado fuera de PostgreSQL; rechazos: `validation.rejected` y `rate_limit.exceeded`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `GET /v1/me/tournaments`, `GET /v1/me/recent-tournaments`                                                            | Consultas PostgreSQL estáticas de colecciones                                                             | Éxito devuelve las proyecciones; filtros, cursor y límite inválidos usan `validation.rejected`. No hay limitador específico. Un fallo del límite PostgreSQL o cancelación usa `database.*`, `request.cancelled` o `request.timeout` en el span HTTP; no se registran cuenta, cursor ni filtros.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `GET /v1/me/tournaments`, `GET /v1/me/recent-tournaments`                                                            | Consultas PostgreSQL estáticas de colecciones                                                             | Éxito devuelve las proyecciones; en la colección paginada el cursor corresponde al último ID entregado, validado con recorridos PostgreSQL sin omisiones ni duplicados. La fila adicional no crea spans ni atributos. Filtros, cursor y límite inválidos usan `validation.rejected`. No hay limitador específico. Un fallo del límite PostgreSQL o cancelación usa `database.*`, `request.cancelled` o `request.timeout` en el span HTTP; no se registran cuenta, cursor ni filtros.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `POST /v1/me/suggestions`                                                                                            | `postgresql.CreateProductSuggestion`; `smtp.send.suggestion` después del guardado                         | El éxito depende solo del insert. Entrada inválida usa `validation.rejected`; el cuarto envío por cuenta y hora usa `rate_limit.exceeded`; PostgreSQL usa las categorías técnicas comunes. Un fallo SMTP queda en su span hijo y no cambia el `201`. Texto, username, cuenta, destinatario e identificador quedan fuera de logs, trazas y analítica.                                                                                                                                                                                                                                                                                                                                                                                  |
 | `PUT` \| `DELETE /v1/me/tournaments/{tournamentId}/follow`                                                           | `postgresql.FollowVisibleTournament`, `postgresql.UnfollowTournament`                                     | Éxito es idempotente. ID inválido: `validation.rejected`; torneo no visible: `tournament.not_found`. No hay límite de tasa propio ni spans por las ramas de seguimiento.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `POST /v1/tournaments`, equipos, inicio, cancelación, resultado y finalización; `GET /v1/tournaments/{tournamentId}` | Operaciones PostgreSQL estáticas del ciclo del torneo                                                     | La entrada inválida —incluido deporte ausente/desconocido, `bestOfSets` incompatible, tanteo de set ausente o nulo, set imposible o posterior a la victoria, tanteo de baloncesto empatado o desempate incompatible de fútbol o balonmano— usa `validation.rejected`; los rechazos de negocio distinguen `tournament.forbidden`, `tournament.not_found`, y conflictos cerrados de inicio, equipos, retirada, resultado, cancelación o finalización. Deporte, configuración, sets, juegos de tenis de mesa, parciales de voleibol, tanteos e IDs no se exportan como atributos. Sin limitador específico. Los fallos técnicos y cancelaciones conservan las categorías seguras comunes en el span raíz.                                                                                                                                                                                    |
+| `POST /v1/tournaments`, equipos, inicio, cancelación, resultado y finalización; `GET /v1/tournaments/{tournamentId}` | Operaciones PostgreSQL estáticas del ciclo del torneo                                                     | La entrada inválida —incluido deporte ausente/desconocido, `bestOfSets` incompatible, tanteo de set ausente o nulo, set imposible o posterior a la victoria, tanteo de baloncesto empatado o desempate incompatible de fútbol o balonmano— usa `validation.rejected`; los rechazos de negocio distinguen `tournament.forbidden`, `tournament.not_found`, y conflictos cerrados de inicio, equipos, retirada, resultado, cancelación o finalización. Intentar corregir un resultado administrativo o un partido con un participante retirado conserva `tournament.result_conflict`: mismo rechazo y recuperación, sin nueva categoría ni IDs. Deporte, configuración, sets, juegos de tenis de mesa, parciales de voleibol, tanteos e IDs no se exportan como atributos. Sin limitador específico. Los fallos técnicos y cancelaciones conservan las categorías seguras comunes en el span raíz.                                                                                                                                                                                    |
 | Inicio mixto y `POST /v1/tournaments/{tournamentId}/stages/elimination/start`                                        | Transacción PostgreSQL de composición, clasificación congelada, desempate condicional y generación del cuadro | El éxito crea la liga, abre atómicamente los desempates exactos del corte o, cuando todas las plazas están resueltas, inicia el cuadro. JSON o parámetros inválidos usan `validation.rejected`; una composición o plantilla incompatible usa `tournament.configuration_rejected`; una transición prematura, repetida o sin suficientes equipos no retirados usa `tournament.stage_transition_conflict`; autorización y ausencia conservan `tournament.forbidden` y `tournament.not_found`. Un resultado de desempate sin ganador usa `validation.rejected`, igual que cualquier resultado eliminatorio inválido. No se exportan equipos, grupos, ciclos, cantidades, resultados, retiradas ni IDs. No hay límite de tasa específico. Cada fallo técnico usa `database.*` o `request.failed`, el timeout `request.timeout` y la cancelación `request.cancelled`, sin error bruto y sin spans por validación, clasificación, desempate, CTE o generación de IDs. |
 | Invitaciones de equipo: crear, revocar, inspeccionar e inscribir                                                     | Operaciones PostgreSQL estáticas sobre invitación, equipo, vínculo y seguimiento                          | Éxito crea o revoca la capacidad, devuelve su proyección segura o confirma equipo y seguimiento. Entrada inválida usa `validation.rejected`; enlace desconocido, rotado o cerrado usa `tournament.invitation_not_found`; cuenta repetida, nombre duplicado o aforo completo usa `tournament.invitation_conflict`; autorización de la organizadora conserva `tournament.forbidden`. Token, hash, nombre, cuenta e IDs no se exportan. No hay span por aleatoriedad o SHA-256 ni limitador específico; fallos técnicos y cancelaciones usan las categorías comunes.                                                                                                                                                                     |
 | Administración de torneos: listar, asignar, eliminar y transferir                                                    | Operaciones PostgreSQL estáticas de administración                                                        | Éxito devuelve o modifica únicamente la proyección contractual. Entrada inválida: `validation.rejected`; negocio: `tournament.forbidden`, `tournament.not_found`, `tournament.administrator_conflict` o `tournament.ownership_transfer_conflict`. Nombres de usuario e IDs quedan fuera de atributos, logs y nombres de spans; no existe un límite de tasa específico.                                                                                                                                                                                                                                                                                                                                                                |
@@ -382,3 +392,72 @@ forzada con sockets reales. Las pruebas existentes de HTTP conservan el contrato
 de categorías seguras. La propagación de endpoints, pérdida de respuestas en el
 borde y terminación por SIGKILL requieren el recorrido de rollout del runbook;
 no quedan demostradas por los logs de drenaje ni por un rollout exitoso.
+
+## Apagado fuera de pruebas — ADR-0146
+
+`make dev-observability-down` y `make dev-public-observability-down` desactivan
+el exportador y detienen los seis servicios técnicos conservando volúmenes. No
+levantan una API que ya esté apagada. `make dev-down` y `make dev-public-down`
+apagan todo el carril, incluidos perfiles técnicos; público suspende además sus
+LaunchAgents. Ningún servicio dev reinicia automáticamente con Docker Desktop.
+Mientras la observabilidad está apagada no hay histórico central ni alertas dev;
+la API conserva su consola JSON segura y métricas internas durante las pruebas.
+La retención de 24 h se aplica cuando los servicios técnicos están activos; la
+purga no avanza con Loki/Tempo apagados. Producción conserva su funcionamiento.
+
+### Recorridos sociales revisados — ADR-0147
+
+| Endpoint | Éxito y negocio | Rechazos y límites técnicos seguros |
+| --- | --- | --- |
+| `POST /v1/apple-login-challenges` | 201; solo digests en persistencia | 400 `validation.rejected`/`credential.apple_challenge_invalid`; 429 `rate_limit.exceeded`; configuración ausente 503 `identity.apple_unavailable`; PostgreSQL usa categorías técnicas existentes. |
+| `POST /v1/apple-callback` | 303 `ready`; denegación 303 `cancelled` sin causa de fallo ni sesión | State inválido 400 `credential.apple_challenge_invalid`; formulario 400 `validation.rejected`; 429 `rate_limit.exceeded`; intercambio/JWKS 303 `failed` con `identity.provider_unavailable`; token/nonce rechazado con `credential.apple_challenge_invalid`; fallos DB con categorías existentes. Nunca se redirige sin state reclamado. |
+| `POST /v1/apple-sessions` | 200; 202 pide alta y no consume prueba; 409 `identity.email_conflict` | 400 validación/prueba; 429 tasa; configuración ausente 503; fallo DB 500 seguro. La transacción abarca prueba, cuenta, evidencia legal, borrador y sesión. |
+| `POST /v1/google-login-challenges`, `POST /v1/google-sessions` | Conservan sus recorridos | Se aplica el 429 declarado con `rate_limit.exceeded`; no exporta IP. El contrato challenge añade 500 real de persistencia. |
+| `GET /v1/me/access-methods` | Incluye presencia booleana de Apple | No exporta issuer, subject ni email como atributos; conserva autenticación y fallos técnicos anteriores. |
+
+`identity.provider_unavailable` es la categoría técnica cerrada del límite HTTP
+Apple (intercambio de código y claves públicas): no contiene el error remoto.
+Los spans raíz conservan las plantillas de ruta; no hay spans por hash, rama,
+aleatoriedad o JWT. Ninguna salida exporta state, nonce, proof, código, tokens,
+email, subject, clave privada ni cuerpos Apple. Los callbacks y las sesiones usan
+no-store. Cancelar una petición no escribe feedback; cancelar en Apple vuelve con
+un estado cerrado, sin fallo. Pruebas HTTP verifican todos estos recorridos y
+atributos seguros; la integración comprueba consumo concurrente y rollback de 202.
+
+## Revisión de rotación de enlaces — 2026-10-04
+
+Se revisan `POST /v1/sessions` y `POST /v1/password-resets` al corregir las
+colisiones de tokens activos. Los locks de cuenta y las consultas de rotación
+son límites PostgreSQL; no se añaden spans de validación, CTE, hash ni generación
+de secreto. No cambian las categorías ni se exportan email, cuenta, token o SQL.
+
+| Salida                                                                  | Evidencia y tratamiento                                                                                                                                                                                                                                                           |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Login verificado 200 / pendiente 202                                    | HTTP real; el pendiente rota email y conserva cero sesiones en las regresiones de persistencia.                                                                                                                                                                                   |
+| Recuperación elegible/desconocida 202                                   | Cuerpo vacío idéntico; la cuenta desconocida no invoca SMTP. Prueba HTTP contractual y recorrido Mailpit local.                                                                                                                                                                   |
+| Validación 400 / tasa 429                                               | Pruebas HTTP; `validation.rejected` / `rate_limit.exceeded`; 429 conserva Retry-After.                                                                                                                                                                                            |
+| Credenciales de login rechazadas 401                                    | Recorrido HTTP y suite `access_observability_test.go`; `authentication.credentials_rejected`, sin distinguir cuenta o contraseña. Recuperación no tiene rechazo de negocio revelador.                                                                                             |
+| Adquisición de conexión, lock, invalidación/inserción o commit fallidos | El span de PostgreSQL conserva su categoría `database.*`; la raíz de estos recorridos usa `request.failed` como diagnóstico común sin exportar el error. Respuesta 500 segura. Las regresiones de persistencia prueban la transición y la cancelación sin dejar tokens parciales. |
+| SMTP fallido                                                            | El span SMTP conserva `smtp.delivery_failed`; la raíz usa `request.failed`. Respuesta 500 sin mensaje del proveedor. Prueba HTTP con un error privado centinela.                                                                                                                  |
+| Timeout o cancelación de PostgreSQL/SMTP                                | Categorías comunes `request.timeout` / `request.cancelled` en el span raíz y en los límites instrumentados; pruebas HTTP comprueban que sus errores no aparecen en el cuerpo. El cliente no muestra feedback por una cancelación intencionada.                                    |
+
+`password_recovery_contract_test.go` comprueba las diez salidas de recuperación:
+éxito elegible/desconocido, validación, tasa y fallo/cancelación/timeout de cada
+una de sus dos dependencias. Las pruebas no activan exporters ni observabilidad
+local/dev. No se afirma haber inducido cada fallo técnico en un servidor vivo:
+esa evidencia procede de inyección de dependencias y de la suite de observabilidad.
+
+Aprendizaje: revisar únicamente el primer envío ocultaba un 500 al repetirlo.
+Probar transiciones consecutivas y simultáneas descubre orden de CTE y relojes
+de transacción que una prueba aislada de éxito no ejercita.
+
+
+Revisión cliente de seguimiento (2026-10-05): PUT/DELETE usan sus operaciones
+generadas con authenticatedApiFetch. Se recorren 204 idempotente, validación 400,
+sesión 401, CSRF 403, PUT no visible 404, fallo PostgreSQL y cancelación; no hay
+limitador propio. PUT 404 aporta recuperación con league_unavailable; otros
+HTTP/5xx/problemas desconocidos conservan common_request_error, transporte usa
+common_network_error y sesión invalidada no duplica feedback. Se conservan
+plantilla de ruta y categorías seguras del inventario, sin spans ni atributos
+por seguimiento, inputs o IDs. Las pruebas cliente y el ciclo visual web/Android
+complementan el contrato sin exportar cuerpos ni activar observabilidad local.

@@ -13,7 +13,11 @@ import {
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
+import appleLogo from "../../../../assets/apple-logo.png";
 import googleLogo from "../../../../assets/google-g.png";
+
+import { AppleAuthenticationError } from "@/features/federated-apple/api";
+import { useAppleAuthentication } from "@/features/federated-apple/use-apple-authentication";
 
 import { GoogleAuthenticationError } from "@/features/federated-google/api";
 import type { TournamentDraftInput } from "@/api/generated/models";
@@ -48,6 +52,9 @@ import {
   useConfirmationDialog,
   useTabContentBottomPadding,
 } from "@/shared/ui";
+
+const socialProviderOrder =
+  Platform.OS === "android" ? (["google", "apple"] as const) : (["apple", "google"] as const);
 
 type AccountScreenProps = {
   sessionReplacementDestination?: "/account" | "/create-tournament" | "/join-team";
@@ -86,38 +93,49 @@ export function AccountScreen({
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [showEmailError, setShowEmailError] = useState(false);
   const [showPasswordError, setShowPasswordError] = useState(false);
-  const [googleUsername, setGoogleUsername] = useState("");
-  const [googleUsernameSubmitted, setGoogleUsernameSubmitted] = useState(false);
-  const [googleTermsAccepted, setGoogleTermsAccepted] = useState(false);
+  const [socialUsername, setSocialUsername] = useState("");
+  const [socialUsernameSubmitted, setSocialUsernameSubmitted] = useState(false);
+  const [socialTermsAccepted, setSocialTermsAccepted] = useState(false);
   const [socialLegalDocument, setSocialLegalDocument] = useState<SocialLegalDocument | null>(null);
-  const { isValid: googleUsernameIsValid, status: googleUsernameAvailability } =
-    useUsernameAvailability(googleUsername);
-  const {
-    chooseUsername,
-    dismissPendingAccount,
-    dismissError: dismissGoogleError,
-    error: googleError,
-    isAuthenticating: isGoogleAuthenticating,
-    isConfigured: isGoogleConfigured,
-    isPreparing: isGooglePreparing,
-    isSubmitting: isGoogleSubmitting,
-    prepare: prepareGoogleAuthentication,
-    requiresUsername,
-    start: startGoogleAuthentication,
-  } = useGoogleAuthentication({
+  const { isValid: socialUsernameIsValid, status: socialUsernameAvailability } =
+    useUsernameAvailability(socialUsername);
+  const google = useGoogleAuthentication({
     draft,
     locale: getCurrentLanguage(),
     onSession: completeAccountSessionReplacement,
   });
+  const apple = useAppleAuthentication({
+    draft,
+    locale: getCurrentLanguage(),
+    onSession: completeAccountSessionReplacement,
+  });
+  const socialAccount = apple.requiresUsername ? apple : google;
+  const { chooseUsername, dismissPendingAccount, isSubmitting: isGoogleSubmitting } = socialAccount;
+  const requiresUsername = google.requiresUsername || apple.requiresUsername;
+  const {
+    error: googleError,
+    dismissError: dismissGoogleError,
+    isAuthenticating: isGoogleAuthenticating,
+    isConfigured: isGoogleConfigured,
+    isPreparing: isGooglePreparing,
+    prepare: prepareGoogleAuthentication,
+    start: startGoogleAuthentication,
+  } = google;
+  const socialBusy =
+    isSigningIn ||
+    isGoogleAuthenticating ||
+    apple.isAuthenticating ||
+    isGoogleSubmitting ||
+    requiresUsername;
   const emailError = !isEmail(email) ? t("validation_email") : undefined;
   const passwordError = !password
     ? t("validation_password_required")
     : password.length < 8
       ? t("validation_password_length")
       : undefined;
-  const googleUsernameError = !googleUsername.trim()
+  const socialUsernameError = !socialUsername.trim()
     ? t("validation_username_required")
-    : !googleUsernameIsValid
+    : !socialUsernameIsValid
       ? t("validation_username_format")
       : undefined;
 
@@ -149,16 +167,37 @@ export function AccountScreen({
     dismissGoogleError();
   }, [dismissGoogleError, googleError, show, t]);
 
+  useEffect(() => {
+    if (!apple.error) return;
+    if (apple.error instanceof AppleAuthenticationError) {
+      show({
+        kind: "generic-error",
+        message: t(
+          apple.error.failure === "rate-limited"
+            ? "account_social_rate_limited"
+            : "account_existing_access_tip",
+        ),
+      });
+    } else {
+      const failure = getRequestFailure(apple.error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    }
+    apple.dismissError();
+  }, [apple, show, t]);
+
   useFocusEffect(
     useCallback(() => {
-      if (!user) prepareGoogleAuthentication();
-    }, [prepareGoogleAuthentication, user]),
+      if (!user) {
+        prepareGoogleAuthentication();
+        void apple.prepare();
+      }
+    }, [apple.prepare, prepareGoogleAuthentication, user]),
   );
 
   const signIn = async () => {
     setShowEmailError(true);
     setShowPasswordError(true);
-    if (emailError || passwordError) return;
+    if (socialBusy || emailError || passwordError) return;
     setIsSigningIn(true);
     try {
       const result = await authenticateLocalAccount({
@@ -188,25 +227,25 @@ export function AccountScreen({
     }
   };
 
-  const createGoogleAccount = () => {
-    setGoogleUsernameSubmitted(true);
+  const createSocialAccount = () => {
+    setSocialUsernameSubmitted(true);
     if (
-      googleUsernameError ||
-      googleUsernameAvailability === "checking" ||
-      googleUsernameAvailability === "unavailable"
+      socialUsernameError ||
+      socialUsernameAvailability === "checking" ||
+      socialUsernameAvailability === "unavailable"
     ) {
       return;
     }
-    if (!googleTermsAccepted) return;
-    void chooseUsername(googleUsername as never);
+    if (!socialTermsAccepted) return;
+    void chooseUsername(socialUsername as never);
   };
 
-  const dismissGoogleAccountCreation = () => {
+  const dismissSocialAccountCreation = () => {
     if (isGoogleSubmitting) return;
     dismissPendingAccount();
-    setGoogleUsername("");
-    setGoogleUsernameSubmitted(false);
-    setGoogleTermsAccepted(false);
+    setSocialUsername("");
+    setSocialUsernameSubmitted(false);
+    setSocialTermsAccepted(false);
     setSocialLegalDocument(null);
   };
 
@@ -294,7 +333,7 @@ export function AccountScreen({
               </Text>
             </Pressable>
             <Button
-              disabled={isSigningIn}
+              disabled={socialBusy}
               label={t("account_sign_in")}
               loading={isSigningIn}
               onPress={() => void signIn()}
@@ -305,37 +344,74 @@ export function AccountScreen({
         <Card>
           <View style={styles.form}>
             <Text variant="title">{t("account_social_title")}</Text>
-            <Pressable
-              accessibilityLabel={t(
-                isGoogleConfigured ? "account_google_continue" : "account_google_unavailable",
+            <View style={styles.socialButtons}>
+              {socialProviderOrder.map((provider) =>
+                provider === "apple" ? (
+                  <Pressable
+                    key="apple"
+                    accessibilityLabel={t(
+                      apple.isConfigured ? "account_apple_continue" : "account_apple_unavailable",
+                    )}
+                    accessibilityRole="button"
+                    accessibilityState={{
+                      busy: apple.isPreparing || apple.isAuthenticating,
+                      disabled: !apple.isConfigured || apple.isPreparing || socialBusy,
+                    }}
+                    disabled={!apple.isConfigured || apple.isPreparing || socialBusy}
+                    onPress={() => void apple.start()}
+                    style={[
+                      styles.socialButton,
+                      { borderColor: colors.border.default },
+                      !apple.isConfigured || apple.isPreparing || socialBusy
+                        ? styles.socialButtonDisabled
+                        : undefined,
+                    ]}
+                  >
+                    {apple.isPreparing || apple.isAuthenticating ? (
+                      <ActivityIndicator color={colors.indicator.default} />
+                    ) : (
+                      <Image
+                        source={appleLogo}
+                        style={[styles.appleLogo, { tintColor: colors.text.primary }]}
+                      />
+                    )}
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    key="google"
+                    accessibilityLabel={t(
+                      isGoogleConfigured ? "account_google_continue" : "account_google_unavailable",
+                    )}
+                    accessibilityRole="button"
+                    accessibilityState={{
+                      busy: isGooglePreparing || isGoogleAuthenticating,
+                      disabled: !isGoogleConfigured || isGooglePreparing || socialBusy,
+                    }}
+                    disabled={!isGoogleConfigured || isGooglePreparing || socialBusy}
+                    onPress={() => void startGoogleAuthentication()}
+                    style={[
+                      styles.socialButton,
+                      { borderColor: colors.border.default },
+                      !isGoogleConfigured || isGooglePreparing || socialBusy
+                        ? styles.socialButtonDisabled
+                        : undefined,
+                    ]}
+                  >
+                    {isGooglePreparing || isGoogleAuthenticating ? (
+                      <ActivityIndicator color={colors.indicator.default} />
+                    ) : (
+                      <Image source={googleLogo} style={styles.googleLogo} />
+                    )}
+                  </Pressable>
+                ),
               )}
-              accessibilityRole="button"
-              accessibilityState={{
-                busy: isGooglePreparing || isGoogleAuthenticating,
-                disabled: !isGoogleConfigured || isGooglePreparing || isGoogleAuthenticating,
-              }}
-              disabled={!isGoogleConfigured || isGooglePreparing || isGoogleAuthenticating}
-              onPress={() => void startGoogleAuthentication()}
-              style={[
-                styles.googleButton,
-                { borderColor: colors.border.default },
-                !isGoogleConfigured || isGooglePreparing || isGoogleAuthenticating
-                  ? styles.googleButtonDisabled
-                  : undefined,
-              ]}
-            >
-              {isGooglePreparing || isGoogleAuthenticating ? (
-                <ActivityIndicator color={colors.indicator.default} />
-              ) : (
-                <Image source={googleLogo} style={styles.googleLogo} />
-              )}
-            </Pressable>
+            </View>
           </View>
         </Card>
 
         <ModalDialog
           dismissAccessibilityLabel={t("common_cancel")}
-          onDismiss={dismissGoogleAccountCreation}
+          onDismiss={dismissSocialAccountCreation}
           visible={requiresUsername}
         >
           <View style={styles.form}>
@@ -344,28 +420,32 @@ export function AccountScreen({
             <TextField
               autoCapitalize="none"
               autoCorrect={false}
-              error={googleUsernameSubmitted ? googleUsernameError : undefined}
-              feedback={usernameFeedback(t, googleUsernameAvailability)}
+              error={socialUsernameSubmitted ? socialUsernameError : undefined}
+              feedback={usernameFeedback(t, socialUsernameAvailability)}
               label={t("account_username_label")}
-              onBlur={() => setGoogleUsernameSubmitted(true)}
-              onChangeText={(value) => setGoogleUsername(value.toLowerCase())}
-              value={googleUsername}
+              onBlur={() => setSocialUsernameSubmitted(true)}
+              onChangeText={(value) => setSocialUsername(value.toLowerCase())}
+              value={socialUsername}
             />
             <TermsAcceptance
-              checked={googleTermsAccepted}
-              onChange={setGoogleTermsAccepted}
+              checked={socialTermsAccepted}
+              onChange={setSocialTermsAccepted}
               onOpenPrivacy={() => setSocialLegalDocument("privacy")}
               onOpenTerms={() => setSocialLegalDocument("terms")}
             />
             <Button
               disabled={
-                !googleTermsAccepted ||
-                googleUsernameAvailability === "checking" ||
-                googleUsernameAvailability === "unavailable"
+                !socialTermsAccepted ||
+                socialUsernameAvailability === "checking" ||
+                socialUsernameAvailability === "unavailable"
               }
-              label={t("account_google_create_account")}
+              label={t(
+                apple.requiresUsername
+                  ? "account_apple_create_account"
+                  : "account_google_create_account",
+              )}
               loading={isGoogleSubmitting}
-              onPress={createGoogleAccount}
+              onPress={createSocialAccount}
             />
             <SocialLegalDocumentDialog
               document={socialLegalDocument}
@@ -397,9 +477,15 @@ const styles = StyleSheet.create({
   authenticatedContent: { gap: space[6], marginHorizontal: space[5] },
   content: { gap: space[5] },
   form: { gap: space[4] },
-  forgotPassword: { alignSelf: "flex-end", marginBottom: space[2] },
+  forgotPassword: {
+    alignSelf: "flex-end",
+    justifyContent: "center",
+    minHeight: control.minHeight,
+    marginBottom: space[2],
+  },
   forgotPasswordText: { textDecorationLine: "underline" },
-  googleButton: {
+  socialButtons: { flexDirection: "row", gap: space[4], justifyContent: "center" },
+  socialButton: {
     alignItems: "center",
     alignSelf: "center",
     borderRadius: radius.pill,
@@ -408,8 +494,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight + space[1],
   },
-  googleButtonDisabled: { opacity: 0.55 },
-  googleLogo: { height: 22, width: 22 },
+  socialButtonDisabled: { opacity: 0.55 },
+  googleLogo: { height: control.iconSize, width: control.iconSize },
+  appleLogo: { height: control.iconSize, width: control.iconSize, resizeMode: "contain" },
   legalDocument: { flexShrink: 1, gap: space[3] },
   legalDocumentContent: { gap: space[4] },
   legalDocumentHeader: { alignItems: "center", flexDirection: "row", gap: space[2] },

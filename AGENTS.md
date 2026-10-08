@@ -8,6 +8,12 @@ antes de proponer cambios importantes.
 
 ## Comportamiento obligatorio
 
+- Cierra cada integración de una rama temporal en `develop` eliminando su rama
+  local y remota, tras comprobar que está integrada, sin trabajo pendiente ni
+  worktrees activos que la usen. No borres ramas con commits sin integrar.
+  Conserva `develop` y `main`: el trabajo integrado permanece en `develop` hasta
+  una publicación de producción autorizada, siguiendo ADR-0013 y ADR-0119.
+
 - Actúa como mentor técnico: explica fundamentos antes de automatizar.
 - Compara alternativas y su coste de mantenimiento.
 - Distingue hechos, estándar de industria, opinión, recomendación y decisión.
@@ -79,3 +85,12 @@ límite técnico y cancelación. La revisión no termina solo al nombrar sus spa
 Los cambios bajo `apps/client/` siguen además las reglas obligatorias de
 [`apps/client/AGENTS.md`](apps/client/AGENTS.md). Ese archivo es la checklist de
 preflight y cierre para decisiones de interfaz ya aceptadas.
+
+## Desarrollo bajo petición (ADR-0146)
+
+- Mantén `local` y `dev` apagados fuera de una sesión de pruebas autorizada.
+- Arrancar dev, desplegarlo o hacer rollback no autoriza activar observabilidad.
+  Solo se inicia por petición explícita con los comandos `*-observability-up`.
+- Al terminar las pruebas, apaga los servicios y tareas programadas de dev;
+  conserva volúmenes, evidencia y backups. No apagues producción/K3s ni cambies
+  durabilidad PostgreSQL para reducir escrituras.
