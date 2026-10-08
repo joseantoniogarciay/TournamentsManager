@@ -4514,7 +4514,6 @@ parado: hay que observar su estado y verificar la estabilidad tras cargar el
 proyecto. La recuperación no elimina volúmenes, fixtures ni cachés y no convierte
 un recorrido nativo incompleto en un caso aprobado.
 
-
 ### Resultados administrativos y límites nativos del blur (2026-10-05)
 
 La comprobación de una baja incluye intentar editar un partido afectado. La
@@ -4536,7 +4535,6 @@ Retrospectiva: las pruebas de comportamiento deben intentar invalidar una
 regla después de su éxito inicial; las advertencias de un SDK requieren leer
 su implementación antes de rediseñar el árbol de vistas.
 
-
 ### Ciclos cerrados y reautenticación lenta (2026-10-06)
 
 Una proyección puede conservar partidos de un ciclo de desempate cerrado. La
@@ -4557,3 +4555,755 @@ incorrecta.
 Retrospectiva: un fixture que devuelve 504 tras esperar comprueba demora y fallo
 de gateway, no demuestra un timeout propio del cliente. Una dimensión solicitada
 al navegador tampoco acredita un viewport hasta observar sus medidas efectivas.
+
+### QA nativo: lectura, acciones y control de gestos (2026-10-06)
+
+Una colección puede exponer sus elementos fuera de pantalla a la accesibilidad.
+Activar el último enlace y comprobar el destino acredita navegación, pero no
+que el usuario pueda llegar a él mediante desplazamiento táctil. La evidencia
+de QA separa lectura de fixtures preparados en otra plataforma, validación
+local del formulario y operaciones realmente confirmadas en la app nativa.
+Un simulador que recupera su pantalla tras Restart conserva sus datos; ese
+reinicio no resuelve ni demuestra por sí solo un defecto de la aplicación.
+
+El intento Android confirma que Welcome y proyecto cargado tienen costes
+muy diferentes incluso con Power Save Mode. Los símbolos C++ siguen
+analizándose y el IDE vuelve a saturar CPU. Recuperar el visor del dispositivo
+no basta si el control cambia de ventana o deja de responder; en ese caso
+se conserva evidencia del entorno y los casos funcionales permanecen pendientes.
+
+### Android independiente: evidencia por gestos y actualización de colecciones (2026-10-06)
+
+Arrancar el AVD directamente evita cargar e indexar el proyecto en Android
+Studio. Con ADB explícitamente autorizado, cada gesto se contrasta con la
+jerarquía visible y una captura; el arranque técnico no sustituye esa evidencia.
+El emulador con teclado físico puede no abrir el teclado virtual: Back entonces
+cierra el diálogo. Hay que observar el estado antes de usarlo para ocultar teclado.
+La burbuja Tools del development client se superpone a acciones de cabecera;
+se distingue esa interferencia del producto y se pulsa una zona libre del control.
+
+Paginación se verifica con el final visible del primer bloque, Cargar más,
+contador definitivo y apertura de una fila nueva. Seguimiento manual se verifica
+con contador y tarjeta tras volver a la biblioteca y se restaura el fixture.
+El tinte Android legible de una confirmación acredita su fallback visual;
+no acredita desenfoque real ni una comparación entre plataformas idéntica.
+
+### QA Android: estados exclusivos y configuración del sistema (2026-10-06)
+
+Cambiar de no comparecencia a abandono y después a marcador comprueba que cada
+forma tiene requisitos propios y que la card deja de mostrar la incidencia
+anterior. Un parcial de un solo lado debe bloquear Guardar; un empate jugado
+requiere una tanda no empatada. Se restaura el resultado original del fixture
+para conservarlo reutilizable, dejando su historial real de QA.
+
+Idioma y escala de texto son configuración del emulador: pueden recrear la
+actividad, devolver la app a Inicio y conservar sesión, recientes y tema.
+Se valida cada pantalla después de esa recreación y se restaura la configuración
+inicial al cerrar. Probar Inicio, Cuenta y confirmación en cuatro idiomas y
+escala 1.3 ofrece evidencia parcial; no equivale a auditar todas las rutas,
+contraste cuantitativo o un lector de pantalla.
+
+### QA Android: recuperación de transporte y estado real del fixture (2026-10-06)
+
+Un formulario puede preservar su borrador y permitir reintentar, pero mostrar una
+causa de error incorrecta. Cortar API, observar el mensaje, recuperarla y confirmar
+el reintento comprueba esas tres responsabilidades. Recuperación reutiliza
+getRequestFailure para distinguir el rechazo de transporte; el 429 útil permanece
+en la feature y los errores desconocidos conservan el mensaje común seguro.
+No hace falta añadir otra abstracción ni copiar reglas por código HTTP.
+
+Abrir un enlace real acredita entrada al formulario, no un cambio de contraseña.
+Se conserva el enlace fuera de Git y no se imprime su token. Un fixture que permite
+login está verificado: el nombre o la intención inicial del script no acredita un
+estado pendiente. La retrospectiva y la matriz registran únicamente acciones
+observadas, separando las suites anteriores de los checks ejecutados en este corte.
+
+### QA Android: composición y persistencia de una final (2026-10-06)
+
+Probar equipos como 1 → 2 → 1 → 2 permite comprobar la restricción mínima,
+la baja cancelada, la baja confirmada y la protección del último equipo. El
+control fijo puede cubrir una fila en mitad del scroll: se desplaza hasta tener
+la acción visible antes de pulsar. La jerarquía accesible puede conservar bounds
+de controles cubiertos por el teclado; una captura evita confundirlos con acciones
+visibles. Se oculta el teclado y se observa nuevamente la posición del formulario.
+
+La finalización se comprueba más allá del popup: resultado con tanda, ganador,
+estado terminal, ausencia de edición, aparición en recientes y reapertura con
+los mismos datos. Una final de dos equipos acredita ese recorrido completo en
+Android; no equivale a recorrer pases directos ni todos los deportes y formatos.
+
+### QA de retirada nativa con tres equipos — 2026-10-06
+
+Un fixture de tres equipos permite probar en una sola retirada el reemplazo de
+un marcador jugado, la resolución de un partido pendiente y la conservación de
+un partido entre rivales activos. Cancelar debe preservar equipo y marcador;
+confirmar debe actualizar clasificación y retirar los accesos a editar sus
+resultados administrativos. Reabrir desde recientes aporta evidencia distinta
+a la respuesta de guardar. Abrir el editor del partido no afectado no acredita
+una nueva escritura: ese alcance debe permanecer explícito.
+
+El cierre del IDE puede invalidar forwards ADB existentes. El healthcheck del
+host no verifica el transporte del emulador; hay que comprobar ambos extremos.
+La development build instalada admite Metro loopback con puerto reenviado,
+sin necesidad de exponer el bundle a la LAN ni cambiar dependencias.
+
+### QA Android: orientación efectiva y Atrás contextual (2026-10-06)
+
+Cambiar settings de rotación no demuestra que una pantalla haya girado. Se
+comprueba el sensor del emulador, orientación efectiva del sistema y respuesta
+de la app. Una build fijada en portrait puede conservar vertical mientras Ajustes
+sí rota: esa evidencia acredita el bloqueo, sin prometer soporte horizontal.
+Se restaura sensor, rotación y overlay de navegación al cerrar la sesión.
+
+Atrás con tres botones se prueba por estado: primero teclado, después ruta;
+diálogo de logout sin cerrar sesión; destino de la última fila y retorno con
+scroll conservado. Una reserva de espacio inferior se valida observando y
+pulsando el último elemento, no solo leyendo la constante de padding.
+
+### Byes e incidencias de raqueta en Android — 2026-10-06
+
+Para acreditar byes nativos hay que iniciar un cuadro impar, comprobar que los
+pases no tienen editor, observar una plaza pendiente y resolver los partidos
+hasta campeón desde el cliente. Los enlaces de origen y destino se prueban en
+ambos estados. Leer un cuadro ya completado aporta otra evidencia, no sustituye
+este recorrido. Un abandono con parcial 2–3 y victoria local separa explícitamente
+tanteo real de adjudicación administrativa; el set con un solo lado debe impedir
+Guardar y recuperar el envío al completar ambos.
+
+### Recuperación iOS y transporte loopback — 2026-10-06
+
+Un servidor Metro puede escuchar en localhost IPv6 y anunciar 127.0.0.1 dentro
+del manifiesto. Hay que comprobar listener y hostname anunciado antes de atribuir
+la carga fallida al cliente. En esta sesión, anunciar localhost mediante
+REACT_NATIVE_PACKAGER_HOSTNAME permite mantener el servidor en loopback sin
+cambiar configuración persistente ni exponer el bundle a la LAN.
+
+La prueba de recuperación separa correo inválido, solicitud segura, corte real,
+borrador conservado, reintento, recepción en Mailpit, enlace inválido y apertura
+nativa del enlace válido. Llegar al formulario con correo correcto y Guardar
+bloqueado no acredita un cambio efectivo de contraseña. Este último paso debe
+quedar pendiente hasta que la persona complete la entrada y el envío exigidos
+por la política de control de escritorio.
+
+### QA iOS: verificación, vacíos y transiciones deportivas — 2026-10-06
+
+Una cuenta pendiente debe mostrar reenvío al intentar login y conservar el
+formulario. El correo inicial no acredita el segundo reenvío: se comprueban
+ambos intentos y sus mensajes locales. El último enlace establece la sesión;
+reutilizarlo debe rechazar el consumo sin perder la sesión ya creada.
+Una cuenta nueva facilita probar colecciones vacías sin borrar datos existentes.
+
+Tres equipos bastan para recorrer un bye nativo con plaza pendiente, enlaces de
+origen/destino y dos partidos escritos hasta campeón. Ganar la final con el equipo
+que pasó directamente añade evidencia distinta al caso Android de cinco equipos.
+En liga, cancelar una retirada debe conservar el marcador; confirmarla sustituye
+jugados y pendientes del retirado y mantiene el editor del partido entre activos.
+La reapertura comprueba persistencia, no solo una actualización optimista.
+
+Device Hub puede traer a pantalla un control accesible fuera del viewport al
+invocarlo. Esto no demuestra que un gesto táctil de scroll funcione ni sustituye
+una prueba con VoiceOver. El informe distingue navegación accesible, observación
+visual y desplazamiento táctil realmente ejecutado.
+
+### QA Android: sets válidos y fin del partido (2026-10-06)
+
+La validez de un set y la validez de la secuencia son condiciones distintas:
+6–5 o 6–6 no son sets completos de tenis/pádel; tres victorias en mejor de cinco
+o dos en mejor de tres impiden añadir sets posteriores. La corrección del campo
+recupera Guardar, pero el error al desaparecer cambia la altura del diálogo:
+se observa su posición antes de confirmar.
+
+Un abandono con último set parcial puede ser válido aunque no sea un resultado
+jugado completo. Pasar a Marcador debe exigir partido terminado y retirar la
+metadata de incidencia tras guardar. Restaurar el fixture por UI y contrastar
+el resultado mediante una lectura independiente mantiene datos reutilizables
+sin borrar el historial de QA ni afirmar cobertura de todas las variantes.
+
+### QA Android: topes deportivos y vocabulario compartido (2026-10-06)
+
+La ventaja de dos y el tope máximo son condiciones separadas. En bádminton a 15,
+15–14 y 20–19 no completan un juego; 16–14 sí, 21–20 aplica la excepción del tope
+y 22–20 se rechaza aunque tenga ventaja de dos. El tercer juego tras dos victorias
+es otra invalidez. Guardar, reabrir y contrastar con API verifica restauración.
+
+Un feedback compartido sobre sets resulta incoherente en un formulario que habla
+de juegos. Referirse a ganar el partido sirve para ambos vocabularios, mientras
+la ayuda específica explica puntos, juegos, sets y topes. Se actualizan los cuatro
+catálogos y se verifica la redacción real en Android sin cambiar reglas de dominio.
+
+### QA Android: último juego parcial y fallos de arranque (2026-10-06)
+
+En tenis de mesa a siete juegos, 11–10 seguido de 2–2 contiene dos juegos
+incompletos y bloquea Guardar en un abandono. Cambiar el primero a 12–10 deja
+solo el último parcial y permite guardar. El desplazamiento táctil hasta el
+final comprueba que la ayuda y Guardar quedan accesibles con siete filas.
+Restaurar 5–3 por UI y contrastarlo con API conserva un fixture reutilizable.
+
+Un error de DevLauncher debe fecharse con el informe actual: el mismo texto de
+un informe antiguo no lo convierte en histórico. Force-stop y apertura de Metro
+recuperaron la sesión; un segundo enlace abrió el destino, pero el éxito de un
+reintento no cierra una caída intermitente ni acredita release. La captura
+inmediata tras un enlace puede mostrar la pantalla anterior: se confirma el
+destino en una captura posterior antes de clasificar el resultado.
+
+### QA Android: verificación y evidencia durante transiciones (2026-10-06)
+
+Un login pendiente reenvía correo y conserva el formulario sin sesión. Dos
+reenvíos, enlace más reciente de Mailpit, activación nativa, enlace consumido y
+sesión tras reinicio comprueban efectos distintos. Preparar la cuenta por API no
+acredita registrar desde UI; abrir el esquema local no acredita App Links HTTPS.
+
+Durante un spinner o splash, uiautomator puede no renovar el XML y dejar el árbol
+anterior. Una captura puede emparejar ese árbol con una imagen ya distinta: no se
+concluye que la pantalla anterior siga visible ni que el arranque haya acabado.
+Se confirma el estado después de cargar y se observa su imagen antes de cerrar QA.
+
+Restaurar una cuenta de QA mediante login puede transferir un borrador local
+válido según ADR-0127. Hay que registrar también cambios de conteo, destino y
+equipos, no solo la identidad. Sin capturar el borrador previo o la petición,
+la relación causal sigue siendo una inferencia; no se etiqueta automáticamente
+como duplicado de un torneo con el mismo nombre.
+
+### QA Android: binario instalado y enlaces de development build (2026-10-06)
+
+La configuración fuente y el APK instalado pueden divergir aunque Metro cargue
+el JavaScript actual. El APK anterior solo declaraba HTTPS /link/; regenerar y
+recompilar desde app.config incorporó /join-team y /tournament/. Inspeccionar el
+manifiesto del APK acredita el cambio nativo, pero no demuestra que ese desfase
+fuera la causa de una caída de DevLauncher.
+
+Expo exige cargar el proyecto antes de usar enlaces propios en development
+builds. El launcher tras un enlace en frío y un crash con el proyecto cargado son
+resultados distintos. Una reinstalación con datos preservados permite contrastar
+sesión y destino. Un intent HTTPS limitado al paquete comprueba filtro y routing,
+pero no acredita asociación de dominio ni elección automática desde el navegador.
+
+### QA Android: alta real desde el formulario (2026-10-06)
+
+Una cuenta preparada por API no demuestra que el formulario de registro funciona.
+El recorrido nativo enviado comprueba nombre no disponible, campos requeridos,
+correo inválido, contraseña corta, corrección y aceptación obligatoria incluso
+con los demás datos válidos. Mailpit pasa de cero correos tras el intento inválido
+a uno tras el envío válido. El alta vuelve al login sin sesión; el enlace real
+activa la identidad y la biblioteca vacía no hereda la cuenta previa.
+
+### QA web: casillas accesibles y restauración de fixtures (2026-10-06)
+
+- Comprobar que un botón se habilita no acredita el estado accesible de una
+  casilla. En react-native-web 0.21.2, TermsAcceptance necesitaba aria-checked
+  explícito junto con accessibilityState nativo. Se verifica true/false en el
+  DOM y la alternancia real; VoiceOver/TalkBack siguen siendo pruebas distintas.
+- Un registro preparado por API no prueba el formulario de alta. Preparar solo
+  datos ficticios, comprobar cero correos tras errores y un correo tras el envío
+  válido permite atribuir el alta a la UI. Activación e identidad deben concluir
+  con colecciones propias, sin heredar la proyección anterior.
+- Reponer un equipo eliminado antes de empezar restaura nombres y número, pero
+  crea otra entidad. Documentar el ID nuevo evita prometer recuperación de
+  identidad; contrastar recarga y GET evita confundir estado optimista con
+  persistencia.
+
+En Device Hub, el reinicio sin borrar recuperó una pantalla atascada en Connecting
+display. El control accesible permitía formularios y confirmaciones aunque
+coordenadas y Return no navegaban. Un fixture iOS independiente creado desde
+Inicio permitió verificar eliminación y reposición antes de empezar; el GET
+posterior acredita persistencia, sin atribuirlo a una reapertura visual.
+
+### QA iOS: alta enviada y avisos del sistema (2026-10-06)
+
+El alta nativa se acredita con datos ficticios preparados sin registro por API:
+errores, username ocupado, formatos inválidos, corrección, consentimiento
+obligatorio, cero correos tras intento inválido y un correo tras envío válido.
+El enlace real activa una identidad con biblioteca 0/0; restaurar la anterior
+recupera sus colecciones propias.
+
+Device Hub no mostró en el árbol accesible el aviso del SO de Guardar contraseña.
+La captura permitió descartarlo y continuar. El hallazgo no demuestra la causa
+de los intentos fallidos anteriores. Una página temporal solo en loopback
+permite abrir enlaces con Safari; el launcher frío exige seleccionar Metro.
+Los clicks de tabs funcionaron, pero drag/scroll de la lista larga no cambiaron
+su posición visible: se conserva ese pendiente sin atribuirlo al producto.
+
+### QA Android: formatos y frontera de caché (2026-10-06)
+
+Una liga a dos vueltas con dos empates prueba la inversión local/visitante, la
+clasificación acumulada y los co-campeones. Un mixto de ocho equipos con dos
+grupos prueba requisito de configuración, confirmación cancelable, clasificación
+congelada, navegación de cuadro y campeón. Preparar once resultados por API no
+acredita once envíos de UI: se documentan por separado el último de grupos y
+las dos semifinales/final guardados desde Android.
+
+El almacén canónico comparte las mutaciones locales, pero reabrir una ruta no
+implica leer cambios externos. El refresh explícito de ADR-0085 se concreta con
+un control en el menú existente, sin librería global ni polling. Para validarlo,
+se carga la ficha, se cambia el marcador fuera de la app y se actualiza; recargar
+Metro antes de observar la diferencia no acredita ese recorrido. El error de
+conexión y el 500 conservan contenido con feedback seguro. Los commits tardíos
+se invalidan al cambiar ID/cuenta o desmontar; cancelar no añade feedback.
+
+El proxy de QA debe coincidir con el prefijo /v1 real y confirmar la inyección
+antes de atribuir una pantalla al fallo. Un banner transitorio puede desaparecer
+antes de una captura tardía: se conserva la observación exacta del envío sin
+atribuir a esa captura evidencia que no contiene. Un fallo temporal de aprobación
+por límite de uso dejó cuerpo inválido/429 sin ejecutar; no equivale a aprobación
+ni a rechazo por riesgo. El cierre posterior apagó compose, Metro, proxy y
+emulador preservando volúmenes. La retrospectiva mantiene pendientes globales
+y visuales de plataformas que no participaron en esta fase.
+
+### QA de refresco: estados inesperados y salida durante espera (2026-10-06)
+
+Android conserva el contenido con el mensaje común ante un cuerpo 200 inválido
+y un 429 no tratado; el 404 declarado retira la ficha obsoleta y permite cerrar.
+No se transforma un estado desconocido en una regla de negocio centralizada.
+La inyección se acredita con el registro del proxy y la UI; la proyección real
+del torneo queda idéntica tras la prueba.
+
+Para comprobar feedback tardío se debe demostrar que la ruta cerró antes de
+terminar la respuesta. Una demora corta no lo acreditó: el banner interceptó el
+toque de cabecera. Con una demora mayor se observó Inicio antes de concluir el
+500 y después sin error de la ficha. Esto valida la guarda al desmontar, sin
+atribuirlo a un AbortController ni a timeout del transporte. Un proxy secuencial
+puede retener otras lecturas: su espera no se atribuye al producto.
+
+La recarga del runtime mostró una excepción de ScreensModule.setupFabric antes
+de entrar en negocio. Un proceso frío recuperó la app sin borrar la sesión;
+esa recuperación no resuelve la incidencia. La traza de Fabric se conserva
+separada del guard de DevLauncher previo, sin asumir una causa común ni convertir
+el aviso de memoria del emulador en diagnóstico. La fase cierra con todos los
+servicios de QA apagados y conserva los pendientes visuales de otras plataformas.
+
+### QA web: carga, refresco y evidencia de cierre (2026-10-07)
+
+Una ficha cacheada puede necesitar leer su relación al reabrirse: cortar la API
+antes de abrir prueba el error de carga con Reintentar, no el banner de refresco.
+Para comprobar conservación de contenido hay que cargar primero la ficha y cortar
+la API después; Actualizar debe conservarla con common_network_error. Los estados
+HTTP no tratados y cuerpos inválidos mantienen common_request_error; el 404
+contratado sustituye la ficha por el estado no disponible.
+
+Una pulsación inmediatamente después de cerrar un menú puede no acreditar la
+navegación pretendida. La prueba de salida durante espera compara el instante en
+que Inicio se observa con el fin real de la respuesta del proxy, y vuelve a revisar
+Inicio después. Un proxy concurrente evita bloquear consultas ajenas al fallo.
+El bloqueo visible de Actualizar se corrobora con su estado disabled.
+
+Un fallo de httptest al abrir un puerto bajo sandbox es una restricción de
+ejecución, no evidencia de regresión de producto. Se conserva el primer registro
+y se repite con los permisos necesarios; solo el segundo resultado acredita la
+suite. Esta fase mantiene separados QA visual web, suites sin integración opt-in
+y pendientes nativos; no cambia decisiones ni añade infraestructura al producto.
+
+Para acreditar cambios externos sin afectar fixtures deportivos terminados se usa
+un torneo ficticio exclusivo y aún en curso. Se carga 2–0, se cambia por API a 3–0,
+se observa que la ficha conserva 2–0 y solo después se pulsa Actualizar. Restaurar
+el 2–0 y refrescar vuelve a comprobar la recuperación. La preparación por API
+permanece diferenciada del recorrido visual. El entorno continúa activo mientras
+sigue la sesión de QA, conforme a la indicación del usuario.
+
+
+### Respetar el ciclo de vida del feedback al corregir su presentación (2026-10-07)
+
+En apps, el banner global debe superar la jerarquía de navegación y permanecer
+al cambiar de pantalla hasta expirar o cerrarse. Web mantiene su host por Screen.
+El host por pantalla de ConfirmationDialog no es una alternativa equivalente
+para un banner nativo. En iOS se conserva el host raíz usando FullWindowOverlay
+de la dependencia existente; la prueba debe navegar con el banner visible y
+comprobar tanto la nueva pantalla como la permanencia del aviso.
+
+El primer intento por Screen cambió una decisión aceptada y se retiró tras la
+corrección del usuario. Un bug no autoriza modificar el comportamiento acordado:
+antes de hacerlo se explica el conflicto y se pide decisión. La solución mínima
+se evalúa por el contrato que conserva, además de por su coste técnico.
+
+
+### QA de renovación de sesión y continuidad entre turnos (2026-10-07)
+
+Móvil decide renovar a partir de expiresAt local; web lo hace tras un 401 de una
+operación. Para comprobar ambos recorridos sin esperar la duración de acceso,
+un proxy de QA puede simular vencimiento próximo solo en el login móvil o un
+401 de un solo uso en web, manteniendo refresh contra la API real. La evidencia
+correlaciona renovación 200, lectura protegida 200 e identidad visible. No se
+presenta como caducidad real ni como prueba de revocación o concurrencia.
+
+Cortar la conexión de refresh antes de remitirla al backend permite comprobar
+que un fallo de red conserva la sesión local; retirar el corte y Reintentar debe
+renovar y recuperar contenido. Una inyección de un solo uso tiene que consumirse
+atómicamente en un proxy concurrente: una carrera de ese proxy no es un defecto
+del cliente. Los registros de QA solo necesitan ruta, método, estado e instante,
+nunca tokens, cookies ni respuestas de establecimiento de sesión.
+
+La continuidad de QA entre turnos debe verificarse en los listeners, no asumirse
+porque existió una sesión de herramienta. Una PTY mantenida por un helper efímero
+puede conservar Metro y el proxy durante la sesión autorizada sin nohup ni tareas
+programadas. Se guardan PID y logs para su cierre posterior; esto no autoriza
+mantener desarrollo activo fuera de las pruebas. API y base de datos se distinguen
+de las herramientas auxiliares al diagnosticar un corte.
+
+
+### QA nativo: validar, alcanzar y guardar son evidencias distintas (2026-10-07)
+
+Un control accesible puede estar en el árbol fuera de la parte visible del popup.
+Su estado enabled/disabled acredita validación, pero no que se haya alcanzado
+por scroll ni enviado. Editar un borrador, cerrar por el fondo y releer el resultado
+persistido permite verificar descarte sin alterar el fixture. Si el fixture ya
+está finalizado se prepara otro exclusivo por API y se identifica esa preparación
+como distinta de la creación visual.
+
+En deportes por sets, conviene recorrer límites que distingan sus perfiles:
+sets extra tras victoria, dos parciales incompletos en abandono, diferencia de
+dos y excepción del tope en bádminton, tanda empatada y desaparición de tanda,
+y umbrales de 25/15 en voleibol. Una lectura de UI posterior verifica qué cambios
+ocurrieron: una referencia accesible caducada puede fallar después de escribir,
+por lo que no se repite a ciegas ni se atribuye el fallo al producto.
+
+
+### Refresh web: fallo de transporte no equivale a rechazo de credenciales (2026-10-07)
+
+Si un acceso recibe 401 y la renovación falla por red, devolver el 401 original
+al coordinador transforma una incertidumbre de transporte en logout. El refresh
+debe propagar el error de conexión; solo su propio 401 confirma rechazo. Estados
+inesperados o cuerpos inválidos conservan el fallback seguro sin borrar identidad.
+La barrera concurrente debe liberarse también al fallar para permitir reintento.
+
+El QA web con cookies necesita un hostname consistente entre página y API:
+localhost y 127.0.0.1 son sitios distintos aunque ambos sean loopback. Al cambiar
+EXPO_PUBLIC_API_BASE_URL en una exportación, comprueba el origen del bundle y
+limpia la caché si conserva el anterior. Un login 200 por sí solo no acredita que
+el navegador haya almacenado una cookie utilizable.
+
+
+### QA de escrituras y feedback nativo sobre popup (2026-10-07)
+
+Antes de atribuir un fallo de escritura al cliente, confirma que el proxy de QA
+reenvía el método real del contrato: un helper centrado en lecturas puede devolver
+501 a PUT sin llegar al backend. Cada guardado visual se confirma por lectura
+independiente antes de restaurar el fixture desde la misma UI.
+
+Un banner de duración corta requiere captura inmediata. Una observación tardía
+sin banner no demuestra que estuviera oculto. En iOS se ha verificado el host
+global tanto sobre fullScreenModal como sobre el popup de resultados, y su
+persistencia al cerrar este último. No se cambia su ciclo de vida para acomodar
+la jerarquía de una pantalla.
+
+
+### Renovación Android y secuencia de QA visual (2026-10-07)
+
+Android conserva la sesión ante un corte de refresh y estados 500/429; retirar
+el fallo y reintentar recupera la biblioteca con renovación real 200. El 401 de
+refresh se comprueba aparte mediante revocación real, sin convertir fallos de
+transporte en rechazo de identidad.
+
+Con un emulador lento, esperar a que termine cada escritura y captura evita
+solapar teclado, envío y navegación. El XML anterior se elimina antes de cada
+volcado: un null root durante transición no permite reutilizarlo como evidencia
+actual. Se excluyen los intentos con entrada incompleta del diagnóstico funcional.
+
+
+Un ANR del sistema del emulador se identifica por el proceso y la ventana
+(com.android.systemui), no por la app visible detrás. Conservar el estado de la
+app y verificarlo tras recuperar la UI permite comprobar persistencia sin borrar
+datos. Una recuperación posterior a varias acciones no acredita por sí sola
+cuál de ellas fue la causa de la mejora.
+
+
+### Banner Android y ventanas nativas (2026-10-07)
+
+pointerEvents="box-none" en una View no acredita que una ventana Modal nativa
+transparente deje pasar eventos a otra ventana. El QA Android confirma banner
+sobre popup, pero bloquea su backdrop durante la vida del banner; la misma
+pulsación cierra después. Se mantiene abierto el defecto técnico, preservando
+la decisión de host global. Verificar superposición e interacción son pruebas
+diferentes; no se corrige una suprimiendo el alcance funcional de la otra.
+
+
+### Banner global: ventanas y pruebas por plataforma (2026-10-07)
+
+Un Modal transparente Android sigue teniendo una ventana completa que puede
+interceptar el backdrop inferior. El adaptador local de ADR-0150 limita su ventana
+al aviso y recibe anclajes de los popups, conservando dueño y fecha límite en el
+provider global. Cambiar el anclaje no debe convertirse en cambiar el ciclo de
+vida funcional. El control iOS antes/después se hace independientemente: pasar
+Android no demuestra nada sobre FullWindowOverlay ni viceversa.
+
+Retrospectiva: las pruebas deben observar primero el banner y ejecutar después
+la acción dentro de su vida. La carga mínima del formulario y Fast Refresh pueden
+invalidar una captura prematura. En Android se sincroniza con la ventana hija visible;
+en iOS con el árbol/captura del aviso. El descarte por arrastre iOS quedó como
+incidencia observada antes del adaptador Android, pendiente de distinguir
+defecto del producto y limitación de automatización, sin conservar ajustes del responder no acreditados
+ni introducir otro adaptador por anticipación.
+
+
+El experimento PopupWindow se retira al ampliar el recorrido a Atrás: API 34
+registra un callback propio incluso sin foco. Reponer el popup oculta el fallo
+visual pero consume la navegación. WindowManager.addView con ventana hija, área
+limitada y flags sin foco/modalidad táctil conserva ambos comportamientos. La
+prueba final vuelve a Inicio con aviso aún activo tras desmontar su ficha origen.
+La evidencia de la implementación anterior se conserva como experimento, no como
+validación del mecanismo final.
+
+
+Recrear Activity durante el arranque de un development client puede ejercitar
+su cargador además del host de la app. Registrar la traza y repetir desde la app
+cargada distingue recorridos, pero no demuestra por sí solo la causa. El fatal
+observado en DevLauncher se conserva abierto aunque el banner posterior a una
+recreación estable funcione. Los títulos de ventanas auxiliares usan el mensaje
+localizado; no se acude a campos @hide para mejorar su accesibilidad. Declarar
+liveRegion no equivale a haber validado TalkBack o VoiceOver.
+
+
+### Gesto rápido iOS y recarga verificable (2026-10-07)
+
+Una ausencia de logs no acredita pérdida de eventos sin validar primero el
+observador y la carga del código instrumentado. El inspector Hermes confirma
+un probe; recargar explícitamente iOS confirma después el render del provider.
+No se toma cada hipótesis probada vía Fast Refresh como ejecutada sin esa prueba.
+
+PanResponder reinicia dx/dy en el grant. En el recorrido observado, el movimiento
+que reclama el responder es -79.7 puntos y release entrega cero; conservar el
+desplazamiento anterior al grant mantiene el umbral decidido, incluso con un único
+move rápido. El arrastre largo cierra, el corto conserva el aviso y cerrar popup y
+ficha conserva el banner sobre Inicio. El arreglo pertenece al cálculo del gesto,
+sin justificar otro adaptador iOS. Se retira toda instrumentación temporal.
+
+
+### Control de regresión frente al cargador Expo (2026-10-07)
+
+Una recreación durante el arranque produce la aserción de contexto en el cargador
+Expo con y sin el adaptador. El control elimina el módulo del registro generado y
+sustituye su host Android por un stub; ocultar el aviso no habría excluido sus
+hooks de ciclo de vida. Se restauran fuentes, configuración y build después del
+control. Aislar una causa evita añadir parches a dependencias para cerrar el QA de
+un componente que no es necesario para provocar el fallo observado.
+
+
+En el QA del host Android, texto al 150% y mensaje francés oscuro conservan la
+legibilidad. Una actualización de tema reenvía los tokens al mismo aviso sin
+renovar su fecha límite. Se verifica el color realmente renderizado antes de
+atribuir éxito al cambio del ajuste del SO; una captura prematura de transición
+no acredita esa actualización. Los ajustes temporales se restauran y el lector
+de pantalla sigue siendo una comprobación distinta de la legibilidad visual.
+
+Android Lint abortó en el análisis Kotlin de build scripts de react-native-worklets
+con Cannot find a KaModule. Se registra como comprobación bloqueada por herramienta,
+sin ocultar el fallo, deshabilitar reglas ni confundir compilación con análisis.
+
+## 2026-10-07 — Alcance de Lint aislado en Android
+
+Si Lint aborta dentro de una dependencia, ejecutar el análisis y generar el
+informe del módulo propio excluyendo explícitamente solo la tarea defectuosa
+puede aportar evidencia parcial. Registrar comando, exclusión y hallazgos; no
+declarar Lint completo aprobado. En el host global, el informe aislado arroja
+0 errores y 6 avisos de constructor para herramientas y recomendaciones KTX.
+No se añade un constructor sin AppContext a una ExpoView solo para satisfacer
+el editor de layouts. El gesto corto debe comprobarse seguido de un descarte
+válido, para acreditar que el control continúa respondiendo.
+
+## 2026-10-07 — Un retorno sin banner visible puede seguir fallando
+
+Tras expirar un aviso en segundo plano, la ausencia de su ventana en dumpsys
+no basta para aprobar el retorno: comprobar que el formulario vuelve a responder
+y que no aparece ANR. Si debuggerd tampoco obtiene la pila, conservar esa
+limitación; los frames omitidos y la presión de CPU no permiten atribuir por sí
+solos la causa al módulo recién incorporado. Comparar Inicio y el mismo popup
+sin aviso antes de proponer un cambio de arquitectura o de contrato funcional.
+
+## 2026-10-07 — Alcance de la navegación accesible en QA visual
+
+Una acción AX sobre un elemento fuera del viewport puede desplazarlo antes de
+abrir su destino. Acredita el enlace, pero no un arrastre manual del listado.
+Comprobar por separado recuperación de posición, recuento conservado y cancelación
+de confirmaciones. Si el mismo gesto no actúa en varias superficies, contrastar
+el canal de entrada antes de cambiar una pantalla por una causa no demostrada.
+
+## 2026-10-07 — Entrega de sugerencias y lectura entre plataformas
+
+Verificar el éxito de una sugerencia contra el buzón ficticio local, además del
+banner y el borrador limpio: confirma la entrega sin recurrir a destinos reales.
+Contrastar los límites con el valor efectivamente observado; una limitación del
+automatizador para introducir Unicode no prueba un defecto del campo.
+
+Los fixtures ya finalizados permiten revisar la lectura nativa de ligas y mixtos
+sin nuevas mutaciones. Registrar por separado esta cobertura y la creación/
+edición completa. En un mixto, comprobar también que la clasificación de liga
+no acumula el partido de la final eliminatoria.
+
+
+## 2026-10-07 — Separar lectura final y ciclo nativo completo
+
+Después de revisar fixtures finalizados, usar torneos nuevos mínimos de dos
+equipos para comprobar por UI inicio, resultado, clasificación y finalización.
+Contrastar luego por API estado, marcador, parciales y campeón exacto. Registrar
+que la preparación fue por API: no acredita el formulario nativo de creación ni
+todos los grupos, jornadas o formatos mixtos.
+
+Un bloqueo del escritorio puede interrumpir el reenvío del teclado al simulador.
+No confundir el texto solicitado con el valor del campo: comprobarlo visualmente
+y volver a observar los controles cuando sus identificadores AX caduquen. Si se
+usa un setter accesible soportado, registrar ese canal y conservar pendiente la
+prueba de teclado o gesto que no se haya podido realizar.
+
+
+## 2026-10-07 — Verificar el límite entre liga y eliminatoria
+
+Un ciclo mixto mínimo útil usa cuatro equipos, seis partidos de liga y una final
+entre dos clasificados. Comparar los tres partidos por equipo y los puntos de la
+tabla antes y después de la final: acreditar el campeón no demuestra por sí solo
+que la clasificación quedó congelada. Incluir un ganador visitante detecta
+inversiones de lados que una tanda de victorias locales no ejercita.
+
+Los bounds accesibles pueden corresponder a texto recortado bajo una cabecera
+fija. Contrastar la captura y escoger un control completamente visible. Si un
+teclado oculta Guardar, comprobar primero la salida normal del foco dentro del
+popup; registrar por separado ese recorrido y el scroll que el canal no ejecuta.
+
+
+## 2026-10-07 — Incidencias nativas y restauración verificable
+
+Conservar una línea base antes de editar fixtures. En no comparecencia y abandono,
+verificar tipo, lado afectado, ganador, marcador administrativo y parciales de
+forma independiente. Un juego completo seguido de otro parcial ejercita un caso
+distinto del abandono sin tanteo opcional. Al restaurar, comparar todos los
+partidos con la línea base, no solo el marcador visible.
+
+Activar Guardar por AX fuera del viewport demuestra la acción accesible, pero no
+que el gesto permita alcanzarlo. Registrar esa diferencia y no corregir el
+producto por una limitación del canal de entrada sin evidencia propia.
+
+
+## 2026-10-08 — Sustitución completa del tipo de resultado
+
+Al pasar de marcador jugado con tanda a incidencia, comprobar que la persistencia
+elimina los lanzamientos anteriores. Al pasar de abandono a no comparecencia,
+comprobar que elimina el parcial. Elegir un abandono del equipo que iba ganando
+permite verificar que el ganador administrativo no se deduce de ese tanteo.
+La restauración debe recuperar el partido completo sin datos residuales.
+
+
+## 2026-10-08 — Parciales y sets administrativos de voleibol
+
+Una incidencia de voleibol puede persistir tres sets administrativos y, además,
+un tanteo parcial real. Verificar ambos campos por separado, que el editor de
+abandono no prellene los administrativos y que restaurar a played elimine la
+incidencia residual. Dos sets incompletos consecutivos deben bloquear Guardar;
+corregir el borrador antes de persistirlo.
+
+Un fixture nuevo de baloncesto prueba alta por incidencia y corrección posterior
+sin reutilizar torneos ya finalizados. La finalización irreversible requiere
+respetar el permiso específico si la revisión automática la rechaza; conservar
+el resultado y cancelar la confirmación permite cerrar la evidencia restante.
+
+
+## 2026-10-08 — Resultado, campeón y lectura final persistente
+
+Tras obtener el permiso específico para finalizar un fixture, confirmar el cierre
+por UI y contrastar championTeamIds con la identidad exacta del ganador. Comparar
+todos los partidos con la evidencia previa para detectar cambios involuntarios.
+La celebración no basta: cerrar y reabrir la ficha, verificar estado finalizado,
+marcador conservado y ausencia de controles de edición. Mantener separada la
+cobertura de preparación por API de las acciones realmente realizadas por UI.
+
+
+## 2026-10-08 — Abandono de tenis con un único último parcial
+
+Probar un set completo seguido de un parcial y añadir otro incompleto para
+comprobar el límite: Guardar debe bloquearse y recuperarse al retirar el último.
+Al cambiar entre no comparecencia y abandono, verificar que el editor no reutiliza
+parciales antiguos ni el marcador administrativo. Confirmar por separado el lado
+que abandona, el ganador y incident.partialSets; restaurar todos los partidos
+contra la línea base al cerrar la prueba.
+
+Un error de identificador AX puede llegar después de aplicar un setter. Releer
+los valores antes de repetir la entrada evita alterar un borrador ya correcto.
+
+
+## 2026-10-08 — Sustituir tanda e incidencia sin datos residuales
+
+En fútbol, recorrer jugado con tanda → no comparecencia → abandono con parcial →
+jugado con tanda. Comparar el partido completo: las incidencias deben eliminar
+penaltis y volver a played debe eliminar incident. Un abandono del equipo que
+iba ganando comprueba que el parcial no decide el ganador administrativo.
+
+Una validación compartida puede funcionar y, aun así, mencionar conceptos ajenos
+al deporte: registrar por separado esa observación de claridad, sin confundirla
+con un fallo funcional. En fútbol, la referencia a sets o juegos del error de
+parcial incompleto queda pendiente de adaptación.
+
+
+## 2026-10-08 — Copy de parcial según tipo de tanteo
+
+Se resuelve la referencia a sets/juegos en fútbol con una clave localizada para
+goles/puntos y la clasificación isSetSport ya existente. Conservar la ayuda del
+último parcial incompleto en deportes por sets evita empobrecer su recuperación;
+un mensaje por deporte añadiría mantenimiento sin aportar una acción diferente.
+La regresión visual puede usar un borrador inválido y descartarlo: verificar
+luego por API que el partido no cambió. El texto español queda comprobado en iOS;
+no extrapolar esa observación a otros idiomas o plataformas.
+
+
+## 2026-10-08 — Disponibilidad del emulador y coherencia de catálogos
+
+Antes de intentar un segundo arranque, contrastar inventario UI y dispositivo:
+una instancia activa puede no ser controlable por el canal disponible. No crear
+otra ni reiniciar la existente solo para ocultar esa limitación. Registrar como
+pendiente el recorrido del producto que no llegó a ejecutarse.
+
+Después de ampliar traducciones, comprobar claves duplicadas, valores vacíos,
+igualdad de conjuntos y marcadores de sustitución entre idiomas. Los cuatro
+catálogos actuales conservan 527 claves coherentes; esto no acredita traducción
+natural ni ausencia de recortes en pantalla.
+
+
+## 2026-10-08 — Evidencia fresca del detector de carreras
+
+Para acreditar una tanda nueva, ejecutar Go con -race -count=1 y guardar JSON:
+una ejecución correcta con resultados cached no demuestra que se hayan repetido
+los recorridos ahora. Separar aprobados, omitidos y paquetes sin pruebas.
+La pasada actual obtiene 483 tests/subtests aprobados y cero informes de carrera;
+las integraciones opt-in permanecen fuera de ese alcance.
+
+Los tests con httptest o listeners de shutdown necesitan puertos efímeros de
+localhost. Conservar el intento restringido y repetir con el permiso necesario;
+no convertir un bind bloqueado por sandbox en un defecto de producto.
+
+
+## 2026-10-08 — Incidencias Android y ausencia de datos incompatibles
+
+Con autorización explícita para ADB se completa el recorrido de incomparecencia,
+abandono y restauración en bádminton, pádel y fútbol. Comprobar tanto los valores
+presentes como los campos que deben desaparecer: sets jugados, parcial y penaltis
+son representaciones excluyentes. Restaurar y comparar todos los partidos contra
+la línea base evita dar por válida una recuperación solo por el ganador visible.
+
+La captura Android confirma el copy de parcial por tanteos y Guardar desactivado.
+UIAutomator puede marcar enabled en el texto interno de un botón desactivado;
+revisar sus ancestros y la imagen antes de concluir que permite guardar. Abrir
+enlaces con la app activa no acredita arranque en frío ni resuelve un ANR previo.
+
+
+## 2026-10-08 — Copy localizado en el formulario real
+
+Un borrador inválido y descartable permite comprobar un mensaje nuevo en los
+cuatro idiomas Android sin alterar el resultado persistido. Verificar catálogo,
+texto completo, botón desactivado y GET posterior; no convertir esta muestra en
+una acreditación de todas las traducciones. La preferencia por app del sistema
+se restaura a su lista vacía original para volver al idioma del SO.
+
+En tenis de mesa a siete juegos, cambiar abandono a incomparecencia elimina
+partialSets y produce 0–4. Restaurar el abandono original exige introducir su
+parcial y comprobar vacíos los otros juegos, además de comparar todos los
+partidos por API. Un aviso histórico de caída en DevLauncher no es un fatal
+nuevo; conservar logs separados para evitar atribuciones por la captura sola.
+
+
+## 2026-10-08 — Subida del bloque acumulado de QA
+
+Antes de subir develop, revisar los archivos reales de Git, incluyendo módulos
+locales nuevos. Ignorar android/ generado no excluye automáticamente los outputs
+Gradle bajo modules/: versionar Kotlin y build.gradle, excluir build/. Conservar
+las limitaciones del QA en el commit, especialmente lectores, Lint nativo y
+DevLauncher; un gate verde no equivale a una publicación productiva.
+
+make verify y 78 pruebas Node pasan para el conjunto. Registrar por separado
+la integración opt-in omitida y la vulnerabilidad de módulo sin llamadas
+alcanzables que govulncheck informa, sin presentar el resultado como cobertura
+universal. Mantener main, tags y despliegue dentro del ciclo autorizado aparte.

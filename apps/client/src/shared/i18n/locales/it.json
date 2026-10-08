@@ -417,7 +417,7 @@
   "racket_set_number": "Set {number}",
   "racket_home_games": "Game del primo partecipante",
   "racket_away_games": "Game del secondo partecipante",
-  "racket_result_invalid": "Completa un risultato valido e fermati quando un partecipante raggiunge i set necessari.",
+  "racket_result_invalid": "Completa un risultato valido e fermati quando un partecipante vince la partita.",
   "racket_participants": "Partecipanti",
   "racket_add_participant": "Aggiungi partecipante",
   "racket_participant_limit_reached": "Un torneo può avere fino a 64 partecipanti.",
@@ -514,6 +514,7 @@
   "result_incident_winner": "La vittoria viene assegnata a {participant}",
   "result_incident_effect": "L’incidente riguarda solo questa partita. Il punteggio parziale non conta per la classifica.",
   "result_incident_partial_invalid": "Completa entrambi i punteggi o lascia il parziale vuoto. Solo l’ultimo set o gioco può essere incompleto.",
+  "result_incident_partial_score_invalid": "Completa entrambi i punteggi o lascia il parziale vuoto.",
   "result_incident_no_show_description": "{participant} non si è presentato.",
   "result_incident_retirement_description": "{participant} si è ritirato dalla partita.",
   "result_incident_partial": "Punteggio parziale: {score}",
@@ -523,5 +524,6 @@
   "account_apple_create_account": "Crea account con Apple",
   "account_social_rate_limited": "Troppi tentativi. Attendi un momento e riprova.",
   "account_social_return_description": "Torna alla schermata dove hai iniziato l’accesso. Se hai chiuso l’app, avvia di nuovo l’accesso.",
-  "account_apple_linked": "Accesso con Apple"
+  "account_apple_linked": "Accesso con Apple",
+  "common_refresh": "Aggiorna"
 }

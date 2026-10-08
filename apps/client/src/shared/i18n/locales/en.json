@@ -417,7 +417,7 @@
   "racket_set_number": "Set {number}",
   "racket_home_games": "First participant games",
   "racket_away_games": "Second participant games",
-  "racket_result_invalid": "Complete a valid result and stop when a participant reaches the required sets.",
+  "racket_result_invalid": "Complete a valid result and stop when a participant wins the match.",
   "racket_participants": "Participants",
   "racket_add_participant": "Add participant",
   "racket_participant_limit_reached": "A tournament can have up to 64 participants.",
@@ -514,6 +514,7 @@
   "result_incident_winner": "Win awarded to {participant}",
   "result_incident_effect": "The incident affects only this match. Partial scores are not used for standings.",
   "result_incident_partial_invalid": "Complete both scores or leave the partial score empty. Only the last set or game may be unfinished.",
+  "result_incident_partial_score_invalid": "Complete both scores or leave the partial score empty.",
   "result_incident_no_show_description": "{participant} did not attend.",
   "result_incident_retirement_description": "{participant} retired from the match.",
   "result_incident_partial": "Partial score: {score}",
@@ -523,5 +524,6 @@
   "account_apple_create_account": "Create account with Apple",
   "account_social_rate_limited": "Too many attempts. Wait a moment and try again.",
   "account_social_return_description": "Return to the screen where you started signing in. If you closed the app, start signing in again.",
-  "account_apple_linked": "Signed in with Apple"
+  "account_apple_linked": "Signed in with Apple",
+  "common_refresh": "Refresh"
 }

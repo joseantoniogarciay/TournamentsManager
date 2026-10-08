@@ -25,6 +25,7 @@ import {
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
+import { FeedbackWindowAnchor } from "@/shared/feedback/android-feedback-host";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 import { Button } from "./button";
@@ -190,6 +191,7 @@ export function ModalDialog({
         enabled={avoidKeyboard && Platform.OS !== "web"}
         style={styles.backdrop}
       >
+        {Platform.OS === "android" ? <FeedbackWindowAnchor /> : null}
         {Platform.OS === "web" ? (
           <View
             pointerEvents="none"

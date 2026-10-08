@@ -50,3 +50,5 @@ Usa [template.md](template.md) y el
 
 - [ADR-0148: Preparar fiabilidad de producción con proyectos PostHog separados](0148-prepare-production-error-tracking-with-separated-posthog-projects.md) — Superado por ADR-0149.
 - [ADR-0149: Reservar el único proyecto PostHog para producción](0149-reserve-the-single-posthog-project-for-production.md) — Aceptado; supera ADR-0148.
+
+- [ADR-0150: Host Android local para el banner global](0150-use-a-local-android-host-for-global-feedback.md) — Aceptado.

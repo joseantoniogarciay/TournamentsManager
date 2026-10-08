@@ -25,6 +25,16 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- Feedback global nativo: host Android local no modal (ADR-0150) que permite
+  operar el popup y navegar durante el aviso; iOS conserva la superposición y
+  corrige el descarte con arrastre rápido. Accesibilidad con lectores pendiente.
+- Renovación de sesión web: fallos de red, 429, 500 o cuerpos inválidos conservan
+  la sesión y permiten recuperar; solo el rechazo de credenciales la invalida.
+- Ficha de torneo: acción localizada Actualizar, sin duplicados ni feedback
+  tardío al cambiar de ruta o cuenta. Recuperación distingue fallos de conexión.
+- Validación de resultados: ayuda de parcial adaptada a tanteos o sets/juegos,
+  con revisión nativa y catálogos es/en/it/fr; semántica de checkbox legal web.
+
 - Acceso social: Apple y Google aparecen como iconos circulares en una fila,
   Apple primero en iOS/web y Google primero en Android, con etiquetas accesibles
   y estados de carga/deshabilitado.

@@ -211,3 +211,9 @@ Si falta un eslabón, el cambio no está terminado.
 [ADR-0146](../adr/0146-run-development-and-observability-on-demand.md), aceptado
 por instrucción explícita del usuario: local/dev apagados fuera de pruebas y
 observabilidad únicamente bajo petición. Producción conserva su operación.
+
+## Banner global Android — 2026-10-07
+
+[ADR-0150](../adr/0150-use-a-local-android-host-for-global-feedback.md), aceptado
+explícitamente: adaptador Android local de Expo para conservar el host global sin
+bloquear ventanas inferiores; comprobar iOS antes y después.

@@ -417,7 +417,7 @@
   "racket_set_number": "Set {number}",
   "racket_home_games": "Juegos del primer participante",
   "racket_away_games": "Juegos del segundo participante",
-  "racket_result_invalid": "Completa un resultado válido y detente cuando uno de los participantes alcance los sets necesarios.",
+  "racket_result_invalid": "Completa un resultado válido y detente cuando uno de los participantes gane el partido.",
   "racket_participants": "Participantes",
   "racket_add_participant": "Añadir participante",
   "racket_participant_limit_reached": "Un torneo puede tener hasta 64 participantes.",
@@ -514,6 +514,7 @@
   "result_incident_winner": "Victoria para {participant}",
   "result_incident_effect": "La incidencia afecta solo a este partido. El tanteo parcial no se usa para la clasificación.",
   "result_incident_partial_invalid": "Completa ambos tanteos o deja el parcial vacío. Solo el último set o juego puede estar incompleto.",
+  "result_incident_partial_score_invalid": "Completa ambos tanteos o deja el parcial vacío.",
   "result_incident_no_show_description": "Incomparecencia de {participant}.",
   "result_incident_retirement_description": "Abandono de {participant}.",
   "result_incident_partial": "Tanteo parcial: {score}",
@@ -523,5 +524,6 @@
   "account_apple_create_account": "Crear cuenta con Apple",
   "account_social_rate_limited": "Has hecho demasiados intentos. Espera un momento e inténtalo de nuevo.",
   "account_social_return_description": "Vuelve a la pantalla donde empezaste el acceso. Si cerraste la app, inicia el acceso de nuevo.",
-  "account_apple_linked": "Acceso con Apple"
+  "account_apple_linked": "Acceso con Apple",
+  "common_refresh": "Actualizar"
 }

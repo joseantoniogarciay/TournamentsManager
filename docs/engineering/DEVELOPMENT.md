@@ -187,6 +187,14 @@ Véase ADR-0096.
   de enlazado y modulemaps. Una build limpia es más lenta, pero reproducible.
 - No se edita a mano un directorio generado. Las necesidades nativas se declaran
   en configuración o config plugins.
+- Antes del QA de enlaces, contrasta los filtros del APK instalado con
+  `app.config.ts`. Recargar Metro no incorpora cambios de esquema, App Links o
+  config plugins al binario: regenera y recompila la development build cuando
+  difieran. Conserva los datos del emulador al reinstalar para comprobar sesión.
+- En una development build, abre primero el proyecto desde la URL exacta de Metro
+  antes de probar un enlace propio. Un enlace con la app detenida puede abrir el
+  launcher y no valida el arranque de una build distribuida. Se separan esos
+  casos en el informe; véase [Expo: app-specific deep links](https://docs.expo.dev/develop/development-builds/development-workflows/).
 - El config plugin local `with-ios-scene-lifecycle.cjs` incorpora el ciclo de vida
   UIScene requerido al compilar con el SDK de iOS 27. Crea una sola ventana
   asociada a su escena y conserva la integración de Expo/React Native para
@@ -382,7 +390,6 @@ La web pública no ejecuta Expo Metro: se exporta estática con
 `https://dev-api.fasttourney.com`. Mailpit solo es accesible en el ciclo local;
 el runtime público usa Resend SMTP autenticado con STARTTLS conforme a ADR-0093.
 
-
 ## Mantenimiento de dependencias — 2026-10-03
 
 La actualización de seguridad se ha ejecutado dentro del contenedor local para
@@ -403,10 +410,10 @@ funciones alcanzables). Los overrides deben retirarse cuando los consumidores
 incorporen las revisiones corregidas por sus propios rangos. No se modifican
 las dependencias directas nativas para forzar una auditoría a cero.
 
-| Paquete pendiente | Motivo y siguiente paso |
-| --- | --- |
-| node-forge 1.4.0 | La corrección indicada 1.4.1 no está publicada en npm al comprobarla. Esperar una revisión oficial publicada y madura. |
-| braces 3.0.3 | La corrección indicada 3.0.4 no está publicada en npm. Esperar una revisión oficial publicada y madura. |
+| Paquete pendiente | Motivo y siguiente paso                                                                                                |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| node-forge 1.4.0  | La corrección indicada 1.4.1 no está publicada en npm al comprobarla. Esperar una revisión oficial publicada y madura. |
+| braces 3.0.3      | La corrección indicada 3.0.4 no está publicada en npm. Esperar una revisión oficial publicada y madura.                |
 
 La promoción posterior v1.8.3 corrige los otros tres avisos con image-size 2.0.4
 y decode-uri-component 0.5.0. Dos parches versionados adaptan Metro 0.84.4 a
@@ -479,3 +486,32 @@ Al actualizar Expo Symbols, contrastar este caso y retirar el parche cuando
 esté resuelto upstream. No compensar por pantalla ni dividir por `fontScale`,
 porque Android admite escalado no lineal. La matriz y el alcance visual están en
 [la revisión entre plataformas](CROSS_PLATFORM_VISUAL_REVIEW_2026-10-04.md).
+
+
+### Módulo local de feedback Android (ADR-0150)
+
+`apps/client/modules/global-feedback` contiene el host Kotlin, enlazado solo en
+Android mediante expo-module.config.json. No se modifica android/ generado por
+CNG. Tras cambiar Kotlin hay que recompilar e instalar la development build antes
+de validar JavaScript; Fast Refresh no incorpora código nativo. El build.gradle
+reutiliza react-android fijado por el proyecto para cargar la misma fuente Figtree,
+sin fijar otra versión ni añadir una librería externa.
+
+El provider raíz mantiene el aviso y su temporizador. El host raíz y ModalDialog
+registran anclajes de ventana de tamaño cero; desmontar uno vuelve a presentar el
+mismo aviso sobre el último anclaje adjunto, sin renovar su fecha límite. La
+implementación .android.tsx requiere TMGlobalFeedback; el módulo base es un stub
+para iOS/web, que no requieren el módulo Android. Los textos, colores, tipografía,
+espacios, radios y duraciones llegan desde los catálogos y tokens compartidos.
+
+La validación debe cubrir tanto el orden visual como el paso de toques, el cierre
+del popup y la navegación con el aviso todavía activo. Una captura después del
+autocierre no demuestra supervivencia. No editar JavaScript durante una secuencia
+de QA nativo: Fast Refresh puede desmontar la ruta y falsear la posición de los
+controles que se está probando.
+
+El host usa WindowManager.addView con TYPE_APPLICATION_SUB_PANEL, sin foco y sin
+modalidad táctil. La prueba de API 34 descartó PopupWindow: PopupDecorView registra
+un callback de Atrás aunque la ventana no tenga foco. Ese callback oculta el
+aviso o consume la navegación si se intenta restaurarlo. La ventana hija pública
+evita ese comportamiento sin reflection, parches del SDK ni cambios de navegación.

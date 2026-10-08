@@ -30,6 +30,7 @@ export function TermsAcceptance({
         accessibilityLabel={t("account_terms_acceptance")}
         accessibilityRole="checkbox"
         accessibilityState={{ checked }}
+        aria-checked={checked}
         onPress={() => onChange(!checked)}
         style={styles.checkboxTarget}
       >

@@ -51,6 +51,7 @@ pnpm-debug.log*
 /apps/client/ios/
 android/.gradle/
 android/app/build/
+/apps/client/modules/*/android/build/
 ios/Pods/
 ios/build/
 

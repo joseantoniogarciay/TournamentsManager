@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
-import { APIUnexpectedResponseError } from "@/api/fetch";
+import { APISessionInvalidatedError, APIUnexpectedResponseError } from "@/api/fetch";
 import { useTournamentFollow } from "@/features/league-creation/use-tournament-follow";
 import type { PublicTournament } from "@/api/generated/models";
 import {
@@ -147,6 +147,9 @@ export default function TournamentScreen() {
   const [loadErrorMessage, setLoadErrorMessage] = useState<string>();
   const [leagueUnavailable, setTournamentUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshInFlight = useRef(false);
+  const refreshGeneration = useRef(0);
   const [isStarting, setIsStarting] = useState(false);
   const [roundRobinLegs, setRoundRobinLegs] = useState<1 | 2>(1);
   const [format, setFormat] = useState<
@@ -256,6 +259,49 @@ export default function TournamentScreen() {
       void load();
     }, [load]),
   );
+  useEffect(() => {
+    setIsRefreshing(false);
+    return () => {
+      refreshGeneration.current += 1;
+      refreshInFlight.current = false;
+    };
+  }, [id, user?.id]);
+  const refresh = async () => {
+    if (!id || refreshInFlight.current) return;
+    const generation = refreshGeneration.current;
+    refreshInFlight.current = true;
+    setIsRefreshing(true);
+    try {
+      await refreshTournament(id);
+      if (generation !== refreshGeneration.current) return;
+      if (user) {
+        const administered = await getTournamentRelationship(id);
+        const nextRelationship = administered ?? (await getTournamentRelationship(id, "followed"));
+        if (generation !== refreshGeneration.current) return;
+        setRelationship(nextRelationship);
+      } else setRelationship(null);
+    } catch (error) {
+      if (generation !== refreshGeneration.current) return;
+      if (
+        error instanceof APISessionInvalidatedError ||
+        (error instanceof Error && error.name === "AbortError")
+      ) {
+        return;
+      }
+      if (error instanceof TournamentUnavailableError) {
+        setTournamentUnavailable(true);
+        setLoadErrorMessage(t("league_unavailable"));
+        return;
+      }
+      const failure = getRequestFailure(error);
+      show({ kind: failure.kind, message: t(failure.messageKey) });
+    } finally {
+      if (generation === refreshGeneration.current) {
+        refreshInFlight.current = false;
+        setIsRefreshing(false);
+      }
+    }
+  };
   const isOrganizer = relationship === "organizer";
   const canManageResults = relationship === "organizer" || relationship === "delegated";
   const start = async () => {
@@ -1369,6 +1415,15 @@ export default function TournamentScreen() {
         >
           <View style={styles.menuActions}>
             <Button
+              label={t("common_refresh")}
+              loading={isRefreshing}
+              onPress={() => {
+                closeWebMenu();
+                void refresh();
+              }}
+              variant="secondary"
+            />
+            <Button
               label={t("league_share")}
               onPress={() => {
                 closeWebMenu();
@@ -1770,7 +1825,13 @@ export default function TournamentScreen() {
                     </Text>
                     <Text color="secondary">{t("result_incident_effect")}</Text>
                     {!canSaveResult ? (
-                      <Text color="error">{t("result_incident_partial_invalid")}</Text>
+                      <Text color="error">
+                        {t(
+                          isSetSport(league.sport)
+                            ? "result_incident_partial_invalid"
+                            : "result_incident_partial_score_invalid",
+                        )}
+                      </Text>
                     ) : null}
                   </View>
                 ) : null}
