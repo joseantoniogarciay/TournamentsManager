@@ -5325,3 +5325,18 @@ puede coexistir con una API 502 porque la VM esté detenida. Recuperar primero
 la instancia existente permite distinguir disponibilidad previa de regresiones
 de la versión nueva. Conservar backups y ensayar migraciones sobre datos
 restaurados, sin usar la base productiva como banco de pruebas.
+
+
+## 2026-10-08 — Cierre productivo y credencial activa
+
+Una subida Git correcta no demuestra que `gh` esté usando la misma identidad:
+SSH y la API de GitHub pueden tener cuentas distintas. Ante un rechazo al crear
+la Release, comprobar `gh auth status` y la cuenta propietaria ya autenticada
+antes de ampliar permisos. La sesión guardada adecuada permite publicar v1.10.0
+sin pedir nuevos scopes ni introducir credenciales.
+
+Registrar la versión de cada componente y comprobar datos de negocio después
+de migrar, además de healthz y réplicas. La subida real de sourcemaps no sustituye
+la prueba de recepción y simbolicación de errores. Al acabar una actualización
+autorizada de dev, apagar servicios y LaunchAgents conservando datos, y mantener
+producción activa: estar actualizado no exige que dev permanezca encendido.

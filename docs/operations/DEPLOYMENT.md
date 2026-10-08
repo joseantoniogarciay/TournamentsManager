@@ -403,3 +403,45 @@ Dev se enciende para desplegar y probar y volverá a apagarse al cerrar, conform
 a ADR-0146; observabilidad dev permanece apagada. Producción conserva sus
 servicios operativos. La release productiva sigue ADR-0119: merge no-ff a main,
 tag anotado, GitHub Release y artefactos del SHA etiquetado.
+
+
+### Cierre de v1.10.0 — 2026-10-08
+
+Publicada [v1.10.0](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.10.0)
+sobre el merge no-ff `b002b4b99fc44a6ec0662b94ec962b8cce9cbea5` de main.
+La [CI del SHA productivo](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37818973693)
+y la [CI de preparación en develop](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37818687061)
+terminan aprobadas. Develop avanza por fast-forward hasta el merge antes del
+cierre documental. No se crean ramas temporales.
+
+- Dev: API, web y renderer `08b7deb3a2def89a11fc8e53600a242bf424fb18`;
+  migración Goose 20 y ocho comprobaciones HTTP/TLS/CORS/revisión correctas.
+- Prod: API, migrator, web y renderer `b002b4b99fc44a6ec0662b94ec962b8cce9cbea5`;
+  dos réplicas API listas, Goose 20 y nueve comprobaciones públicas correctas.
+  Caddy versionado validado y recargado; Secret migrador efímero eliminado.
+- Ambos: sesión y biblioteca anónimas devuelven 401, torneo inexistente 404,
+  cuerpos JSON válidos. Comparación de recuentos y huellas completas de filas
+  de cuentas, torneos, equipos y partidos coincide con las copias previas.
+  La identidad runtime productiva conserva los grants de la tabla Apple.
+- La preparación productiva ejecuta por primera vez la subida real de sourcemaps
+  mediante PostHog CLI; no quedan `.map` en la web pública. Esto no acredita
+  recepción de un error real ni simbolicación en el panel.
+
+Backups pgBackRest previos: dev `20261004-014505F_20261008-174057I` y prod
+`20261004-021506F_20261008-174058I`, ambos con estado correcto. Copias lógicas,
+manifiestos anteriores, logs y comprobaciones permanecen privados en
+`/private/tmp/tm-release-20261008`; no son un archivo duradero ni se versionan.
+El rollback de aplicación conserva web `69533ac6cae53bf7245248221cf8143c13329f40`
+y API `11138a1100db853d04a2e388bae029c013f55843`; no revierte la migración.
+
+Al cerrar se ejecuta `make dev-public-down`: API, PostgreSQL y renderer dev
+apagados, seis LaunchAgents descargados y volúmenes conservados. Observabilidad
+dev no se inicia. Producción/K3s y su renderer permanecen activos. Dev queda
+actualizado para el siguiente arranque autorizado, no permanentemente encendido.
+Apple real, distribución móvil y los límites registrados de QA siguen pendientes.
+
+Retrospectiva: verificar la cuenta activa de `gh` antes de atribuir el rechazo de
+una Release a permisos ausentes. Había otra cuenta activa; usar la sesión ya
+guardada de la propietaria resuelve la publicación sin ampliar scopes. Separar
+salud pública, revisión desplegada, migración y conservación de datos permite
+cerrar el deploy con evidencia concreta sin convertirlo en un QA universal.
