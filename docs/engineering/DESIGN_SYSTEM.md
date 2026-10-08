@@ -114,6 +114,8 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   cabecera el nombre de una entidad,
   este se centra, reserva 20 px frente a los controles laterales y puede ocupar
   dos líneas; no se impone un ancho fijo que lo trunque antes de agotar ese espacio.
+  En Cuenta Android se usa Text compartido con semántica de cabecera y reserva dinámica de control,
+  margen y separación a ambos lados, también para títulos de ruta traducidos.
   En la ficha de torneo iOS, el título personalizado limita su ancho con el ancho
   actual de ventana, los insets seguros y la reserva de controles y separación;
   su tamaño intrínseco no debe extenderse detrás de la toolbar. Las acciones de
@@ -123,8 +125,9 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   600 y 700 cargados antes de montar la interfaz. Los tokens seleccionan la
   familia real de cada peso, en vez de sintetizarlo con `fontWeight`. La escala
   permanece entre 12 y 32 px. Las etiquetas de la primitiva `Button` usan
-  semibold (600) para reforzar su legibilidad sin cambiar tamaño ni altura. El
-  marcador de un partido dentro de una fila usa la escala `title` en negrita:
+  semibold (600) para reforzar su legibilidad sin cambiar tamaño ni altura.
+  Sus líneas permanecen centradas cuando una traducción o el texto ampliado
+  requiere más de una línea. El marcador de un partido dentro de una fila usa la escala `title` en negrita:
   mantiene jerarquía frente a los equipos sin forzar el alto de la card ni
   recortar los glifos. `display` queda para títulos y resultados destacados
   fuera de una fila compacta. Véase ADR-0096.

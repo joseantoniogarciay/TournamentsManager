@@ -6,6 +6,11 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Fixed
+
+- Cabeceras de Cuenta Android con texto ampliado: títulos completos en dos
+  líneas y espacio frente a Volver; etiquetas multilínea de Button centradas.
+
 ## [1.10.0] - 2026-10-08
 
 ### Added

@@ -102,6 +102,17 @@ esperado. No se suman estos contadores como cobertura exhaustiva.
     ganar el partido, manteniendo las ayudas específicas y la validación existente.
     Android reproduce el error y confirma el mensaje corregido.
 
+13. Cabecera Android al 200 %: Cambiar contraseña quedaba pegado a Volver,
+    con ambos límites en x=168. Se sustituye el título estándar de Cuenta en
+    Android por Text compartido con dos líneas y ancho calculado según ventana,
+    control y separación. Español confirma 53 px físicos (aprox. 20 dp) frente
+    al botón, con y sin teclado. Datos de acceso y Cambiar contraseña se revisan
+    al 200 % también en inglés, italiano y francés; los títulos quedan completos.
+14. La etiqueta francesa de Guardar contraseña ocupa dos líneas al 200 % y
+    quedaba alineada a la izquierda dentro del botón centrado. La primitiva
+    Button centra también las líneas de su texto; captura real confirma ambas
+    líneas completas y centradas, sin cambiar el escalado ni el envío.
+
 ## Diferencias y cobertura visual abierta
 
 [La revisión entre plataformas](CROSS_PLATFORM_VISUAL_REVIEW_2026-10-04.md)
@@ -121,14 +132,17 @@ misma ventana frente a una adaptación nativa sin romper fullScreenModal iOS.
 
 Faltan recorridos completos de todas las rutas de la matriz, cuatro idiomas,
 texto ampliado autenticado en rutas aún no acreditadas, orientación, VoiceOver/TalkBack, otras versiones de
-SO, release y dispositivos físicos. Android por tres botones tiene el alcance parcial descrito más abajo; orientación horizontal de la app no se acredita. El usuario aplaza explícitamente el OAuth real a futuras pruebas en dev/prod;
+SO, builds de distribución y dispositivos físicos. La variante release local Android
+se acredita parcialmente en la continuación del 2026-10-08. Android por tres botones tiene el alcance parcial descrito más abajo; orientación horizontal de la app no se acredita. El usuario aplaza explícitamente el OAuth real a futuras pruebas en dev/prod;
 no se bloquea esta sesión local ni se solicita su configuración ahora. Mailpit
 no prueba entrega externa.
 
 La apertura de un enlace de torneo en Android produjo una caída de DevLauncher
 el 2026-10-06. Recuperar la app permitió continuar y un segundo intento abrió
 el destino; la incidencia de arranque/enlace permanece abierta, con evidencia
-en la continuación de tenis de mesa. No se acredita el comportamiento en release.
+en la continuación de tenis de mesa. La tanda del 2026-10-08 añade arranques y
+enlaces en una variante release local; no demuestra que el defecto de
+development build esté corregido.
 
 ## Retrospectiva técnica
 
@@ -4107,3 +4121,202 @@ Retrospectiva: un árbol puede incluir controles fuera del viewport con bounds
 invertidos; desplazar y revisar la captura evita confundir contenido todavía no
 visible con recorte definitivo. Probar el error y su botón juntos, restaurar la
 preferencia del SO y comparar datos después acredita una tanda reproducible.
+
+
+#### 2026-10-08 — Biblioteca y Cuenta Android con texto al 200 %
+
+Se continúa la sesión autorizada con Pixel_API_34, API/PostgreSQL/Mailpit locales
+y Metro en 8083, APP_ENV=local; sin observabilidad. Se arranca el emulador para
+esta tanda y se conecta la build instalada por ADB, sin reinstalar ni actualizar
+dependencias. El arranque carga Inicio autenticado. font_scale pasa de 1.0 a
+2.0; la recreación conserva la sesión. Alcance: español, tema claro, API 34,
+orientación vertical y development build.
+
+Biblioteca muestra Administro 45 y Sigo 5. Los títulos largos se ajustan a
+varias líneas. Se cambia a Sigo y se desplaza hasta el quinto torneo, visible
+completo por encima de la botonera; el botón flotante permite abrir Crear torneo.
+En creación se ven los ocho deportes y los campos; el scroll alcanza el equipo
+precompletado y Crear torneo. Se cierra sin introducir nombre ni enviar.
+No se acredita en esta tanda el envío, la validación ni la paginación de Administro.
+
+Cuenta conserva el usuario ficticio y permite abrir Datos de acceso y Cambiar
+contraseña. El correo y la explicación se ajustan a varias líneas. El formulario
+vacío muestra ambas etiquetas, los campos y Guardar contraseña deshabilitado;
+enfocar Nueva contraseña mantiene el formulario y su acción visibles con teclado.
+No se introduce ni cambia contraseña, no se vincula proveedor, no se cierra sesión
+ni se solicita baja.
+
+Se detecta la incidencia 13 de cabecera: Cambiar contraseña queda pegado al botón
+Volver al 200 %, tanto con teclado como sin él. El título y el control comparten
+x=168 como límite en el árbol; la captura confirma falta de separación. No se
+presenta este recorrido como aprobado íntegramente. La inspección del layout
+nativo de Cuenta muestra el título estándar centrado y un headerLeft propio.
+Recomendación: adaptar la cabecera al espacio disponible reutilizando el patrón
+compartido y conservando el escalado; reducir globalmente el texto penalizaría
+la accesibilidad. Falta implementar y verificar la corrección, incluidas las
+otras cabeceras largas. No se toma una decisión nueva de producto.
+
+Se restaura font_scale=1.0 y se confirma Inicio autenticado. Se detienen Metro,
+el emulador arrancado aquí y los servicios locales; se retiran los reverses
+8080/8083 de esta sesión. La comprobación final encuentra cero contenedores,
+cero listeners de QA y las seis tareas dev conocidas suspendidas; el volumen
+PostgreSQL local permanece. No se opera sobre producción/K3s ni se altera su
+suspensión autorizada preexistente.
+
+Evidencia privada bajo /private/tmp/tm-product-qa-20261004:
+android-large-navigation-*-20261008.{png,xml,log},
+qa-large-font-navigation-{emulator,runtime}-20261008.log,
+qa-large-navigation-shutdown-20261008.log y
+qa-large-navigation-final-state-20261008.json. Se revisan las capturas de
+Biblioteca, final de Sigo, final de creación, Cuenta, Datos de acceso y contraseña
+con/sin teclado. El log del emulador de esta tanda contiene cero FATAL EXCEPTION;
+no reproduce ni cierra el fallo histórico de DevLauncher. No se modifica código
+de producto ni se repiten suites aprobadas sin cambios. git diff --check pasa.
+
+Retrospectiva: los campos pueden adaptarse correctamente al texto ampliado
+mientras la cabecera conserva una restricción distinta. Revisar ambos evita
+acreditar una pantalla entera solo por su contenido. Esperar y volver a leer
+el árbol tras una recreación o transición evita interpretar un toque prematuro
+como un fallo de navegación. Esta evidencia no sustituye TalkBack, otros idiomas,
+release ni dispositivos físicos.
+
+
+#### 2026-10-08 — Corrección de cabecera de Cuenta y etiqueta multilínea
+
+Se reproduce de nuevo la incidencia 13 antes de editar. El layout de Cuenta
+Android conserva NavigationHeaderButton y reemplaza solo su título estándar por
+Text compartido, semántica header y dos líneas. El máximo se calcula con el ancho
+actual menos el control de 44 dp, margen exterior y separación de 20 dp a cada
+lado, siguiendo el patrón existente en web. No se fija un ancho de pantalla ni
+se desactiva el escalado. iOS conserva su configuración nativa y web su layout
+específico; no se modifica la navegación, autorización ni operaciones OpenAPI.
+
+Al 200 %, Cambiar contraseña en español deja 53 px frente a Volver y se muestra
+completo en dos líneas, también con Nueva contraseña enfocada y teclado visible.
+Datos de acceso queda igualmente completo; Volver permite regresar a Cuenta.
+En inglés, italiano y francés se recorren Cuenta → Datos de acceso → Cambiar
+contraseña; las separaciones del editor son 53 px en los tres casos y las
+capturas confirman título íntegro, sin solapamiento. Ajustes y Notificaciones
+se revisan en español al 200 % y no muestran el defecto de separación.
+
+En francés se detecta y corrige la incidencia 14 añadiendo textAlign center a la
+etiqueta de Button compartido. La segunda captura confirma Enregistrer le mot de
+passe en dos líneas centradas, con Guardar deshabilitado en formulario vacío.
+No se introduce ni cambia contraseña, no se guarda ningún formulario ni se
+modifican datos de torneos. El truncado de la etiqueta nativa inglesa de Torneos
+al 200 % permanece como observación de alcance; no se acredita su locución.
+
+pnpm run typecheck, pnpm run check (formato, lint, tipos y OpenAPI) y exportación
+web de 36 rutas pasan con ambos cambios. Expo regenera expo-env.d.ts sin salto
+final: se restaura únicamente ese salto antes del gate, sin incluir un cambio
+funcional generado. No se añaden tests que reproduzcan estilos; la regresión
+se contrasta con el árbol y las capturas reales del caso reproducido.
+
+Checklist cliente: catálogos existentes es/en/it/fr; tokens, Text y Button
+compartidos; cierre circular existente; reserva dinámica y dos líneas sin
+reducir texto; rutas y transporte intactos; no se tocan endpoints ni se añaden
+reglas de negocio. Siguen abiertos lectores, otras rutas/versiones de SO,
+dispositivos físicos, distribución y proveedores reales aplazados.
+
+Evidencia privada bajo /private/tmp/tm-product-qa-20261004:
+android-header-*-20261008.{png,xml,json}, qa-header-locales.py,
+qa-header-locales-20261008.log y qa-header-{button-check,button-web-export,
+typecheck}-20261008.log. La corrección se prueba sin editar JavaScript durante
+las secuencias de navegación.
+
+Retrospectiva: el título estándar de una toolbar y un control propio pueden
+medirse con límites diferentes. Reutilizar el cálculo de espacio aceptado es
+suficiente; no hace falta cambiar el router ni reducir la preferencia de texto.
+Revisar el idioma más largo descubre también etiquetas multilínea cuyo bloque
+está centrado pero cuyas líneas no lo están.
+
+
+#### 2026-10-08 — Intento de TalkBack, sin acreditar recorrido completo
+
+TalkBack 14.2.0.618048417 está instalado en Pixel_API_34. Se guardan los valores
+previos enabled_accessibility_services=null, accessibility_enabled=0 y
+touch_exploration_enabled=0. Tras activar el servicio y resolver su solicitud
+inicial de notificaciones, dumpsys acredita servicio enlazado y exploración
+táctil activa. La notificación se rechaza; no se habilitan permisos del producto.
+
+El primer intento combina UIAutomator events/dump con el lector. La inspección
+altera el estado de exploración: no se usa como evidencia de navegación TalkBack.
+Se detiene el proceso UIAutomator y se contrasta servicio activo con capturas.
+Los intentos con gestos ADB y atajos de teclado no acreditan un recorrido fiable
+del foco dentro de la app; el borde de foco permanece en Tools de la development
+build aunque otros eventos naveguen. No se equipara navegar mediante una
+inyección a usar correctamente el lector ni se acredita calidad de locución.
+Los [atajos oficiales](https://support.google.com/accessibility/android/answer/6110948?hl=en)
+son referencia, no prueba de ejecución satisfactoria en este emulador.
+
+Durante la reconexión y el lanzamiento explícito de MainActivity se registran
+dos FATAL EXCEPTION de DevLauncher con el guard App react context shouldn't be
+created before. Reconectar una vez la URL exacta de Metro recupera Inicio
+autenticado. Es evidencia nueva del fallo ya abierto de development build;
+no se atribuye al formulario ni se declara corregido. Los logs y capturas
+android-talkback-*-20261008 se conservan privados. Se restauran los tres valores
+seguros previos de accesibilidad y el estado sin decisión del permiso de
+notificaciones de TalkBack. El caso de lector permanece abierto.
+
+Retrospectiva: validar un lector exige comprobar que el instrumento no lo
+suspende y que las acciones realmente recorren su foco. Un servicio activo,
+un árbol completo o una pulsación que navega no bastan por separado.
+
+
+#### 2026-10-08 — APK release local, bundle incluido y recuperación de conexión
+
+Se compila assembleRelease para ARM64 con el JDK incluido en Android Studio,
+APP_ENV=local y API loopback. La APK com.fasttourney.app.local no es debuggable y
+comparte el certificado de QA con la development build: adb install -r conserva
+sus datos. Se guarda antes una copia de la APK debug. Es una prueba local,
+firmada con la clave de desarrollo; no es un artefacto de tienda ni una
+publicación de producción. La fuente es ea57150 más las dos correcciones de
+cabecera y Button descritas arriba, todavía sin commit al compilar.
+
+La primera APK, con política de red por defecto, abre Inicio en tres arranques
+pero no conecta con la API HTTP local. Para aislar bundle y navegación, se
+crea un overlay release temporal en el Android generado e ignorado: base HTTP
+denegada y excepción únicamente para 127.0.0.1, sin subdominios. El primer
+intento del overlay falla lintVitalRelease por omitir includeSubdomains; se
+corrige explícitamente a false y la compilación pasa sin omitir tareas. El
+overlay se conserva privado y se retira del árbol de trabajo. No cambia
+app.config.ts, la política del producto ni la infraestructura pública.
+
+Con Metro apagado y esa APK de QA se comprueba:
+
+- Tres arranques fríos recuperan Inicio autenticado y actividad reciente.
+  am start informa 5560, 6652 y 6748 ms; son medidas de este emulador, no un
+  presupuesto de rendimiento. El log acotado registra cero FATAL EXCEPTION.
+- El enlace fasttourney-local de QA formulario football abre la ficha con la
+  app abierta y cerrada. La captura conserva 1–1, penaltis 4–6 y ganador visitante.
+- Al detener solo la API local y abrir el enlace en frío, RequestErrorCard
+  muestra common_network_error y Reintentar, sin cuerpo interno ni aviso
+  duplicado. Tras restaurar la API, Reintentar recupera la ficha. La proyección
+  pública completa coincide con la lectura previa, sin cambios en partidos.
+- Un nuevo arranque con API disponible recupera la sesión. Cuenta → Datos de
+  acceso → Cambiar contraseña al 200 % mantiene el título completo y 53 px
+  físicos frente a Volver. El formulario permanece vacío y no se envía.
+
+La compilación normal y la variante temporal pasan las tareas vitales de lint
+release. Esto no cierra el gate anterior de lint Android completo ni acredita
+iOS release, otras arquitecturas, firma de distribución, App Links verificados
+por el SO, OAuth real, dispositivos físicos o todas las rutas de la matriz.
+La caída de DevLauncher permanece abierta: no se reproduce en estos arranques
+release, pero esa muestra no corrige ni invalida la evidencia de development.
+
+Se reintenta TalkBack en la APK release sin Tools ni UIAutomator. El servicio
+muestra foco en el título de Inicio, pero los siguientes gestos ADB no acreditan
+avances sucesivos fiables. Se conservan las capturas, se restauran los valores
+previos y no se declara aprobado el lector ni su locución.
+
+Evidencia privada: android-local-release-{build,loopback-rebuild}-20261008.log,
+android-local-release-{default-policy,loopback}-20261008.apk,
+android-local-release-artifacts-20261008.json, android-release-*-20261008,
+qa-release-{startup-loopback,recovery}-20261008.log y scripts asociados.
+SHA256 de la APK temporal: 67cc5cee4501fdd4251834e9c3bd2d0949f3e205246066d2b90632b7f96255f2.
+Producción/K3s permanece apagada y no se activa observabilidad.
+
+Retrospectiva: un bundle release puede arrancar correctamente y fallar por la
+política de transporte del entorno local. Separar ambos hechos permite probar
+navegación y recuperación con una excepción estrecha, sin debilitar la
+configuración distribuible ni presentar un binario de QA como producción.

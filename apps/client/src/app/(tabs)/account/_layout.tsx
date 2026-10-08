@@ -1,7 +1,7 @@
 import { Stack, router } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View, useWindowDimensions } from "react-native";
 
-import { space, typography } from "@tournaments-manager/design-tokens";
+import { control, space, typography } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
@@ -13,6 +13,9 @@ export default function AccountLayout() {
   const t = getTranslator();
   const { colors } = usePreferences();
   const { user } = useSession();
+  const { width } = useWindowDimensions();
+  // Match the web header's control, outer margin and gap on both sides.
+  const titleWidth = Math.max(0, width - 2 * (control.minHeight + 2 * space[5]));
   const goBackToAccount = () => {
     if (router.canGoBack()) {
       router.back();
@@ -48,6 +51,20 @@ export default function AccountLayout() {
         headerStyle: { backgroundColor: colors.surface.canvas },
         headerTintColor: colors.text.primary,
         headerTitleAlign: "center",
+        ...(Platform.OS === "android"
+          ? {
+              headerTitle: ({ children }: { children: string }) => (
+                <Text
+                  accessibilityRole="header"
+                  variant="title"
+                  numberOfLines={2}
+                  style={{ maxWidth: titleWidth, textAlign: "center" }}
+                >
+                  {children}
+                </Text>
+              ),
+            }
+          : {}),
         headerTitleStyle: { color: colors.text.primary, fontFamily: typography.family.semibold },
       }}
     >

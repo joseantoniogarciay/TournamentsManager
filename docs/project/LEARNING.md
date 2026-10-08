@@ -5354,3 +5354,51 @@ viewport con bounds invertidos. Desplazar el diálogo y contrastar captura y
 contenedor del botón permite acreditar mensaje completo y acción deshabilitada.
 Restaurar font_scale y comparar todos los partidos tras descartar el borrador
 cierra esta prueba sin introducir cambios de datos ni extrapolar accesibilidad.
+
+
+## 2026-10-08 — Cabeceras y texto ampliado en Android
+
+Probar un formulario al 200 % exige revisar también su cabecera. En Cambiar
+contraseña, los campos y Guardar caben incluso con teclado, pero el título
+estándar centrado queda pegado al botón Volver propio. Contrastar captura con
+los límites del árbol permite registrar la falta de separación sin confundirla
+con recorte del contenido desplazable. La corrección debe reservar espacio al
+control y adaptar el título; reducir globalmente el tamaño de texto anularía
+parte de la preferencia de accesibilidad.
+
+Tras una recreación por font_scale o el cierre de un modal, leer de nuevo el
+árbol antes del siguiente toque: una coordenada correcta enviada durante la
+transición puede no navegar. Restaurar la preferencia y apagar solo los recursos
+arrancados para la tanda mantiene reproducible el QA sin tocar producción.
+
+
+## 2026-10-08 — Corrección mínima y límites de instrumentación accesible
+
+La cabecera Android de Cuenta se corrige con Text compartido, dos líneas y el
+cálculo de reserva lateral ya existente en web. Comprobar español, inglés,
+italiano y francés al 200 % descubre tanto el margen frente a Volver como la
+alineación interna de un botón multilínea. No desactivar el escalado para hacer
+caber un título ni ampliar la corrección a otra navegación sin evidencia.
+
+UIAutomator puede alterar temporalmente la exploración del lector que se intenta
+probar. Separar inspección, servicio enlazado y recorrido efectivo del foco;
+no declarar TalkBack aprobado por obtener XML o navegar con eventos inyectados.
+Registrar también las caídas nuevas de DevLauncher aunque reconectar recupere
+la app, y conservar esa limitación separada del formulario corregido.
+
+
+## 2026-10-08 — Separar APK release local y distribución
+
+Una APK release no implica firma de tienda ni conectividad con HTTP local.
+Conservar el binario original, comparar certificado antes de install -r y
+apagar Metro permite comprobar el bundle incluido sin borrar la sesión.
+Una excepción de transporte para QA debe ser explícita, limitada a loopback,
+privada y retirada del árbol; nunca convertirla en una relajación del producto.
+Lint vital detectó que el dominio temporal necesitaba includeSubdomains=false:
+se corrige el harness, sin desactivar el gate. No confundir ese subconjunto de
+lint con el análisis Android completo.
+
+Tres arranques y enlaces correctos en release son evidencia acotada. No cierran
+una caída de DevLauncher en development ni las pruebas de distribución o lector.
+El corte/reintento debe contrastarse con la proyección previa para comprobar
+recuperación real y conservación de datos, además del mensaje seguro.
