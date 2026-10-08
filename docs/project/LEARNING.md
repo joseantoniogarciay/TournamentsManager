@@ -5340,3 +5340,17 @@ de migrar, además de healthz y réplicas. La subida real de sourcemaps no susti
 la prueba de recepción y simbolicación de errores. Al acabar una actualización
 autorizada de dev, apagar servicios y LaunchAgents conservando datos, y mantener
 producción activa: estar actualizado no exige que dev permanezca encendido.
+
+
+## 2026-10-08 — Suspensión autorizada y texto ampliado
+
+Una excepción explícita de disponibilidad debe distinguirse de la regla normal
+que mantiene producción activa. Apagar el invitado ordenadamente y suspender
+renderer, backups externos y autoarranque conserva el estado sin tareas fallidas
+ni reencendidos. La home estática 200 no demuestra salud de la API suspendida.
+
+Al probar texto al 200 %, el árbol Android puede conservar nodos fuera del
+viewport con bounds invertidos. Desplazar el diálogo y contrastar captura y
+contenedor del botón permite acreditar mensaje completo y acción deshabilitada.
+Restaurar font_scale y comparar todos los partidos tras descartar el borrador
+cierra esta prueba sin introducir cambios de datos ni extrapolar accesibilidad.

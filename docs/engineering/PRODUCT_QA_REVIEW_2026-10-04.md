@@ -120,7 +120,7 @@ limitación vigente universal. La solución queda abierta: evaluar una capa en l
 misma ventana frente a una adaptación nativa sin romper fullScreenModal iOS.
 
 Faltan recorridos completos de todas las rutas de la matriz, cuatro idiomas,
-texto ampliado autenticado, orientación, VoiceOver/TalkBack, otras versiones de
+texto ampliado autenticado en rutas aún no acreditadas, orientación, VoiceOver/TalkBack, otras versiones de
 SO, release y dispositivos físicos. Android por tres botones tiene el alcance parcial descrito más abajo; orientación horizontal de la app no se acredita. El usuario aplaza explícitamente el OAuth real a futuras pruebas en dev/prod;
 no se bloquea esta sesión local ni se solicita su configuración ahora. Mailpit
 no prueba entrega externa.
@@ -4067,3 +4067,43 @@ La comprobación en seco confirma que el gate incluye la suite.
 Retrospectiva: tener un test versionado y aprobado no asegura que CI lo ejecute.
 Mantener la nueva regresión en la entrada compartida evita perder esa protección
 en futuras subidas; no requiere otro workflow ni una herramienta nueva.
+
+
+#### 2026-10-08 — Android autenticado con texto al 200 %
+
+Se arranca Pixel_API_34 para esta tanda; no había dispositivo ADB activo.
+API/PostgreSQL/Mailpit locales y Metro se encienden sin observabilidad. La build
+instalada es com.fasttourney.app.local: Metro se ejecuta con APP_ENV=local y los
+reverses 8080/8083 de esta sesión, sin reconstruir ni cambiar dependencias.
+
+Con la app ya cargada se cambia font_scale de 1.0 a 2.0. La recreación conserva
+la sesión y vuelve a Inicio. Se recorre Actividad reciente, QA formulario football,
+la ficha y Editar resultado. El título de la ficha usa dos líneas; las etiquetas
+largas del formulario se ajustan, y el scroll permite alcanzar los campos y el
+botón inferior. El alcance es español, tema claro y emulador Android API 34.
+
+En el editor se elige Incidencia, Abandono y Equipo local. Se conserva el tanteo
+local 1 y se vacía el visitante. Tras ocultar el teclado y desplazar el diálogo,
+«Completa ambos tanteos o deja el parcial vacío.» se lee completo en dos líneas;
+Guardar resultado queda desactivado tanto en el contenedor del árbol como en la
+captura revisada. No se guarda: se descarta por backdrop. GET confirma igualdad
+exacta de todos los partidos y estado con la línea base previa. El log de esta
+sesión del emulador registra cero FATAL EXCEPTION y cero guard de contexto; no
+reproduce ni cierra el fallo de solapamiento durante arranque de DevLauncher.
+
+Se restaura font_scale=1.0 y se confirma Inicio autenticado. Se detienen Metro,
+los tres servicios locales y el emulador que se arrancó para esta prueba;
+se retiran únicamente los reverses ADB de la sesión. Volúmenes y evidencia
+permanecen. La suspensión productiva de esta fecha responde a una autorización
+explícita separada, documentada en DEPLOYMENT.md; no es parte del QA local.
+
+Evidencia privada: android-large-font-*-20261008.{png,xml,json,log},
+qa-large-font-{runtime,metro,shutdown}-20261008.log y
+qa-large-font-final-state-20261008.json, bajo /private/tmp/tm-product-qa-20261004.
+La evidencia no acredita lectores de pantalla, todas las rutas/idiomas, otros
+SO, release ni dispositivos físicos. No se modifica código de producto.
+
+Retrospectiva: un árbol puede incluir controles fuera del viewport con bounds
+invertidos; desplazar y revisar la captura evita confundir contenido todavía no
+visible con recorte definitivo. Probar el error y su botón juntos, restaurar la
+preferencia del SO y comparar datos después acredita una tanda reproducible.

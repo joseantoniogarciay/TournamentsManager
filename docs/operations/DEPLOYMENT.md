@@ -445,3 +445,41 @@ una Release a permisos ausentes. Había otra cuenta activa; usar la sesión ya
 guardada de la propietaria resuelve la publicación sin ampliar scopes. Separar
 salud pública, revisión desplegada, migración y conservación de datos permite
 cerrar el deploy con evidencia concreta sin convertirlo en un QA universal.
+
+
+### Suspensión productiva autorizada — 2026-10-08
+
+Después del despliegue verificado, el usuario solicita reducir consumo y confirma
+explícitamente «Apagar producción/K3s, aceptando que la API pública quede fuera
+de servicio». Esta instrucción autoriza excepcionalmente el apagado de esta
+sesión frente a la regla ordinaria de conservar producción activa de ADR-0146;
+no modifica durabilidad ni borra recursos.
+
+Se solicita apagado del SO invitado con `utmctl stop --request` para
+fasttourney-k3s-lab (9494026F-7DD1-4FFC-9229-851A9391DBB5); UTM confirma stopped.
+Se deshabilitan y descargan los LaunchAgents del Mac
+com.fasttourney.prod-league-preview-renderer,
+com.fasttourney.prod-postgresql-backup-full,
+com.fasttourney.prod-postgresql-backup-incremental y
+com.fasttourney.utm-autostart. Así no se reenciende la VM automáticamente ni se
+siguen lanzando tareas contra una BD apagada. Se conservan plists, VM, discos,
+volúmenes, releases y backups. Local/dev se apagan al cerrar el QA.
+
+La API pública devuelve 502 esperado mientras está suspendida. La home estática
+sigue respondiendo 200 mediante Caddy/Tunnel; no representa disponibilidad del
+producto ni de sus previews de torneo. No se cambia el router ni el túnel.
+Producción permanece apagada hasta una nueva petición explícita.
+
+Para reactivar, con autorización: arrancar la VM existente con `utmctl start`
+y esperar K3s/PostgreSQL y ambas réplicas API; comprobar healthz público. Después
+rehabilitar con `launchctl enable` y cargar con `launchctl bootstrap` los tres
+plists productivos anteriores del directorio ~/Library/LaunchAgents. Solo si se
+quiere recuperar el arranque automático del Mac, rehabilitar también el plist
+com.fasttourney.utm-autostart. Comprobar renderer 8091, revisión web/API
+b002b4b99fc44a6ec0662b94ec962b8cce9cbea5 y programación de backups, sin redesplegar
+ni migrar por el mero hecho de arrancar. La CI del cierre documental f1e59e0
+termina aprobada antes de esta suspensión.
+
+Retrospectiva: apagar producción es una decisión de disponibilidad, no solo de
+consumo. Registrar consentimiento, estado público esperado y tareas suspendidas
+hace reversible la operación sin confundir una API 502 deliberada con regresión.
