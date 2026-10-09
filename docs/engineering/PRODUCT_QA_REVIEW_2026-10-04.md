@@ -4366,3 +4366,76 @@ qa-android-release-cleanup asociados. El directorio privado tiene modo 700.
 Retrospectiva: verificar el foco antes de activar evita confundir navegación
 por coordenadas con uso del lector. Comprobar respuestas HTTP junto al mensaje
 visible distingue el rechazo de negocio recuperable del fallback común seguro.
+
+
+#### 2026-10-08 — iOS release de simulador y VoiceOver acotado
+
+Xcode 27 compila FastTourneyLocal Release para iPhone 17, iOS 27.0, ARM64,
+con bundle incluido y Metro apagado. Se interrumpe deliberadamente el primer
+build de dos arquitecturas y se usa ONLY_ACTIVE_ARCH=YES. La build sin firma
+compila y abre Inicio, pero la ficha muestra common_request_error sin petición
+correlacionada. Recompilar con CODE_SIGNING_ALLOWED=YES y CODE_SIGN_IDENTITY=-
+genera entitlements de simulador y permite cargar la ficha. Es una limitación
+del harness sin firma; no se demuestra una causa interna concreta de SecureStore.
+No se añaden perfiles ni excepciones de transporte: ATS conserva
+NSAllowsArbitraryLoads=false y NSAllowsLocalNetworking=true. No había app
+FastTourney instalada en este simulador. Es firma ad hoc, no distribución.
+Fuente 80a0d41, seguida solo por documentación. SHA256 de main.jsbundle:
+3f2be6d7f6a588a88c5c9e19972cc9e6b2734e02124b6ff139054345f5d51e10.
+
+Con la build firmada se comprueba visualmente:
+
+- Tres arranques fríos llegan a Inicio anónimo sin Metro. No acredita sesión
+  persistida en esta instalación nueva ni rendimiento de dispositivo físico.
+- Enlace tournament con app abierta y cerrada: QA formulario football, 1–1,
+  penaltis 4–6 y ganador visitante. El primer comando usó una ruta plural
+  incorrecta; se descarta como prueba del enlace válido.
+- UUID inexistente: HTTP 404 real, torneo no disponible y Cerrar. Identificador
+  malformado: HTTP 400 real, common_request_error y Reintentar. Logs de API
+  corroboran ambos estados; no se muestran cuerpos internos.
+- API local detenida: common_network_error y Reintentar, sin aviso duplicado.
+  Tras restaurar HTTP 200, el toque recupera la ficha. Las proyecciones públicas
+  completas anterior y posterior coinciden byte a byte.
+- Text Size 11 mantiene separados los controles, pero recorta verticalmente
+  el título en la toolbar nativa. Reproduce la limitación abierta a Text Size 7,
+  sin acreditar lectura completa. Text Size vuelve a 3.
+
+Antes de recompilar con firma, VoiceOver muestra avance real desde el título
+de Inicio a descripción y Crear torneo. La doble pulsación abre el formulario
+y el siguiente gesto alcanza su cabecera. No se escribe ni envía. Es evidencia
+de foco y activación sobre la build sin firma, no locución ni toda la matriz.
+VoiceOver vuelve a off; Capture Keyboard permanece off. Tras reinstalar,
+Device Hub deja de exponer el subárbol de la app en esta sesión: las pruebas
+posteriores usan capturas y coordenadas observadas. La falta del árbol
+instrumental no se presenta como una auditoría accesible del producto.
+
+Evidencia privada: ios-local-release-{arm64,adhoc}-build-20261008.log,
+ios-release-artifacts-20261008.json, ios-release-{cold-1,cold-2,cold-3,
+football-warm,football-cold,link-missing,link-malformed,offline,retry,
+text-size-11}-20261008.png, ios-voiceover-{create-focus,form-heading}-20261008.png,
+ios-api-links-log-20261008.log e ios-release-complete-log-20261008.log.
+El log acotado no contiene coincidencias fatal/uncaught/crash; no certifica
+ausencia de cualquier fallo. Producción y observabilidad permanecen apagadas.
+
+Se repite :app:lintDebug sin excluir dependencias. Falla nuevamente en
+:react-native-worklets:lintAnalyzeDebug con Cannot find a KaModule for the
+VirtualFile, una excepción del analizador. Log privado
+android-full-lint-retry-20261008.log. El gate completo continúa abierto;
+no se desactivan reglas ni se actualizan dependencias para ocultar el fallo.
+
+Retrospectiva: xcodebuild aprobado no garantiza un harness instalado adecuado
+para servicios nativos. Contrastar firma, HTTP y pantalla evita modificar
+negocio o transporte por un problema de instrumentación. Conservar explícito
+el límite de altura de cabecera, sin desactivar el escalado para ocultarlo.
+
+
+Cierre operativo verificado el 2026-10-09: make dev-down retira API, PostgreSQL
+y Mailpit sin borrar volúmenes; no quedan contenedores locales activos ni
+listeners de QA en 8080/5432/8025/1025/8083. La app iOS de QA se termina; se
+conserva el simulador que ya estaba arrancado antes de la tanda. Text Size=3,
+VoiceOver=off y Capture Keyboard=off restaurados. Android permanece apagado
+con la APK debug restaurada. UTM informa K3s stopped y las tareas de dev,
+producción y autostart siguen disabled. No se reinicia producción ni se publica
+un nuevo release. El primer cierre fue rechazado por un fallo de revisión
+automática debido al límite de uso; no ejecutó la acción y se completó tras
+reanudar la sesión. Evidencia y backups se conservan.

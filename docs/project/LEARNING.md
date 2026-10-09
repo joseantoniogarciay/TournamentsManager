@@ -5416,3 +5416,18 @@ y descartar evidencia de la ruta incorrecta antes de reintentar.
 Un recorrido satisfactorio de foco no acredita locución ni toda la matriz.
 Registrar por separado controles alcanzados, activaciones, campos sin enviar y
 restauración exacta de preferencias, APK y recursos propios al cerrar la tanda.
+
+
+## 2026-10-08 — Release de simulador y límites de evidencia iOS
+
+La build sin firma abría Inicio pero fallaba antes de una petición pública.
+La firma ad hoc permitió completar el recorrido conservando ATS. Comprobar
+entitlements y correlación HTTP antes de relajar transporte; no inferir una
+causa concreta de SecureStore solo por el resultado comparativo.
+
+Device Hub puede perder el subárbol tras reinstalar aunque la pantalla siga
+operativa. Separar pruebas visuales por capturas del recorrido real VoiceOver.
+Tres arranques, enlaces negativos y recuperación aportan evidencia acotada;
+el recorte de cabecera al tamaño máximo sigue abierto. Repetir Android Lint
+sin exclusiones confirma el bloqueo del analizador de worklets, sin sustituir
+el gate completo por su subconjunto vital de release.
