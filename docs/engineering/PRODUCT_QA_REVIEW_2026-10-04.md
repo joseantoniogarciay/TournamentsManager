@@ -4588,3 +4588,42 @@ Se restaura Text Size a 3, VoiceOver y captura de teclado permanecen apagados
 y se termina la app de QA. make dev-down completa el cierre, docker ps queda
 vacío y utmctl confirma producción/K3s stopped. Se conservan volúmenes, backups
 y evidencia; no hay publicación de producción ni activación de observabilidad.
+
+#### 2026-10-09 — Contraste del motor Android Lint e inventario alcanzable
+
+El [análisis de herramientas](ANDROID_LINT_ENGINE_ANALYSIS_2026-10-09.md)
+registra los contrastes y fuentes primarias. La propiedad efectiva de AGP
+-Pandroid.lint.useK2Uast=false permite completar Worklets. El contraste completo
+:app:lintDebug :global-feedback:lintDebug alcanza lintReportDebug y termina
+exit 1: 924 tareas, 191 ejecutadas. La app tiene dos errores y 45 avisos,
+contados desde el XML, sin asumir que un build exitoso equivalga a cero avisos.
+MissingPrefix procede de la marca data-generated del generador de filtros de
+Expo; NewApi procede del atributo API 33 del generador de estilos de splash.
+
+El módulo local se ejecuta después por separado con K1: exit 0, 166 tareas,
+28 ejecutadas; cero errores, seis avisos (ViewConstructor una vez y UseKtx
+cinco). ViewConstructor concierne al constructor requerido por herramientas
+XML, no demuestra un fallo de creación del ExpoView por su AppContext. No se
+introduce un constructor inválido ni una dependencia para silenciar avisos.
+Los avisos de la app incluyen recursos generados, iconos, APIs, orientación,
+permisos heredados y recomendaciones de actualización; el XML conserva todo
+el inventario para priorizarlo con contexto, sin actualizaciones automáticas.
+
+ADR-0152 queda Propuesto para decidir el coste de dos parches de generación.
+No se aplican; ningún archivo fuente del cliente, dependencia, configuración
+nativa o regla de lint cambia en esta fase. K1 aporta evidencia complementaria;
+el gate K2 continúa abierto. Lint 9.0.1 también falla por una segunda excepción
+FIR. El cambio upstream integrado el 7 de octubre no prueba disponibilidad de
+un artefacto publicado, ni autoriza saltar la espera de ADR-0138.
+
+Se vuelve a comprobar iOS desde CUA: Home visible, Text Size 3, VoiceOver y
+captura de teclado apagados; Device Hub sigue sin el subárbol de la app. Se
+termina la app después. Captura ios-accessibility-channel-recheck-20261009.png.
+No se atribuye a ese contraste locución, orden de foco ni una matriz accesible.
+API, PostgreSQL, Metro, emulador Android y producción no se arrancan.
+
+Evidencia privada: android-full-lint-k1-20261009.log, android-feedback-lint-k1
+-20261009.log e informes android-{app,global-feedback}-lint-k1-report-20261009.xml.
+Retrospectiva: un crash de herramienta puede ocultar errores reales de recursos.
+Separar motor, ejecución, informe y decisión permite avanzar el inventario sin
+rebajar el gate ni confundir un workaround diagnóstico con un arreglo aprobado.

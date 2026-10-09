@@ -54,3 +54,5 @@ Usa [template.md](template.md) y el
 - [ADR-0150: Host Android local para el banner global](0150-use-a-local-android-host-for-global-feedback.md) — Aceptado.
 
 - [ADR-0151: Títulos iOS adaptables al espacio real](0151-reflow-ios-entity-titles-for-accessibility.md) — Aceptado.
+
+- [ADR-0152: Corregir errores en recursos Android generados por Expo](0152-correct-expo-generated-android-lint-errors.md) — Propuesto.

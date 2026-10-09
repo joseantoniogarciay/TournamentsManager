@@ -5489,3 +5489,18 @@ por fallo del analizador de scripts Kotlin; la traza adicional no lo corrige.
 Retrospectiva: medir el caso corto y el largo al mismo tamaño prueba la
 condición que importa. Compartir el arreglo evita excepciones por pantalla,
 pero no reemplaza el recorrido nativo de cada ruta.
+
+### 2026-10-09 — Contrastar lint sin sustituir su criterio de cierre
+
+Una propiedad JVM puede quedar reemplazada por la configuración que AGP envía
+al worker: la traza K2 demuestra que JAVA_TOOL_OPTIONS no logró el contraste.
+-Pandroid.lint.useK2Uast=false sí permite analizar Worklets y alcanzar el
+informe de la app. Eso descubre dos errores de generación de recursos que
+quedaban ocultos detrás del fallo de herramienta. K1 complementa el diagnóstico;
+no acredita haber corregido K2 ni habilita cambiar el motor permanente.
+
+Contar severidades desde el XML evita presentar un build exitoso como un
+informe sin avisos: el módulo local tiene cero errores y seis avisos; la app,
+dos errores y 45 avisos. Corregir CNG en su origen, conservar idempotencia y
+calificar recursos por API exige una decisión sobre mantenimiento temporal.
+ADR-0152 propone ese coste sin implementar mientras espera aceptación.
