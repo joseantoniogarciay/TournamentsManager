@@ -12,9 +12,9 @@ func TestIntegrationPurgeExpiredAccountsDeletesOnlyExpiredAccountsAndAnonymizesH
 	ctx := context.Background()
 	pool := integrationPool(t)
 	repository := NewAccountTournamentRepository(pool)
-	organizerID := createVerifiedLocalAccount(t, ctx, pool, "organizer@example.test", "organizer", "correct password")
-	administratorID := createVerifiedLocalAccount(t, ctx, pool, "administrator@example.test", "administrator", "correct password")
-	notDueID := createVerifiedLocalAccount(t, ctx, pool, "not-due@example.test", "notdue", "correct password")
+	organizerID := createVerifiedLocalAccount(ctx, t, pool, "organizer@example.test", "organizer", "correct password")
+	administratorID := createVerifiedLocalAccount(ctx, t, pool, "administrator@example.test", "administrator", "correct password")
+	notDueID := createVerifiedLocalAccount(ctx, t, pool, "not-due@example.test", "notdue", "correct password")
 	creation := tournaments.NewCreationService(repository)
 	created, err := creation.Create(ctx, organizerID, tournaments.CreateInput{Name: "Liga de purga", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
 	if err != nil {

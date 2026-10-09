@@ -147,7 +147,7 @@ func TestAppleJWKSCacheAndUnknownKeyThrottle(t *testing.T) {
 	provider.keys = nil
 	provider.keysExpire = time.Time{}
 	calls := 0
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		calls++
 		_ = json.NewEncoder(w).Encode(map[string]any{"keys": []map[string]string{{"kid": "apple-key", "kty": "RSA", "alg": "RS256", "use": "sig", "n": base64.RawURLEncoding.EncodeToString(key.N.Bytes()), "e": base64.RawURLEncoding.EncodeToString(big.NewInt(int64(key.E)).Bytes())}}})
 	}))
@@ -171,7 +171,7 @@ func TestAppleExchangeBoundariesAreSafe(t *testing.T) {
 	for _, status := range []int{400, 429, 500, 200} {
 		t.Run(http.StatusText(status), func(t *testing.T) {
 			provider, _ := testProvider(t)
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(status)
 				_, _ = w.Write([]byte(`{"internal":"private-token-and-email"}`))
 			}))

@@ -46,7 +46,7 @@ func TestListRejectsUnknownRelationship(t *testing.T) {
 	t.Parallel()
 
 	_, err := NewService(&repositoryStub{}).List(context.Background(), "account", "unknown", "", 20)
-	if err != ErrInvalidRelationship {
+	if !errors.Is(err, ErrInvalidRelationship) {
 		t.Errorf("List() error = %v, want %v", err, ErrInvalidRelationship)
 	}
 }

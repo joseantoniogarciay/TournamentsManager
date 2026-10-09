@@ -5445,3 +5445,23 @@ la limitación instrumental. Actualizar la causa de la deuda y conservar la
 validación funcional, sin suprimir reglas ni mezclar ese trabajo con el parche.
 Producción apagada conserva sus binarios: el parche en develop requiere una
 publicación verificada antes de volver a servirlos.
+
+
+## 2026-10-09 — Restaurar lint de tests con evidencia completa
+
+Los límites de presentación de golangci-lint pueden ocultar ocurrencias del
+mismo diagnóstico. Usar --max-same-issues=0 --max-issues-per-linter=0 antes de
+contar o cerrar deuda: los 38 hallazgos iniciales eran una muestra.
+
+El contexto del test debe llegar a las peticiones y sockets. Comprobar el
+cierre antes de señalar la finalización evita perder errores de limpieza.
+Una cookie de petición no necesita atributos de una cookie de respuesta;
+representar el protocolo real evita un falso positivo sin suprimir gosec.
+Mantener imports por archivo sustituye ParseDir sin añadir carga de paquetes
+ni cambiar el alcance del test de arquitectura.
+
+Retrospectiva: restaurado run.tests: true, cero incidencias en el análisis
+completo y ningún linter desactivado. Las aserciones y escenarios se conservan.
+
+Validación: make verify y go test -race ./... aprobados; la integración
+PostgreSQL depende de CI mientras los entornos de sesión están apagados.

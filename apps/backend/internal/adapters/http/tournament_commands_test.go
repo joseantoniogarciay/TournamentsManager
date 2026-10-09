@@ -80,7 +80,7 @@ func TestCreateGoogleSessionPassesDraftForExistingIdentity(t *testing.T) {
 	service := federated.NewService(repository, testGoogleVerifier{identity: federated.Identity{
 		Issuer: federated.GoogleIssuer, Subject: "subject", Email: "person@example.test", Nonce: "nonce", EmailVerified: true,
 	}})
-	request := httptest.NewRequest(http.MethodPost, "/v1/google-sessions", strings.NewReader(`{"challengeId":"019abcde-1111-7111-8111-111111111111","idToken":"google-token","sessionTransport":"bearer","draft":{"draftId":"019abcde-1111-7111-8111-111111111112","name":"Copa Google","sport":"badminton","bestOfSets":3,"pointsPerGame":21,"teams":[{"name":"Uno"},{"name":"Dos"}]}}`))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/google-sessions", strings.NewReader(`{"challengeId":"019abcde-1111-7111-8111-111111111111","idToken":"google-token","sessionTransport":"bearer","draft":{"draftId":"019abcde-1111-7111-8111-111111111112","name":"Copa Google","sport":"badminton","bestOfSets":3,"pointsPerGame":21,"teams":[{"name":"Uno"},{"name":"Dos"}]}}`))
 	recorder := httptest.NewRecorder()
 
 	createGoogleSession(service, sessionCookies(false)).ServeHTTP(recorder, request)
@@ -104,7 +104,7 @@ func TestCreateTournamentAcceptsAndReturnsBasketball(t *testing.T) {
 		Sport: tournaments.SportBasketball, State: "published", Teams: []tournaments.Team{{ID: "a", Name: "Azules"}, {ID: "b", Name: "Rojos"}}, Matches: []tournaments.Match{},
 	}
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{created: created}))
-	request := httptest.NewRequest(http.MethodPost, "/v1/tournaments", strings.NewReader(`{"name":"Liga de baloncesto","sport":"basketball","teams":[{"name":"Azules"},{"name":"Rojos"}]}`))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments", strings.NewReader(`{"name":"Liga de baloncesto","sport":"basketball","teams":[{"name":"Azules"},{"name":"Rojos"}]}`))
 	request.Header.Set("Authorization", "Bearer session-token")
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
@@ -127,7 +127,7 @@ func TestCreateTournamentAcceptsAndReturnsHandball(t *testing.T) {
 		Sport: tournaments.SportHandball, State: "published", Teams: []tournaments.Team{{ID: "a", Name: "Azules"}, {ID: "b", Name: "Rojos"}}, Matches: []tournaments.Match{},
 	}
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{created: created}))
-	request := httptest.NewRequest(http.MethodPost, "/v1/tournaments", strings.NewReader(`{"name":"Liga de balonmano","sport":"handball","teams":[{"name":"Azules"},{"name":"Rojos"}]}`))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments", strings.NewReader(`{"name":"Liga de balonmano","sport":"handball","teams":[{"name":"Azules"},{"name":"Rojos"}]}`))
 	request.Header.Set("Authorization", "Bearer session-token")
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
@@ -148,7 +148,7 @@ func TestStartMixedTournamentMapsConfigurationConflict(t *testing.T) {
 	const tournamentID = "019abcde-2222-7222-8222-222222222222"
 	creation := tournaments.NewCreationService(testCreationRepository{startErr: tournaments.ErrInvalidMixedConfiguration})
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
-	request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+tournamentID+"/start", strings.NewReader(`{"format":"league_then_single_elimination","roundRobinLegs":1,"leagueStructure":"groups","groupCount":4,"qualifiersPerGroup":2}`))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments/"+tournamentID+"/start", strings.NewReader(`{"format":"league_then_single_elimination","roundRobinLegs":1,"leagueStructure":"groups","groupCount":4,"qualifiersPerGroup":2}`))
 	request.Header.Set("Authorization", "Bearer session-token")
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
@@ -166,7 +166,7 @@ func TestStartTournamentEliminationMapsTransitionConflict(t *testing.T) {
 	const tournamentID = "019abcde-2222-7222-8222-222222222222"
 	creation := tournaments.NewCreationService(testCreationRepository{eliminationErr: tournaments.ErrTournamentStageTransitionConflict})
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
-	request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+tournamentID+"/stages/elimination/start", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments/"+tournamentID+"/stages/elimination/start", nil)
 	request.Header.Set("Authorization", "Bearer session-token")
 	recorder := httptest.NewRecorder()
 
@@ -183,7 +183,7 @@ func TestCancelTournamentAllowsBearerSession(t *testing.T) {
 	const leagueID = "019abcde-2222-7222-8222-222222222222"
 	creation := tournaments.NewCreationService(testCreationRepository{cancelled: tournaments.Tournament{ID: leagueID, Name: "Liga", State: "cancelled", Teams: []tournaments.Team{}, Matches: []tournaments.Match{}}})
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
-	request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+leagueID+"/cancel", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments/"+leagueID+"/cancel", nil)
 	request.Header.Set("Authorization", "Bearer session-token")
 	recorder := httptest.NewRecorder()
 
@@ -211,7 +211,7 @@ func TestCancelTournamentMapsBusinessErrors(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{cancelErr: test.err}))
-			request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+leagueID+"/cancel", nil)
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments/"+leagueID+"/cancel", nil)
 			request.Header.Set("Authorization", "Bearer session-token")
 			recorder := httptest.NewRecorder()
 
@@ -238,7 +238,7 @@ func TestCompleteTournamentMapsBusinessErrors(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{completeErr: test.err}))
-			request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+leagueID+"/complete", nil)
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments/"+leagueID+"/complete", nil)
 			request.Header.Set("Authorization", "Bearer session-token")
 			recorder := httptest.NewRecorder()
 			handler.ServeHTTP(recorder, request)
@@ -256,7 +256,7 @@ func TestAddTournamentTeamReturnsTheCreatedTeam(t *testing.T) {
 	team := tournaments.Team{ID: "019abcde-3333-7333-8333-333333333333", Name: "Azules", Position: 3}
 	creation := tournaments.NewCreationService(testCreationRepository{team: team})
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
-	request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+leagueID+"/teams", strings.NewReader(`{"name":"Azules"}`))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments/"+leagueID+"/teams", strings.NewReader(`{"name":"Azules"}`))
 	request.Header.Set("Authorization", "Bearer session-token")
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
@@ -285,7 +285,7 @@ func TestAddTournamentTeamMapsBusinessErrors(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{teamErr: test.err}))
-			request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+leagueID+"/teams", strings.NewReader(`{"name":"Azules"}`))
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments/"+leagueID+"/teams", strings.NewReader(`{"name":"Azules"}`))
 			request.Header.Set("Authorization", "Bearer session-token")
 			request.Header.Set("Content-Type", "application/json")
 			recorder := httptest.NewRecorder()
@@ -304,7 +304,7 @@ func TestCreateTournamentTeamInvitationReturnsOneTimeSecret(t *testing.T) {
 	const accountID = "019abcde-1111-7111-8111-111111111111"
 	const tournamentID = "019abcde-2222-7222-8222-222222222222"
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{}))
-	request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+tournamentID+"/team-invitation", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments/"+tournamentID+"/team-invitation", nil)
 	request.Header.Set("Authorization", "Bearer session-token")
 	recorder := httptest.NewRecorder()
 
@@ -330,7 +330,7 @@ func TestInspectTournamentTeamInvitationIsPublicAndReturnsSafeProjection(t *test
 	const token = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	creation := tournaments.NewCreationService(testCreationRepository{invitation: tournaments.TeamInvitation{TournamentID: tournamentID, TournamentName: "Copa abierta"}})
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
-	request := httptest.NewRequest(http.MethodPost, "/v1/team-invitations/inspection", strings.NewReader(`{"token":"`+token+`"}`))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/team-invitations/inspection", strings.NewReader(`{"token":"`+token+`"}`))
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
 
@@ -355,7 +355,7 @@ func TestJoinTournamentTeamInvitationReturnsRegistration(t *testing.T) {
 		Team:         tournaments.Team{ID: teamID, Name: "Mi equipo", Position: 2},
 	}})
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
-	request := httptest.NewRequest(http.MethodPost, "/v1/team-invitations/registration", strings.NewReader(`{"token":"`+token+`","name":" Mi equipo "}`))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/team-invitations/registration", strings.NewReader(`{"token":"`+token+`","name":" Mi equipo "}`))
 	request.Header.Set("Authorization", "Bearer session-token")
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
@@ -393,7 +393,7 @@ func TestTournamentTeamInvitationEndpointsMapBusinessErrors(t *testing.T) {
 			if strings.HasSuffix(test.path, "/registration") {
 				body = strings.NewReader(`{"token":"` + token + `","name":"Azules"}`)
 			}
-			request := httptest.NewRequest(http.MethodPost, test.path, body)
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, test.path, body)
 			request.Header.Set("Authorization", "Bearer session-token")
 			request.Header.Set("Content-Type", "application/json")
 			recorder := httptest.NewRecorder()
@@ -420,7 +420,7 @@ func TestRemoveTournamentTeamMapsBusinessErrors(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{removeErr: test.err}))
-			request := httptest.NewRequest(http.MethodDelete, "/v1/tournaments/"+leagueID+"/teams/"+teamID, nil)
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodDelete, "/v1/tournaments/"+leagueID+"/teams/"+teamID, nil)
 			request.Header.Set("Authorization", "Bearer session-token")
 			recorder := httptest.NewRecorder()
 
@@ -448,7 +448,7 @@ func TestWithdrawTournamentTeamMapsBusinessErrors(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{withdrawErr: test.err}))
-			request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+leagueID+"/teams/"+teamID+"/withdraw", nil)
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments/"+leagueID+"/teams/"+teamID+"/withdraw", nil)
 			request.Header.Set("Authorization", "Bearer session-token")
 			recorder := httptest.NewRecorder()
 			handler.ServeHTTP(recorder, request)
@@ -466,7 +466,7 @@ func TestRecordMatchResultUsesTheContractRoundField(t *testing.T) {
 	const matchID = "019abcde-3333-7333-8333-333333333333"
 	creation := tournaments.NewCreationService(testCreationRepository{result: tournaments.Tournament{ID: leagueID, State: "in_progress", Teams: []tournaments.Team{}, Matches: []tournaments.Match{{ID: matchID, RoundNumber: 1, State: "completed", ResultType: tournaments.ResultPlayed}}}})
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, creation)
-	request := httptest.NewRequest(http.MethodPut, "/v1/tournaments/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(`{"homeScore":2,"awayScore":1}`))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPut, "/v1/tournaments/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(`{"homeScore":2,"awayScore":1}`))
 	request.Header.Set("Authorization", "Bearer session-token")
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
@@ -549,7 +549,7 @@ func TestRecordMatchResultMapsBusinessErrors(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{resultErr: test.err}))
-			request := httptest.NewRequest(http.MethodPut, "/v1/tournaments/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(`{"homeScore":2,"awayScore":1}`))
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodPut, "/v1/tournaments/"+leagueID+"/matches/"+matchID+"/result", strings.NewReader(`{"homeScore":2,"awayScore":1}`))
 			request.Header.Set("Authorization", "Bearer session-token")
 			request.Header.Set("Content-Type", "application/json")
 			recorder := httptest.NewRecorder()

@@ -33,7 +33,7 @@ func (s *riscProcessorStub) HandleRISCEvent(context.Context, federated.RISCEvent
 func TestRISCEventReceiverAcceptsVerifiedEventOnlyAfterProcessing(t *testing.T) {
 	processor := &riscProcessorStub{}
 	handler := NewRISCEventReceiver(riscVerifierStub{event: federated.RISCEvent{ID: "event", Issuer: federated.GoogleIssuer, Subject: "subject", Type: federated.RISCSessionsRevoked}}, processor)
-	request := httptest.NewRequest(http.MethodPost, "/v1/risc/events", strings.NewReader("signed-set"))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/risc/events", strings.NewReader("signed-set"))
 	request.Header.Set("Content-Type", "application/secevent+jwt")
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, request)
@@ -45,7 +45,7 @@ func TestRISCEventReceiverAcceptsVerifiedEventOnlyAfterProcessing(t *testing.T) 
 func TestRISCEventReceiverRejectsInvalidAndDoesNotProcess(t *testing.T) {
 	processor := &riscProcessorStub{}
 	handler := NewRISCEventReceiver(riscVerifierStub{err: errors.New("invalid")}, processor)
-	request := httptest.NewRequest(http.MethodPost, "/v1/risc/events", strings.NewReader("bad"))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/risc/events", strings.NewReader("bad"))
 	request.Header.Set("Content-Type", "application/secevent+jwt")
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, request)
@@ -57,7 +57,7 @@ func TestRISCEventReceiverRejectsInvalidAndDoesNotProcess(t *testing.T) {
 func TestRISCEventReceiverReturnsSafeUnavailableForProcessorFailure(t *testing.T) {
 	processor := &riscProcessorStub{err: errors.New("database refused event")}
 	handler := NewRISCEventReceiver(riscVerifierStub{event: federated.RISCEvent{ID: "event", Issuer: federated.GoogleIssuer, Subject: "subject", Type: federated.RISCSessionsRevoked}}, processor)
-	request := httptest.NewRequest(http.MethodPost, "/v1/risc/events", strings.NewReader("signed-set"))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/risc/events", strings.NewReader("signed-set"))
 	request.Header.Set("Content-Type", "application/secevent+jwt")
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, request)
@@ -69,7 +69,7 @@ func TestRISCEventReceiverReturnsSafeUnavailableForProcessorFailure(t *testing.T
 func TestRISCEventReceiverAllowsRetryWhenGoogleTrustMaterialIsUnavailable(t *testing.T) {
 	processor := &riscProcessorStub{}
 	handler := NewRISCEventReceiver(riscVerifierStub{err: federated.ErrRISCUnavailable}, processor)
-	request := httptest.NewRequest(http.MethodPost, "/v1/risc/events", strings.NewReader("signed-set"))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/risc/events", strings.NewReader("signed-set"))
 	request.Header.Set("Content-Type", "application/secevent+jwt")
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, request)

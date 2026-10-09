@@ -192,7 +192,7 @@ func localRISCVerifier(t *testing.T) (*rsa.PrivateKey, *RISCVerifier) {
 		case "/configuration":
 			_ = json.NewEncoder(w).Encode(map[string]string{"issuer": "https://accounts.google.com/", "jwks_uri": server.URL + "/jwks"})
 		case "/jwks":
-			_ = json.NewEncoder(w).Encode(map[string]any{"keys": []map[string]string{{"kid": "risc-test-key", "kty": "RSA", "alg": "RS256", "n": base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.N.Bytes()), "e": base64.RawURLEncoding.EncodeToString(big.NewInt(int64(privateKey.PublicKey.E)).Bytes())}}})
+			_ = json.NewEncoder(w).Encode(map[string]any{"keys": []map[string]string{{"kid": "risc-test-key", "kty": "RSA", "alg": "RS256", "n": base64.RawURLEncoding.EncodeToString(privateKey.N.Bytes()), "e": base64.RawURLEncoding.EncodeToString(big.NewInt(int64(privateKey.E)).Bytes())}}})
 		default:
 			http.NotFound(w, r)
 		}

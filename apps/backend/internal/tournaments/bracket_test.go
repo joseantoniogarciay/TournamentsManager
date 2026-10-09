@@ -1,6 +1,9 @@
 package tournaments
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestGenerateSingleEliminationMaterializesFutureWinnerSlots(t *testing.T) {
 	bracket, err := GenerateSingleElimination([]string{"a", "b", "c", "d"})
@@ -43,7 +46,7 @@ func TestGenerateSingleEliminationNeverCreatesAByeOnlyMatch(t *testing.T) {
 
 func TestGenerateSingleEliminationRejectsInvalidEntrants(t *testing.T) {
 	for _, teams := range [][]string{{"a"}, {"a", "a"}, {"a", ""}} {
-		if _, err := GenerateSingleElimination(teams); err != ErrInvalidBracketEntrants {
+		if _, err := GenerateSingleElimination(teams); !errors.Is(err, ErrInvalidBracketEntrants) {
 			t.Fatalf("GenerateSingleElimination(%#v) error = %v", teams, err)
 		}
 	}
@@ -64,7 +67,7 @@ func TestGenerateSeededSingleEliminationPairsExtremesAndSeparatesTopSeeds(t *tes
 }
 
 func TestGenerateSeededSingleEliminationRequiresACompleteField(t *testing.T) {
-	if _, err := GenerateSeededSingleElimination([]string{"1", "2", "3"}); err != ErrInvalidBracketEntrants {
+	if _, err := GenerateSeededSingleElimination([]string{"1", "2", "3"}); !errors.Is(err, ErrInvalidBracketEntrants) {
 		t.Fatalf("error = %v", err)
 	}
 }

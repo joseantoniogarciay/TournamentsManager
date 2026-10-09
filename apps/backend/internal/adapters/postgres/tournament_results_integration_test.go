@@ -11,8 +11,8 @@ import (
 func TestIntegrationWithdrawTournamentTeamAppliesUniformResultsAndKeepsHistory(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	organizerID := createVerifiedLocalAccount(t, ctx, pool, "withdraw-organizer@example.test", "withdraworganizer", "correct password")
-	outsiderID := createVerifiedLocalAccount(t, ctx, pool, "withdraw-outsider@example.test", "withdrawoutsider", "correct password")
+	organizerID := createVerifiedLocalAccount(ctx, t, pool, "withdraw-organizer@example.test", "withdraworganizer", "correct password")
+	outsiderID := createVerifiedLocalAccount(ctx, t, pool, "withdraw-outsider@example.test", "withdrawoutsider", "correct password")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, organizerID, tournaments.CreateInput{Name: "Liga con baja", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}, {Name: "Verdes"}}})
 	if err != nil {
@@ -55,7 +55,7 @@ func TestIntegrationWithdrawTournamentTeamAppliesUniformResultsAndKeepsHistory(t
 		t.Fatalf("equipo retirado = %#v, se esperaba marcado", updated.Teams[0])
 	}
 	if _, err := service.RecordResult(ctx, organizerID, created.ID, match.ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1}); !errors.Is(err, tournaments.ErrMatchResultConflict) {
-		t.Fatalf("corregir resultado administrativo = %v, se esperaba conflicto", err)
+		t.Fatalf("corregir resultado por incidencia = %v, se esperaba conflicto", err)
 	}
 	persisted, err := service.GetPublic(ctx, created.ID)
 	if err != nil {
@@ -63,12 +63,12 @@ func TestIntegrationWithdrawTournamentTeamAppliesUniformResultsAndKeepsHistory(t
 	}
 	for _, saved := range persisted.Matches {
 		if saved.ID == match.ID && (saved.ResultType != tournaments.ResultAdministrative || saved.HomeScore == nil || saved.AwayScore == nil || (saved.HomeTeamID == withdrawn.ID && (*saved.HomeScore != 0 || *saved.AwayScore != 3)) || (saved.AwayTeamID == withdrawn.ID && (*saved.HomeScore != 3 || *saved.AwayScore != 0))) {
-			t.Fatalf("resultado administrativo alterado = %#v", saved)
+			t.Fatalf("resultado por incidencia alterado = %#v", saved)
 		}
 	}
 	var historyCount, playedCount, administrativeCount int
 	if err := pool.QueryRow(ctx, `SELECT count(*), count(*) FILTER (WHERE result_type = 'played'), count(*) FILTER (WHERE result_type = 'administrative') FROM match_result_changes WHERE match_id = $1`, match.ID).Scan(&historyCount, &playedCount, &administrativeCount); err != nil || historyCount != 2 || playedCount != 1 || administrativeCount != 1 {
-		t.Fatalf("historial del resultado sustituido = total %d, jugado %d, administrativo %d, %v", historyCount, playedCount, administrativeCount, err)
+		t.Fatalf("historial del resultado sustituido = total %d, jugado %d, por incidencia %d, %v", historyCount, playedCount, administrativeCount, err)
 	}
 	if _, err := service.WithdrawTeam(ctx, organizerID, created.ID, withdrawn.ID); !errors.Is(err, tournaments.ErrTournamentWithdrawalConflict) {
 		t.Fatalf("segunda baja = %v, se esperaba conflicto", err)
@@ -79,7 +79,7 @@ func TestIntegrationWithdrawTournamentTeamAppliesUniformResultsAndKeepsHistory(t
 		t.Fatal(err)
 	}
 	if _, err := service.RecordResult(ctx, organizerID, created.ID, match.ID, tournaments.MatchResultInput{HomeScore: 2, AwayScore: 1}); !errors.Is(err, tournaments.ErrMatchResultConflict) {
-		t.Fatalf("corregir partido de retirado sin marcador administrativo = %v", err)
+		t.Fatalf("corregir partido de retirado sin marcador por incidencia = %v", err)
 	}
 	other, found := leagueMatchBetweenTeams(started.Matches, started.Teams[1].ID, started.Teams[2].ID)
 	if !found {
@@ -93,7 +93,7 @@ func TestIntegrationWithdrawTournamentTeamAppliesUniformResultsAndKeepsHistory(t
 func TestIntegrationBasketballRejectsTiesAndAppliesTwentyZeroWithdrawal(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	organizerID := createVerifiedLocalAccount(t, ctx, pool, "basketball-organizer@example.test", "basketballorganizer", "correct password")
+	organizerID := createVerifiedLocalAccount(ctx, t, pool, "basketball-organizer@example.test", "basketballorganizer", "correct password")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, organizerID, tournaments.CreateInput{
 		Name: "Liga de baloncesto", Sport: tournaments.SportBasketball,
@@ -126,7 +126,7 @@ func TestIntegrationBasketballRejectsTiesAndAppliesTwentyZeroWithdrawal(t *testi
 			continue
 		}
 		if updatedMatch.ResultType != tournaments.ResultAdministrative || updatedMatch.HomeScore == nil || updatedMatch.AwayScore == nil {
-			t.Fatalf("resultado administrativo = %#v", updatedMatch)
+			t.Fatalf("resultado por incidencia = %#v", updatedMatch)
 		}
 		if updatedMatch.HomeTeamID == withdrawn.ID && (*updatedMatch.HomeScore != 0 || *updatedMatch.AwayScore != 20) {
 			t.Fatalf("retirada local = %d-%d", *updatedMatch.HomeScore, *updatedMatch.AwayScore)
@@ -145,7 +145,7 @@ func TestIntegrationBasketballRejectsTiesAndAppliesTwentyZeroWithdrawal(t *testi
 func TestIntegrationHandballUsesTwoOneZeroAndTenZeroWithdrawal(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	organizerID := createVerifiedLocalAccount(t, ctx, pool, "handball-organizer@example.test", "handballorganizer", "correct password")
+	organizerID := createVerifiedLocalAccount(ctx, t, pool, "handball-organizer@example.test", "handballorganizer", "correct password")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, organizerID, tournaments.CreateInput{
 		Name: "Liga de balonmano", Sport: tournaments.SportHandball,
@@ -192,7 +192,7 @@ func TestIntegrationHandballUsesTwoOneZeroAndTenZeroWithdrawal(t *testing.T) {
 			continue
 		}
 		if match.ResultType != tournaments.ResultAdministrative || match.HomeScore == nil || match.AwayScore == nil {
-			t.Fatalf("resultado administrativo de balonmano = %#v", match)
+			t.Fatalf("resultado por incidencia de balonmano = %#v", match)
 		}
 		if match.HomeTeamID == withdrawn.ID && (*match.HomeScore != 0 || *match.AwayScore != 10) {
 			t.Fatalf("retirada local de balonmano = %d-%d", *match.HomeScore, *match.AwayScore)

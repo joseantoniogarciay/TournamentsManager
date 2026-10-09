@@ -14,7 +14,7 @@ func TestIntegrationBadmintonProfilesAndHistory(t *testing.T) {
 		t.Run(fmt.Sprint(points), func(t *testing.T) {
 			pool := integrationPool(t)
 			ctx := context.Background()
-			owner := createVerifiedLocalAccount(t, ctx, pool, "badminton@example.test", "badminton_owner", "correct password")
+			owner := createVerifiedLocalAccount(ctx, t, pool, "badminton@example.test", "badminton_owner", "correct password")
 			service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 			value, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Badminton", Sport: tournaments.SportBadminton, BestOfSets: 3, PointsPerGame: points, Teams: []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}}})
 			if err != nil {
@@ -34,16 +34,16 @@ func TestIntegrationBadmintonProfilesAndHistory(t *testing.T) {
 				t.Fatal(err)
 			}
 			first, second, final := value.Matches[0], value.Matches[1], value.Matches[2]
-			cap := 30
+			scoreCap := 30
 			if points == 15 {
-				cap = 21
+				scoreCap = 21
 			}
-			sets := []tournaments.SetScore{{HomeScore: points, AwayScore: points - 2}, {HomeScore: cap - 1, AwayScore: cap}, {HomeScore: cap, AwayScore: cap - 1}}
+			sets := []tournaments.SetScore{{HomeScore: points, AwayScore: points - 2}, {HomeScore: scoreCap - 1, AwayScore: scoreCap}, {HomeScore: scoreCap, AwayScore: scoreCap - 1}}
 			value, err = service.RecordResult(ctx, owner, value.ID, first.ID, tournaments.MatchResultInput{Sets: sets})
 			if err != nil || value.PointsPerGame != points || len(value.Matches[0].Sets) != 3 || value.Matches[2].HomeTeamID != first.HomeTeamID {
 				t.Fatalf("record=%+v %v", value, err)
 			}
-			invalid := []tournaments.SetScore{{HomeScore: cap + 1, AwayScore: cap - 1}, {HomeScore: points, AwayScore: 0}}
+			invalid := []tournaments.SetScore{{HomeScore: scoreCap + 1, AwayScore: scoreCap - 1}, {HomeScore: points, AwayScore: 0}}
 			if _, err = service.RecordResult(ctx, owner, value.ID, first.ID, tournaments.MatchResultInput{Sets: invalid}); !errors.Is(err, tournaments.ErrInvalidBracketResult) {
 				t.Fatalf("above cap accepted: %v", err)
 			}

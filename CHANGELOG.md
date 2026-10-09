@@ -13,6 +13,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- Análisis Go de tests restaurado en el gate: contextos explícitos, comprobación
+  de cierres y errores envueltos; sin supresiones de linters.
+
 - Cabeceras de Cuenta Android con texto ampliado: títulos completos en dos
   líneas y espacio frente a Volver; etiquetas multilínea de Button centradas.
 

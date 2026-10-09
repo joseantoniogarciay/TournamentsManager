@@ -95,7 +95,7 @@ func TestClientIPUsesForwardedAddressOnlyFromTrustedProxy(t *testing.T) {
 		{"trusted proxy with invalid header", "192.168.65.1:54321", "not-an-ip", "192.168.65.1"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodGet, "/", nil)
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 			request.RemoteAddr = test.remoteAddr
 			request.Header.Set("X-Client-IP", test.forwarded)
 			if got := trusted(request); got != test.want {
@@ -121,7 +121,7 @@ func TestClientIPUsesForwardedAddressWithValidEdgeToken(t *testing.T) {
 		{"invalid forwarded address", "not-an-ip", "edge-token-for-test", "10.42.0.9"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodGet, "/", nil)
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
 			request.RemoteAddr = "10.42.0.9:54321"
 			request.Header.Set("X-Client-IP", test.forwarded)
 			if test.token != "" {
@@ -190,7 +190,7 @@ func TestRegistrationRateLimitsByClientIP(t *testing.T) {
 
 	handler := NewHandler(registration.NewService(testRegistrationRepository{}, nil), nil, testAuthenticator{}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins)
 	for range registrationLimit {
-		request := httptest.NewRequest(http.MethodPost, "/v1/registrations", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"es","termsVersion":"2026-08-22"}`))
+		request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/registrations", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"es","termsVersion":"2026-08-22"}`))
 		request.RemoteAddr = "203.0.113.1:10000"
 		request.Header.Set("Content-Type", "application/json")
 		recorder := httptest.NewRecorder()
@@ -200,7 +200,7 @@ func TestRegistrationRateLimitsByClientIP(t *testing.T) {
 		}
 	}
 
-	request := httptest.NewRequest(http.MethodPost, "/v1/registrations", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"es","termsVersion":"2026-08-22"}`))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/registrations", strings.NewReader(`{"email":"person@example.test","password":"correct horse battery staple","username":"person_name","locale":"es","termsVersion":"2026-08-22"}`))
 	request.RemoteAddr = "203.0.113.1:10000"
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()

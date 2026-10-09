@@ -31,7 +31,7 @@ func volleyballResult(homeWins bool, losingSets int) tournaments.MatchResultInpu
 func TestIntegrationVolleyballLeagueCorrectionAndWithdrawalHistory(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	owner := createVerifiedLocalAccount(t, ctx, pool, "volley@example.test", "volley_owner", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "volley@example.test", "volley_owner", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	value, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Volleyball", Sport: tournaments.SportVolleyball, BestOfSets: 5, Teams: []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}}})
 	if err != nil {
@@ -92,7 +92,7 @@ func TestIntegrationVolleyballLeagueCorrectionAndWithdrawalHistory(t *testing.T)
 func TestIntegrationVolleyballCompletionUsesRallyRatio(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	owner := createVerifiedLocalAccount(t, ctx, pool, "volley_complete@example.test", "volley_complete", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "volley_complete@example.test", "volley_complete", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	value, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Rally tie", Sport: tournaments.SportVolleyball, BestOfSets: 5, Teams: []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}}})
 	if err != nil {
@@ -137,7 +137,7 @@ func TestIntegrationVolleyballCompletionUsesRallyRatio(t *testing.T) {
 func TestIntegrationVolleyballMixedRepeatedTieBreakAndFinal(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	owner := createVerifiedLocalAccount(t, ctx, pool, "volley_mixed@example.test", "volley_mixed", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "volley_mixed@example.test", "volley_mixed", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	value, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Volleyball mixed", Sport: tournaments.SportVolleyball, BestOfSets: 5, Teams: []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}}})
 	if err != nil {
@@ -215,7 +215,7 @@ func TestIntegrationVolleyballMixedRepeatedTieBreakAndFinal(t *testing.T) {
 func TestIntegrationVolleyballGroupsWithdrawalAndKnockout(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	owner := createVerifiedLocalAccount(t, ctx, pool, "volley_groups@example.test", "volley_groups", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "volley_groups@example.test", "volley_groups", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	teams := []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}, {Name: "E"}, {Name: "F"}}
 	value, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Groups", Sport: tournaments.SportVolleyball, BestOfSets: 5, Teams: teams})

@@ -151,7 +151,7 @@ func TestNotificationHandlersDoNotRecordFailuresForSuccess(t *testing.T) {
 }
 
 func notificationRequest(method, target string) *http.Request {
-	request := httptest.NewRequest(method, target, nil)
+	request := httptest.NewRequestWithContext(context.Background(), method, target, nil)
 	return request.WithContext(context.WithValue(request.Context(), accountContextKey{}, "019abcde-1111-7111-8111-111111111111"))
 }
 

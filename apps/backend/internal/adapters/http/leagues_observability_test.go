@@ -75,13 +75,13 @@ func TestTournamentHandlersRecordValidationAndBusinessFailuresOnRootSpan(t *test
 		{
 			name:    "public lookup validation",
 			handler: getPublicTournament(tournaments.NewCreationService(testCreationRepository{})),
-			request: httptest.NewRequest(http.MethodGet, "/v1/tournaments/not-a-uuid", nil),
+			request: httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/v1/tournaments/not-a-uuid", nil),
 			want:    "validation.rejected",
 		},
 		{
 			name:    "create tournament without sport",
 			handler: createTournament(tournaments.NewCreationService(testCreationRepository{})),
-			request: httptest.NewRequest(http.MethodPost, "/v1/tournaments", strings.NewReader(`{"name":"Torneo","teams":[{"name":"A"},{"name":"B"}]}`)),
+			request: httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments", strings.NewReader(`{"name":"Torneo","teams":[{"name":"A"},{"name":"B"}]}`)),
 			want:    "validation.rejected",
 		},
 		{
@@ -112,7 +112,7 @@ func TestTournamentHandlersRecordValidationAndBusinessFailuresOnRootSpan(t *test
 }
 
 func leaguePathRequest(method, target, leagueID string) *http.Request {
-	request := httptest.NewRequest(method, target, nil)
+	request := httptest.NewRequestWithContext(context.Background(), method, target, nil)
 	request.SetPathValue("tournamentId", leagueID)
 	return request
 }

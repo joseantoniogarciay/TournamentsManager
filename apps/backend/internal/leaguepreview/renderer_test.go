@@ -26,7 +26,7 @@ func TestHandlerRendersTournamentMetadataAtCanonicalURL(t *testing.T) {
 	defer api.Close()
 
 	handler := newTestHandler(t, api.URL)
-	request := httptest.NewRequest(http.MethodGet, "/tournament/"+testTournamentID, nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/tournament/"+testTournamentID, nil)
 	request.Host = "fasttourney.test"
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
@@ -57,7 +57,7 @@ func TestHandlerReturnsNotFoundForUnavailableTournament(t *testing.T) {
 	api := httptest.NewServer(http.NotFoundHandler())
 	defer api.Close()
 	handler := newTestHandler(t, api.URL)
-	request := httptest.NewRequest(http.MethodGet, "/tournament/"+testTournamentID, nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/tournament/"+testTournamentID, nil)
 	request.Host = "fasttourney.test"
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
@@ -69,7 +69,7 @@ func TestHandlerReturnsNotFoundForUnavailableTournament(t *testing.T) {
 func TestHandlerReportsTheRunningRevisionWhenTheShellIsReadable(t *testing.T) {
 	t.Parallel()
 	handler := newTestHandler(t, "http://127.0.0.1:1/v1")
-	request := httptest.NewRequest(http.MethodGet, "/-/ready", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/-/ready", nil)
 	request.Host = "fasttourney.test"
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
@@ -84,7 +84,7 @@ func TestHandlerReportsTheRunningRevisionWhenTheShellIsReadable(t *testing.T) {
 func TestHandlerDoesNotCaptureNestedTournamentRoutes(t *testing.T) {
 	t.Parallel()
 	handler := newTestHandler(t, "http://127.0.0.1:1/v1")
-	request := httptest.NewRequest(http.MethodGet, "/tournament/"+testTournamentID+"/standings", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/tournament/"+testTournamentID+"/standings", nil)
 	request.Host = "fasttourney.test"
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)

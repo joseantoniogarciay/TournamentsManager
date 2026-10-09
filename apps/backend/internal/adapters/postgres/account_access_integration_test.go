@@ -12,7 +12,7 @@ import (
 func TestIntegrationAccountOptionsRequireSingleUseReauthenticationTicket(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "person@example.test", "person", "old correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "person@example.test", "person", "old correct password")
 	methods, err := NewAccountTournamentRepository(pool).GetAccessMethods(ctx, accountID)
 	if err != nil {
 		t.Fatalf("consultar métodos de acceso: %v", err)

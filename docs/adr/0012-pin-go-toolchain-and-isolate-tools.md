@@ -150,6 +150,11 @@ este cambio no actualiza los binarios ya publicados.
 Fuentes: [aviso oficial GO-2026-6617](https://pkg.go.dev/vuln/GO-2026-6617) y
 [historial de Go](https://go.dev/doc/devel/release#go1.26.9).
 
+**Cierre de la excepción de tests — 2026-10-09:** se restaura `run.tests: true`
+tras corregir los hallazgos en tests, sin retirar linters ni añadir supresiones.
+El análisis sin límites de presentación devuelve cero incidencias. Se conserva
+el comportamiento de las pruebas y el grafo de herramientas aceptado.
+
 ## Ruta canónica del módulo
 
 La autenticación del propietario y la disponibilidad del repositorio se

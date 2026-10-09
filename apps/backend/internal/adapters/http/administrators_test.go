@@ -14,7 +14,7 @@ func TestListTournamentAdministratorsReturnsUsernames(t *testing.T) {
 	const accountID = "019abcde-1111-7111-8111-111111111111"
 	const leagueID = "019abcde-2222-7222-8222-222222222222"
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{administrators: []string{"alex", "bea"}}))
-	request := httptest.NewRequest(http.MethodGet, "/v1/tournaments/"+leagueID+"/administrators", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/v1/tournaments/"+leagueID+"/administrators", nil)
 	request.Header.Set("Authorization", "Bearer session-token")
 	recorder := httptest.NewRecorder()
 
@@ -41,7 +41,7 @@ func TestTransferTournamentOwnershipMapsBusinessErrors(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: accountID}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins, tournaments.NewCreationService(testCreationRepository{transferErr: test.err}))
-			request := httptest.NewRequest(http.MethodPost, "/v1/tournaments/"+leagueID+"/transfer", strings.NewReader(`{"username":"alex"}`))
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/tournaments/"+leagueID+"/transfer", strings.NewReader(`{"username":"alex"}`))
 			request.Header.Set("Authorization", "Bearer session-token")
 			request.Header.Set("X-CSRF-Token", "token")
 			recorder := httptest.NewRecorder()
@@ -70,7 +70,7 @@ func TestAdministratorManagementMapsBusinessErrors(t *testing.T) {
 			if test.method == http.MethodDelete {
 				path += "/alex"
 			}
-			request := httptest.NewRequest(test.method, path, nil)
+			request := httptest.NewRequestWithContext(t.Context(), test.method, path, nil)
 			request.Header.Set("Authorization", "Bearer session-token")
 			request.Header.Set("X-CSRF-Token", "token")
 			recorder := httptest.NewRecorder()

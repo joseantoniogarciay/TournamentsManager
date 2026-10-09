@@ -13,7 +13,7 @@ import (
 func TestIntegrationMixedTournamentFreezesQualifiersAndStartsSeededBracket(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-owner@example.com", "mixed_owner", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "mixed-owner@example.com", "mixed_owner", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	teams := make([]tournaments.TeamInput, 8)
 	for index := range teams {
@@ -90,7 +90,7 @@ func TestIntegrationMixedTournamentFreezesQualifiersAndStartsSeededBracket(t *te
 func TestIntegrationMixedTournamentRepeatsAnUnresolvedQualificationTieBreak(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-tiebreak@example.com", "mixed_tiebreak", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "mixed-tiebreak@example.com", "mixed_tiebreak", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, owner, tournaments.CreateInput{
 		Name: "Mixed repeated tiebreak", Sport: tournaments.SportFootball,
@@ -205,7 +205,7 @@ func TestIntegrationMixedTournamentRepeatsAnUnresolvedQualificationTieBreak(t *t
 func TestIntegrationMixedTournamentRejectsAnUnbalancedRoster(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-invalid@example.com", "mixed_invalid", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "mixed-invalid@example.com", "mixed_invalid", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	teams := make([]tournaments.TeamInput, 10)
 	for index := range teams {
@@ -230,7 +230,7 @@ func TestIntegrationMixedTournamentRejectsAnUnbalancedRoster(t *testing.T) {
 func TestIntegrationMixedTournamentPersistsBalancedGroupsAndQualifiers(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-groups@example.com", "mixed_groups", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "mixed-groups@example.com", "mixed_groups", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	teams := make([]tournaments.TeamInput, 8)
 	for index := range teams {
@@ -288,7 +288,7 @@ func TestIntegrationMixedTournamentPersistsBalancedGroupsAndQualifiers(t *testin
 func TestIntegrationMixedTournamentSupportsOddGroupsAndTwoLegs(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-odd-groups@example.com", "mixed_odd_groups", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "mixed-odd-groups@example.com", "mixed_odd_groups", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	teams := make([]tournaments.TeamInput, 6)
 	for index := range teams {
@@ -320,7 +320,7 @@ func TestIntegrationMixedTournamentSupportsOddGroupsAndTwoLegs(t *testing.T) {
 func TestIntegrationMixedTournamentReplacesAWithdrawnQualifier(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-withdrawal@example.com", "mixed_withdrawal", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "mixed-withdrawal@example.com", "mixed_withdrawal", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, owner, tournaments.CreateInput{
 		Name: "Mixed withdrawal", Sport: tournaments.SportFootball,
@@ -368,8 +368,8 @@ func TestIntegrationMixedTournamentReplacesAWithdrawnQualifier(t *testing.T) {
 func TestIntegrationMixedTournamentTransitionIsAuthorizedAndConcurrentSafe(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-concurrent@example.com", "mixed_concurrent", "password123")
-	outsider := createVerifiedLocalAccount(t, ctx, pool, "mixed-outsider@example.com", "mixed_outsider", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "mixed-concurrent@example.com", "mixed_concurrent", "password123")
+	outsider := createVerifiedLocalAccount(ctx, t, pool, "mixed-outsider@example.com", "mixed_outsider", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Mixed concurrent", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "One"}, {Name: "Two"}}})
 	if err != nil {
@@ -418,7 +418,7 @@ func TestIntegrationMixedTournamentTransitionIsAuthorizedAndConcurrentSafe(t *te
 func TestIntegrationMixedBasketballCompletesThroughTheBracket(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-basketball@example.com", "mixed_basketball", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "mixed-basketball@example.com", "mixed_basketball", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Mixed basketball", Sport: tournaments.SportBasketball, Teams: []tournaments.TeamInput{{Name: "One"}, {Name: "Two"}}})
 	if err != nil {
@@ -460,7 +460,7 @@ func TestIntegrationMixedBasketballCompletesThroughTheBracket(t *testing.T) {
 func TestIntegrationMixedHandballCompletesWithSevenMetreShootout(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "mixed-handball@example.com", "mixed_handball", "password123")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "mixed-handball@example.com", "mixed_handball", "password123")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Mixed handball", Sport: tournaments.SportHandball, Teams: []tournaments.TeamInput{{Name: "One"}, {Name: "Two"}}})
 	if err != nil {

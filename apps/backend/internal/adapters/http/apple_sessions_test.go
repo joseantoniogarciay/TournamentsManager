@@ -77,7 +77,7 @@ func TestAppleHandlersStatusesAndSafeRootReasons(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recorder := httptest.NewRecorder()
-			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(test.body))
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/", strings.NewReader(test.body))
 			request.Header.Set("Content-Type", test.contentType)
 			ctx, span := provider.Tracer("test").Start(request.Context(), test.route)
 			test.handler.ServeHTTP(recorder, request.WithContext(ctx))
@@ -116,17 +116,17 @@ func TestAppleHandlersStatusesAndSafeRootReasons(t *testing.T) {
 
 func TestSocialRateLimitAndCancellation(t *testing.T) {
 	called := 0
-	handler := socialRateLimit(func(w http.ResponseWriter, r *http.Request) { called++; w.WriteHeader(201) }, newRequestLimiter(1, time.Minute), func(*http.Request) string { return "loopback" })
-	handler(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/", nil))
+	handler := socialRateLimit(func(w http.ResponseWriter, _ *http.Request) { called++; w.WriteHeader(201) }, newRequestLimiter(1, time.Minute), func(*http.Request) string { return "loopback" })
+	handler(httptest.NewRecorder(), httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/", nil))
 	limited := httptest.NewRecorder()
-	handler(limited, httptest.NewRequest(http.MethodPost, "/", nil))
+	handler(limited, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/", nil))
 	if called != 1 || limited.Code != 429 || limited.Header().Get("Retry-After") == "" {
 		t.Fatalf("rate limit=%d %d", called, limited.Code)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	recorder := httptest.NewRecorder()
-	writeAppleFailure(recorder, httptest.NewRequest(http.MethodPost, "/", nil).WithContext(ctx), context.Canceled)
+	writeAppleFailure(recorder, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/", nil).WithContext(ctx), context.Canceled)
 	if recorder.Body.Len() != 0 {
 		t.Fatal("intentional cancellation wrote feedback")
 	}
@@ -136,7 +136,7 @@ func TestAppleCallbackBypassesOnlyItsOwnProviderOrigin(t *testing.T) {
 	service := federated.NewAppleService(httpAppleRepository{}, httpAppleProvider{})
 	handler := NewHandlerWithConfig(HandlerConfig{CORSAllowedOrigins: []string{"https://dev.fasttourney.com"}}, HandlerDependencies{Apple: &service})
 	for _, path := range []string{"/v1/apple-callback", "/v1/apple-sessions"} {
-		request := httptest.NewRequest(http.MethodPost, path, strings.NewReader("bad"))
+		request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, path, strings.NewReader("bad"))
 		request.Header.Set("Origin", "https://appleid.apple.com")
 		recorder := httptest.NewRecorder()
 		handler.ServeHTTP(recorder, request)

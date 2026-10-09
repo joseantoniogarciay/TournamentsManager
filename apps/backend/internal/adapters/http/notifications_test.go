@@ -45,7 +45,7 @@ func TestListNotificationsUsesContractFieldNames(t *testing.T) {
 		tournaments.NewService(testTournamentRepository{}),
 		testAllowedOrigins,
 	)
-	request := httptest.NewRequest(http.MethodGet, "/v1/me/notifications", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/v1/me/notifications", nil)
 	request.Header.Set("Authorization", "Bearer session-token")
 	recorder := httptest.NewRecorder()
 

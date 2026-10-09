@@ -10,7 +10,7 @@ import (
 func TestIntegrationSuggestionPersistsAccountBodyAndTimestamp(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "suggestion@example.test", "suggestion_person", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "suggestion@example.test", "suggestion_person", "correct password")
 
 	result, err := suggestions.NewService(NewSuggestionRepository(pool), nil).Submit(ctx, accountID, "  Añadir torneos por parejas  ")
 	if err != nil || result.NotificationFailed {

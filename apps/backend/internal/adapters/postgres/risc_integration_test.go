@@ -11,7 +11,7 @@ import (
 func TestRISCRevocationIsAtomicAndIdempotent(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "risc@example.test", "risc_person", "correct horse battery staple")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "risc@example.test", "risc_person", "correct horse battery staple")
 	if _, err := pool.Exec(ctx, `INSERT INTO external_identities (account_id, provider, issuer, subject) VALUES ($1, 'google', $2, $3)`, accountID, federated.GoogleIssuer, "google-subject"); err != nil {
 		t.Fatalf("crear identidad Google: %v", err)
 	}
@@ -57,7 +57,7 @@ func leagueMatchBetweenTeams(matches []tournaments.Match, firstTeamID, secondTea
 	return tournaments.Match{}, false
 }
 
-func recordWin(t *testing.T, ctx context.Context, service tournaments.CreationService, accountID, leagueID string, match tournaments.Match, winnerTeamID string, winningScore, losingScore int) {
+func recordWin(ctx context.Context, t *testing.T, service tournaments.CreationService, accountID, leagueID string, match tournaments.Match, winnerTeamID string, winningScore, losingScore int) {
 	t.Helper()
 	homeScore, awayScore := losingScore, winningScore
 	if match.HomeTeamID == winnerTeamID {
@@ -68,4 +68,4 @@ func recordWin(t *testing.T, ctx context.Context, service tournaments.CreationSe
 	}
 }
 
-// Esta prueba usa una base efímera preparada por el comando de integración.
+// Esta prueba usa una base efímera preparada para la ejecución de integración.

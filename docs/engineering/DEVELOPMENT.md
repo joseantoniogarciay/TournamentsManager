@@ -80,6 +80,14 @@ make check
 make verify
 ```
 
+`make lint` incluye los tests Go (`run.tests: true`). Para revisar el inventario
+completo sin truncar hallazgos por regla:
+
+```bash
+cd apps/backend
+go tool -modfile=go.tool.mod golangci-lint run --max-same-issues=0 --max-issues-per-linter=0 ./...
+```
+
 `make check` agrupa formato, lint y tests. `make verify` añade la exportación
 web del cliente Expo a `/tmp/tournaments-manager-web-export`, la limpieza de
 ambos módulos, build y vulnerabilidades. La exportación comprueba Expo Router y

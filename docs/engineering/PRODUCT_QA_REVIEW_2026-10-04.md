@@ -4463,7 +4463,7 @@ paquete no usa este backend. No se declara limpio todo el grafo por ese exit 0.
 Fuente: [aviso oficial](https://pkg.go.dev/vuln/GO-2026-6617).
 
 Se revisa el disparador de lint de tests: con --tests=true ahora carga los
-paquetes y obtiene 38 hallazgos reales (errcheck 3, errorlint 3, gosec 5,
+paquetes y muestra 38 hallazgos (informe limitado por regla) (errcheck 3, errorlint 3, gosec 5,
 misspell 8, noctx 7, revive 8, staticcheck 3, unused 1). Se actualiza la deuda
 y el comentario de configuración; tests:false permanece hasta resolverlos.
 No se atribuye ya ese pendiente a una excepción del cargador ni se suprimen
@@ -4476,3 +4476,36 @@ Retrospectiva: la base de vulnerabilidades cambia sin cambios de código.
 Una actualización mínima puede corregir el gate de seguridad y, a la vez,
 permitir revisar una excepción antigua; distinguir ambas deudas evita
 confundir un parche probado con una certificación global o un despliegue.
+
+
+#### 2026-10-09 — Cierre del análisis de tests Go
+
+Se restaura run.tests: true y se retira la deuda de DECISIONS_TO_REVISIT.
+El informe inicial de 38 incidencias estaba limitado por regla; la revisión
+posterior usa --max-same-issues=0 --max-issues-per-linter=0 y acaba con 0 issues.
+No se eliminan reglas, aserciones ni escenarios y no se añaden nolint.
+
+Peticiones y sockets de test usan contexto explícito; el cierre HTTP comprueba
+lectura y cierre antes de publicar su resultado. Los errores de dominio se
+comparan con errors.Is. Los helpers siguen validando las mismas cuentas y
+resultados; los ocho tokens concurrentes conservan sus bytes únicos mediante
+un índice byte acotado por constante. Las cookies entrantes se representan
+como cabecera Cookie: Secure corresponde a la cookie emitida por servidor.
+Se elimina parser.ParseDir obsoleto conservando la inspección de imports de
+todos los archivos Go de producción en cada directorio. Los falsos positivos
+del corrector inglés se resuelven reformulando diagnósticos españoles.
+
+Evidencia privada: qa-tests-lint-unlimited-20261009.log (inventario restante)
+y qa-tests-lint-complete-20261009.log (cero incidencias).
+
+Retrospectiva: un informe resumido no es un inventario exhaustivo. Revisar sin
+límites de presentación permite cerrar la excepción sin debilitar el gate.
+Esta fase no acredita Android Lint completo, la cabecera iOS a texto máximo
+ni el recorrido global con lectores. Local, dev y producción siguen apagados.
+
+Validación final: GOTOOLCHAIN=go1.26.9 make verify y go test -race ./...
+terminan con exit 0. PostgreSQL permanece apagado y las pruebas que exigen
+TEST_DATABASE_URL se omiten localmente; CI ejecutará esa integración.
+Govulncheck conserva el aviso de módulo OpenPGP previamente documentado,
+con cero vulnerabilidades alcanzables. Logs privados:
+qa-tests-enabled-verify-20261009.log y qa-tests-enabled-race-20261009.log.

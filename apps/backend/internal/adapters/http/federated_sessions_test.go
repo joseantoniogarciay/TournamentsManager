@@ -19,7 +19,7 @@ func TestCreateGoogleChallengeReturnsCreated(t *testing.T) {
 	service := federated.NewService(testFederatedRepository{}, nil)
 	recorder := httptest.NewRecorder()
 
-	createGoogleChallenge(service).ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, "/v1/google-login-challenges", nil))
+	createGoogleChallenge(service).ServeHTTP(recorder, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/google-login-challenges", nil))
 
 	if recorder.Code != http.StatusCreated {
 		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusCreated)
@@ -37,7 +37,6 @@ func TestFederatedHandlersRecordOnlySafeRootFailureReasons(t *testing.T) {
 	})
 
 	validIdentity := federated.Identity{Issuer: federated.GoogleIssuer, Subject: "google-subject", Email: "person@example.test", Nonce: "nonce", EmailVerified: true}
-	const challengeID = "019abcde-1111-7111-8111-111111111111"
 	for _, test := range []struct {
 		name    string
 		route   string
@@ -83,7 +82,7 @@ func TestFederatedHandlersRecordOnlySafeRootFailureReasons(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(test.body))
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/", strings.NewReader(test.body))
 			request.Header.Set("Authorization", "Bearer secret-session-token")
 			ctx, span := provider.Tracer("test").Start(request.Context(), test.route)
 			test.handler.ServeHTTP(httptest.NewRecorder(), request.WithContext(ctx))
