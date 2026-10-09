@@ -5227,3 +5227,36 @@ Retrospectiva: separar la decisión de densidad de tabla de la adaptación del
 resto de la pantalla reduce el cambio y evita un layout paralelo. La limitación
 visual del texto fijo queda explícita en ADR-0153. Al finalizar se apagan Metro
 y servicios dev conservando volúmenes; no se activa observabilidad.
+
+### 2026-10-09 — Revalidación web de clasificación y búsquedas
+
+Sobre develop 1062432 se arranca Metro y el stack local sin observabilidad.
+El navegador integrado conserva la sesión ficticia. La clasificación de la liga
+de equipos con nombres largos se observa a 1280 × 720 y 390 × 844, en español
+y tema oscuro. En escritorio caben todas las estadísticas; en ancho móvil el
+scroll horizontal llega a GC/DG con cabecera sincronizada y equipos/puntos
+fijos. Se conservan posiciones 1/1/3 y puntos 3/3/0. Las filas permanecen
+alineadas. El diálogo de reglas permite desplazar hasta el texto de retirada
+con Ok visible; cerrar y Volver regresan al torneo. No se acredita zoom: el
+atajo de ampliación no cambió la presentación del navegador integrado.
+
+En el torneo propio QA Web refresh 20261007, Administradores muestra el vacío.
+Añadir administrador comprueba ayuda de mínimo con dos caracteres, ocho
+resultados ficticios con qa_ y vacío con una búsqueda sin coincidencias. A
+390 × 480 se desplaza hasta el último resultado completo, con margen inferior.
+Tras cerrar, la lista continúa sin delegados. Transferir torneo muestra su aviso,
+los mismos ocho candidatos y alcanza el último en el viewport bajo; Cerrar
+regresa al torneo con las acciones de creador. No se selecciona destinatario,
+se concede permiso ni se transfiere propiedad. La espera de búsqueda se observa
+antes de juzgar su estado final; no se cuenta el estado intermedio como resultado.
+
+No hay nuevos defectos confirmados ni cambios de implementación en esta pasada.
+Las capturas y estados constan en la conversación, sin PNG exportado. Se restaura
+el viewport del navegador y se cierra la pestaña de QA. Metro y API/PostgreSQL/
+Mailpit se apagan al terminar, conservando volúmenes. No se activa producción.
+Android, lectores, zoom web y búsquedas nativas con teclado continúan pendientes;
+un viewport bajo no acredita teclado ni safe area de iOS o Android.
+
+Retrospectiva: la exportación web anterior solo probaba construcción. El scroll
+real confirma sincronización y alcance de columnas; una ventana baja comprueba
+alcance del último resultado sin atribuirle evidencia de teclado móvil.

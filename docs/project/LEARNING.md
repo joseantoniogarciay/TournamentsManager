@@ -5678,3 +5678,12 @@ optativa y mantiene el default nativo para el resto; no convertir esta excepció
 en una política global. Verificar datos, cabecera sincronizada y ambos extremos
 del scroll, además de que título, ayuda y reglas sigan ampliándose. Restaurar
 ajustes y apagar servicios al cerrar la sesión.
+
+### 2026-10-09 — Delimitar evidencia de viewport en QA
+
+Una exportación web no acredita gestos ni sincronización de cabeceras. Probar
+scroll real en ancho móvil verifica el alcance de estadísticas y conserva la
+relación entre equipo y puntos. Reducir la altura del navegador sirve para
+alcanzar el último resultado de una búsqueda, pero no sustituye pruebas con
+teclado y safe area nativos. Esperar el estado final de una búsqueda antes de
+juzgarla; registrar por separado instrumentos que no aplican zoom.
