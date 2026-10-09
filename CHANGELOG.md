@@ -21,6 +21,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- Crear torneo aprovecha el área inferior: safe area y separación quedan dentro
+  del contenido desplazable, sin recortar su viewport con padding del padre.
+
 - Texto iOS recalculado al cambiar Dynamic Type con una pantalla abierta; chips
   y etiquetas ajustan su altura sin reiniciar ni perder el borrador o foco de campos.
 

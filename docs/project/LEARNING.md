@@ -5576,3 +5576,14 @@ limitar escala y sin remontar campos/rutas. QA conserva deporte, borrador y
 edición después de ampliar; hay que probar aumento y reducción con contenido
 montado. Retirar esta adaptación cuando RN pase el recorrido sin ella. Tener
 AX disponible no acredita por sí solo locución o foco VoiceOver.
+
+
+### 2026-10-09 — Safe area dentro del contenido desplazable
+
+El padding inferior de un padre recorta el viewport y deja una franja fija.
+En Crear torneo, la instrucción del usuario se concreta moviendo inset +
+`space[4]` a `KeyboardAwareScrollView.contentContainerStyle`: el scroll llega
+al borde y la separación final sigue disponible. La opción compartida es
+explícita para no duplicar la reserva específica de tabs. Verificar por separado
+el alcance del viewport y la lectura del último control con texto ampliado;
+no confundir un gesto insuficiente del automatizador con un defecto del scroll.

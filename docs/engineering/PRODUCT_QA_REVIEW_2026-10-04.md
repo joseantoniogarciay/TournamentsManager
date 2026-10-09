@@ -4749,3 +4749,53 @@ independientes. La integración PostgreSQL local se omite sin URL de pruebas;
 la comprobación remota se realiza en CI tras subir a develop. Metro queda
 apagado y se termina la app y el simulador arrancado en esta sesión. API,
 PostgreSQL, observabilidad y producción no se han arrancado.
+
+
+#### 2026-10-09 — Safe area inferior en Crear torneo
+
+El usuario identifica la franja inferior desaprovechada y precisa la regla:
+aprovechar el safe area y añadir la separación dentro del contenido. El código
+confirma que `Screen` sumaba inset + `space[4]` como padding del padre: el
+viewport de `KeyboardAwareScrollView` terminaba antes de esa franja.
+
+Se conserva el cálculo y se cambia su propietario: Crear torneo usa
+`Screen bottomInset="none"`; la primitiva compartida admite
+`bottomInset="safe-area"` y reserva inset nativo + 16 px al final de
+`contentContainerStyle`. Web conserva 16 px sin inset nativo. El valor por
+defecto de la nueva opción es none para respetar los cálculos específicos de
+las rutas con tabs. No se cambia navegación, títulos, escalado ni operación
+OpenAPI. La decisión concreta del usuario mantiene los tokens y la regla de
+layout compartido de ADR-0054/0055; no requiere una nueva dirección de stack.
+
+La vista compacta de Device Hub permite observar desplazamiento del formulario
+previo a la corrección. Arranque con Text Size 11 alcanza el botón completo
+(`accessibility-create-bottom-size11-cold-20261009.png`); pulsarlo vacío muestra
+los errores localizados de ambos campos y sus etiquetas AX incluyen el mensaje.
+No se crea un torneo ni se inicia sesión. En el cambio en caliente, la captura
+previa `accessibility-create-bottom-size11-20261009.png` muestra el viewport
+cortado antes del borde inferior. No se declara que ese gesto hubiese alcanzado
+su límite máximo ni se infiere de él un fallo del motor de scroll.
+
+Tras el cambio, `accessibility-create-safe-area-after-20261009.png` muestra el
+contenido llegando a la zona inferior antes vacía a Text Size 11.
+`accessibility-create-safe-area-size3-20261009.png` muestra formulario completo,
+botón y card a tamaño normal. La separación final queda dentro del scroll,
+según el código. Los gestos posteriores del canal no aportan evidencia adicional
+del último control a 11 después del cambio; esa comprobación visual y VoiceOver
+continúan pendientes. Se restaura tamaño 3 y se cierra a Inicio sin conservar
+borrador; VoiceOver y captura de teclado permanecen apagados.
+
+Typecheck, formato de los archivos modificados y exportación web pasan. La
+checklist de cliente conserva copy localizado, tokens, cierre nativo y API
+sin cambios; no se desactiva el escalado. Metro, app y simulador de esta sesión
+se apagan. API, PostgreSQL, observabilidad y producción no se arrancan.
+
+Retrospectiva: safe area y separación no obligan a recortar el viewport. En
+contenido desplazable, reservarlos dentro de su contenido permite recorrer la
+superficie hasta el borde y mantiene protegido el último control. La captura
+de viewport y la de final de scroll responden a preguntas distintas.
+
+Gate final: `make verify` pasa. Integración PostgreSQL local omitida por no
+definir TM_INTEGRATION_DATABASE_URL; no se presenta como ejecutada localmente.
+El commit anterior de Dynamic Type `ebb6649` cerró CI con éxito en
+[run 37939253169](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37939253169).

@@ -68,6 +68,15 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   botonera, con 20 px de separación lateral. El contenido desplazable reserva
   también su altura y separación para que el último elemento nunca quede bajo el
   botón. El icono conserva una etiqueta accesible localizada.
+- **Safe area en formularios desplazables sin tabs:** el área desplazable puede
+  alcanzar el borde inferior. La separación del último control pertenece al
+  contenido: `Screen bottomInset="none"` y
+  `KeyboardAwareScrollView bottomInset="safe-area"` reservan el inset nativo más
+  `space[4]` (16 px) dentro del scroll; web reserva solo ese padding. Crear torneo
+  aplica esta regla. No reservar además ese espacio en el padre, porque crearía
+  una franja fija que el contenido nunca puede recorrer. Las rutas con tabs
+  siguen usando su cálculo específico de botonera superpuesta.
+
 - **Teclado y tabs:** en web la barra de tabs se ancla al borde inferior del
   viewport visual, también al aparecer el teclado. El padding inferior de un
   formulario web no toma el safe-area inset, porque puede variar al aparecer el
