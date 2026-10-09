@@ -5503,4 +5503,26 @@ Contar severidades desde el XML evita presentar un build exitoso como un
 informe sin avisos: el módulo local tiene cero errores y seis avisos; la app,
 dos errores y 45 avisos. Corregir CNG en su origen, conservar idempotencia y
 calificar recursos por API exige una decisión sobre mantenimiento temporal.
-ADR-0152 propone ese coste sin implementar mientras espera aceptación.
+El usuario acepta ADR-0152 con alternativa B: esperar versiones corregidas
+de Expo, conservando los errores y el gate K2 abiertos.
+
+
+### 2026-10-09 — Revisar versiones antes de atribuir correcciones
+
+La matriz exacta de Expo 57.0.26 ofrece directos maduros y RN 0.86.3;
+latest de RN es otra línea y la CLI pide ahora paquetes de menos de siete días.
+La madurez de directos no certifica todo el grafo. Los tarballs oficiales
+inspeccionados conservan ambos defectos de generación Android; actualizar
+por antigüedad o por advertencia no prueba que se corrijan. El changelog
+separa memoria Hermes (ya corregida en el conjunto actual) y arranque dev
+(corregido en el candidato); no prometer ahorro de producción sin evidencia.
+
+El soporte oficial de escenas puede reducir mantenimiento propio, pero solo
+tras validar generación, arranque y enlaces. Un parche de Symbols sigue
+necesitando revisión si la nueva fuente conserva su defecto. No retirar
+adaptadores por una nota de release ni instalar cambios durante una revisión.
+
+Retrospectiva de QA: al máximo tamaño, el título de creación es completo en
+en/it/fr; los saltos varían con el texto real. Se comprueba Cerrar en inglés y
+se restaura español y tamaño 3. Capturas visuales no acreditan VoiceOver ni
+el recorrido accesible de todas las pantallas.

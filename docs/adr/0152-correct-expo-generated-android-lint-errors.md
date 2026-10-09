@@ -1,6 +1,6 @@
 # ADR-0152: Corregir dos errores en la generación de recursos Android de Expo
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado
 - **Fecha:** 2026-10-09
 - **Decisor:** Usuario
 - **Propietario del análisis:** Codex como mentor técnico
@@ -73,9 +73,11 @@ el usuario prefiere conservar esas incidencias hasta un upgrade compatible.
 
 ## Decisión del usuario
 
-**Pendiente.** No se aplican parches ni cambios de configuración mientras este
-ADR siga Propuesto. Esta decisión no incluye activar producción, instalar una
-versión joven ni seleccionar K1 como motor permanente.
+**Aceptada el 2026-10-09: alternativa B.** El usuario responde «Esperar versiones
+corregidas de Expo». Se conservan los dos errores y el gate K2 abiertos hasta
+identificar versiones publicadas, maduras y compatibles y comprobarlas. No se
+aplican los parches de la alternativa A ni cambios permanentes del motor lint.
+Esta decisión no incluye activar producción ni instalar una versión joven.
 
 ## Consecuencias
 
@@ -83,7 +85,12 @@ La alternativa A añade mantenimiento temporal y evidencia obligatoria en cada
 upgrade. La B mantiene abiertos los dos errores además del fallo K2. Ninguna
 alternativa certifica automáticamente accesibilidad ni todo el QA del cliente.
 
-## Validación
+## Validación de futuras versiones corregidas
+
+Con la alternativa B aceptada, estos criterios se aplicarán al evaluar una
+corrección oficial. No representan parches locales implementados ni checks
+ya superados. La [revisión del 9 de octubre](../engineering/EXPO_UPDATE_REVIEW_2026-10-09.md)
+no identifica la corrección en los generadores publicados inspeccionados.
 
 - Generar dos veces con la misma configuración: mismos filtros, ningún duplicado;
   migrar un manifest con data-generated y conservar filtros no generados.

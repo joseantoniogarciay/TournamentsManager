@@ -11,6 +11,7 @@
 - [Auditoría nativa iOS 2026-10-03](IOS_VISUAL_AUDIT_2026-10-03.md): preparación, compatibilidad de arranque y cobertura pendiente.
 - [Auditoría inicial Android 2026-10-03](ANDROID_VISUAL_AUDIT_2026-10-03.md): recorrido inicial en Android 14, corrección de tema de tabs e incidencia de teclado.
 - [CLIENT_PRACTICES.md](CLIENT_PRACTICES.md): reglas de rendimiento, listas, accesibilidad y reutilización del cliente universal.
+- [Revisión Expo / React Native 2026-10-09](EXPO_UPDATE_REVIEW_2026-10-09.md): candidatos maduros, compatibilidad y correcciones Android pendientes.
 - [DEVELOPMENT.md](DEVELOPMENT.md): flujo y Definition of Done.
 - [IDENTITY.md](IDENTITY.md): credenciales locales, proveedores y vinculación.
 - [SECURITY.md](SECURITY.md): principios y amenazas.

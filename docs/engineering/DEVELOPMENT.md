@@ -431,7 +431,7 @@ validaron CI y exportaciones JS web/iOS/Android, primero dev y después prod.
 Los parches se retirarán al actualizar consumidores compatibles. Véase el
 [cierre operativo](../operations/WEB_DEPENDENCY_COMPATIBILITY_2026-10-03.md).
 
-Expo CLI pide una nueva matriz del SDK 57, incluida Expo 57.0.26 y React Native
+En la revisión del 3 de octubre, Expo CLI pedía una nueva matriz del SDK 57, incluida Expo 57.0.26 y React Native
 0.86.3. La operación de instalación se detuvo por la edad de Expo 57.0.26,
 expo-constants 57.0.20 y expo-modules-core 57.0.20. La revisión automática
 rechazó añadir sus excepciones y se solicitó autorización explícita. No se
@@ -441,6 +441,12 @@ El usuario decidió después mantener la espera salvo vulnerabilidad crítica
 (ADR-0138): esta matriz queda aplazada hasta cumplir siete días, sin excepción
 por compatibilidad. Al actualizarla se fijarán los directos y se validarán build
 nativa limpia, arranque y flujo, además de typecheck y exportación web.
+
+La [revisión del 9 de octubre](EXPO_UPDATE_REVIEW_2026-10-09.md) confirma que
+la matriz 57.0.26 ya cumple antigüedad directa. La CLI ahora pide 57.0.27,
+aún joven; no se ha instalado ninguna matriz nueva ni cerrado los errores
+de generación Android de ADR-0152. Revisar transitivas, overrides y parches
+antes de una actualización explícita.
 
 Para mantener los servicios en segundo plano en Docker Desktop:
 

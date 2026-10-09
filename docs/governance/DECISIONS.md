@@ -226,3 +226,11 @@ el 2026-10-09: conservar el título en la barra iOS siempre que quepa; medir
 la altura real y colocarlo debajo únicamente si supera el espacio disponible.
 Conservar botones nativos, escalado, nombre completo y semántica de cabecera.
 La aclaración del usuario extiende la regla a todos los títulos de navegación.
+
+## Errores de generación Android pendientes de Expo
+
+[ADR-0152](../adr/0152-correct-expo-generated-android-lint-errors.md), aceptado
+el 2026-10-09: el usuario elige esperar versiones corregidas de Expo, sin añadir
+los dos parches propuestos. Los errores MissingPrefix y NewApi y la excepción
+del gate K2 permanecen abiertos; no adoptar K1 como sustituto ni omitir reglas.
+Toda actualización debe respetar maduración y validación de conjunto.

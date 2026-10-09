@@ -4627,3 +4627,35 @@ Evidencia privada: android-full-lint-k1-20261009.log, android-feedback-lint-k1
 Retrospectiva: un crash de herramienta puede ocultar errores reales de recursos.
 Separar motor, ejecución, informe y decisión permite avanzar el inventario sin
 rebajar el gate ni confundir un workaround diagnóstico con un arreglo aprobado.
+
+Decisión posterior del usuario: «Esperar versiones corregidas de Expo».
+ADR-0152 pasa a Aceptado con alternativa B; no se implementan los dos parches.
+Los dos errores, los avisos y el bloqueo K2 se conservan abiertos.
+
+
+#### 2026-10-09 — Títulos de creación por idioma y revisión de updates
+
+Se instala el artefacto final Release ARM64 ya compilado y se prueba creación
+con Text Size 11 y idiomas por proceso: inglés muestra Create tournament en
+dos líneas; italiano Crea torneo en una; francés Créer un tournoi en dos.
+En los tres el nombre completo aparece bajo la barra y Cerrar queda separado.
+La pulsación de Cerrar en inglés vuelve a Home. No se envían formularios ni
+se afirma que se haya probado el cierre en italiano/francés.
+
+Capturas privadas: ios-title-create-{en,it,fr}-size11-20261009.png,
+ios-title-create-en-close-20261009.png e ios-locale-restore-es-20261009.png.
+Se restaura Text Size 3, español, VoiceOver y captura de teclado apagados;
+se termina la app. El canal de accesibilidad de la app continúa ausente,
+por lo que esta evidencia visual no cierra foco ni locución VoiceOver.
+
+El usuario solicita revisar actualizaciones pendientes. La
+[revisión Expo/RN](EXPO_UPDATE_REVIEW_2026-10-09.md) encuentra una matriz madura
+57.0.26 / RN 0.86.3, pero los generadores inspeccionados aún conservan los dos
+errores Android. No se modifica paquete, lockfile, parche ni motor lint.
+La expectativa CLI más reciente incluye versiones jóvenes. La resolución
+transitiva y las builds de una nueva matriz quedan pendientes de su adopción.
+
+Retrospectiva: completar evidencia visual por idioma y comprobar paquetes
+oficiales permite avanzar QA sin certificar accesibilidad o correcciones no
+probadas. API, PostgreSQL, Metro, emulador Android, observabilidad y producción
+no se arrancan en esta fase; se conservan evidencia y datos.
