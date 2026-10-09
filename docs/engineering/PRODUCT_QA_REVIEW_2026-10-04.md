@@ -5332,3 +5332,43 @@ Retrospectiva: dimensiones correctas no prueban por sí solas interacción. Los
 eventos de offset permiten distinguir un gesto no entregado de un scroll real;
 el gran rebote del instrumento exige esperar a su estabilización antes de juzgar
 el alcance. No se introduce una corrección de layout sin defecto confirmado.
+
+
+### 2026-10-09 — VoiceOver de Notificaciones y bloqueo de la sesión siguiente
+
+Sobre eaeeaf9, iPhone 17/iOS 27, sesión ficticia qa_visual_player conservada,
+Metro y API/PostgreSQL/Mailpit locales sin observabilidad. Cuenta abre
+Notificaciones. VoiceOver se activa a Text Size 3: el gesto horizontal alcanza
+Cerrar y después el primer aviso; el árbol AX muestra Eliminar todas, el título
+y 31 pares independientes de Abrir torneo / Eliminar notificación.
+
+Con el primer aviso enfocado se cambia a Text Size 11. El título mantiene el
+corte Notificacio- / nes y los gestos avanzan por avisos y acciones, desplazando
+la lista automáticamente. La barra AX pasa por 3 %, 23 %, 92 % y 99 %. Desde
+la barra final, un gesto inverso enfoca el último botón de eliminar, visible
+por completo; otro vuelve al cuerpo del último aviso. Las cards ampliadas son
+más altas que el viewport: esta pasada acredita foco y desplazamiento del
+lector, no una card completa en una sola captura, locución ni activación.
+No se abre un torneo ni se elimina ninguna notificación. Se restaura Text Size
+3 y VoiceOver off, con Capture Keyboard off, y Cerrar vuelve a Cuenta.
+
+Android Studio termina mostrando el AVD existente Pixel API 34. Se intenta
+arrancarlo desde Device Manager; no se obtiene una vista interactiva del teléfono.
+Tras una parada desde el gestor se abre el proyecto Android y se vuelve a
+solicitar el arranque desde su panel, sin modificar código ni configuración.
+El navegador integrado carga Home; Safari se abre con una pestaña nueva para
+comprobar zoom mediante controles de navegador. Antes de navegar a localhost,
+CUA informa que el Mac está bloqueado y el desbloqueo automático no es posible.
+Se solicita al usuario desbloqueo manual. No se acredita Android, teclado visible
+ni zoom web y tampoco se puede verificar/cerrar el emulador o la pestaña Safari
+con el escritorio bloqueado. Quedan como limpieza pendiente al recuperar acceso.
+
+Metro y los contenedores locales se apagan conservando volúmenes. No se modifica
+implementación ni se repiten sus checks. Evidencia AX y capturas en la conversación.
+El QA global sigue abierto.
+
+Retrospectiva: el porcentaje de scroll junto al rectángulo de foco permite
+verificar navegación aunque las notificaciones tengan texto repetido. Un árbol
+AX con controles separados no certifica su locución o activación. El bloqueo del
+host interrumpe la evidencia UI y requiere recuperar acceso antes de juzgar
+Android o zoom.
