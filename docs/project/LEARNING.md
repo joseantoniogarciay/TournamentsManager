@@ -5610,3 +5610,12 @@ botón final y desplaza el contenido para separarlo de la barra de gestos;
 activar un campo vacío permite comprobar el teclado sin escribir ni enviar.
 Conservar borrador y ajustes originales hace reversible la pasada. No asumir
 que cada evento rápido produce un avance de foco: verificar antes de activar.
+
+### 2026-10-09 — Auditar el propietario del inset antes de extender una corrección
+
+Corregir un formulario compartido no migra automáticamente sus otras rutas.
+La búsqueda conjunta de Screen, bottomInset y contentContainerStyle identifica
+seis casos con reserva del padre aún pendiente. Separar ramas estáticas,
+paddings propios y reserva de tabs evita aplicar dos veces el inset o perder
+separación al extender el patrón. La revisión estática orienta el QA, pero no
+sustituye evidencia visual del último control.

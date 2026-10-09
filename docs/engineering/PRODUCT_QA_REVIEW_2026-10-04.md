@@ -4918,3 +4918,39 @@ Retrospectiva: comprobar entrada táctil, foco y resultado permite distinguir
 activación del lector de un toque por coordenadas. El acceso al teclado y al
 último botón aporta evidencia específica tras el upgrade sin enviar un
 formulario ni arrancar servicios adicionales.
+
+#### 2026-10-09 — Inventario del safe area restante
+
+La siguiente pasada visual iOS no puede iniciarse: CUA informa que el Mac está
+bloqueado y no puede desbloquearlo. Se solicita desbloqueo manual; no se arranca
+Metro, API ni otro servicio mientras no haya acceso al simulador. Se continúa
+con revisión estática del propietario del inset inferior. El cierre de Crear
+torneo no se extiende implícitamente al resto del cliente.
+
+| Ruta | Evidencia en código | QA y aplicación restantes |
+| --- | --- | --- |
+| join-team | Screen declara safe-area; el formulario usa KeyboardAwareScrollView sin reserva propia | Comprobar formulario y último control; conservar protección de las ramas estáticas de carga/error |
+| link/password-reset | Las ramas de error y formulario usan Screen por defecto y KeyboardAwareScrollView sin inset propio | Revisar ambos layouts; el cambio efectivo de credencial continúa reservado a intervención humana |
+| tournament/[id]/administrators/add | Screen por defecto; scroll con paddingBottom space[5] | Revisar viewport, teclado y último resultado; evitar duplicar separación al mover el inset |
+| tournament/[id]/transfer | Screen por defecto; scroll con paddingBottom space[5] | Revisar viewport y último resultado sin ejecutar transferencia |
+| account/notifications | Screen por defecto; ScrollView con paddingBottom space[8] | Completar desplazamiento real iOS; conservar padding de contenido y no borrar notificaciones |
+| tournament/[id]/standings | Screen por defecto; ScrollView de tabla con paddingBottom space[5] | Revisar final vertical y control horizontal/sticky antes de adaptar layout |
+
+En estas seis rutas, Screen reserva inset + space[4] fuera del scroll y por
+tanto recorta su viewport. Es un hecho de implementación; no acredita por sí
+solo un control inaccesible ni una reproducción visual de recorte. No se
+modifica código durante este inventario. Las rutas bajo tabs ya usan su
+cálculo específico dentro del contenido; equipos y administradores declaran
+bottomInset none y reserva propia en su scroll. Los documentos legales tienen
+bottomInset none y padding propio, y requieren una revisión distinta del
+inset nativo; no se clasifican como la misma franja fija del padre.
+
+Las tres integraciones anteriores de evidencia cierran CI con éxito:
+`fd4f83d` ([37946222813](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37946222813)),
+`d1c83e3` ([37947317466](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37947317466)) y
+`03ed43c` ([37958638867](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37958638867)).
+No se publica producción ni se repite un gate nativo con la misma matriz.
+
+Retrospectiva: localizar quién reserva el inset permite priorizar la siguiente
+pasada sin declarar una migración global terminada. Las ramas sin scroll y
+los paddings propios deben revisarse antes de trasladar la reserva.
