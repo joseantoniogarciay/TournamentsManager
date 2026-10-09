@@ -15,6 +15,7 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 type Props = PropsWithChildren<{
   accessibilityLabel?: NativeTextProps["accessibilityLabel"];
+  allowFontScaling?: NativeTextProps["allowFontScaling"];
   accessibilityRole?: NativeTextProps["accessibilityRole"];
   variant?: "body" | "bodyLarge" | "caption" | "title" | "display";
   color?: "primary" | "secondary" | "inverse" | "onBrand" | "error" | "success";
@@ -26,6 +27,7 @@ type Props = PropsWithChildren<{
 
 export function Text({
   accessibilityLabel,
+  allowFontScaling,
   accessibilityRole,
   children,
   variant = "body",
@@ -52,6 +54,7 @@ export function Text({
       // Commit a native prop update without remounting text or changing its scaling.
       nativeID={Platform.OS === "ios" ? `${textId}-${fontScale}` : undefined}
       accessibilityLabel={accessibilityLabel}
+      allowFontScaling={allowFontScaling}
       accessibilityRole={accessibilityRole}
       numberOfLines={numberOfLines}
       onPress={onPress}

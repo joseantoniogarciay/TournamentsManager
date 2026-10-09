@@ -280,10 +280,15 @@ export default function TournamentStandingsScreen() {
                   <View style={styles.tableColumns}>
                     <View style={styles.leftColumn}>
                       <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                        <Text color="secondary" style={styles.position}>
+                        <Text allowFontScaling={false} color="secondary" style={styles.position}>
                           {t("league_standings_position")}
                         </Text>
-                        <Text color="secondary" numberOfLines={1} style={styles.team}>
+                        <Text
+                          allowFontScaling={false}
+                          color="secondary"
+                          numberOfLines={1}
+                          style={styles.team}
+                        >
                           {t("league_standings_team")}
                         </Text>
                       </View>
@@ -322,7 +327,7 @@ export default function TournamentStandingsScreen() {
                     </View>
                     <View style={styles.pointsColumn}>
                       <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                        <Text color="secondary" style={styles.points}>
+                        <Text allowFontScaling={false} color="secondary" style={styles.points}>
                           {t("league_standings_points")}
                         </Text>
                       </View>
@@ -343,8 +348,10 @@ export default function TournamentStandingsScreen() {
                           key={standing.teamId}
                           style={[styles.row, { borderColor: colors.border.default }]}
                         >
-                          <Text style={styles.position}>{standing.position}</Text>
-                          <Text numberOfLines={1} style={styles.team}>
+                          <Text allowFontScaling={false} style={styles.position}>
+                            {standing.position}
+                          </Text>
+                          <Text allowFontScaling={false} numberOfLines={1} style={styles.team}>
                             {teams.get(standing.teamId) ?? ""}
                           </Text>
                         </View>
@@ -396,7 +403,7 @@ export default function TournamentStandingsScreen() {
                           key={standing.teamId}
                           style={[styles.row, { borderColor: colors.border.default }]}
                         >
-                          <Text style={styles.points} variant="title">
+                          <Text allowFontScaling={false} style={styles.points} variant="title">
                             {standing.points}
                           </Text>
                         </View>
@@ -460,7 +467,7 @@ function StatisticsHeader({ sport }: { sport: PublicTournament["sport"] }) {
   return (
     <View style={styles.statisticsRow}>
       {keys.map((key) => (
-        <Text key={key} color="secondary" style={styles.stat}>
+        <Text allowFontScaling={false} key={key} color="secondary" style={styles.stat}>
           {t(key)}
         </Text>
       ))}
@@ -513,7 +520,7 @@ function StatisticsValues({
   return (
     <View style={styles.statisticsRow}>
       {values.map((value, index) => (
-        <Text key={index} style={styles.stat}>
+        <Text allowFontScaling={false} key={index} style={styles.stat}>
           {value}
         </Text>
       ))}

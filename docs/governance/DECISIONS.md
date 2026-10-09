@@ -244,3 +244,12 @@ compatibles dentro de los rangos actuales, manteniendo ADR-0138 y ADR-0015.
 No se autoriza saltar siete días, migrar SDK/React/RN minor ni aplicar los dos
 parches Android rechazados en ADR-0152. La revisión técnica recoge versiones,
 compatibilidad, retirada del parche Metro y validaciones.
+
+## Clasificación compacta y tamaño fijo — 2026-10-09
+
+[ADR-0153](../adr/0153-keep-standings-table-at-a-fixed-text-size.md), aceptado
+por decisión explícita del usuario: conservar usable y compacta la tabla sin
+que sus celdas crezcan con el tamaño de texto del sistema. Sustituye la propuesta
+de desplazar la tabla completa con texto ampliado. La excepción afecta solo a
+encabezados, posiciones, equipos, estadísticas y puntos; título, ayuda, grupos
+y reglas conservan el escalado. No altera los datos ni el contrato HTTP.

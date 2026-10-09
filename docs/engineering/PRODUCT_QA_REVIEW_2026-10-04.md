@@ -5195,3 +5195,35 @@ El QA restante y la tabla ampliada continúan abiertos.
 Retrospectiva: alinear filas y garantizar espacio legible son requisitos
 separados. Una prueba que descubre el segundo límite debe detener la integración
 del ensayo y preparar una decisión concreta, sin ocultarlo detrás de checks verdes.
+
+### 2026-10-09 — Tabla compacta por decisión explícita del usuario
+
+La instrucción «La tabla de clasificación no puede ser tan accesible, la dejamos
+usable pero que no crezca con texto porque va a reventar» sustituye la propuesta
+anterior de ADR-0153. El ADR queda aceptado con tamaño fijo exclusivamente en
+las celdas. Se añade una prop optativa a Text; el resto conserva el default
+nativo. No se implementan alturas compartidas ni una nueva rama de scroll.
+
+Evidencia nativa: development build local en iPhone 17/iOS 27, sesión
+qa_visual_player, liga de equipos con acentos y nombres largos. Tras recarga
+completa de Metro, Text Size 3 y 11 conservan tamaño y correspondencia de filas:
+posiciones 1/1/3 y puntos 3/3/0. Se recorre el scroll horizontal con cabecera
+sincronizada hasta PE/PP/GF/GC/DG (última fila 0/2/0/6/-6), equipos y puntos
+fijos, y se vuelve a PJ/PG con tamaño máximo. Un gesto corto que empieza y
+termina dentro del área de estadísticas da evidencia estable; los primeros
+gestos largos no confirmaron el desplazamiento y no se contaron como éxito.
+Título y ayuda se amplían. El diálogo de reglas se abre con texto ampliado y
+se cierra con Ok; se restaura Text Size 3. Las capturas están en la conversación,
+sin archivo PNG nuevo exportado.
+
+Validación: typecheck, ESLint de los dos archivos modificados y exportación web
+correctos; salida y log en /private/tmp/tm-product-qa-20261004/ con prefijo
+fixed-standings-web-20261009. Checklist cliente: textos/locales existentes,
+tokens, márgenes y controles nativos conservados; sin operación OpenAPI tocada.
+La exportación no certifica interacción web. Android y lector siguen pendientes.
+El QA global no queda cerrado por esta pasada.
+
+Retrospectiva: separar la decisión de densidad de tabla de la adaptación del
+resto de la pantalla reduce el cambio y evita un layout paralelo. La limitación
+visual del texto fijo queda explícita en ADR-0153. Al finalizar se apagan Metro
+y servicios dev conservando volúmenes; no se activa observabilidad.

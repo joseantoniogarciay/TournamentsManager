@@ -178,6 +178,11 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   mantiene jerarquía frente a los equipos sin forzar el alto de la card ni
   recortar los glifos. `display` queda para títulos y resultados destacados
   fuera de una fila compacta. Véase ADR-0096.
+- **Clasificación:** según [ADR-0153](../adr/0153-keep-standings-table-at-a-fixed-text-size.md),
+  solo las celdas (encabezados, posición, equipo, estadísticas y puntos) usan
+  `allowFontScaling={false}` para conservar la tabla compacta. Text mantiene el
+  escalado nativo por defecto. Título, ayuda de scroll, grupos y reglas siguen
+  escalando; no se introduce un límite global de accesibilidad.
 - **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base.
   Cada card reserva siempre 20 px de margen exterior horizontal y los layouts
   dejan 20 px entre cards, sin alterar su padding interno.

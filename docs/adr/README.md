@@ -57,4 +57,4 @@ Usa [template.md](template.md) y el
 
 - [ADR-0152: Corregir errores en recursos Android generados por Expo](0152-correct-expo-generated-android-lint-errors.md) — Aceptado; esperar versiones corregidas de Expo.
 
-- [ADR-0153: Desplazar la tabla completa cuando no quepan las columnas fijas](0153-scroll-the-whole-standings-table-when-fixed-columns-do-not-fit.md) — Propuesto; pendiente de decisión explícita.
+- [ADR-0153: Tamaño fijo de las celdas de clasificación](0153-keep-standings-table-at-a-fixed-text-size.md) — Aceptado; excepción localizada al escalado de texto.

@@ -5666,3 +5666,15 @@ palabra autorizado sin cambiar su tamaño ni mostrar un guion permanente;
 requiere comprobar la cabecera tras recarga y cambios de tamaño. La medición
 invisible puede remontarse con su clave de contexto sin remontar controles
 visibles ni desplazar el foco.
+
+### 2026-10-09 — Excepción localizada de escalado en clasificación
+
+Una tabla con columnas fijas puede perder correspondencia entre filas cuando
+solo algunos textos crecen; compartir alturas no resuelve la falta de ancho.
+Comparar una tabla desplazable completa con una excepción de escalado permite
+que el usuario decida el coste en densidad y lectura. ADR-0153 acepta tamaño
+fijo solo en las celdas de clasificación. Text expone allowFontScaling como prop
+optativa y mantiene el default nativo para el resto; no convertir esta excepción
+en una política global. Verificar datos, cabecera sincronizada y ambos extremos
+del scroll, además de que título, ayuda y reglas sigan ampliándose. Restaurar
+ajustes y apagar servicios al cerrar la sesión.
