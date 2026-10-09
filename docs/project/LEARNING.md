@@ -5592,3 +5592,12 @@ La comprobación final con cambio 3 → 11 en una pantalla montada muestra el
 último botón completo tras desplazar el formulario; su acción vacía conserva
 la validación localizada de ambos campos. Captura y AX se complementan, pero
 no sustituyen la prueba de lectura y navegación con VoiceOver.
+
+### 2026-10-09 — Evidencia de navegación con VoiceOver
+
+Los gestos horizontales con VoiceOver activo muestran avance del foco y scroll
+automático hasta el botón final a tamaño 11, aunque AX no cambie. La vuelta
+hasta Cerrar acredita navegación inversa. Un doble clic del canal puede actuar
+sobre un punto distinto del foco; no equivale a activar ese foco con el lector.
+Separar navegación, activación, edición y locución evita declarar accesibilidad
+completa a partir de una captura o una acción instrumental.

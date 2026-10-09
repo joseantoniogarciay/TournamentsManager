@@ -4827,3 +4827,45 @@ global continúan abiertos.
 Retrospectiva: la prueba en caliente acredita el último control después de
 la nueva medición de texto. Combinar captura y validación local permite
 comprobar su lectura y acción sin introducir datos ni depender de servicios.
+
+#### 2026-10-09 — VoiceOver: foco y scroll de Crear torneo
+
+Development build instalada en iPhone 17, iOS 27.0, con JavaScript de
+`fd4f83d` y Metro local. API, PostgreSQL y observabilidad permanecen apagados.
+VoiceOver se activa temporalmente en Device Hub. En Inicio, gestos horizontales
+avanzan el rectángulo de foco desde título a descripción y Crear torneo.
+En el formulario avanzan por cabecera, Deporte y los deportes en orden.
+
+El foco está en Tenis al cambiar Text Size 3 → 11 con la vista montada:
+permanece en ese control y el layout recompone el contenido. Pádel está
+seleccionado por una pulsación del canal, sin introducir nombres. Los gestos
+del lector continúan por Voleibol, Tenis de mesa, Bádminton, Pádel, explicación
+de sets, etiqueta y campo del torneo, sección y ayuda del participante,
+etiqueta y campo del participante y botón final. VoiceOver desplaza el
+formulario automáticamente al alcanzar contenido fuera del viewport.
+El botón completo queda enfocado y visible a 11. El gesto inverso alcanza el
+campo anterior y la navegación inversa completa alcanza Cerrar nativo.
+
+Evidencia privada en el directorio habitual:
+`ios-voiceover-create-bottom-focus-size11-20261009.png`,
+`ios-voiceover-create-reverse-field-size11-20261009.png` y
+`ios-voiceover-create-close-focus-size11-20261009.png`.
+Las capturas del canal durante el recorrido corroboran los focos intermedios.
+No se acredita locución, escritura con lector ni activación por doble toque:
+un doble clic de CUA en otro punto cambió Pádel mientras el foco seguía en
+Tenis. Por eso las pulsaciones del canal no se equiparan a la activación
+del elemento enfocado. Esto acota también la evidencia de apertura del
+formulario de esta pasada; la navegación por gesto sí muestra avance real.
+No se infiere un defecto de activación del producto por esa diferencia.
+
+Se restaura Text Size 3 y VoiceOver off; Capture Keyboard continúa off y se
+conserva el volumen original. Cerrar vuelve a Inicio sin guardar ni enviar.
+Metro y la app se terminan, conservando el simulador previamente arrancado.
+No cambia implementación ni se repiten los gates de código ya aprobados.
+Producción sigue apagada por la decisión previa del usuario. El inventario
+global conserva locución, activación/edición con lector, otras rutas y gates
+Android pendientes.
+
+Retrospectiva: un árbol AX estable puede coexistir con foco y scroll reales
+del lector. Sus capturas permiten acreditar navegación; una pulsación enviada
+por instrumentación no demuestra por sí sola activación VoiceOver.
