@@ -5687,3 +5687,12 @@ relación entre equipo y puntos. Reducir la altura del navegador sirve para
 alcanzar el último resultado de una búsqueda, pero no sustituye pruebas con
 teclado y safe area nativos. Esperar el estado final de una búsqueda antes de
 juzgarla; registrar por separado instrumentos que no aplican zoom.
+
+### 2026-10-10 — Evidencia de navegación con lector
+
+El número de gestos enviados no demuestra dónde está el foco: comprobar su
+rectángulo al llegar a título, campo, primer y último resultado. Un cambio
+de escala puede reubicarlo al remontar un título adaptado; volver a recorrer
+la pantalla y contrastar foco con porcentaje de scroll acredita alcance.
+Conservar por separado la evidencia de locución, activación y teclado visible:
+un recorrido completo de VoiceOver no certifica esas tres condiciones.

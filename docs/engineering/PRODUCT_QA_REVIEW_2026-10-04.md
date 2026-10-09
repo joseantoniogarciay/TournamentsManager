@@ -5464,3 +5464,44 @@ Retrospectiva: el límite explícito del navegador debe registrarse como límite
 de cobertura. La recuperación del panel y el arranque del emulador no prueban
 la recarga de JavaScript; esa evidencia requiere observar el bundle actual
 antes de certificar comportamiento Android.
+
+
+### 2026-10-10 — VoiceOver en búsquedas de administradores y transferencia
+
+Sobre a6d368b, Android Studio devuelve cgWindowNotFound al recuperar su ventana,
+aunque el inventario lo muestra abierto. Se solicita al usuario cerrar y abrir
+el IDE con el Pixel acoplado. No se añade ningún túnel ni se acredita Android
+actual en esta pasada. Device Hub sí responde y permite continuar en iOS.
+
+Se arranca Metro y dev sin observabilidad. Reload del menú Expo recarga iPhone
+17/iOS 27; Metro confirma bundle iOS de 1.674 módulos. La sesión ficticia
+qa_visual_player y su torneo QA formulario table_tennis se conservan. Añadir
+administrador permite introducir qa_ mediante Capture Keyboard y carga ocho
+candidatos. VoiceOver recorre Cerrar, título, campo y primer candidato. Text
+Size 11 conserva la consulta y el foco del primer resultado, cuyo nombre
+se distribuye en tres líneas. Siete gestos siguientes alcanzan el último
+candidato, completo en dos líneas, con rectángulo de foco y margen inferior.
+No se selecciona ninguna cuenta. Cerrar regresa a la lista sin delegados.
+
+Transferir carga los mismos ocho destinatarios. A Text Size 3, VoiceOver
+enfoca el aviso de pérdida de permisos antes del campo. Cambiar a 11 vuelve
+a enfocar el título adaptado; el aviso conserva su texto en AX. Los gestos
+avanzan por aviso, campo y primer candidato, llevando el scroll al 25 %.
+Siete gestos siguientes alcanzan el último destinatario completo, con foco,
+y la barra AX marca 100 %. No se selecciona destinatario ni se transfiere.
+La evidencia acredita foco y desplazamiento; no locución, activación de
+candidatos ni oclusión por teclado, que sigue oculto en pantalla.
+
+Se restauran Text Size 3, VoiceOver off y Capture Keyboard off, confirmados
+en AX. Cerrar vuelve al torneo y su menú conserva Administradores, Transferir
+y Cancelar; se vuelve a Home. Metro y API/PostgreSQL/Mailpit se apagan
+conservando volúmenes. Se restaura el único archivo generado por Expo. No se
+modifica implementación ni se repiten checks de código. Evidencia AX y visual
+en la conversación, sin PNG exportado. El QA global sigue abierto: Android
+actual, teclado visible, locución/otras rutas y zoom autenticado permanecen
+pendientes; el cierre del IDE/Pixel del bloqueo anterior no se puede confirmar.
+
+Retrospectiva: verificar el rectángulo de foco entre etapas evita deducir la
+navegación solo del número de gestos enviados. Un cambio de escala puede
+reubicar el foco cuando el título adaptado se remonta; comprobar nuevamente
+el recorrido permite distinguir esa transición del acceso a los resultados.
