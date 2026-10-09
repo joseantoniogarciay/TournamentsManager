@@ -5372,3 +5372,53 @@ verificar navegación aunque las notificaciones tengan texto repetido. Un árbol
 AX con controles separados no certifica su locución o activación. El bloqueo del
 host interrumpe la evidencia UI y requiere recuperar acceso antes de juzgar
 Android o zoom.
+
+
+### 2026-10-09 — Zoom web real en Safari tras recuperar el host
+
+Tras el desbloqueo manual del usuario se retoma Metro y dev sin observabilidad.
+Safari abre una pestaña temporal de localhost:8082 sin sesión. Visualización /
+Ampliar cambia la presentación y Menú de página confirma 115 %. Su selector
+permite fijar 200 %, porcentaje explícitamente observado en AX. Home y Crear
+torneo se recomponen a ese zoom: título, deportes, campos, ayudas y botón final
+se ven completos en la ventana de 1.440 × 1.410, sin solapamientos observados.
+
+La revisión automática rechaza pulsar Inicia sesión para crearlo por la posible
+apertura de autenticación. No se reintenta ni se elude ese rechazo. Enfocar cada
+campo vacío y abandonarlo verifica sus dos errores localizados; se ven completos
+y sus respectivas etiquetas AX incluyen el mensaje. No se introduce dato, se
+inicia sesión ni se crea torneo. Cerrar vuelve a Home; el selector confirma
+restauración al 100 % y se cierra solo la pestaña temporal, conservando la previa.
+Se cierra también la pestaña temporal del navegador integrado.
+
+Esta evidencia cierra zoom del 200 % en Home y Crear torneo para esta ventana
+y navegador; no certifica clasificación, vistas autenticadas ni reflow del 400 %.
+Capturas y estados en la conversación, sin PNG exportado. No cambia implementación.
+
+Retrospectiva: confirmar el porcentaje en el navegador evita equiparar viewport
+reducido a zoom. La validación al perder foco permite observar errores sin entrar
+en autenticación ni accionar un envío.
+
+
+Android tras el desbloqueo: Running Devices muestra la build instalada y Home
+con sesión ficticia. Abrir el torneo muestra el mensaje común de conexión;
+reverse --list está vacío y EXPO_PUBLIC_API_BASE_URL apunta a localhost:8080.
+Se añade únicamente reverse tcp:8080 y Reintentar carga el torneo. Se añade
+tcp:8082 para recargar Metro. Abrir el menú Expo funciona en el panel integrado,
+pero la ventana separada de Running Devices aporta una captura del teléfono
+mientras los clics posteriores se dirigen al IDE principal. No se confirma
+Reload ni bundle Android de la revisión actual. Los controles Dock y los menús
+no recuperan un control fiable; se solicita al usuario acoplar manualmente.
+No se modifica la app por un problema del instrumento. La búsqueda Android con
+teclado y la clasificación actual permanecen sin acreditar.
+
+Al cerrar esta tanda se retiran exclusivamente los reverses tcp:8080 y tcp:8082;
+la lista vuelve a estar vacía. Device Manager muestra Shutting down y después
+el Pixel sin indicador activo, con Play disponible. Se cierra Android Studio y
+se confirma ausencia de ventanas tras aceptar terminar sus tareas de indexación.
+No se cambia el escalado Android, TalkBack ni datos del emulador. iOS conserva
+Text Size 3, VoiceOver y Capture Keyboard apagados. La comprobación adicional
+del menú View de Device Hub no ofrece control de teclado en pantalla. Metro y
+API/PostgreSQL/Mailpit quedan apagados, sin tareas de dev activas. El QA global
+continúa abierto: lectores de otras rutas/locución, teclado visible, Android
+actual y zoom de clasificación/vistas autenticadas requieren otra pasada.
