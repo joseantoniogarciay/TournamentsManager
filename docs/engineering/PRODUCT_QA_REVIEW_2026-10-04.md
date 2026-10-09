@@ -5422,3 +5422,45 @@ del menú View de Device Hub no ofrece control de teclado en pantalla. Metro y
 API/PostgreSQL/Mailpit quedan apagados, sin tareas de dev activas. El QA global
 continúa abierto: lectores de otras rutas/locución, teclado visible, Android
 actual y zoom de clasificación/vistas autenticadas requieren otra pasada.
+
+
+### 2026-10-10 — Safari al 300 % y recuperación parcial del Pixel
+
+Sobre 4451e08, se retoma la sesión autorizada después del desbloqueo manual.
+Safari abre una pestaña temporal de localhost:8082, sin sesión. El selector
+de página confirma 300 %; es su última opción y Visualización / Ampliar queda
+deshabilitado. Esta pasada no acredita 400 %.
+
+En la captura de 2.880 × 2.100 píxeles, Home conserva título, descripción,
+Crear torneo y tabs sin recortes horizontales observados. Crear torneo conserva
+título y cierre, y los ocho deportes se distribuyen en tres filas. Enfocar
+los campos desplaza el contenido hasta ellos; abandonar cada campo vacío
+muestra su error localizado y lo incorpora a su etiqueta AX. Se observan
+completos ambos errores y el botón final, con borde y separación inferior.
+No se introduce dato ni se acciona autenticación o creación. Se restaura
+100 %, se confirma en el selector y se cierra únicamente la pestaña temporal.
+La evidencia queda en las capturas y estados de la conversación, sin PNG
+exportado. Clasificación y vistas autenticadas con zoom siguen pendientes.
+
+Android Studio devuelve noWindowsAvailable en los clics por coordenadas del
+gestor. Running Devices permite abrir la lista del AVD existente mediante AX;
+tras elevar el selector y usar teclado, el Pixel arranca. Dock consigue
+acoplarlo al IDE. La captura muestra el torneo ficticio conservado y el menú
+Expo con Reload. Se añaden únicamente los reverses tcp:8080 y tcp:8082, cuya
+lista inicial estaba vacía. Pulsar Reload por coordenadas vuelve a fallar
+con noWindowsAvailable; Metro no registra bundle Android. No se acredita
+versión actual, búsqueda con teclado ni clasificación Android. Se solicita
+ayuda manual para el arranque; no se modifica código por este fallo de control.
+
+Metro y API/PostgreSQL/Mailpit quedan apagados, conservando volúmenes y sin
+observabilidad. Se retiran los dos reverses temporales y se restaura el único
+cambio generado por Expo en expo-env.d.ts. Al intentar cerrar el IDE, AX deja
+de ofrecer controles y getApp termina en timeoutReached: el cierre del Pixel
+y Android Studio queda pendiente de intervención manual. No se modifica
+escalado, lector ni datos del emulador. No hay cambios de implementación ni
+se repiten checks de código. El QA global permanece abierto.
+
+Retrospectiva: el límite explícito del navegador debe registrarse como límite
+de cobertura. La recuperación del panel y el arranque del emulador no prueban
+la recarga de JavaScript; esa evidencia requiere observar el bundle actual
+antes de certificar comportamiento Android.
