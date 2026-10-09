@@ -56,3 +56,5 @@ Usa [template.md](template.md) y el
 - [ADR-0151: Títulos iOS adaptables al espacio real](0151-reflow-ios-entity-titles-for-accessibility.md) — Aceptado.
 
 - [ADR-0152: Corregir errores en recursos Android generados por Expo](0152-correct-expo-generated-android-lint-errors.md) — Aceptado; esperar versiones corregidas de Expo.
+
+- [ADR-0153: Desplazar la tabla completa cuando no quepan las columnas fijas](0153-scroll-the-whole-standings-table-when-fixed-columns-do-not-fit.md) — Propuesto; pendiente de decisión explícita.

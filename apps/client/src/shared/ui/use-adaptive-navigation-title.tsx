@@ -52,6 +52,7 @@ export function useAdaptiveNavigationTitle(title: string | undefined, emphasized
           style={[styles.measurement, { width: maxWidth }]}
         >
           <Text
+            key={measurementKey}
             onTextLayout={({ nativeEvent: { lines } }) => {
               const height = lines.reduce(
                 (bottom, line) => Math.max(bottom, line.y + line.height),

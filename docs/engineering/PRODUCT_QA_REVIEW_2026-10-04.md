@@ -5146,3 +5146,52 @@ transferencias o credenciales. Producción y observabilidad no se activan.
 Retrospectiva: revalidar el gesto tras una corrección cierra una evidencia
 específica, no toda la matriz. En una tabla dividida en columnas, ampliar texto
 debe mantener la relación entre entidad y valores además de permitir scroll.
+
+
+#### 2026-10-09 — Corte silábico autorizado y límite de columnas fijas
+
+El usuario acepta «Permitir corte silábico» para el título de Notificaciones.
+Los cuatro catálogos incorporan un guion opcional Unicode en notifications_title;
+se conserva la palabra, escala, navegación y las claves existentes. El guion no
+se muestra a tamaño normal. La medición invisible de la cabecera iOS se renueva
+mediante su key al cambiar título, ancho, tamaño o énfasis; no se remonta la
+cabecera visible ni se altera el foco de controles. Conserva medición de líneas
+y la comparación de altura de ADR-0151.
+
+En iPhone 17/iOS 27 Debug, después de recargar el código y recorrer Cuenta →
+Notificaciones, Text Size 11 muestra el título completo con corte silábico
+«Notificacio- / nes», sin dejar la «s» aislada. Abrir el torneo desde el cuerpo
+funciona y su nombre largo se lee debajo de la barra a tamaño máximo; restaurar
+Text Size 3 lo devuelve a la barra. Las capturas constan en esta conversación;
+no se exportan PNG adicionales. No se acredita locución de VoiceOver ni los
+otros tres locales o Android con el guion opcional.
+
+Un ensayo de tabla comparte alturas medidas por fila y amplía los anchos de
+celdas. La muestra a tamaño 11 mantiene alineados equipos y valores, pero deja
+un viewport de estadísticas ilegible y el nombre demasiado estrecho. Restaurar
+el tamaño recupera las alturas normales. El ensayo no pasa QA ni se integra:
+se conserva en el archivo privado standings-measured-rows-draft-20261009.tsx,
+en /private/tmp/tm-product-qa-20261004/, y se restaura standings.tsx al código
+integrado. No se presenta la desalineación anterior como resuelta en develop.
+
+ADR-0153 propone desplazar la tabla completa únicamente cuando el espacio no
+permita columnas fijas y una estadística legible. Se solicita decisión explícita;
+la alternativa de cards añade otra composición y más mantenimiento. La rama
+adaptativa no se implementa mientras el ADR siga Propuesto, según AGENTS.md.
+El título sí es una corrección de copy ya autorizada y dentro de ADR-0151.
+
+Preflight: manifiesto, baseline cerrado, reglas cliente, ADR-0054/0055/0056 y
+0151, diseño, arquitectura y desarrollo revisados. Cierre de checklist: textos
+en los cuatro catálogos, sin medidas nuevas, reducción de escalado, librerías,
+controles, navegación, sesión, operaciones HTTP ni reglas de negocio nuevas.
+La key solo afecta a la medición invisible y conserva su exclusión de
+accesibilidad. Typecheck, lint, Prettier y exportación web del estado final pasan.
+
+Se restaura Text Size 3 y se conservan VoiceOver/Capture Keyboard apagados.
+Metro y API/PostgreSQL/Mailpit se apagan, conservando volúmenes y el simulador
+preexistente. No se activa observabilidad ni producción; no se borran datos.
+El QA restante y la tabla ampliada continúan abiertos.
+
+Retrospectiva: alinear filas y garantizar espacio legible son requisitos
+separados. Una prueba que descubre el segundo límite debe detener la integración
+del ensayo y preparar una decisión concreta, sin ocultarlo detrás de checks verdes.

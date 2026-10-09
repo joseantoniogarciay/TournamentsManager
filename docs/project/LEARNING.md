@@ -5655,3 +5655,14 @@ una tabla debe comprobar la correspondencia entre entidad y valores, además
 del desplazamiento y acceso al extremo final. Una altura común por fila y
 anchos compatibles con el escalado son una corrección más acotada que sustituir
 la tabla; esa recomendación aún requiere implementación y revalidación.
+
+
+### 2026-10-09 — Distinguir alineación y espacio legible
+
+Una altura compartida puede alinear filas y seguir dejando una columna sin
+ancho suficiente. Comprobar el viewport real tras ampliar celdas evita cerrar
+un arreglo incompleto. El guion opcional en un catálogo permite un corte de
+palabra autorizado sin cambiar su tamaño ni mostrar un guion permanente;
+requiere comprobar la cabecera tras recarga y cambios de tamaño. La medición
+invisible puede remontarse con su clave de contexto sin remontar controles
+visibles ni desplazar el foco.
