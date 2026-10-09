@@ -5296,3 +5296,39 @@ Retrospectiva: entrada por teclado del host y teclado visible son evidencias
 separadas. Un gesto que mueve Administradores no certifica Transferir, donde
 el aviso ampliado cambia la zona inicial del recorrido; conservar el caso abierto
 hasta aislar el comportamiento evita una corrección especulativa.
+
+
+### 2026-10-09 — Cierre del alcance de resultados en Transferir iOS ampliado
+
+Sobre abc566b, mismo iPhone 17/iOS 27, sesión y torneo ficticios. Se añaden
+trazas temporales de dimensiones y offset, sin consulta ni datos de usuarios,
+para aislar el caso anterior. La recarga de desarrollo deja una pantalla negra;
+Reload y Go home del menú de Expo no recuperan la interfaz. Cerrar Fast Tourney
+Local mediante la acción del selector de apps y abrirla de nuevo restaura Home
+con sesión y actividad reciente. Se registra como incidencia de la sesión de
+desarrollo, sin atribuirla a Transferir ni certificar una causa de producto.
+
+Transferir con qa_ vuelve a cargar ocho resultados. A Text Size 11, el contenido
+mide aproximadamente 2.310 puntos y el viewport 562. El scroll del instrumento
+sobre el aviso no genera eventos. Un arrastre ascendente desde el margen izquierdo
+sí genera offsets y un rebote muy grande; tras estabilizarse alcanza aproximadamente
+1.748 puntos, el final del contenido. Se observan el último candidato completo en
+dos líneas, el separador y margen inferior. El título permanece completo bajo la
+barra. Se retiran las tres trazas y se comprueba que la misma presentación final
+se conserva. El caso abierto de alcance de resultados queda cerrado para este
+simulador sin modificar el layout; no se acredita el comportamiento de todos los
+gestos ni del teclado visible.
+
+Text Size vuelve a 3, Capture Keyboard y VoiceOver permanecen apagados. Cerrar
+regresa al torneo con las acciones del creador y se vuelve a Home. No se selecciona
+ninguna cuenta ni se cambia la propiedad. Evidencia visual y medidas en la
+conversación, sin PNG exportado. Solo queda documentación versionada; no se
+repiten checks de código al haber retirado íntegramente la instrumentación.
+Metro y API/PostgreSQL/Mailpit se apagan al cerrar, conservando volúmenes y sin
+activar observabilidad. Android, lectores, teclado visible y zoom web siguen
+pendientes; el QA global continúa en curso.
+
+Retrospectiva: dimensiones correctas no prueban por sí solas interacción. Los
+eventos de offset permiten distinguir un gesto no entregado de un scroll real;
+el gran rebote del instrumento exige esperar a su estabilización antes de juzgar
+el alcance. No se introduce una corrección de layout sin defecto confirmado.
