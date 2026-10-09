@@ -5260,3 +5260,39 @@ un viewport bajo no acredita teclado ni safe area de iOS o Android.
 Retrospectiva: la exportación web anterior solo probaba construcción. El scroll
 real confirma sincronización y alcance de columnas; una ventana baja comprueba
 alcance del último resultado sin atribuirle evidencia de teclado móvil.
+
+### 2026-10-09 — Búsquedas iOS y límite de evidencia con teclado
+
+Sobre a2d8e00, iPhone 17/iOS 27 development build local y sesión ficticia
+conservada. Se recarga Metro y se abre el torneo propio QA formulario table_tennis
+por Actividad reciente. Administradores muestra el vacío y Añadir abre el campo
+con foco y ayuda de mínimo. Capture Keyboard permite introducir qa_ y carga
+los ocho resultados. El teclado en pantalla permanece oculto; los controles
+visibles de Device Hub no ofrecen una opción para mostrarlo y el instrumento
+no encuentra la app Simulator. No se acredita oclusión por teclado.
+
+En Añadir administrador, Text Size 11 conserva la consulta, coloca el título
+completo bajo la barra y permite alcanzar el último resultado. Tras estabilizar
+el rebote se ven sus dos líneas completas, borde y separación inferior. Text
+Size 3 restaura presentación normal y Cerrar vuelve a la lista sin delegados.
+No se selecciona cuenta ni se concede permiso.
+
+Transferir muestra aviso y ayuda; qa_ carga ocho destinatarios. Se ven completos
+a Text Size 3 y 7. A tamaño 11, el aviso ocupa el viewport y los gestos sobre
+texto, margen y borde inferior no permiten confirmar acceso a los resultados.
+Terminar edición con Return y repetir el cambio 3→11 no cierra esa evidencia.
+El caso permanece abierto: no se atribuye aún a código ni al instrumento, y no
+se modifica el layout por una causa no aislada. Cerrar funciona y conserva
+las acciones del creador. No se selecciona destinatario ni se transfiere.
+
+Capturas y estados observados en la conversación; sin PNG adicional exportado.
+Se restauran Text Size 3, Capture Keyboard off y VoiceOver off; se sale a Home.
+Metro y API/PostgreSQL/Mailpit se apagan conservando volúmenes; sin observabilidad
+ni producción. No cambia implementación, por lo que no se repiten checks del
+cliente ya aprobados. Android, lectores, teclado visible y transferencia iOS
+ampliada siguen pendientes. El QA global continúa en curso.
+
+Retrospectiva: entrada por teclado del host y teclado visible son evidencias
+separadas. Un gesto que mueve Administradores no certifica Transferir, donde
+el aviso ampliado cambia la zona inicial del recorrido; conservar el caso abierto
+hasta aislar el comportamiento evita una corrección especulativa.
