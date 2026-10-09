@@ -4799,3 +4799,31 @@ Gate final: `make verify` pasa. Integración PostgreSQL local omitida por no
 definir TM_INTEGRATION_DATABASE_URL; no se presenta como ejecutada localmente.
 El commit anterior de Dynamic Type `ebb6649` cerró CI con éxito en
 [run 37939253169](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37939253169).
+
+#### 2026-10-09 — Cierre visual del safe area a tamaño 11
+
+Se carga el commit `456d9a3` en la development build instalada del simulador
+iPhone 17 (iOS 27.0), sin arrancar API ni PostgreSQL. Desde Crear torneo a
+Text Size 3 se cambia a 11 con la pantalla montada y se desplaza el formulario
+en la ventana compacta de Device Hub. La captura privada
+`accessibility-create-safe-area-bottom-live11-20261009.png` acredita el botón
+«Inicia sesión para crearlo» completo, con sus dos líneas dentro de la
+superficie y separación inferior. Cierra la comprobación visual pendiente
+tras el ajuste del safe area; no certifica VoiceOver ni todas las rutas.
+
+Pulsar el botón con los campos vacíos muestra los dos errores localizados;
+las etiquetas AX de los campos incluyen su respectivo mensaje. No se inicia
+sesión ni se crea un torneo. Cerrar vuelve a Inicio y se restaura Text Size 3.
+VoiceOver y captura de teclado permanecen apagados; el simulador ya estaba
+arrancado al comenzar esta comprobación y se conserva así. Metro y la app se
+terminan. Dev, observabilidad y producción no se arrancan.
+
+CI del cambio `456d9a3` termina correctamente en
+[run 37944204703](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37944204703).
+Esta fase añade evidencia y documentación, sin cambios de implementación.
+Los bloqueos Android de ADR-0152 y los recorridos pendientes de la matriz
+global continúan abiertos.
+
+Retrospectiva: la prueba en caliente acredita el último control después de
+la nueva medición de texto. Combinar captura y validación local permite
+comprobar su lectura y acción sin introducir datos ni depender de servicios.

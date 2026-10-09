@@ -5587,3 +5587,8 @@ al borde y la separación final sigue disponible. La opción compartida es
 explícita para no duplicar la reserva específica de tabs. Verificar por separado
 el alcance del viewport y la lectura del último control con texto ampliado;
 no confundir un gesto insuficiente del automatizador con un defecto del scroll.
+
+La comprobación final con cambio 3 → 11 en una pantalla montada muestra el
+último botón completo tras desplazar el formulario; su acción vacía conserva
+la validación localizada de ambos campos. Captura y AX se complementan, pero
+no sustituyen la prueba de lectura y navegación con VoiceOver.
