@@ -13,6 +13,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- Títulos iOS adaptables al espacio real (ADR-0151): permanecen en la barra
+  mientras quepan y se muestran completos debajo solo cuando lo necesitan,
+  conservando botones nativos y el tamaño de texto solicitado.
+
 - Análisis Go de tests restaurado en el gate: contextos explícitos, comprobación
   de cierres y errores envueltos; sin supresiones de linters.
 

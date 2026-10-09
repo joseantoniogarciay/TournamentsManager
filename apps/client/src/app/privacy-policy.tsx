@@ -64,7 +64,11 @@ export default function PrivacyPolicyScreen() {
           </Stack.Toolbar>
         ) : null}
       </Stack.Screen>
-      <Screen bottomInset="none" topInset="navigation-bar">
+      <Screen
+        navigationTitle={t("privacy_policy_title")}
+        bottomInset="none"
+        topInset="navigation-bar"
+      >
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Card>
             <View style={styles.intro}>

@@ -93,7 +93,11 @@ export default function AccountPasswordScreen() {
   };
 
   return (
-    <Screen bottomInset="none" topInset="navigation-bar">
+    <Screen
+      navigationTitle={t("account_password_change_title")}
+      bottomInset="none"
+      topInset="navigation-bar"
+    >
       <KeyboardAwareScrollView
         contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
       >

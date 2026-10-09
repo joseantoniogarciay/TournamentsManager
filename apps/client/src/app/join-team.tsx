@@ -221,7 +221,11 @@ export default function JoinTeamScreen() {
           }}
         />
       ) : null}
-      <Screen bottomInset="safe-area" topInset="navigation-bar">
+      <Screen
+        navigationTitle={t("team_invitation_title")}
+        bottomInset="safe-area"
+        topInset="navigation-bar"
+      >
         {!initialized || isLoading ? (
           <LoadingTransition active message={t("common_loading")} />
         ) : loadError || !invitation ? (

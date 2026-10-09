@@ -5465,3 +5465,27 @@ completo y ningún linter desactivado. Las aserciones y escenarios se conservan.
 
 Validación: make verify y go test -race ./... aprobados; la integración
 PostgreSQL depende de CI mientras los entornos de sesión están apagados.
+
+
+## 2026-10-09 — Un título ampliado solo cambia de posición si no cabe
+
+ADR-0151 aceptado: comparar la medición del nombre completo con el ancho
+reservado y la altura real de navegación. El tamaño de texto no es un umbral
+de diseño: Equipos permanece arriba a tamaño 7 mientras el nombre largo de
+la ficha pasa debajo. Compartir medición y semántica con las rutas estáticas
+conserva comportamiento uniforme sin sustituir los botones de UIKit.
+
+Una función de headerTitle que devuelve null puede activar el título de ruta
+por defecto. Un View vacío y el título nativo vacío evitan ese fallback cuando
+el título visible pasa al contenido. La copia usada para medir debe quedar
+oculta a lectores y toques; no se duplica el nombre visible.
+
+El cambio de tamaño en caliente del inspector puede conservar cajas de
+contenido anteriores. Contrastar captura y arranque frío, declarar el límite
+y no atribuir por esa señal una causa a toda la plataforma. Las pruebas
+visuales no acreditan VoiceOver ni cada idioma. Android Lint sigue pendiente
+por fallo del analizador de scripts Kotlin; la traza adicional no lo corrige.
+
+Retrospectiva: medir el caso corto y el largo al mismo tamaño prueba la
+condición que importa. Compartir el arreglo evita excepciones por pantalla,
+pero no reemplaza el recorrido nativo de cada ruta.

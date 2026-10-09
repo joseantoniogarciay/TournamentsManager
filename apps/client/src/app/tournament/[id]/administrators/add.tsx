@@ -149,7 +149,7 @@ export default function AddTournamentAdministratorScreen() {
       {!usesLiquidGlassNavigation ? (
         <Stack.Screen options={{ headerLeft: () => closeButton }} />
       ) : null}
-      <Screen topInset="navigation-bar">
+      <Screen navigationTitle={t("league_add_administrator")} topInset="navigation-bar">
         <KeyboardAwareScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"

@@ -45,7 +45,11 @@ export default function ForgotPasswordScreen() {
     }
   };
   return (
-    <Screen bottomInset="none" topInset="navigation-bar">
+    <Screen
+      navigationTitle={t("password_recovery_title")}
+      bottomInset="none"
+      topInset="navigation-bar"
+    >
       <KeyboardAwareScrollView contentContainerStyle={{ paddingBottom: tabContentBottomPadding }}>
         <Card>
           <View style={styles.form}>

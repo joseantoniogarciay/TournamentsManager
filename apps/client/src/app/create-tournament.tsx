@@ -160,7 +160,11 @@ export default function CreateTournamentScreen() {
           }}
         />
       ) : null}
-      <Screen bottomInset="safe-area" topInset="navigation-bar">
+      <Screen
+        navigationTitle={t("league_create_title")}
+        bottomInset="safe-area"
+        topInset="navigation-bar"
+      >
         <KeyboardAwareScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}

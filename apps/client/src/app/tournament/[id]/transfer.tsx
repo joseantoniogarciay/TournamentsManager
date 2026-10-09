@@ -124,7 +124,7 @@ export default function TransferTournamentScreen() {
           />
         </Stack.Toolbar>
       ) : null}
-      <Screen topInset="navigation-bar">
+      <Screen navigationTitle={t("league_transfer")} topInset="navigation-bar">
         <KeyboardAwareScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"

@@ -7,15 +7,18 @@ import { space } from "@tournaments-manager/design-tokens";
 import { FeedbackBanner } from "@/shared/feedback/feedback-provider";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
+import { AdaptiveNavigationTitle } from "./adaptive-navigation-title";
 import { ConfirmationDialogHost } from "./confirmation-dialog";
 
 type ScreenProps = PropsWithChildren<{
+  navigationTitle?: string;
   bottomInset?: "safe-area" | "none";
   topInset?: "safe-area" | "navigation-bar";
 }>;
 
 export function Screen({
   children,
+  navigationTitle,
   bottomInset = "safe-area",
   topInset = "safe-area",
 }: ScreenProps) {
@@ -35,6 +38,7 @@ export function Screen({
         },
       ]}
     >
+      {navigationTitle ? <AdaptiveNavigationTitle title={navigationTitle} /> : null}
       {children}
       {Platform.OS === "web" ? <FeedbackBanner /> : null}
       <ConfirmationDialogHost />

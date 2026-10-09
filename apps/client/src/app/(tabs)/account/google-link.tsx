@@ -15,7 +15,7 @@ import { useGoogleIdentityProof } from "@/features/federated-google/use-google-i
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
-import { Button, ModalDialog, Text, TextField } from "@/shared/ui";
+import { Button, ModalDialog, Screen, Text, TextField } from "@/shared/ui";
 
 type Stage = "reauthenticate" | "prepare-google" | "connecting";
 
@@ -188,7 +188,16 @@ export function GoogleLinkDialog({
 }
 
 export default function GoogleLinkScreen() {
+  const t = getTranslator();
   const dismiss = useCallback(() => router.back(), []);
-  return <GoogleLinkDialog onDismiss={dismiss} onLinked={dismiss} visible />;
+  return (
+    <Screen
+      navigationTitle={t("account_google_link_title")}
+      bottomInset="none"
+      topInset="navigation-bar"
+    >
+      <GoogleLinkDialog onDismiss={dismiss} onLinked={dismiss} visible />
+    </Screen>
+  );
 }
 const styles = StyleSheet.create({ form: { gap: space[4] } });

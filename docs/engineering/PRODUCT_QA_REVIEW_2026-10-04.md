@@ -4509,3 +4509,82 @@ TM_INTEGRATION_DATABASE_URL se omiten localmente; CI ejecutará esa integración
 Govulncheck conserva el aviso de módulo OpenPGP previamente documentado,
 con cero vulnerabilidades alcanzables. Logs privados:
 qa-tests-enabled-verify-20261009.log y qa-tests-enabled-race-20261009.log.
+
+
+#### 2026-10-09 — Títulos iOS adaptables al espacio real (ADR-0151)
+
+El usuario acepta ADR-0151 y precisa que el cambio de posición solo ocurra
+cuando no haya otra opción; además extiende la regla a todos los títulos de
+navegación. La primitiva mide el texto completo con ancho reservado para
+controles y separación, y compara su altura con useHeaderHeight del Router
+sin el inset superior. No limita el escalado ni decide por fontScale.
+La clave de medición cambia con nombre, ancho, escala y peso tipográfico.
+
+Screen.navigationTitle aplica la regla en rutas de Cuenta, Ajustes, avisos,
+crear, unirse, legales y gestión del torneo. La ficha usa el mismo hook y
+sitúa el nombre en su cabecera desplazable. Las pantallas sin título no
+reciben uno. La medición oculta queda fuera de accesibilidad y de los toques.
+La primera prueba detecta que devolver null permite al stack recuperar el
+nombre técnico de ruta; se corrige devolviendo un View vacío y declarando
+el título nativo vacío cuando se presenta el nombre debajo.
+
+Xcode 27 compila Release ARM64 con firma ad hoc para iPhone 17/iOS 27, sin
+Metro. Pruebas visuales en español sobre el simulador existente:
+
+- Ficha football: tamaño 3 conserva el nombre completo en la barra; tamaños
+  7 y 11 lo muestran completo debajo sin cruzar Cerrar ni Acciones.
+- Equipos a tamaño 7: permanece completo en la barra. Demuestra que texto
+  ampliado no activa por sí solo la adaptación.
+- Crear torneo: tamaño 3 mantiene el título en la barra; tamaño 11 lo muestra
+  completo debajo. El toque CUA sobre Cerrar vuelve a Inicio, sin enviar.
+- Ajustes a tamaño 11: título completo debajo y sin identificador técnico.
+- Las proyecciones públicas del fixture antes y después son idénticas por cmp.
+
+Cambiar Text Size en caliente mediante Device Hub deja algunos textos del
+contenido con cajas anteriores; se registran capturas separadas y se contrasta
+mediante arranque frío. El arranque frío recompone el contenido. No se presenta
+la prueba del inspector como certificación del cambio de tamaño en dispositivo
+físico. Device Hub sigue sin exponer el subárbol de la app tras reinstalar:
+esto acredita disposición y cierre por capturas/toque, no locución VoiceOver
+ni toda la matriz. Idiomas restantes y todas las rutas aún requieren recorrido
+nativo; la implementación compartida no equivale a verificar cada combinación.
+La app admite orientación portrait: no se fuerza otra orientación para el QA.
+
+Checklist apps/client/AGENTS.md revisada: catálogos existentes, tokens y
+primitivas compartidos, márgenes, separación frente a botones, cierre nativo,
+semántica de cabecera y escalado intactos. Ninguna operación OpenAPI cambia;
+los adaptadores y apiFetch se conservan. No se añade dependencia ni módulo
+nativo. La compilación final incluye la ruta de vinculación de Google; no se
+prueba aquí su acceso social real.
+
+Evidencia privada: ios-title-reflow-{normal,size7-fixed,size11-fixed}-20261009.png,
+ios-title-teams-size7-20261009.png, ios-title-create-{normal,size11,close-size11}
+-20261009.png, ios-title-settings-size11-20261009.png; logs de build y verify
+ios-title-reflow-*-20261009.log. Se conserva también el intento inicial para
+mostrar el fallback detectado.
+
+Android: :react-native-worklets:lintAnalyzeDebug --rerun-tasks --stacktrace
+--no-daemon --max-workers=2, con LINT_PRINT_STACKTRACE=true, vuelve a fallar
+en Cannot find a KaModule for the VirtualFile. La traza pasa por análisis de
+script Gradle Kotlin; no identifica aquí un arreglo validado. Evidencia:
+android-worklets-lint-diagnostic-20261009.log. El gate completo sigue abierto,
+sin supresiones ni actualización de dependencias.
+
+Retrospectiva: medir texto y espacio reales permite adaptar solo cuando hace
+falta. Una devolución vacía de un renderer puede activar un fallback nativo;
+comprobar barra y contenido juntos evita mostrar identificadores internos.
+Las pruebas de título corto/largo al mismo tamaño son más útiles que un umbral
+arbitrario de escala. No confundir el arreglo del título con toda la matriz
+de accesibilidad o con un despliegue.
+
+Cierre local de la fase: typecheck, make verify y compilación final Xcode
+Release ARM64 terminan con exit 0; Xcode registra BUILD SUCCEEDED. El análisis
+de vulnerabilidades no encuentra casos alcanzables ni paquetes importados
+afectados; mantiene un aviso en un módulo requerido no llamado por el código.
+La integración PostgreSQL completa corresponde al CI, no se atribuye a una
+ejecución local que omita su URL. git diff --check pasa.
+
+Se restaura Text Size a 3, VoiceOver y captura de teclado permanecen apagados
+y se termina la app de QA. make dev-down completa el cierre, docker ps queda
+vacío y utmctl confirma producción/K3s stopped. Se conservan volúmenes, backups
+y evidencia; no hay publicación de producción ni activación de observabilidad.

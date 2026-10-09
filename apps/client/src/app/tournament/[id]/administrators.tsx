@@ -180,7 +180,11 @@ export default function TournamentAdministratorsScreen() {
           ) : null}
         </>
       ) : null}
-      <Screen bottomInset="none" topInset="navigation-bar">
+      <Screen
+        navigationTitle={t("tournament_administrators")}
+        bottomInset="none"
+        topInset="navigation-bar"
+      >
         {loadErrorMessage ? (
           <RequestErrorCard
             actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}

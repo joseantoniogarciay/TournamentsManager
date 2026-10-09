@@ -50,6 +50,10 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Un título largo de cabecera no usa un ancho fijo arbitrario: ocupa el espacio
   disponible hasta conservar 20 px frente a los controles laterales, se centra
   y puede usar dos líneas si la ruta necesita mostrar el nombre de una entidad.
+- Según ADR-0151, un título de navegación iOS solo pasa debajo de la barra
+  cuando su medición con el ancho reservado supera la altura disponible.
+  Reutiliza `Screen.navigationTitle` o `useAdaptiveNavigationTitle` para
+  entidades desplazables; no reduzcas el escalado ni uses umbrales arbitrarios.
 - Una card mantiene su padding interno definido por la primitiva y añade siempre
   20 px de margen exterior horizontal. El layout reserva además 20 px entre
   cards hermanas; no se corrige esa separación alterando el padding de la card.

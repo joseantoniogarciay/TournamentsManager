@@ -121,6 +121,17 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   su tamaño intrínseco no debe extenderse detrás de la toolbar. Las acciones de
   Equipos y Clasificación conservan su ancho de contenido y pueden pasar a otra
   fila cuando el texto aumentado agota el espacio.
+  Según [ADR-0151](../adr/0151-reflow-ios-entity-titles-for-accessibility.md),
+  todos los títulos de navegación iOS permanecen en la barra mientras quepan.
+  La primitiva compartida mide el texto completo con el ancho reservado y lo
+  compara con la altura real de navegación sin el inset superior. Solo si no
+  cabe se muestra una única cabecera completa debajo de la barra, conservando
+  botones nativos y escalado. No se usa un umbral arbitrario de fontScale.
+  `Screen.navigationTitle` aplica la regla a títulos de ruta; la ficha de
+  torneo inserta su nombre dentro del contenido desplazable mediante
+  `useAdaptiveNavigationTitle`. La medición invisible no recibe interacción
+  ni se expone a accesibilidad. La barra vacía usa un título nativo vacío para
+  evitar que aparezca el nombre técnico de la ruta como fallback.
 - **Tipografía:** Figtree local en web, iOS y Android, con los pesos 400, 500,
   600 y 700 cargados antes de montar la interfaz. Los tokens seleccionan la
   familia real de cada peso, en vez de sintetizarlo con `fontWeight`. La escala

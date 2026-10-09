@@ -18,6 +18,7 @@ type Props = PropsWithChildren<{
   color?: "primary" | "secondary" | "inverse" | "onBrand" | "error" | "success";
   numberOfLines?: number;
   onPress?: NativeTextProps["onPress"];
+  onTextLayout?: NativeTextProps["onTextLayout"];
   style?: StyleProp<TextStyle>;
 }>;
 
@@ -29,6 +30,7 @@ export function Text({
   color: textColor = "primary",
   numberOfLines,
   onPress,
+  onTextLayout,
   style,
 }: Props) {
   const { colors } = usePreferences();
@@ -46,6 +48,7 @@ export function Text({
       accessibilityRole={accessibilityRole}
       numberOfLines={numberOfLines}
       onPress={onPress}
+      onTextLayout={onTextLayout}
       style={[styles.base, variants[variant], textColors[textColor], style]}
     >
       {children}

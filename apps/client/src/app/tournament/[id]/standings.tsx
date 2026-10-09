@@ -209,7 +209,7 @@ export default function TournamentStandingsScreen() {
           </Stack.Toolbar>
         </>
       ) : null}
-      <Screen topInset="navigation-bar">
+      <Screen navigationTitle={t("league_standings")} topInset="navigation-bar">
         {!league ? (
           loadErrorMessage ? (
             <RequestErrorCard

@@ -129,7 +129,7 @@ export default function NotificationsScreen() {
           />
         </Stack.Toolbar>
       ) : null}
-      <Screen topInset="navigation-bar">
+      <Screen navigationTitle={t("notifications_title")} topInset="navigation-bar">
         {loadErrorMessage ? (
           <RequestErrorCard
             actionLabel={t("common_retry")}

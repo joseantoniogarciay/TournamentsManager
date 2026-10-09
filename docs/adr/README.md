@@ -52,3 +52,5 @@ Usa [template.md](template.md) y el
 - [ADR-0149: Reservar el único proyecto PostHog para producción](0149-reserve-the-single-posthog-project-for-production.md) — Aceptado; supera ADR-0148.
 
 - [ADR-0150: Host Android local para el banner global](0150-use-a-local-android-host-for-global-feedback.md) — Aceptado.
+
+- [ADR-0151: Títulos iOS adaptables al espacio real](0151-reflow-ios-entity-titles-for-accessibility.md) — Aceptado.

@@ -217,3 +217,12 @@ observabilidad únicamente bajo petición. Producción conserva su operación.
 [ADR-0150](../adr/0150-use-a-local-android-host-for-global-feedback.md), aceptado
 explícitamente: adaptador Android local de Expo para conservar el host global sin
 bloquear ventanas inferiores; comprobar iOS antes y después.
+
+
+## Títulos de navegación con texto ampliado
+
+[ADR-0151](../adr/0151-reflow-ios-entity-titles-for-accessibility.md), aceptado
+el 2026-10-09: conservar el título en la barra iOS siempre que quepa; medir
+la altura real y colocarlo debajo únicamente si supera el espacio disponible.
+Conservar botones nativos, escalado, nombre completo y semántica de cabecera.
+La aclaración del usuario extiende la regla a todos los títulos de navegación.

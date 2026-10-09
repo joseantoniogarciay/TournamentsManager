@@ -139,7 +139,11 @@ export default function AccountAccessScreen() {
   }, [removePasswordGoogle.error, show, t]);
 
   return (
-    <Screen bottomInset="none" topInset="navigation-bar">
+    <Screen
+      navigationTitle={t("account_access_data_title")}
+      bottomInset="none"
+      topInset="navigation-bar"
+    >
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}

@@ -1,15 +1,7 @@
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Platform,
-  ScrollView,
-  SectionList,
-  Share,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Platform, ScrollView, SectionList, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
@@ -73,6 +65,7 @@ import {
   Text,
   TextField,
   useConfirmationDialog,
+  useAdaptiveNavigationTitle,
   usesLiquidGlassNavigation,
 } from "@/shared/ui";
 
@@ -137,10 +130,10 @@ export default function TournamentScreen() {
   const { user } = useSession();
   const { colors } = usePreferences();
   const insets = useSafeAreaInsets();
-  const { width: windowWidth } = useWindowDimensions();
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
   const league = useTournament(id);
+  const navigationTitle = useAdaptiveNavigationTitle(league?.name);
   const { loadTournament, putTournament, refreshTournament } = useTournamentStore();
   const [relationship, setRelationship] = useState<string | null>();
   const following = useTournamentFollow(id, relationship, setRelationship);
@@ -571,7 +564,7 @@ export default function TournamentScreen() {
             </Stack.Toolbar>
           ) : null}
         </Stack.Screen>
-        <Screen topInset="navigation-bar">
+        <Screen navigationTitle={t("league_title")} topInset="navigation-bar">
           {loadErrorMessage ? (
             <RequestErrorCard
               actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}
@@ -798,25 +791,8 @@ export default function TournamentScreen() {
     headerStyle: { backgroundColor: colors.surface.canvas },
     headerTintColor: colors.text.primary,
     headerTitleAlign: "center" as const,
-    headerTitle: () => (
-      <Text
-        numberOfLines={2}
-        style={[
-          styles.navigationTitle,
-          Platform.OS === "ios" && {
-            maxWidth: Math.max(
-              0,
-              windowWidth -
-                2 * (Math.max(insets.left, insets.right) + space[5] + control.minHeight + space[5]),
-            ),
-            marginHorizontal: 0,
-          },
-        ]}
-        variant="bodyLarge"
-      >
-        {league.name}
-      </Text>
-    ),
+    title: navigationTitle.nativeTitle,
+    headerTitle: navigationTitle.headerTitle,
   };
   const bracketRounds = [...new Set(bracketMatches.map((match) => match.round))].sort(
     (first, second) => first - second,
@@ -1014,6 +990,7 @@ export default function TournamentScreen() {
         </>
       )}
       <Screen bottomInset="none" topInset="navigation-bar">
+        {navigationTitle.measurement}
         <View ref={matchListViewport} style={styles.listViewport}>
           {showsBracket ? (
             <ScrollView
@@ -1034,6 +1011,7 @@ export default function TournamentScreen() {
               stickyHeaderIndices={Platform.OS === "web" ? undefined : [1]}
             >
               <View style={styles.listHeader}>
+                {navigationTitle.contentTitle}
                 {tournamentSummary}
                 {phaseSelector}
                 <BracketIntro />
@@ -1086,6 +1064,7 @@ export default function TournamentScreen() {
               stickySectionHeadersEnabled
               ListHeaderComponent={
                 <View style={styles.listHeader}>
+                  {navigationTitle.contentTitle}
                   {tournamentSummary}
                   {phaseSelector}
                   {showsTieBreak ? (
@@ -1953,11 +1932,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight,
   },
-  navigationTitle: {
-    flexShrink: 1,
-    marginHorizontal: space[5],
-    textAlign: "center",
-  },
+
   menuActions: { gap: space[5] },
   matchSeparator: { height: space[5] },
   match: { gap: space[3] },
