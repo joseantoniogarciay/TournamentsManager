@@ -77,6 +77,12 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   una franja fija que el contenido nunca puede recorrer. Las rutas con tabs
   siguen usando su cálculo específico de botonera superpuesta.
 
+- **Safe area en la lista de notificaciones:** una vez cargada, `Screen` no
+  reserva una franja inferior. El `ScrollView` suma el inset nativo a su
+  `space[8]` (32 px) de padding de contenido; web conserva solo los 32 px.
+  El estado vacío usa ese mismo contenedor desplazable. Carga y error, que
+  son bloques estáticos, conservan la reserva inferior de `Screen`.
+
 - **Teclado y tabs:** en web la barra de tabs se ancla al borde inferior del
   viewport visual, también al aparecer el teclado. El padding inferior de un
   formulario web no toma el safe-area inset, porque puede variar al aparecer el

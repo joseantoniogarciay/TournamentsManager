@@ -2,6 +2,7 @@ import { router, Stack } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { control, space } from "@tournaments-manager/design-tokens";
 import type { Notification } from "@/api/generated/models";
 import {
@@ -29,6 +30,7 @@ import { useNotifications } from "@/features/notifications/notification-provider
 
 export default function NotificationsScreen() {
   const t = getTranslator();
+  const insets = useSafeAreaInsets();
   const { colors } = usePreferences();
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
@@ -129,7 +131,11 @@ export default function NotificationsScreen() {
           />
         </Stack.Toolbar>
       ) : null}
-      <Screen navigationTitle={t("notifications_title")} topInset="navigation-bar">
+      <Screen
+        bottomInset={items !== undefined && !loadErrorMessage ? "none" : "safe-area"}
+        navigationTitle={t("notifications_title")}
+        topInset="navigation-bar"
+      >
         {loadErrorMessage ? (
           <RequestErrorCard
             actionLabel={t("common_retry")}
@@ -140,7 +146,12 @@ export default function NotificationsScreen() {
         ) : items === undefined ? (
           <LoadingTransition active message={t("common_loading")} />
         ) : (
-          <ScrollView contentContainerStyle={styles.content}>
+          <ScrollView
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: (Platform.OS === "web" ? 0 : insets.bottom) + space[8] },
+            ]}
+          >
             {items.length === 0 ? (
               <View style={styles.empty}>
                 <Text color="secondary">{t("notifications_empty")}</Text>
@@ -212,7 +223,7 @@ function formatNotificationDate(value: string, fallback: string) {
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, gap: space[5], paddingBottom: space[8] },
+  content: { flexGrow: 1, gap: space[5] },
   empty: { alignItems: "center", flex: 1, justifyContent: "center", paddingHorizontal: space[5] },
   row: { alignItems: "center", flexDirection: "row", gap: space[3] },
   message: { flex: 1, gap: space[1] },

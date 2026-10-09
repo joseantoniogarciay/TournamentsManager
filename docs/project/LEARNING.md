@@ -5629,3 +5629,11 @@ se alcanzan por scroll; abrir su destino y volver permite comprobar conservació
 de posición. Eso no valida por sí solo la presentación del título ni que el
 inset se reserve dentro del contenido. La recuperación sin token tiene una
 rama de error verificable sin cambiar una credencial.
+
+### 2026-10-09 — Migrar el inset según la rama de contenido
+
+Si una ruta alterna lista desplazable y bloques estáticos, la reserva inferior
+puede depender de la rama: dentro del ScrollView para contenido cargado,
+en Screen para carga/error. Conservar el padding propio de la lista y sumar
+solo el inset evita duplicar la separación heredada del padre. No cambiar
+los contratos de la feature para resolver una cuestión de layout.

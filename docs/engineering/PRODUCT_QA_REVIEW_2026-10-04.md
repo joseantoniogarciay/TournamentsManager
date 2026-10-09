@@ -5000,3 +5000,43 @@ Retrospectiva: llegar al final y regresar desde un destino aporta evidencia
 distinta de activar un elemento fuera de pantalla mediante AX. Acceso al
 contenido, presentación del título y propiedad del inset son comprobaciones
 separadas; esta pasada cierra únicamente lo observado.
+
+#### 2026-10-09 — Mover el inset de notificaciones al contenido
+
+Se aplica la regla de viewport aprovechable ya pedida por el usuario a una
+ruta concreta. Con items cargados y sin error, Screen declara bottomInset none;
+el ScrollView reserva inset inferior nativo + space[8]. Se conserva el padding
+propio de 32 px y se elimina la reserva adicional fija del padre. Web mantiene
+32 px sin inset nativo. El vacío continúa dentro del mismo ScrollView; carga y
+error estáticos conservan safe-area en Screen. No cambia operación HTTP,
+contrato, mapping de errores ni comportamiento de borrado.
+
+La alternativa de conservar Screen con safe-area seguiría dejando una franja
+fuera del viewport. Una nueva primitiva compartida para una sola lista añadiría
+mantenimiento innecesario: se usa el hook de insets existente y tokens.
+
+Preflight: baseline cerrado, manifiesto original, ADR-0054/0055/0056 y reglas
+cliente revisados. Cierre: no se añaden textos, medidas literales, controles,
+permisos ni lógica de negocio. Los márgenes de Card y el espacio entre tarjetas
+se conservan. Typecheck, ESLint y Prettier del archivo y exportación web pasan.
+
+La build Debug iOS carga la lista conservada con sesión QA previa y muestra
+contenido hasta el borde inferior, incluida parte de la siguiente card dentro
+del área que antes reservaba Screen. Evidencia privada:
+notifications-safe-area-corrected-size3-20261009.png y logs
+notifications-safe-area-{metro,dev,web}-20261009.log en el directorio habitual.
+Device Hub dibuja el puntero, pero esta pasada no entrega acciones táctiles a
+la app: tampoco responde Cerrar. Ampliar y renovar la ventana, arrastre y scroll
+no resuelven esa limitación. No se acredita una nueva prueba del extremo final,
+texto máximo, estado vacío ni Android con la implementación corregida. La
+pasada anterior de scroll corresponde al código previo y no se reutiliza como
+validación de este cambio.
+
+Metro, API, Mailpit y PostgreSQL quedan apagados; los volúmenes y el simulador
+preexistente se conservan. No se activa observabilidad ni producción. No se
+crean ni borran notificaciones. Cinco rutas del inventario conservan aún la
+reserva externa; el título partido de Notificaciones permanece pendiente.
+
+Retrospectiva: la propiedad del inset puede corregirse sin alterar estados
+estáticos ni duplicar padding. Una captura del viewport demuestra su extensión,
+pero no sustituye el recorrido del último elemento tras el cambio.
