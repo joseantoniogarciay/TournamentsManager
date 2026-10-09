@@ -5093,3 +5093,56 @@ Retrospectiva: elegir la reserva según la rama conserva las protecciones estát
 sin renunciar al viewport desplazable. Conservar padding propio evita uniformar
 listas distintas por accidente. Una limitación de entrada del instrumento debe
 mantener abierto el QA, aunque typecheck y bundling confirmen la implementación.
+
+#### 2026-10-09 — Revalidación táctil de notificaciones y clasificación
+
+Se continúa sobre `8eccca9` en iPhone 17, iOS 27, Debug local. CUA vuelve a
+entregar toques y arrastres: Cuenta, apertura de Notificaciones, reintento,
+destino y cierre responden. El subtree React Native sigue sin exponerse al
+instrumento; la evidencia de interacción son las capturas y estados observados
+en esta conversación. No se crean archivos PNG adicionales en esta pasada.
+Metro se inicia en terminal persistente; API, PostgreSQL y Mailpit se arrancan
+con `make dev-up`, sin observabilidad. Se conserva la sesión qa_visual_player y
+los datos existentes. El fallo inicial de conexión muestra el fallback común;
+Reintentar carga la lista cuando la API está disponible.
+
+Notificaciones alcanza por arrastre la tarjeta más antigua, 4/10/2026 16:34:26,
+a Text Size 3 y 11. Tras estabilizarse se ven la fecha, el borde inferior de
+la tarjeta y separación respecto al borde del dispositivo. Con tamaño 11 se
+abre el torneo desde el cuerpo de esa tarjeta; Cerrar devuelve a la misma
+posición inferior. Se cierra la revalidación de scroll y destino de esta lista
+con el inset corregido (`71b1b52`). No se acredita vacío, Android ni VoiceOver
+con esta implementación. El título sigue partiendo la «s» en otra línea a
+tamaño 11: permanece abierto como defecto de presentación.
+
+La clasificación del mismo torneo carga tres equipos. A tamaño 3, el arrastre
+horizontal revela GC y DG conservando equipos y puntos en sus columnas fijas.
+El diálogo de reglas abre y OK lo cierra. El control flotante de Expo intercepta
+inicialmente el área de acciones; moverlo permite comprobar el botón nativo.
+No se atribuye esa interferencia a una ausencia de respuesta del producto.
+
+**Hallazgo abierto:** a Text Size 11 las cabeceras se fragmentan y las filas
+de estadísticas y puntos dejan de coincidir verticalmente con las de equipos.
+Se observa también tras un gesto vertical y una captura estabilizada. No se
+aprueba la tabla ampliada ni se cierra su QA de inset/scroll vertical por esta
+muestra. El código conserva anchos fijos y tres listas de filas independientes
+con `minHeight`, sin altura común por fila; esto aporta una causa probable,
+no una prueba de que el traslado reciente del inset haya causado el defecto.
+
+Recomendación de siguiente corrección: conservar la tabla y sincronizar la altura
+de cada fila, con espacio de columnas compatible con texto ampliado. Tiene menos
+coste que sustituirla por una nueva composición; desactivar el escalado no
+cumple la accesibilidad aceptada. No se modifica implementación en esta pasada.
+Quedan pendientes los formularios de invitación/recuperación válidos, búsqueda
+de administradores y transferencia, y la matriz nativa restante. El menú de
+este torneo solo ofrece Actualizar y Compartir; no acredita acceso a las rutas
+de administración con la sesión conservada.
+
+Se restaura Text Size 3; VoiceOver y Capture Keyboard permanecen apagados.
+Se conserva el simulador preexistente y se apagan Metro y el stack local,
+conservando volúmenes. No se borran notificaciones ni se envían formularios,
+transferencias o credenciales. Producción y observabilidad no se activan.
+
+Retrospectiva: revalidar el gesto tras una corrección cierra una evidencia
+específica, no toda la matriz. En una tabla dividida en columnas, ampliar texto
+debe mantener la relación entre entidad y valores además de permitir scroll.

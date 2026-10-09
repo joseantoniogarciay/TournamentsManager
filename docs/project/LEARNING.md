@@ -5645,3 +5645,13 @@ del estilo recibido. Para una lista que requiere 20 px propios, sumar el inset
 a ese padding explícito conserva su separación; activar ambas vías sobrescribe
 el valor. Las ramas de carga/error estático necesitan revisar su propietario
 por separado. Migración de código y cierre del QA nativo son hitos distintos.
+
+### 2026-10-09 — Conservar la relación entre columnas con texto ampliado
+
+Tres columnas que renderizan filas por separado pueden aumentar su altura de
+forma distinta aunque compartan minHeight. La revisión a Text Size 11 de la
+clasificación muestra equipos, estadísticas y puntos desalineados. El QA de
+una tabla debe comprobar la correspondencia entre entidad y valores, además
+del desplazamiento y acceso al extremo final. Una altura común por fila y
+anchos compatibles con el escalado son una corrección más acotada que sustituir
+la tabla; esa recomendación aún requiere implementación y revalidación.
