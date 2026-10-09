@@ -5601,3 +5601,12 @@ hasta Cerrar acredita navegación inversa. Un doble clic del canal puede actuar
 sobre un punto distinto del foco; no equivale a activar ese foco con el lector.
 Separar navegación, activación, edición y locución evita declarar accesibilidad
 completa a partir de una captura o una acción instrumental.
+
+### 2026-10-09 — TalkBack con formulario ampliado y servicios apagados
+
+La entrada táctil del emulador permite verificar activación del elemento
+enfocado con doble toque fuera de su posición. Al 200 %, TalkBack alcanza el
+botón final y desplaza el contenido para separarlo de la barra de gestos;
+activar un campo vacío permite comprobar el teclado sin escribir ni enviar.
+Conservar borrador y ajustes originales hace reversible la pasada. No asumir
+que cada evento rápido produce un avance de foco: verificar antes de activar.

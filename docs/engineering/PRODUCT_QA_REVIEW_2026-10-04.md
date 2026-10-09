@@ -4869,3 +4869,52 @@ Android pendientes.
 Retrospectiva: un árbol AX estable puede coexistir con foco y scroll reales
 del lector. Sus capturas permiten acreditar navegación; una pulsación enviada
 por instrumentación no demuestra por sí sola activación VoiceOver.
+
+#### 2026-10-09 — TalkBack y safe area Android tras la actualización
+
+Pixel_API_34 (API 34) se arranca para esta tanda con la APK Debug actualizada
+del 9 de octubre y JavaScript de `d1c83e3`. Metro está activo; API, PostgreSQL,
+dev, observabilidad y producción permanecen apagados. Se conservan antes de
+probar los tres ajustes de accesibilidad, font_scale=1.0 y reverses vacíos.
+Cambiar a font_scale=2.0 recrea la actividad y vuelve a Inicio; se abre Crear
+torneo desde esa pantalla estable. No se presenta esa recreación como un
+recorrido aprobado de conservación de ruta.
+
+UIAutomator se usa únicamente antes de activar TalkBack. Con el lector activo
+se emplea entrada táctil `adb emu event mouse` y capturas. La petición de
+notificaciones de la Suite de Accesibilidad se rechaza; no es necesaria para
+el recorrido. La muestra acredita foco en cabecera, Deporte, Fútbol,
+Baloncesto, Pádel y campo del torneo. El doble toque fuera de Pádel activa
+el deporte enfocado, conserva el foco y actualiza su descripción y etiquetas.
+Activar el campo del torneo vacío abre el teclado; no se escribe. Cerrar
+teclado permite continuar hasta la sección de participante y el botón final.
+
+El recorrido de foco desplaza automáticamente el formulario. La captura
+`android-talkback-safe-area-focus-19-20261009.png` muestra Crear torneo
+completo y enfocado, con separación respecto a la barra de gestos y final de
+card visible. Se cierra la comprobación Android de acceso al último control
+en este formulario al 200 %, sin acreditar locución ni todos los lectores,
+rutas o versiones. La variante autenticada conserva un borrador previo con
+nombre de torneo vacío y participante «Incidencia Local». No se pulsa Crear,
+no se guarda ni se crea ningún fixture.
+
+La navegación inversa vuelve a Fútbol; el doble toque restaura la selección
+original. El foco alcanza Cerrar y activarlo vuelve a Inicio. El aviso común
+de conexión allí es coherente con la API apagada y no muestra detalles internos.
+No se modifica la sesión ni se cambian nombres. Se restauran y comprueban
+exactamente los ajustes originales, se retira únicamente reverse tcp:8082,
+se termina la app y se apaga el emulador iniciado para QA. Metro queda apagado.
+
+Evidencia privada: `android-talkback-safe-area-{before,restored}-20261009.json`,
+capturas `android-talkback-safe-area-*`, estado del servicio, logs de Metro y
+emulador y script `qa-talkback-safe-area-20261009.py` en el directorio habitual.
+La secuencia de navegación inversa rápida no avanzó un elemento por cada
+evento; se vuelve a verificar visualmente Fútbol y Cerrar antes de activarlos.
+No se deduce un defecto del producto de la cadencia del instrumento.
+No cambia implementación. El gate lint Android de ADR-0152 continúa abierto;
+no se repite con la misma matriz ni se aplican los parches rechazados.
+
+Retrospectiva: comprobar entrada táctil, foco y resultado permite distinguir
+activación del lector de un toque por coordenadas. El acceso al teclado y al
+último botón aporta evidencia específica tras el upgrade sin enviar un
+formulario ni arrancar servicios adicionales.
