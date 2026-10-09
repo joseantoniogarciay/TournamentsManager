@@ -5040,3 +5040,56 @@ reserva externa; el título partido de Notificaciones permanece pendiente.
 Retrospectiva: la propiedad del inset puede corregirse sin alterar estados
 estáticos ni duplicar padding. Una captura del viewport demuestra su extensión,
 pero no sustituye el recorrido del último elemento tras el cambio.
+
+#### 2026-10-09 — Extender la propiedad del inset a las cinco rutas restantes
+
+Se aplica la regla ya solicitada de aprovechar el viewport y añadir separación
+al final del contenido. No se introduce una decisión de stack ni una nueva
+primitiva. La alternativa de cambiar el default global de Screen afectaría
+ramas estáticas y rutas no revisadas; se mantiene la selección explícita por
+ruta. Preflight del manifiesto, baseline y ADR-0054/0055/0056 sigue vigente.
+
+| Ruta | Reserva de contenido implementada | Rama estática conservada |
+| --- | --- | --- |
+| join-team | KeyboardAwareScrollView safe-area: inset + 16 px; Screen none solo con invitación válida y lista para mostrar | Carga y RequestErrorCard conservan Screen safe-area |
+| link/password-reset | Formulario y error desplazable: KeyboardAwareScrollView safe-area, Screen none | LoadingTransition conserva Screen safe-area |
+| administrators/add | KeyboardAwareScrollView: inset + 20 px, Screen none | Sus estados parciales siguen dentro del formulario |
+| transfer | KeyboardAwareScrollView: inset + 20 px, Screen none | Sus estados parciales siguen dentro del formulario |
+| standings | ScrollView vertical: inset + 20 px, Screen none con liga cargada | Sin liga, carga/error conservan Screen safe-area |
+
+En los tres últimos casos se conserva el padding propio de 20 px mediante el
+hook existente; no se activa la opción de 16 px que lo reemplazaría. Web no
+suma inset nativo. Clasificación mantiene su scroll horizontal, cabecera sticky,
+selectors y diálogo de reglas. No se cambia navegación, copy, objetivos táctiles,
+features HTTP ni reglas de recuperación. No se ejecutan asignaciones,
+transferencias, adhesiones ni cambios de contraseña.
+
+Cierre explícito de checklist cliente: mismos tokens, localización, controles
+nativos, márgenes de contenido y Card, y cabeceras existentes; no se introducen
+librerías ni bypass del cliente generado. Typecheck, ESLint de las cinco rutas,
+Prettier y exportación web final pasan. No se añaden tests que reflejen los
+mismos estilos; la validación pendiente es de viewport, teclado y gestos reales.
+
+Se renueva la sesión CUA. Home de iOS expone su árbol nativo, pero la app React
+Native continúa sin subtree y los toques no activan ni la salida de recuperación.
+La rama sin token corregida muestra mensaje y CTA completos tanto a tamaño 3
+como a Text Size 11, sin iniciar API. Se conserva
+reset-safe-area-corrected-size11-20261009.png en el directorio privado habitual,
+junto a invitation-reset-safe-area-metro-20261009.log y
+remaining-safe-area-web-20261009.log. No se acredita la activación de la salida
+con este cambio. Tampoco se acredita formulario válido de recuperación, invitación
+válida, búsqueda con teclado/último resultado o tabla vertical/horizontal.
+La nueva revalidación de notificaciones sigue bloqueada por entrada táctil.
+
+La corrección de propiedad del inset está implementada en las seis rutas del
+inventario (incluida Notificaciones, 71b1b52), pero su QA nativo completo no está
+cerrado. La presentación del título partido de Notificaciones permanece pendiente.
+Se restaura Text Size 3 y se confirma VoiceOver y Capture Keyboard apagados;
+se termina la app y Metro, conservando el simulador preexistente. API y resto de
+servicios locales no se arrancan en esta pasada. No se activa observabilidad ni
+producción.
+
+Retrospectiva: elegir la reserva según la rama conserva las protecciones estáticas
+sin renunciar al viewport desplazable. Conservar padding propio evita uniformar
+listas distintas por accidente. Una limitación de entrada del instrumento debe
+mantener abierto el QA, aunque typecheck y bundling confirmen la implementación.

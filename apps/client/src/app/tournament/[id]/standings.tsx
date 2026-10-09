@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -34,6 +35,7 @@ const statisticsColumnWidth = 36;
 
 export default function TournamentStandingsScreen() {
   const t = getTranslator();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
   const league = useTournament(id);
@@ -209,7 +211,11 @@ export default function TournamentStandingsScreen() {
           </Stack.Toolbar>
         </>
       ) : null}
-      <Screen navigationTitle={t("league_standings")} topInset="navigation-bar">
+      <Screen
+        bottomInset={league ? "none" : "safe-area"}
+        navigationTitle={t("league_standings")}
+        topInset="navigation-bar"
+      >
         {!league ? (
           loadErrorMessage ? (
             <RequestErrorCard
@@ -225,6 +231,7 @@ export default function TournamentStandingsScreen() {
           <ScrollView
             contentContainerStyle={[
               styles.content,
+              { paddingBottom: (Platform.OS === "web" ? 0 : insets.bottom) + space[5] },
               displayedStandings.length === 0 && styles.emptyContent,
             ]}
             onLayout={(event) => setTableViewportWidth(event.nativeEvent.layout.width)}
@@ -609,7 +616,7 @@ function StandingsRulesContent({ league }: { league: PublicTournament | null | u
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: space[5], paddingHorizontal: space[5] },
+  content: { paddingHorizontal: space[5] },
   emptyContent: { paddingHorizontal: 0 },
   groupSelector: { flexDirection: "row", flexWrap: "wrap", gap: space[2], paddingBottom: space[4] },
   headerRow: {

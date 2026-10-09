@@ -72,8 +72,10 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   alcanzar el borde inferior. La separación del último control pertenece al
   contenido: `Screen bottomInset="none"` y
   `KeyboardAwareScrollView bottomInset="safe-area"` reservan el inset nativo más
-  `space[4]` (16 px) dentro del scroll; web reserva solo ese padding. Crear torneo
-  aplica esta regla. No reservar además ese espacio en el padre, porque crearía
+  `space[4]` (16 px) dentro del scroll; web reserva solo ese padding. Crear torneo,
+  la rama válida de Unirse a un equipo y las ramas desplazables de recuperación
+  de contraseña aplican esta regla. Sus cargas/errores estáticos conservan
+  la protección inferior del padre. No reservar además ese espacio en el padre, porque crearía
   una franja fija que el contenido nunca puede recorrer. Las rutas con tabs
   siguen usando su cálculo específico de botonera superpuesta.
 
@@ -82,6 +84,15 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   `space[8]` (32 px) de padding de contenido; web conserva solo los 32 px.
   El estado vacío usa ese mismo contenedor desplazable. Carga y error, que
   son bloques estáticos, conservan la reserva inferior de `Screen`.
+
+- **Listas con separación propia:** Añadir administrador y Transferir usan
+  `Screen bottomInset="none"` y reservan el inset nativo + `space[5]` (20 px)
+  en el contenido de su `KeyboardAwareScrollView`. La tabla de Clasificación
+  hace lo mismo en su scroll vertical cuando tiene liga; sin liga conserva
+  safe-area en `Screen` para carga/error. Web mantiene solo los 20 px.
+  El inset se añade al padding propio sin activar además la opción de 16 px
+  de la primitiva, que sobrescribiría esa separación. La adaptación de layout
+  está implementada; el QA nativo completo de estas rutas sigue pendiente.
 
 - **Teclado y tabs:** en web la barra de tabs se ancla al borde inferior del
   viewport visual, también al aparecer el teclado. El padding inferior de un

@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, space } from "@tournaments-manager/design-tokens";
 
@@ -28,6 +29,7 @@ const debounceMilliseconds = 400;
 
 export default function TransferTournamentScreen() {
   const t = getTranslator();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
   const { show, showAfterNavigation } = useFeedback();
@@ -124,9 +126,12 @@ export default function TransferTournamentScreen() {
           />
         </Stack.Toolbar>
       ) : null}
-      <Screen navigationTitle={t("league_transfer")} topInset="navigation-bar">
+      <Screen bottomInset="none" navigationTitle={t("league_transfer")} topInset="navigation-bar">
         <KeyboardAwareScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: (Platform.OS === "web" ? 0 : insets.bottom) + space[5] },
+          ]}
           keyboardShouldPersistTaps="handled"
         >
           <Text color="secondary">{t("league_transfer_description")}</Text>
@@ -161,7 +166,7 @@ export default function TransferTournamentScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { gap: space[3], paddingBottom: space[5], paddingHorizontal: space[5] },
+  content: { gap: space[3], paddingHorizontal: space[5] },
   row: {
     alignItems: "center",
     borderBottomWidth: 1,

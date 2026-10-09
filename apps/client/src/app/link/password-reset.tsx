@@ -69,8 +69,8 @@ export default function PasswordResetScreen() {
     );
   if (failed)
     return (
-      <Screen>
-        <KeyboardAwareScrollView>
+      <Screen bottomInset="none">
+        <KeyboardAwareScrollView bottomInset="safe-area">
           <Card>
             <View style={styles.form}>
               <Text>{t("password_recovery_link_invalid")}</Text>
@@ -81,8 +81,8 @@ export default function PasswordResetScreen() {
       </Screen>
     );
   return (
-    <Screen>
-      <KeyboardAwareScrollView>
+    <Screen bottomInset="none">
+      <KeyboardAwareScrollView bottomInset="safe-area">
         <Card>
           <View style={styles.form}>
             <Text variant="title">{t("password_recovery_new_title")}</Text>

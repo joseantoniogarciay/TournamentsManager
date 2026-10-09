@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -30,6 +31,7 @@ const debounceMilliseconds = 400;
 
 export default function AddTournamentAdministratorScreen() {
   const t = getTranslator();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
   const { show } = useFeedback();
@@ -149,9 +151,16 @@ export default function AddTournamentAdministratorScreen() {
       {!usesLiquidGlassNavigation ? (
         <Stack.Screen options={{ headerLeft: () => closeButton }} />
       ) : null}
-      <Screen navigationTitle={t("league_add_administrator")} topInset="navigation-bar">
+      <Screen
+        bottomInset="none"
+        navigationTitle={t("league_add_administrator")}
+        topInset="navigation-bar"
+      >
         <KeyboardAwareScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: (Platform.OS === "web" ? 0 : insets.bottom) + space[5] },
+          ]}
           keyboardShouldPersistTaps="handled"
         >
           <TextField
@@ -195,7 +204,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight,
   },
-  content: { gap: space[3], paddingBottom: space[5], paddingHorizontal: space[5] },
+  content: { gap: space[3], paddingHorizontal: space[5] },
   row: {
     alignItems: "center",
     borderBottomWidth: 1,

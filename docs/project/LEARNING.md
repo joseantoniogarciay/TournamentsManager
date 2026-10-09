@@ -5637,3 +5637,11 @@ puede depender de la rama: dentro del ScrollView para contenido cargado,
 en Screen para carga/error. Conservar el padding propio de la lista y sumar
 solo el inset evita duplicar la separación heredada del padre. No cambiar
 los contratos de la feature para resolver una cuestión de layout.
+
+### 2026-10-09 — Conservar separación propia al trasladar el inset
+
+La opción safe-area de KeyboardAwareScrollView escribe inset + 16 px después
+del estilo recibido. Para una lista que requiere 20 px propios, sumar el inset
+a ese padding explícito conserva su separación; activar ambas vías sobrescribe
+el valor. Las ramas de carga/error estático necesitan revisar su propietario
+por separado. Migración de código y cierre del QA nativo son hitos distintos.
