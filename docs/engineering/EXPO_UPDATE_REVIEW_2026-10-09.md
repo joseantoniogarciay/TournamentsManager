@@ -136,3 +136,129 @@ la nueva matriz y no se atribuye a esta revisión.
 - [Metadatos config-plugins](https://registry.npmjs.org/@expo/config-plugins).
 - [Metadatos splash-screen](https://registry.npmjs.org/expo-splash-screen).
 - ADR-0138, ADR-0152 y [diagnóstico lint](ANDROID_LINT_ENGINE_ANALYSIS_2026-10-09.md).
+
+
+## Aplicación autorizada después de la revisión
+
+El usuario solicita «Deja instalado todo lo actualizable». Se aplica la matriz
+madura SDK 57 de la tabla mediante Expo CLI, manteniendo siete días y cero
+exclusiones. Los directos Expo quedan fijados; se resuelven transitivas y
+actualizaciones dentro de los rangos compatibles existentes con pnpm update.
+No se migra SDK, React, la línea RN ni herramientas a otro major.
+
+Se alinean log-box 57.0.4 y metro-runtime 57.0.16. Se declara Metro Config
+0.86.3 como herramienta del cliente para satisfacer el peer exacto de RN.
+Symbols conserva el mismo parche de glifo para 57.0.3, comprobado en fuente
+y build instaladas. Metro 0.84.5/0.84.6 incorporan lector propio, no dependen
+de image-size; se retiran el parche 0.84.4 y su override específico. Las pruebas
+existentes de imágenes válidas, escaladas, vacías y truncadas pasan.
+
+También se actualizan, dentro de sus rangos, PostHog JS 4.78.4, su plugin
+2.12.3, Screens 4.26.2, React Native Web 0.21.3 y tipos React 19.2.18.
+El resolver prefiere plugin 2.12.3 por el manifiesto y conjunto instalado;
+no se fuerza 2.12.4 con un override adicional. No se activa telemetría ni se
+cambian sus reglas por actualizar sus dependencias.
+
+Expo CLI instala los paquetes, pero devuelve exit 1 al no poder escribir
+plugins automáticamente en app.config.ts. Se añaden explícitamente expo-font
+y expo-localization a esa configuración; CNG limpio termina exit 0 en iOS y
+Android. La advertencia de expo-system-ui ya existente se conserva inventariada;
+no se incorpora otra dependencia durante este mantenimiento.
+
+Instalación congelada, typecheck, exportación web, tests de compatibilidad y
+make verify terminan exit 0. Expo check conserva únicamente los cinco directos
+jóvenes de la revisión; no se oculta con excludes. Peers nativos quedan
+alineados; persisten dos avisos previos de tooling (Hono Node Server y
+TypeScript/neverpanic), sin degradar las correcciones de seguridad para ocultarlos.
+
+CocoaPods se resuelve después de actualizar su índice: PostHog iOS 3.86.3
+(publicado 1 de octubre, 16:37:26 UTC) cumple la espera; Android usa
+posthog-android 3.71.4 (Maven Central Last-Modified: 30 de septiembre,
+11:31:39 UTC). El control pnpm no se atribuye a gestores nativos: sus fechas
+se contrastan en las fuentes oficiales.
+
+Fuentes adicionales: [release PostHog iOS 3.86.3](https://github.com/PostHog/posthog-ios/releases/tag/3.86.3)
+y [POM PostHog Android 3.71.4](https://repo1.maven.org/maven2/com/posthog/posthog-android/3.71.4/posthog-android-3.71.4.pom).
+Los resultados nativos y de arranque se registran abajo.
+
+
+La comprobación offline de la matriz incluida termina exit 0, con el aviso
+propio de Expo de que la validación offline es menos fiable. Complementa la
+comprobación online, no acredita que las revisiones remotas jóvenes estén
+instaladas. `pnpm audit` conserva dos avisos altos y cero críticos: node-forge
+(requiere >=1.4.1) y braces (>=3.0.4). El registro oficial sigue sin publicar
+esas correcciones al consultar el 9 de octubre; no se modifica la política
+ni se declara que la auditoría haya pasado sin avisos.
+
+
+### Validación Android de la instalación
+
+La primera compilación nativa se interrumpe por disco lleno. Se conservan logs,
+capturas y el último binario válido iOS, y se elimina exclusivamente su antiguo
+DerivedData de QA. Se recuperan unos cinco GiB; la recompilación Android para
+la arquitectura ARM64 del emulador termina BUILD SUCCESSFUL (55 s).
+El APK Debug se instala con `adb install -r`, sin borrar los datos.
+
+Metro conserva inicialmente la ruta física de Router 57.0.15 en su caché.
+Se reinicia con `--clear` y registra el bundle de Router 57.0.24. El emulador
+muestra Home, abre Crear torneo desde su botón y regresa a Home al cerrar.
+Fuentes, iconos y campos visibles quedan en capturas privadas; no se envían
+formularios ni se cambian las fixtures. Se apaga el emulador iniciado para QA.
+
+Lint habitual conserva el crash K2 en Worklets, `Cannot find a KaModule for the
+VirtualFile`. El contraste temporal K1 alcanza el XML de app: dos errores
+(MissingPrefix y NewApi), 45 avisos. Global-feedback se completa por separado
+con exit 0. No se cambia el motor permanente ni se aplican los parches Android
+rechazados. La instalación nativa funcional no equivale a cerrar ese gate.
+
+Evidencias: expo-update-{android-build,android-lint,android-lint-k1,feedback-lint-k1}
+-20261009.log, informes XML copiados y expo-update-android-{home,create}
+-20261009.png. Los fallos iniciales de disco se conservan como *-disk-full.log.
+El último binario anterior queda en ios-last-good-release-20261008.app.
+
+
+### Validación iOS y cierre
+
+Xcode Debug ARM64 termina BUILD SUCCEEDED, exit 0 (740 s tras recuperar
+espacio). Se instala la nueva .app en iPhone 17 / iOS 27, conservando los datos.
+Tras el desbloqueo del Mac confirmado por el usuario, CUA abre el launcher y
+cierra su explicación inicial y Dev Menu. Metro registra Router 57.0.24 para
+el bundle iOS. Home muestra fuentes e iconos y abre Crear torneo desde su botón.
+
+Text Size 3 conserva el título en la barra. Cambiar a 11 con el formulario
+abierto reubica correctamente el título, pero produce recortes en otros textos
+con alturas antiguas. Tras relanzar la app y entrar por el esquema local,
+los bloques y chips recuperan su reflow: título completo debajo de la barra,
+Cerrar separado y texto de deportes visible. Se verifica Cerrar -> Home.
+Este contraste no determina si el relayout en caliente procede del baseline,
+del modo Debug o del upgrade; se registra para comparación, sin dar por cerrada
+la accesibilidad. Home a 11 conserva el gran título partido ya inventariado.
+
+Capturas privadas: expo-update-ios-home-20261009.png,
+expo-update-ios-create-size{3,11}-20261009.png,
+expo-update-ios-create-size11-cold-20261009.png,
+expo-update-ios-close-size11-20261009.png y expo-update-ios-restored-20261009.png.
+El árbol accesible de la app sigue ausente en Device Hub; estas capturas no
+acreditan VoiceOver ni orden de foco. No se envían formularios, no se inicia
+sesión y no se alteran credenciales o fixtures.
+
+Se restaura Text Size 3 y español; VoiceOver y Capture Keyboard permanecen off.
+La app iOS se termina y Metro se detiene. El emulador Android creado para esta
+sesión está apagado; el simulador iOS preexistente se conserva. API, PostgreSQL,
+observabilidad y producción no se arrancan. Los adaptadores de escenas vigentes
+se mantienen; no se atribuye al upgrade su retirada ni la validación OAuth.
+
+Checklist cliente contra los archivos cambiados: package.json, app.config.ts
+y parche Symbols conservan las decisiones de arquitectura, tema, idioma,
+feedback y navegación aceptadas. Los plugins añadidos permiten CNG, no añaden
+flujos de producto. No se toca operación OpenAPI ni se crean fetch/DTOs, textos
+visibles, controles o reglas de negocio. Se completan typecheck, web,
+compatibilidad de dependencias y make verify; los gates nativos abiertos se
+identifican expresamente. La integración PostgreSQL completa se valida en CI,
+no se atribuye a una prueba local sin su URL.
+
+Retrospectiva de cierre: retirar el parche ya sustituido por upstream reduce
+mantenimiento; conservar Symbols evita reintroducir el defecto. Un caché de
+Metro y una falta de espacio pueden invalidar un contraste del upgrade sin
+ser defectos de producto. Medir con código nuevo y separar arranque frío del
+cambio de escala en caliente deja evidencia reproducible y límites claros.

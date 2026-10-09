@@ -102,6 +102,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: "automatic",
   plugins: [
     "expo-router",
+    "expo-font",
+    "expo-localization",
     ...(appEnvironment !== "production"
       ? []
       : [

@@ -234,3 +234,13 @@ el 2026-10-09: el usuario elige esperar versiones corregidas de Expo, sin añadi
 los dos parches propuestos. Los errores MissingPrefix y NewApi y la excepción
 del gate K2 permanecen abiertos; no adoptar K1 como sustituto ni omitir reglas.
 Toda actualización debe respetar maduración y validación de conjunto.
+
+
+### 2026-10-09 — Instalar actualizaciones maduras del cliente
+
+El usuario solicita «Deja instalado todo lo actualizable» tras revisar Expo/RN.
+Se autoriza aplicar la matriz madura del SDK 57 y resolver actualizaciones
+compatibles dentro de los rangos actuales, manteniendo ADR-0138 y ADR-0015.
+No se autoriza saltar siete días, migrar SDK/React/RN minor ni aplicar los dos
+parches Android rechazados en ADR-0152. La revisión técnica recoge versiones,
+compatibilidad, retirada del parche Metro y validaciones.

@@ -27,8 +27,8 @@ minimumReleaseAgeExclude: []
 # madurado. Se fijan a las últimas revisiones anteriores compatibles para que el
 # árbol pueda respetar la política sin una exclusión por edad.
 overrides:
-  "@expo/log-box": 57.0.1
-  "@expo/metro-runtime": 57.0.4
+  "@expo/log-box": 57.0.4
+  "@expo/metro-runtime": 57.0.16
   "@faker-js/faker@10.4.0": 10.6.0
   "@scalar/cli>@fastify/static": 10.1.2
   "@hono/node-server@2.0.1": 2.0.10
@@ -46,16 +46,15 @@ overrides:
   "nanoid@5.0.9": 5.1.16
   "undici@7.28.0": 7.29.1
   "xcode>uuid": 11.1.1
-  "metro@0.84.4>image-size": 2.0.4
   "query-string@7.1.3>decode-uri-component": 0.5.0
 
 # Correcciones de seguridad verificadas el 2026-10-03. Los selectores conservan
 # cada rama compatible; xcode solo consume uuid.v4 y Scalar usa Fastify 5.
-# Los parches versionados adaptan Metro a bytes y query-string al export ESM.
+# El parche versionado adapta query-string al export ESM; Metro 0.84.5+
+# incorpora su propio lector de imágenes y ya no depende de image-size.
 # Los paquetes sin corrección publicada quedan inventariados en DEVELOPMENT.md.
 nodeLinker: isolated
 storeDir: .pnpm-store
 patchedDependencies:
-  expo-symbols@57.0.2: patches/expo-symbols@57.0.2.patch
-  metro@0.84.4: patches/metro@0.84.4.patch
+  expo-symbols@57.0.3: patches/expo-symbols@57.0.3.patch
   query-string@7.1.3: patches/query-string@7.1.3.patch

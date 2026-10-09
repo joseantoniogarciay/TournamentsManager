@@ -4659,3 +4659,34 @@ Retrospectiva: completar evidencia visual por idioma y comprobar paquetes
 oficiales permite avanzar QA sin certificar accesibilidad o correcciones no
 probadas. API, PostgreSQL, Metro, emulador Android, observabilidad y producción
 no se arrancan en esta fase; se conservan evidencia y datos.
+
+
+#### 2026-10-09 — Instalación autorizada de la matriz madura
+
+El usuario pide instalar lo actualizable tras revisar Expo/RN. Se aplica Expo
+57.0.26 / RN 0.86.3, se actualizan paquetes compatibles y transitivas maduras,
+sin exclusiones de edad. El [informe de actualización](EXPO_UPDATE_REVIEW_2026-10-09.md)
+registra versiones, pares, parches, compatibilidad y evidencia privada.
+Instalación congelada, typecheck, web, make verify y regresiones de dependencias
+pasan; el check online conserva los cinco directos jóvenes. Se mantienen los
+avisos altos de node-forge/braces con correcciones todavía no publicadas.
+
+Android Debug ARM64 compila, se instala conservando datos y recorre Home ->
+Crear torneo -> Cerrar -> Home con Router 57.0.24 tras limpiar el caché Metro.
+No se envían formularios ni se modifican fixtures. El emulador de esta sesión
+queda apagado. K2 sigue fallando en Worklets; el XML diagnóstico K1 conserva dos
+errores y 45 avisos de app. Global-feedback pasa con cero errores y seis avisos.
+No se debilita el gate ni se aplican los dos parches rechazados por el usuario.
+
+Las primeras builds nativas se interrumpen por disco lleno. Se conserva el
+último binario iOS y la evidencia y se elimina su DerivedData antiguo; la
+recompilación Android pasa. Después del desbloqueo confirmado por el usuario,
+iOS Debug ARM64 compila, se instala y muestra Home con Router 57.0.24. Crear
+torneo conserva título en barra a Text Size 3 y debajo a 11; al relanzar a 11
+los chips hacen reflow y el cierre nativo vuelve a Home. Cambiar la escala en
+caliente recorta otros textos: se registra el contraste sin atribuirlo al
+upgrade ni cerrar accesibilidad. El árbol AX de la app sigue ausente.
+
+Se restaura tamaño 3 y español; se termina la app iOS y Metro. No se arranca API,
+PostgreSQL, observabilidad ni producción. La revisión vinculada conserva toda
+la evidencia y la retrospectiva; no se presenta este smoke test como QA total.

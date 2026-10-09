@@ -447,6 +447,10 @@ la matriz 57.0.26 ya cumple antigüedad directa. La CLI ahora pide 57.0.27,
 aún joven; no se ha instalado ninguna matriz nueva ni cerrado los errores
 de generación Android de ADR-0152. Revisar transitivas, overrides y parches
 antes de una actualización explícita.
+El usuario autoriza después su instalación: la matriz madura y sus transitivas
+quedan resueltas; el informe vinculado registra instalación congelada, builds,
+recorridos y gates todavía abiertos. Se retira el parche Metro obsoleto y se
+conserva Symbols 57.0.3.
 
 Para mantener los servicios en segundo plano en Docker Desktop:
 
@@ -490,7 +494,7 @@ Producción/K3s conserva sus servicios y controles.
 
 ### Iconos Material y escala de texto (2026-10-04)
 
-`patches/expo-symbols@57.0.2.patch` mantiene fijo el glifo Material dentro de su
+`patches/expo-symbols@57.0.3.patch` mantiene fijo el glifo Material dentro de su
 caja declarada. El fallo se reprodujo en Pixel API 34/Android 14 con el tamaño
 de fuente máximo: la X de Crear torneo se recortaba hasta parecer una flecha.
 El parche cambia solo `allowFontScaling` del texto del icono en fuente y build

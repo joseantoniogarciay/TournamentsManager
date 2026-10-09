@@ -12,7 +12,7 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 
 - **Iconos y texto ampliado:** los glifos de iconos mantienen el tamaño del token
   dentro de su caja; el texto de la interfaz conserva el escalado de accesibilidad.
-  `expo-symbols` 57.0.2 dibuja Material Symbols mediante `Text` en Android/web:
+  `expo-symbols` 57.0.3 dibuja Material Symbols mediante `Text` en Android/web:
   un parche pnpm desactiva `allowFontScaling` únicamente en ese glifo para evitar
   su recorte al ampliar la letra. SF Symbols en iOS mantiene su implementación
   nativa. Revalidar y retirar el parche cuando la dependencia corrija este caso.

@@ -6,6 +6,14 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Changed
+
+- Cliente actualizado a Expo 57.0.26 / React Native 0.86.3 y dependencias
+  compatibles maduras; lockfile revisado, Metro Config alineado, plugins de
+  fuentes/localización explícitos y parche Symbols conservado para 57.0.3.
+- Retirado el parche Metro antiguo al incorporar upstream su lector de imágenes.
+  Se mantienen la espera de siete días y las incidencias Android de ADR-0152.
+
 ### Security
 
 - Toolchain Go 1.26.9 y `golang.org/x/net` 0.60.0 fijados en los módulos de

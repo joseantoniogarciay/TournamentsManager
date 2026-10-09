@@ -5526,3 +5526,40 @@ Retrospectiva de QA: al máximo tamaño, el título de creación es completo en
 en/it/fr; los saltos varían con el texto real. Se comprueba Cerrar en inglés y
 se restaura español y tamaño 3. Capturas visuales no acreditan VoiceOver ni
 el recorrido accesible de todas las pantallas.
+
+
+### 2026-10-09 — Aplicar una matriz madura y verificar la resolución real
+
+La autorización de instalar permite actualizar el SDK actual; no elimina la
+espera de siete días. Fijar Expo 57.0.26, alinear sus paquetes y resolver las
+transitivas evita que --fix arrastre cinco directos jóvenes. La instalación
+congelada posterior valida la reproducibilidad del nuevo lockfile. Los peers
+de RN requieren Metro Config 0.86.3, no la revisión antigua elegida antes.
+
+Al cambiar paquetes parcheados, actualizar versión y entrada de patch juntos:
+la instalación por etapas de Expo puede dejar un parche sin consumidor. Revisar
+la nueva fuente permitió retirar el parche de Metro: su lector propio supera
+las pruebas reales de imágenes. Symbols todavía necesita su corrección y se
+mantiene para 57.0.3. Añadir los config plugins que la CLI no puede escribir
+automáticamente en app.config.ts completa CNG sin editar sus salidas.
+
+CocoaPods y Gradle no heredan minimumReleaseAge de pnpm: contrastar publicaciones
+nativas en sus fuentes. Un build interrumpido por disco lleno no demuestra
+incompatibilidad: conservar logs y último binario, limpiar caches de QA y
+compilar solo la arquitectura necesaria permitió recuperar Android. Metro
+puede mantener el realpath anterior de un symlink; reiniciar con --clear y
+comprobar la versión del entry usado evita validar código antiguo.
+
+Retrospectiva: separar instalación, compatibilidad, reproducción y QA funcional
+permite retirar mantenimiento obsoleto sin cerrar incidencias que siguen reales.
+El upgrade conserva el crash K2 y los dos errores del generador Expo; se respeta
+la espera aceptada de ADR-0152. Dos avisos altos de seguridad conservan la espera
+porque sus correcciones anunciadas aún no están publicadas en npm.
+
+
+La build iOS pasa tras recuperar espacio y permite navegar y cerrar con el nuevo
+Router. Cambiar Dynamic Type en una vista montada y abrirla de nuevo desde frío
+son escenarios distintos: en el primero se observaron alturas desactualizadas;
+el segundo recompone chips y contenido. No atribuir el contraste al upgrade
+sin comparar el baseline. El título adaptativo funciona en ambos casos, pero
+eso no certifica todo el layout ni el canal VoiceOver ausente.
