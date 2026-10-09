@@ -21,6 +21,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- Texto iOS recalculado al cambiar Dynamic Type con una pantalla abierta; chips
+  y etiquetas ajustan su altura sin reiniciar ni perder el borrador o foco de campos.
+
 - Títulos iOS adaptables al espacio real (ADR-0151): permanecen en la barra
   mientras quepan y se muestran completos debajo solo cuando lo necesitan,
   conservando botones nativos y el tamaño de texto solicitado.

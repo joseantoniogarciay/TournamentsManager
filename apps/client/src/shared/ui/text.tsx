@@ -1,10 +1,12 @@
-import { type PropsWithChildren } from "react";
+import { type PropsWithChildren, useId } from "react";
 import {
+  Platform,
   StyleSheet,
   Text as NativeText,
   type StyleProp,
   type TextProps as NativeTextProps,
   type TextStyle,
+  useWindowDimensions,
 } from "react-native";
 
 import { color, typography } from "@tournaments-manager/design-tokens";
@@ -34,6 +36,8 @@ export function Text({
   style,
 }: Props) {
   const { colors } = usePreferences();
+  const textId = useId();
+  const { fontScale } = useWindowDimensions();
   const textColors = {
     primary: { color: colors.text.primary },
     secondary: { color: colors.text.secondary },
@@ -44,6 +48,9 @@ export function Text({
   };
   return (
     <NativeText
+      // RN 0.86 iOS keeps stale paragraph measurements after Dynamic Type changes.
+      // Commit a native prop update without remounting text or changing its scaling.
+      nativeID={Platform.OS === "ios" ? `${textId}-${fontScale}` : undefined}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={accessibilityRole}
       numberOfLines={numberOfLines}

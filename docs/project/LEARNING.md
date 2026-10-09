@@ -5563,3 +5563,16 @@ son escenarios distintos: en el primero se observaron alturas desactualizadas;
 el segundo recompone chips y contenido. No atribuir el contraste al upgrade
 sin comparar el baseline. El título adaptativo funciona en ambos casos, pero
 eso no certifica todo el layout ni el canal VoiceOver ausente.
+
+
+### 2026-10-09 — Dynamic Type con pantallas ya montadas
+
+RN 0.86.3 iOS puede dibujar glifos ampliados sobre mediciones anteriores al
+cambio de escala. El contraste relanzado/en caliente y el
+[reporte upstream](https://github.com/react/react-native/issues/57512) orientan
+el diagnóstico; la reproducción local decide la corrección. `Text` actualiza
+un ID nativo único al cambiar `fontScale` para volver a medir sin `key`, sin
+limitar escala y sin remontar campos/rutas. QA conserva deporte, borrador y
+edición después de ampliar; hay que probar aumento y reducción con contenido
+montado. Retirar esta adaptación cuando RN pase el recorrido sin ella. Tener
+AX disponible no acredita por sí solo locución o foco VoiceOver.

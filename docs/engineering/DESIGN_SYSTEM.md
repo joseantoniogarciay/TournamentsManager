@@ -17,6 +17,16 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   su recorte al ampliar la letra. SF Symbols en iOS mantiene su implementación
   nativa. Revalidar y retirar el parche cuando la dependencia corrija este caso.
 
+- **Cambio de tamaño de texto en caliente (iOS):** `Text` escucha `fontScale`
+  mediante `useWindowDimensions` y actualiza un `nativeID` único derivado de
+  `useId` y la escala. En RN 0.86.3 esa actualización invalida la medición de
+  párrafos que quedaba antigua al cambiar Dynamic Type. Conserva el nodo React,
+  el escalado nativo, los tokens y el estado de campos/rutas; no añade `key`,
+  límites de escala ni tamaño calculado en JS. Android/web no reciben ese ID.
+  Es una adaptación temporal: retirarla cuando el renderer recalcule correctamente
+  sin ella, comprobando cambios en ambos sentidos con la pantalla montada.
+  La evidencia y límites están en [QA](PRODUCT_QA_REVIEW_2026-10-04.md).
+
 - **Color:** azul como acción primaria; violeta como acento; superficies claras;
   verde, ámbar y rojo reservados para estado y feedback.
 - **Indicadores informativos:** un número de paso o un marcador no interactivo

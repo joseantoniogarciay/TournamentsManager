@@ -4690,3 +4690,62 @@ upgrade ni cerrar accesibilidad. El árbol AX de la app sigue ausente.
 Se restaura tamaño 3 y español; se termina la app iOS y Metro. No se arranca API,
 PostgreSQL, observabilidad ni producción. La revisión vinculada conserva toda
 la evidencia y la retrospectiva; no se presenta este smoke test como QA total.
+
+
+#### 2026-10-09 — Recalcular texto iOS al cambiar Dynamic Type en caliente
+
+Problema reproducido en la development build Expo 57.0.26 / RN 0.86.3: pasar
+Text Size 3 -> 11 con Crear torneo montado conserva las alturas antiguas de
+etiquetas y chips, aunque los glifos crecen. La captura privada
+`dynamic-type-live-before-20261009.png` vuelve a mostrar el recorte; el arranque
+previo usa el binario actualizado y Metro con Router 57.0.24.
+
+El [reporte upstream #57512](https://github.com/react/react-native/issues/57512)
+describe el mismo patrón y documenta que una actualización de propiedades basta
+para volver a medir. Es evidencia de contexto, no prueba de que toda su causa
+interna coincida con esta app. La dependencia instalada conserva contenido del
+párrafo y marca su medición como sucia cuando cambia props.
+
+Se concreta la accesibilidad aceptada en ADR-0054/0055/0151 en la primitiva
+`Text`: `useWindowDimensions().fontScale` actualiza un `nativeID` único (`useId`
++ escala) solo en iOS. No se altera la etiqueta accesible ni se remonta el texto,
+la ruta o el formulario. Se conserva `allowFontScaling` nativo y los tokens;
+no se introduce un parche de dependencia ni una librería. Frente a remontar con
+`key={fontScale}`, evita sustituir nodos; frente a un parche Fabric, tiene menor
+coste de actualización. La adaptación se retira cuando el renderer pase esta
+misma prueba sin la propiedad de invalidación.
+
+Prueba con la pantalla montada tras cargar el cambio: 3 -> 11 muestra Deporte y
+chips completos y reordenados (`dynamic-type-live-candidate-20261009.png`),
+conserva el deporte Tenis y el borrador QA escala, comprobados también en AX.
+11 -> 3 -> 7 muestra etiquetas completas y campo activo; escribir después de
+cambiar a 7 añade texto al mismo borrador sin reenfocarlo. La captura
+`dynamic-type-size7-focus-20261009.png` muestra cursor, borde de foco y
+QA escala viva 7. Otra transición 7 -> 11 -> 3 conserva edición y añade 11 al
+valor. A 7 el título cabe en barra; a 11 pasa completo debajo: la regla sigue
+basada en medición y no en un umbral de escala.
+
+El árbol AX de la app está disponible en esta sesión: hay una sola cabecera
+Crear torneo, Cerrar es botón, Tenis consta seleccionado y los campos tienen
+nombre localizado. Esto avanza la evidencia semántica, pero no certifica locución
+ni recorrido VoiceOver. El gesto de scroll solicitado a Device Hub no desplaza
+el formulario; no se acredita aquí lectura visual del último control a 11.
+No se envían formularios ni se cambia ningún fixture. Se limpia el borrador,
+Cerrar vuelve a Inicio y se restaura Text Size 3, VoiceOver apagado y captura
+de teclado apagada.
+
+Checklist de cliente: cambio compartido y acotado a iOS, sin copy nuevo ni
+colores/medidas locales, semántica y escalado conservados, sin operación OpenAPI
+ni endpoint modificado. Typecheck y exportación web pasan. Los bloqueos Android
+K2/generadores de ADR-0152 y el resto de la matriz global siguen abiertos.
+
+Retrospectiva: una captura tras relanzar no cubre el cambio de preferencia con
+contenido montado. La comprobación de altura debe acompañarse de estado y
+edición retenidos; una propiedad de invalidación permite corregir el defecto
+observado sin asumir la complejidad de mantener el renderer nativo.
+
+Cierre del gate: `make verify` pasa, además de typecheck y exportación web
+independientes. La integración PostgreSQL local se omite sin URL de pruebas;
+la comprobación remota se realiza en CI tras subir a develop. Metro queda
+apagado y se termina la app y el simulador arrancado en esta sesión. API,
+PostgreSQL, observabilidad y producción no se han arrancado.
