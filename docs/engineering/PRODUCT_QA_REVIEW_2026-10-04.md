@@ -4505,7 +4505,7 @@ ni el recorrido global con lectores. Local, dev y producción siguen apagados.
 
 Validación final: GOTOOLCHAIN=go1.26.9 make verify y go test -race ./...
 terminan con exit 0. PostgreSQL permanece apagado y las pruebas que exigen
-TEST_DATABASE_URL se omiten localmente; CI ejecutará esa integración.
+TM_INTEGRATION_DATABASE_URL se omiten localmente; CI ejecutará esa integración.
 Govulncheck conserva el aviso de módulo OpenPGP previamente documentado,
 con cero vulnerabilidades alcanzables. Logs privados:
 qa-tests-enabled-verify-20261009.log y qa-tests-enabled-race-20261009.log.
