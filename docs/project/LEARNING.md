@@ -5619,3 +5619,13 @@ seis casos con reserva del padre aún pendiente. Separar ramas estáticas,
 paddings propios y reserva de tabs evita aplicar dos veces el inset o perder
 separación al extender el patrón. La revisión estática orienta el QA, pero no
 sustituye evidencia visual del último control.
+
+### 2026-10-09 — Verificar el final estable de una lista ampliada
+
+El rebote de un gesto puede mostrar temporalmente una gran zona vacía.
+Comprobar el fotograma estabilizado evita confundirlo con padding permanente.
+Una tarjeta mayor que el viewport sigue siendo recorrible si texto y fecha
+se alcanzan por scroll; abrir su destino y volver permite comprobar conservación
+de posición. Eso no valida por sí solo la presentación del título ni que el
+inset se reserve dentro del contenido. La recuperación sin token tiene una
+rama de error verificable sin cambiar una credencial.

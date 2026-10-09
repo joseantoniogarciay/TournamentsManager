@@ -4954,3 +4954,49 @@ No se publica producción ni se repite un gate nativo con la misma matriz.
 Retrospectiva: localizar quién reserva el inset permite priorizar la siguiente
 pasada sin declarar una migración global terminada. Las ramas sin scroll y
 los paddings propios deben revisarse antes de trasladar la reserva.
+
+#### 2026-10-09 — Desplazamiento real de notificaciones iOS y enlace sin token
+
+Tras desbloquear el Mac se retoma iPhone 17, iOS 27, con el Debug actualizado.
+La ruta de recuperación sin token muestra mensaje localizado y Volver a la
+home completos a Text Size 11. Activar la salida vuelve a Inicio. No se introduce
+ni cambia ninguna credencial; esta rama no reproduce un último control recortado.
+
+Se inicia Metro y el entorno local API/PostgreSQL/Mailpit sin observabilidad.
+Metro se detiene durante la pasada y aparece el error del servidor de desarrollo;
+se reinicia y se reconecta antes de continuar. Se inicia sesión por el formulario
+normal con la cuenta ficticia qa_visual_player, sin insertar sesión por archivos.
+El teclado del instrumento requiere Alt+2 para la arroba con su distribución
+española; no se atribuyen los intentos de entrada a un fallo del producto.
+
+La lista conservada alcanza por gesto su notificación más antigua,
+4/10/2026 16:34:26. A Text Size 3 su tarjeta completa y separación inferior
+son visibles. A Text Size 11 el texto de una tarjeta supera el viewport,
+pero el recorrido permite leer su extremo inferior y la fecha completa,
+con separación respecto al borde. Tocar el cuerpo abre «QA Liga de equipos
+con acentos y nombres largos»; Cerrar regresa a la misma posición inferior.
+No se activa ningún borrado ni se crea un fixture. Se cierra el pendiente de
+desplazamiento real iOS de esta lista; no se acredita lectura con VoiceOver.
+
+A tamaño 11 el título Notificaciones parte la «s» final en otra línea;
+queda pendiente revisar esa presentación. El acceso al final no demuestra
+que el propietario actual del inset siga la regla de viewport aprovechable: la
+reserva externa inventariada continúa sin migrar. No se modifica implementación
+ni se extiende el cierre de Crear torneo a las seis rutas restantes.
+
+Evidencia privada en /private/tmp/tm-product-qa-20261004/:
+ios-reset-no-token-size11-20261009.png,
+ios-notifications-bottom-size3-20261009.png,
+ios-notifications-bottom-size11-20261009.png y logs de Metro y dev-up de esta
+pasada. AX del instrumento no expone el subtree de la app; se contrastan
+resultados mediante capturas y gestos observados. Un fotograma de rebote de
+scroll no se considera posición final: se comprueba después de estabilizarse.
+
+Se restaura Text Size 3, VoiceOver y Capture Keyboard quedan desactivados.
+Se termina la app, se conserva el simulador que ya estaba arrancado y se
+apagan Metro y el entorno local con dev-down, conservando volúmenes.
+
+Retrospectiva: llegar al final y regresar desde un destino aporta evidencia
+distinta de activar un elemento fuera de pantalla mediante AX. Acceso al
+contenido, presentación del título y propiedad del inset son comprobaciones
+separadas; esta pasada cierra únicamente lo observado.
