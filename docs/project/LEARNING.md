@@ -5431,3 +5431,17 @@ Tres arranques, enlaces negativos y recuperación aportan evidencia acotada;
 el recorte de cabecera al tamaño máximo sigue abierto. Repetir Android Lint
 sin exclusiones confirma el bloqueo del analizador de worklets, sin sustituir
 el gate completo por su subconjunto vital de release.
+
+
+## 2026-10-09 — Seguridad y revisión de excepciones tras un parche
+
+Una CI aprobada ayer puede fallar hoy por nuevos avisos de govulncheck.
+Actualizar dentro de la línea aceptada, respetar el grafo mínimo del módulo y
+verificar ambos tidy, tests y build. Cero símbolos vulnerables no equivale a
+cero avisos de módulo: OpenPGP sigue señalado en x/crypto aunque no se importa.
+
+Go 1.26.9 permite cargar tests en lint; aparecen 38 hallazgos antes ocultos por
+la limitación instrumental. Actualizar la causa de la deuda y conservar la
+validación funcional, sin suprimir reglas ni mezclar ese trabajo con el parche.
+Producción apagada conserva sus binarios: el parche en develop requiere una
+publicación verificada antes de volver a servirlos.

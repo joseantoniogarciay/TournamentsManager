@@ -4439,3 +4439,40 @@ producción y autostart siguen disabled. No se reinicia producción ni se public
 un nuevo release. El primer cierre fue rechazado por un fallo de revisión
 automática debido al límite de uso; no ejecutó la acción y se completó tras
 reanudar la sesión. Evidencia y backups se conservan.
+
+
+#### 2026-10-09 — Parche de seguridad descubierto durante el cierre de CI
+
+CI de 787444c falla en govulncheck con once avisos publicados el 8 de octubre:
+GO-2026-6617, 6613, 6612, 6611, 6610, 6608, 6607, 6605, 6603, 6600 y 6599.
+La CI anterior aprobada no invalida una detección posterior de la base viva.
+Se aplica la política de parches aceptada en ADR-0012: toolchain Go 1.26.9
+en ambos módulos y x/net 0.60.0; go get resuelve además los mínimos requeridos
+de crypto, sync, sys, text y mod, con tidy y checksums separados.
+Docker Hub publica 1.26.9-bookworm para amd64 y arm64: se alinea la base.
+No se construyen ni despliegan imágenes de servicio en esta tanda. Los binarios
+de producción siguen siendo los de v1.10.0 y K3s permanece apagado.
+
+GOTOOLCHAIN=go1.26.9 make verify local termina con exit 0: formato, lint,
+tests, generación, tidy de ambos grafos, build, exportación web y govulncheck.
+La integración PostgreSQL opt-in queda omitida localmente con los servicios
+apagados; CI la ejecuta en su base efímera. El análisis detallado conserva
+GO-2026-5932 de OpenPGP en el módulo x/crypto, sin versión corregida: cero
+vulnerabilidades en símbolos y paquetes importados, un aviso de módulo cuyo
+paquete no usa este backend. No se declara limpio todo el grafo por ese exit 0.
+Fuente: [aviso oficial](https://pkg.go.dev/vuln/GO-2026-6617).
+
+Se revisa el disparador de lint de tests: con --tests=true ahora carga los
+paquetes y obtiene 38 hallazgos reales (errcheck 3, errorlint 3, gosec 5,
+misspell 8, noctx 7, revive 8, staticcheck 3, unused 1). Se actualiza la deuda
+y el comentario de configuración; tests:false permanece hasta resolverlos.
+No se atribuye ya ese pendiente a una excepción del cargador ni se suprimen
+reglas para declararlo aprobado. Las pruebas funcionales siguen ejecutándose.
+
+Evidencia privada: qa-close-ci-failed-20261009.log,
+qa-go-security-verify-20261009.log, qa-go-security-vuln-verbose-20261009.log,
+qa-go-lint-tests-20261009.log y go-1.26.9-docker-manifest-20261009.json.
+Retrospectiva: la base de vulnerabilidades cambia sin cambios de código.
+Una actualización mínima puede corregir el gate de seguridad y, a la vez,
+permitir revisar una excepción antigua; distinguir ambas deudas evita
+confundir un parche probado con una certificación global o un despliegue.

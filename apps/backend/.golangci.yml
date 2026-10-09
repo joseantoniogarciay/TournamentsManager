@@ -2,8 +2,8 @@ version: "2"
 
 run:
   timeout: 5m
-  # Go 1.26 y golangci-lint 2.12.2 no cargan de forma fiable paquetes de prueba.
-  # La suite de pruebas se ejecuta por separado con `go test ./...`.
+  # Con Go 1.26.9 ya cargan los tests, pero la revisión detecta 38 hallazgos
+  # pendientes (QA 2026-10-09). `go test ./...` mantiene su validación funcional.
   tests: false
 
 linters:

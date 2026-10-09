@@ -31,7 +31,7 @@
 ## Toolchain Go
 
 - Versión mínima del módulo: Go 1.26.0.
-- Toolchain exacto: Go 1.26.6.
+- Toolchain exacto: Go 1.26.9.
 - El backend usa `apps/backend/go.mod`.
 - Las herramientas usan `apps/backend/go.tool.mod` y
   `apps/backend/go.tool.sum`.
@@ -398,7 +398,7 @@ con x/net 0.58.0 y x/text 0.41.0 requeridos por el grafo. En herramientas se
 corrigen además cel-go 0.30.0, x/mod 0.40.0 y compress 1.18.7; x/tools sube
 a 0.49.0 por esa resolución. La auditoría de los seis ejecutables Go tampoco
 detecta avisos en sus paquetes importados. Se conservan Go
-1.26.6, las herramientas fijadas y el esquema de módulos separado. `govulncheck`
+1.26.9, las herramientas fijadas y el esquema de módulos separado. `govulncheck`
 ya no detecta vulnerabilidades en paquetes importados por la aplicación ni en
 funciones alcanzables. Conserva el aviso GO-2026-5932 sobre `openpgp`, paquete
 obsoleto dentro de x/crypto que la aplicación no importa y sin versión corregida.

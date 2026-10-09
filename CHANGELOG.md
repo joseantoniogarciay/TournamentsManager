@@ -6,6 +6,11 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Security
+
+- Toolchain Go 1.26.9 y `golang.org/x/net` 0.60.0 fijados en los módulos de
+  aplicación y herramientas para corregir los avisos detectados por CI.
+
 ### Fixed
 
 - Cabeceras de Cuenta Android con texto ampliado: títulos completos en dos

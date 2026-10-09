@@ -139,6 +139,17 @@ imagen se usa únicamente para arrancar el bootstrap: las directivas `toolchain
 go1.26.6`, con `GOTOOLCHAIN=auto`, descargan y seleccionan el compilador seguro
 antes del build.
 
+**Aplicación de la política de parches — 2026-10-09:** el gate de seguridad
+detecta once avisos publicados el 8 de octubre, alcanzables con Go 1.26.6
+y `golang.org/x/net` 0.58.0. Se fija Go 1.26.9 en ambos módulos y x/net 0.60.0
+en sus grafos separados. Mantiene la línea minor, las herramientas y la
+política aceptada de actualización revisada y verificada; no reabre una
+decisión de stack. Docker Hub publica 1.26.9-bookworm para amd64 y arm64; se actualiza la base
+y se retira el bootstrap antiguo, conservando el toolchain exacto del módulo. Producción permanece suspendida:
+este cambio no actualiza los binarios ya publicados.
+Fuentes: [aviso oficial GO-2026-6617](https://pkg.go.dev/vuln/GO-2026-6617) y
+[historial de Go](https://go.dev/doc/devel/release#go1.26.9).
+
 ## Ruta canónica del módulo
 
 La autenticación del propietario y la disponibilidad del repositorio se
