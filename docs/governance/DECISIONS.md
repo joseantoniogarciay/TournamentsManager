@@ -266,3 +266,12 @@ El usuario amplía ADR-0154 con «Vamos a por ellas»: gestión e invitación ju
 al listado de equipos cuando estén disponibles, y resumen lateral junto a
 partidos de liga iniciada. Regreso a una columna en viewport estrecho; sin
 rediseñar formularios, cuadros, desempates ni flujos de negocio.
+
+## Hosting web Cloudflare — 2026-10-10
+
+[ADR-0155](../adr/0155-host-production-web-on-cloudflare-static-assets.md),
+aceptado mediante «Vamos con ello»: migrar solo la web a hosting estático gratuito,
+conservar API/K3s domésticos y la publicación explícita. Workers Static Assets y
+renderer mínimo conservan rutas, previews y seguridad. No se autoriza un plan de
+pago. El estado efectivo y comandos están en `infra/cloudflare/README.md`;
+la implementación local no acredita una conmutación en la cuenta.

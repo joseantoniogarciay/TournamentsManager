@@ -29,7 +29,24 @@ lint: lint-go lint-ts
 check: format-check lint typecheck openapi-lint test
 
 # Verificación completa local y de CI.
-verify: check test-session-refresh test-client-telemetry test-social-authentication test-app-links test-dependencies test-match-incidents test-ios-scenes test-operational-safety test-integration client-web-export openapi-generate-check sqlc-generate-check tidy-check tidy-tools-check build vuln
+verify: check test-session-refresh test-client-telemetry test-social-authentication test-app-links test-dependencies test-match-incidents test-ios-scenes test-cloudflare-web test-operational-safety test-integration client-web-export openapi-generate-check sqlc-generate-check tidy-check tidy-tools-check build vuln
+
+.PHONY: test-cloudflare-web cloudflare-web-stage cloudflare-web-check cloudflare-web-preview cloudflare-web-publish
+test-cloudflare-web:
+	node --test tests/cloudflare-web.test.mjs
+
+# Preparar no publica; preview sube una versión sin cambiar el dominio público.
+cloudflare-web-stage:
+	node infra/cloudflare/stage-web.mjs "$(SHA)"
+
+cloudflare-web-check:
+	node infra/cloudflare/publish-web.mjs check "$(RELEASE)"
+
+cloudflare-web-preview:
+	node infra/cloudflare/publish-web.mjs preview "$(RELEASE)"
+
+cloudflare-web-publish:
+	node infra/cloudflare/publish-web.mjs publish "$(RELEASE)"
 
 .PHONY: test-session-refresh
 test-session-refresh:

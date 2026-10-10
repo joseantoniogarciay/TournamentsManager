@@ -6,6 +6,8 @@ allowBuilds:
   "@scarf/scarf": false
   esbuild: false
   vue-demi: false
+  # Wrangler necesita verificar su binario oficial para pruebas locales.
+  workerd: true
 
 # La instalación normal no puede modificar la resolución aprobada. Los cambios de
 # dependencias se hacen de forma deliberada con `pnpm add`, `pnpm update` o

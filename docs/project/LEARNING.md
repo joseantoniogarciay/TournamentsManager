@@ -5844,3 +5844,17 @@ ScrollView conserva flexGrow por defecto: width por sí solo no limita su
 reparto de espacio. Fijar flexGrow a cero y verificar ambos anchos. En una
 lista virtualizada, conservar instancia y referencia del viewport en la
 columna principal al mover el resumen entre lateral y encabezado.
+
+### 2026-10-10 — Separar hosting estático de disponibilidad de API
+
+Cloudflare Tunnel transporta solicitudes al origen; Wrangler publica los archivos
+en el borde. Alojar assets gratuitamente elimina la dependencia doméstica para
+cargar la interfaz, pero no para consultar o escribir datos. Una migración debe
+conservar CSP, SEO, fallback de rutas, asociaciones móviles y previews, además
+del HTML inicial. El candidato registra SHA distintos para app e infraestructura
+y hashes de contenido; copiar el release productivo evita publicar trabajo de
+develop por accidente. Las pruebas con workerd detectaron incompatibilidad de
+`redirect: "error"` y una regla de noindex que no cubría el hostname de versión.
+El estado local preparado y el hosting efectivo se documentan por separado;
+falta acceso a la cuenta para acreditar la conmutación. No se activa pago ni
+observabilidad por preparar el despliegue.

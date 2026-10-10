@@ -132,6 +132,12 @@ Dockerfile y usa Air con el código montado; el target `runtime` valida el
 artefacto sin compilador ni Air y es también la imagen desplegada en K3s para
 `prod`. Expo se ejecuta en host por sus simuladores y herramientas nativas.
 
+ADR-0155 acepta mover la web productiva a Workers Static Assets, conservando
+API y dev domésticos. El 2026-10-10 se prepara la implementación; la conmutación
+todavía no está confirmada. Véase el [flujo Cloudflare](../../infra/cloudflare/README.md)
+para candidatos trazables, previews, publicación y recuperación. Hasta verificar
+las rutas activas en la cuenta, sigue vigente el hosting doméstico siguiente.
+
 Una beta doméstica usa Cloudflare Tunnel como entrada HTTPS pública (ADR-0090).
 El conector del Mac inicia una conexión saliente y alcanza Caddy solo por
 loopback; no se reenvían puertos en UniFi ni se publica PostgreSQL o el puerto

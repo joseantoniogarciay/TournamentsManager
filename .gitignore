@@ -1,5 +1,6 @@
 # Local configuration and secrets
 /.config/
+.wrangler/
 .env
 .env.*
 infra/local/api.docker.env

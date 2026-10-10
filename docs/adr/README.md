@@ -60,3 +60,5 @@ Usa [template.md](template.md) y el
 - [ADR-0153: Tamaño fijo de las celdas de clasificación](0153-keep-standings-table-at-a-fixed-text-size.md) — Aceptado; excepción localizada al escalado de texto.
 
 - [ADR-0154: Ancho web responsive](0154-constrain-responsive-web-content-width.md) — Aceptado.
+
+- [ADR-0155: Hosting web en Cloudflare Static Assets](0155-host-production-web-on-cloudflare-static-assets.md) — Aceptado; conmutación pendiente de validación en la cuenta.

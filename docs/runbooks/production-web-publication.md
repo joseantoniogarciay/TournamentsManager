@@ -7,6 +7,14 @@
 
 ## Síntoma e impacto
 
+ADR-0155 acepta migrar el hosting a Cloudflare Static Assets. La implementación
+local del 2026-10-10 no está aún conmutada: falta autenticar la cuenta y verificar
+el dominio. El [procedimiento Cloudflare](../../infra/cloudflare/README.md)
+separa staging, dry-run, URL de versión y publicación, conservando el origen
+doméstico para rollback. Tras activar esas rutas, los pasos Caddy de este
+runbook quedan como recuperación del origen anterior; cambiar `current` ya no
+publica la web del borde. Actualizar evidencia y estado al cerrar el corte real.
+
 Este runbook cubre una nueva publicación o la recuperación de la SPA de
 producción. No despliega API, PostgreSQL ni Secrets. Ante una publicación que no
 supere las verificaciones, `fasttourney.com` vuelve al `503` versionado.
