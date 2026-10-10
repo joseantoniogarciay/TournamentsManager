@@ -5631,3 +5631,36 @@ elemento recorrible. Comprobar su foco y texto visible completo acredita
 alcance, pero no permite inferir cómo lo pronuncia el lector. No confundir
 un cursor visible con teclado visible ni cerrar esa cobertura por un recorrido
 sin oclusión.
+
+### 2026-10-10 — VoiceOver en sugerencias de Home
+
+Sobre 04b95bc, se reutiliza el bundle iOS de la sesión anterior, sin arrancar
+Metro ni dev ni acreditar otra recarga. Crear torneo conserva nombre vacío,
+equipo «Incidencia Local» y su validación previa. Capture Keyboard se activa
+con Command-K y se vuelve a desactivar: no aparece teclado software. Escape
+no desactiva esa captura. El menú View de Device Hub no ofrece un control
+visible para mostrar el teclado. Se cierra el formulario sin modificar valores
+ni crear torneo; la cobertura con teclado permanece pendiente.
+
+En Home, a Text Size 11 y con VoiceOver activo, el recorrido alcanza «¿Te
+falta algo?» y su descripción completa en cuatro líneas. El siguiente gesto
+enfoca el campo vacío: su rectángulo queda visible y el placeholder se recorta
+con puntos suspensivos, mientras AX conserva la descripción completa y el
+requisito de longitud. El siguiente enfoca «Escribe entre 8 y 1.000 caracteres.»:
+el desplazamiento lo deja completo en tres líneas por encima de las pestañas.
+Otro gesto enfoca Enviar sugerencia, deshabilitado, completo en dos líneas
+con margen hasta la barra inferior. No se introduce texto ni se activa el
+botón. Esta evidencia acredita foco y desplazamiento con texto máximo, no
+locución, edición ni recuperación con teclado abierto.
+
+Se restaura Text Size 3 y se confirma VoiceOver off y Capture Keyboard off.
+Se deja Home en sugerencias, vacío y sin envío. docker ps no muestra contenedores
+activos. No se cambian archivos del cliente ni se repiten checks de código.
+Evidencia visual y AX en la conversación, sin PNG exportado. El QA global
+permanece abierto: Android actual, formularios con teclado, locución y zoom
+autenticado siguen pendientes.
+
+Retrospectiva: un botón deshabilitado puede recibir foco del lector y provocar
+el desplazamiento necesario para verlo completo. Observarlo con foco acredita
+su alcance; no prueba activación ni el comportamiento con teclado. La
+truncación visual del placeholder debe distinguirse de su descripción AX.

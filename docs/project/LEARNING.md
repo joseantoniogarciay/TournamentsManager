@@ -5723,3 +5723,12 @@ fuera del viewport inicial puede quedar completo al recibir foco. Alcanzar el
 botón final con texto máximo prueba desplazamiento del formulario, sin requerir
 activarlo. Un cursor visible con Capture Keyboard off no prueba que el teclado
 software esté abierto; conservar esa cobertura como pendiente hasta observarlo.
+
+### 2026-10-10 — Botón deshabilitado y foco del lector
+
+Recorrer también el botón final deshabilitado: VoiceOver puede enfocarlo y
+llevarlo por encima de la barra de pestañas. Verificar el rectángulo, texto
+completo y margen inferior antes de acreditar alcance. Registrar por separado
+placeholder truncado y descripción AX completa; ninguno demuestra locución.
+No confundir Capture Keyboard del instrumento con la aparición del teclado
+software del dispositivo.
