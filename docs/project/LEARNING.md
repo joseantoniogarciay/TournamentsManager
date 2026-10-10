@@ -5794,3 +5794,11 @@ teclado todavía visible acredita más que abrir el formulario. En lector,
 servicio enlazado, foco inicial y nombres/roles expuestos no prueban avance,
 activación ni locución. Registrar cada límite y detener reintentos mantiene
 finita la fase; no convertir una muestra parcial en aprobación completa.
+
+### 2026-10-10 — No parchear por un aviso sin componente identificado
+
+Distinguir una actualización después de desmontar de la advertencia de React
+antes del montaje. El mensaje del renderer identifica el detector, no la causa.
+Revisar efectos y callbacks de arranque no sustituye una traza del componente.
+No añadir guards o demoras repartidos para silenciar un aviso sin demostrar
+su origen; conservarlo y capturar la traza cuando vuelva a aparecer.

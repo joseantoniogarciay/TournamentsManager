@@ -217,3 +217,33 @@ Retrospectiva: el emulador separado permitió aislar la saturación del IDE y
 completar la muestra útil de teclado. Servicio activo, atributos accesibles y
 foco inicial son evidencias distintas de recorrido y audio; mantener esa
 separación evita tanto una aprobación falsa como otra matriz interminable.
+
+## Seguimiento acotado del aviso React — revisión de fuentes
+
+Tras cerrar las muestras se revisa el aviso sin arrancar servicios. En
+_layout.tsx, SessionProvider, PreferencesProvider, NotificationProvider,
+FeedbackProvider y HomeScreen, las cargas asíncronas observadas parten de
+efectos o callbacks. El temporizador de fallback de fuentes limpia su timeout.
+TournamentStore usa useSyncExternalStore con suscripción y retirada; construir
+el store no inicia su carga. PendingVerificationProvider no inicia tareas.
+El hook runtime de expo-font fijado inicia loadAsync desde useEffect y protege
+sus actualizaciones con isMounted. ClientTelemetryProvider omite inicializar
+PostHog en local, conforme a su configuración existente.
+
+El texto del aviso existe en warnAboutUpdateOnNotYetMountedFiberInDEV del
+renderer ReactFabric de react-native fijado. Esto identifica su emisor, no el
+componente causante. La revisión no localiza el efecto durante render descrito
+por el aviso ni descarta que exista en otra ruta o dependencia. La falta de
+protección de algunas promesas después de desmontar tampoco demuestra esta
+advertencia específica antes del montaje. No se añaden guards, demoras ni
+cambios de dependencias sin evidencia causal.
+
+Resultado: aviso conservado, causa sin localizar; próximo disparador concreto,
+si reaparece, capturar la traza del componente y el momento del arranque. No
+se abren más recorridos manuales ni se modifica el cliente. ADR-0152 mantiene
+la alternativa B aceptada: esperar correcciones de Expo; no se aplica un parche
+local de lint ni se vuelve a ejecutar el gate bloqueado sin cambio relevante.
+
+Retrospectiva: un texto genérico de React orienta el diagnóstico, pero no
+justifica cambios preventivos dispersos. Revisar los puntos de arranque permite
+acotar hipótesis con coste bajo; detenerse sin atribución preserva la evidencia.
