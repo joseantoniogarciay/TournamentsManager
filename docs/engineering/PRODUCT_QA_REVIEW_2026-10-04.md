@@ -5791,3 +5791,13 @@ la pestaña QA. El [inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md)
 registra detalles y límites; solo teclado Android y TalkBack siguen sin
 ejecutar dentro de las tres muestras, por timeout del instrumento.
 No se amplía la matriz a otras rutas, idiomas o componentes con VoiceOver.
+
+### 2026-10-10 — Recuperación Android sin muestra aprobada
+
+Con cierre del IDE autorizado se verifica apps/client/android en bienvenida
+y se recupera parcialmente Pixel API 34. La apertura de la app no es fiable:
+Android muestra «UI del sistema no responde» y el IDE vuelve a indicar memoria
+baja. El [inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md) conserva teclado
+ampliado y TalkBack como no ejecutados por entorno; no como defectos del producto.
+No se modifican ajustes de accesibilidad. Se apagan Metro/dev y se retiran los
+túneles añadidos en la tanda. No se amplía el alcance.

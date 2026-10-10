@@ -5774,3 +5774,13 @@ el porcentaje en el menú del navegador: una sucesión de atajos no demuestra
 el zoom alcanzado. allowFontScaling=false limita Dynamic Type nativo, pero
 no impide que el navegador amplíe las celdas. Renovar coordenadas cuando cambie
 la captura y registrar solo el desplazamiento cuyo resultado se observa.
+
+### 2026-10-10 — Recuperación parcial del instrumento Android
+
+ADB conectado e imagen de Home no acreditan una sesión de QA utilizable.
+Comprobar apertura fiable de la app y bundle actual antes de activar texto
+ampliado o lector. Un aviso «UI del sistema no responde» y memoria baja del
+IDE conservan el bloqueo del entorno; no atribuirlos al producto. La ruta
+Help de un módulo seleccionado tampoco demuestra la raíz del proyecto:
+contrastarla con el proyecto reciente de la pantalla de bienvenida. Acotar
+reintentos y apagar servicios evita convertir la recuperación en otra matriz.

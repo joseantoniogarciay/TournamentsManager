@@ -64,8 +64,8 @@ los textos posibles ni de traducción correcta. No se modificó el cliente.
 
 | Muestra | Resultado | Cierre |
 | --- | --- | --- |
-| Formulario Android con teclado/texto ampliado | Android Studio seleccionable, pero AX/captura agotan tiempo de espera | Bloqueada por instrumento; se acepta el límite y no se insiste |
-| TalkBack representativo | Mismo bloqueo de Android; no se activa ni se acredita | Fuera de ejecución de esta fase por instrumento |
+| Formulario Android con teclado/texto ampliado | Recuperación del IDE y Pixel intentada; memoria baja, capturas lentas y «UI del sistema no responde» impiden abrir la app de forma fiable | Bloqueada por entorno; no ejecutada ni aprobada |
+| TalkBack representativo | Mismo bloqueo de Android; no se activa ni se acredita | Bloqueada por entorno; no ejecutada ni aprobada |
 | Zoom web autenticado | Safari, sesión ficticia: clasificación al 200 % y 300 %, reglas desplazables y cierre comprobados | Muestra completada; no certifica todas las rutas ni 400 % |
 
 VoiceOver iOS reutiliza muestras existentes de formulario, listas y controles.
@@ -128,6 +128,35 @@ por Metro se restaura. Retrospectiva: una sesión ausente se puede preparar con
 el login autorizado; no debe confundirse con un bloqueo técnico. Verificar
 porcentaje explícito y renovar coordenadas evita acreditar gestos sin efecto.
 
+## Recuperación Android autorizada: límite confirmado
+
+Sobre develop 4c9bfe4, el usuario autoriza cerrar la sesión del IDE, incluso
+forzar si no responde, con el riesgo de cambios sin guardar informado. La
+segunda salida normal muestra Confirm Exit por tareas de fondo y se completa.
+Se reabre Android Studio y se cierra el proyecto restaurado desde Close Project.
+La pantalla de bienvenida confirma apps/client/android: el Help que mostraba
+node_modules/.pnpm no acreditaba otro proyecto. Se corrige esa hipótesis.
+
+Virtual Device Manager permite arrancar Pixel API 34 sin abrir el proyecto;
+ADB lo detecta conectado, pero Running Devices no ofrece la pantalla. Se
+reabre el proyecto verificado y una parada/arranque desde Device Manager
+recupera imagen de Home y respuesta del botón Home. Esa recuperación parcial
+no demuestra que el instrumento sea estable ni que la app actual esté cargada.
+
+Al intentar abrir Fast Tourney aparece «UI del sistema no responde». Se pulsa
+Esperar; desaparece el aviso, pero los intentos siguientes muestran el menú
+contextual del icono y no una apertura fiable. Android Studio vuelve a indicar
+Low memory; una captura anterior tardó unos 62 segundos. No se acredita bundle
+Android actual, teclado ampliado ni TalkBack. No se cambian esos ajustes ni
+se amplía la matriz. Son bloqueos del entorno, no defectos del producto demostrados.
+
+Se detienen Metro/dev sin observabilidad y se retiran los túneles 8082/8080
+añadidos durante la tanda. Se para Pixel desde Device Manager y ADB confirma
+que no quedan dispositivos, preservando sus datos. Solo cambia documentación
+y aprendizaje. Retrospectiva:
+recuperar Home no basta para declarar recuperado el instrumento; comprobar
+la apertura de la app antes de cambiar accesibilidad y limitar los reintentos.
+
 ## Verificación y cierre operativo
 
 No se modificó código ni se repitieron suites que ya pasaron sin cambios
@@ -138,6 +167,7 @@ la muestra autenticada y su zoom. El primer arranque de Metro
 sin permisos de red no llegó a servir; se detuvo y el segundo cargó web.
 Al terminar se detienen Metro y dev, se conserva la pestaña Google previa
 y se cierra la pestaña QA. No se activa observabilidad ni se modifica Android,
-que continúa con el límite instrumental registrado. No hay acciones sobre
+que continúa con el límite del entorno registrado en la recuperación anterior.
+No hay acciones sobre
 datos, credenciales o permisos. La validación documental comprueba enlaces
 locales nuevos y git diff --check.
