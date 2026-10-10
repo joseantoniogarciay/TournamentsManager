@@ -71,6 +71,9 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   Inicio y biblioteca reutilizan `ResponsiveColumns`: dos columnas web a
   partir de `webLayout.columnsMinWidth` (960 px), una debajo y en nativo.
   La compensación de medio margen por celda conserva los 20 px entre cards.
+  Equipos con alta/invitación usa la variante `sidebar`; sin controles mantiene
+  lectura. En liga iniciada la ficha reserva `webLayout.sidebarWidth` al resumen
+  sin mover ni remontar la lista de partidos. No aplicar a cuadros/desempates.
 - **Muy importante — márgenes de contenido móvil:** un formulario, listado o
   bloque de contenido no puede quedar a ras de los laterales. Debe vivir en una
   `Card` (que aporta los 20 px exteriores) o en una primitiva de layout

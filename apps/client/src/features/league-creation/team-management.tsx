@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { useState } from "react";
 import { ActivityIndicator, Platform, Pressable, Share, StyleSheet, View } from "react-native";
 
-import { control, space } from "@tournaments-manager/design-tokens";
+import { control, space, webLayout } from "@tournaments-manager/design-tokens";
 
 import type { PublicTournament } from "@/api/generated/models";
 import {
@@ -21,7 +21,15 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { getWithdrawalDescriptionKey, isRacketSport } from "@/shared/tournaments/sport";
-import { Button, Card, ModalDialog, Text, TextField, useConfirmationDialog } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  ModalDialog,
+  ResponsiveColumns,
+  Text,
+  TextField,
+  useConfirmationDialog,
+} from "@/shared/ui";
 import { WebIcon } from "@/shared/ui/web-icon";
 
 const localAppLinkURL = "http://localhost:8082";
@@ -203,59 +211,57 @@ export function TournamentTeamManagement({
       onCancel: () => undefined,
     });
 
-  return (
-    <>
-      {canAddTeam ? (
-        <Card>
-          <View style={styles.invitationCard}>
-            <View style={styles.invitationCopy}>
-              <Text variant="title">
-                {t(racket ? "racket_complete_participants_title" : "league_complete_teams_title")}
-              </Text>
-              <Text color="secondary">
-                {t(
-                  racket
-                    ? "racket_complete_participants_description"
-                    : "league_complete_teams_description",
-                )}
-              </Text>
-              {tournament.teams.length < 2 ? (
-                <Text color="secondary">
-                  {t(
-                    racket
-                      ? "racket_start_requires_two_participants"
-                      : "league_start_requires_two_teams",
-                  )}
-                </Text>
-              ) : null}
-              {!racket ? (
-                <Text color="secondary">{t("league_invitation_rotation_hint")}</Text>
-              ) : null}
-            </View>
+  const management = canAddTeam ? (
+    <Card>
+      <View style={styles.invitationCard}>
+        <View style={styles.invitationCopy}>
+          <Text variant="title">
+            {t(racket ? "racket_complete_participants_title" : "league_complete_teams_title")}
+          </Text>
+          <Text color="secondary">
+            {t(
+              racket
+                ? "racket_complete_participants_description"
+                : "league_complete_teams_description",
+            )}
+          </Text>
+          {tournament.teams.length < 2 ? (
+            <Text color="secondary">
+              {t(
+                racket
+                  ? "racket_start_requires_two_participants"
+                  : "league_start_requires_two_teams",
+              )}
+            </Text>
+          ) : null}
+          {!racket ? <Text color="secondary">{t("league_invitation_rotation_hint")}</Text> : null}
+        </View>
+        <Button
+          label={t(racket ? "racket_add_participant" : "league_add_team")}
+          onPress={openAddTeam}
+          variant="secondary"
+        />
+        {!racket ? (
+          <>
             <Button
-              label={t(racket ? "racket_add_participant" : "league_add_team")}
-              onPress={openAddTeam}
+              disabled={teamLimitReached}
+              label={t("league_share_invitation")}
+              loading={isSharingInvitation}
+              onPress={() => void shareInvitation()}
+            />
+            <Button
+              label={t("league_revoke_invitation")}
+              loading={isRevokingInvitation}
+              onPress={() => void revokeInvitation()}
               variant="secondary"
             />
-            {!racket ? (
-              <>
-                <Button
-                  disabled={teamLimitReached}
-                  label={t("league_share_invitation")}
-                  loading={isSharingInvitation}
-                  onPress={() => void shareInvitation()}
-                />
-                <Button
-                  label={t("league_revoke_invitation")}
-                  loading={isRevokingInvitation}
-                  onPress={() => void revokeInvitation()}
-                  variant="secondary"
-                />
-              </>
-            ) : null}
-          </View>
-        </Card>
-      ) : null}
+          </>
+        ) : null}
+      </View>
+    </Card>
+  ) : null;
+  const teams = (
+    <View style={styles.teamList}>
       {tournament.teams.map((team) => (
         <Card density="compact" key={team.id}>
           <View style={styles.teamRow}>
@@ -297,6 +303,19 @@ export function TournamentTeamManagement({
           </View>
         </Card>
       ))}
+    </View>
+  );
+
+  return (
+    <>
+      {canAddTeam ? (
+        <ResponsiveColumns variant="sidebar">
+          {management}
+          {teams}
+        </ResponsiveColumns>
+      ) : (
+        <View style={Platform.OS === "web" ? styles.readingList : undefined}>{teams}</View>
+      )}
       <ModalDialog
         dismissAccessibilityLabel={t("common_close")}
         onDismiss={dismissDialog}
@@ -335,6 +354,8 @@ export function TournamentTeamManagement({
 }
 
 const styles = StyleSheet.create({
+  teamList: { gap: space[5] },
+  readingList: { alignSelf: "center", width: "100%", maxWidth: webLayout.readingMaxWidth },
   invitationCard: { gap: space[4] },
   invitationCopy: { gap: space[2] },
   removeButton: {

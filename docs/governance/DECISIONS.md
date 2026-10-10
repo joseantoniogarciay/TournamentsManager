@@ -261,3 +261,8 @@ la petición del usuario: limitar el ancho desktop y adaptarlo al viewport.
 Marco común de 1200 px y contenido de lectura/formulario de 720 px mediante
 tokens compartidos. El usuario acepta también
 columnas de Inicio/biblioteca, con regreso a una columna en móvil web y zoom.
+
+El usuario amplía ADR-0154 con «Vamos a por ellas»: gestión e invitación junto
+al listado de equipos cuando estén disponibles, y resumen lateral junto a
+partidos de liga iniciada. Regreso a una columna en viewport estrecho; sin
+rediseñar formularios, cuadros, desempates ni flujos de negocio.

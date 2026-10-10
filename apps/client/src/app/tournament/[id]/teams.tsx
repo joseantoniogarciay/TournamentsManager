@@ -117,6 +117,7 @@ export default function TournamentTeamsScreen() {
         </Stack.Toolbar>
       ) : null}
       <Screen
+        webWidth="wide"
         navigationTitle={t(
           league && isRacketSport(league.sport) ? "racket_participants" : "league_teams",
         )}

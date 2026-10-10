@@ -5835,3 +5835,12 @@ contenido, sin deducir su autorización de una petición de ancho máximo. Tras
 aceptarlas, una media query mantiene DOM y estado al cambiar el ancho. Revisar
 componentes que devuelven null antes de reservarles una celda evita huecos.
 Compensar medio margen por celda permite compartir el gutter sin cambiar Card.
+
+### 2026-10-10 — Separar contexto y trabajo solo donde aporta utilidad
+
+Un lateral resulta útil cuando conserva controles junto a una lista extensa;
+sin controles, una columna vacía no mejora la consulta. En React Native Web,
+ScrollView conserva flexGrow por defecto: width por sí solo no limita su
+reparto de espacio. Fijar flexGrow a cero y verificar ambos anchos. En una
+lista virtualizada, conservar instancia y referencia del viewport en la
+columna principal al mover el resumen entre lateral y encabezado.

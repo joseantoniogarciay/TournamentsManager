@@ -194,7 +194,13 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   disponible, manteniendo los márgenes de Card y el fondo completo.
   Inicio y biblioteca usan `ResponsiveColumns`: dos columnas desde 960 px CSS,
   una por debajo. Mantiene orden DOM, 20 px de separación y estructura estable
-  al cambiar ancho/zoom; nativo conserva una columna.
+  al cambiar ancho/zoom; nativo conserva una columna. Equipos con gestión
+  disponible usa la variante `sidebar`, con controles al lado del listado y
+  posición sticky. Sin controles conserva ancho de lectura. La ficha de liga
+  iniciada reserva `webLayout.sidebarWidth` (360 px) para resumen y accesos;
+  los partidos mantienen su lista desplazable. Al estrechar el viewport el
+  resumen vuelve al encabezado. Preparación, desempates y cuadros conservan
+  su organización y ancho disponible.
 - **Forma:** los campos y demás controles compactos usan radio 12 px; las
   tarjetas usan 16 px. Los botones usan `radius.pill` (999 px), de modo que sus
   extremos son siempre semicirculares respecto de su altura. La variante

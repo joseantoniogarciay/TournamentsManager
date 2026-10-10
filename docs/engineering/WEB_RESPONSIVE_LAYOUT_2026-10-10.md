@@ -49,3 +49,42 @@ La muestra con sesión recuperada detectó que TipCard devuelve null; evitar
 reservarle una celda mantiene útil la segunda fila. CSS mantiene el mismo DOM
 al cambiar ancho y evita trasladar breakpoints a cada feature. La comprobación
 por patrones y unos tamaños frontera basta para este cambio reversible.
+
+## Ampliación aceptada: equipos y ficha de liga
+
+El usuario acepta las dos oportunidades tras comparar su utilidad y coste.
+Gestión e invitación comparten lateral con un listado de equipos; sin alta o
+invitación no se reserva una columna vacía. La variante sidebar reutiliza la
+primitiva de columnas y mantiene los márgenes; CSS fija el panel al desplazar
+contenido. Nativo mantiene una columna y los diálogos originales.
+
+La ficha de liga iniciada sitúa resumen/accesos en un lateral de 360 px;
+partidos conservan su SectionList y su referencia de viewport, ahora medida
+solo en la columna principal. El lateral tiene desplazamiento propio para
+que sus controles sigan alcanzables. Al estrechar la ventana, el resumen
+regresa al encabezado sin trasladar ni remontar la SectionList. El selector de
+fase permanece junto a los partidos. Preparación, desempates y cuadros no
+reciben este lateral. La gestión de equipos compartida también se adapta
+cuando aparece dentro de la ficha en preparación.
+
+Muestra ejecutada con fixtures existentes, sin escrituras de negocio:
+
+- QA bajas equipos web iOS: ficha en preparación y ruta Equipos a 1600 px,
+  controles a la izquierda, lista a la derecha; a 320 px se apilan, sin overflow.
+  Apertura/cierre del diálogo Añadir equipo, sin escribir ni guardar.
+- QA web football league: ficha finalizada a 1600 px, lateral compacto y
+  jornadas en la columna principal; al cambiar a 959 px el resumen regresa
+  al encabezado; a 320 px todo refluye y scrollWidth coincide con viewport.
+- Lista de equipos de consulta: mantiene contenido centrado a 720 px.
+- QA formulario football: cuadro final sigue usando el marco amplio.
+
+Capturas: `/tmp/tm-web-team-sidebar.jpg` y `/tmp/tm-web-league-sidebar.jpg`.
+Typecheck, ESLint y exportación web completan la muestra. Revisión del diff
+confirma que solicitudes, permisos, validación y textos localizados conservan
+su implementación. No se certifican scroll sticky con listas largas ni lector
+por esta muestra; no se repite la matriz anterior ni se crean fixtures.
+
+Retrospectiva: ScrollView añade flexGrow por defecto; establecer solo width
+no reserva un lateral estrecho. La muestra detectó reparto de ancho excesivo
+y se corrigió flexGrow a cero antes del cierre. Mantener la lista de partidos
+en el mismo padre evita reiniciar su instancia al alternar el lateral.

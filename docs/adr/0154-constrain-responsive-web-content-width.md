@@ -43,8 +43,13 @@ La biblioteca distribuye sus tarjetas por filas de dos; filtros y paginación
 conservan su posición. Una media query a 960 px vuelve a una columna al reducir
 el viewport CSS, también con zoom. El DOM conserva el mismo orden y estructura
 en ambos tamaños. La primitiva compensa medio margen de Card en cada celda
-para mantener 20 px exteriores y entre columnas, sin cambiar Card. No se cambia la organización de la ficha ni la excepción de
-texto de clasificación de ADR-0153. Móvil nativo conserva su layout.
+para mantener 20 px exteriores y entre columnas, sin cambiar Card. La ampliación aceptada después mediante «Vamos a por ellas» coloca gestión e
+invitación junto al listado de equipos cuando hay acciones disponibles; sin
+ellas mantiene una lista de lectura. En la ficha con partidos de liga, resumen
+y accesos pasan a una columna lateral desplazable y los partidos conservan su
+lista. Preparación, desempates y cuadro eliminatorio conservan su organización.
+Una ventana estrecha devuelve el resumen al encabezado sin remontar la lista.
+No cambia la excepción de texto de clasificación de ADR-0153. Móvil nativo conserva su layout.
 
 ## Validación
 
@@ -56,7 +61,7 @@ No se envían formularios ni se cambian fixtures para validar layout.
 
 ## Consecuencias
 
-Tres tokens, una propiedad de Screen y una primitiva de columnas evitan medidas por ruta. Una pantalla
+Tokens compartidos, una propiedad de Screen y una primitiva de columnas evitan medidas por ruta. Una pantalla
 nueva elige lectura o datos amplios; no introduce anchos arbitrarios. El límite
 es ajustable si la evidencia visual muestra falta de espacio. La distribución
 en columnas no se deduce de la anchura: responde al contenido y mantiene orden
