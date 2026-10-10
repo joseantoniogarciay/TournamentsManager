@@ -92,3 +92,20 @@ aceptado; `manual` permite rechazar los saltos de API con respuesta segura.
 La URL de versión tiene dos etiquetas antes de `workers.dev`; una regla con una
 sola no la protegía de indexación. Separar assets y renderer conserva gratuito
 el tráfico estático sin cambiar el cliente universal ni lógica de negocio.
+
+## Evidencia local — 2026-10-10
+
+- App productiva reutilizada: `b002b4b99fc44a6ec0662b94ec962b8cce9cbea5`.
+- Implementación: `219dbf8`; candidato independiente bajo `.config/cloudflare`.
+- Trece pruebas de hosting/dependencias y once de seguridad operacional pasan.
+  ESLint, TypeScript, formato y export Expo de 36 rutas pasan. No se ejecutó el
+  gate completo de promoción ni se creó un nuevo release de producto.
+- Dry-run de ambos Workers correcto: 110 archivos y Worker de 7,03 KiB.
+- Wrangler local verificó doce rutas del artefacto real: home, cuenta, ajustes,
+  legales, subruta de torneo, iconos, robots, sitemap y manifiesto en 200;
+  asociación móvil ausente en 404. Tipos MIME, SHA público, `nosniff` y política
+  de indexación correctos. No se certificó login en URL de versión ni cuota/plan
+  de la cuenta: requieren acceso y validación del dominio real.
+- `wrangler whoami` confirma ausencia de autenticación. No se subió ni activó
+  ninguna versión. El servidor local se detuvo al terminar; dev/observabilidad
+  permanecieron apagados y producción doméstica no se modificó.
