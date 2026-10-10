@@ -5782,3 +5782,12 @@ sin pruebas de código adicionales; capturas visibles en la conversación.
 Retrospectiva: mantener densidad visual permite conservar nombres completos
 en AX. El foco de una muestra no demuestra lectura contextual ni orden de toda
 la tabla; separar esos límites de la evidencia de layout estable.
+### 2026-10-10 — Muestra finita de zoom web autenticado
+
+Se completa en Safari la muestra de clasificación y reglas al 200 %/300 %,
+con sesión ficticia normal, valores y correspondencia de las tres filas,
+scroll hasta el último párrafo y cierre con Ok. Se restaura 100 % y se cierra
+la pestaña QA. El [inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md)
+registra detalles y límites; solo teclado Android y TalkBack siguen sin
+ejecutar dentro de las tres muestras, por timeout del instrumento.
+No se amplía la matriz a otras rutas, idiomas o componentes con VoiceOver.

@@ -66,7 +66,7 @@ los textos posibles ni de traducción correcta. No se modificó el cliente.
 | --- | --- | --- |
 | Formulario Android con teclado/texto ampliado | Android Studio seleccionable, pero AX/captura agotan tiempo de espera | Bloqueada por instrumento; se acepta el límite y no se insiste |
 | TalkBack representativo | Mismo bloqueo de Android; no se activa ni se acredita | Fuera de ejecución de esta fase por instrumento |
-| Zoom web autenticado | Safari carga la versión actual en Inicio anónimo; no hay sesión QA conservada en ese navegador | No ejecutada en esta tanda; se conserva la evidencia web previa y el límite de zoom autenticado |
+| Zoom web autenticado | Safari, sesión ficticia: clasificación al 200 % y 300 %, reglas desplazables y cierre comprobados | Muestra completada; no certifica todas las rutas ni 400 % |
 
 VoiceOver iOS reutiliza muestras existentes de formulario, listas y controles.
 La tabla tiene evidencia parcial de foco; locución y asociación contextual no
@@ -93,12 +93,48 @@ por capa y un presupuesto de tres muestras permiten cerrar con honestidad.
 Los defectos abiertos se conservan; las variantes no probadas dejan de crecer
 automáticamente como trabajo de esta fase.
 
+## Ampliación acotada: muestra web completada
+
+El usuario solicita continuar con lo restante. Sobre develop 56183e9 se
+arrancan Metro y dev sin observabilidad. Android Studio vuelve a presentar
+timeoutReached al pedir captura; se solicita recuperación manual. No se
+activan TalkBack ni ajustes de texto Android, y no se insiste sobre el IDE.
+Los únicos pendientes de ejecución de las tres muestras son teclado Android
+y TalkBack; ambos dependen de recuperar el instrumento.
+
+En Safari se inicia sesión normal con qa_visual_player, cuenta ficticia
+existente. Se descarta guardar contraseña. La asignación AX inicial no
+actualiza ambos campos React; la entrada nativa permite completar el login.
+No se interpreta ese intento instrumental como defecto del cliente.
+
+Se abre desde la biblioteca la liga de equipos con acentos y nombres largos.
+El menú de página permite seleccionar y verificar 200 % y 300 % reales.
+La clasificación conserva tres filas, posiciones 1/1/3, puntos 3/3/0 y última
+fila 2/0/0/2/0/6/-6. Nombres visualmente truncados; AX conserva los completos.
+El título y los controles quedan separados. El zoom del navegador amplía
+también las celdas: allowFontScaling=false no desactiva zoom web.
+
+Al 300 % se abre Reglas de clasificación, se desplaza dentro del texto hasta
+el párrafo final de retirada y se cierra con Ok, completo y visible. El primer
+scroll usó coordenadas de una captura anterior y no acredita alcance; el
+segundo, sobre la captura actual, muestra el último párrafo. Se restaura 100 %,
+se confirma en el menú y se cierra únicamente la pestaña QA, conservando Google.
+Capturas y AX en la conversación. Esta es una muestra de clasificación y su
+diálogo en sesión autenticada, no una auditoría de todas las rutas ni 400 %.
+
+Metro y dev se apagan conservando volúmenes. No se cambian datos ni permisos.
+Solo se actualiza documentación; el salto de línea de expo-env.d.ts generado
+por Metro se restaura. Retrospectiva: una sesión ausente se puede preparar con
+el login autorizado; no debe confundirse con un bloqueo técnico. Verificar
+porcentaje explícito y renovar coordenadas evita acreditar gestos sin efecto.
+
 ## Verificación y cierre operativo
 
 No se modificó código ni se repitieron suites que ya pasaron sin cambios
 posteriores relevantes. Se revisaron fuentes y pruebas existentes; los
 resultados de ejecución conservan sus fechas en el histórico. La apertura
-web confirma carga, no zoom ni autenticación. El primer arranque de Metro
+web de la primera tanda solo confirmó carga; la ampliación anterior registra
+la muestra autenticada y su zoom. El primer arranque de Metro
 sin permisos de red no llegó a servir; se detuvo y el segundo cargó web.
 Al terminar se detienen Metro y dev, se conserva la pestaña Google previa
 y se cierra la pestaña QA. No se activa observabilidad ni se modifica Android,

@@ -5766,3 +5766,11 @@ vigente, revisar patrones compartidos una vez y limitar las muestras manuales
 evita una matriz sin final. Registrar por separado defecto reproducido,
 variante fuera de alcance y bloqueo instrumental. La revisión de código
 demuestra implementación; no se presenta como gesto, locución o zoom ejecutado.
+### 2026-10-10 — Zoom real con sesión de QA
+
+La falta de sesión conservada no bloquea una prueba si el login ficticio está
+autorizado. Preparar el acceso normal y descartar guardar contraseña. Verificar
+el porcentaje en el menú del navegador: una sucesión de atajos no demuestra
+el zoom alcanzado. allowFontScaling=false limita Dynamic Type nativo, pero
+no impide que el navegador amplíe las celdas. Renovar coordenadas cuando cambie
+la captura y registrar solo el desplazamiento cuyo resultado se observa.
