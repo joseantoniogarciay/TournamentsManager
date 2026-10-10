@@ -5732,3 +5732,12 @@ completo y margen inferior antes de acreditar alcance. Registrar por separado
 placeholder truncado y descripción AX completa; ninguno demuestra locución.
 No confundir Capture Keyboard del instrumento con la aparición del teclado
 software del dispositivo.
+
+### 2026-10-10 — Dirección de Metro y evidencia de recarga Android
+
+Contrastar el servidor reciente del lanzador con el puerto de Metro activo
+antes de atribuir «Unable to load script» al cliente. Un servidor detectado
+y una imagen recuperada no acreditan carga del bundle; comprobar su emisión
+en Metro y después la pantalla. Si el panel pierde AX o muestra estados
+con retraso, delimitar la cobertura y retirar túneles y servicios temporales
+aunque el apagado del AVD quede bloqueado por el instrumento.

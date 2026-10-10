@@ -5664,3 +5664,41 @@ Retrospectiva: un botón deshabilitado puede recibir foco del lector y provocar
 el desplazamiento necesario para verlo completo. Observarlo con foco acredita
 su alcance; no prueba activación ni el comportamiento con teclado. La
 truncación visual del placeholder debe distinguirse de su descripción AX.
+
+### 2026-10-10 — Recuperación parcial del instrumento Android y conexión Metro
+
+Sobre dd84424, Running Devices sigue inicialmente desconectado; Reconnect
+devuelve cannotClickOffscreenElement. Device Manager permite detener Pixel
+API 34 y adb confirma ausencia de dispositivos. Se sale del IDE con Confirm
+Exit y se observa guardado de ajustes, splash y reapertura del proyecto.
+No se cambia heap, modo de ahorro, dependencias ni código. El nuevo arranque
+del Pixel recupera imagen y controles habilitados. Tras Cerrar torneo se
+observa Home con los datos QA conservados. La imagen tarda en reflejar
+acciones; cambiar entre ventana independiente y panel acoplado permite
+observar estados posteriores. Esto recupera navegación parcial, no un
+instrumento estable para certificar formularios o lector.
+
+Se inician Metro en 8082 y dev sin observabilidad. Se añaden reverses 8082 y
+8080, ausentes al inicio. Reload del menú Expo termina en «Unable to load
+script»; Metro no confirma ningún bundle Android. Go home permite observar
+el lanzador: el proyecto reciente apunta a http://127.0.0.1:8083 y el servidor
+detectado a http://192.168.1.167:8082. Esa diferencia es una causa probable de
+la recarga fallida, no una recuperación acreditada. Intentar abrir el servidor
+detectado devuelve AXError.cannotComplete y después noWindowsAvailable;
+seleccionarlo de nuevo no permite confirmar carga. Recuperar Android Studio
+termina en timeoutReached. No se valida implementación Android actual ni se
+introducen datos, seleccionan destinatarios o cambian resultados.
+
+Metro se detiene y dev-down finaliza conservando volúmenes; docker ps queda
+vacío. Se retiran ambos reverses añadidos y reverse --list queda vacío. Se
+restaura únicamente el salto de línea generado en expo-env.d.ts; no hay
+cambios de cliente ni checks de código repetidos. adb aún identifica
+emulator-5554 como device: el apagado final del Pixel queda pendiente por
+falta de acceso al IDE. No se acredita una presentación final estable del
+panel. Evidencia visual y errores del instrumento en la conversación, sin
+PNG exportado. El QA global sigue abierto.
+
+Retrospectiva: separar recuperación de imagen, navegación y recarga efectiva.
+Un servidor detectado no acredita que la build lo haya abierto; exigir
+confirmación de bundle en Metro antes de evaluar código actual. Registrar la
+dirección reciente evita atribuir un fallo de carga del entorno a la feature.
