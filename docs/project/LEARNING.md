@@ -5750,3 +5750,11 @@ no sustituye esa acción. Comprobar también la reapertura al enfocar otro campo
 y registrar si el arrastre oculta el teclado. A texto máximo, distinguir campo
 con límites completos, valor recortado y etiqueta fuera del viewport; no
 afirmar visibilidad simultánea de elementos observados en posiciones distintas.
+### 2026-10-10 — Foco y contexto de una tabla compacta
+
+Una celda truncada puede conservar el nombre completo en AX y recibir foco.
+Validar por separado densidad visual, foco visible, orden del recorrido y
+asociación hablada de cabecera, equipo y valor. Las tandas rápidas de gestos
+no acreditan todos sus avances: contar únicamente estados observados. Tras
+activar VoiceOver, comprobar dónde queda el foco antes de interpretar el
+primer toque como exploración del objetivo.

@@ -5745,3 +5745,38 @@ Retrospectiva: localizar el control software en Device → Keyboard resuelve el
 bloqueo del instrumento sin modificar la app. Observar por separado límites
 del campo, texto recortado y botón final; un arrastre que cierra teclado
 acredita recuperación por ocultación, no scroll con teclado abierto.
+### 2026-10-10 — Foco de clasificación compacta en iOS
+
+Sobre develop ade4498, iPhone 17/iOS 27 y la sesión ficticia existente,
+se arranca dev sin observabilidad y se abre desde Torneos la liga «QA Liga
+de equipos con acentos y nombres largos». Se reutiliza el bundle iOS cargado;
+esta pasada no ejecuta Metro ni acredita una nueva recarga.
+
+La tabla carga tres equipos, posiciones 1/1/3 y puntos 3/3/0. Text Size 11
+amplía título y ayuda; las celdas conservan el tamaño fijo de ADR-0153.
+Con VoiceOver on se observa foco sobre Equipo, Pts y PJ/PG de la primera
+fila. La navegación observada pasa por bloques de estadísticas y columnas
+fijas; no se acredita orden completo por filas. Una tanda de seis gestos
+solo deja evidencia final en PG: no se cuenta cada gesto como avance confirmado.
+
+La exploración táctil enfoca el nombre de la última fila, visualmente truncado
+pero con descripción AX «Peñas del Mediterráneo» completa. El siguiente gesto
+lleva el foco a sus puntos 0. Con el lector apagado, un arrastre corto dentro
+del bloque estadístico desplaza cabeceras y valores hasta PE/PP/GF/GC/DG,
+con última fila 0/2/0/6/-6 y equipo/puntos fijos. Tras reactivar VoiceOver,
+la exploración táctil enfoca DG de esa última fila. El primer toque tras
+activar el lector deja foco en Volver; se confirma DG en un toque posterior.
+
+Alcance: foco visible y etiquetas AX de las muestras indicadas. No se captura
+audio ni se certifican asociación hablada de cabecera/equipo/valor, recorrido
+exhaustivo o desplazamiento horizontal mediante gestos del lector. Android
+sigue pendiente de recuperación manual del instrumento; el QA global continúa
+abierto. No se cambian datos, resultados ni permisos.
+
+Cierre: Text Size 3, VoiceOver off y Capture Keyboard off verificados; regreso
+a Inicio. Dev se apaga conservando volúmenes. Cambio exclusivamente documental,
+sin pruebas de código adicionales; capturas visibles en la conversación.
+
+Retrospectiva: mantener densidad visual permite conservar nombres completos
+en AX. El foco de una muestra no demuestra lectura contextual ni orden de toda
+la tabla; separar esos límites de la evidencia de layout estable.
