@@ -5587,3 +5587,47 @@ Retrospectiva: la lista puede recuperar espacio ocultando el teclado durante
 el arrastre. Registrar esa transición evita afirmar que el último resultado
 se alcanza con el teclado todavía abierto; verificar campo, resultado final
 y salida sin cambios distingue oclusión temporal de un bloqueo de uso.
+
+
+### 2026-10-10 — VoiceOver en Crear torneo y recuperación visual de sugerencias
+
+Sobre c7c215d, se conserva en iPhone 17/iOS 27 el bundle recargado en la pasada
+anterior. No se inicia Metro ni dev, ni se acredita una nueva recarga. En Home,
+enfocar Sugerencias muestra cursor, pero el teclado no aparece. El botón queda
+inicialmente bajo las pestañas; arrastrar en el margen izquierdo recupera el
+campo completo y Enviar sugerencia por encima de ellas. El campo permanece
+vacío, el botón deshabilitado y no se envía nada. Esta observación acredita
+recuperación visual sin teclado, no cierra la prueba de oclusión por teclado.
+
+Crear torneo conserva Fútbol seleccionado, nombre vacío y el equipo ya
+presente «Incidencia Local». Enfocar nombre y después equipo muestra solo
+«Introduce el nombre del torneo.»; AX incorpora ese error a la etiqueta del
+campo inválido. No se modifica ningún valor ni se pulsa Crear. El teclado
+sigue oculto incluso tras activar y desactivar Capture Keyboard. Se solicita
+al usuario mostrarlo manualmente para continuar esa cobertura.
+
+A Text Size 11 se activa VoiceOver. Un toque enfoca Cerrar y un gesto siguiente
+enfoca el título adaptado, confirmado por el rectángulo visible. Diez gestos
+siguientes atraviesan el bloque de deportes y alcanzan la etiqueta Nombre
+del torneo. Los gestos siguientes enfocan campo inválido y error: este último
+se muestra completo en tres líneas con foco. Cuatro gestos siguientes alcanzan
+el campo del equipo; AX conserva su valor completo aunque el texto del input
+se recorte horizontalmente. El siguiente enfoca Crear torneo, visible completo
+en dos líneas con borde de foco y margen inferior. No se activa el botón.
+La evidencia acredita foco y desplazamiento hasta el final; no locución,
+entrada con lector ni envío. Las capturas intermedias no acreditan por sí
+solas el foco individual de cada opción de deporte.
+
+Se restaura Text Size 3, VoiceOver off y Capture Keyboard off, confirmados
+en AX. Se deja Crear torneo abierto con Nombre de tu equipo enfocado para la
+recuperación manual solicitada; no se crean datos ni se cambia el borrador.
+docker ps confirma que no hay contenedores activos. No hay cambios de código
+ni se repiten checks de implementación. Evidencia AX y visual en la conversación,
+sin PNG exportado. Android, formularios con teclado, locución y zoom autenticado
+siguen pendientes; el QA global permanece abierto.
+
+Retrospectiva: el error forma parte de la etiqueta del input y también es un
+elemento recorrible. Comprobar su foco y texto visible completo acredita
+alcance, pero no permite inferir cómo lo pronuncia el lector. No confundir
+un cursor visible con teclado visible ni cerrar esa cobertura por un recorrido
+sin oclusión.

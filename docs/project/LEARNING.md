@@ -5714,3 +5714,12 @@ teclado abierto. Introducir una consulta mediante el text field AX settable
 permite conservar Capture Keyboard off y comprobar la oclusión real del
 teclado del simulador. Salir sin activar candidatos y verificar permisos
 conservados mantiene el QA de búsquedas separado de delegación o transferencia.
+
+### 2026-10-10 — Errores recorribles en formularios con lector
+
+Verificar por separado foco del input inválido y del mensaje de validación:
+una etiqueta AX que incorpora el error no demuestra su locución, y un error
+fuera del viewport inicial puede quedar completo al recibir foco. Alcanzar el
+botón final con texto máximo prueba desplazamiento del formulario, sin requerir
+activarlo. Un cursor visible con Capture Keyboard off no prueba que el teclado
+software esté abierto; conservar esa cobertura como pendiente hasta observarlo.
