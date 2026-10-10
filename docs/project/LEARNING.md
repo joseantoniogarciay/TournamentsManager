@@ -5741,3 +5741,12 @@ y una imagen recuperada no acreditan carga del bundle; comprobar su emisión
 en Metro y después la pantalla. Si el panel pierde AX o muestra estados
 con retraso, delimitar la cobertura y retirar túneles y servicios temporales
 aunque el apagado del AVD quede bloqueado por el instrumento.
+
+### 2026-10-10 — Mostrar teclado software en Device Hub
+
+Device → Keyboard → Toggle Software Keyboard muestra el teclado del simulador
+con un campo enfocado, conservando Capture Keyboard off. El control de captura
+no sustituye esa acción. Comprobar también la reapertura al enfocar otro campo
+y registrar si el arrastre oculta el teclado. A texto máximo, distinguir campo
+con límites completos, valor recortado y etiqueta fuera del viewport; no
+afirmar visibilidad simultánea de elementos observados en posiciones distintas.

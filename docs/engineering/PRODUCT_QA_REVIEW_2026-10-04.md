@@ -5702,3 +5702,46 @@ Retrospectiva: separar recuperación de imagen, navegación y recarga efectiva.
 Un servidor detectado no acredita que la build lo haya abierto; exigir
 confirmación de bundle en Metro antes de evaluar código actual. Registrar la
 dirección reciente evita atribuir un fallo de carga del entorno a la feature.
+
+### 2026-10-10 — Teclado software iOS en Crear torneo y sugerencias
+
+Sobre 6230977, seleccionar Android Studio vuelve a terminar en timeoutReached.
+Se solicita recuperación manual del IDE y Pixel. No se arranca Metro ni dev;
+se reutiliza en iPhone 17/iOS 27 el bundle de la sesión iOS anterior, sin nueva
+recarga. Device Hub ofrece Device → Keyboard → Toggle Software Keyboard:
+invocar esa acción con equipo enfocado muestra el teclado, manteniendo Capture
+Keyboard off. Los menús Controls y View no son la ubicación de este control.
+
+Crear torneo, Text Size 3: equipo «Incidencia Local» y su campo quedan completos
+por encima del teclado; el botón queda oculto. Arrastrar en el margen izquierdo
+cierra el teclado y recupera Crear torneo completo con margen inferior. A
+Text Size 11, enfocar equipo vuelve a mostrar teclado: etiqueta y límites del
+campo quedan completos sobre él, aunque su valor se recorta horizontalmente.
+El arrastre cierra el teclado y alcanza el botón completo en dos líneas.
+Enfocar nombre vacío también muestra el campo completo por encima del teclado;
+su etiqueta queda parcialmente fuera del viewport superior. Arrastrar cierra
+el teclado y el blur incorpora «Introduce el nombre del torneo.» a la etiqueta
+AX. No se introduce texto ni se activa Crear; se restaura tamaño 3 y se cierra.
+
+Sugerencias, Text Size 3: enfocar el campo vacío muestra teclado y oclusión
+parcial del campo. El arrastre lo cierra y deja campo, error y botón deshabilitado
+completos por encima de las pestañas. A Text Size 11, enfocar mantiene teclado
+visible con parte del campo oculta; el arrastre lo cierra y deja error completo
+en tres líneas y botón completo en dos por encima de las pestañas. En ese
+viewport final el borde superior del campo queda fuera de pantalla; no se
+afirma visibilidad simultánea de todo el campo y botón a tamaño máximo.
+No se introduce ni envía sugerencia.
+
+Se restaura Text Size 3 y AX confirma VoiceOver off, Capture Keyboard off y
+Enviar sugerencia deshabilitado. Se deja Home en sugerencias sin teclado.
+docker ps queda vacío; no hay servicios o túneles iniciados en esta pasada.
+No hay cambios de cliente ni checks de código repetidos. Evidencia visual y AX
+en la conversación, sin PNG exportado. La cobertura acredita oclusión inicial
+y recuperación al ocultar teclado; no alcance del botón manteniéndolo abierto,
+edición con lector ni envío. Android actual, locución, otras rutas y zoom
+autenticado mantienen el QA global abierto.
+
+Retrospectiva: localizar el control software en Device → Keyboard resuelve el
+bloqueo del instrumento sin modificar la app. Observar por separado límites
+del campo, texto recortado y botón final; un arrastre que cierra teclado
+acredita recuperación por ocultación, no scroll con teclado abierto.
