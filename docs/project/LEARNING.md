@@ -5784,3 +5784,13 @@ IDE conservan el bloqueo del entorno; no atribuirlos al producto. La ruta
 Help de un módulo seleccionado tampoco demuestra la raíz del proyecto:
 contrastarla con el proyecto reciente de la pantalla de bienvenida. Acotar
 reintentos y apagar servicios evita convertir la recuperación en otra matriz.
+
+### 2026-10-10 — Cerrar una muestra con evidencia diferenciada
+
+Un IDE saturado puede impedir QA aunque el emulador funcione por separado.
+Usar esa alternativa con autorización y restaurar la preferencia al terminar.
+En teclado ampliado, observar campo enfocado, desplazamiento y botón con el
+teclado todavía visible acredita más que abrir el formulario. En lector,
+servicio enlazado, foco inicial y nombres/roles expuestos no prueban avance,
+activación ni locución. Registrar cada límite y detener reintentos mantiene
+finita la fase; no convertir una muestra parcial en aprobación completa.

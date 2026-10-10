@@ -5801,3 +5801,14 @@ baja. El [inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md) conserva teclado
 ampliado y TalkBack como no ejecutados por entorno; no como defectos del producto.
 No se modifican ajustes de accesibilidad. Se apagan Metro/dev y se retiran los
 túneles añadidos en la tanda. No se amplía el alcance.
+
+### 2026-10-10 — Cierre de las muestras Android acotadas
+
+Con emulador separado y ADB autorizados se carga el bundle actual. Crear torneo
+al 200 % permite editar y desplazar con teclado abierto: segundo campo y botón
+completos sobre el teclado, sin envío. TalkBack activo muestra foco inicial;
+se inspeccionan nombres y roles Android en un detalle ficticio. Avance de foco,
+activación mediante lector y audio quedan sin acreditar. El
+[inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md) sustituye el bloqueo previo
+por estos resultados: dos muestras completadas y una parcial, sin más intentos
+pendientes en esta tanda. Se restauran ajustes y se apagan Pixel, Metro y dev.

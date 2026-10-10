@@ -2,7 +2,9 @@
 
 > Estado: fase cerrada parcialmente, con límites explícitos.
 > Decisión del usuario: aceptar el 2026-10-10 un cierre parcial por riesgo.
-> Fuente revisada: develop 0481a91. No autoriza publicación ni distribución.
+> Fuente revisada: develop 0481a91; última muestra Android sobre fbc06c1.
+> No quedan muestras pendientes de intento en esta tanda; TalkBack conserva validación parcial.
+> No autoriza publicación ni distribución.
 
 ## Alcance y criterio de salida
 
@@ -50,7 +52,7 @@ medida de cobertura exhaustiva.
 | `shared/ui/button.tsx`, tokens | Role button, busy/disabled, loading bloquea pulsación, mínimo 44, texto centrado | Reutilizar las muestras de botones; no garantiza locución |
 | `shared/ui/text-field.tsx` | Etiqueta desde label/placeholder, error incorporado a AX, interacción por campo, blur/change explícitos, control de contraseña 44 | No recorrer cada campo con VoiceOver |
 | `shared/ui/confirmation-dialog.tsx`, `screen.tsx` | Host por pantalla enfocada, modal, cierre accesible y back nativo, botones comunes | Reutilizar diálogos probados; foco/restauración no se certifican solo por código |
-| `keyboard-aware-scroll-view.tsx` | Mide campo y teclado, considera ventana Android reducida, insets iOS y limpia listeners | Necesita una muestra Android; no prometer botón visible con teclado abierto |
+| `keyboard-aware-scroll-view.tsx` | Mide campo y teclado, considera ventana Android reducida, insets iOS y limpia listeners | Muestra Android completada abajo; no generalizar a todos los formularios |
 | `screen.tsx`, `card.tsx`, `use-tab-content-bottom-padding.ts` | Margen de Card 20, reserva inferior en contenido, top inset separado | Reutilizar muestras de cada layout |
 | `text.tsx`, `standings.tsx` | Escalado nativo por defecto; false solo en celdas de clasificación; columnas fijas y estadísticas desplazables | Excepción de ADR-0153 conservada; no nueva alternativa de tabla |
 | Cards de torneo, biblioteca, notificaciones y búsquedas de administrador/transferencia | Roles, nombres completos/localizados o texto hijo, controles de estado y bloqueo existentes | Revisión de conexiones representativas, no auditoría exhaustiva |
@@ -64,8 +66,8 @@ los textos posibles ni de traducción correcta. No se modificó el cliente.
 
 | Muestra | Resultado | Cierre |
 | --- | --- | --- |
-| Formulario Android con teclado/texto ampliado | Recuperación del IDE y Pixel intentada; memoria baja, capturas lentas y «UI del sistema no responde» impiden abrir la app de forma fiable | Bloqueada por entorno; no ejecutada ni aprobada |
-| TalkBack representativo | Mismo bloqueo de Android; no se activa ni se acredita | Bloqueada por entorno; no ejecutada ni aprobada |
+| Formulario Android con teclado/texto ampliado | Pixel API 34, bundle actual, texto al 200 %: edición, scroll y foco del segundo campo con teclado visible; botón completo sobre el teclado | Muestra completada sin enviar; no certifica todos los formularios |
+| TalkBack representativo | Servicio y exploración táctil activos; foco inicial visible y nombres/roles Android inspeccionados en un detalle de torneo | Ejecutada parcialmente; avance, activación mediante lector y locución sin acreditar |
 | Zoom web autenticado | Safari, sesión ficticia: clasificación al 200 % y 300 %, reglas desplazables y cierre comprobados | Muestra completada; no certifica todas las rutas ni 400 % |
 
 VoiceOver iOS reutiliza muestras existentes de formulario, listas y controles.
@@ -81,6 +83,10 @@ se certifican. No se exige revisar cada componente o escuchar toda la app.
 - Gate de lint Android y deuda del analizador: seguimiento en ADR-0152;
   separado del QA funcional, sin presentarlo como aprobado.
 - Tamaño fijo de clasificación: limitación visual aceptada en ADR-0153.
+- TalkBack: recorrido, activación y locución no acreditados en esta muestra.
+- Metro registra una advertencia de actualización de estado antes de montar
+  un componente; sin traza localizada ni fallo funcional asociado acreditado.
+  Se conserva para diagnóstico, sin atribuir causa ni declarar corregida.
 - Builds/dispositivos físicos, otros SO, orientación completa, OAuth externo,
   entrega real de correo y validación distribuible de telemetría: fases
   específicas; este cierre no las certifica ni autoriza publicar.
@@ -157,17 +163,57 @@ y aprendizaje. Retrospectiva:
 recuperar Home no basta para declarar recuperado el instrumento; comprobar
 la apertura de la app antes de cambiar accesibilidad y limitar los reintentos.
 
+## Última muestra Android: teclado completado y TalkBack parcial
+
+Sobre develop fbc06c1, el usuario autoriza forzar el cierre del IDE, usar el
+emulador separado temporalmente y controlar exclusivamente Pixel QA con ADB.
+Android Studio consume aproximadamente 814–822 % de CPU con el emulador apagado
+y muestra memoria baja/error interno. Cerrarlo y mantener el proyecto cerrado
+permite arrancar Pixel API 34 desde Device Manager. La preferencia Launch in
+Running Devices tool window se desactiva solo para esta tanda.
+
+Metro confirma bundle Android actual (1707 módulos); la app abre la sesión
+ficticia existente. Aparece la advertencia de React recogida arriba. Esta
+apertura correcta no prueba corregida la caída histórica de DevLauncher por
+otra ruta. Dev se inicia sin observabilidad y se añaden túneles 8082/8080.
+
+Con font_scale=2.0, Crear torneo muestra opciones de deporte y campos. Se
+introduce únicamente el borrador QA_teclado_sin_crear. El primer campo y su
+etiqueta quedan visibles con teclado abierto. Al desplazar el formulario,
+Nombre del equipo y Crear torneo quedan completos sobre el teclado; se enfoca
+el segundo campo y el teclado sigue visible. No se envía el formulario ni se
+crea un torneo. Se oculta el teclado y se restaura font_scale=1.0; la recreación
+de la actividad vuelve a Home. No hay captura independiente del teclado oculto
+al 200 %, ni evidencia de todas las rutas o de una build distribuible.
+
+Se activa TalkBack y dumpsys confirma servicio enlazado y exploración táctil.
+Se rechaza la petición de notificaciones de Suite de Accesibilidad Android.
+Durante esa navegación se abre el detalle ficticio QA formulario football;
+no se edita ni finaliza. La captura muestra foco verde inicial en Volver.
+UI Automator confirma controles Android Button, enabled, clickable y focusable
+con nombres Volver, Acciones del torneo, Final, Editar resultado y Finalizar
+torneo, además de la imagen Ganador. El XML no acredita locución ni orden de
+lectura. Los intentos de gesto y atajo no muestran avance verificable de foco:
+no se contabilizan como recorrido ni activación mediante lector. Se detienen
+los reintentos dentro de la muestra acotada, conservando ese límite.
+
 ## Verificación y cierre operativo
 
-No se modificó código ni se repitieron suites que ya pasaron sin cambios
-posteriores relevantes. Se revisaron fuentes y pruebas existentes; los
-resultados de ejecución conservan sus fechas en el histórico. La apertura
-web de la primera tanda solo confirmó carga; la ampliación anterior registra
-la muestra autenticada y su zoom. El primer arranque de Metro
-sin permisos de red no llegó a servir; se detuvo y el segundo cargó web.
-Al terminar se detienen Metro y dev, se conserva la pestaña Google previa
-y se cierra la pestaña QA. No se activa observabilidad ni se modifica Android,
-que continúa con el límite del entorno registrado en la recuperación anterior.
-No hay acciones sobre
-datos, credenciales o permisos. La validación documental comprueba enlaces
-locales nuevos y git diff --check.
+Se restaura y verifica font_scale=1.0, accessibility_enabled=0 y ausencia de
+servicios accesibles habilitados, sus valores previos. Se retira el XML temporal
+del dispositivo, ambos túneles y se apaga Pixel; ADB confirma lista vacía.
+La preferencia Launch in Running Devices tool window vuelve a estar marcada
+y se guarda; el IDE queda en bienvenida, sin proyecto abierto. Metro y dev se
+apagan conservando volúmenes; no queda escucha en 8082 ni contenedores activos.
+No se activa observabilidad ni se actúa sobre producción.
+
+Solo se modifica documentación y aprendizaje; se restaura el salto final de
+expo-env.d.ts generado por Metro. No se repiten suites de código sin cambios.
+La verificación documental usa git diff --check y comprueba enlaces locales.
+La fase sigue cerrada parcialmente: dos muestras completadas y TalkBack
+parcial. Los límites registrados no amplían automáticamente esta tanda.
+
+Retrospectiva: el emulador separado permitió aislar la saturación del IDE y
+completar la muestra útil de teclado. Servicio activo, atributos accesibles y
+foco inicial son evidencias distintas de recorrido y audio; mantener esa
+separación evita tanto una aprobación falsa como otra matriz interminable.
