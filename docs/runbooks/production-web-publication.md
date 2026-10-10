@@ -8,8 +8,10 @@
 ## Síntoma e impacto
 
 ADR-0155 acepta migrar el hosting a Cloudflare Static Assets. La implementación
-local del 2026-10-10 no está aún conmutada: falta autenticar la cuenta y verificar
-el dominio. El [procedimiento Cloudflare](../../infra/cloudflare/README.md)
+del 2026-10-10 no está aún conmutada: cuenta autenticada, Workers Free y URL de
+versión comprobados; faltan TLS válido del dominio y salud de la API suspendida.
+La reemisión gratuita de Universal SSL está solicitada con autorización; el
+ajuste queda activado. El [procedimiento Cloudflare](../../infra/cloudflare/README.md)
 separa staging, dry-run, URL de versión y publicación, conservando el origen
 doméstico para rollback. Tras activar esas rutas, los pasos Caddy de este
 runbook quedan como recuperación del origen anterior; cambiar `current` ya no

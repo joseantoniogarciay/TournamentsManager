@@ -5856,5 +5856,17 @@ y hashes de contenido; copiar el release productivo evita publicar trabajo de
 develop por accidente. Las pruebas con workerd detectaron incompatibilidad de
 `redirect: "error"` y una regla de noindex que no cubría el hostname de versión.
 El estado local preparado y el hosting efectivo se documentan por separado;
-falta acceso a la cuenta para acreditar la conmutación. No se activa pago ni
+la conmutación exige acreditar el dominio real. No se activa pago ni
 observabilidad por preparar el despliegue.
+
+### 2026-10-10 — Validar permisos y primer despliegue en Cloudflare
+
+`versions upload` necesita un Worker existente; crearlo primero sin rutas y con
+workers.dev desactivado permite validar la versión sin conmutar producción.
+La API actual exigió `workers_scripts:write` aunque el scope genérico
+`workers:write` describe scripts; elegir permisos específicos evita conceder
+todos los servicios del login por defecto. Los assets y el SHA pueden ser
+correctos mientras la API suspendida produce 503 y el dominio falla TLS.
+Comprobar certificado de borde y salud de API por separado, conservar Universal
+SSL activado tras solicitar reemisión y no dar el corte por terminado antes de
+verificar HTTPS real.

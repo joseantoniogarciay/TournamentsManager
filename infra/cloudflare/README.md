@@ -5,9 +5,13 @@ en K3s doméstico vía Tunnel/Caddy. Dominio y audiencia OAuth no cambian.
 
 ## Estado efectivo
 
-2026-10-10: implementación local preparada; **no conmutada todavía**. La cuenta
-Cloudflare requiere login. No se ha contratado un plan ni cambiado DNS, rutas,
-API o LaunchAgents. Actualizar este estado tras comprobar la publicación real.
+2026-10-10: cuenta autenticada y Workers Free confirmado; **no conmutada todavía**.
+El Worker existe sin rutas y la URL de versión sirve el artefacto productivo.
+El dominio no supera TLS: Universal SSL estaba activado con la tabla de
+certificados vacía. Con autorización explícita se desactivó, se esperó un minuto
+y se reactivó para solicitar reemisión; queda activado y pendiente de verificar
+certificado válido. K3s permanece suspendido; el usuario solicita arrancarlo
+después de la migración web. No se contrató pago ni se cambió DNS o rutas.
 
 ## Preparar y comprobar
 
@@ -38,6 +42,21 @@ source maps, claves y `.env` en los archivos. Preparar no actualiza `current`.
 Autenticar Wrangler en la cuenta propietaria de la zona; no imprimir ni versionar
 tokens. Comprobar Workers Free y permisos de Workers/rutas antes de publicar.
 No seleccionar planes de pago.
+
+La autorización mínima utilizada es `account:read user:read
+workers_scripts:write workers_routes:write zone:read`; Wrangler añade
+`offline_access`. El permiso genérico `workers:write` no permitió consultar los
+despliegues con la API actual. No ampliar a los demás scopes del login por defecto.
+
+La primera subida de versión exige que el Worker exista. Si Cloudflare confirma
+que no existe, crear primero una configuración independiente del candidato, con
+el mismo nombre, código y assets, `routes: []`, `workers_dev: false` y
+`preview_urls: true`, y ejecutar `wrangler deploy --config <config-inicial>`.
+Guardar fuera del candidato esta configuración, resolviendo `main` y el
+directorio de assets a sus rutas absolutas. El resultado debe indicar **No
+targets deployed**. Este paso es solo para la creación inicial: no repetirlo
+contra un Worker con rutas activas porque retiraría sus triggers. Después usar
+el candidato inmutable para `preview` y `publish`.
 
 ```sh
 make cloudflare-web-preview RELEASE=<directorio>
@@ -109,3 +128,28 @@ el tráfico estático sin cambiar el cliente universal ni lógica de negocio.
 - `wrangler whoami` confirma ausencia de autenticación. No se subió ni activó
   ninguna versión. El servidor local se detuvo al terminar; dev/observabilidad
   permanecieron apagados y producción doméstica no se modificó.
+
+## Evidencia remota — 2026-10-10
+
+- OAuth conectado con permisos de scripts/rutas y lectura de usuario/cuenta/zona;
+  no se registran credenciales en Git. Plan de la cuenta: Workers Free, $0.
+- Creación inicial sin targets: `e4ae4f3e-9657-46e5-9f9c-98e3a9cc51a9`.
+  Versión de prueba: `d7feb929-0197-4c8e-a876-74e96685a05a`, infraestructura
+  `1d760bb03f6cc479be074d6088769bad3c271ac0` y app `b002b4b…`.
+- [URL de versión](https://d7feb929-fasttourney-web.joseantoniogarciay.workers.dev):
+  home, manifiesto, cuenta, privacidad y subruta de clasificación en 200;
+  asociación móvil ausente y JS inexistente en 404. `noindex`, MIME y `nosniff`
+  presentes; SHA de `deployment.json` coincide con producción. Cloudflare añade
+  su propio `noindex` a la URL de versión. Startup 1 ms.
+- Dos fichas raíz de torneo devuelven el 503 seguro: API productiva suspendida.
+  No certifica aún metadatos reales ni 404 de un torneo ausente desde el borde.
+- La API Cloudflare confirma zona activa y cero rutas Workers en la zona.
+  El TLS público presenta un certificado ajeno (`core1.netops.test`); DNS público
+  y resolver HTTPS coinciden. No se omitió validación de certificados.
+  Tabla Edge Certificates vacía; reemisión autorizada solicitada y Universal SSL
+  reactivado. La publicación queda pendiente del gate TLS y salud de API.
+
+Retrospectiva: un dry-run no comprueba permisos remotos ni el requisito de crear
+el Worker antes de subir versiones. Separar esa creación sin rutas evita cortar
+el origen antes de validar. El HTTPS de la URL de versión y el del dominio son
+gates independientes; restaurar K3s no corrige un certificado de borde ausente.
