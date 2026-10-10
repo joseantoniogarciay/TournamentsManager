@@ -5505,3 +5505,35 @@ Retrospectiva: verificar el rectángulo de foco entre etapas evita deducir la
 navegación solo del número de gestos enviados. Un cambio de escala puede
 reubicar el foco cuando el título adaptado se remonta; comprobar nuevamente
 el recorrido permite distinguir esa transición del acceso a los resultados.
+
+
+### 2026-10-10 — Reinicio del Pixel y bloqueo del panel Android
+
+Sobre f9f47f8, Android Studio recupera inicialmente la ventana del proyecto.
+El IDE muestra avisos de memoria insuficiente e internal IDE error; no se
+atribuyen a la app ni se modifica el heap o la configuración. El Pixel conserva
+la pantalla del torneo y el menú Expo, pero los clics de cierre no producen
+un cambio visible y Back por AX devuelve cannotClickOffscreenElement.
+
+Cerrar el proyecto permite abrir el gestor de dispositivos independiente.
+Pulsar Stop detiene el Pixel: adb devices queda vacío y el gestor cambia a Play.
+Esto confirma el cierre que estaba pendiente en la pasada anterior. Play lo
+arranca de nuevo; adb identifica emulator-5554 como device. Se reabre el mismo
+proyecto apps/client/android. Tras terminar el diálogo de configuración C/C++,
+Running Devices conserva «Disconnected from the Emulator» y los controles
+deshabilitados. Intentar cerrar esa conexión devuelve noWindowsAvailable;
+recuperar la ventana y leer AX termina en timeoutReached. Finder sí responde.
+Se solicita recuperación manual del IDE y un Pixel que responda a clics.
+
+No se inicia Metro ni dev, no se añade ningún reverse y docker ps confirma
+que no hay contenedores activos. La lista final de reverses está vacía. El
+Pixel reiniciado sigue activo; su cierre final y el del IDE no se acreditan por
+el bloqueo de control. No hay cambios de implementación ni datos, y no se
+repiten checks de código. La evidencia visual/AX permanece en la conversación.
+Android actual, teclado visible y el resto de cobertura pendiente siguen
+abiertos: reiniciar el AVD no acredita recarga del bundle ni interacción.
+
+Retrospectiva: distinguir proceso Android disponible, transmisión del panel
+y respuesta a clics evita confundir adb device con un instrumento de QA usable.
+Una captura del IDE y sus avisos sirve para delimitar el bloqueo; no prueba
+un defecto funcional del cliente.

@@ -5696,3 +5696,11 @@ de escala puede reubicarlo al remontar un título adaptado; volver a recorrer
 la pantalla y contrastar foco con porcentaje de scroll acredita alcance.
 Conservar por separado la evidencia de locución, activación y teclado visible:
 un recorrido completo de VoiceOver no certifica esas tres condiciones.
+
+### 2026-10-10 — Disponibilidad del proceso y del panel Android
+
+adb puede identificar un AVD como device mientras Running Devices permanece
+desconectado y no permite interacción. Verificar por separado el arranque,
+la imagen del panel, la respuesta a clics y la recarga del bundle antes de
+certificar QA. Un aviso de memoria del IDE delimita un problema del instrumento;
+no justifica cambiar código de la app ni ajustar el heap sin decisión del usuario.
