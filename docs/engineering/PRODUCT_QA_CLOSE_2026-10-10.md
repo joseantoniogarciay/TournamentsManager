@@ -2,8 +2,8 @@
 
 > Estado: fase cerrada parcialmente, con límites explícitos.
 > Decisión del usuario: aceptar el 2026-10-10 un cierre parcial por riesgo.
-> Fuente revisada: develop 0481a91; última muestra Android sobre fbc06c1.
-> No quedan muestras pendientes de intento en esta tanda; TalkBack conserva validación parcial.
+> Fuente revisada: develop 0481a91; última muestra Android sobre 35a770f.
+> Las tres muestras están ejecutadas; TalkBack acredita foco y activación, sin certificar audio.
 > No autoriza publicación ni distribución.
 
 ## Alcance y criterio de salida
@@ -67,7 +67,7 @@ los textos posibles ni de traducción correcta. No se modificó el cliente.
 | Muestra | Resultado | Cierre |
 | --- | --- | --- |
 | Formulario Android con teclado/texto ampliado | Pixel API 34, bundle actual, texto al 200 %: edición, scroll y foco del segundo campo con teclado visible; botón completo sobre el teclado | Muestra completada sin enviar; no certifica todos los formularios |
-| TalkBack representativo | Servicio y exploración táctil activos; foco inicial visible y nombres/roles Android inspeccionados en un detalle de torneo | Ejecutada parcialmente; avance, activación mediante lector y locución sin acreditar |
+| TalkBack representativo | Inicio: título → descripción → Crear torneo; doble toque abre formulario, enfoca nombre, abre teclado y permite volver a Inicio | Muestra de foco y activación completada; locución sin acreditar |
 | Zoom web autenticado | Safari, sesión ficticia: clasificación al 200 % y 300 %, reglas desplazables y cierre comprobados | Muestra completada; no certifica todas las rutas ni 400 % |
 
 VoiceOver iOS reutiliza muestras existentes de formulario, listas y controles.
@@ -83,7 +83,8 @@ se certifican. No se exige revisar cada componente o escuchar toda la app.
 - Gate de lint Android y deuda del analizador: seguimiento en ADR-0152;
   separado del QA funcional, sin presentarlo como aprobado.
 - Tamaño fijo de clasificación: limitación visual aceptada en ADR-0153.
-- TalkBack: recorrido, activación y locución no acreditados en esta muestra.
+- TalkBack: foco y activación acreditados en la muestra vigente; locución,
+  todas las rutas y dispositivos físicos no certificados.
 - Metro registra una advertencia de actualización de estado antes de montar
   un componente; sin traza localizada ni fallo funcional asociado acreditado.
   Se conserva para diagnóstico, sin atribuir causa ni declarar corregida.
@@ -210,8 +211,9 @@ No se activa observabilidad ni se actúa sobre producción.
 Solo se modifica documentación y aprendizaje; se restaura el salto final de
 expo-env.d.ts generado por Metro. No se repiten suites de código sin cambios.
 La verificación documental usa git diff --check y comprueba enlaces locales.
-La fase sigue cerrada parcialmente: dos muestras completadas y TalkBack
-parcial. Los límites registrados no amplían automáticamente esta tanda.
+Al cierre de esa tanda había dos muestras completadas y TalkBack parcial.
+La continuación final de este documento supera el límite de foco/activación.
+Los límites registrados no amplían automáticamente la matriz.
 
 Retrospectiva: el emulador separado permitió aislar la saturación del IDE y
 completar la muestra útil de teclado. Servicio activo, atributos accesibles y
@@ -247,3 +249,48 @@ local de lint ni se vuelve a ejecutar el gate bloqueado sin cambio relevante.
 Retrospectiva: un texto genérico de React orienta el diagnóstico, pero no
 justifica cambios preventivos dispersos. Revisar los puntos de arranque permite
 acotar hipótesis con coste bajo; detenerse sin atribución preserva la evidencia.
+
+## Continuación solicitada: arranque y foco TalkBack comprobados
+
+Sobre develop 35a770f se ejecuta una nueva tanda finita, solicitada por el
+usuario. Pixel API 34 arranca separado sin abrir el proyecto en el IDE;
+Metro y dev se inician sin observabilidad. Tras force-stop, la URL exacta
+publicada por Metro abre MainActivity en frío: Status ok, 2182 ms en este
+emulador. Metro confirma el bundle actual de 1728 módulos y la captura muestra
+Inicio autenticado con las tres cards ficticias existentes. Metro y logcat
+ReactNativeJS/AndroidRuntime no registran el aviso antes del montaje ni FATAL
+EXCEPTION durante esta tanda. No reproducido no equivale a corregido: ambos
+antecedentes siguen registrados.
+
+Los primeros intentos de teclado emulado no avanzan el foco del permiso
+inicial; un evento con alias SYN_REPORT devuelve sintaxis inválida. Se liberan
+las teclas y se descarta ese intento. Se recupera del histórico la técnica ya
+validada el 8 de octubre: adb emu event mouse. Con ella se verifica foco en
+No permitir y su doble toque rechaza notificaciones. No se concede el permiso.
+No se usa UIAutomator durante este recorrido.
+
+Capturas sucesivas acreditan en Inicio título → descripción → Crear torneo.
+El doble toque activa ese botón y abre el formulario con foco en Volver.
+La exploración táctil enfoca el campo Nombre del torneo; el doble toque abre
+su teclado y muestra simultáneamente foco TalkBack verde y borde de edición.
+Se conserva QA_teclado_sin_crear, el borrador de la muestra anterior, y Nombre
+de tu equipo Incidencia Local: volver a Home no había acreditado descartar el
+borrador. No se escribe ni envía en esta tanda. Se oculta el teclado mediante
+Back; se verifica foco en Volver y su doble toque devuelve Inicio, con foco
+visible en el título. Esta muestra supera el límite anterior de avance y
+activación; no modifica retroactivamente los intentos fallidos ni acredita audio.
+
+Se restaura y verifica enabled_accessibility_services=null,
+accessibility_enabled=0, touch_exploration_enabled=0 y font_scale=1.0. Se
+retiran los túneles 8082/8080; se detienen Pixel, Metro y dev conservando datos
+y volúmenes. No se modifica la preferencia del IDE ni se activa observabilidad.
+Solo cambia documentación; expo-env.d.ts recupera su salto final generado.
+Evidencia privada: /tmp/tm-qa-react-start-20261010{,-final}.log,
+/tmp/tm-qa-react-start-20261010.png y /tmp/tm-qa-tb-mouse-*.png.
+
+Resultado vigente: las tres muestras del presupuesto se han ejecutado; zoom
+y teclado están completados y TalkBack acredita foco/activación. La fase
+conserva los límites de audio y distribución, sin más recorridos previstos.
+Retrospectiva: consultar primero la solución instrumental ya acreditada en el
+histórico evita repetir pruebas fallidas de entrada ADB. Una secuencia de foco,
+activación y retorno observada es suficiente para esta muestra representativa.

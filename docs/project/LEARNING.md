@@ -5802,3 +5802,13 @@ antes del montaje. El mensaje del renderer identifica el detector, no la causa.
 Revisar efectos y callbacks de arranque no sustituye una traza del componente.
 No añadir guards o demoras repartidos para silenciar un aviso sin demostrar
 su origen; conservarlo y capturar la traza cuando vuelva a aparecer.
+
+### 2026-10-10 — Reutilizar el instrumento de QA ya validado
+
+Consultar la solución instrumental del histórico antes de repetir entradas
+fallidas. En este Pixel, adb emu event mouse permite verificar foco TalkBack y
+activar con doble toque donde input swipe y atajos no lo acreditaban. No usar
+UIAutomator durante ese recorrido. Capturar cada foco antes de activar y
+verificar la pantalla resultante; un retorno a Home no demuestra eliminación
+de un borrador. Un arranque sin warning se registra como no reproducido,
+sin cerrar la incidencia histórica ni certificar locución.

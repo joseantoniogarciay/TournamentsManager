@@ -5812,3 +5812,15 @@ activación mediante lector y audio quedan sin acreditar. El
 [inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md) sustituye el bloqueo previo
 por estos resultados: dos muestras completadas y una parcial, sin más intentos
 pendientes en esta tanda. Se restauran ajustes y se apagan Pixel, Metro y dev.
+
+### 2026-10-10 — TalkBack: recorrido y activación acreditados
+
+Sobre 35a770f, un arranque frío del bundle actual recupera Inicio autenticado;
+el aviso React y FATAL no aparecen en Metro/logcat de la tanda. Reutilizando
+adb emu event mouse ya validado el 8 de octubre se verifica foco sucesivo en
+Inicio, activación de Crear torneo, foco del nombre, apertura de teclado y
+retorno mediante Volver con TalkBack. No se escribe ni envía; el borrador
+anterior sigue presente. No se acredita audio. El
+[inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md) registra las tres muestras
+ejecutadas, sus límites y evidencia. Se restauran accesibilidad y túneles;
+Pixel, Metro y dev quedan apagados, sin observabilidad ni cambios de cliente.
