@@ -1,6 +1,8 @@
 # Revisión de producto — 2026-10-04
 
-> Estado: en curso. No acredita todas las casuísticas ni todas las plataformas.
+> Estado: cierre parcial por riesgo autorizado el 2026-10-10; ver
+> [lista vigente de cierre](PRODUCT_QA_CLOSE_2026-10-10.md).
+> Este informe histórico no acredita todas las casuísticas ni plataformas.
 > Base: `189acc7`, con las correcciones de rotación de enlaces y copy descritas
 > aquí. Entorno local, cuentas ficticias; sin desplegar ni activar observabilidad.
 

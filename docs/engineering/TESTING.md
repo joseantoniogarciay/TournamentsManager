@@ -12,6 +12,11 @@ aislada ni una pirámide rígida.
 
 ## Selección por riesgo
 
+El [cierre de QA del 2026-10-10](PRODUCT_QA_CLOSE_2026-10-10.md) aplica
+esta estrategia con patrones compartidos y muestras representativas. Su lista
+vigente sustituye los pendientes cronológicos como inventario de esa fase;
+no certifica plataformas o comportamientos que no se hayan ejecutado.
+
 | Riesgo                      | Evidencia preferida                                                                     |
 | --------------------------- | --------------------------------------------------------------------------------------- |
 | Invariante de dominio       | Prueba rápida del dominio/caso de uso                                                   |

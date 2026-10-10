@@ -5758,3 +5758,11 @@ asociación hablada de cabecera, equipo y valor. Las tandas rápidas de gestos
 no acreditan todos sus avances: contar únicamente estados observados. Tras
 activar VoiceOver, comprobar dónde queda el foco antes de interpretar el
 primer toque como exploración del objetivo.
+### 2026-10-10 — Cerrar QA por riesgo con inventario vigente
+
+Un diario de evidencia no sirve como lista de pendientes: mantiene límites
+históricos aunque otra pasada ya los haya resuelto. Consolidar una lista
+vigente, revisar patrones compartidos una vez y limitar las muestras manuales
+evita una matriz sin final. Registrar por separado defecto reproducido,
+variante fuera de alcance y bloqueo instrumental. La revisión de código
+demuestra implementación; no se presenta como gesto, locución o zoom ejecutado.
