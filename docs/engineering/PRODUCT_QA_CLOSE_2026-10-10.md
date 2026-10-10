@@ -76,8 +76,9 @@ se certifican. No se exige revisar cada componente o escuchar toda la app.
 
 ## Defectos y límites que sobreviven al cierre
 
-- Caída de DevLauncher Android al abrir enlace: evidencia histórica abierta;
-  arranques release correctos no prueban su corrección.
+- Caída de DevLauncher Android: reproducida y localizada en la recreación
+  durante arranque con el APK actualizado; sigue sin corregir. Véase
+  [diagnóstico](DEVLAUNCHER_DIAGNOSIS_2026-10-10.md).
 - Android oscurece diálogos sin el mismo blur iOS: diferencia conocida, sin
   ensayo adicional ni cambio de arquitectura autorizado en este cierre.
 - Gate de lint Android y deuda del analizador: seguimiento en ADR-0152;
@@ -294,3 +295,13 @@ conserva los límites de audio y distribución, sin más recorridos previstos.
 Retrospectiva: consultar primero la solución instrumental ya acreditada en el
 histórico evita repetir pruebas fallidas de entrada ADB. Una secuencia de foco,
 activación y retorno observada es suficiente para esta muestra representativa.
+
+## Ampliación elegida: diagnóstico de DevLauncher
+
+El usuario elige este alcance específico. El
+[diagnóstico vigente](DEVLAUNCHER_DIAGNOSIS_2026-10-10.md) identifica que el APK
+instalado era el del 8 de octubre pese al bundle actual; se instala y verifica
+el Debug recompilado del 9. Las muestras anteriores conservan su evidencia
+observada, sin acreditar esa matriz nativa actual. Con el APK actualizado se
+reproduce el guard de Expo durante recreación de actividad, incluso sin
+TalkBack. Se ejecutan seis casos acotados; no se implementa un parche.

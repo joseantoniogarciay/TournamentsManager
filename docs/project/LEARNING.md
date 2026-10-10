@@ -5812,3 +5812,13 @@ UIAutomator durante ese recorrido. Capturar cada foco antes de activar y
 verificar la pantalla resultante; un retorno a Home no demuestra eliminación
 de un borrador. Un arranque sin warning se registra como no reproducido,
 sin cerrar la incidencia histórica ni certificar locución.
+
+### 2026-10-10 — Verificar APK y separar una carrera de arranque
+
+El hash del APK instalado puede diferir del recompilado aunque Metro entregue
+JavaScript actual. Comparar identidad antes de atribuir resultados al upgrade;
+conservar datos mediante install -r y comprobar de nuevo. Un snapshot puede
+recuperar estado antiguo: contrastar arranque sin snapshot. En DevLauncher,
+ActivityRelaunchItem más el guard de contexto existente localiza el fallo en
+recreación durante carga. El control sin TalkBack muestra que no lo requiere;
+una espera sin fallo no demuestra corrección ni una tasa de incidencia.

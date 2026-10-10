@@ -5824,3 +5824,14 @@ anterior sigue presente. No se acredita audio. El
 [inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md) registra las tres muestras
 ejecutadas, sus límites y evidencia. Se restauran accesibilidad y túneles;
 Pixel, Metro y dev quedan apagados, sin observabilidad ni cambios de cliente.
+
+### 2026-10-10 — DevLauncher diagnosticado con identidad APK comprobada
+
+El usuario elige diagnosticar la caída. Se encuentra instalado el APK del
+8 de octubre y se reemplaza con install -r por el Debug recompilado del 9,
+verificando hash y conservando datos. En seis casos de recreación de arranque,
+dos producen el guard de DevLauncherAppLoader, uno con TalkBack y otro sin él.
+El [diagnóstico](DEVLAUNCHER_DIAGNOSIS_2026-10-10.md) registra tiempos, traza,
+fuente, alternativas y límites. Incidencia localizada y reproducida, sin parche.
+Las muestras previas del día acreditan bundle y gestos en el binario observado,
+no la versión nativa de la matriz actual. No se repite la matriz funcional.
