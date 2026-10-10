@@ -15,6 +15,7 @@ export { KeyboardAwareScrollView } from "./keyboard-aware-scroll-view";
 export { LoadingTransition } from "./loading-transition";
 export { NavigationHeaderButton, usesLiquidGlassNavigation } from "./navigation-header-button";
 export { RequestErrorCard } from "./request-error-card";
+export { ResponsiveColumns } from "./responsive-columns";
 export { Screen } from "./screen";
 export { Text } from "./text";
 export { TextField } from "./text-field";

@@ -186,6 +186,15 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 - **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base.
   Cada card reserva siempre 20 px de margen exterior horizontal y los layouts
   dejan 20 px entre cards, sin alterar su padding interno.
+- **Ancho web:** [ADR-0154](../adr/0154-constrain-responsive-web-content-width.md)
+  centra navegación, contenido y tabs en un marco máximo de 1200 px.
+  Formularios y lectura usan un contenido máximo de 720 px; Inicio, biblioteca,
+  ficha y clasificación declaran `Screen webWidth="wide"`. Los tokens
+  `webLayout` comparten los límites. En viewports menores ocupan el ancho
+  disponible, manteniendo los márgenes de Card y el fondo completo.
+  Inicio y biblioteca usan `ResponsiveColumns`: dos columnas desde 960 px CSS,
+  una por debajo. Mantiene orden DOM, 20 px de separación y estructura estable
+  al cambiar ancho/zoom; nativo conserva una columna.
 - **Forma:** los campos y demás controles compactos usan radio 12 px; las
   tarjetas usan 16 px. Los botones usan `radius.pill` (999 px), de modo que sus
   extremos son siempre semicirculares respecto de su altura. La variante

@@ -63,6 +63,14 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   lista: eso desplazaría las cards 40 px desde el borde.
 - `Screen` no añade padding horizontal: ese margen exterior pertenece a `Card`.
   Añadirlo en ambos sitios duplica la separación lateral.
+- Según ADR-0154, web centra navegación y tabs en `webLayout.maxWidth` (1200 px).
+  `Screen` limita su contenido a `webLayout.readingMaxWidth` (720 px) por defecto;
+  Inicio, biblioteca, ficha y clasificación declaran `webWidth="wide"`.
+  Son máximos, nunca mínimos. El fondo cubre el marco completo; no añadas
+  límites por card ni padding horizontal para compensar el centrado.
+  Inicio y biblioteca reutilizan `ResponsiveColumns`: dos columnas web a
+  partir de `webLayout.columnsMinWidth` (960 px), una debajo y en nativo.
+  La compensación de medio margen por celda conserva los 20 px entre cards.
 - **Muy importante — márgenes de contenido móvil:** un formulario, listado o
   bloque de contenido no puede quedar a ras de los laterales. Debe vivir en una
   `Card` (que aporta los 20 px exteriores) o en una primitiva de layout

@@ -17,6 +17,7 @@ import {
   Card,
   LoadingTransition,
   RequestErrorCard,
+  ResponsiveColumns,
   Screen,
   Text,
   useTabContentBottomPadding,
@@ -45,7 +46,7 @@ export default function TournamentsScreen() {
   const showFloatingAction = !isRestoring && (!user || !isInitialLoad);
 
   return (
-    <Screen bottomInset="none">
+    <Screen bottomInset="none" webWidth="wide">
       {!isRestoring && user && hasLoadedTournaments && loadError && !isLoading ? (
         <ScrollView
           contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
@@ -171,7 +172,11 @@ function TournamentLibrary({
             <Text color="secondary">{empty}</Text>
           </View>
         ) : (
-          leagues.map((league) => <TournamentCard key={league.id} league={league} />)
+          <ResponsiveColumns>
+            {leagues.map((league) => (
+              <TournamentCard key={league.id} league={league} />
+            ))}
+          </ResponsiveColumns>
         )}
         {page.nextCursor ? (
           <View style={styles.pagination}>

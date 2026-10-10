@@ -37,6 +37,8 @@ export const space = {
 
 export const radius = { control: 12, card: 16, pill: 999 } as const;
 
+export const webLayout = { maxWidth: 1200, readingMaxWidth: 720, columnsMinWidth: 960 } as const;
+
 export const typography = {
   family: {
     regular: "Figtree_400Regular",

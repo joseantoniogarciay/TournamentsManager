@@ -212,6 +212,7 @@ export default function TournamentStandingsScreen() {
         </>
       ) : null}
       <Screen
+        webWidth="wide"
         bottomInset={league ? "none" : "safe-area"}
         navigationTitle={t("league_standings")}
         topInset="navigation-bar"

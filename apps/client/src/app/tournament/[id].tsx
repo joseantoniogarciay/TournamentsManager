@@ -564,7 +564,7 @@ export default function TournamentScreen() {
             </Stack.Toolbar>
           ) : null}
         </Stack.Screen>
-        <Screen navigationTitle={t("league_title")} topInset="navigation-bar">
+        <Screen navigationTitle={t("league_title")} topInset="navigation-bar" webWidth="wide">
           {loadErrorMessage ? (
             <RequestErrorCard
               actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}
@@ -989,7 +989,7 @@ export default function TournamentScreen() {
           </Stack.Toolbar>
         </>
       )}
-      <Screen bottomInset="none" topInset="navigation-bar">
+      <Screen bottomInset="none" topInset="navigation-bar" webWidth="wide">
         {navigationTitle.measurement}
         <View ref={matchListViewport} style={styles.listViewport}>
           {showsBracket ? (

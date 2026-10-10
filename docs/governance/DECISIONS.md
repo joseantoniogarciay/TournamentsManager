@@ -253,3 +253,11 @@ que sus celdas crezcan con el tamaño de texto del sistema. Sustituye la propues
 de desplazar la tabla completa con texto ampliado. La excepción afecta solo a
 encabezados, posiciones, equipos, estadísticas y puntos; título, ayuda, grupos
 y reglas conservan el escalado. No altera los datos ni el contrato HTTP.
+
+## Ancho web responsive — 2026-10-10
+
+[ADR-0154](../adr/0154-constrain-responsive-web-content-width.md), aceptado por
+la petición del usuario: limitar el ancho desktop y adaptarlo al viewport.
+Marco común de 1200 px y contenido de lectura/formulario de 720 px mediante
+tokens compartidos. El usuario acepta también
+columnas de Inicio/biblioteca, con regreso a una columna en móvil web y zoom.

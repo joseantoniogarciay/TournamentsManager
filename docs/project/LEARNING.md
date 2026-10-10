@@ -5822,3 +5822,16 @@ recuperar estado antiguo: contrastar arranque sin snapshot. En DevLauncher,
 ActivityRelaunchItem más el guard de contexto existente localiza el fallo en
 recreación durante carga. El control sin TalkBack muestra que no lo requiere;
 una espera sin fallo no demuestra corrección ni una tasa de incidencia.
+
+### 2026-10-10 — Limitar contenido y conservar el fondo web
+
+Limitar solo Card deja cabeceras y tabs desalineados. El marco del navegador
+y una botonera fixed deben compartir límite y centrado. Para lectura, limitar
+un hijo de Screen permite que su canvas cubra el marco: limitar Screen crea
+bandas del fondo del navegador, visibles en tema oscuro. Medir el viewport y
+scrollWidth complementa la muestra visual; reflow a 320 px no certifica por
+sí solo zoom real del navegador. Las mejoras de columnas se deciden por
+contenido, sin deducir su autorización de una petición de ancho máximo. Tras
+aceptarlas, una media query mantiene DOM y estado al cambiar el ancho. Revisar
+componentes que devuelven null antes de reservarles una celda evita huecos.
+Compensar medio margen por celda permite compartir el gutter sin cambiar Card.

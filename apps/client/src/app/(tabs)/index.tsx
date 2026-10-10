@@ -17,7 +17,14 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { SuggestionCard } from "@/features/suggestions/components/suggestion-card";
 import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
-import { Button, Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  ResponsiveColumns,
+  Screen,
+  Text,
+  useTabContentBottomPadding,
+} from "@/shared/ui";
 
 export default function HomeScreen() {
   const { colors } = usePreferences();
@@ -74,7 +81,7 @@ export default function HomeScreen() {
   return (
     <>
       <HomeMetadata />
-      <Screen bottomInset="none">
+      <Screen bottomInset="none" webWidth="wide">
         <ScrollView
           automaticallyAdjustKeyboardInsets
           key={revision}
@@ -93,53 +100,55 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           style={styles.scroll}
         >
-          <Card>
-            <View style={styles.hero}>
-              <Text variant="display">{t("home_hero")}</Text>
-              <Text color="secondary" variant="bodyLarge">
-                {t("home_introduction")}
-              </Text>
-              <Button
-                label={t("home_create_tournament")}
-                onPress={() => router.push("/create-tournament" as Href)}
-              />
-            </View>
-          </Card>
-
-          {user ? (
-            <View style={styles.homeSection}>
-              <Text style={styles.sectionTitle} variant="title">
-                {t("home_recent_leagues_title")}
-              </Text>
-              <View style={styles.recentContent}>
-                {isLoading ? (
-                  <Text color="secondary" style={styles.recentEmpty}>
-                    {t("common_loading")}
-                  </Text>
-                ) : recentTournaments.length === 0 ? (
-                  <View style={styles.recentEmpty}>
-                    <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
-                  </View>
-                ) : (
-                  recentTournaments.map((league) => (
-                    <TournamentCard key={league.id} league={league} />
-                  ))
-                )}
+          <ResponsiveColumns gap={space[6]} fullWidthLast>
+            <Card>
+              <View style={styles.hero}>
+                <Text variant="display">{t("home_hero")}</Text>
+                <Text color="secondary" variant="bodyLarge">
+                  {t("home_introduction")}
+                </Text>
+                <Button
+                  label={t("home_create_tournament")}
+                  onPress={() => router.push("/create-tournament" as Href)}
+                />
               </View>
-            </View>
-          ) : null}
+            </Card>
 
-          {user ? (
-            <View style={styles.homeSection}>
-              <Text style={styles.sectionTitle} variant="title">
-                {t("home_suggestion_title")}
-              </Text>
-              <SuggestionCard />
-              <TipCard />
-            </View>
-          ) : null}
+            {user ? (
+              <View style={styles.homeSection}>
+                <Text style={styles.sectionTitle} variant="title">
+                  {t("home_recent_leagues_title")}
+                </Text>
+                <View style={styles.recentContent}>
+                  {isLoading ? (
+                    <Text color="secondary" style={styles.recentEmpty}>
+                      {t("common_loading")}
+                    </Text>
+                  ) : recentTournaments.length === 0 ? (
+                    <View style={styles.recentEmpty}>
+                      <Text color="secondary">{t("home_recent_leagues_empty")}</Text>
+                    </View>
+                  ) : (
+                    recentTournaments.map((league) => (
+                      <TournamentCard key={league.id} league={league} />
+                    ))
+                  )}
+                </View>
+              </View>
+            ) : null}
 
-          {showGuestHome ? <GuestOnboarding t={t} /> : null}
+            {user ? (
+              <View style={styles.homeSection}>
+                <Text style={styles.sectionTitle} variant="title">
+                  {t("home_suggestion_title")}
+                </Text>
+                <SuggestionCard />
+                <TipCard />
+              </View>
+            ) : null}
+
+            {showGuestHome ? <GuestOnboarding t={t} /> : null}
+          </ResponsiveColumns>
         </ScrollView>
       </Screen>
     </>
@@ -183,7 +192,7 @@ function HomeMetadata() {
 
 function GuestOnboarding({ t }: { t: ReturnType<typeof getTranslator> }) {
   return (
-    <>
+    <View style={styles.content}>
       <Card>
         <View style={styles.section}>
           <Text variant="title">{t("home_section_title")}</Text>
@@ -209,7 +218,7 @@ function GuestOnboarding({ t }: { t: ReturnType<typeof getTranslator> }) {
           />
         </View>
       </Card>
-    </>
+    </View>
   );
 }
 

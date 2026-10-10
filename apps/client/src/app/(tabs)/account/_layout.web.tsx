@@ -1,7 +1,7 @@
 import { Stack, router } from "expo-router";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 
-import { control, space, typography } from "@tournaments-manager/design-tokens";
+import { control, space, typography, webLayout } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
@@ -13,7 +13,8 @@ export default function AccountLayout() {
   const t = getTranslator();
   const { colors } = usePreferences();
   const { user } = useSession();
-  const { width } = useWindowDimensions();
+  const { width: viewportWidth } = useWindowDimensions();
+  const width = Math.min(viewportWidth, webLayout.maxWidth);
   // Reserve the 44 px control, outer margin and 20 px gap on both sides.
   const titleWidth = Math.max(0, width - 2 * (control.minHeight + 2 * space[5]));
   const actionsWidth =
