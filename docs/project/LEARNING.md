@@ -5704,3 +5704,13 @@ desconectado y no permite interacción. Verificar por separado el arranque,
 la imagen del panel, la respuesta a clics y la recarga del bundle antes de
 certificar QA. Un aviso de memoria del IDE delimita un problema del instrumento;
 no justifica cambiar código de la app ni ajustar el heap sin decisión del usuario.
+
+### 2026-10-10 — Teclado visible y recuperación por desplazamiento
+
+Una búsqueda puede dejar resultados bajo el teclado y recuperarlos al ocultarlo
+durante un arrastre. Observar teclado, borde del campo y último resultado en
+etapas separadas: llegar al final después de ocultarlo no acredita scroll con
+teclado abierto. Introducir una consulta mediante el text field AX settable
+permite conservar Capture Keyboard off y comprobar la oclusión real del
+teclado del simulador. Salir sin activar candidatos y verificar permisos
+conservados mantiene el QA de búsquedas separado de delegación o transferencia.

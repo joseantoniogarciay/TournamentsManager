@@ -5537,3 +5537,53 @@ Retrospectiva: distinguir proceso Android disponible, transmisión del panel
 y respuesta a clics evita confundir adb device con un instrumento de QA usable.
 Una captura del IDE y sus avisos sirve para delimitar el bloqueo; no prueba
 un defecto funcional del cliente.
+
+
+### 2026-10-10 — Teclado visible en búsquedas iOS
+
+Sobre 4902b73, Android Studio vuelve a ofrecer AX. Reconnect devuelve
+cannotClickOffscreenElement; sacar Running Devices a ventana independiente
+mantiene «Disconnected from the Emulator» y controles deshabilitados. No se
+acredita Android actual ni se añaden reverses. El panel queda independiente;
+el cierre final del Pixel y la recuperación del IDE siguen pendientes.
+
+Device Hub permite ahora mostrar el teclado iOS al enfocar Sugerencias con
+Capture Keyboard off. Se observa oclusión parcial inicial del campo; esta
+observación no certifica todavía el formulario ni su recuperación mediante
+scroll. No se introduce ni envía sugerencia. Se inicia Metro y dev sin
+observabilidad, y Reload desde el botón de herramientas Expo recarga iPhone
+17/iOS 27; Metro confirma bundle iOS de 1.645 módulos. La sesión ficticia y
+el torneo QA formulario table_tennis se conservan.
+
+Añadir administrador: a Text Size 3, enfocar el campo y setValue qa_ conservan
+el teclado visible. Se ven siete candidatos sobre él; el último de los ocho
+queda oculto. Un gesto de arrastre en el margen izquierdo oculta el teclado
+y deja visible qa_web_register_263be8 completo. A Text Size 11, volver a
+enfocar muestra título y campo completos, con el primer nombre parcialmente
+oculto por el teclado. Arrastrar en el margen oculta el teclado y desplaza
+la lista al último candidato, completo en dos líneas con separador y margen
+inferior. Se cierra sin seleccionar; la lista confirma que no hay delegados.
+
+Transferir: a Text Size 3, la búsqueda qa_ muestra aviso, campo y seis
+candidatos sobre el teclado. Arrastrar oculta el teclado y deja visibles los
+ocho destinatarios, incluido el último completo. A Text Size 11, enfocar
+desplaza el contenido hasta el campo, cuyo borde inferior queda por encima
+del teclado; la parte inicial del aviso queda fuera del viewport. Arrastrar
+en el margen oculta el teclado y alcanza el último destinatario completo en
+dos líneas, con separador y margen inferior. No se selecciona ni transfiere.
+La recuperación observada usa ocultación del teclado al arrastrar; no se
+certifica alcance del último resultado manteniendo el teclado abierto.
+
+Se restaura Text Size 3 y se confirma VoiceOver off y Capture Keyboard off.
+El menú del torneo conserva Administradores, Transferir y Cancelar; se vuelve
+a Home sin teclado. Metro y API/PostgreSQL/Mailpit se apagan, conservando
+volúmenes. Se restaura únicamente el salto de línea generado en expo-env.d.ts.
+No hay cambios de implementación ni se repiten checks de código. Evidencia
+visual y AX en la conversación, sin PNG exportado. El QA global sigue abierto:
+Android actual, otros formularios con teclado, locución/otras rutas y zoom
+autenticado permanecen pendientes.
+
+Retrospectiva: la lista puede recuperar espacio ocultando el teclado durante
+el arrastre. Registrar esa transición evita afirmar que el último resultado
+se alcanza con el teclado todavía abierto; verificar campo, resultado final
+y salida sin cambios distingue oclusión temporal de un bloqueo de uso.
