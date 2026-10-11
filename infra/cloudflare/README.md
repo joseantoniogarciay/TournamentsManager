@@ -5,13 +5,20 @@ en K3s doméstico vía Tunnel/Caddy. Dominio y audiencia OAuth no cambian.
 
 ## Estado efectivo
 
-2026-10-10: cuenta autenticada y Workers Free confirmado; **no conmutada todavía**.
-El Worker existe sin rutas y la URL de versión sirve el artefacto productivo.
-El dominio no supera TLS: Universal SSL estaba activado con la tabla de
-certificados vacía. Con autorización explícita se desactivó, se esperó un minuto
-y se reactivó para solicitar reemisión; queda activado y pendiente de verificar
-certificado válido. K3s permanece suspendido; el usuario solicita arrancarlo
-después de la migración web. No se contrató pago ni se cambió DNS o rutas.
+2026-10-11: rutas productivas activadas en Workers Free. Se conserva la app
+`b002b4b99fc44a6ec0662b94ec962b8cce9cbea5`; no se promocionan cambios funcionales
+de develop. K3s, PostgreSQL y dos réplicas API están recuperados, con healthz
+público 200 y CORS productivo 204. Backups y renderer de rollback rehabilitados.
+No se contrató pago ni se cambió el DNS/API. La comprobación de corte detectó
+`noindex` en la home del borde, pese a pasar localmente: la home pasa primero
+por el Worker para retirar esa cabecera solo en el host canónico. El resto de
+archivos sigue usando el servicio estático y los previews conservan noindex.
+
+El certificado ajeno recibido el 10 de octubre coincide con la interceptación
+Digi documentada por [OONI](https://ooni.org/post/2026-laliga-collateral/), incluida
+su huella SHA-1. No demostraba ausencia de certificado en Cloudflare. El día 11
+la conexión vuelve a validar HTTPS con Google Trust Services WE1. Universal SSL
+queda activado; no se repite su reemisión ni se omite validación TLS.
 
 ## Preparar y comprobar
 
@@ -71,8 +78,8 @@ sobre DNS proxied existente, sin retirar registros de Tunnel ni cambiar API.
 `workers.dev` queda desactivado; las URLs de versión están habilitadas y llevan
 `noindex`. No sustituyen el gate de login: CORS solo autoriza el dominio productivo.
 
-Los archivos se sirven antes de la función. `/tournament/*` pasa primero por ella:
-el UUID exacto consulta la API pública con timeout de tres segundos; sus subrutas
+Los archivos se sirven antes de la función, salvo la home y `/tournament/*`:
+la home retira noindex solo en el dominio canónico; el UUID exacto de torneo consulta la API pública con timeout de tres segundos; sus subrutas
 usan el shell de los mismos assets. Nunca se reenvían sesión, cookies ni token
 privado de borde. Otras rutas sin archivo conservan el fallback Expo. Archivos y
 asociaciones inexistentes devuelven 404. Cabeceras estáticas y dinámicas comparten
@@ -81,7 +88,7 @@ incluida su descripción histórica de liga, evitando cambios de producto aquí.
 
 ## Coste y recuperación
 
-Los archivos estáticos tienen almacenamiento y peticiones gratuitos. La función
+Los archivos estáticos tienen almacenamiento y peticiones gratuitos. La función (incluida la home)
 y `www` consumen la cuota compartida Workers Free de 100.000 peticiones/día por
 cuenta y su límite de CPU. No se usa `run_worker_first=true` global. Agotar cuota
 afecta a documentos dinámicos/fallback y `www`, sin contratar pago automáticamente.
@@ -110,7 +117,9 @@ La prueba con el runtime de Wrangler detectó que `redirect: "error"` no es
 aceptado; `manual` permite rechazar los saltos de API con respuesta segura.
 La URL de versión tiene dos etiquetas antes de `workers.dev`; una regla con una
 sola no la protegía de indexación. Separar assets y renderer conserva gratuito
-el tráfico estático sin cambiar el cliente universal ni lógica de negocio.
+el tráfico estático sin cambiar el cliente universal ni lógica de negocio. La comprobación del
+dominio real sigue siendo necesaria: la indexación de la home no coincidió
+con el runtime local y se trata explícitamente en el Worker.
 
 ## Evidencia local — 2026-10-10
 
@@ -152,4 +161,4 @@ el tráfico estático sin cambiar el cliente universal ni lógica de negocio.
 Retrospectiva: un dry-run no comprueba permisos remotos ni el requisito de crear
 el Worker antes de subir versiones. Separar esa creación sin rutas evita cortar
 el origen antes de validar. El HTTPS de la URL de versión y el del dominio son
-gates independientes; restaurar K3s no corrige un certificado de borde ausente.
+gates independientes; restaurar K3s no corrige una interceptación TLS del operador.

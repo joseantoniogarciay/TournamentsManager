@@ -5870,3 +5870,18 @@ correctos mientras la API suspendida produce 503 y el dominio falla TLS.
 Comprobar certificado de borde y salud de API por separado, conservar Universal
 SSL activado tras solicitar reemisión y no dar el corte por terminado antes de
 verificar HTTPS real.
+
+
+### 2026-10-11 — Corte Cloudflare y diagnóstico de TLS
+
+Un certificado ajeno al dominio no demuestra que el proveedor no haya emitido
+el suyo: contrastar sujeto y huella con mediciones independientes antes de
+atribuir la causa. `core1.netops.test` coincidió con la interceptación Digi
+documentada por OONI. Al desaparecer, HTTPS volvió a validarse.
+
+El hosting local y el borde real pueden diferir al aplicar `_headers` a la
+home. Verificar indexación en el dominio productivo después del corte; resolver
+la home en el Worker permite retirar noindex explícitamente sin ejecutar la
+función para todos los archivos. Esto añade la home a la cuota Workers Free.
+Recuperar K3s exige readiness real, no solo rollout guardado: las réplicas
+conservaron inicialmente estados anteriores hasta recuperar PostgreSQL.

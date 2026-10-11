@@ -171,7 +171,10 @@ export default {
     );
     const headers = new globalThis.Headers(shell.headers);
     for (const [key, value] of Object.entries(securityHeaders)) headers.set(key, value);
-    headers.set("X-Robots-Tag", noindex);
+    // Keep the canonical home indexable even when the edge asset service
+    // supplies a noindex header. Preview hosts and SPA fallbacks stay private.
+    if (url.hostname === "fasttourney.com" && url.pathname === "/") headers.delete("X-Robots-Tag");
+    else headers.set("X-Robots-Tag", noindex);
     return new globalThis.Response(shell.body, { status: shell.status, headers });
   },
 };

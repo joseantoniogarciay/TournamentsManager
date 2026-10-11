@@ -91,6 +91,8 @@ test("Cloudflare release preserves static routing and safe dynamic tournament do
       const home = await fetch("/");
       assert.equal(home.status, 200);
       assert.equal(home.headers.get("X-Robots-Tag"), null);
+      assert.equal((await fetch("/?tracking=1")).headers.get("X-Robots-Tag"), null);
+      assert.equal((await fetch("/", { method: "HEAD" })).headers.get("X-Robots-Tag"), null);
       assert.match(home.headers.get("Content-Security-Policy"), /frame-ancestors 'none'/);
       assert.equal(
         (await fetch("/account")).headers.get("X-Robots-Tag"),

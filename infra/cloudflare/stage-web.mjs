@@ -49,7 +49,7 @@ export function webConfig(name, redirect = false) {
             binding: "ASSETS",
             html_handling: "drop-trailing-slash",
             not_found_handling: "none",
-            run_worker_first: ["/tournament/*"],
+            run_worker_first: ["/", "/tournament/*"],
           },
         }),
   };
