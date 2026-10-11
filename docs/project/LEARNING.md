@@ -5964,3 +5964,13 @@ inspeccionados no completan siete días hasta el 13 a las 14:14:47 de Madrid.
 Se conserva la matriz madura; las fuentes de los generadores Android todavía
 contienen los dos defectos pendientes. Una fecha candidata no certifica el
 grafo completo ni sustituye builds limpias y QA después de la actualización.
+
+
+## 2026-10-11 — Cierre de v1.12.0
+
+PostHog estaba configurado también en web para fiabilidad, sin analítica de uso.
+Un rechazo de aprobación al enviar mapas fuente no es un fallo de PostHog.
+Tras autorización explícita del contenido/destino, la CLI completa la preparación
+y se retiran los mapas públicos. El certificado ajeno de la red no se corrige
+modificando la aplicación ni desactivando TLS: despliegue autorizado, preview
+y origen comprobados, verificación pública limitada declarada.

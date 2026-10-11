@@ -583,3 +583,50 @@ la conciliación corrige esa pérdida temporal de trazabilidad.
 
 Retrospectiva: las siguientes actualizaciones deben guardar y promocionar
 el bloque verificado antes de cambiar producción, conforme a ADR-0119.
+
+
+## Publicación v1.12.0 — 2026-10-11
+
+El usuario autoriza publicar web y backend, continuar pese al certificado ajeno
+recibido en su conexión y subir los mapas fuente a PostHog UE 255144.
+Tag v1.12.0, merge main `3a9d41086ce158daf145a2930c477e4fa213244f`.
+Incluye repetición de torneos, elección de equipos libres en invitaciones, aviso
+de plaza ocupada y fecha/hora/lugar opcionales (ADR-0158/0159/0160).
+No distribuye builds nativas ni incorpora los parches jóvenes de Expo.
+
+`make verify` local y CI de develop/main pasan, incluida integración PostgreSQL
+en CI. Backup incremental cifrado replicado y restaurado en un volumen temporal
+con repositorio solo lectura; Job de ensayo eliminado al terminar. Goose aplica
+00021/00022 y confirma versión 22. API con dos réplicas listas en el SHA del tag;
+secreto migrador efímero retirado. Huellas de datos anteriores coinciden antes y
+después, excluyendo las columnas nuevas (cuentas/torneos/equipos/partidos: 3/10/26/21).
+
+El artefacto definitivo conserva PostHog de fiabilidad; la CLI termina
+correctamente, vincula los mapas al SHA y los retira del export. No demuestra
+recepción ni simbolicación de un error real. Candidato previo sin PostHog
+conservado fuera de publicación; nunca se activó en Cloudflare.
+
+Cloudflare confirma ambos triggers y versiones activas:
+
+- web: `e97c2239-325e-4b46-9076-6206b772cad0`;
+- www: `97d3f0e0-0f4b-400b-b52b-574d007c43f5`.
+
+Preview definitivo: TLS válido, deployment.json con SHA correcto y home/cuenta
+noindex. Cinco checks del origen API pasan (health, 404, 401 de repetición y
+lugar, CORS); renderer con SHA correcto. Origen web de rollback actualizado al
+mismo SHA: cinco rutas correctas, cuenta noindex y ningún mapa público.
+La verificación HTTPS de fasttourney.com/api desde la red del operador queda
+pendiente: certificado autofirmado core1.netops.test con huella
+D5:EB:30:1E:5A:00:4C:8B:6C:39:36:A5:DA:81:B1:E8:FC:F6:D7:7F,
+coincidente con el incidente anterior. No se omite TLS ni cambia DNS/certificados.
+
+Rollback: API y web v1.11.0 conservadas; Workers previos
+`05f8a02a-d89b-4811-844e-4e97323c183e` y
+`6c27d953-97e8-436c-b231-b9f50bb6e772`. Las migraciones aditivas permiten
+volver al código anterior sin Down; evaluar pérdida antes de retirar columnas.
+Evidencia privada: `/private/tmp/tm-release-v112-20261011`. Dev/local apagados.
+
+Retrospectiva: distinguir fallos del proveedor, bloqueos de aprobación del
+contenido enviado y limitaciones de la red. Publicación confirmada por el plano
+de control y comprobación del origen no equivalen al recorrido HTTPS completo
+desde todas las redes; conservar explícitamente ese límite.
