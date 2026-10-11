@@ -26,7 +26,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: bootstrap-migrations
-          image: tournaments-manager-postgresql:18.4-pgbackrest-2.59.1
+          image: tournaments-manager-postgresql:18.6-pgbackrest-2.59.3
           imagePullPolicy: Never
           command:
             - sh

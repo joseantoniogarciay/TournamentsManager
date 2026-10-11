@@ -503,3 +503,83 @@ Ver versiones activas, pruebas y retrospectiva en
 una ejecución Worker para conservar su indexación; el resto de assets sigue
 estático. Un certificado de interceptación del operador no se interpreta como
 fallo de emisión Cloudflare: se contrasta la huella y la conexión.
+
+### Publicación v1.11.0 — 2026-10-11
+
+[Release v1.11.0](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.11.0)
+publicada sobre el merge no-ff `ec8112a383fadd2abb1bf0d1800406e01c5a761a`.
+Incluye responsive desktop, accesibilidad/scroll, Expo 57.0.26 / RN 0.86.3,
+Go 1.26.9 y hosting Cloudflare Free. No distribuye apps nativas en tiendas.
+
+`make verify` local, integración PostgreSQL efímera y prueba race de apagado
+pasan. La CI del candidato
+[e2e1d57](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/38118422034)
+pasa antes de promocionar. La [CI del SHA etiquetado](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/38118777031)
+también termina aprobada. El merge conserva exactamente el árbol del candidato.
+Web/infra, API, migrator y renderer de rollback tienen el SHA etiquetado; dos
+réplicas API listas. Goose confirma versión 20 sin migraciones pendientes.
+Backup cifrado `20261004-021506F_20261011-063119I` replicado y restaurado desde
+la copia recibida, en un volumen aislado eliminado al terminar. Huellas completas
+de cuentas/torneos/equipos/partidos coinciden antes/después (3/10/26/21 filas).
+37 peticiones de healthz durante el rollout devuelven 200, sin fallos observados.
+Secret migrador efímero eliminado; no se alteran PostgreSQL ni su durabilidad.
+
+Nueve comprobaciones HTTP/TLS/CORS/manifiesto/renderer pasan. Biblioteca y
+métodos de acceso anónimos devuelven 401 JSON; torneo ausente 404 JSON. Web
+conserva 200 con metadatos para torneo público y 404 para UUID ausente, fallback
+de subruta y rechazo de JS inexistente. Home indexable y preview noindex.
+Navegador productivo: 1600 px muestra columnas 590/590 y tabs centradas 1200;
+390 px vuelve a una columna, sin overflow de página. No se repite login
+autenticado ni envío de correo; el QA previo acotado conserva sus límites.
+Sourcemaps se suben al proyecto PostHog autorizado y se retiran del export; no
+acredita por sí mismo recepción ni simbolicación de un error real.
+
+Workers actuales y rollback en `infra/cloudflare/README.md`. API previa b002b4b
+y manifiesto capturado conservados; origen Caddy anterior disponible para
+recuperación. Evidencia operativa privada en `/private/tmp/tm-release-20261011`.
+Dev/local siguen apagados. Develop avanza hasta el merge productivo; no se
+crean ramas temporales. No se publican cambios de dev doméstico en esta sesión.
+
+Retrospectiva: un solo SHA para los artefactos evita mezclar la migración de
+hosting con bundles anteriores. Preparar y verificar antes de activar mantiene
+rollback disponible; medir lecturas durante rollout y contrastar huellas aporta
+evidencia de disponibilidad y conservación sin mutar fixtures productivos.
+
+## 2026-10-11 — PostgreSQL, pgBackRest y Caddy
+
+ADR-0157 autoriza PostgreSQL 18.6 y pgBackRest 2.59.3 en producción. Imagen
+`tournaments-manager-postgresql:18.6-pgbackrest-2.59.3`,
+checksum oficial del fuente pgBackRest verificado durante build. Se conserva
+la imagen anterior y ambos PVC. Restauración previa y posterior satisfactoria
+en emptyDir, repositorio de backups de solo lectura y sin montar datos activos.
+El backup completo nuevo se crea con `--no-expire-auto`; no se expiran copias.
+`pgbackrest check` pasa, PostgreSQL está Ready y API dentro de K3s devuelve 200.
+Se exporta copia cifrada adicional fuera de la VM. Evidencia privada:
+`/private/tmp/tm-infra-upgrade-20261011`.
+
+Caddy 2.11.7 instalado desde Homebrew, configuración validada y servicio
+`sh.brew.caddy` activo con binario nuevo. Durante el reinicio se observó 502
+y «no route to host» desde launchd, aunque curl y K3s funcionaban. Volver al
+binario y etiqueta anteriores tampoco recuperó inmediatamente el acceso.
+Después de la comprobación del permiso de Red local por el usuario, la API
+volvió a 200; no se atribuye causa definitiva solo por esa correlación.
+La revisión automática bloqueó inicialmente reactivar la versión nueva;
+tras recuperar 200 autorizó completar la transición. API pública, origen
+y web comprobados con 2.11.7 activo. Se conserva binario 2.11.4 para rollback.
+
+Retrospectiva: probar restauración antes de cambiar el único Pod permite
+comprobar compatibilidad real. Validar configuración y binario de un proxy
+no sustituye probar su conectividad desde el proceso gestionado por launchd.
+Local/dev siguen apagados; observabilidad productiva existente no se modifica.
+
+### Conciliación Git del hito operativo
+
+Se promociona el bloque de infraestructura a main mediante merge explícito
+y tag v1.11.1. Esta release registra PostgreSQL/pgBackRest y Caddy activos;
+web y API conservan sus artefactos v1.11.0, sin reconstrucción ni despliegue
+adicional. Las valoraciones nativas permanecen en develop, pendientes de
+distribución. El despliegue operativo precedió al commit en esta sesión:
+la conciliación corrige esa pérdida temporal de trazabilidad.
+
+Retrospectiva: las siguientes actualizaciones deben guardar y promocionar
+el bloque verificado antes de cambiar producción, conforme a ADR-0119.

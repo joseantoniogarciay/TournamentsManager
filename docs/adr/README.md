@@ -62,3 +62,5 @@ Usa [template.md](template.md) y el
 - [ADR-0154: Ancho web responsive](0154-constrain-responsive-web-content-width.md) — Aceptado.
 
 - [ADR-0155: Hosting web en Cloudflare Static Assets](0155-host-production-web-on-cloudflare-static-assets.md) — Aceptado; conmutación pendiente de validación en la cuenta.
+
+- [ADR-0157: PostgreSQL, pgBackRest y Caddy](0157-upgrade-postgresql-pgbackrest-and-caddy.md) — Aceptado; actualización operativa y excepción puntual de madurez.

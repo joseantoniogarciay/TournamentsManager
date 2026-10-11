@@ -2,7 +2,8 @@
 # dev so the K3s image can archive WAL and create physical backups.
 FROM debian:bookworm-slim AS pgbackrest-build
 
-ARG PGBACKREST_VERSION=2.59.1
+ARG PGBACKREST_VERSION=2.59.3
+ARG PGBACKREST_SHA256=14037901db002e5536a948bf9f0fc0ff6cde31f4e675d3e9b46f129071bf2e5f
 
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
@@ -25,12 +26,13 @@ RUN apt-get update \
 RUN curl --fail --location --silent --show-error \
         "https://github.com/pgbackrest/pgbackrest/releases/download/release%2F${PGBACKREST_VERSION}/pgbackrest-${PGBACKREST_VERSION}.tar.gz" \
         --output /tmp/pgbackrest.tar.gz \
+    && echo "${PGBACKREST_SHA256}  /tmp/pgbackrest.tar.gz" | sha256sum --check --strict \
     && mkdir /src \
     && tar --extract --gzip --file /tmp/pgbackrest.tar.gz --strip-components=1 --directory /src \
     && meson setup /build /src \
     && ninja -C /build
 
-FROM postgres:18.4-bookworm
+FROM postgres:18.6-bookworm
 
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \

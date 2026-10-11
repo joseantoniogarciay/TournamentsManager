@@ -54,7 +54,7 @@ docker run --rm \
   --env POSTGRES_DB=fasttourney_prod \
   --volume "$restore_replica_directory:/var/lib/pgbackrest:ro" \
   --mount "type=volume,src=$restore_volume,dst=/restore" \
-  tournaments-manager-postgresql:18.4-pgbackrest-2.59.1 \
+  tournaments-manager-postgresql:18.6-pgbackrest-2.59.3 \
   sh -ec '
     chown 999:999 /restore
     gosu postgres pgbackrest --stanza=fasttourney-prod --pg1-path=/restore restore

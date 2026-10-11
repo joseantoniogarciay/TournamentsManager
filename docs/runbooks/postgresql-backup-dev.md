@@ -7,7 +7,7 @@
 
 Este runbook protege el clúster `tournaments-manager-dev`, no el entorno
 `local`, la evidencia legal separada ni el runtime `prod` de K3s. Usa pgBackRest
-2.59.1, copia física, archivado WAL y recuperación a un instante (PITR).
+2.59.3, copia física, archivado WAL y recuperación a un instante (PITR).
 
 La copia base contiene el clúster completo. Los incrementales contienen cambios
 físicos desde la copia anterior y el WAL permite reproducir cambios posteriores.

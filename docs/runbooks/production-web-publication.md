@@ -8,7 +8,8 @@
 ## Síntoma e impacto
 
 ADR-0155 está conmutado desde el 2026-10-11: producción sirve el artefacto
-`b002b4b99fc44a6ec0662b94ec962b8cce9cbea5` desde Workers Static Assets Free.
+`ec8112a383fadd2abb1bf0d1800406e01c5a761a` (v1.11.0) desde Workers Static
+Assets Free; la primera conmutación reutilizó b002b4b.
 K3s y PostgreSQL están recuperados; la API pública devuelve 200. El
 [procedimiento Cloudflare](../../infra/cloudflare/README.md) separa staging,
 comprobación y publicación. Los pasos Caddy de este runbook quedan como
@@ -302,3 +303,23 @@ Trust Services WE1. Universal SSL permanece activado; no se repitió la reemisi�
 Retrospectiva: separar salud API, TLS desde la conexión y hosting evita atribuir
 todas las caídas a una sola causa. Comprobar el dominio después del corte es
 necesario aunque la prueba local y la URL de versión hayan pasado.
+
+## Publicación v1.11.0 — 2026-10-11
+
+SHA `ec8112a383fadd2abb1bf0d1800406e01c5a761a` trazado al tag anotado,
+GitHub Release, manifiesto web, imagen API y renderer. La preparación usa
+`stage-prod-web.sh` y luego el candidato inmutable Cloudflare; no se activa
+`current` ni se recarga Caddy para publicar el borde. Web Worker
+`05f8a02a-d89b-4811-844e-4e97323c183e`, redirect
+`6c27d953-97e8-436c-b231-b9f50bb6e772`.
+
+Nueve checks públicos pasan; API 200/CORS 204, home 200 indexable, cuenta 200
+noindex y www 308. Torneo público/metadatos 200, UUID ausente 404; preview
+noindex. Reflow productivo comprobado a 1600 y 390 px. Backup cifrado previo
+restaurado en aislamiento; huellas de datos conservadas. Evidencia y límites
+en la sección v1.11.0 de DEPLOYMENT.md. No se revalida login real ni correo.
+
+Para rollback Cloudflare usar las versiones web
+`b878e160-71cf-4a76-83ee-c9c3992edb59` y redirect
+`629c2b56-f91d-4879-a91a-a66c9d8612b2`, con configuración correspondiente.
+Rollback API recupera b002b4b y su manifiesto anterior; no revierte datos.
