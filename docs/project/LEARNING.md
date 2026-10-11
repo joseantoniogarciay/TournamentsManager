@@ -5885,3 +5885,14 @@ la home en el Worker permite retirar noindex explícitamente sin ejecutar la
 función para todos los archivos. Esto añade la home a la cuota Workers Free.
 Recuperar K3s exige readiness real, no solo rollout guardado: las réplicas
 conservaron inicialmente estados anteriores hasta recuperar PostgreSQL.
+
+
+### 2026-10-11 — Gate de v1.11.0
+
+La migración de hosting dejó candidatos inmutables bajo `.config/cloudflare`.
+ESLint no hereda automáticamente las exclusiones Git: excluir únicamente ese
+árbol generado evita analizar bundles minificados sin relajar reglas de fuente.
+El gate completo local pasa tras esa corrección; persistencia se verifica en
+PostgreSQL efímero aislado. La publicación siguiente agrupa responsive web,
+mejoras de accesibilidad y parches de Expo/Go sin nuevas migraciones ni cambios
+en datos de negocio. Backup cifrado y huellas agregadas preceden al despliegue.

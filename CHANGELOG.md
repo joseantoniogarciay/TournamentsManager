@@ -6,6 +6,15 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-11
+
+### Added
+
+- Web desktop con marco máximo centrado, columnas en Inicio y biblioteca y
+  laterales útiles en gestión de equipos y fichas de liga; una columna en móvil.
+- Hosting productivo en Cloudflare Workers Static Assets Free, con previews
+  seguros de torneo, redirección canónica y rollback al origen doméstico.
+
 ### Changed
 
 - Cliente actualizado a Expo 57.0.26 / React Native 0.86.3 y dependencias
@@ -20,6 +29,12 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
   aplicación y herramientas para corregir los avisos detectados por CI.
 
 ### Fixed
+
+- Scroll de formularios y listados conserva el área segura dentro del contenido;
+  Notificaciones permite corte silábico y clasificación mantiene texto compacto
+  según la excepción de accesibilidad aceptada.
+- Home productiva indexable en Cloudflare; previews, dev y rutas de aplicación
+  conservan noindex. El lint excluye candidatos de despliegue generados.
 
 - Crear torneo aprovecha el área inferior: safe area y separación quedan dentro
   del contenido desplazable, sin recortar su viewport con padding del padre.
