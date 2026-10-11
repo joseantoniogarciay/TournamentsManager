@@ -153,7 +153,8 @@ sus permisos administrativos.
 
 El creador lo asigna directamente mediante su `username`, sin aceptación previa.
 El administrador puede abandonar la liga; el creador puede retirarlo con efecto
-inmediato. Su único permiso operativo es gestionar resultados; la mecánica de
+inmediato. Puede gestionar resultados y, según ADR-0158, los datos opcionales de fecha,
+hora y lugar; la mecánica de
 registro queda limitada al tanteo final local y visitante, ambos enteros no
 negativos, y a un desempate solo cuando una eliminatoria de fútbol o balonmano
 empatada lo necesita. El cliente lo presenta como penaltis en fútbol y
@@ -317,8 +318,8 @@ y [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md) definen
 la estructura mínima que originó la liga de fútbol. ADR-0126 y ADR-0134 amplían
 ese núcleo: el torneo elige `football`, `basketball` o `handball` al crearse y
 conserva el deporte durante todo su ciclo. Los tres admiten liga a una o dos
-vueltas y eliminatoria directa a partido único; no incluyen fechas, horas,
-periodos ni prórrogas desglosadas.
+vueltas y eliminatoria directa a partido único; no incluyen periodos ni prórrogas desglosadas. ADR-0158 añade
+fecha, hora y lugar como información opcional, independiente del tanteo.
 
 ADR-0135 incorpora `tennis` y `padel` exclusivamente para eliminatoria directa.
 Tenis permite elegir al mejor de tres o cinco sets; pádel se juega al mejor de
@@ -482,3 +483,39 @@ lectura identifica motivo, participante, ganadora y parcial; en liga etiqueta
 además el resultado administrativo. Correcciones, permisos, congelación de
 fases, dependencias del cuadro e historial conservan las reglas existentes.
 Doble ausencia, suspensión y sanciones configurables siguen fuera del alcance.
+
+## Fecha, hora y lugar opcionales — ADR-0158
+
+El creador y los administradores designados pueden añadir o editar el lugar
+común del torneo y los datos de cada partido. Fecha y hora son opcionales e
+independientes; una hora conserva la zona IANA del dispositivo que la asigna
+y se presenta en esa zona, también al leerla desde otro dispositivo. No se
+convierten días civiles a UTC. Un lugar propio vacío hereda el lugar común.
+
+Se editan en el detalle, después de crear, sin añadir campos obligatorios a la
+creación ni condiciones al inicio o los resultados. La fecha se introduce como
+DD/MM/AAAA y la hora como HH:mm; no se añade una dependencia nativa de calendario.
+El resto solo ve valores existentes; si no hay información no aparece un bloque
+vacío ni controles deshabilitados. Torneos completados y cancelados quedan en
+lectura, y los byes no se planifican. No incorpora reservas ni avisos.
+
+## Nuevas ediciones e inscripción en equipos preparados
+
+ADR-0159 permite que la persona propietaria actual repita un torneo finalizado.
+«Repetir torneo» abre `/tournament/:id/repeat`: revisa nombre y composición,
+elige su equipo y consulta deporte, reglas y formato heredados. Al confirmar,
+se crea una edición independiente en `published`. Conserva el formato como
+propuesta editable al iniciar; no genera partidos ni arrastra resultados,
+retiradas, fechas, lugares, campeones, delegados, seguidores o invitaciones.
+El histórico anterior se conserva. La repetición no sobrescribe el borrador
+local del alta habitual y los reintentos de una misma intención no crean duplicados.
+
+ADR-0160 aplica a todas las invitaciones de torneos sin iniciar: quien entra
+puede elegir un equipo existente sin cuenta vinculada o escribir otro nombre
+para crear uno si quedan plazas. La lista contiene únicamente nombres libres;
+la inscripción verifica de nuevo disponibilidad y permisos, porque otra persona
+puede ocupar el equipo mientras el formulario está abierto. Elegir un equipo
+no aumenta la composición, también cuando ya contiene 64 equipos. Una cuenta
+no puede inscribirse dos veces y una selección ocupada se rechaza. El enlace
+permite ocupar un equipo libre; no acredita que sea su participante anterior.
+La organizadora controla la distribución y revocación de la invitación.

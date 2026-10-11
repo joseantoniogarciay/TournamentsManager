@@ -190,3 +190,14 @@ transporte usa feedback de conexión y los demás fallos conservan el mensaje
 común seguro. Cancelar no muestra un banner.
 
 Preparación y gates pendientes: [runbook de acceso social](../../docs/runbooks/social-login.md).
+
+## Valoraciones de tienda
+
+ADR-0156 usa expo-store-review al cerrar el popup tras finalizar un torneo y
+al alcanzar diez entradas agregadas a la ficha de cualquier torneo. Se mantiene
+un contador por instalación y un mínimo de 60 días entre intentos, sin IDs ni
+telemetría. Solo se ejecuta en builds Release con appEnvironment=production; web,
+Debug y local/dev no solicitan reseñas. La tienda puede omitir el diálogo.
+
+Pruebas de política: `make test-store-review`. La aparición real y el envío
+requieren una app distribuida por tienda; TestFlight no muestra la solicitud iOS.

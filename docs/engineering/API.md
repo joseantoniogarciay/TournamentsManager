@@ -393,3 +393,57 @@ resultado bloqueado `409`. Solo el conflicto conserva feedback específico;
 resto de HTTP, `5xx`, cuerpo inválido y problemas desconocidos usan
 `common_request_error`, transporte `common_network_error`, cancelación
 intencional sin aviso. Nunca se muestra texto bruto del backend.
+
+## Planificación informativa opcional (ADR-0158)
+
+`PUT /v1/tournaments/{tournamentId}/venue` reemplaza `venue`.
+`PUT /v1/tournaments/{tournamentId}/matches/{matchId}/schedule` reemplaza
+`scheduledDate`, `scheduledTime`, `timeZone` y `venue`; exige las cuatro claves
+y usa cadenas vacías para eliminar valores. Los campos vacíos se omiten al leer.
+Hora civil de 24 horas con zona IANA, fecha civil real independiente, lugar
+recortado hasta 160 caracteres Unicode sin controles. El cliente nunca interpreta
+una hora sin fecha como un instante UTC.
+
+Ambas operaciones exigen sesión y permiso de creador/delegado, validan IDs y
+cuerpo JSON único (máximo 4096 bytes) y devuelven `200 PublicTournament`.
+Respuestas seguras: 400 validación, 401 sesión, 403 permiso, 404 recurso,
+409 torneo cerrado o bye, 500 límite técnico. No hay limitador adicional ni
+respuesta 429 propia. El cliente distingue 403/404/409 solo para problemas
+`about:blank` válidos que coincidan con el estado; el resto conserva fallback
+seguro, incluido 429 inesperado.
+
+## Repetición y equipos libres — ADR-0159 / ADR-0160
+
+`POST /v1/tournaments/{tournamentId}/repeat` recibe `requestId` UUID, nombre y
+lista de equipos revisada; el primero pertenece a la organizadora. Verifica
+propiedad actual y origen `completed` bajo el lock del torneo y crea atómicamente
+la nueva edición. Lee deporte, reglas y configuración inicial en servidor;
+ningún campo del cliente permite copiar permisos ni resultados. `201` devuelve
+`PublicTournament`, incluso al recuperar una intención anterior. El par
+origen/cuenta/intención deduplica peticiones concurrentes. Un reintento posterior
+al inicio devuelve el estado actual de la misma edición.
+
+Salidas: `400` cuerpo/IDs/composición inválidos; `401` sesión ausente; `403`
+propiedad o CSRF; `404` origen ausente; `409` origen no finalizado; `500` fallo
+técnico seguro. No hay limitador nuevo para esta operación, como en el alta
+actual. La feature distingue permiso, ausencia y cierre por su recuperación;
+otros estados, cuerpos inválidos o fallos técnicos mantienen fallback común.
+La cancelación intencionada del cliente aborta sin feedback.
+
+La proyección pública añade `suggestedStart` opcional solo en ediciones publicadas.
+Es una propuesta de formato y reglas iniciales, sin fases materializadas; inicio
+y cancelación la eliminan. El inicio mantiene la validación deportiva vigente.
+
+La inspección de invitaciones añade `allowsExistingTeams` y `availableTeamNames`.
+Su lista pública de nombres no incluye cuentas, tokens ni IDs de participantes.
+El formulario mantiene compatibilidad con respuestas anteriores sin esos campos.
+La inscripción normalizada elige un equipo libre existente o crea uno con
+capacidad. Ambas vías vinculan cuenta y seguimiento sin administración. Se
+serializan con inicio, rotación, revocación e inscripción mediante el lock común.
+Una invitación con 64 equipos sigue disponible si al menos uno no tiene cuenta;
+sin espacio ni equipos libres, la inspección devuelve `404` y crear enlace `409`.
+
+Un equipo ya vinculado al inscribirse produce 409 RFC 9457 con
+`type: urn:tournaments-manager:problem:team-occupied`. La UI conserva el nombre,
+refresca opciones y muestra el aviso localizado de plaza ocupada. Tipos desconocidos
+o cuerpos inválidos usan el error común seguro.

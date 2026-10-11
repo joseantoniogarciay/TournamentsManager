@@ -425,7 +425,7 @@ func (r AccountTournamentRepository) Start(ctx context.Context, accountID, leagu
 	if legs == 0 {
 		legs = 1
 	}
-	if _, err := tx.Exec(ctx, `UPDATE tournaments SET state = 'in_progress', round_robin_legs = $2,format=$3, last_activity_at = now() WHERE id = $1`, leagueID, legs, input.Format); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE tournaments SET state = 'in_progress', suggested_start = NULL, round_robin_legs = $2,format=$3, last_activity_at = now() WHERE id = $1`, leagueID, legs, input.Format); err != nil {
 		return tournaments.Tournament{}, err
 	}
 	if _, err := tx.Exec(ctx, `DELETE FROM tournament_team_invitations WHERE tournament_id = $1`, leagueID); err != nil {
@@ -698,7 +698,7 @@ func (r AccountTournamentRepository) Cancel(ctx context.Context, accountID, leag
 	if _, err := tx.Exec(ctx, `UPDATE tournament_stages SET state='cancelled' WHERE tournament_id=$1`, leagueID); err != nil {
 		return tournaments.Tournament{}, err
 	}
-	if _, err := tx.Exec(ctx, `UPDATE tournaments SET state = 'cancelled', last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE tournaments SET state = 'cancelled', suggested_start = NULL, last_activity_at = now() WHERE id = $1`, leagueID); err != nil {
 		return tournaments.Tournament{}, err
 	}
 	if _, err := tx.Exec(ctx, `DELETE FROM tournament_team_invitations WHERE tournament_id = $1`, leagueID); err != nil {

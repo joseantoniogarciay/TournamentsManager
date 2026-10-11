@@ -461,3 +461,48 @@ common_network_error y sesión invalidada no duplica feedback. Se conservan
 plantilla de ruta y categorías seguras del inventario, sin spans ni atributos
 por seguimiento, inputs o IDs. Las pruebas cliente y el ciclo visual web/Android
 complementan el contrato sin exportar cuerpos ni activar observabilidad local.
+
+### Inventario: fecha, hora y lugar opcionales (ADR-0158)
+
+Rutas raíz `PUT /v1/tournaments/{tournamentId}/venue` y
+`PUT /v1/tournaments/{tournamentId}/matches/{matchId}/schedule`. No se añaden
+spans por validación, rama ni normalización.
+
+| Salida | Diagnóstico seguro en raíz | Evidencia |
+| --- | --- | --- |
+| Éxito 200 | Sin failure.reason | HTTP y PostgreSQL de planificación |
+| Entrada/cuerpo/ID inválido 400 | validation.rejected | HTTP y dominio |
+| Sesión rechazada 401 | Middleware compartido | Prueba HTTP sin sesión |
+| Límite de tasa | Sin limitador propio; 429 inesperado conserva fallback cliente | Test cliente |
+| Permiso 403 / ausencia 404 | tournament.forbidden / tournament.not_found | HTTP y PostgreSQL |
+| Torneo cerrado o bye 409 | tournament.scheduling_conflict | HTTP y PostgreSQL |
+| Begin, autorización, lectura, UPDATE, proyección o commit fallidos | database.unavailable, database.constraint_failed o database.query_failed según causa | Categorización HTTP de errores de persistencia y suite PostgreSQL |
+| Deadline / cancelación | request.timeout / request.cancelled | HTTP; cliente aborta sin banner al salir |
+
+No se exportan fecha, hora, zona, lugar, identificadores ni el error bruto.
+Las pruebas HTTP simulan categorías técnicas, no provocan un fallo real en
+cada consulta/commit. Aprendizaje: la planificación informativa mantiene el
+mismo límite transaccional de autorización sin participar en reglas deportivas.
+
+## Inventario: nuevas ediciones y equipos libres — ADR-0159 / ADR-0160
+
+| Salida / límite recorrido | Diagnóstico en raíz | Evidencia |
+| --- | --- | --- |
+| Repetición 201, también reintento concurrente | Sin fallo; plantilla POST /v1/tournaments/{tournamentId}/repeat | HTTP y PostgreSQL, una edición por intención |
+| Validación 400 | validation.rejected | UUID, nombres duplicados y campos extra en pruebas HTTP |
+| Sesión 401 / CSRF 403 | Categorías existentes de sesión y seguridad | Pruebas del router; ninguna causa inferida del estado HTTP |
+| Propiedad 403 / origen ausente 404 / estado 409 | tournament.forbidden / tournament.not_found / tournament.repetition_conflict | HTTP seguro y persistencia con delegado, transferencia y estados |
+| Begin, lock, lectura del origen/intención, INSERT de edición/equipos/vínculo, preferencia, proyección y commit | database.query_failed, database.unavailable o database.constraint_failed según categoría segura existente | Cada salida devuelve su error al límite HTTP; pruebas HTTP de categorización y ausencia de detalles, integración de atomicidad y reintentos. No se afirma inyección individual de fallos en cada sentencia |
+| Cancelación / deadline | request.cancelled / request.timeout | HTTP y cancelación de acceso PostgreSQL; el cliente aborta sin banner al salir |
+| Inspección y registro en equipo libre | Éxito sin causa; rechazos conservan tournament.invitation_not_found / tournament.invitation_conflict | Elección, carrera, cuenta duplicada, revocación, inicio y capacidad 64; la inspección solo muestra nombres libres |
+| Límite de tasa | No hay un nuevo limitador en estos recorridos; no se inventa un 429 | Se conserva la política de alta/invitaciones; el cliente usa fallback seguro si recibe un estado no tratado |
+
+El span raíz conserva la plantilla de ruta; no se añade un span por rama,
+validación, generación de intención o selección de equipo. Los spans técnicos
+existentes de PostgreSQL cubren sus límites. Nunca se exportan nombres, IDs,
+composición, reglas, requestId, secretos, cuentas ni errores brutos.
+
+La inscripción en una plaza ya vinculada devuelve 409 seguro con tipo
+`urn:tournaments-manager:problem:team-occupied` y causa raíz
+`tournament.team_occupied`. Se prueba la carrera de reclamación real: solo una
+cuenta gana, la otra recibe ese rechazo sin duplicar equipos ni exportar cuentas.

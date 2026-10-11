@@ -64,3 +64,10 @@ Usa [template.md](template.md) y el
 - [ADR-0155: Hosting web en Cloudflare Static Assets](0155-host-production-web-on-cloudflare-static-assets.md) — Aceptado; conmutación pendiente de validación en la cuenta.
 
 - [ADR-0157: PostgreSQL, pgBackRest y Caddy](0157-upgrade-postgresql-pgbackrest-and-caddy.md) — Aceptado; actualización operativa y excepción puntual de madurez.
+
+- [ADR-0156: Valoraciones nativas en hitos de torneos](0156-request-native-store-reviews-at-tournament-milestones.md) — Aceptado; ambos disparadores comparten 60 días entre intentos.
+
+- [ADR-0158: Fecha, hora y lugar opcionales](0158-add-optional-tournament-and-match-scheduling.md) — Aceptado.
+
+- [ADR-0159: Repetir torneos finalizados como nuevas ediciones](0159-repeat-completed-tournaments-as-new-editions.md) — Aceptado.
+- [ADR-0160: Elegir equipos libres o crear otros mediante invitación](0160-choose-unlinked-teams-or-create-through-invitations.md) — Aceptado.

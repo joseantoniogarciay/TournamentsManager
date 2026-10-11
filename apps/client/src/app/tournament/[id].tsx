@@ -1,3 +1,5 @@
+import { MatchSchedule } from "@/features/scheduling/match-schedule";
+import { canEditScheduling } from "@/features/scheduling/values";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -16,6 +18,7 @@ import { control, radius, space, typography, webLayout } from "@tournaments-mana
 
 import { APISessionInvalidatedError, APIUnexpectedResponseError } from "@/api/fetch";
 import { useTournamentFollow } from "@/features/league-creation/use-tournament-follow";
+import { useStoreReview } from "@/features/store-review/use-store-review";
 import type { PublicTournament } from "@/api/generated/models";
 import {
   cancelTournamentRequest,
@@ -140,7 +143,7 @@ export default function TournamentScreen() {
   const insets = useSafeAreaInsets();
   const { width: viewportWidth } = useWindowDimensions();
   const { show } = useFeedback();
-  const { confirm } = useConfirmationDialog();
+  const { confirm, isOpen: confirmationOpen } = useConfirmationDialog();
   const league = useTournament(id);
   const navigationTitle = useAdaptiveNavigationTitle(league?.name);
   const { loadTournament, putTournament, refreshTournament } = useTournamentStore();
@@ -170,6 +173,34 @@ export default function TournamentScreen() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [completionConfirmationOpen, setCompletionConfirmationOpen] = useState(false);
   const [completionOpen, setCompletionOpen] = useState(false);
+  const [completionDismissing, setCompletionDismissing] = useState(false);
+  const completionDestination = useRef<string | undefined>(undefined);
+  const requestCompletionReview = useStoreReview(
+    id,
+    Boolean(league) && !isLoading && !loadErrorMessage,
+    confirmationOpen ||
+      menuOpen ||
+      completionConfirmationOpen ||
+      completionOpen ||
+      completionDismissing ||
+      Boolean(editingMatchID),
+  );
+  const closeCompletion = (showStandings = false) => {
+    completionDestination.current = showStandings ? id : undefined;
+    setCompletionDismissing(true);
+    setCompletionOpen(false);
+  };
+  const afterCompletionDismissed = useCallback(() => {
+    setCompletionDismissing(false);
+    // Commit the free surface before consulting the shared request guard.
+    requestAnimationFrame(() => {
+      void requestCompletionReview().then(() => {
+        const destination = completionDestination.current;
+        completionDestination.current = undefined;
+        if (destination) router.push(`/tournament/${destination}/standings`);
+      });
+    });
+  }, [requestCompletionReview]);
   const [selectedCompetitionPhase, setSelectedCompetitionPhase] = useState<
     "league" | "tiebreak" | "bracket"
   >("bracket");
@@ -225,9 +256,20 @@ export default function TournamentScreen() {
     setBracketRoundSelectionRevision(0);
     setBracketHorizontalMetrics({ contentWidth: 0, viewportWidth: 0 });
   }, [id]);
+  const initializedConfigurationID = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (league && isRacketSport(league.sport)) setFormat("single_elimination");
-  }, [league?.id, league?.sport]);
+    if (!league || initializedConfigurationID.current === league.id) return;
+    initializedConfigurationID.current = league.id;
+    const config = league.suggestedStart;
+    if (config) {
+      setFormat(config.format);
+      setRoundRobinLegs(config.roundRobinLegs ?? 1);
+      setLeagueStructure(config.leagueStructure ?? "single_table");
+      setQualifierCount(config.qualifierCount ?? 2);
+      setGroupCount(String(config.groupCount ?? 2));
+      setQualifiersPerGroup(String(config.qualifiersPerGroup ?? 2));
+    } else if (league && isRacketSport(league.sport)) setFormat("single_elimination");
+  }, [league]);
   const load = useCallback(
     async (force = false) => {
       if (!id) {
@@ -259,6 +301,9 @@ export default function TournamentScreen() {
   useFocusEffect(
     useCallback(() => {
       void load();
+      return () => {
+        completionDestination.current = undefined;
+      };
     }, [load]),
   );
   useEffect(() => {
@@ -687,6 +732,14 @@ export default function TournamentScreen() {
           : canComplete
             ? { label: t("league_complete"), loading: isCompleting, onPress: complete }
             : undefined;
+      case "completed":
+        return isOrganizer
+          ? {
+              label: t("tournament_repeat"),
+              loading: false,
+              onPress: () => router.push(`/tournament/${id}/repeat`),
+            }
+          : undefined;
       default:
         return undefined;
     }
@@ -935,6 +988,18 @@ export default function TournamentScreen() {
           </View>
         </View>
       </Card>
+      {league.venue || canEditScheduling(relationship, league.state) ? (
+        <Card>
+          {league.venue ? <Text color="secondary">{league.venue}</Text> : null}
+          {canEditScheduling(relationship, league.state) ? (
+            <Button
+              label={t(league.venue ? "scheduling_venue_edit" : "scheduling_venue_add")}
+              variant="secondary"
+              onPress={() => router.push(`/tournament/${id}/venue`)}
+            />
+          ) : null}
+        </Card>
+      ) : null}
       {!showExpandedTeamManagement ? (
         <View style={styles.summaryActions}>
           <View style={styles.summaryAction}>
@@ -1062,6 +1127,9 @@ export default function TournamentScreen() {
                   ref={bracketView}
                   tournament={bracketTournament}
                   canManage={canManageResults}
+                  onSchedule={(matchId) =>
+                    router.push({ pathname: "/tournament/[id]/schedule", params: { id, matchId } })
+                  }
                   onHorizontalMetricsChange={updateBracketHorizontalMetrics}
                   onHorizontalScroll={syncBracketHorizontalControl}
                   onMatchFocus={ensureBracketMatchVisible}
@@ -1358,6 +1426,19 @@ export default function TournamentScreen() {
                           </Text>
                         ) : null}
                         <IncidentSummary match={match} teams={teamsByID} showAdministrativeScore />
+                        <MatchSchedule match={match} tournamentVenue={league.venue} />
+                        {canEditScheduling(relationship, league.state) && match.state !== "bye" ? (
+                          <Button
+                            label={t("scheduling_title")}
+                            variant="secondary"
+                            onPress={() =>
+                              router.push({
+                                pathname: "/tournament/[id]/schedule",
+                                params: { id, matchId: match.id },
+                              })
+                            }
+                          />
+                        ) : null}
                         {canEditMatchResult(match) ? (
                           <Button
                             label={
@@ -1871,7 +1952,8 @@ export default function TournamentScreen() {
         </ModalDialog>
         <ModalDialog
           dismissAccessibilityLabel={t("common_close")}
-          onDismiss={() => setCompletionOpen(false)}
+          onDismiss={() => closeCompletion()}
+          onAfterDismiss={afterCompletionDismissed}
           visible={completionOpen}
         >
           <View style={styles.completionSuccessContent}>
@@ -1896,14 +1978,13 @@ export default function TournamentScreen() {
               <Button
                 label={t("league_completion_view_standings")}
                 onPress={() => {
-                  setCompletionOpen(false);
-                  router.push(`/tournament/${league.id}/standings`);
+                  closeCompletion(true);
                 }}
               />
             ) : null}
             <Button
               label={t("common_close")}
-              onPress={() => setCompletionOpen(false)}
+              onPress={() => closeCompletion()}
               variant="secondary"
             />
           </View>

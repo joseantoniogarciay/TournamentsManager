@@ -32,11 +32,11 @@ func (r AccountTournamentRepository) SaveTeamInvitation(ctx context.Context, acc
 	if state != "published" {
 		return tournaments.ErrTournamentInvitationConflict
 	}
-	var teamCount int
-	if err := tx.QueryRow(ctx, `SELECT COUNT(*) FROM tournament_teams WHERE tournament_id = $1`, tournamentID).Scan(&teamCount); err != nil {
+	var accepts bool
+	if err := tx.QueryRow(ctx, `SELECT (SELECT COUNT(*) FROM tournament_teams WHERE tournament_id=t.id) < 64 OR (EXISTS (SELECT 1 FROM tournament_teams team WHERE team.tournament_id=t.id AND NOT EXISTS (SELECT 1 FROM tournament_team_accounts a WHERE a.team_id=team.id))) FROM tournaments t WHERE t.id=$1`, tournamentID).Scan(&accepts); err != nil {
 		return err
 	}
-	if teamCount >= 64 {
+	if !accepts {
 		return tournaments.ErrTournamentInvitationConflict
 	}
 	if _, err := tx.Exec(ctx, `INSERT INTO tournament_team_invitations (tournament_id, token_hash) VALUES ($1, $2) ON CONFLICT (tournament_id) DO UPDATE SET token_hash = EXCLUDED.token_hash, created_at = now()`, tournamentID, tokenHash[:]); err != nil {
@@ -74,7 +74,7 @@ func (r AccountTournamentRepository) RevokeTeamInvitation(ctx context.Context, a
 // InspectTeamInvitation returns only the safe tournament projection for an active invitation.
 func (r AccountTournamentRepository) InspectTeamInvitation(ctx context.Context, tokenHash tournaments.InvitationTokenHash) (tournaments.TeamInvitation, error) {
 	var invitation tournaments.TeamInvitation
-	err := r.pool.QueryRow(ctx, `SELECT tournaments.id::text, tournaments.name FROM tournament_team_invitations JOIN tournaments ON tournaments.id = tournament_team_invitations.tournament_id WHERE tournament_team_invitations.token_hash = $1 AND tournaments.state = 'published' AND (SELECT COUNT(*) FROM tournament_teams WHERE tournament_id = tournaments.id) < 64`, tokenHash[:]).Scan(&invitation.TournamentID, &invitation.TournamentName)
+	err := r.pool.QueryRow(ctx, `SELECT tournaments.id::text, tournaments.name, true, ARRAY(SELECT team.name FROM tournament_teams team WHERE team.tournament_id=tournaments.id AND NOT EXISTS (SELECT 1 FROM tournament_team_accounts a WHERE a.team_id=team.id) ORDER BY team.position) FROM tournament_team_invitations JOIN tournaments ON tournaments.id = tournament_team_invitations.tournament_id WHERE tournament_team_invitations.token_hash = $1 AND tournaments.state = 'published' AND ((SELECT COUNT(*) FROM tournament_teams WHERE tournament_id = tournaments.id) < 64 OR (EXISTS (SELECT 1 FROM tournament_teams team WHERE team.tournament_id=tournaments.id AND NOT EXISTS (SELECT 1 FROM tournament_team_accounts a WHERE a.team_id=team.id))))`, tokenHash[:]).Scan(&invitation.TournamentID, &invitation.TournamentName, &invitation.AllowsExistingTeams, &invitation.AvailableTeamNames)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return tournaments.TeamInvitation{}, tournaments.ErrTournamentInvitationNotFound
 	}
@@ -114,19 +114,32 @@ func (r AccountTournamentRepository) JoinTeamInvitation(ctx context.Context, acc
 	if alreadyJoined {
 		return tournaments.TeamRegistration{}, tournaments.ErrTournamentInvitationConflict
 	}
-	var position, count int
-	if err := tx.QueryRow(ctx, `SELECT COALESCE(MAX(position), 0), COUNT(*) FROM tournament_teams WHERE tournament_id = $1`, registration.TournamentID).Scan(&position, &count); err != nil {
-		return tournaments.TeamRegistration{}, err
+	// The tournament lock serializes claims, additions, invitation rotation and start.
+	{
+		var occupied bool
+		err := tx.QueryRow(ctx, `SELECT team.id::text,team.name,team.position,EXISTS (SELECT 1 FROM tournament_team_accounts a WHERE a.team_id=team.id) FROM tournament_teams team WHERE team.tournament_id=$1 AND team.name_normalized=lower($2)`, registration.TournamentID, input.Name).Scan(&registration.Team.ID, &registration.Team.Name, &registration.Team.Position, &occupied)
+		if occupied {
+			return tournaments.TeamRegistration{}, tournaments.ErrTournamentTeamOccupied
+		}
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return tournaments.TeamRegistration{}, err
+		}
 	}
-	if count >= 64 {
-		return tournaments.TeamRegistration{}, tournaments.ErrTournamentInvitationConflict
-	}
-	if err := tx.QueryRow(ctx, `INSERT INTO tournament_teams (tournament_id, name, name_normalized, position) VALUES ($1, $2, lower($2), $3) RETURNING id::text, name, position`, registration.TournamentID, input.Name, position+1).Scan(&registration.Team.ID, &registration.Team.Name, &registration.Team.Position); err != nil {
-		var databaseError *pgconn.PgError
-		if errors.As(err, &databaseError) && databaseError.Code == "23505" {
+	if registration.Team.ID == "" {
+		var position, count int
+		if err := tx.QueryRow(ctx, `SELECT COALESCE(MAX(position), 0), COUNT(*) FROM tournament_teams WHERE tournament_id = $1`, registration.TournamentID).Scan(&position, &count); err != nil {
+			return tournaments.TeamRegistration{}, err
+		}
+		if count >= 64 {
 			return tournaments.TeamRegistration{}, tournaments.ErrTournamentInvitationConflict
 		}
-		return tournaments.TeamRegistration{}, err
+		if err := tx.QueryRow(ctx, `INSERT INTO tournament_teams (tournament_id,name,name_normalized,position) VALUES ($1,$2,lower($2),$3) RETURNING id::text,name,position`, registration.TournamentID, input.Name, position+1).Scan(&registration.Team.ID, &registration.Team.Name, &registration.Team.Position); err != nil {
+			var databaseError *pgconn.PgError
+			if errors.As(err, &databaseError) && databaseError.Code == "23505" {
+				return tournaments.TeamRegistration{}, tournaments.ErrTournamentInvitationConflict
+			}
+			return tournaments.TeamRegistration{}, err
+		}
 	}
 	if _, err := tx.Exec(ctx, `INSERT INTO tournament_team_accounts (tournament_id, team_id, account_id) VALUES ($1, $2, $3)`, registration.TournamentID, registration.Team.ID, account); err != nil {
 		var databaseError *pgconn.PgError

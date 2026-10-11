@@ -73,6 +73,24 @@ export class TournamentTeamInvitationUnavailableError extends Error {
   }
 }
 
+export class TournamentTeamOccupiedError extends Error {}
+
+function invitationProblemType(response: { status: number; data: unknown }) {
+  const problem = response.data;
+  if (
+    !problem ||
+    typeof problem !== "object" ||
+    !("type" in problem) ||
+    typeof problem.type !== "string" ||
+    !("status" in problem) ||
+    problem.status !== response.status ||
+    !("title" in problem) ||
+    typeof problem.title !== "string"
+  )
+    return undefined;
+  return problem.type;
+}
+
 export class TournamentTeamInvitationConflictError extends Error {
   constructor() {
     super("La invitación no puede aceptar este equipo");
@@ -120,6 +138,8 @@ export async function createTournamentTeamInvitationRequest(tournamentID: string
     undefined,
     authenticatedApiFetch,
   );
+  if (response.status === 409 && invitationProblemType(response) === "about:blank")
+    throw new TournamentTeamInvitationConflictError();
   if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
   const token = parseTournamentTeamInvitationToken(response.data);
   if (!token) throw new APIUnexpectedResponseError(response.status);
@@ -139,7 +159,8 @@ export async function inspectTournamentTeamInvitationRequest(token: string) {
     undefined,
     apiFetch,
   );
-  if (response.status === 404) throw new TournamentTeamInvitationUnavailableError();
+  if (response.status === 404 && invitationProblemType(response) === "about:blank")
+    throw new TournamentTeamInvitationUnavailableError();
   if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
   const invitation = parseTournamentTeamInvitation(response.data);
   if (!invitation) throw new APIUnexpectedResponseError(response.status);
@@ -151,8 +172,15 @@ export async function joinTournamentWithTeamInvitationRequest(token: string, nam
     undefined,
     authenticatedApiFetch,
   );
-  if (response.status === 404) throw new TournamentTeamInvitationUnavailableError();
-  if (response.status === 409) throw new TournamentTeamInvitationConflictError();
+  if (response.status === 404 && invitationProblemType(response) === "about:blank")
+    throw new TournamentTeamInvitationUnavailableError();
+  if (
+    response.status === 409 &&
+    invitationProblemType(response) === "urn:tournaments-manager:problem:team-occupied"
+  )
+    throw new TournamentTeamOccupiedError();
+  if (response.status === 409 && invitationProblemType(response) === "about:blank")
+    throw new TournamentTeamInvitationConflictError();
   if (response.status !== 201) throw new APIUnexpectedResponseError(response.status);
   const registration = parseTournamentTeamRegistration(response.data);
   if (!registration) throw new APIUnexpectedResponseError(response.status);

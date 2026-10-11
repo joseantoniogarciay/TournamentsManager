@@ -1,4 +1,15 @@
-import { isSetSport, isValidBestOfSets, isValidPointsPerGame } from "@/shared/tournaments/sport";
+import {
+  validCivilDate,
+  validCivilTime,
+  validTimeZone,
+  validVenue,
+} from "@/features/scheduling/values";
+import {
+  isRacketSport,
+  isSetSport,
+  isValidBestOfSets,
+  isValidPointsPerGame,
+} from "@/shared/tournaments/sport";
 import type { AccountTournament } from "@/api/generated/models/accountTournament";
 import type { AccountTournamentPage } from "@/api/generated/models/accountTournamentPage";
 import { AccountTournamentRelationship } from "@/api/generated/models/accountTournamentRelationship";
@@ -132,7 +143,28 @@ export function parseTournamentTeam(value: unknown): TournamentTeam | null {
 export function parseTournamentTeamInvitation(value: unknown): TournamentTeamInvitation | null {
   if (!isRecord(value) || !isUUID(value.tournamentId) || typeof value.tournamentName !== "string")
     return null;
-  return { tournamentId: value.tournamentId, tournamentName: value.tournamentName };
+  if (
+    ("allowsExistingTeams" in value && typeof value.allowsExistingTeams !== "boolean") ||
+    ("availableTeamNames" in value &&
+      (!Array.isArray(value.availableTeamNames) ||
+        value.availableTeamNames.length > 64 ||
+        !value.availableTeamNames.every(
+          (name) =>
+            typeof name === "string" && name.trim().length > 0 && Array.from(name).length <= 100,
+        )))
+  )
+    return null;
+  if (value.availableTeamNames && !value.allowsExistingTeams) return null;
+  return {
+    tournamentId: value.tournamentId,
+    tournamentName: value.tournamentName,
+    ...(value.allowsExistingTeams
+      ? {
+          allowsExistingTeams: true,
+          availableTeamNames: (value.availableTeamNames ?? []) as string[],
+        }
+      : {}),
+  };
 }
 
 export function parseTournamentTeamInvitationToken(value: unknown): string | null {
@@ -200,6 +232,27 @@ function parseMatch(value: unknown): Match | null {
       !isIntegerAtLeast(value.awayScore, 0) ||
       !value.homeTeamId ||
       !value.awayTeamId)
+  )
+    return null;
+  if (
+    "venue" in value &&
+    (typeof value.venue !== "string" || !value.venue || !validVenue(value.venue))
+  )
+    return null;
+  if (
+    "scheduledDate" in value &&
+    (typeof value.scheduledDate !== "string" || !validCivilDate(value.scheduledDate))
+  )
+    return null;
+  if (
+    "scheduledTime" in value &&
+    (typeof value.scheduledTime !== "string" || !validCivilTime(value.scheduledTime))
+  )
+    return null;
+  if (
+    "scheduledTime" in value
+      ? typeof value.timeZone !== "string" || !validTimeZone(value.timeZone)
+      : "timeZone" in value
   )
     return null;
   const incident = value.incident;
@@ -362,8 +415,62 @@ function parseUUIDs(value: unknown): string[] | null {
 }
 
 /** Valida el contenedor y filtra de forma independiente sus colecciones internas. */
+function parseSuggestedStart(value: unknown): PublicTournament["suggestedStart"] | null {
+  if (!isRecord(value)) return null;
+  const keys = Object.keys(value);
+  if (value.format === "single_elimination")
+    return keys.length === 1 ? { format: "single_elimination" } : null;
+  if (value.roundRobinLegs !== 1 && value.roundRobinLegs !== 2) return null;
+  if (value.format === "league")
+    return keys.length === 2 ? { format: "league", roundRobinLegs: value.roundRobinLegs } : null;
+  if (value.format !== "league_then_single_elimination") return null;
+  if (
+    value.leagueStructure === "single_table" &&
+    keys.length === 4 &&
+    [2, 4, 8, 16, 32, 64].includes(value.qualifierCount as number)
+  )
+    return {
+      format: value.format,
+      roundRobinLegs: value.roundRobinLegs,
+      leagueStructure: "single_table",
+      qualifierCount: value.qualifierCount as 2 | 4 | 8 | 16 | 32 | 64,
+    };
+  if (
+    value.leagueStructure === "groups" &&
+    keys.length === 5 &&
+    Number.isInteger(value.groupCount) &&
+    Number(value.groupCount) >= 2 &&
+    Number(value.groupCount) <= 64 &&
+    Number.isInteger(value.qualifiersPerGroup) &&
+    Number(value.qualifiersPerGroup) >= 1 &&
+    Number(value.qualifiersPerGroup) <= 63
+  )
+    return {
+      format: value.format,
+      roundRobinLegs: value.roundRobinLegs,
+      leagueStructure: "groups",
+      groupCount: Number(value.groupCount),
+      qualifiersPerGroup: Number(value.qualifiersPerGroup),
+    };
+  return null;
+}
+
 export function parsePublicTournament(value: unknown): PublicTournament | null {
   if (!isRecord(value)) return null;
+  if (
+    "venue" in value &&
+    (typeof value.venue !== "string" || !value.venue || !validVenue(value.venue))
+  )
+    return null;
+  const suggestedStart =
+    "suggestedStart" in value ? parseSuggestedStart(value.suggestedStart) : undefined;
+  if (
+    "suggestedStart" in value &&
+    (!suggestedStart ||
+      value.state !== "published" ||
+      (isRacketSport(String(value.sport)) && suggestedStart.format !== "single_elimination"))
+  )
+    return null;
   const stages = parseStages(value.stages);
   const stageTeams = parseStageTeams(value.stageTeams);
   const tieBreakPools = parseTieBreakPools(value.tieBreakPools);
@@ -395,8 +502,10 @@ export function parsePublicTournament(value: unknown): PublicTournament | null {
   )
     return null;
   return {
+    ...(suggestedStart ? { suggestedStart } : {}),
     id: value.id,
     name: value.name,
+    ...(value.venue ? { venue: value.venue as string } : {}),
     sport: value.sport as PublicTournament["sport"],
     ...(racket ? { bestOfSets: value.bestOfSets as 3 | 5 | 7 } : {}),
     ...(value.sport === "badminton" ? { pointsPerGame: value.pointsPerGame as 15 | 21 } : {}),

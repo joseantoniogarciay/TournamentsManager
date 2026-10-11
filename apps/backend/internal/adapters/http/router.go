@@ -26,14 +26,15 @@ type HandlerConfig struct {
 
 // HandlerDependencies contains the application services exposed over HTTP.
 type HandlerDependencies struct {
-	Registration       registration.Service
-	Federated          *federated.Service
-	Apple              *federated.AppleService
-	Authenticator      sessionAuthenticator
-	TournamentList     tournaments.Service
-	TournamentCreation *tournaments.CreationService
-	Suggestions        *suggestions.Service
-	RISCReceiver       http.Handler
+	Registration         registration.Service
+	Federated            *federated.Service
+	Apple                *federated.AppleService
+	Authenticator        sessionAuthenticator
+	TournamentList       tournaments.Service
+	TournamentCreation   *tournaments.CreationService
+	TournamentScheduling *tournaments.SchedulingService
+	Suggestions          *suggestions.Service
+	RISCReceiver         http.Handler
 }
 
 // NewHandler builds a handler with secure-cookie defaults. It is kept as a
@@ -137,7 +138,12 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 	followHandler := requireSession(authenticator)(cookieCSRF(http.HandlerFunc(followTournament(tournamentService))))
 	mux.Handle("PUT /v1/me/tournaments/{tournamentId}/follow", followHandler)
 	mux.Handle("DELETE /v1/me/tournaments/{tournamentId}/follow", followHandler)
+	if dependencies.TournamentScheduling != nil {
+		mux.Handle("PUT /v1/tournaments/{tournamentId}/venue", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(setTournamentScheduling(*dependencies.TournamentScheduling, false)))))
+		mux.Handle("PUT /v1/tournaments/{tournamentId}/matches/{matchId}/schedule", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(setTournamentScheduling(*dependencies.TournamentScheduling, true)))))
+	}
 	if creationService != nil {
+		mux.Handle("POST /v1/tournaments/{tournamentId}/repeat", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(repeatTournament(*creationService)))))
 		mux.Handle("POST /v1/tournaments", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createTournament(*creationService)))))
 		mux.Handle("POST /v1/tournaments/{tournamentId}/team-invitation", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createTournamentTeamInvitation(*creationService)))))
 		mux.Handle("DELETE /v1/tournaments/{tournamentId}/team-invitation", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(revokeTournamentTeamInvitation(*creationService)))))

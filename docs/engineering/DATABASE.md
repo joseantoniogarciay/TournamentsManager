@@ -163,3 +163,33 @@ aislada en `dev` y `prod`. Un cambio destructivo sigue exigiendo documentar
 rollback, forward-fix o expand/contract; el análisis de consultas y la
 saturación de conexiones se investigan cuando exista evidencia, no como trabajo
 abierto genérico.
+
+## Información opcional de encuentros (ADR-0158)
+
+La migración 00021 añade `tournaments.venue` y `matches.scheduled_date`,
+`scheduled_time`, `time_zone`, `venue`, con valor vacío inicial. Se conservan
+como texto civil, no timestamps que convertirían una fecha u hora parcial en
+un instante inexistente. El servicio valida fechas reales y zonas IANA; la
+base refuerza forma, longitud y coherencia hora/zona. El lugar común se hereda
+al leer, sin copiarlo a cada fila. La transacción bloquea primero el torneo
+para serializar autorización, transferencia, delegación y cierre; modifica
+solo estos campos y `last_activity_at`. El Down elimina únicamente columnas
+introducidas por esta migración; perdería sus datos si se aplicase.
+
+## Nuevas ediciones — migración 00022
+
+`tournaments` conserva `repetition_source_id`, `repetition_account_id` y
+`repetition_request_id` como identidad interna de una creación reintentable;
+un índice único deduplica origen/cuenta/intención. La cuenta histórica se borra
+con `ON DELETE SET NULL` al purgarla: haber repetido un torneo no bloquea la
+eliminación de una cuenta que ya transfirió sus torneos. El origen se conserva
+como histórico. La intención no se exporta en la proyección pública.
+
+`suggested_start` JSONB contiene únicamente las reglas iniciales cerradas de
+los tres formatos. No es un motor genérico ni un estado deportivo: solo puede
+existir mientras el torneo está publicado y se elimina al iniciar o cancelar.
+Fases, partidos y relaciones de cuenta no se copian. Cada equipo recibe un ID
+nuevo y se restablece su estado sin retirada. La copia transaccional vincula
+solo el primer equipo a la propietaria; los demás se pueden inscribir mediante
+la invitación nueva. El lock de torneo evita reclamaciones duplicadas de equipos
+sin cuenta; crear un nombre nuevo continúa sujeto a la composición máxima.

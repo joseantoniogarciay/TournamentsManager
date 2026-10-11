@@ -106,6 +106,7 @@ func run(args []string) error {
 		appleService = &service
 	}
 	tournamentCreation := tournaments.NewCreationService(accountTournaments)
+	tournamentScheduling := tournaments.NewSchedulingService(accountTournaments)
 
 	server := &http.Server{
 		Addr: appConfig.HTTPAddr,
@@ -119,14 +120,15 @@ func run(args []string) error {
 				EdgeProxyAuthToken:   appConfig.EdgeProxyAuthToken,
 			},
 			httpadapter.HandlerDependencies{
-				Registration:       registrationService,
-				Federated:          federatedService,
-				Apple:              appleService,
-				Authenticator:      accountTournaments,
-				TournamentList:     tournaments.NewService(accountTournaments),
-				TournamentCreation: &tournamentCreation,
-				Suggestions:        &suggestionService,
-				RISCReceiver:       riscReceiver,
+				Registration:         registrationService,
+				Federated:            federatedService,
+				Apple:                appleService,
+				Authenticator:        accountTournaments,
+				TournamentList:       tournaments.NewService(accountTournaments),
+				TournamentCreation:   &tournamentCreation,
+				TournamentScheduling: &tournamentScheduling,
+				Suggestions:          &suggestionService,
+				RISCReceiver:         riscReceiver,
 			},
 		)),
 		ReadHeaderTimeout: 5 * time.Second,

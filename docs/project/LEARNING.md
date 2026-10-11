@@ -5863,3 +5863,104 @@ ausencia absoluta; actualizar pgBackRest tampoco regenera esas claves.
 Retrospectiva: un proxy puede validar su configuración y fallar al acceder
 a una VM desde launchd. Comparar la conexión del proceso con curl y comprobar
 permisos del sistema es necesario antes de declarar disponible el servicio.
+
+## 2026-10-11 — Las valoraciones registran intentos, no resultados
+
+Apple y Google deciden si mostrar el diálogo y no comunican si se envió una
+valoración. Persistir el intento antes de llamar y serializar los dos disparadores
+evita duplicados incluso con fallos o cuotas. El contador por instalación no
+requiere backend ni eventos de analítica. La política pura se prueba con puertos
+de almacenamiento y tienda; el adaptador limita la ejecución a Release de
+producción nativa. Un cierre de Modal en iOS necesita su callback nativo: desmontar
+el componente al poner visible=false puede perderlo. Android carece de ese
+callback; el popup que solicita revisión se cierra sin animación y espera un frame.
+
+Retrospectiva: una promesa resuelta no acredita diálogo ni reseña. Compilar valida
+el módulo, mientras que la distribución por tienda y sus cuotas condicionan la
+prueba final. Revisar un parche de pgBackRest exige considerar las claves
+persistidas: cambiar el binario no las reemplaza.
+
+## 2026-10-11 — Información opcional de encuentros
+
+ADR-0158 añade coordinación manual sin exigir un calendario para torneos rápidos.
+Un día civil y una hora parcial no son un instante UTC: conservar fecha/hora
+separadas y una zona para la hora evita desplazamientos entre dispositivos.
+El lugar común se hereda al leer y se sustituye solo cuando el partido tiene
+su propio lugar. La autorización se serializa con delegación y transferencia.
+
+Retrospectiva del incremento: se reutilizaron formularios y estado canónico,
+sin nuevos servicios, calendarios nativos, mapas o avisos. La prueba de cuerpo
+JSON estricto encontró un fallo compartido: Decode podía devolver nil al
+consumir un segundo objeto, aceptándolo accidentalmente. Se corrigió su
+rechazo y se añadió cobertura de regresión. La validación incluye PostgreSQL
+efímero y tests de HTTP/cliente; QA nativa se mantiene como comprobación
+separada y no se atribuye a la exportación web.
+
+Cierre verificado: `make verify` en verde, integración PostgreSQL completa,
+Down/Up de la migración aislada y revisión web a 390×844 y escritorio.
+Se confirmó visualmente la ausencia de controles y bloques de planificación
+en lectura sin datos. No se arrancaron local/dev ni observabilidad; los recursos
+efímeros de pruebas se eliminaron. Falta QA visual en dispositivos nativos.
+
+## 2026-10-11 — Cierre del recorrido nativo de programación opcional
+
+La continuación acredita guardado, validación, herencia, eliminación y permisos
+en iOS 27.0 y Android 14 con builds actuales y una API ficticia aislada.
+El [informe](../engineering/PRODUCT_QA_SCHEDULING_2026-10-11.md) distingue esa
+evidencia de la suite PostgreSQL real. Una fixture también debe cumplir el
+contrato: devolver un lugar vacío en vez de omitirlo produjo un rechazo correcto
+del parser, que se resolvió corrigiendo la fixture y repitiendo el recorrido.
+
+Retrospectiva: un teclado de hardware oculta una parte de la QA. Device Hub
+permite mostrar el teclado de software desde Device → Keyboard. La indexación
+del IDE puede consumir más CPU que el emulador; separar compilación de QA,
+usar un dispositivo cada vez y cerrarlo al terminar evita carga acumulada.
+Los banners transitorios requieren una captura inmediata, no solo un árbol de
+accesibilidad posterior. Metro, fixture y ambos dispositivos quedaron apagados.
+
+## 2026-10-11 — Nuevas ediciones y composición frente a inscripción
+
+ADR-0159 y ADR-0160 distinguen el equipo deportivo de su relación con una cuenta.
+Copiar la composición no requiere copiar permisos ni inscripciones: nuevos IDs,
+resultados vacíos y una invitación independiente permiten conservar el histórico.
+Elegir un equipo sin cuenta no consume capacidad, aunque el torneo ya tenga 64
+plazas deportivas. Un nombre y un enlace compartido permiten inscripción; no
+constituyen una prueba de identidad del participante anterior.
+
+Una repetición también separa configuración propuesta y fases activas. Guardar
+solo las reglas iniciales evita copiar cuadros resueltos, byes, clasificación o
+la configuración accidental de una fase de desempate. El cliente inicializa los
+controles una vez por torneo para que una actualización no borre cambios locales.
+
+Retrospectiva técnica: reutilizar el alta sin revisar sus efectos habría vinculado
+el primer equipo arbitrario a la organizadora y descartado el formato. La selección
+explícita del equipo propio y una operación atómica resuelven ambos límites. La
+idempotencia necesita una intención estable durante los reintentos, no bloquear
+solo el botón. Las pruebas concurrentes acreditan que el lock de torneo coordina
+las elecciones de equipos; las propuestas de formato no congelan la composición.
+La referencia histórica de cuenta usa SET NULL para no impedir su purga legítima.
+
+Una lista de plazas libres es una instantánea. La transacción serializa la
+reclamación; el rechazo tipado permite explicar una carrera sin confundirla
+con el límite de equipos o una segunda inscripción de la misma cuenta.
+
+La [QA de repetición](../engineering/PRODUCT_QA_REPETITION_2026-10-11.md) separa
+la navegación web con fixture de la suite PostgreSQL real. El gate completo y
+la regeneración determinista pasan; la QA visual nativa y de tema claro quedan
+pendientes. Una fixture debe respetar también el orden de paginación del contrato.
+
+La continuación nativa acredita iOS 27.0 en tema claro: duplicados, creación,
+reintento seguro, reclamación ocupada, entrada libre y rechazo sin propiedad.
+Android 14 completa después los mismos recorridos mediante ADB expresamente
+autorizado. El teclado mantiene visibles campo y acción. No se encontraron defectos
+en esta muestra; se apagaron emuladores, Metro y API ficticia. Una captura de
+navegación necesita esperar al destino; un banner transitorio exige capturar pronto.
+
+## 2026-10-11 — Madurez de los siguientes parches Expo
+
+La [revisión](../engineering/EXPO_UPDATE_REVIEW_2026-10-11.md) confirma cinco
+parches de la matriz SDK 57 publicados el 6 de octubre. Sus mínimos transitivos
+inspeccionados no completan siete días hasta el 13 a las 14:14:47 de Madrid.
+Se conserva la matriz madura; las fuentes de los generadores Android todavía
+contienen los dos defectos pendientes. Una fecha candidata no certifica el
+grafo completo ni sustituye builds limpias y QA después de la actualización.

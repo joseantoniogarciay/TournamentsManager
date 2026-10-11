@@ -105,7 +105,7 @@ func decodeBody(r *http.Request, target any) error {
 		return err
 	}
 	if err := decoder.Decode(&struct{}{}); err != io.EOF {
-		return err
+		return errors.New("request must contain exactly one JSON value")
 	}
 	return nil
 }
