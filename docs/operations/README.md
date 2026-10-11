@@ -12,3 +12,5 @@
 - [Conciliación del workspace — 2026-10-03](WORKSPACE_RECONCILIATION_2026-10-03.md): entregas integradas, cambios operativos pendientes y base local actualizada.
 
 - [Revisión del bloque operativo — 2026-10-03](OPERATIONAL_BLOCK_REVIEW_2026-10-03.md): validación, integración local y límites de promoción.
+
+- [Revisión de dependencias — 2026-10-11](DEPENDENCY_REVIEW_2026-10-11.md): candidatos de infraestructura, maduración y aviso de cifrado pgBackRest.

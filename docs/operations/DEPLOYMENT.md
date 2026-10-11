@@ -544,3 +544,42 @@ Retrospectiva: un solo SHA para los artefactos evita mezclar la migración de
 hosting con bundles anteriores. Preparar y verificar antes de activar mantiene
 rollback disponible; medir lecturas durante rollout y contrastar huellas aporta
 evidencia de disponibilidad y conservación sin mutar fixtures productivos.
+
+## 2026-10-11 — PostgreSQL, pgBackRest y Caddy
+
+ADR-0157 autoriza PostgreSQL 18.6 y pgBackRest 2.59.3 en producción. Imagen
+`tournaments-manager-postgresql:18.6-pgbackrest-2.59.3`,
+checksum oficial del fuente pgBackRest verificado durante build. Se conserva
+la imagen anterior y ambos PVC. Restauración previa y posterior satisfactoria
+en emptyDir, repositorio de backups de solo lectura y sin montar datos activos.
+El backup completo nuevo se crea con `--no-expire-auto`; no se expiran copias.
+`pgbackrest check` pasa, PostgreSQL está Ready y API dentro de K3s devuelve 200.
+Se exporta copia cifrada adicional fuera de la VM. Evidencia privada:
+`/private/tmp/tm-infra-upgrade-20261011`.
+
+Caddy 2.11.7 instalado desde Homebrew, configuración validada y servicio
+`sh.brew.caddy` activo con binario nuevo. Durante el reinicio se observó 502
+y «no route to host» desde launchd, aunque curl y K3s funcionaban. Volver al
+binario y etiqueta anteriores tampoco recuperó inmediatamente el acceso.
+Después de la comprobación del permiso de Red local por el usuario, la API
+volvió a 200; no se atribuye causa definitiva solo por esa correlación.
+La revisión automática bloqueó inicialmente reactivar la versión nueva;
+tras recuperar 200 autorizó completar la transición. API pública, origen
+y web comprobados con 2.11.7 activo. Se conserva binario 2.11.4 para rollback.
+
+Retrospectiva: probar restauración antes de cambiar el único Pod permite
+comprobar compatibilidad real. Validar configuración y binario de un proxy
+no sustituye probar su conectividad desde el proceso gestionado por launchd.
+Local/dev siguen apagados; observabilidad productiva existente no se modifica.
+
+### Conciliación Git del hito operativo
+
+Se promociona el bloque de infraestructura a main mediante merge explícito
+y tag v1.11.1. Esta release registra PostgreSQL/pgBackRest y Caddy activos;
+web y API conservan sus artefactos v1.11.0, sin reconstrucción ni despliegue
+adicional. Las valoraciones nativas permanecen en develop, pendientes de
+distribución. El despliegue operativo precedió al commit en esta sesión:
+la conciliación corrige esa pérdida temporal de trazabilidad.
+
+Retrospectiva: las siguientes actualizaciones deben guardar y promocionar
+el bloque verificado antes de cambiar producción, conforme a ADR-0119.

@@ -49,19 +49,19 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
-| [0149](../adr/0149-reserve-the-single-posthog-project-for-production.md) | Reservar proyecto PostHog 255144 para producción; beta/local apagados | Aceptado | 2026-10-04 |
-| [0148](../adr/0148-prepare-production-error-tracking-with-separated-posthog-projects.md) | Preparar fiabilidad de producción con proyectos PostHog separados | Superado por ADR-0149 | 2026-10-04 |
-| [0147](../adr/0147-add-apple-browser-login-on-all-clients.md) | Acceso Apple mediante navegador en web, iOS y Android | Aceptado | 2026-10-04 |
-| [0146](../adr/0146-run-development-and-observability-on-demand.md) | Desarrollo apagado fuera de pruebas y observabilidad bajo petición | Aceptado | 2026-10-04 |
-| [0145](../adr/0145-drain-api-before-container-termination.md) | Drenar la API antes de terminar el contenedor | Aceptado | 2026-10-03 |
-| [0142](../adr/0142-record-match-incidents-across-sports.md) | Registrar incidencias por partido en todos los deportes | Aceptado | 2026-10-03 |
-| [0141](../adr/0141-support-badminton-with-point-games.md) | Soportar bádminton con juegos por puntos | Aceptado | 2026-10-03 |
-| [0140](../adr/0140-bound-production-telemetry-retention.md) | Acotar diagnóstico y seguridad de producción con purga y alertas de espacio | Aceptado | 2026-10-03 |
-| [0139](../adr/0139-limit-development-telemetry-to-one-day.md) | Limitar la telemetría de desarrollo a un día | Aceptado | 2026-10-03 |
-| [0138](../adr/0138-wait-seven-days-except-critical-vulnerabilities.md) | Esperar siete días salvo vulnerabilidades críticas | Aceptado | 2026-10-03 |
-| [0144](../adr/0144-adopt-ios-scene-lifecycle-through-cng.md) | Adoptar UIScene mediante config plugin CNG | Aceptado | 2026-10-03 |
-| [0137](../adr/0137-support-volleyball-across-tournament-stages.md) | Soportar voleibol en liga, eliminatoria y formato mixto | Aceptado | 2026-10-02 |
-| [0136](../adr/0136-support-table-tennis-with-point-games.md) | Soportar tenis de mesa con juegos por puntos | Aceptado | 2026-10-02 |
+| [0149](../adr/0149-reserve-the-single-posthog-project-for-production.md)                      | Reservar proyecto PostHog 255144 para producción; beta/local apagados           | Aceptado              | 2026-10-04 |
+| [0148](../adr/0148-prepare-production-error-tracking-with-separated-posthog-projects.md)      | Preparar fiabilidad de producción con proyectos PostHog separados               | Superado por ADR-0149 | 2026-10-04 |
+| [0147](../adr/0147-add-apple-browser-login-on-all-clients.md)                                 | Acceso Apple mediante navegador en web, iOS y Android                           | Aceptado              | 2026-10-04 |
+| [0146](../adr/0146-run-development-and-observability-on-demand.md)                            | Desarrollo apagado fuera de pruebas y observabilidad bajo petición              | Aceptado              | 2026-10-04 |
+| [0145](../adr/0145-drain-api-before-container-termination.md)                                 | Drenar la API antes de terminar el contenedor                                   | Aceptado              | 2026-10-03 |
+| [0142](../adr/0142-record-match-incidents-across-sports.md)                                   | Registrar incidencias por partido en todos los deportes                         | Aceptado              | 2026-10-03 |
+| [0141](../adr/0141-support-badminton-with-point-games.md)                                     | Soportar bádminton con juegos por puntos                                        | Aceptado              | 2026-10-03 |
+| [0140](../adr/0140-bound-production-telemetry-retention.md)                                   | Acotar diagnóstico y seguridad de producción con purga y alertas de espacio     | Aceptado              | 2026-10-03 |
+| [0139](../adr/0139-limit-development-telemetry-to-one-day.md)                                 | Limitar la telemetría de desarrollo a un día                                    | Aceptado              | 2026-10-03 |
+| [0138](../adr/0138-wait-seven-days-except-critical-vulnerabilities.md)                        | Esperar siete días salvo vulnerabilidades críticas                              | Aceptado              | 2026-10-03 |
+| [0144](../adr/0144-adopt-ios-scene-lifecycle-through-cng.md)                                  | Adoptar UIScene mediante config plugin CNG                                      | Aceptado              | 2026-10-03 |
+| [0137](../adr/0137-support-volleyball-across-tournament-stages.md)                            | Soportar voleibol en liga, eliminatoria y formato mixto                         | Aceptado              | 2026-10-02 |
+| [0136](../adr/0136-support-table-tennis-with-point-games.md)                                  | Soportar tenis de mesa con juegos por puntos                                    | Aceptado              | 2026-10-02 |
 | [0135](../adr/0135-support-tennis-and-padel-with-set-results.md)                              | Soportar tenis y pádel con resultados por sets                                  | Aceptado              | 2026-09-23 |
 | [0134](../adr/0134-support-handball-with-an-explicit-sport-profile.md)                        | Soportar balonmano con un perfil deportivo explícito                            | Aceptado              | 2026-09-21 |
 | [0133](../adr/0133-compose-league-and-knockout-stages.md)                                     | Componer liga y eliminatoria en un mismo torneo                                 | Aceptado              | 2026-09-20 |
@@ -116,7 +116,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0013](../adr/0013-use-develop-as-integration-branch.md)                                      | Usar `develop` como rama de integración                                         | Aceptado              | 2026-07-24 |
 | [0014](../adr/0014-use-node-pnpm-and-strict-typescript.md)                                    | Usar Node LTS, pnpm y TypeScript estricto                                       | Aceptado              | 2026-07-24 |
 | [0075](../adr/0075-freeze-local-lockfiles-and-delay-dependency-releases.md)                   | Congelar el lockfile local y retrasar versiones nuevas                          | Aceptado              | 2026-08-04 |
-| [0077](../adr/0077-allow-immediate-expo-compatibility-updates.md)                             | Permitir actualizaciones inmediatas del conjunto compatible de Expo             | Superado por ADR-0138  | 2026-08-09 |
+| [0077](../adr/0077-allow-immediate-expo-compatibility-updates.md)                             | Permitir actualizaciones inmediatas del conjunto compatible de Expo             | Superado por ADR-0138 | 2026-08-09 |
 | [0015](../adr/0015-use-expo-router-and-continuous-native-generation.md)                       | Usar Expo, Expo Router y CNG                                                    | Aceptado              | 2026-07-24 |
 | [0016](../adr/0016-use-client-side-web-rendering-initially.md)                                | Usar rendering web client-side inicialmente                                     | Superado por ADR-0120 | 2026-07-24 |
 | [0017](../adr/0017-use-env-contracts-github-environments-and-oidc.md)                         | Usar contratos de entorno, GitHub Environments y OIDC                           | Aceptado              | 2026-07-24 |
@@ -218,7 +218,6 @@ observabilidad únicamente bajo petición. Producción conserva su operación.
 explícitamente: adaptador Android local de Expo para conservar el host global sin
 bloquear ventanas inferiores; comprobar iOS antes y después.
 
-
 ## Títulos de navegación con texto ampliado
 
 [ADR-0151](../adr/0151-reflow-ios-entity-titles-for-accessibility.md), aceptado
@@ -234,7 +233,6 @@ el 2026-10-09: el usuario elige esperar versiones corregidas de Expo, sin añadi
 los dos parches propuestos. Los errores MissingPrefix y NewApi y la excepción
 del gate K2 permanecen abiertos; no adoptar K1 como sustituto ni omitir reglas.
 Toda actualización debe respetar maduración y validación de conjunto.
-
 
 ### 2026-10-09 — Instalar actualizaciones maduras del cliente
 
@@ -275,3 +273,10 @@ conservar API/K3s domésticos y la publicación explícita. Workers Static Asset
 renderer mínimo conservan rutas, previews y seguridad. No se autoriza un plan de
 pago. El estado efectivo y comandos están en `infra/cloudflare/README.md`;
 la implementación local no acredita una conmutación en la cuenta.
+
+## 2026-10-11 — Parches de infraestructura
+
+El usuario autoriza PostgreSQL 18.6, pgBackRest 2.59.3 y Caddy 2.11.7 mediante
+«Hacemos los 3», con excepción puntual de las horas restantes de madurez para
+pgBackRest. [ADR-0157](../adr/0157-upgrade-postgresql-pgbackrest-and-caddy.md).
+ADR-0138 mantiene el plazo general; no se modifica retención, datos ni durabilidad.

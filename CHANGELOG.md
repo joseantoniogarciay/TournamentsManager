@@ -6,6 +6,15 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-10-11
+
+### Changed
+
+- PostgreSQL productivo 18.6 y pgBackRest 2.59.3, con backups conservados,
+  restauración antes y después y checksum del fuente verificado. ADR-0157.
+- Caddy 2.11.7 activo, con configuración validada y disponibilidad pública
+  comprobada. Binario anterior conservado.
+
 ## [1.11.0] - 2026-10-11
 
 ### Added

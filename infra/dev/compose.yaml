@@ -10,7 +10,7 @@ x-development-logging: &development-logging
 
 services:
   postgres:
-    image: tournaments-manager-dev-postgres:pgbackrest-2.59.1
+    image: tournaments-manager-dev-postgres:pgbackrest-2.59.3
     restart: "no"
     logging: *development-logging
     build:
@@ -44,7 +44,7 @@ services:
   postgres-restore:
     profiles: ["backup-restore"]
     logging: *development-logging
-    image: tournaments-manager-dev-postgres:pgbackrest-2.59.1
+    image: tournaments-manager-dev-postgres:pgbackrest-2.59.3
     build:
       context: ./postgresql
     env_file:

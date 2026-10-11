@@ -37,11 +37,11 @@ el `503` de producción.
 
 ## Artefacto PostgreSQL
 
-La imagen incluye PostgreSQL 18.4 y pgBackRest 2.59.1. Se construye en el Mac y
+La imagen incluye PostgreSQL 18.6 y pgBackRest 2.59.3. Se construye en el Mac y
 se importa en el containerd de K3s con el tag:
 
 ```text
-tournaments-manager-postgresql:18.4-pgbackrest-2.59.1
+tournaments-manager-postgresql:18.6-pgbackrest-2.59.3
 ```
 
 No se aplica el StatefulSet hasta confirmar en la VM que ese tag existe en
@@ -209,8 +209,8 @@ el PVC local. En un terminal del Mac, lee la frase desde Contraseñas sin pegarl
 en la conversación ni guardarla en un fichero y ejecuta:
 
 ```sh
-docker image inspect tournaments-manager-postgresql:18.4-pgbackrest-2.59.1 >/dev/null \
-  || docker build --tag tournaments-manager-postgresql:18.4-pgbackrest-2.59.1 infra/k3s/postgresql
+docker image inspect tournaments-manager-postgresql:18.6-pgbackrest-2.59.3 >/dev/null \
+  || docker build --tag tournaments-manager-postgresql:18.6-pgbackrest-2.59.3 infra/k3s/postgresql
 ssh-add --apple-use-keychain ~/.ssh/fasttourney_k3s_operator
 . infra/k3s/.env
 ssh -o BatchMode=yes "$K3S_SSH_USER@$K3S_SSH_HOST" 'sudo -n true'

@@ -4899,7 +4899,6 @@ el 2–0 y refrescar vuelve a comprobar la recuperación. La preparación por AP
 permanece diferenciada del recorrido visual. El entorno continúa activo mientras
 sigue la sesión de QA, conforme a la indicación del usuario.
 
-
 ### Respetar el ciclo de vida del feedback al corregir su presentación (2026-10-07)
 
 En apps, el banner global debe superar la jerarquía de navegación y permanecer
@@ -4913,7 +4912,6 @@ El primer intento por Screen cambió una decisión aceptada y se retiró tras la
 corrección del usuario. Un bug no autoriza modificar el comportamiento acordado:
 antes de hacerlo se explica el conflicto y se pide decisión. La solución mínima
 se evalúa por el contrato que conserva, además de por su coste técnico.
-
 
 ### QA de renovación de sesión y continuidad entre turnos (2026-10-07)
 
@@ -4938,7 +4936,6 @@ programadas. Se guardan PID y logs para su cierre posterior; esto no autoriza
 mantener desarrollo activo fuera de las pruebas. API y base de datos se distinguen
 de las herramientas auxiliares al diagnosticar un corte.
 
-
 ### QA nativo: validar, alcanzar y guardar son evidencias distintas (2026-10-07)
 
 Un control accesible puede estar en el árbol fuera de la parte visible del popup.
@@ -4955,7 +4952,6 @@ y umbrales de 25/15 en voleibol. Una lectura de UI posterior verifica qué cambi
 ocurrieron: una referencia accesible caducada puede fallar después de escribir,
 por lo que no se repite a ciegas ni se atribuye el fallo al producto.
 
-
 ### Refresh web: fallo de transporte no equivale a rechazo de credenciales (2026-10-07)
 
 Si un acceso recibe 401 y la renovación falla por red, devolver el 401 original
@@ -4970,7 +4966,6 @@ EXPO_PUBLIC_API_BASE_URL en una exportación, comprueba el origen del bundle y
 limpia la caché si conserva el anterior. Un login 200 por sí solo no acredita que
 el navegador haya almacenado una cookie utilizable.
 
-
 ### QA de escrituras y feedback nativo sobre popup (2026-10-07)
 
 Antes de atribuir un fallo de escritura al cliente, confirma que el proxy de QA
@@ -4984,7 +4979,6 @@ global tanto sobre fullScreenModal como sobre el popup de resultados, y su
 persistencia al cerrar este último. No se cambia su ciclo de vida para acomodar
 la jerarquía de una pantalla.
 
-
 ### Renovación Android y secuencia de QA visual (2026-10-07)
 
 Android conserva la sesión ante un corte de refresh y estados 500/429; retirar
@@ -4997,13 +4991,11 @@ solapar teclado, envío y navegación. El XML anterior se elimina antes de cada
 volcado: un null root durante transición no permite reutilizarlo como evidencia
 actual. Se excluyen los intentos con entrada incompleta del diagnóstico funcional.
 
-
 Un ANR del sistema del emulador se identifica por el proceso y la ventana
 (com.android.systemui), no por la app visible detrás. Conservar el estado de la
 app y verificarlo tras recuperar la UI permite comprobar persistencia sin borrar
 datos. Una recuperación posterior a varias acciones no acredita por sí sola
 cuál de ellas fue la causa de la mejora.
-
 
 ### Banner Android y ventanas nativas (2026-10-07)
 
@@ -5013,7 +5005,6 @@ sobre popup, pero bloquea su backdrop durante la vida del banner; la misma
 pulsación cierra después. Se mantiene abierto el defecto técnico, preservando
 la decisión de host global. Verificar superposición e interacción son pruebas
 diferentes; no se corrige una suprimiendo el alcance funcional de la otra.
-
 
 ### Banner global: ventanas y pruebas por plataforma (2026-10-07)
 
@@ -5032,7 +5023,6 @@ incidencia observada antes del adaptador Android, pendiente de distinguir
 defecto del producto y limitación de automatización, sin conservar ajustes del responder no acreditados
 ni introducir otro adaptador por anticipación.
 
-
 El experimento PopupWindow se retira al ampliar el recorrido a Atrás: API 34
 registra un callback propio incluso sin foco. Reponer el popup oculta el fallo
 visual pero consume la navegación. WindowManager.addView con ventana hija, área
@@ -5041,7 +5031,6 @@ prueba final vuelve a Inicio con aviso aún activo tras desmontar su ficha orige
 La evidencia de la implementación anterior se conserva como experimento, no como
 validación del mecanismo final.
 
-
 Recrear Activity durante el arranque de un development client puede ejercitar
 su cargador además del host de la app. Registrar la traza y repetir desde la app
 cargada distingue recorridos, pero no demuestra por sí solo la causa. El fatal
@@ -5049,7 +5038,6 @@ observado en DevLauncher se conserva abierto aunque el banner posterior a una
 recreación estable funcione. Los títulos de ventanas auxiliares usan el mensaje
 localizado; no se acude a campos @hide para mejorar su accesibilidad. Declarar
 liveRegion no equivale a haber validado TalkBack o VoiceOver.
-
 
 ### Gesto rápido iOS y recarga verificable (2026-10-07)
 
@@ -5065,7 +5053,6 @@ move rápido. El arrastre largo cierra, el corto conserva el aviso y cerrar popu
 ficha conserva el banner sobre Inicio. El arreglo pertenece al cálculo del gesto,
 sin justificar otro adaptador iOS. Se retira toda instrumentación temporal.
 
-
 ### Control de regresión frente al cargador Expo (2026-10-07)
 
 Una recreación durante el arranque produce la aserción de contexto en el cargador
@@ -5074,7 +5061,6 @@ sustituye su host Android por un stub; ocultar el aviso no habría excluido sus
 hooks de ciclo de vida. Se restauran fuentes, configuración y build después del
 control. Aislar una causa evita añadir parches a dependencias para cerrar el QA de
 un componente que no es necesario para provocar el fallo observado.
-
 
 En el QA del host Android, texto al 150% y mensaje francés oscuro conservan la
 legibilidad. Una actualización de tema reenvía los tokens al mismo aviso sin
@@ -5127,7 +5113,6 @@ sin nuevas mutaciones. Registrar por separado esta cobertura y la creación/
 edición completa. En un mixto, comprobar también que la clasificación de liga
 no acumula el partido de la final eliminatoria.
 
-
 ## 2026-10-07 — Separar lectura final y ciclo nativo completo
 
 Después de revisar fixtures finalizados, usar torneos nuevos mínimos de dos
@@ -5142,7 +5127,6 @@ y volver a observar los controles cuando sus identificadores AX caduquen. Si se
 usa un setter accesible soportado, registrar ese canal y conservar pendiente la
 prueba de teclado o gesto que no se haya podido realizar.
 
-
 ## 2026-10-07 — Verificar el límite entre liga y eliminatoria
 
 Un ciclo mixto mínimo útil usa cuatro equipos, seis partidos de liga y una final
@@ -5156,7 +5140,6 @@ fija. Contrastar la captura y escoger un control completamente visible. Si un
 teclado oculta Guardar, comprobar primero la salida normal del foco dentro del
 popup; registrar por separado ese recorrido y el scroll que el canal no ejecuta.
 
-
 ## 2026-10-07 — Incidencias nativas y restauración verificable
 
 Conservar una línea base antes de editar fixtures. En no comparecencia y abandono,
@@ -5169,7 +5152,6 @@ Activar Guardar por AX fuera del viewport demuestra la acción accesible, pero n
 que el gesto permita alcanzarlo. Registrar esa diferencia y no corregir el
 producto por una limitación del canal de entrada sin evidencia propia.
 
-
 ## 2026-10-08 — Sustitución completa del tipo de resultado
 
 Al pasar de marcador jugado con tanda a incidencia, comprobar que la persistencia
@@ -5177,7 +5159,6 @@ elimina los lanzamientos anteriores. Al pasar de abandono a no comparecencia,
 comprobar que elimina el parcial. Elegir un abandono del equipo que iba ganando
 permite verificar que el ganador administrativo no se deduce de ese tanteo.
 La restauración debe recuperar el partido completo sin datos residuales.
-
 
 ## 2026-10-08 — Parciales y sets administrativos de voleibol
 
@@ -5192,7 +5173,6 @@ sin reutilizar torneos ya finalizados. La finalización irreversible requiere
 respetar el permiso específico si la revisión automática la rechaza; conservar
 el resultado y cancelar la confirmación permite cerrar la evidencia restante.
 
-
 ## 2026-10-08 — Resultado, campeón y lectura final persistente
 
 Tras obtener el permiso específico para finalizar un fixture, confirmar el cierre
@@ -5201,7 +5181,6 @@ todos los partidos con la evidencia previa para detectar cambios involuntarios.
 La celebración no basta: cerrar y reabrir la ficha, verificar estado finalizado,
 marcador conservado y ausencia de controles de edición. Mantener separada la
 cobertura de preparación por API de las acciones realmente realizadas por UI.
-
 
 ## 2026-10-08 — Abandono de tenis con un único último parcial
 
@@ -5215,7 +5194,6 @@ contra la línea base al cerrar la prueba.
 Un error de identificador AX puede llegar después de aplicar un setter. Releer
 los valores antes de repetir la entrada evita alterar un borrador ya correcto.
 
-
 ## 2026-10-08 — Sustituir tanda e incidencia sin datos residuales
 
 En fútbol, recorrer jugado con tanda → no comparecencia → abandono con parcial →
@@ -5228,7 +5206,6 @@ al deporte: registrar por separado esa observación de claridad, sin confundirla
 con un fallo funcional. En fútbol, la referencia a sets o juegos del error de
 parcial incompleto queda pendiente de adaptación.
 
-
 ## 2026-10-08 — Copy de parcial según tipo de tanteo
 
 Se resuelve la referencia a sets/juegos en fútbol con una clave localizada para
@@ -5238,7 +5215,6 @@ un mensaje por deporte añadiría mantenimiento sin aportar una acción diferent
 La regresión visual puede usar un borrador inválido y descartarlo: verificar
 luego por API que el partido no cambió. El texto español queda comprobado en iOS;
 no extrapolar esa observación a otros idiomas o plataformas.
-
 
 ## 2026-10-08 — Disponibilidad del emulador y coherencia de catálogos
 
@@ -5252,7 +5228,6 @@ igualdad de conjuntos y marcadores de sustitución entre idiomas. Los cuatro
 catálogos actuales conservan 527 claves coherentes; esto no acredita traducción
 natural ni ausencia de recortes en pantalla.
 
-
 ## 2026-10-08 — Evidencia fresca del detector de carreras
 
 Para acreditar una tanda nueva, ejecutar Go con -race -count=1 y guardar JSON:
@@ -5264,7 +5239,6 @@ las integraciones opt-in permanecen fuera de ese alcance.
 Los tests con httptest o listeners de shutdown necesitan puertos efímeros de
 localhost. Conservar el intento restringido y repetir con el permiso necesario;
 no convertir un bind bloqueado por sandbox en un defecto de producto.
-
 
 ## 2026-10-08 — Incidencias Android y ausencia de datos incompatibles
 
@@ -5278,7 +5252,6 @@ La captura Android confirma el copy de parcial por tanteos y Guardar desactivado
 UIAutomator puede marcar enabled en el texto interno de un botón desactivado;
 revisar sus ancestros y la imagen antes de concluir que permite guardar. Abrir
 enlaces con la app activa no acredita arranque en frío ni resuelve un ANR previo.
-
 
 ## 2026-10-08 — Copy localizado en el formulario real
 
@@ -5294,7 +5267,6 @@ parcial y comprobar vacíos los otros juegos, además de comparar todos los
 partidos por API. Un aviso histórico de caída en DevLauncher no es un fatal
 nuevo; conservar logs separados para evitar atribuciones por la captura sola.
 
-
 ## 2026-10-08 — Subida del bloque acumulado de QA
 
 Antes de subir develop, revisar los archivos reales de Git, incluyendo módulos
@@ -5308,7 +5280,6 @@ la integración opt-in omitida y la vulnerabilidad de módulo sin llamadas
 alcanzables que govulncheck informa, sin presentar el resultado como cobertura
 universal. Mantener main, tags y despliegue dentro del ciclo autorizado aparte.
 
-
 ## 2026-10-08 — Regresiones de sesión dentro del gate
 
 Revisar el workflow y los prerrequisitos de make verify antes de dar por
@@ -5317,7 +5288,6 @@ renovación web estaban en la pasada local tests/*.test.mjs, pero faltaban en
 el gate compartido. El target test-session-refresh las incorpora a make verify
 y, por tanto, al workflow existente, sin otra infraestructura.
 
-
 ## 2026-10-08 — Preflight de publicación y estado real del runtime
 
 Comprobar web y API por separado antes del deploy: un shell estático con 200
@@ -5325,7 +5295,6 @@ puede coexistir con una API 502 porque la VM esté detenida. Recuperar primero
 la instancia existente permite distinguir disponibilidad previa de regresiones
 de la versión nueva. Conservar backups y ensayar migraciones sobre datos
 restaurados, sin usar la base productiva como banco de pruebas.
-
 
 ## 2026-10-08 — Cierre productivo y credencial activa
 
@@ -5341,7 +5310,6 @@ la prueba de recepción y simbolicación de errores. Al acabar una actualizació
 autorizada de dev, apagar servicios y LaunchAgents conservando datos, y mantener
 producción activa: estar actualizado no exige que dev permanezca encendido.
 
-
 ## 2026-10-08 — Suspensión autorizada y texto ampliado
 
 Una excepción explícita de disponibilidad debe distinguirse de la regla normal
@@ -5354,7 +5322,6 @@ viewport con bounds invertidos. Desplazar el diálogo y contrastar captura y
 contenedor del botón permite acreditar mensaje completo y acción deshabilitada.
 Restaurar font_scale y comparar todos los partidos tras descartar el borrador
 cierra esta prueba sin introducir cambios de datos ni extrapolar accesibilidad.
-
 
 ## 2026-10-08 — Cabeceras y texto ampliado en Android
 
@@ -5371,7 +5338,6 @@ Tras una recreación por font_scale o el cierre de un modal, leer de nuevo el
 transición puede no navegar. Restaurar la preferencia y apagar solo los recursos
 arrancados para la tanda mantiene reproducible el QA sin tocar producción.
 
-
 ## 2026-10-08 — Corrección mínima y límites de instrumentación accesible
 
 La cabecera Android de Cuenta se corrige con Text compartido, dos líneas y el
@@ -5385,7 +5351,6 @@ probar. Separar inspección, servicio enlazado y recorrido efectivo del foco;
 no declarar TalkBack aprobado por obtener XML o navegar con eventos inyectados.
 Registrar también las caídas nuevas de DevLauncher aunque reconectar recupere
 la app, y conservar esa limitación separada del formulario corregido.
-
 
 ## 2026-10-08 — Separar APK release local y distribución
 
@@ -5403,7 +5368,6 @@ una caída de DevLauncher en development ni las pruebas de distribución o lecto
 El corte/reintento debe contrastarse con la proyección previa para comprobar
 recuperación real y conservación de datos, además del mensaje seguro.
 
-
 ## 2026-10-08 — Entrada táctil y evidencia de lector
 
 En este emulador, la inyección shell input no avanzaba de forma fiable el foco
@@ -5416,7 +5380,6 @@ y descartar evidencia de la ruta incorrecta antes de reintentar.
 Un recorrido satisfactorio de foco no acredita locución ni toda la matriz.
 Registrar por separado controles alcanzados, activaciones, campos sin enviar y
 restauración exacta de preferencias, APK y recursos propios al cerrar la tanda.
-
 
 ## 2026-10-08 — Release de simulador y límites de evidencia iOS
 
@@ -5432,7 +5395,6 @@ el recorte de cabecera al tamaño máximo sigue abierto. Repetir Android Lint
 sin exclusiones confirma el bloqueo del analizador de worklets, sin sustituir
 el gate completo por su subconjunto vital de release.
 
-
 ## 2026-10-09 — Seguridad y revisión de excepciones tras un parche
 
 Una CI aprobada ayer puede fallar hoy por nuevos avisos de govulncheck.
@@ -5445,7 +5407,6 @@ la limitación instrumental. Actualizar la causa de la deuda y conservar la
 validación funcional, sin suprimir reglas ni mezclar ese trabajo con el parche.
 Producción apagada conserva sus binarios: el parche en develop requiere una
 publicación verificada antes de volver a servirlos.
-
 
 ## 2026-10-09 — Restaurar lint de tests con evidencia completa
 
@@ -5465,7 +5426,6 @@ completo y ningún linter desactivado. Las aserciones y escenarios se conservan.
 
 Validación: make verify y go test -race ./... aprobados; la integración
 PostgreSQL depende de CI mientras los entornos de sesión están apagados.
-
 
 ## 2026-10-09 — Un título ampliado solo cambia de posición si no cabe
 
@@ -5506,7 +5466,6 @@ calificar recursos por API exige una decisión sobre mantenimiento temporal.
 El usuario acepta ADR-0152 con alternativa B: esperar versiones corregidas
 de Expo, conservando los errores y el gate K2 abiertos.
 
-
 ### 2026-10-09 — Revisar versiones antes de atribuir correcciones
 
 La matriz exacta de Expo 57.0.26 ofrece directos maduros y RN 0.86.3;
@@ -5526,7 +5485,6 @@ Retrospectiva de QA: al máximo tamaño, el título de creación es completo en
 en/it/fr; los saltos varían con el texto real. Se comprueba Cerrar en inglés y
 se restaura español y tamaño 3. Capturas visuales no acreditan VoiceOver ni
 el recorrido accesible de todas las pantallas.
-
 
 ### 2026-10-09 — Aplicar una matriz madura y verificar la resolución real
 
@@ -5556,14 +5514,12 @@ El upgrade conserva el crash K2 y los dos errores del generador Expo; se respeta
 la espera aceptada de ADR-0152. Dos avisos altos de seguridad conservan la espera
 porque sus correcciones anunciadas aún no están publicadas en npm.
 
-
 La build iOS pasa tras recuperar espacio y permite navegar y cerrar con el nuevo
 Router. Cambiar Dynamic Type en una vista montada y abrirla de nuevo desde frío
 son escenarios distintos: en el primero se observaron alturas desactualizadas;
 el segundo recompone chips y contenido. No atribuir el contraste al upgrade
 sin comparar el baseline. El título adaptativo funciona en ambos casos, pero
 eso no certifica todo el layout ni el canal VoiceOver ausente.
-
 
 ### 2026-10-09 — Dynamic Type con pantallas ya montadas
 
@@ -5576,7 +5532,6 @@ limitar escala y sin remontar campos/rutas. QA conserva deporte, borrador y
 edición después de ampliar; hay que probar aumento y reducción con contenido
 montado. Retirar esta adaptación cuando RN pase el recorrido sin ella. Tener
 AX disponible no acredita por sí solo locución o foco VoiceOver.
-
 
 ### 2026-10-09 — Safe area dentro del contenido desplazable
 
@@ -5655,7 +5610,6 @@ una tabla debe comprobar la correspondencia entre entidad y valores, además
 del desplazamiento y acceso al extremo final. Una altura común por fila y
 anchos compatibles con el escalado son una corrección más acotada que sustituir
 la tabla; esa recomendación aún requiere implementación y revalidación.
-
 
 ### 2026-10-09 — Distinguir alineación y espacio legible
 
@@ -5750,6 +5704,7 @@ no sustituye esa acción. Comprobar también la reapertura al enfocar otro campo
 y registrar si el arrastre oculta el teclado. A texto máximo, distinguir campo
 con límites completos, valor recortado y etiqueta fuera del viewport; no
 afirmar visibilidad simultánea de elementos observados en posiciones distintas.
+
 ### 2026-10-10 — Foco y contexto de una tabla compacta
 
 Una celda truncada puede conservar el nombre completo en AX y recibir foco.
@@ -5758,6 +5713,7 @@ asociación hablada de cabecera, equipo y valor. Las tandas rápidas de gestos
 no acreditan todos sus avances: contar únicamente estados observados. Tras
 activar VoiceOver, comprobar dónde queda el foco antes de interpretar el
 primer toque como exploración del objetivo.
+
 ### 2026-10-10 — Cerrar QA por riesgo con inventario vigente
 
 Un diario de evidencia no sirve como lista de pendientes: mantiene límites
@@ -5766,6 +5722,7 @@ vigente, revisar patrones compartidos una vez y limitar las muestras manuales
 evita una matriz sin final. Registrar por separado defecto reproducido,
 variante fuera de alcance y bloqueo instrumental. La revisión de código
 demuestra implementación; no se presenta como gesto, locución o zoom ejecutado.
+
 ### 2026-10-10 — Zoom real con sesión de QA
 
 La falta de sesión conservada no bloquea una prueba si el login ficticio está
@@ -5871,7 +5828,6 @@ Comprobar certificado de borde y salud de API por separado, conservar Universal
 SSL activado tras solicitar reemisión y no dar el corte por terminado antes de
 verificar HTTPS real.
 
-
 ### 2026-10-11 — Corte Cloudflare y diagnóstico de TLS
 
 Un certificado ajeno al dominio no demuestra que el proveedor no haya emitido
@@ -5886,7 +5842,6 @@ función para todos los archivos. Esto añade la home a la cuota Workers Free.
 Recuperar K3s exige readiness real, no solo rollout guardado: las réplicas
 conservaron inicialmente estados anteriores hasta recuperar PostgreSQL.
 
-
 ### 2026-10-11 — Gate de v1.11.0
 
 La migración de hosting dejó candidatos inmutables bajo `.config/cloudflare`.
@@ -5896,3 +5851,15 @@ El gate completo local pasa tras esa corrección; persistencia se verifica en
 PostgreSQL efímero aislado. La publicación siguiente agrupa responsive web,
 mejoras de accesibilidad y parches de Expo/Go sin nuevas migraciones ni cambios
 en datos de negocio. Backup cifrado y huellas agregadas preceden al despliegue.
+
+## 2026-10-11 — Actualizar backups requiere restaurarlos
+
+PostgreSQL 18.6 y pgBackRest 2.59.3 pasan restauraciones antes y después del
+rollout. El gate monta solo el repositorio en lectura y restaura en emptyDir.
+`--no-expire-auto` conserva backups previos durante la transición. El chequeo
+heurístico de subclaves persistidas no mostró señal de debilidad, pero no prueba
+ausencia absoluta; actualizar pgBackRest tampoco regenera esas claves.
+
+Retrospectiva: un proxy puede validar su configuración y fallar al acceder
+a una VM desde launchd. Comparar la conexión del proceso con curl y comprobar
+permisos del sistema es necesario antes de declarar disponible el servicio.
