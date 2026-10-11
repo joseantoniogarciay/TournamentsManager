@@ -1,3 +1,9 @@
+import {
+  validCivilDate,
+  validCivilTime,
+  validTimeZone,
+  validVenue,
+} from "@/features/scheduling/values";
 import { isSetSport, isValidBestOfSets, isValidPointsPerGame } from "@/shared/tournaments/sport";
 import type { AccountTournament } from "@/api/generated/models/accountTournament";
 import type { AccountTournamentPage } from "@/api/generated/models/accountTournamentPage";
@@ -202,6 +208,27 @@ function parseMatch(value: unknown): Match | null {
       !value.awayTeamId)
   )
     return null;
+  if (
+    "venue" in value &&
+    (typeof value.venue !== "string" || !value.venue || !validVenue(value.venue))
+  )
+    return null;
+  if (
+    "scheduledDate" in value &&
+    (typeof value.scheduledDate !== "string" || !validCivilDate(value.scheduledDate))
+  )
+    return null;
+  if (
+    "scheduledTime" in value &&
+    (typeof value.scheduledTime !== "string" || !validCivilTime(value.scheduledTime))
+  )
+    return null;
+  if (
+    "scheduledTime" in value
+      ? typeof value.timeZone !== "string" || !validTimeZone(value.timeZone)
+      : "timeZone" in value
+  )
+    return null;
   const incident = value.incident;
   const hasIncident = value.resultType === "no_show" || value.resultType === "retirement";
   if (hasIncident) {
@@ -364,6 +391,11 @@ function parseUUIDs(value: unknown): string[] | null {
 /** Valida el contenedor y filtra de forma independiente sus colecciones internas. */
 export function parsePublicTournament(value: unknown): PublicTournament | null {
   if (!isRecord(value)) return null;
+  if (
+    "venue" in value &&
+    (typeof value.venue !== "string" || !value.venue || !validVenue(value.venue))
+  )
+    return null;
   const stages = parseStages(value.stages);
   const stageTeams = parseStageTeams(value.stageTeams);
   const tieBreakPools = parseTieBreakPools(value.tieBreakPools);
@@ -397,6 +429,7 @@ export function parsePublicTournament(value: unknown): PublicTournament | null {
   return {
     id: value.id,
     name: value.name,
+    ...(value.venue ? { venue: value.venue as string } : {}),
     sport: value.sport as PublicTournament["sport"],
     ...(racket ? { bestOfSets: value.bestOfSets as 3 | 5 | 7 } : {}),
     ...(value.sport === "badminton" ? { pointsPerGame: value.pointsPerGame as 15 | 21 } : {}),

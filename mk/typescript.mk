@@ -43,3 +43,7 @@ test-dependencies:
 .PHONY: test-match-incidents
 test-match-incidents:
 	$(PNPM) run test:match-incidents
+
+.PHONY: test-scheduling
+test-scheduling:
+	$(PNPM) run test:scheduling

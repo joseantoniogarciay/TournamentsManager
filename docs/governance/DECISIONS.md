@@ -287,3 +287,7 @@ El usuario acepta los dos disparadores (cierre del popup tras finalizar y décim
 entrada al detalle de cualquier torneo) con 60 días entre intentos.
 [ADR-0156](../adr/0156-request-native-store-reviews-at-tournament-milestones.md)
 registra el contador local, las cuotas de tienda y el alcance de producción móvil.
+
+## Información opcional de encuentros
+
+[ADR-0158](../adr/0158-add-optional-tournament-and-match-scheduling.md) — Aceptado el 2026-10-11 por el usuario tras revisión de diseños.

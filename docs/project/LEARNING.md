@@ -5879,3 +5879,25 @@ Retrospectiva: una promesa resuelta no acredita diálogo ni reseña. Compilar va
 el módulo, mientras que la distribución por tienda y sus cuotas condicionan la
 prueba final. Revisar un parche de pgBackRest exige considerar las claves
 persistidas: cambiar el binario no las reemplaza.
+
+## 2026-10-11 — Información opcional de encuentros
+
+ADR-0158 añade coordinación manual sin exigir un calendario para torneos rápidos.
+Un día civil y una hora parcial no son un instante UTC: conservar fecha/hora
+separadas y una zona para la hora evita desplazamientos entre dispositivos.
+El lugar común se hereda al leer y se sustituye solo cuando el partido tiene
+su propio lugar. La autorización se serializa con delegación y transferencia.
+
+Retrospectiva del incremento: se reutilizaron formularios y estado canónico,
+sin nuevos servicios, calendarios nativos, mapas o avisos. La prueba de cuerpo
+JSON estricto encontró un fallo compartido: Decode podía devolver nil al
+consumir un segundo objeto, aceptándolo accidentalmente. Se corrigió su
+rechazo y se añadió cobertura de regresión. La validación incluye PostgreSQL
+efímero y tests de HTTP/cliente; QA nativa se mantiene como comprobación
+separada y no se atribuye a la exportación web.
+
+Cierre verificado: `make verify` en verde, integración PostgreSQL completa,
+Down/Up de la migración aislada y revisión web a 390×844 y escritorio.
+Se confirmó visualmente la ausencia de controles y bloques de planificación
+en lectura sin datos. No se arrancaron local/dev ni observabilidad; los recursos
+efímeros de pruebas se eliminaron. Falta QA visual en dispositivos nativos.

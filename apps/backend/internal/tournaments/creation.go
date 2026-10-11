@@ -140,6 +140,10 @@ type InvitationTokenHash [sha256.Size]byte
 
 // Match represents a generated league match.
 type Match struct {
+	ScheduledDate     string         `json:"scheduledDate,omitempty"`
+	ScheduledTime     string         `json:"scheduledTime,omitempty"`
+	TimeZone          string         `json:"timeZone,omitempty"`
+	Venue             string         `json:"venue,omitempty"`
 	StageID           string         `json:"stageId"`
 	HomeSourceKind    SlotSourceKind `json:"homeSourceKind"`
 	AwaySourceKind    SlotSourceKind `json:"awaySourceKind"`
@@ -178,6 +182,7 @@ const (
 
 // Tournament is the projection of a visible league.
 type Tournament struct {
+	Venue           string                      `json:"venue,omitempty"`
 	Stages          []Stage                     `json:"stages"`
 	StageTeams      []StageTeam                 `json:"stageTeams"`
 	TieBreakPools   []QualificationTieBreakPool `json:"tieBreakPools"`

@@ -8,6 +8,18 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Fecha, hora y lugar opcionales por partido y lugar común del torneo. Solo
+  creador y administradores designados editan; lectores ven únicamente datos
+  existentes. Herencia de lugar, zona horaria y lectura en jornadas/cuadros.
+  ADR-0158; migración 00021 preparada, sin publicación de producción.
+
+### Fixed
+
+- El lector HTTP de JSON rechaza un segundo valor tras el cuerpo, incluso si
+  ese segundo valor se decodifica correctamente.
+
+### Added
+
 - Solicitud de valoración nativa al cerrar el popup de torneo finalizado o
   alcanzar diez entradas a detalles de torneos, con 60 días entre intentos
   por instalación. Solo builds Release de producción; la tienda controla

@@ -20,6 +20,11 @@ import type { TournamentTeam } from "./tournamentTeam.js";
 import type { Uuid } from "./uuid.js";
 
 export interface PublicTournament {
+  /**
+   * @minLength 1
+   * @maxLength 160
+   */
+  venue?: string;
   id: Uuid;
   name: string;
   sport: PublicTournamentSport;

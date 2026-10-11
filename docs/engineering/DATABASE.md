@@ -163,3 +163,15 @@ aislada en `dev` y `prod`. Un cambio destructivo sigue exigiendo documentar
 rollback, forward-fix o expand/contract; el análisis de consultas y la
 saturación de conexiones se investigan cuando exista evidencia, no como trabajo
 abierto genérico.
+
+## Información opcional de encuentros (ADR-0158)
+
+La migración 00021 añade `tournaments.venue` y `matches.scheduled_date`,
+`scheduled_time`, `time_zone`, `venue`, con valor vacío inicial. Se conservan
+como texto civil, no timestamps que convertirían una fecha u hora parcial en
+un instante inexistente. El servicio valida fechas reales y zonas IANA; la
+base refuerza forma, longitud y coherencia hora/zona. El lugar común se hereda
+al leer, sin copiarlo a cada fila. La transacción bloquea primero el torneo
+para serializar autorización, transferencia, delegación y cierre; modifica
+solo estos campos y `last_activity_at`. El Down elimina únicamente columnas
+introducidas por esta migración; perdería sus datos si se aplicase.

@@ -393,3 +393,21 @@ resultado bloqueado `409`. Solo el conflicto conserva feedback específico;
 resto de HTTP, `5xx`, cuerpo inválido y problemas desconocidos usan
 `common_request_error`, transporte `common_network_error`, cancelación
 intencional sin aviso. Nunca se muestra texto bruto del backend.
+
+## Planificación informativa opcional (ADR-0158)
+
+`PUT /v1/tournaments/{tournamentId}/venue` reemplaza `venue`.
+`PUT /v1/tournaments/{tournamentId}/matches/{matchId}/schedule` reemplaza
+`scheduledDate`, `scheduledTime`, `timeZone` y `venue`; exige las cuatro claves
+y usa cadenas vacías para eliminar valores. Los campos vacíos se omiten al leer.
+Hora civil de 24 horas con zona IANA, fecha civil real independiente, lugar
+recortado hasta 160 caracteres Unicode sin controles. El cliente nunca interpreta
+una hora sin fecha como un instante UTC.
+
+Ambas operaciones exigen sesión y permiso de creador/delegado, validan IDs y
+cuerpo JSON único (máximo 4096 bytes) y devuelven `200 PublicTournament`.
+Respuestas seguras: 400 validación, 401 sesión, 403 permiso, 404 recurso,
+409 torneo cerrado o bye, 500 límite técnico. No hay limitador adicional ni
+respuesta 429 propia. El cliente distingue 403/404/409 solo para problemas
+`about:blank` válidos que coincidan con el estado; el resto conserva fallback
+seguro, incluido 429 inesperado.

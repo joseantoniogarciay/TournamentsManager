@@ -486,3 +486,19 @@ TMGlobalFeedback (ADR-0150): una ventana hija no modal de WindowManager limitada
 aviso. ModalDialog aporta solo un anclaje de ventana; el provider raíz sigue
 siendo dueño del aviso y su plazo. Web conserva su host de pantalla. No se trasladan los banners nativos al patrón por Screen de
 ConfirmationDialogHost: las confirmaciones tienen otro ciclo de vida.
+
+### Información opcional del partido (ADR-0158)
+
+Las jornadas y los cuadros reutilizan `MatchSchedule`: fecha localizada sin
+cambiar el día civil, hora junto a su zona y lugar efectivo debajo del marcador.
+Sin datos devuelve un bloque nulo. Solo creador/delegados de un torneo activo
+ven la acción secundaria «Fecha, hora y lugar». El resumen ofrece el lugar
+común y su edición bajo los mismos permisos. No se incorporan escudos o
+ilustraciones sugeridos incidentalmente por el mockup generado.
+
+Las rutas schedule/venue reutilizan navegación, Card, TextField, Button y
+KeyboardAwareScrollView; contienen safe area dentro del scroll, validación
+por blur, bloqueo de envíos y traducción es/en/fr/it. Los valores conservan el
+borrador ante fallo de transporte o HTTP. Cerrar aborta el envío y suprime
+feedback tardío. Una pérdida de permiso ofrece recarga explícita conservando
+la entrada mientras no se recargue. No se añade un selector nativo externo.

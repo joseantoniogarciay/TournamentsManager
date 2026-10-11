@@ -14,6 +14,20 @@ import type { SetResult } from "./setResult.js";
 import type { Uuid } from "./uuid.js";
 
 export interface Match {
+  /**
+   * @minLength 1
+   * @maxLength 160
+   */
+  venue?: string;
+  scheduledDate?: string;
+  /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
+  scheduledTime?: string;
+  /**
+   * Zona IANA de la hora civil; obligatoria si hay hora.
+   * @minLength 1
+   * @maxLength 100
+   */
+  timeZone?: string;
   id: Uuid;
   /** @minimum 1 */
   round: number;

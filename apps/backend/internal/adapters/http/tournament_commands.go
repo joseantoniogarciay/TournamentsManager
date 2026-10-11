@@ -732,6 +732,8 @@ func recordTournamentFailure(ctx context.Context, err error) {
 		observability.RecordEndpointFailure(ctx, "tournament.not_found")
 	case errors.Is(err, tournaments.ErrTournamentForbidden), errors.Is(err, tournaments.ErrMatchResultForbidden):
 		observability.RecordEndpointFailure(ctx, "tournament.forbidden")
+	case errors.Is(err, tournaments.ErrSchedulingConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.scheduling_conflict")
 	case errors.Is(err, tournaments.ErrTournamentConflict):
 		observability.RecordEndpointFailure(ctx, "tournament.start_conflict")
 	case errors.Is(err, tournaments.ErrInvalidMixedConfiguration):

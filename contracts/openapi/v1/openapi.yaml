@@ -1003,6 +1003,96 @@ paths:
         "403": { description: La sesión no pertenece a la organizadora. }
         "404": { description: El torneo no existe. }
         "409": { description: El torneo no está en curso o aún tiene partidos pendientes. }
+  /tournaments/{tournamentId}/venue:
+    put:
+      tags: [Tournaments]
+      operationId: setTournamentVenue
+      summary: Actualiza el lugar opcional del torneo
+      description: >-
+        Reemplaza los campos informativos. Cadenas vacías eliminan el dato.
+        Solo creador y administradores designados, en torneo publicado o en curso.
+        Un bye no admite planificación. Lugar propio vacío hereda el lugar del torneo.
+        No altera resultados ni clasificación. Hora civil en la zona IANA indicada,
+        sin conversión automática a la zona del lector; fecha y hora independientes.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: tournamentId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TournamentVenueInput" }
+      responses:
+        "200":
+          description: Información guardada y proyección pública actualizada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicTournament" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403":
+          description: La cuenta no administra el torneo.
+          content:
+            { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+        "404":
+          description: El torneo o partido no está disponible.
+          content:
+            { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+        "409":
+          description: Torneo cerrado o partido bye.
+          content:
+            { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+        "500": { $ref: "#/components/responses/RequestProblem" }
+  /tournaments/{tournamentId}/matches/{matchId}/schedule:
+    put:
+      tags: [Tournaments]
+      operationId: setMatchSchedule
+      summary: Actualiza fecha, hora y lugar opcionales de un partido
+      description: >-
+        Reemplaza los campos informativos. Cadenas vacías eliminan el dato.
+        Solo creador y administradores designados, en torneo publicado o en curso.
+        Un bye no admite planificación. Lugar propio vacío hereda el lugar del torneo.
+        No altera resultados ni clasificación. Hora civil en la zona IANA indicada,
+        sin conversión automática a la zona del lector; fecha y hora independientes.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: tournamentId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: matchId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MatchScheduleInput" }
+      responses:
+        "200":
+          description: Información guardada y proyección pública actualizada.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicTournament" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403":
+          description: La cuenta no administra el torneo.
+          content:
+            { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+        "404":
+          description: El torneo o partido no está disponible.
+          content:
+            { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+        "409":
+          description: Torneo cerrado o partido bye.
+          content:
+            { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+        "500": { $ref: "#/components/responses/RequestProblem" }
   /tournaments/{tournamentId}/matches/{matchId}/result:
     put:
       tags: [Tournaments]
@@ -1734,6 +1824,7 @@ components:
           championTeamIds,
         ]
       properties:
+        venue: { type: string, minLength: 1, maxLength: 160 }
         id: { $ref: "#/components/schemas/UUID" }
         name: { type: string }
         sport:
@@ -1870,6 +1961,31 @@ components:
         withdrawn:
           type: boolean
           description: Indica que la organizadora declaró su baja durante la liga en curso.
+    TournamentVenueInput:
+      type: object
+      additionalProperties: false
+      required: [venue]
+      properties:
+        venue: { type: string, maxLength: 160, description: Vacío elimina el lugar común. }
+    MatchScheduleInput:
+      type: object
+      additionalProperties: false
+      required: [scheduledDate, scheduledTime, timeZone, venue]
+      properties:
+        scheduledDate:
+          {
+            type: string,
+            pattern: "^$|^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            description: Día civil real YYYY-MM-DD o vacío.,
+          }
+        scheduledTime: { type: string, pattern: "^$|^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+        timeZone:
+          {
+            type: string,
+            maxLength: 100,
+            description: Zona IANA válida si hay hora; vacío si no hay hora.,
+          }
+        venue: { type: string, maxLength: 160, description: Vacío hereda el lugar común. }
     Match:
       type: object
       required:
@@ -1886,6 +2002,16 @@ components:
           sets,
         ]
       properties:
+        venue: { type: string, minLength: 1, maxLength: 160 }
+        scheduledDate: { type: string, format: date }
+        scheduledTime: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+        timeZone:
+          {
+            type: string,
+            minLength: 1,
+            maxLength: 100,
+            description: Zona IANA de la hora civil; obligatoria si hay hora.,
+          }
         id: { $ref: "#/components/schemas/UUID" }
         round: { type: integer, minimum: 1 }
         sequence: { type: integer, minimum: 1 }

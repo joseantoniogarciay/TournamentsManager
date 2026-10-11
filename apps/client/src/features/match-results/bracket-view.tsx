@@ -1,3 +1,4 @@
+import { MatchSchedule } from "@/features/scheduling/match-schedule";
 import { IncidentSummary } from "./incident-summary";
 import { SymbolView } from "expo-symbols";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
@@ -57,6 +58,7 @@ export const BracketView = forwardRef<
     onHorizontalScroll: (offset: number) => void;
     onMatchFocus: (matchView: View) => void;
     onEdit: (id: string) => void;
+    onSchedule: (id: string) => void;
     onRoundChange: (round: number) => void;
     roundSelectionRevision: number;
     selectedRound: number;
@@ -69,6 +71,7 @@ export const BracketView = forwardRef<
     onHorizontalScroll,
     onMatchFocus,
     onEdit,
+    onSchedule,
     onRoundChange,
     roundSelectionRevision,
     selectedRound,
@@ -249,6 +252,14 @@ export const BracketView = forwardRef<
               </Text>
             ) : null}
             <IncidentSummary match={match} teams={teams} />
+            <MatchSchedule match={match} tournamentVenue={tournament.venue} />
+            {canManage && tournament.state === "in_progress" && match.state !== "bye" ? (
+              <Button
+                label={t("scheduling_title")}
+                variant="secondary"
+                onPress={() => onSchedule(match.id)}
+              />
+            ) : null}
             {match.state === "bye" ? (
               <Text color="secondary">{t("bracket_auto_advance")}</Text>
             ) : null}

@@ -461,3 +461,25 @@ common_network_error y sesión invalidada no duplica feedback. Se conservan
 plantilla de ruta y categorías seguras del inventario, sin spans ni atributos
 por seguimiento, inputs o IDs. Las pruebas cliente y el ciclo visual web/Android
 complementan el contrato sin exportar cuerpos ni activar observabilidad local.
+
+### Inventario: fecha, hora y lugar opcionales (ADR-0158)
+
+Rutas raíz `PUT /v1/tournaments/{tournamentId}/venue` y
+`PUT /v1/tournaments/{tournamentId}/matches/{matchId}/schedule`. No se añaden
+spans por validación, rama ni normalización.
+
+| Salida | Diagnóstico seguro en raíz | Evidencia |
+| --- | --- | --- |
+| Éxito 200 | Sin failure.reason | HTTP y PostgreSQL de planificación |
+| Entrada/cuerpo/ID inválido 400 | validation.rejected | HTTP y dominio |
+| Sesión rechazada 401 | Middleware compartido | Prueba HTTP sin sesión |
+| Límite de tasa | Sin limitador propio; 429 inesperado conserva fallback cliente | Test cliente |
+| Permiso 403 / ausencia 404 | tournament.forbidden / tournament.not_found | HTTP y PostgreSQL |
+| Torneo cerrado o bye 409 | tournament.scheduling_conflict | HTTP y PostgreSQL |
+| Begin, autorización, lectura, UPDATE, proyección o commit fallidos | database.unavailable, database.constraint_failed o database.query_failed según causa | Categorización HTTP de errores de persistencia y suite PostgreSQL |
+| Deadline / cancelación | request.timeout / request.cancelled | HTTP; cliente aborta sin banner al salir |
+
+No se exportan fecha, hora, zona, lugar, identificadores ni el error bruto.
+Las pruebas HTTP simulan categorías técnicas, no provocan un fallo real en
+cada consulta/commit. Aprendizaje: la planificación informativa mantiene el
+mismo límite transaccional de autorización sin participar en reglas deportivas.

@@ -11,9 +11,11 @@ import type {
   AuthenticationProblemResponse,
   ListCurrentAccountTournamentsParams,
   MatchResultInput,
+  MatchScheduleInput,
   Problem,
   PublicTournament,
   PublishedTournament,
+  RequestProblemResponse,
   StartTournamentRequest,
   TeamInput,
   TournamentAdministrators,
@@ -25,6 +27,7 @@ import type {
   TournamentTeamInvitationSecret,
   TournamentTeamRegistration,
   TournamentTeamRegistrationInput,
+  TournamentVenueInput,
   Username,
   Uuid,
   ValidationProblemResponse,
@@ -1111,6 +1114,165 @@ export const completeTournament = async (
 
   const data: completeTournamentResponse["data"] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as completeTournamentResponse;
+};
+
+export type setTournamentVenueResponse200 = {
+  data: PublicTournament;
+  status: 200;
+};
+
+export type setTournamentVenueResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type setTournamentVenueResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type setTournamentVenueResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setTournamentVenueResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setTournamentVenueResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setTournamentVenueResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type setTournamentVenueResponseSuccess = setTournamentVenueResponse200 & {
+  headers: Headers;
+};
+export type setTournamentVenueResponseError = (
+  | setTournamentVenueResponse400
+  | setTournamentVenueResponse401
+  | setTournamentVenueResponse403
+  | setTournamentVenueResponse404
+  | setTournamentVenueResponse409
+  | setTournamentVenueResponse500
+) & {
+  headers: Headers;
+};
+
+export type setTournamentVenueResponse =
+  setTournamentVenueResponseSuccess | setTournamentVenueResponseError;
+
+export const getSetTournamentVenueUrl = (tournamentId: Uuid) => {
+  return `/tournaments/${tournamentId}/venue`;
+};
+
+/**
+ * Reemplaza los campos informativos. Cadenas vacías eliminan el dato. Solo creador y administradores designados, en torneo publicado o en curso. Un bye no admite planificación. Lugar propio vacío hereda el lugar del torneo. No altera resultados ni clasificación. Hora civil en la zona IANA indicada, sin conversión automática a la zona del lector; fecha y hora independientes.
+ * @summary Actualiza el lugar opcional del torneo
+ */
+export const setTournamentVenue = async (
+  tournamentId: Uuid,
+  tournamentVenueInput: TournamentVenueInput,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<setTournamentVenueResponse> => {
+  const res = await (fetchFn ?? fetch)(getSetTournamentVenueUrl(tournamentId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(tournamentVenueInput),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: setTournamentVenueResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as setTournamentVenueResponse;
+};
+
+export type setMatchScheduleResponse200 = {
+  data: PublicTournament;
+  status: 200;
+};
+
+export type setMatchScheduleResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type setMatchScheduleResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type setMatchScheduleResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setMatchScheduleResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setMatchScheduleResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setMatchScheduleResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type setMatchScheduleResponseSuccess = setMatchScheduleResponse200 & {
+  headers: Headers;
+};
+export type setMatchScheduleResponseError = (
+  | setMatchScheduleResponse400
+  | setMatchScheduleResponse401
+  | setMatchScheduleResponse403
+  | setMatchScheduleResponse404
+  | setMatchScheduleResponse409
+  | setMatchScheduleResponse500
+) & {
+  headers: Headers;
+};
+
+export type setMatchScheduleResponse =
+  setMatchScheduleResponseSuccess | setMatchScheduleResponseError;
+
+export const getSetMatchScheduleUrl = (tournamentId: Uuid, matchId: Uuid) => {
+  return `/tournaments/${tournamentId}/matches/${matchId}/schedule`;
+};
+
+/**
+ * Reemplaza los campos informativos. Cadenas vacías eliminan el dato. Solo creador y administradores designados, en torneo publicado o en curso. Un bye no admite planificación. Lugar propio vacío hereda el lugar del torneo. No altera resultados ni clasificación. Hora civil en la zona IANA indicada, sin conversión automática a la zona del lector; fecha y hora independientes.
+ * @summary Actualiza fecha, hora y lugar opcionales de un partido
+ */
+export const setMatchSchedule = async (
+  tournamentId: Uuid,
+  matchId: Uuid,
+  matchScheduleInput: MatchScheduleInput,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<setMatchScheduleResponse> => {
+  const res = await (fetchFn ?? fetch)(getSetMatchScheduleUrl(tournamentId, matchId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(matchScheduleInput),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: setMatchScheduleResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as setMatchScheduleResponse;
 };
 
 export type recordMatchResultResponse200 = {

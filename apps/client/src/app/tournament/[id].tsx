@@ -1,3 +1,5 @@
+import { MatchSchedule } from "@/features/scheduling/match-schedule";
+import { canEditScheduling } from "@/features/scheduling/values";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -967,6 +969,18 @@ export default function TournamentScreen() {
           </View>
         </View>
       </Card>
+      {league.venue || canEditScheduling(relationship, league.state) ? (
+        <Card>
+          {league.venue ? <Text color="secondary">{league.venue}</Text> : null}
+          {canEditScheduling(relationship, league.state) ? (
+            <Button
+              label={t(league.venue ? "scheduling_venue_edit" : "scheduling_venue_add")}
+              variant="secondary"
+              onPress={() => router.push(`/tournament/${id}/venue`)}
+            />
+          ) : null}
+        </Card>
+      ) : null}
       {!showExpandedTeamManagement ? (
         <View style={styles.summaryActions}>
           <View style={styles.summaryAction}>
@@ -1094,6 +1108,9 @@ export default function TournamentScreen() {
                   ref={bracketView}
                   tournament={bracketTournament}
                   canManage={canManageResults}
+                  onSchedule={(matchId) =>
+                    router.push({ pathname: "/tournament/[id]/schedule", params: { id, matchId } })
+                  }
                   onHorizontalMetricsChange={updateBracketHorizontalMetrics}
                   onHorizontalScroll={syncBracketHorizontalControl}
                   onMatchFocus={ensureBracketMatchVisible}
@@ -1390,6 +1407,19 @@ export default function TournamentScreen() {
                           </Text>
                         ) : null}
                         <IncidentSummary match={match} teams={teamsByID} showAdministrativeScore />
+                        <MatchSchedule match={match} tournamentVenue={league.venue} />
+                        {canEditScheduling(relationship, league.state) && match.state !== "bye" ? (
+                          <Button
+                            label={t("scheduling_title")}
+                            variant="secondary"
+                            onPress={() =>
+                              router.push({
+                                pathname: "/tournament/[id]/schedule",
+                                params: { id, matchId: match.id },
+                              })
+                            }
+                          />
+                        ) : null}
                         {canEditMatchResult(match) ? (
                           <Button
                             label={

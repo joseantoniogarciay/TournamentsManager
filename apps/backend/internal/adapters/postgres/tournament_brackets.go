@@ -15,7 +15,7 @@ type tournamentReader interface {
 
 func readTournament(ctx context.Context, db tournamentReader, id string) (tournaments.Tournament, error) {
 	value := tournaments.Tournament{Teams: []tournaments.Team{}, Matches: []tournaments.Match{}, Stages: []tournaments.Stage{}, StageTeams: []tournaments.StageTeam{}, TieBreakPools: []tournaments.QualificationTieBreakPool{}, ChampionTeamIDs: []string{}}
-	err := db.QueryRow(ctx, `SELECT id::text,name,sport,COALESCE(best_of_sets,0),COALESCE(points_per_game,0),format,state,round_robin_legs FROM tournaments WHERE id=$1`, id).Scan(&value.ID, &value.Name, &value.Sport, &value.BestOfSets, &value.PointsPerGame, &value.Format, &value.State, &value.RoundRobinLegs)
+	err := db.QueryRow(ctx, `SELECT id::text,name,sport,COALESCE(best_of_sets,0),COALESCE(points_per_game,0),format,state,round_robin_legs,venue FROM tournaments WHERE id=$1`, id).Scan(&value.ID, &value.Name, &value.Sport, &value.BestOfSets, &value.PointsPerGame, &value.Format, &value.State, &value.RoundRobinLegs, &value.Venue)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return value, tournaments.ErrTournamentNotFound
 	}
@@ -86,14 +86,14 @@ func readTournament(ctx context.Context, db tournamentReader, id string) (tourna
 	if rows.Err() != nil {
 		return value, rows.Err()
 	}
-	rows, err = db.Query(ctx, `SELECT m.id::text,m.stage_id::text,m.round_number,m.sequence,COALESCE(m.group_number,0),COALESCE(m.home_team_id::text,''),COALESCE(m.away_team_id::text,''),m.state,m.home_score,m.away_score,m.home_source_kind,m.away_source_kind,COALESCE(m.home_source_match_id::text,''),COALESCE(m.away_source_match_id::text,''),COALESCE(m.winner_team_id::text,''),m.home_penalties,m.away_penalties,COALESCE(m.result_type,''),m.incident FROM matches m JOIN tournament_stages s ON s.id=m.stage_id WHERE m.tournament_id=$1 ORDER BY s.position,m.round_number,m.sequence`, id)
+	rows, err = db.Query(ctx, `SELECT m.id::text,m.stage_id::text,m.round_number,m.sequence,COALESCE(m.group_number,0),COALESCE(m.home_team_id::text,''),COALESCE(m.away_team_id::text,''),m.state,m.home_score,m.away_score,m.home_source_kind,m.away_source_kind,COALESCE(m.home_source_match_id::text,''),COALESCE(m.away_source_match_id::text,''),COALESCE(m.winner_team_id::text,''),m.home_penalties,m.away_penalties,COALESCE(m.result_type,''),m.incident,m.scheduled_date,m.scheduled_time,m.time_zone,m.venue FROM matches m JOIN tournament_stages s ON s.id=m.stage_id WHERE m.tournament_id=$1 ORDER BY s.position,m.round_number,m.sequence`, id)
 	if err != nil {
 		return value, err
 	}
 	for rows.Next() {
 		var match tournaments.Match
 		match.Sets = []tournaments.SetScore{}
-		if err = rows.Scan(&match.ID, &match.StageID, &match.RoundNumber, &match.Sequence, &match.GroupNumber, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore, &match.HomeSourceKind, &match.AwaySourceKind, &match.HomeSourceMatchID, &match.AwaySourceMatchID, &match.WinnerTeamID, &match.HomePenalties, &match.AwayPenalties, &match.ResultType, &match.Incident); err != nil {
+		if err = rows.Scan(&match.ID, &match.StageID, &match.RoundNumber, &match.Sequence, &match.GroupNumber, &match.HomeTeamID, &match.AwayTeamID, &match.State, &match.HomeScore, &match.AwayScore, &match.HomeSourceKind, &match.AwaySourceKind, &match.HomeSourceMatchID, &match.AwaySourceMatchID, &match.WinnerTeamID, &match.HomePenalties, &match.AwayPenalties, &match.ResultType, &match.Incident, &match.ScheduledDate, &match.ScheduledTime, &match.TimeZone, &match.Venue); err != nil {
 			rows.Close()
 			return value, err
 		}
