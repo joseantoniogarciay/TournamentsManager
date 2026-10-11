@@ -129,6 +129,12 @@ func joinTournamentTeamInvitation(service tournaments.CreationService) http.Hand
 			writeProblem(w, http.StatusNotFound, "Invitation is unavailable")
 			return
 		}
+		if errors.Is(err, tournaments.ErrTournamentTeamOccupied) {
+			w.Header().Set("Content-Type", "application/problem+json")
+			w.WriteHeader(http.StatusConflict)
+			_ = json.NewEncoder(w).Encode(map[string]any{"type": "urn:tournaments-manager:problem:team-occupied", "status": http.StatusConflict, "title": "Team is already occupied"})
+			return
+		}
 		if errors.Is(err, tournaments.ErrTournamentInvitationConflict) {
 			writeProblem(w, http.StatusConflict, "Invitation cannot accept this team")
 			return
@@ -732,6 +738,8 @@ func recordTournamentFailure(ctx context.Context, err error) {
 		observability.RecordEndpointFailure(ctx, "tournament.not_found")
 	case errors.Is(err, tournaments.ErrTournamentForbidden), errors.Is(err, tournaments.ErrMatchResultForbidden):
 		observability.RecordEndpointFailure(ctx, "tournament.forbidden")
+	case errors.Is(err, tournaments.ErrTournamentRepetitionConflict):
+		observability.RecordEndpointFailure(ctx, "tournament.repetition_conflict")
 	case errors.Is(err, tournaments.ErrSchedulingConflict):
 		observability.RecordEndpointFailure(ctx, "tournament.scheduling_conflict")
 	case errors.Is(err, tournaments.ErrTournamentConflict):
@@ -748,6 +756,8 @@ func recordTournamentFailure(ctx context.Context, err error) {
 		observability.RecordEndpointFailure(ctx, "tournament.team_conflict")
 	case errors.Is(err, tournaments.ErrTournamentInvitationNotFound):
 		observability.RecordEndpointFailure(ctx, "tournament.invitation_not_found")
+	case errors.Is(err, tournaments.ErrTournamentTeamOccupied):
+		observability.RecordEndpointFailure(ctx, "tournament.team_occupied")
 	case errors.Is(err, tournaments.ErrTournamentInvitationConflict):
 		observability.RecordEndpointFailure(ctx, "tournament.invitation_conflict")
 	case errors.Is(err, tournaments.ErrTournamentWithdrawalConflict):

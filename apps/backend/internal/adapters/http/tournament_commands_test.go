@@ -24,6 +24,7 @@ func TestTournamentInvitationFailureReasonsAreClosedAndSafe(t *testing.T) {
 		reason string
 	}{
 		"unavailable": {err: tournaments.ErrTournamentInvitationNotFound, reason: "tournament.invitation_not_found"},
+		"occupied":    {err: tournaments.ErrTournamentTeamOccupied, reason: "tournament.team_occupied"},
 		"conflict":    {err: tournaments.ErrTournamentInvitationConflict, reason: "tournament.invitation_conflict"},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -384,6 +385,7 @@ func TestTournamentTeamInvitationEndpointsMapBusinessErrors(t *testing.T) {
 		{name: "create forbidden", path: "/v1/tournaments/" + tournamentID + "/team-invitation", repository: testCreationRepository{saveInviteErr: tournaments.ErrTournamentForbidden}, want: http.StatusForbidden},
 		{name: "create after start", path: "/v1/tournaments/" + tournamentID + "/team-invitation", repository: testCreationRepository{saveInviteErr: tournaments.ErrTournamentInvitationConflict}, want: http.StatusConflict},
 		{name: "join unavailable", path: "/v1/team-invitations/registration", repository: testCreationRepository{registrationErr: tournaments.ErrTournamentInvitationNotFound}, want: http.StatusNotFound},
+		{name: "join occupied", path: "/v1/team-invitations/registration", repository: testCreationRepository{registrationErr: tournaments.ErrTournamentTeamOccupied}, want: http.StatusConflict},
 		{name: "join conflict", path: "/v1/team-invitations/registration", repository: testCreationRepository{registrationErr: tournaments.ErrTournamentInvitationConflict}, want: http.StatusConflict},
 	}
 	for _, test := range tests {
@@ -398,6 +400,9 @@ func TestTournamentTeamInvitationEndpointsMapBusinessErrors(t *testing.T) {
 			request.Header.Set("Content-Type", "application/json")
 			recorder := httptest.NewRecorder()
 			handler.ServeHTTP(recorder, request)
+			if test.name == "join occupied" && !strings.Contains(recorder.Body.String(), `"type":"urn:tournaments-manager:problem:team-occupied"`) {
+				t.Errorf("missing occupied discriminator: %s", recorder.Body.String())
+			}
 			if recorder.Code != test.want {
 				t.Errorf("status = %d, want %d; body = %s", recorder.Code, test.want, recorder.Body.String())
 			}

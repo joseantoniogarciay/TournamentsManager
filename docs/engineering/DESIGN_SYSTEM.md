@@ -502,3 +502,22 @@ por blur, bloqueo de envíos y traducción es/en/fr/it. Los valores conservan el
 borrador ante fallo de transporte o HTTP. Cerrar aborta el envío y suprime
 feedback tardío. Una pérdida de permiso ofrece recarga explícita conservando
 la entrada mientras no se recargue. No se añade un selector nativo externo.
+
+## Repetir torneo y elegir equipos — ADR-0159 / ADR-0160
+
+La acción principal del detalle finalizado es «Repetir torneo» solo para la
+propietaria actual. La ruta de revisión reutiliza cabecera con atrás circular
+web/Android y Toolbar iOS, Screen, Card, TextField, ConfigurationOption y
+KeyboardAwareScrollView. Nombre y equipos validan por blur y envío; cada fila
+conserva su identidad local al eliminar otras filas. La selección del equipo
+propio precede al envío y no permite pulsaciones duplicadas. La configuración
+heredada se muestra en lectura; el detalle nuevo reutiliza sus controles de
+inicio, precargados una sola vez por torneo para no borrar ediciones al refrescar.
+
+La invitación muestra opciones con los nombres de equipos libres y conserva el
+campo de nombre editable. Pulsar una opción completa ese campo. Un conflicto
+refresca las opciones sin borrar la entrada. Crear un nombre nuevo o elegir uno
+existente comparten una única acción de inscripción. No se muestran cuentas
+ni se afirma que el enlace compruebe identidad. La carga completa y el error
+usan LoadingTransition y RequestErrorCard; fallos al enviar conservan los campos
+y usan feedback seguro. Todos los textos están en es/en/it/fr.

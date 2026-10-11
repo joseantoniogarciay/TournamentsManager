@@ -8,6 +8,15 @@
 import type { Uuid } from "./uuid.js";
 
 export interface TournamentTeamInvitation {
+  /** Permite elegir equipos existentes sin cuenta vinculada. */
+  allowsExistingTeams?: boolean;
+  /**
+   * Nombres libres al consultar; la inscripción vuelve a verificar disponibilidad.
+   * @maxItems 64
+   * @items.minLength 1
+   * @items.maxLength 100
+   */
+  availableTeamNames?: string[];
   tournamentId: Uuid;
   /**
    * @minLength 1

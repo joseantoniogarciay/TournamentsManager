@@ -15,7 +15,7 @@ type tournamentReader interface {
 
 func readTournament(ctx context.Context, db tournamentReader, id string) (tournaments.Tournament, error) {
 	value := tournaments.Tournament{Teams: []tournaments.Team{}, Matches: []tournaments.Match{}, Stages: []tournaments.Stage{}, StageTeams: []tournaments.StageTeam{}, TieBreakPools: []tournaments.QualificationTieBreakPool{}, ChampionTeamIDs: []string{}}
-	err := db.QueryRow(ctx, `SELECT id::text,name,sport,COALESCE(best_of_sets,0),COALESCE(points_per_game,0),format,state,round_robin_legs,venue FROM tournaments WHERE id=$1`, id).Scan(&value.ID, &value.Name, &value.Sport, &value.BestOfSets, &value.PointsPerGame, &value.Format, &value.State, &value.RoundRobinLegs, &value.Venue)
+	err := db.QueryRow(ctx, `SELECT id::text,name,sport,COALESCE(best_of_sets,0),COALESCE(points_per_game,0),format,state,round_robin_legs,venue,suggested_start FROM tournaments WHERE id=$1`, id).Scan(&value.ID, &value.Name, &value.Sport, &value.BestOfSets, &value.PointsPerGame, &value.Format, &value.State, &value.RoundRobinLegs, &value.Venue, &value.SuggestedStart)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return value, tournaments.ErrTournamentNotFound
 	}

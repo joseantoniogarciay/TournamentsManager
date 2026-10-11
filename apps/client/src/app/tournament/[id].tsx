@@ -256,9 +256,20 @@ export default function TournamentScreen() {
     setBracketRoundSelectionRevision(0);
     setBracketHorizontalMetrics({ contentWidth: 0, viewportWidth: 0 });
   }, [id]);
+  const initializedConfigurationID = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (league && isRacketSport(league.sport)) setFormat("single_elimination");
-  }, [league?.id, league?.sport]);
+    if (!league || initializedConfigurationID.current === league.id) return;
+    initializedConfigurationID.current = league.id;
+    const config = league.suggestedStart;
+    if (config) {
+      setFormat(config.format);
+      setRoundRobinLegs(config.roundRobinLegs ?? 1);
+      setLeagueStructure(config.leagueStructure ?? "single_table");
+      setQualifierCount(config.qualifierCount ?? 2);
+      setGroupCount(String(config.groupCount ?? 2));
+      setQualifiersPerGroup(String(config.qualifiersPerGroup ?? 2));
+    } else if (league && isRacketSport(league.sport)) setFormat("single_elimination");
+  }, [league]);
   const load = useCallback(
     async (force = false) => {
       if (!id) {
@@ -721,6 +732,14 @@ export default function TournamentScreen() {
           : canComplete
             ? { label: t("league_complete"), loading: isCompleting, onPress: complete }
             : undefined;
+      case "completed":
+        return isOrganizer
+          ? {
+              label: t("tournament_repeat"),
+              loading: false,
+              onPress: () => router.push(`/tournament/${id}/repeat`),
+            }
+          : undefined;
       default:
         return undefined;
     }

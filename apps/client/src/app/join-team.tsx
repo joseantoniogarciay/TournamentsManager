@@ -9,6 +9,7 @@ import {
   inspectTournamentTeamInvitationRequest,
   joinTournamentWithTeamInvitationRequest,
   TournamentTeamInvitationConflictError,
+  TournamentTeamOccupiedError,
   TournamentTeamInvitationUnavailableError,
 } from "@/features/league-creation/api";
 import { maximumTeamNameLength } from "@/features/league-creation/draft";
@@ -28,6 +29,7 @@ import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
   Card,
+  ConfigurationOption,
   KeyboardAwareScrollView,
   LoadingTransition,
   NavigationHeaderButton,
@@ -38,7 +40,12 @@ import {
   usesLiquidGlassNavigation,
 } from "@/shared/ui";
 
-type Invitation = { tournamentId: string; tournamentName: string };
+type Invitation = {
+  tournamentId: string;
+  tournamentName: string;
+  allowsExistingTeams?: boolean;
+  availableTeamNames?: string[];
+};
 
 export default function JoinTeamScreen() {
   const t = getTranslator();
@@ -174,8 +181,22 @@ export default function JoinTeamScreen() {
         setInvitation(undefined);
         setLoadError("unavailable");
         await clearPendingTeamInvitation();
-      } else if (error instanceof TournamentTeamInvitationConflictError) {
-        show({ kind: "generic-error", message: t("team_invitation_conflict") });
+      } else if (
+        error instanceof TournamentTeamInvitationConflictError ||
+        error instanceof TournamentTeamOccupiedError
+      ) {
+        show({
+          kind: "generic-error",
+          message: t(
+            error instanceof TournamentTeamOccupiedError
+              ? "team_invitation_occupied"
+              : "team_invitation_conflict",
+          ),
+        });
+        // Refresh available choices after a claim race, retaining the entered name.
+        void inspectTournamentTeamInvitationRequest(token)
+          .then(setInvitation)
+          .catch(() => undefined);
       } else {
         const failure = getRequestFailure(error);
         show({ kind: failure.kind, message: t(failure.messageKey) });
@@ -247,7 +268,34 @@ export default function JoinTeamScreen() {
               <View style={styles.form}>
                 <View style={styles.introduction}>
                   <Text variant="title">{invitation.tournamentName}</Text>
-                  <Text color="secondary">{t("team_invitation_description")}</Text>
+                  <Text color="secondary">
+                    {t(
+                      invitation.allowsExistingTeams
+                        ? "tournament_repeat_join_help"
+                        : "team_invitation_description",
+                    )}
+                  </Text>
+                  {invitation.allowsExistingTeams ? (
+                    <View style={styles.availableTeams}>
+                      <Text variant="bodyLarge">{t("tournament_repeat_available_teams")}</Text>
+                      {invitation.availableTeamNames?.length ? (
+                        invitation.availableTeamNames.map((teamName) => (
+                          <ConfigurationOption
+                            key={teamName}
+                            label={teamName}
+                            selected={name === teamName}
+                            disabled={isSubmitting}
+                            onPress={() => {
+                              setNameEdited(true);
+                              setName(teamName);
+                            }}
+                          />
+                        ))
+                      ) : (
+                        <Text color="secondary">{t("tournament_repeat_no_available_teams")}</Text>
+                      )}
+                    </View>
+                  ) : null}
                   <Text color="secondary">{t("team_invitation_permissions")}</Text>
                 </View>
                 <TextField
@@ -277,6 +325,7 @@ export default function JoinTeamScreen() {
 }
 
 const styles = StyleSheet.create({
+  availableTeams: { gap: space[2] },
   content: { gap: space[5] },
   form: { gap: space[4] },
   introduction: { gap: space[2] },

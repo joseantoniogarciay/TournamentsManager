@@ -483,3 +483,26 @@ No se exportan fecha, hora, zona, lugar, identificadores ni el error bruto.
 Las pruebas HTTP simulan categorías técnicas, no provocan un fallo real en
 cada consulta/commit. Aprendizaje: la planificación informativa mantiene el
 mismo límite transaccional de autorización sin participar en reglas deportivas.
+
+## Inventario: nuevas ediciones y equipos libres — ADR-0159 / ADR-0160
+
+| Salida / límite recorrido | Diagnóstico en raíz | Evidencia |
+| --- | --- | --- |
+| Repetición 201, también reintento concurrente | Sin fallo; plantilla POST /v1/tournaments/{tournamentId}/repeat | HTTP y PostgreSQL, una edición por intención |
+| Validación 400 | validation.rejected | UUID, nombres duplicados y campos extra en pruebas HTTP |
+| Sesión 401 / CSRF 403 | Categorías existentes de sesión y seguridad | Pruebas del router; ninguna causa inferida del estado HTTP |
+| Propiedad 403 / origen ausente 404 / estado 409 | tournament.forbidden / tournament.not_found / tournament.repetition_conflict | HTTP seguro y persistencia con delegado, transferencia y estados |
+| Begin, lock, lectura del origen/intención, INSERT de edición/equipos/vínculo, preferencia, proyección y commit | database.query_failed, database.unavailable o database.constraint_failed según categoría segura existente | Cada salida devuelve su error al límite HTTP; pruebas HTTP de categorización y ausencia de detalles, integración de atomicidad y reintentos. No se afirma inyección individual de fallos en cada sentencia |
+| Cancelación / deadline | request.cancelled / request.timeout | HTTP y cancelación de acceso PostgreSQL; el cliente aborta sin banner al salir |
+| Inspección y registro en equipo libre | Éxito sin causa; rechazos conservan tournament.invitation_not_found / tournament.invitation_conflict | Elección, carrera, cuenta duplicada, revocación, inicio y capacidad 64; la inspección solo muestra nombres libres |
+| Límite de tasa | No hay un nuevo limitador en estos recorridos; no se inventa un 429 | Se conserva la política de alta/invitaciones; el cliente usa fallback seguro si recibe un estado no tratado |
+
+El span raíz conserva la plantilla de ruta; no se añade un span por rama,
+validación, generación de intención o selección de equipo. Los spans técnicos
+existentes de PostgreSQL cubren sus límites. Nunca se exportan nombres, IDs,
+composición, reglas, requestId, secretos, cuentas ni errores brutos.
+
+La inscripción en una plaza ya vinculada devuelve 409 seguro con tipo
+`urn:tournaments-manager:problem:team-occupied` y causa raíz
+`tournament.team_occupied`. Se prueba la carrera de reclamación real: solo una
+cuenta gana, la otra recibe ese rechazo sin duplicar equipos ni exportar cuentas.

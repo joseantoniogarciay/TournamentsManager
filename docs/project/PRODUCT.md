@@ -498,3 +498,24 @@ DD/MM/AAAA y la hora como HH:mm; no se añade una dependencia nativa de calendar
 El resto solo ve valores existentes; si no hay información no aparece un bloque
 vacío ni controles deshabilitados. Torneos completados y cancelados quedan en
 lectura, y los byes no se planifican. No incorpora reservas ni avisos.
+
+## Nuevas ediciones e inscripción en equipos preparados
+
+ADR-0159 permite que la persona propietaria actual repita un torneo finalizado.
+«Repetir torneo» abre `/tournament/:id/repeat`: revisa nombre y composición,
+elige su equipo y consulta deporte, reglas y formato heredados. Al confirmar,
+se crea una edición independiente en `published`. Conserva el formato como
+propuesta editable al iniciar; no genera partidos ni arrastra resultados,
+retiradas, fechas, lugares, campeones, delegados, seguidores o invitaciones.
+El histórico anterior se conserva. La repetición no sobrescribe el borrador
+local del alta habitual y los reintentos de una misma intención no crean duplicados.
+
+ADR-0160 aplica a todas las invitaciones de torneos sin iniciar: quien entra
+puede elegir un equipo existente sin cuenta vinculada o escribir otro nombre
+para crear uno si quedan plazas. La lista contiene únicamente nombres libres;
+la inscripción verifica de nuevo disponibilidad y permisos, porque otra persona
+puede ocupar el equipo mientras el formulario está abierto. Elegir un equipo
+no aumenta la composición, también cuando ya contiene 64 equipos. Una cuenta
+no puede inscribirse dos veces y una selección ocupada se rechaza. El enlace
+permite ocupar un equipo libre; no acredita que sea su participante anterior.
+La organizadora controla la distribución y revocación de la invitación.

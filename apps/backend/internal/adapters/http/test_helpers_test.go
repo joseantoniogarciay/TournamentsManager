@@ -240,3 +240,7 @@ func (testFederatedRepository) AddGoogleIdentity(context.Context, string, string
 func (r testFederatedRepository) ReauthenticateGoogle(context.Context, string, string, string, []byte, federated.Identity, []byte) error {
 	return r.reauthenticationErr
 }
+
+func (r testCreationRepository) Repeat(context.Context, string, string, tournaments.RepeatInput) (tournaments.Tournament, error) {
+	return r.created, nil
+}

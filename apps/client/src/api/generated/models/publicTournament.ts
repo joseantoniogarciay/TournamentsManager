@@ -13,6 +13,7 @@ import type { PublicTournamentRoundRobinLegs } from "./publicTournamentRoundRobi
 import type { PublicTournamentSport } from "./publicTournamentSport.js";
 import type { PublicTournamentState } from "./publicTournamentState.js";
 import type { QualificationTieBreakPool } from "./qualificationTieBreakPool.js";
+import type { SuggestedTournamentStart } from "./suggestedTournamentStart.js";
 import type { TournamentStage } from "./tournamentStage.js";
 import type { TournamentStageTeam } from "./tournamentStageTeam.js";
 import type { TournamentStanding } from "./tournamentStanding.js";
@@ -20,6 +21,7 @@ import type { TournamentTeam } from "./tournamentTeam.js";
 import type { Uuid } from "./uuid.js";
 
 export interface PublicTournament {
+  suggestedStart?: SuggestedTournamentStart;
   /**
    * @minLength 1
    * @maxLength 160

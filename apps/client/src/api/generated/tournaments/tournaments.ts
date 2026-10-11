@@ -15,6 +15,7 @@ import type {
   Problem,
   PublicTournament,
   PublishedTournament,
+  RepeatTournamentInput,
   RequestProblemResponse,
   StartTournamentRequest,
   TeamInput,
@@ -359,6 +360,85 @@ export const getPublicTournament = async (
   return { data, status: res.status, headers: res.headers } as getPublicTournamentResponse;
 };
 
+export type repeatTournamentResponse201 = {
+  data: PublicTournament;
+  status: 201;
+};
+
+export type repeatTournamentResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type repeatTournamentResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type repeatTournamentResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type repeatTournamentResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type repeatTournamentResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type repeatTournamentResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type repeatTournamentResponseSuccess = repeatTournamentResponse201 & {
+  headers: Headers;
+};
+export type repeatTournamentResponseError = (
+  | repeatTournamentResponse400
+  | repeatTournamentResponse401
+  | repeatTournamentResponse403
+  | repeatTournamentResponse404
+  | repeatTournamentResponse409
+  | repeatTournamentResponse500
+) & {
+  headers: Headers;
+};
+
+export type repeatTournamentResponse =
+  repeatTournamentResponseSuccess | repeatTournamentResponseError;
+
+export const getRepeatTournamentUrl = (tournamentId: Uuid) => {
+  return `/tournaments/${tournamentId}/repeat`;
+};
+
+/**
+ * Solo la propietaria actual. Copia deporte y reglas desde el origen, revisa nombre y equipos (el primero pertenece a la organizadora) y conserva el formato como propuesta editable antes de iniciar. requestId deduplica reintentos de la misma intención, también concurrentes. Un reintento devuelve la edición existente en su estado actual. No copia resultados, programación, permisos ni inscripciones ajenas.
+ * @summary Crea una nueva edición de un torneo finalizado
+ */
+export const repeatTournament = async (
+  tournamentId: Uuid,
+  repeatTournamentInput: RepeatTournamentInput,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<repeatTournamentResponse> => {
+  const res = await (fetchFn ?? fetch)(getRepeatTournamentUrl(tournamentId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(repeatTournamentInput),
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: repeatTournamentResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as repeatTournamentResponse;
+};
+
 export type createTournamentTeamInvitationResponse201 = {
   data: TournamentTeamInvitationSecret;
   status: 201;
@@ -581,7 +661,7 @@ export type joinTournamentWithTeamInvitationResponse404 = {
 };
 
 export type joinTournamentWithTeamInvitationResponse409 = {
-  data: void;
+  data: Problem;
   status: 409;
 };
 
@@ -606,7 +686,7 @@ export const getJoinTournamentWithTeamInvitationUrl = () => {
 };
 
 /**
- * Exige una cuenta verificada. Crea atómicamente el equipo, su vínculo con la cuenta y el seguimiento del torneo. No concede administración.
+ * Un equipo existente sin cuenta se puede elegir sin duplicarlo; los nombres ocupados se rechazan. Exige una cuenta verificada. Crea atómicamente el equipo, su vínculo con la cuenta y el seguimiento del torneo. No concede administración.
  * @summary Inscribe el equipo de la cuenta mediante una invitación
  */
 export const joinTournamentWithTeamInvitation = async (

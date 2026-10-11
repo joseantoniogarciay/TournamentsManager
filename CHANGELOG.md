@@ -6,12 +6,24 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-10-11
+
 ### Added
+
+- Repetir un torneo finalizado desde su detalle como propietaria: revisión de
+  nombre/equipos, selección del equipo propio y configuración heredada antes de
+  crear una edición independiente sin resultados ni permisos anteriores.
+- Invitaciones de todos los torneos publicados con opciones de equipos sin
+  cuenta vinculada o nombre nuevo si hay capacidad; elegir no añade otra plaza.
+- Creación transaccional deduplicada por intención, migración 00022 y
+  configuración propuesta que se elimina al iniciar/cancelar. ADR-0159/0160.
+- Si otra persona ocupa el equipo elegido, la invitación muestra un aviso
+  específico y actualiza los equipos disponibles conservando el nombre escrito.
 
 - Fecha, hora y lugar opcionales por partido y lugar común del torneo. Solo
   creador y administradores designados editan; lectores ven únicamente datos
   existentes. Herencia de lugar, zona horaria y lectura en jornadas/cuadros.
-  ADR-0158; migración 00021 preparada, sin publicación de producción.
+  ADR-0158; migración 00021.
 
 ### Fixed
 

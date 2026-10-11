@@ -67,6 +67,8 @@ var (
 	ErrTournamentTeamConflict = errors.New("equipo de liga inválido")
 	// ErrTournamentInvitationNotFound indicates an inactive or unknown team invitation.
 	ErrTournamentInvitationNotFound = errors.New("invitación de equipo no disponible")
+	// ErrTournamentTeamOccupied indicates a team already linked to an account.
+	ErrTournamentTeamOccupied = errors.New("equipo ya ocupado")
 	// ErrTournamentInvitationConflict indicates that an invitation cannot accept the requested team.
 	ErrTournamentInvitationConflict = errors.New("invitación de equipo no puede aceptar la inscripción")
 	// ErrTournamentWithdrawalConflict indicates that a team cannot be withdrawn now.
@@ -93,12 +95,12 @@ type CreateInput struct {
 
 // StartInput defines the rules frozen when the league starts.
 type StartInput struct {
-	Format             string
-	RoundRobinLegs     int
-	LeagueStructure    string
-	QualifierCount     int
-	GroupCount         int
-	QualifiersPerGroup int
+	Format             string `json:"format"`
+	RoundRobinLegs     int    `json:"roundRobinLegs,omitempty"`
+	LeagueStructure    string `json:"leagueStructure,omitempty"`
+	QualifierCount     int    `json:"qualifierCount,omitempty"`
+	GroupCount         int    `json:"groupCount,omitempty"`
+	QualifiersPerGroup int    `json:"qualifiersPerGroup,omitempty"`
 }
 
 // MatchResultInput represents a final score and any sport-specific tiebreak data.
@@ -125,8 +127,10 @@ type Team struct {
 
 // TeamInvitation identifies the tournament behind an active invitation without exposing its hash.
 type TeamInvitation struct {
-	TournamentID   string `json:"tournamentId"`
-	TournamentName string `json:"tournamentName"`
+	AllowsExistingTeams bool     `json:"allowsExistingTeams,omitempty"`
+	AvailableTeamNames  []string `json:"availableTeamNames,omitempty"`
+	TournamentID        string   `json:"tournamentId"`
+	TournamentName      string   `json:"tournamentName"`
 }
 
 // TeamRegistration confirms both the tournament and team created by an invitation.
@@ -182,6 +186,7 @@ const (
 
 // Tournament is the projection of a visible league.
 type Tournament struct {
+	SuggestedStart  *StartInput                 `json:"suggestedStart,omitempty"`
 	Venue           string                      `json:"venue,omitempty"`
 	Stages          []Stage                     `json:"stages"`
 	StageTeams      []StageTeam                 `json:"stageTeams"`
@@ -252,6 +257,7 @@ type Standing struct {
 // CreationRepository persists and queries a league's initial lifecycle.
 type CreationRepository interface {
 	Create(context.Context, string, CreateInput) (Tournament, error)
+	Repeat(context.Context, string, string, RepeatInput) (Tournament, error)
 	AddTeam(context.Context, string, string, TeamInput) (Team, error)
 	RemoveTeam(context.Context, string, string, string) error
 	SaveTeamInvitation(context.Context, string, string, InvitationTokenHash) error

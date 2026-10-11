@@ -11,6 +11,7 @@ import {
   removeTournamentTeamRequest,
   revokeTournamentTeamInvitationRequest,
   TournamentTeamConflictError,
+  TournamentTeamInvitationConflictError,
   withdrawTournamentTeamRequest,
 } from "@/features/league-creation/api";
 import { useTournamentStore } from "@/features/league-creation/league-store";
@@ -123,10 +124,6 @@ export function TournamentTeamManagement({
   };
   const shareInvitation = async () => {
     if (isSharingInvitation) return;
-    if (teamLimitReached) {
-      show({ kind: "generic-error", message: t("league_team_limit_reached") });
-      return;
-    }
     setIsSharingInvitation(true);
     try {
       const token = await createTournamentTeamInvitationRequest(tournament.id);
@@ -137,14 +134,21 @@ export function TournamentTeamManagement({
       if (!base) throw new Error("missing app link URL");
       const url = `${base}/join-team#${token}`;
       await Share.share({
-        message: t("league_invitation_share_message")
+        message: t("tournament_repeat_invitation_share")
           .replace("{tournament}", tournament.name)
           .replace("{url}", url),
       });
     } catch (error) {
       if (isShareCancellation(error)) return;
       const failure = getRequestFailure(error);
-      show({ kind: failure.kind, message: t(failure.messageKey) });
+      show({
+        kind: failure.kind,
+        message: t(
+          error instanceof TournamentTeamInvitationConflictError
+            ? "team_invitation_conflict"
+            : failure.messageKey,
+        ),
+      });
     } finally {
       setIsSharingInvitation(false);
     }
@@ -234,6 +238,9 @@ export function TournamentTeamManagement({
               )}
             </Text>
           ) : null}
+          {tournament.suggestedStart ? (
+            <Text color="secondary">{t("tournament_repeat_teams_help")}</Text>
+          ) : null}
           {!racket ? <Text color="secondary">{t("league_invitation_rotation_hint")}</Text> : null}
         </View>
         <Button
@@ -241,22 +248,19 @@ export function TournamentTeamManagement({
           onPress={openAddTeam}
           variant="secondary"
         />
-        {!racket ? (
-          <>
-            <Button
-              disabled={teamLimitReached}
-              label={t("league_share_invitation")}
-              loading={isSharingInvitation}
-              onPress={() => void shareInvitation()}
-            />
-            <Button
-              label={t("league_revoke_invitation")}
-              loading={isRevokingInvitation}
-              onPress={() => void revokeInvitation()}
-              variant="secondary"
-            />
-          </>
-        ) : null}
+        <>
+          <Button
+            label={t("league_share_invitation")}
+            loading={isSharingInvitation}
+            onPress={() => void shareInvitation()}
+          />
+          <Button
+            label={t("league_revoke_invitation")}
+            loading={isRevokingInvitation}
+            onPress={() => void revokeInvitation()}
+            variant="secondary"
+          />
+        </>
       </View>
     </Card>
   ) : null;

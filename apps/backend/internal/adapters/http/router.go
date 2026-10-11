@@ -143,6 +143,7 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 		mux.Handle("PUT /v1/tournaments/{tournamentId}/matches/{matchId}/schedule", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(setTournamentScheduling(*dependencies.TournamentScheduling, true)))))
 	}
 	if creationService != nil {
+		mux.Handle("POST /v1/tournaments/{tournamentId}/repeat", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(repeatTournament(*creationService)))))
 		mux.Handle("POST /v1/tournaments", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createTournament(*creationService)))))
 		mux.Handle("POST /v1/tournaments/{tournamentId}/team-invitation", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createTournamentTeamInvitation(*creationService)))))
 		mux.Handle("DELETE /v1/tournaments/{tournamentId}/team-invitation", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(revokeTournamentTeamInvitation(*creationService)))))

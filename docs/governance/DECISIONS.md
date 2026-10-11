@@ -291,3 +291,6 @@ registra el contador local, las cuotas de tienda y el alcance de producción mó
 ## Información opcional de encuentros
 
 [ADR-0158](../adr/0158-add-optional-tournament-and-match-scheduling.md) — Aceptado el 2026-10-11 por el usuario tras revisión de diseños.
+
+- [ADR-0159: Repetir torneos finalizados como nuevas ediciones](../adr/0159-repeat-completed-tournaments-as-new-editions.md) — Aceptado; histórico independiente y revisión previa.
+- [ADR-0160: Elegir equipos libres o crear otros mediante invitación](../adr/0160-choose-unlinked-teams-or-create-through-invitations.md) — Aceptado; amplía la elección a todos los torneos publicados.
