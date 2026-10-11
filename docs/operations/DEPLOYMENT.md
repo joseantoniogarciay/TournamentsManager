@@ -503,3 +503,44 @@ Ver versiones activas, pruebas y retrospectiva en
 una ejecución Worker para conservar su indexación; el resto de assets sigue
 estático. Un certificado de interceptación del operador no se interpreta como
 fallo de emisión Cloudflare: se contrasta la huella y la conexión.
+
+### Publicación v1.11.0 — 2026-10-11
+
+[Release v1.11.0](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.11.0)
+publicada sobre el merge no-ff `ec8112a383fadd2abb1bf0d1800406e01c5a761a`.
+Incluye responsive desktop, accesibilidad/scroll, Expo 57.0.26 / RN 0.86.3,
+Go 1.26.9 y hosting Cloudflare Free. No distribuye apps nativas en tiendas.
+
+`make verify` local, integración PostgreSQL efímera y prueba race de apagado
+pasan. La CI del candidato
+[e2e1d57](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/38118422034)
+pasa antes de promocionar. La [CI del SHA etiquetado](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/38118777031)
+también termina aprobada. El merge conserva exactamente el árbol del candidato.
+Web/infra, API, migrator y renderer de rollback tienen el SHA etiquetado; dos
+réplicas API listas. Goose confirma versión 20 sin migraciones pendientes.
+Backup cifrado `20261004-021506F_20261011-063119I` replicado y restaurado desde
+la copia recibida, en un volumen aislado eliminado al terminar. Huellas completas
+de cuentas/torneos/equipos/partidos coinciden antes/después (3/10/26/21 filas).
+37 peticiones de healthz durante el rollout devuelven 200, sin fallos observados.
+Secret migrador efímero eliminado; no se alteran PostgreSQL ni su durabilidad.
+
+Nueve comprobaciones HTTP/TLS/CORS/manifiesto/renderer pasan. Biblioteca y
+métodos de acceso anónimos devuelven 401 JSON; torneo ausente 404 JSON. Web
+conserva 200 con metadatos para torneo público y 404 para UUID ausente, fallback
+de subruta y rechazo de JS inexistente. Home indexable y preview noindex.
+Navegador productivo: 1600 px muestra columnas 590/590 y tabs centradas 1200;
+390 px vuelve a una columna, sin overflow de página. No se repite login
+autenticado ni envío de correo; el QA previo acotado conserva sus límites.
+Sourcemaps se suben al proyecto PostHog autorizado y se retiran del export; no
+acredita por sí mismo recepción ni simbolicación de un error real.
+
+Workers actuales y rollback en `infra/cloudflare/README.md`. API previa b002b4b
+y manifiesto capturado conservados; origen Caddy anterior disponible para
+recuperación. Evidencia operativa privada en `/private/tmp/tm-release-20261011`.
+Dev/local siguen apagados. Develop avanza hasta el merge productivo; no se
+crean ramas temporales. No se publican cambios de dev doméstico en esta sesión.
+
+Retrospectiva: un solo SHA para los artefactos evita mezclar la migración de
+hosting con bundles anteriores. Preparar y verificar antes de activar mantiene
+rollback disponible; medir lecturas durante rollout y contrastar huellas aporta
+evidencia de disponibilidad y conservación sin mutar fixtures productivos.

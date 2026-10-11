@@ -5,9 +5,10 @@ en K3s doméstico vía Tunnel/Caddy. Dominio y audiencia OAuth no cambian.
 
 ## Estado efectivo
 
-2026-10-11: rutas productivas activadas en Workers Free. Se conserva la app
-`b002b4b99fc44a6ec0662b94ec962b8cce9cbea5`; no se promocionan cambios funcionales
-de develop. K3s, PostgreSQL y dos réplicas API están recuperados, con healthz
+2026-10-11: rutas productivas activadas en Workers Free. La primera migración
+conservó `b002b4b…`; después se publicó v1.11.0 autorizada, con web y API
+`ec8112a383fadd2abb1bf0d1800406e01c5a761a`, incluidas las mejoras responsive
+y de accesibilidad de develop. K3s, PostgreSQL y dos réplicas API están recuperados, con healthz
 público 200 y CORS productivo 204. Backups y renderer de rollback rehabilitados.
 No se contrató pago ni se cambió el DNS/API. La comprobación de corte detectó
 `noindex` en la home del borde, pese a pasar localmente: la home pasa primero
@@ -173,3 +174,13 @@ productivas previstas. Home indexable 200, cuenta noindex 200, torneo público
 con metadatos 200, UUID ausente 404, www 308 con query y preview noindex.
 K3s recuperado, API 200/CORS 204 y tareas de backup rehabilitadas. Evidencia y
 límites de verificación en el runbook de publicación.
+
+## Release v1.11.0 — 2026-10-11
+
+Web e infraestructura `ec8112a383fadd2abb1bf0d1800406e01c5a761a`. Worker web
+`05f8a02a-d89b-4811-844e-4e97323c183e`; redirect
+`6c27d953-97e8-436c-b231-b9f50bb6e772`. Preview validado
+`23927eaf-9327-4320-9921-3ca161e22834`. No se cambia DNS ni plan Free.
+Rollback previo: web `b878e160-71cf-4a76-83ee-c9c3992edb59` y redirect
+`629c2b56-f91d-4879-a91a-a66c9d8612b2`, mediante sus configuraciones.
+El origen Caddy conservado continúa con el artefacto b002b4b anterior.
