@@ -80,3 +80,39 @@ DECISIONS.md, LEARNING.md y CHANGELOG.md.
 - Contenedor efímero y servidor de preview detenidos al cerrar. No se publican
   producción ni migraciones en bases de despliegue. QA visual iOS/Android
   pendiente; la exportación web no acredita esa revisión.
+
+## Intento de QA nativa — 2026-10-11
+
+Se exportan bundles Hermes de iOS y Android con el código de develop 8cac014.
+La build iOS instalada falla al importar ExpoStoreReview; se reconstruye con
+CocoaPods y `expo run:ios`: build correcta, cero errores y una advertencia del
+script de Expo Dev Launcher. Android se compila usando el JDK incluido en
+Android Studio; Gradle termina correctamente y el APK se instala en Pixel API
+34. Se conecta cada build a Metro y a una API ficticia aislada, sin producción.
+
+Se alcanza Inicio en Android, pero no se acredita el recorrido de programación.
+El control de ventanas nativas devuelve árboles de accesibilidad vacíos,
+`AXError.cannotComplete` y finalmente `noWindowsAvailable` en Device Hub,
+incluso tras reiniciar el controlador. La QA funcional visual iOS/Android sigue
+pendiente: no se marcan como comprobados teclado, guardado, permisos ni retorno.
+
+Retrospectiva: exportar JavaScript no confirma compatibilidad de una build
+instalada. Actualizar el binario permite eliminar el bloqueo de dependencia;
+la compilación correcta y la disponibilidad del control visual son evidencias
+separadas. No se cambian componentes de producto por un fallo del controlador.
+Metro, API ficticia y dispositivos de esta sesión se apagan conservando datos.
+
+### Continuación iOS con control recuperado
+
+En iPhone 18 Pro / iOS 27.0 se comprueba con API ficticia y build actual:
+lectura sin programación, acciones del creador, formulario opcional, rechazo
+local de 31/02/2026, guardado de 18/10/2026 a las 18:30 Europe/Madrid en Pista 2,
+retorno al torneo y reapertura con valores conservados. Se guarda el lugar
+común Polideportivo Central; se vacían fecha, hora y lugar propio y el partido
+hereda el lugar común sin mostrar fecha/hora. El resultado deportivo sigue
+pendiente. Evidencia privada: /tmp/tm-scheduling-ios-saved.png.
+
+La entrada de campos se acredita mediante accesibilidad del simulador; el
+teclado en pantalla aún no se acredita porque el dispositivo usa teclado de
+hardware. Android sigue pendiente más allá de compilación e Inicio. No se
+cierra la QA de ambas plataformas con esta muestra parcial.
