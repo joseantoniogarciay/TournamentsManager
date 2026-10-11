@@ -88,7 +88,7 @@ func TestScheduleAccountDeletionAllowsConfiguredCookieOrigin(t *testing.T) {
 	handler := NewHandler(registration.Service{}, nil, testDeletionAuthenticator{testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}}, tournaments.NewService(testTournamentRepository{}), testAllowedOrigins)
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodDelete, "/v1/me/account", nil)
 	request.Header.Set("Origin", "http://localhost:8082")
-	request.AddCookie(&http.Cookie{Name: "__Host-tm_session", Value: "opaque-session"})
+	request.Header.Add("Cookie", "__Host-tm_session=opaque-session")
 	recorder := httptest.NewRecorder()
 
 	handler.ServeHTTP(recorder, request)

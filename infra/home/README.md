@@ -26,6 +26,12 @@ respectivos artefactos y configuración.
 
 ## Web de producción publicada
 
+ADR-0155 acepta hosting productivo en Cloudflare; el 2026-10-10 está preparado
+localmente y pendiente de conmutación. El [flujo nuevo](../cloudflare/README.md)
+reutiliza exports de `stage-prod-web.sh`. Tras activar Workers, `current` queda
+como origen de recuperación y el renderer Go sigue sirviendo dev; cambiar ese
+enlace ya no despliega la web Cloudflare.
+
 `stage-prod-web.sh` exporta un SHA de producción hacia
 `/opt/homebrew/var/www/fasttourney/prod/releases/<SHA>/`, incorpora los dos
 ficheros reales de `/.well-known/` y escribe un manifiesto sin secretos. No

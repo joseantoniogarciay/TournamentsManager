@@ -57,6 +57,7 @@ const socialProviderOrder =
   Platform.OS === "android" ? (["google", "apple"] as const) : (["apple", "google"] as const);
 
 type AccountScreenProps = {
+  navigationTitle?: string;
   sessionReplacementDestination?: "/account" | "/create-tournament" | "/join-team";
   transferTournamentDraft?: boolean;
 };
@@ -64,6 +65,7 @@ type AccountScreenProps = {
 type SocialLegalDocument = "privacy" | "terms";
 
 export function AccountScreen({
+  navigationTitle,
   sessionReplacementDestination = "/account",
   transferTournamentDraft = true,
 }: AccountScreenProps) {
@@ -262,7 +264,7 @@ export function AccountScreen({
 
   if (user) {
     return (
-      <Screen bottomInset="none" topInset="navigation-bar">
+      <Screen navigationTitle={navigationTitle} bottomInset="none" topInset="navigation-bar">
         <ScrollView
           contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
           showsVerticalScrollIndicator={false}
@@ -290,7 +292,7 @@ export function AccountScreen({
   }
 
   return (
-    <Screen bottomInset="none" topInset="navigation-bar">
+    <Screen navigationTitle={navigationTitle} bottomInset="none" topInset="navigation-bar">
       <KeyboardAwareScrollView
         contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}

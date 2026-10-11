@@ -81,7 +81,7 @@ func localVerifier(t *testing.T) (*rsa.PrivateKey, Verifier) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	modulus := base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.N.Bytes())
+	modulus := base64.RawURLEncoding.EncodeToString(privateKey.N.Bytes())
 	exponent := base64.RawURLEncoding.EncodeToString(big.NewInt(int64(privateKey.PublicKey.E)).Bytes())
 	certificates, err := json.Marshal(map[string]any{"keys": []map[string]string{{"kid": "test-key", "kty": "RSA", "alg": "RS256", "use": "sig", "n": modulus, "e": exponent}}})
 	if err != nil {

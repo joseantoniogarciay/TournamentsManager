@@ -147,6 +147,6 @@ func TestSubmitSuggestionRecordsSafeFailureReasons(t *testing.T) {
 }
 
 func suggestionRequestWithAccount(body string) *http.Request {
-	request := httptest.NewRequest(http.MethodPost, "/v1/me/suggestions", bytes.NewBufferString(body))
+	request := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/v1/me/suggestions", bytes.NewBufferString(body))
 	return request.WithContext(context.WithValue(request.Context(), accountContextKey{}, "019abcde-1111-7111-8111-111111111111"))
 }

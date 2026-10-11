@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -34,6 +35,7 @@ const statisticsColumnWidth = 36;
 
 export default function TournamentStandingsScreen() {
   const t = getTranslator();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = usePreferences();
   const league = useTournament(id);
@@ -209,7 +211,12 @@ export default function TournamentStandingsScreen() {
           </Stack.Toolbar>
         </>
       ) : null}
-      <Screen topInset="navigation-bar">
+      <Screen
+        webWidth="wide"
+        bottomInset={league ? "none" : "safe-area"}
+        navigationTitle={t("league_standings")}
+        topInset="navigation-bar"
+      >
         {!league ? (
           loadErrorMessage ? (
             <RequestErrorCard
@@ -225,6 +232,7 @@ export default function TournamentStandingsScreen() {
           <ScrollView
             contentContainerStyle={[
               styles.content,
+              { paddingBottom: (Platform.OS === "web" ? 0 : insets.bottom) + space[5] },
               displayedStandings.length === 0 && styles.emptyContent,
             ]}
             onLayout={(event) => setTableViewportWidth(event.nativeEvent.layout.width)}
@@ -273,10 +281,15 @@ export default function TournamentStandingsScreen() {
                   <View style={styles.tableColumns}>
                     <View style={styles.leftColumn}>
                       <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                        <Text color="secondary" style={styles.position}>
+                        <Text allowFontScaling={false} color="secondary" style={styles.position}>
                           {t("league_standings_position")}
                         </Text>
-                        <Text color="secondary" numberOfLines={1} style={styles.team}>
+                        <Text
+                          allowFontScaling={false}
+                          color="secondary"
+                          numberOfLines={1}
+                          style={styles.team}
+                        >
                           {t("league_standings_team")}
                         </Text>
                       </View>
@@ -315,7 +328,7 @@ export default function TournamentStandingsScreen() {
                     </View>
                     <View style={styles.pointsColumn}>
                       <View style={[styles.headerRow, { borderColor: colors.border.default }]}>
-                        <Text color="secondary" style={styles.points}>
+                        <Text allowFontScaling={false} color="secondary" style={styles.points}>
                           {t("league_standings_points")}
                         </Text>
                       </View>
@@ -336,8 +349,10 @@ export default function TournamentStandingsScreen() {
                           key={standing.teamId}
                           style={[styles.row, { borderColor: colors.border.default }]}
                         >
-                          <Text style={styles.position}>{standing.position}</Text>
-                          <Text numberOfLines={1} style={styles.team}>
+                          <Text allowFontScaling={false} style={styles.position}>
+                            {standing.position}
+                          </Text>
+                          <Text allowFontScaling={false} numberOfLines={1} style={styles.team}>
                             {teams.get(standing.teamId) ?? ""}
                           </Text>
                         </View>
@@ -389,7 +404,7 @@ export default function TournamentStandingsScreen() {
                           key={standing.teamId}
                           style={[styles.row, { borderColor: colors.border.default }]}
                         >
-                          <Text style={styles.points} variant="title">
+                          <Text allowFontScaling={false} style={styles.points} variant="title">
                             {standing.points}
                           </Text>
                         </View>
@@ -453,7 +468,7 @@ function StatisticsHeader({ sport }: { sport: PublicTournament["sport"] }) {
   return (
     <View style={styles.statisticsRow}>
       {keys.map((key) => (
-        <Text key={key} color="secondary" style={styles.stat}>
+        <Text allowFontScaling={false} key={key} color="secondary" style={styles.stat}>
           {t(key)}
         </Text>
       ))}
@@ -506,7 +521,7 @@ function StatisticsValues({
   return (
     <View style={styles.statisticsRow}>
       {values.map((value, index) => (
-        <Text key={index} style={styles.stat}>
+        <Text allowFontScaling={false} key={index} style={styles.stat}>
           {value}
         </Text>
       ))}
@@ -609,7 +624,7 @@ function StandingsRulesContent({ league }: { league: PublicTournament | null | u
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: space[5], paddingHorizontal: space[5] },
+  content: { paddingHorizontal: space[5] },
   emptyContent: { paddingHorizontal: 0 },
   groupSelector: { flexDirection: "row", flexWrap: "wrap", gap: space[2], paddingBottom: space[4] },
   headerRow: {

@@ -30,7 +30,7 @@ func TestListAccountTournamentsRejectsCookieAndBearerTogether(t *testing.T) {
 
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/v1/me/tournaments?relationship=administered", nil)
 	request.Header.Set("Authorization", "Bearer opaque-session")
-	request.AddCookie(&http.Cookie{Name: "__Host-tm_session", Value: "other-session"})
+	request.Header.Add("Cookie", "__Host-tm_session=other-session")
 	recorder := httptest.NewRecorder()
 	testHandler().ServeHTTP(recorder, request)
 
@@ -43,7 +43,7 @@ func TestRevokeCurrentSessionExpiresCookie(t *testing.T) {
 	t.Parallel()
 
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodDelete, "/v1/sessions", nil)
-	request.AddCookie(&http.Cookie{Name: "__Host-tm_session", Value: "opaque-session"})
+	request.Header.Add("Cookie", "__Host-tm_session=opaque-session")
 	recorder := httptest.NewRecorder()
 
 	testHandler().ServeHTTP(recorder, request)
@@ -83,9 +83,9 @@ func TestRefreshCookieRejectsCrossSiteRequest(t *testing.T) {
 	handler := refreshCookieCSRF(testAllowedOrigins, sessionCookies(true), http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
 		writer.WriteHeader(http.StatusNoContent)
 	}))
-	request := httptest.NewRequest(http.MethodPost, "/v1/sessions/refresh", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/sessions/refresh", nil)
 	request.Header.Set("Origin", "https://untrusted.example")
-	request.AddCookie(&http.Cookie{Name: "__Host-tm_refresh", Value: "refresh"})
+	request.Header.Add("Cookie", "__Host-tm_refresh=refresh")
 	recorder := httptest.NewRecorder()
 
 	handler.ServeHTTP(recorder, request)
@@ -139,7 +139,7 @@ func TestFollowTournamentRejectsCrossSiteCookieRequest(t *testing.T) {
 	handler := NewHandler(registration.Service{}, nil, testAuthenticator{accountID: "019abcde-2222-7222-8222-222222222222"}, tournaments.NewService(testTournamentRepository{followVisible: true}), testAllowedOrigins)
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodPut, "/v1/me/tournaments/019abcde-1111-7111-8111-111111111111/follow", nil)
 	request.Header.Set("Origin", "https://evil.example")
-	request.AddCookie(&http.Cookie{Name: "__Host-tm_session", Value: "web-session"})
+	request.Header.Add("Cookie", "__Host-tm_session=web-session")
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, request)
 

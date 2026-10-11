@@ -26,7 +26,7 @@ func TestIntegrationTournamentCreationAndStartWithPostgres(t *testing.T) {
 	if err != nil || publicCreated.Matches == nil || publicCreated.Teams == nil {
 		t.Fatalf("consultar liga recién creada = %#v, %v; se esperaban arrays no nulos", publicCreated, err)
 	}
-	administratorID := createVerifiedLocalAccount(t, ctx, pool, "administrator@example.test", "administrator", "correct password")
+	administratorID := createVerifiedLocalAccount(ctx, t, pool, "administrator@example.test", "administrator", "correct password")
 	if err := service.AssignAdministrator(ctx, accountID, created.ID, "administrator"); err != nil {
 		t.Fatalf("asignar administradora: %v", err)
 	}
@@ -73,7 +73,7 @@ func TestIntegrationTournamentCreationAndStartWithPostgres(t *testing.T) {
 	if err := pool.QueryRow(ctx, `SELECT count(*), max(previous_home_score), max(previous_away_score) FROM match_result_changes WHERE match_id = $1`, started.Matches[1].ID).Scan(&historyCount, &previousHome, &previousAway); err != nil || historyCount != 2 || previousHome != 2 || previousAway != 1 {
 		t.Fatalf("historial = count %d, previo %d-%d, %v; se esperaban dos cambios y previo 2-1", historyCount, previousHome, previousAway, err)
 	}
-	if _, err := service.Start(ctx, accountID, created.ID, tournaments.StartInput{RoundRobinLegs: 1}); err != tournaments.ErrTournamentConflict {
+	if _, err := service.Start(ctx, accountID, created.ID, tournaments.StartInput{RoundRobinLegs: 1}); !errors.Is(err, tournaments.ErrTournamentConflict) {
 		t.Fatalf("segundo inicio = %v, se esperaba %v", err, tournaments.ErrTournamentConflict)
 	}
 	cancelled, err := service.Cancel(ctx, accountID, created.ID)
@@ -83,7 +83,7 @@ func TestIntegrationTournamentCreationAndStartWithPostgres(t *testing.T) {
 	if cancelled.State != "cancelled" || len(cancelled.Teams) != 4 || len(cancelled.Matches) != 12 {
 		t.Fatalf("liga cancelada = %#v, se esperaban datos conservados y estado cancelled", cancelled)
 	}
-	if _, err := service.Cancel(ctx, accountID, created.ID); err != tournaments.ErrTournamentCancellationConflict {
+	if _, err := service.Cancel(ctx, accountID, created.ID); !errors.Is(err, tournaments.ErrTournamentCancellationConflict) {
 		t.Fatalf("segunda cancelación = %v, se esperaba %v", err, tournaments.ErrTournamentCancellationConflict)
 	}
 	if _, err := service.RecordResult(ctx, accountID, created.ID, started.Matches[0].ID, tournaments.MatchResultInput{HomeScore: 4, AwayScore: 0}); !errors.Is(err, tournaments.ErrMatchResultConflict) {
@@ -105,7 +105,7 @@ func TestIntegrationTournamentCreationAndStartWithPostgres(t *testing.T) {
 func TestIntegrationSetSportConfigurationCannotBeNull(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "set_config@example.test", "set_config_owner", "correct horse battery staple")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "set_config@example.test", "set_config_owner", "correct horse battery staple")
 	for _, sport := range []string{"tennis", "padel", "table_tennis", "volleyball"} {
 		_, err := pool.Exec(ctx, `INSERT INTO tournaments (organizer_account_id,name,sport,best_of_sets,published_at) VALUES ($1,'Missing set format',$2,NULL,now())`, owner, sport)
 		var violation *pgconn.PgError

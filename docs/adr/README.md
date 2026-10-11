@@ -52,3 +52,13 @@ Usa [template.md](template.md) y el
 - [ADR-0149: Reservar el único proyecto PostHog para producción](0149-reserve-the-single-posthog-project-for-production.md) — Aceptado; supera ADR-0148.
 
 - [ADR-0150: Host Android local para el banner global](0150-use-a-local-android-host-for-global-feedback.md) — Aceptado.
+
+- [ADR-0151: Títulos iOS adaptables al espacio real](0151-reflow-ios-entity-titles-for-accessibility.md) — Aceptado.
+
+- [ADR-0152: Corregir errores en recursos Android generados por Expo](0152-correct-expo-generated-android-lint-errors.md) — Aceptado; esperar versiones corregidas de Expo.
+
+- [ADR-0153: Tamaño fijo de las celdas de clasificación](0153-keep-standings-table-at-a-fixed-text-size.md) — Aceptado; excepción localizada al escalado de texto.
+
+- [ADR-0154: Ancho web responsive](0154-constrain-responsive-web-content-width.md) — Aceptado.
+
+- [ADR-0155: Hosting web en Cloudflare Static Assets](0155-host-production-web-on-cloudflare-static-assets.md) — Aceptado; conmutación pendiente de validación en la cuenta.

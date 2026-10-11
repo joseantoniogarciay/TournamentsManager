@@ -31,7 +31,7 @@
 ## Toolchain Go
 
 - Versión mínima del módulo: Go 1.26.0.
-- Toolchain exacto: Go 1.26.6.
+- Toolchain exacto: Go 1.26.9.
 - El backend usa `apps/backend/go.mod`.
 - Las herramientas usan `apps/backend/go.tool.mod` y
   `apps/backend/go.tool.sum`.
@@ -78,6 +78,14 @@ make build
 make vuln
 make check
 make verify
+```
+
+`make lint` incluye los tests Go (`run.tests: true`). Para revisar el inventario
+completo sin truncar hallazgos por regla:
+
+```bash
+cd apps/backend
+go tool -modfile=go.tool.mod golangci-lint run --max-same-issues=0 --max-issues-per-linter=0 ./...
 ```
 
 `make check` agrupa formato, lint y tests. `make verify` añade la exportación
@@ -398,7 +406,7 @@ con x/net 0.58.0 y x/text 0.41.0 requeridos por el grafo. En herramientas se
 corrigen además cel-go 0.30.0, x/mod 0.40.0 y compress 1.18.7; x/tools sube
 a 0.49.0 por esa resolución. La auditoría de los seis ejecutables Go tampoco
 detecta avisos en sus paquetes importados. Se conservan Go
-1.26.6, las herramientas fijadas y el esquema de módulos separado. `govulncheck`
+1.26.9, las herramientas fijadas y el esquema de módulos separado. `govulncheck`
 ya no detecta vulnerabilidades en paquetes importados por la aplicación ni en
 funciones alcanzables. Conserva el aviso GO-2026-5932 sobre `openpgp`, paquete
 obsoleto dentro de x/crypto que la aplicación no importa y sin versión corregida.
@@ -423,7 +431,7 @@ validaron CI y exportaciones JS web/iOS/Android, primero dev y después prod.
 Los parches se retirarán al actualizar consumidores compatibles. Véase el
 [cierre operativo](../operations/WEB_DEPENDENCY_COMPATIBILITY_2026-10-03.md).
 
-Expo CLI pide una nueva matriz del SDK 57, incluida Expo 57.0.26 y React Native
+En la revisión del 3 de octubre, Expo CLI pedía una nueva matriz del SDK 57, incluida Expo 57.0.26 y React Native
 0.86.3. La operación de instalación se detuvo por la edad de Expo 57.0.26,
 expo-constants 57.0.20 y expo-modules-core 57.0.20. La revisión automática
 rechazó añadir sus excepciones y se solicitó autorización explícita. No se
@@ -433,6 +441,16 @@ El usuario decidió después mantener la espera salvo vulnerabilidad crítica
 (ADR-0138): esta matriz queda aplazada hasta cumplir siete días, sin excepción
 por compatibilidad. Al actualizarla se fijarán los directos y se validarán build
 nativa limpia, arranque y flujo, además de typecheck y exportación web.
+
+La [revisión del 9 de octubre](EXPO_UPDATE_REVIEW_2026-10-09.md) confirma que
+la matriz 57.0.26 ya cumple antigüedad directa. La CLI ahora pide 57.0.27,
+aún joven; no se ha instalado ninguna matriz nueva ni cerrado los errores
+de generación Android de ADR-0152. Revisar transitivas, overrides y parches
+antes de una actualización explícita.
+El usuario autoriza después su instalación: la matriz madura y sus transitivas
+quedan resueltas; el informe vinculado registra instalación congelada, builds,
+recorridos y gates todavía abiertos. Se retira el parche Metro obsoleto y se
+conserva Symbols 57.0.3.
 
 Para mantener los servicios en segundo plano en Docker Desktop:
 
@@ -476,7 +494,7 @@ Producción/K3s conserva sus servicios y controles.
 
 ### Iconos Material y escala de texto (2026-10-04)
 
-`patches/expo-symbols@57.0.2.patch` mantiene fijo el glifo Material dentro de su
+`patches/expo-symbols@57.0.3.patch` mantiene fijo el glifo Material dentro de su
 caja declarada. El fallo se reprodujo en Pixel API 34/Android 14 con el tamaño
 de fuente máximo: la X de Crear torneo se recortaba hasta parecer una flecha.
 El parche cambia solo `allowFontScaling` del texto del icono en fuente y build

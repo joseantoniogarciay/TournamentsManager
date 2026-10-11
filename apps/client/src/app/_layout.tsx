@@ -9,9 +9,9 @@ import * as WebBrowser from "expo-web-browser";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { type PropsWithChildren, useEffect, useState } from "react";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 
-import { typography } from "@tournaments-manager/design-tokens";
+import { typography, webLayout } from "@tournaments-manager/design-tokens";
 
 import { FeedbackProvider } from "@/shared/feedback/feedback-provider";
 import { PendingVerificationProvider } from "@/features/registration/pending-verification";
@@ -255,7 +255,13 @@ function NavigationTheme({ children }: PropsWithChildren) {
   return (
     <ThemeProvider value={resolvedTheme === "dark" ? DarkTheme : DefaultTheme}>
       <WebPageAppearance backgroundColor={colors.surface.canvas} resolvedTheme={resolvedTheme} />
-      {children}
+      {Platform.OS === "web" ? (
+        <View style={{ flex: 1, alignSelf: "center", width: "100%", maxWidth: webLayout.maxWidth }}>
+          {children}
+        </View>
+      ) : (
+        children
+      )}
     </ThemeProvider>
   );
 }
@@ -322,6 +328,8 @@ function WebPageAppearance({
             left: 0 !important;
             position: fixed !important;
             right: 0 !important;
+            max-width: ${webLayout.maxWidth}px;
+            margin-inline: auto;
             z-index: 1 !important;
           }
         }

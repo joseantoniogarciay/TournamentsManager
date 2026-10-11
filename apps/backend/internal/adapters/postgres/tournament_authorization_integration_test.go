@@ -11,8 +11,8 @@ import (
 func TestIntegrationTournamentMutationsRequireOrganizerOrAdministrator(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	organizerID := createVerifiedLocalAccount(t, ctx, pool, "organizer@example.test", "organizer", "correct password")
-	outsiderID := createVerifiedLocalAccount(t, ctx, pool, "outsider@example.test", "outsider", "correct password")
+	organizerID := createVerifiedLocalAccount(ctx, t, pool, "organizer@example.test", "organizer", "correct password")
+	outsiderID := createVerifiedLocalAccount(ctx, t, pool, "outsider@example.test", "outsider", "correct password")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, organizerID, tournaments.CreateInput{Name: "Liga permisos", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
 	if err != nil {

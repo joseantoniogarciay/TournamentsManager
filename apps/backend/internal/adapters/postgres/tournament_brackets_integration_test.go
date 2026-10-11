@@ -11,7 +11,7 @@ import (
 func TestIntegrationBracketLifecycle(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "bracket@example.test", "bracket_owner", "correct horse battery staple")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "bracket@example.test", "bracket_owner", "correct horse battery staple")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	tournament, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Bracket", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}, {Name: "E"}}})
 	if err != nil {
@@ -80,7 +80,7 @@ func TestIntegrationBracketLifecycle(t *testing.T) {
 func TestIntegrationTennisSetsAreValidatedPersistedAndHistorized(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "tennis@example.test", "tennis_owner", "correct horse battery staple")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "tennis@example.test", "tennis_owner", "correct horse battery staple")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	tournament, err := service.Create(ctx, owner, tournaments.CreateInput{
 		Name: "Tenis", Sport: tournaments.SportTennis, BestOfSets: 3,
@@ -131,7 +131,7 @@ func TestIntegrationTennisSetsAreValidatedPersistedAndHistorized(t *testing.T) {
 func TestIntegrationTableTennisSevenGamesAndCorrection(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	owner := createVerifiedLocalAccount(t, ctx, pool, "table_tennis@example.test", "table_tennis_owner", "correct horse battery staple")
+	owner := createVerifiedLocalAccount(ctx, t, pool, "table_tennis@example.test", "table_tennis_owner", "correct horse battery staple")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	value, err := service.Create(ctx, owner, tournaments.CreateInput{Name: "Table tennis", Sport: tournaments.SportTableTennis, BestOfSets: 7, Teams: []tournaments.TeamInput{{Name: "A"}, {Name: "B"}, {Name: "C"}, {Name: "D"}}})
 	if err != nil {

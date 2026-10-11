@@ -217,3 +217,61 @@ observabilidad únicamente bajo petición. Producción conserva su operación.
 [ADR-0150](../adr/0150-use-a-local-android-host-for-global-feedback.md), aceptado
 explícitamente: adaptador Android local de Expo para conservar el host global sin
 bloquear ventanas inferiores; comprobar iOS antes y después.
+
+
+## Títulos de navegación con texto ampliado
+
+[ADR-0151](../adr/0151-reflow-ios-entity-titles-for-accessibility.md), aceptado
+el 2026-10-09: conservar el título en la barra iOS siempre que quepa; medir
+la altura real y colocarlo debajo únicamente si supera el espacio disponible.
+Conservar botones nativos, escalado, nombre completo y semántica de cabecera.
+La aclaración del usuario extiende la regla a todos los títulos de navegación.
+
+## Errores de generación Android pendientes de Expo
+
+[ADR-0152](../adr/0152-correct-expo-generated-android-lint-errors.md), aceptado
+el 2026-10-09: el usuario elige esperar versiones corregidas de Expo, sin añadir
+los dos parches propuestos. Los errores MissingPrefix y NewApi y la excepción
+del gate K2 permanecen abiertos; no adoptar K1 como sustituto ni omitir reglas.
+Toda actualización debe respetar maduración y validación de conjunto.
+
+
+### 2026-10-09 — Instalar actualizaciones maduras del cliente
+
+El usuario solicita «Deja instalado todo lo actualizable» tras revisar Expo/RN.
+Se autoriza aplicar la matriz madura del SDK 57 y resolver actualizaciones
+compatibles dentro de los rangos actuales, manteniendo ADR-0138 y ADR-0015.
+No se autoriza saltar siete días, migrar SDK/React/RN minor ni aplicar los dos
+parches Android rechazados en ADR-0152. La revisión técnica recoge versiones,
+compatibilidad, retirada del parche Metro y validaciones.
+
+## Clasificación compacta y tamaño fijo — 2026-10-09
+
+[ADR-0153](../adr/0153-keep-standings-table-at-a-fixed-text-size.md), aceptado
+por decisión explícita del usuario: conservar usable y compacta la tabla sin
+que sus celdas crezcan con el tamaño de texto del sistema. Sustituye la propuesta
+de desplazar la tabla completa con texto ampliado. La excepción afecta solo a
+encabezados, posiciones, equipos, estadísticas y puntos; título, ayuda, grupos
+y reglas conservan el escalado. No altera los datos ni el contrato HTTP.
+
+## Ancho web responsive — 2026-10-10
+
+[ADR-0154](../adr/0154-constrain-responsive-web-content-width.md), aceptado por
+la petición del usuario: limitar el ancho desktop y adaptarlo al viewport.
+Marco común de 1200 px y contenido de lectura/formulario de 720 px mediante
+tokens compartidos. El usuario acepta también
+columnas de Inicio/biblioteca, con regreso a una columna en móvil web y zoom.
+
+El usuario amplía ADR-0154 con «Vamos a por ellas»: gestión e invitación junto
+al listado de equipos cuando estén disponibles, y resumen lateral junto a
+partidos de liga iniciada. Regreso a una columna en viewport estrecho; sin
+rediseñar formularios, cuadros, desempates ni flujos de negocio.
+
+## Hosting web Cloudflare — 2026-10-10
+
+[ADR-0155](../adr/0155-host-production-web-on-cloudflare-static-assets.md),
+aceptado mediante «Vamos con ello»: migrar solo la web a hosting estático gratuito,
+conservar API/K3s domésticos y la publicación explícita. Workers Static Assets y
+renderer mínimo conservan rutas, previews y seguridad. No se autoriza un plan de
+pago. El estado efectivo y comandos están en `infra/cloudflare/README.md`;
+la implementación local no acredita una conmutación en la cuenta.

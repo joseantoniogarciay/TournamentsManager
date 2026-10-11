@@ -45,7 +45,7 @@ func integrationPool(t *testing.T) *pgxpool.Pool {
 	return pool
 }
 
-func createVerifiedLocalAccount(t *testing.T, ctx context.Context, pool *pgxpool.Pool, email, username, password string) string {
+func createVerifiedLocalAccount(ctx context.Context, t *testing.T, pool *pgxpool.Pool, email, username, password string) string {
 	t.Helper()
 	passwordHash, err := registration.HashPassword(password)
 	if err != nil {

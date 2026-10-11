@@ -1,6 +1,7 @@
 package tournaments
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -49,10 +50,10 @@ func TestBracketCompletesEverySupportedFieldSize(t *testing.T) {
 
 func TestBracketShootoutAndCorrection(t *testing.T) {
 	b, _ := GenerateSingleElimination([]string{"a", "b", "c", "d"})
-	if _, err := b.RecordResult(2, 1, BracketResult{HomeScore: 1}); err != ErrBracketMatchNotReady {
+	if _, err := b.RecordResult(2, 1, BracketResult{HomeScore: 1}); !errors.Is(err, ErrBracketMatchNotReady) {
 		t.Fatalf("future final: %v", err)
 	}
-	if _, err := b.RecordResult(1, 1, BracketResult{}); err != ErrInvalidBracketResult {
+	if _, err := b.RecordResult(1, 1, BracketResult{}); !errors.Is(err, ErrInvalidBracketResult) {
 		t.Fatalf("draw: %v", err)
 	}
 	home, away := 4, 5
@@ -84,7 +85,7 @@ func TestBracketShootoutAndCorrection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := next.RecordResult(1, 1, BracketResult{HomeScore: 3}); err != ErrBracketResultDependency {
+	if _, err := next.RecordResult(1, 1, BracketResult{HomeScore: 3}); !errors.Is(err, ErrBracketResultDependency) {
 		t.Fatalf("descendant guard: %v", err)
 	}
 }
@@ -93,10 +94,10 @@ func TestBasketballBracketRejectsTiesAndShootouts(t *testing.T) {
 	b, _ := GenerateSingleElimination([]string{"a", "b"})
 	b.Sport = SportBasketball
 	home, away := 5, 4
-	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 80, AwayScore: 80}); err != ErrInvalidBracketResult {
+	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 80, AwayScore: 80}); !errors.Is(err, ErrInvalidBracketResult) {
 		t.Fatalf("tied basketball result = %v", err)
 	}
-	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 80, AwayScore: 80, HomePenalties: &home, AwayPenalties: &away}); err != ErrInvalidBracketResult {
+	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 80, AwayScore: 80, HomePenalties: &home, AwayPenalties: &away}); !errors.Is(err, ErrInvalidBracketResult) {
 		t.Fatalf("basketball shootout = %v", err)
 	}
 	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 81, AwayScore: 80}); err != nil {
@@ -120,7 +121,7 @@ func TestHandballBracketUsesSevenMeterShootoutAfterTiedFinalScore(t *testing.T) 
 	if len(resolved) != 1 || resolved[0].WinnerTeamID != "a" {
 		t.Fatalf("resolved handball bracket = %#v, want team a", resolved)
 	}
-	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 28, AwayScore: 28}); err != ErrInvalidBracketResult {
+	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 28, AwayScore: 28}); !errors.Is(err, ErrInvalidBracketResult) {
 		t.Fatalf("tied handball result = %v, want invalid", err)
 	}
 }
@@ -138,7 +139,7 @@ func TestTennisBracketDerivesWinnerFromSets(t *testing.T) {
 	if err != nil || resolved[0].WinnerTeamID != "a" || resolved[0].Result.Sets[0].HomeScore != 6 {
 		t.Fatalf("resolved tennis bracket = %#v, %v", resolved, err)
 	}
-	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 2, AwayScore: 0, Sets: []SetScore{{6, 0}, {6, 0}}}); err != ErrInvalidBracketResult {
+	if _, err := b.RecordResult(1, 1, BracketResult{HomeScore: 2, AwayScore: 0, Sets: []SetScore{{6, 0}, {6, 0}}}); !errors.Is(err, ErrInvalidBracketResult) {
 		t.Fatalf("unfinished best-of-five accepted: %v", err)
 	}
 }
@@ -166,16 +167,16 @@ func TestBracketRejectsMalformedSourcesAndResults(t *testing.T) {
 		{HomeScore: 2, HomePenalties: &one, AwayPenalties: &zero},
 	} {
 		b, _ := GenerateSingleElimination([]string{"a", "b"})
-		if _, err := b.RecordResult(1, 1, result); err != ErrInvalidBracketResult {
+		if _, err := b.RecordResult(1, 1, result); !errors.Is(err, ErrInvalidBracketResult) {
 			t.Fatalf("invalid result accepted: %#v %v", result, err)
 		}
 	}
 	b, _ := GenerateSingleElimination([]string{"a", "b", "c"})
-	if _, err := b.RecordResult(1, 2, BracketResult{HomeScore: 1}); err != ErrBracketMatchNotReady {
+	if _, err := b.RecordResult(1, 2, BracketResult{HomeScore: 1}); !errors.Is(err, ErrBracketMatchNotReady) {
 		t.Fatalf("bye cannot have score: %v", err)
 	}
 	b.Matches[2].Home.SourceSequence = 2
-	if _, err := b.Resolve(); err != ErrInvalidBracketStructure {
+	if _, err := b.Resolve(); !errors.Is(err, ErrInvalidBracketStructure) {
 		t.Fatalf("wrong source: %v", err)
 	}
 }

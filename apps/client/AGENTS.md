@@ -50,6 +50,10 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Un título largo de cabecera no usa un ancho fijo arbitrario: ocupa el espacio
   disponible hasta conservar 20 px frente a los controles laterales, se centra
   y puede usar dos líneas si la ruta necesita mostrar el nombre de una entidad.
+- Según ADR-0151, un título de navegación iOS solo pasa debajo de la barra
+  cuando su medición con el ancho reservado supera la altura disponible.
+  Reutiliza `Screen.navigationTitle` o `useAdaptiveNavigationTitle` para
+  entidades desplazables; no reduzcas el escalado ni uses umbrales arbitrarios.
 - Una card mantiene su padding interno definido por la primitiva y añade siempre
   20 px de margen exterior horizontal. El layout reserva además 20 px entre
   cards hermanas; no se corrige esa separación alterando el padding de la card.
@@ -59,6 +63,17 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   lista: eso desplazaría las cards 40 px desde el borde.
 - `Screen` no añade padding horizontal: ese margen exterior pertenece a `Card`.
   Añadirlo en ambos sitios duplica la separación lateral.
+- Según ADR-0154, web centra navegación y tabs en `webLayout.maxWidth` (1200 px).
+  `Screen` limita su contenido a `webLayout.readingMaxWidth` (720 px) por defecto;
+  Inicio, biblioteca, ficha y clasificación declaran `webWidth="wide"`.
+  Son máximos, nunca mínimos. El fondo cubre el marco completo; no añadas
+  límites por card ni padding horizontal para compensar el centrado.
+  Inicio y biblioteca reutilizan `ResponsiveColumns`: dos columnas web a
+  partir de `webLayout.columnsMinWidth` (960 px), una debajo y en nativo.
+  La compensación de medio margen por celda conserva los 20 px entre cards.
+  Equipos con alta/invitación usa la variante `sidebar`; sin controles mantiene
+  lectura. En liga iniciada la ficha reserva `webLayout.sidebarWidth` al resumen
+  sin mover ni remontar la lista de partidos. No aplicar a cuadros/desempates.
 - **Muy importante — márgenes de contenido móvil:** un formulario, listado o
   bloque de contenido no puede quedar a ras de los laterales. Debe vivir en una
   `Card` (que aporta los 20 px exteriores) o en una primitiva de layout

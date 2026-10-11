@@ -53,7 +53,11 @@ export default function TermsOfUseScreen() {
           </Stack.Toolbar>
         ) : null}
       </Stack.Screen>
-      <Screen bottomInset="none" topInset="navigation-bar">
+      <Screen
+        navigationTitle={t("terms_of_use_title")}
+        bottomInset="none"
+        topInset="navigation-bar"
+      >
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Card>
             <View style={styles.section}>

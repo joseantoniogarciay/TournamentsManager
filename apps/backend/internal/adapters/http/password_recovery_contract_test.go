@@ -69,7 +69,7 @@ func TestPasswordResetRequestResponsesDoNotExposeDependencyDetails(t *testing.T)
 			response := httptest.NewRecorder()
 			exporter.Reset()
 			ctx, span := provider.Tracer("test").Start(context.Background(), "POST /v1/password-resets")
-			handler.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/v1/password-resets", strings.NewReader(test.body)).WithContext(ctx))
+			handler.ServeHTTP(response, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/password-resets", strings.NewReader(test.body)).WithContext(ctx))
 			span.End()
 			wantReason := ""
 			switch test.status {

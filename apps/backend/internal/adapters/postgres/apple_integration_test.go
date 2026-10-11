@@ -100,7 +100,7 @@ func TestIntegrationAppleRejectsEmailConflictExpiryAndConcurrentConsumption(t *t
 	ctx := context.Background()
 	pool := integrationPool(t)
 	repository := NewFederatedRepository(pool)
-	_ = createVerifiedLocalAccount(t, ctx, pool, "person@example.test", "person", "correct password")
+	_ = createVerifiedLocalAccount(ctx, t, pool, "person@example.test", "person", "correct password")
 	provider := &integrationAppleProvider{identity: federated.Identity{Issuer: federated.AppleIssuer, Subject: "apple-conflict", Email: "person@example.test", EmailVerified: true}}
 	service, id, proof := prepareAppleIntegration(t, repository, provider)
 	input := &federated.Registration{Username: "another_person", Locale: "en", TermsVersion: legal.CurrentTermsVersion}

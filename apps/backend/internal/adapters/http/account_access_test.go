@@ -22,7 +22,7 @@ func TestCreateReauthenticationTicketReportsSelectedGoogleAccountConflict(t *tes
 			Subject:       "other-google-account",
 		}},
 	)
-	request := httptest.NewRequest(http.MethodPost, "/v1/me/reauthentication-tickets", strings.NewReader(`{"challengeId":"019abcde-1111-7111-8111-111111111111","idToken":"google-id-token","purpose":"set-local-password"}`))
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/me/reauthentication-tickets", strings.NewReader(`{"challengeId":"019abcde-1111-7111-8111-111111111111","idToken":"google-id-token","purpose":"set-local-password"}`))
 	request.Header.Set("Authorization", "Bearer session-token")
 	request = request.WithContext(context.WithValue(request.Context(), accountContextKey{}, "019abcde-2222-7222-8222-222222222222"))
 	recorder := httptest.NewRecorder()

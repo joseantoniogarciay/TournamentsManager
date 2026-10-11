@@ -24,14 +24,18 @@ func TestShutdownPreservesActiveResponseAndRejectsNewConnections(t *testing.T) {
 	response := make(chan string, 1)
 	go func() {
 		client := &http.Client{Timeout: 3 * time.Second}
-		resp, err := client.Get("http://" + address)
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://"+address, nil)
 		if err != nil {
 			response <- err.Error()
 			return
 		}
-		defer resp.Body.Close()
-		body, err := io.ReadAll(resp.Body)
+		resp, err := client.Do(request)
 		if err != nil {
+			response <- err.Error()
+			return
+		}
+		body, readErr := io.ReadAll(resp.Body)
+		if err := errors.Join(readErr, resp.Body.Close()); err != nil {
 			response <- err.Error()
 			return
 		}
@@ -43,9 +47,12 @@ func TestShutdownPreservesActiveResponseAndRejectsNewConnections(t *testing.T) {
 	stopped := make(chan error, 1)
 	go func() { stopped <- shutdownHTTP(ctx, server) }()
 	waitShutdownEvent(t, served) // Shutdown has closed the listener.
-	connection, err := net.DialTimeout("tcp", address, time.Second)
+	dialer := net.Dialer{Timeout: time.Second}
+	connection, err := dialer.DialContext(t.Context(), "tcp", address)
 	if err == nil {
-		connection.Close()
+		if err := connection.Close(); err != nil {
+			t.Errorf("close unexpected connection: %v", err)
+		}
 		t.Fatal("new connection accepted while draining")
 	}
 	select {
@@ -75,7 +82,7 @@ func TestShutdownPreservesActiveResponseAndRejectsNewConnections(t *testing.T) {
 func TestShutdownDeadlineCancelsRemainingRequest(t *testing.T) {
 	started := make(chan struct{})
 	canceled := make(chan struct{})
-	server, address, _ := startShutdownTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server, address, _ := startShutdownTestServer(t, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		close(started)
 		<-r.Context().Done()
 		close(canceled)
@@ -84,9 +91,16 @@ func TestShutdownDeadlineCancelsRemainingRequest(t *testing.T) {
 	go func() {
 		defer close(clientFinished)
 		client := &http.Client{Timeout: 3 * time.Second}
-		resp, err := client.Get("http://" + address)
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://"+address, nil)
+		if err != nil {
+			t.Errorf("create request: %v", err)
+			return
+		}
+		resp, err := client.Do(request)
 		if err == nil {
-			resp.Body.Close()
+			if err := resp.Body.Close(); err != nil {
+				t.Errorf("close response: %v", err)
+			}
 		}
 	}()
 	waitShutdownEvent(t, started)
@@ -101,7 +115,8 @@ func TestShutdownDeadlineCancelsRemainingRequest(t *testing.T) {
 
 func startShutdownTestServer(t *testing.T, handler http.Handler) (*http.Server, string, <-chan struct{}) {
 	t.Helper()
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	listenConfig := net.ListenConfig{}
+	listener, err := listenConfig.Listen(t.Context(), "tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}

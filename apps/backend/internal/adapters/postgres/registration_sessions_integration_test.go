@@ -13,7 +13,7 @@ import (
 func TestIntegrationPasswordResetConsumesTokenRevokesSessionsAndCreatesNewSession(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "person@example.test", "person", "old correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "person@example.test", "person", "old correct password")
 	if _, err := pool.Exec(ctx, `INSERT INTO sessions (account_id, token_hash, idle_expires_at, absolute_expires_at) VALUES ($1, decode(repeat('01', 32), 'hex'), now() + interval '1 day', now() + interval '1 day')`, accountID); err != nil {
 		t.Fatalf("crear sesión previa: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestIntegrationPasswordResetConsumesTokenRevokesSessionsAndCreatesNewSessio
 func TestIntegrationLocalLoginCreatesTournamentAndSessionAtomically(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "login-draft@example.test", "login_draft", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "login-draft@example.test", "login_draft", "correct password")
 	service := registration.NewService(NewRegistrationRepository(pool), nil)
 
 	draft := &registration.Draft{
@@ -88,7 +88,7 @@ func TestIntegrationLocalLoginCreatesTournamentAndSessionAtomically(t *testing.T
 func TestIntegrationGoogleLoginCreatesTournamentAndSessionAtomically(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "google-draft@example.test", "google_draft", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "google-draft@example.test", "google_draft", "correct password")
 	if _, err := pool.Exec(ctx, `INSERT INTO external_identities (account_id, provider, issuer, subject) VALUES ($1, 'google', $2, 'draft-subject')`, accountID, federated.GoogleIssuer); err != nil {
 		t.Fatalf("crear identidad Google: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestIntegrationGoogleLoginCreatesTournamentAndSessionAtomically(t *testing.
 func TestIntegrationLoginDraftFailureRollsBackSession(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "rollback-draft@example.test", "rollback_draft", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "rollback-draft@example.test", "rollback_draft", "correct password")
 	repository := NewRegistrationRepository(pool)
 
 	_, err := repository.CreateLocalLoginSession(ctx, accountID, sessionHash("rollback-session"), sessionHash("rollback-refresh"), &registration.Draft{
@@ -160,7 +160,7 @@ func TestIntegrationLoginDraftFailureRollsBackSession(t *testing.T) {
 func TestIntegrationGoogleLoginDraftFailureRollsBackChallengeAndSession(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "google-rollback@example.test", "google_rollback", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "google-rollback@example.test", "google_rollback", "correct password")
 	if _, err := pool.Exec(ctx, `INSERT INTO external_identities (account_id, provider, issuer, subject) VALUES ($1, 'google', $2, 'rollback-subject')`, accountID, federated.GoogleIssuer); err != nil {
 		t.Fatalf("crear identidad Google: %v", err)
 	}
@@ -247,11 +247,11 @@ func TestIntegrationConcurrentPendingLoginsKeepOneActiveVerification(t *testing.
 	const renewals = 8
 	start := make(chan struct{})
 	results := make(chan error, renewals)
-	for i := range renewals {
+	for i := range byte(renewals) {
 		go func() {
 			<-start
 			next := make([]byte, 32)
-			next[0] = byte(i + 2)
+			next[0] = i + 2
 			_, _, err := repository.RenewLoginVerification(ctx, accountID, next)
 			results <- err
 		}()
@@ -282,7 +282,7 @@ func TestIntegrationConcurrentPendingLoginsKeepOneActiveVerification(t *testing.
 func TestIntegrationRepeatedPasswordResetRequestsInvalidatePreviousLinks(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "reset-repeat@example.test", "reset_repeat", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "reset-repeat@example.test", "reset_repeat", "correct password")
 	repository := NewRegistrationRepository(pool)
 	hashes := [][]byte{make([]byte, 32), make([]byte, 32)}
 	for i, hash := range hashes {
@@ -300,11 +300,11 @@ func TestIntegrationRepeatedPasswordResetRequestsInvalidatePreviousLinks(t *test
 	}
 	const renewals = 8
 	start, results := make(chan struct{}), make(chan error, renewals)
-	for i := range renewals {
+	for i := range byte(renewals) {
 		go func() {
 			<-start
 			hash := make([]byte, 32)
-			hash[0] = byte(i + 3)
+			hash[0] = i + 3
 			_, _, _, err := repository.CreatePasswordReset(ctx, "reset-repeat@example.test", hash)
 			results <- err
 		}()

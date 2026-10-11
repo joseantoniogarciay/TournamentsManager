@@ -12,10 +12,20 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 
 - **Iconos y texto ampliado:** los glifos de iconos mantienen el tamaño del token
   dentro de su caja; el texto de la interfaz conserva el escalado de accesibilidad.
-  `expo-symbols` 57.0.2 dibuja Material Symbols mediante `Text` en Android/web:
+  `expo-symbols` 57.0.3 dibuja Material Symbols mediante `Text` en Android/web:
   un parche pnpm desactiva `allowFontScaling` únicamente en ese glifo para evitar
   su recorte al ampliar la letra. SF Symbols en iOS mantiene su implementación
   nativa. Revalidar y retirar el parche cuando la dependencia corrija este caso.
+
+- **Cambio de tamaño de texto en caliente (iOS):** `Text` escucha `fontScale`
+  mediante `useWindowDimensions` y actualiza un `nativeID` único derivado de
+  `useId` y la escala. En RN 0.86.3 esa actualización invalida la medición de
+  párrafos que quedaba antigua al cambiar Dynamic Type. Conserva el nodo React,
+  el escalado nativo, los tokens y el estado de campos/rutas; no añade `key`,
+  límites de escala ni tamaño calculado en JS. Android/web no reciben ese ID.
+  Es una adaptación temporal: retirarla cuando el renderer recalcule correctamente
+  sin ella, comprobando cambios en ambos sentidos con la pantalla montada.
+  La evidencia y límites están en [QA](PRODUCT_QA_REVIEW_2026-10-04.md).
 
 - **Color:** azul como acción primaria; violeta como acento; superficies claras;
   verde, ámbar y rojo reservados para estado y feedback.
@@ -58,6 +68,32 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   botonera, con 20 px de separación lateral. El contenido desplazable reserva
   también su altura y separación para que el último elemento nunca quede bajo el
   botón. El icono conserva una etiqueta accesible localizada.
+- **Safe area en formularios desplazables sin tabs:** el área desplazable puede
+  alcanzar el borde inferior. La separación del último control pertenece al
+  contenido: `Screen bottomInset="none"` y
+  `KeyboardAwareScrollView bottomInset="safe-area"` reservan el inset nativo más
+  `space[4]` (16 px) dentro del scroll; web reserva solo ese padding. Crear torneo,
+  la rama válida de Unirse a un equipo y las ramas desplazables de recuperación
+  de contraseña aplican esta regla. Sus cargas/errores estáticos conservan
+  la protección inferior del padre. No reservar además ese espacio en el padre, porque crearía
+  una franja fija que el contenido nunca puede recorrer. Las rutas con tabs
+  siguen usando su cálculo específico de botonera superpuesta.
+
+- **Safe area en la lista de notificaciones:** una vez cargada, `Screen` no
+  reserva una franja inferior. El `ScrollView` suma el inset nativo a su
+  `space[8]` (32 px) de padding de contenido; web conserva solo los 32 px.
+  El estado vacío usa ese mismo contenedor desplazable. Carga y error, que
+  son bloques estáticos, conservan la reserva inferior de `Screen`.
+
+- **Listas con separación propia:** Añadir administrador y Transferir usan
+  `Screen bottomInset="none"` y reservan el inset nativo + `space[5]` (20 px)
+  en el contenido de su `KeyboardAwareScrollView`. La tabla de Clasificación
+  hace lo mismo en su scroll vertical cuando tiene liga; sin liga conserva
+  safe-area en `Screen` para carga/error. Web mantiene solo los 20 px.
+  El inset se añade al padding propio sin activar además la opción de 16 px
+  de la primitiva, que sobrescribiría esa separación. La adaptación de layout
+  está implementada; el QA nativo completo de estas rutas sigue pendiente.
+
 - **Teclado y tabs:** en web la barra de tabs se ancla al borde inferior del
   viewport visual, también al aparecer el teclado. El padding inferior de un
   formulario web no toma el safe-area inset, porque puede variar al aparecer el
@@ -114,23 +150,57 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   cabecera el nombre de una entidad,
   este se centra, reserva 20 px frente a los controles laterales y puede ocupar
   dos líneas; no se impone un ancho fijo que lo trunque antes de agotar ese espacio.
+  En Cuenta Android se usa Text compartido con semántica de cabecera y reserva dinámica de control,
+  margen y separación a ambos lados, también para títulos de ruta traducidos.
   En la ficha de torneo iOS, el título personalizado limita su ancho con el ancho
   actual de ventana, los insets seguros y la reserva de controles y separación;
   su tamaño intrínseco no debe extenderse detrás de la toolbar. Las acciones de
   Equipos y Clasificación conservan su ancho de contenido y pueden pasar a otra
   fila cuando el texto aumentado agota el espacio.
+  Según [ADR-0151](../adr/0151-reflow-ios-entity-titles-for-accessibility.md),
+  todos los títulos de navegación iOS permanecen en la barra mientras quepan.
+  La primitiva compartida mide el texto completo con el ancho reservado y lo
+  compara con la altura real de navegación sin el inset superior. Solo si no
+  cabe se muestra una única cabecera completa debajo de la barra, conservando
+  botones nativos y escalado. No se usa un umbral arbitrario de fontScale.
+  `Screen.navigationTitle` aplica la regla a títulos de ruta; la ficha de
+  torneo inserta su nombre dentro del contenido desplazable mediante
+  `useAdaptiveNavigationTitle`. La medición invisible no recibe interacción
+  ni se expone a accesibilidad. La barra vacía usa un título nativo vacío para
+  evitar que aparezca el nombre técnico de la ruta como fallback.
 - **Tipografía:** Figtree local en web, iOS y Android, con los pesos 400, 500,
   600 y 700 cargados antes de montar la interfaz. Los tokens seleccionan la
   familia real de cada peso, en vez de sintetizarlo con `fontWeight`. La escala
   permanece entre 12 y 32 px. Las etiquetas de la primitiva `Button` usan
-  semibold (600) para reforzar su legibilidad sin cambiar tamaño ni altura. El
-  marcador de un partido dentro de una fila usa la escala `title` en negrita:
+  semibold (600) para reforzar su legibilidad sin cambiar tamaño ni altura.
+  Sus líneas permanecen centradas cuando una traducción o el texto ampliado
+  requiere más de una línea. El marcador de un partido dentro de una fila usa la escala `title` en negrita:
   mantiene jerarquía frente a los equipos sin forzar el alto de la card ni
   recortar los glifos. `display` queda para títulos y resultados destacados
   fuera de una fila compacta. Véase ADR-0096.
+- **Clasificación:** según [ADR-0153](../adr/0153-keep-standings-table-at-a-fixed-text-size.md),
+  solo las celdas (encabezados, posición, equipo, estadísticas y puntos) usan
+  `allowFontScaling={false}` para conservar la tabla compacta. Text mantiene el
+  escalado nativo por defecto. Título, ayuda de scroll, grupos y reglas siguen
+  escalando; no se introduce un límite global de accesibilidad.
 - **Espaciado:** escala de 4 px; los layouts usan 16 px como separación base.
   Cada card reserva siempre 20 px de margen exterior horizontal y los layouts
   dejan 20 px entre cards, sin alterar su padding interno.
+- **Ancho web:** [ADR-0154](../adr/0154-constrain-responsive-web-content-width.md)
+  centra navegación, contenido y tabs en un marco máximo de 1200 px.
+  Formularios y lectura usan un contenido máximo de 720 px; Inicio, biblioteca,
+  ficha y clasificación declaran `Screen webWidth="wide"`. Los tokens
+  `webLayout` comparten los límites. En viewports menores ocupan el ancho
+  disponible, manteniendo los márgenes de Card y el fondo completo.
+  Inicio y biblioteca usan `ResponsiveColumns`: dos columnas desde 960 px CSS,
+  una por debajo. Mantiene orden DOM, 20 px de separación y estructura estable
+  al cambiar ancho/zoom; nativo conserva una columna. Equipos con gestión
+  disponible usa la variante `sidebar`, con controles al lado del listado y
+  posición sticky. Sin controles conserva ancho de lectura. La ficha de liga
+  iniciada reserva `webLayout.sidebarWidth` (360 px) para resumen y accesos;
+  los partidos mantienen su lista desplazable. Al estrechar el viewport el
+  resumen vuelve al encabezado. Preparación, desempates y cuadros conservan
+  su organización y ancho disponible.
 - **Forma:** los campos y demás controles compactos usan radio 12 px; las
   tarjetas usan 16 px. Los botones usan `radius.pill` (999 px), de modo que sus
   extremos son siempre semicirculares respecto de su altura. La variante

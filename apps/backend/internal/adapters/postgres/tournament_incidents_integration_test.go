@@ -27,7 +27,7 @@ func TestIntegrationIncidentKnockoutAcrossSports(t *testing.T) {
 		t.Run(string(sport), func(t *testing.T) {
 			pool := integrationPool(t)
 			ctx := context.Background()
-			owner := createVerifiedLocalAccount(t, ctx, pool, "incident@example.test", "incident_owner", "password123")
+			owner := createVerifiedLocalAccount(ctx, t, pool, "incident@example.test", "incident_owner", "password123")
 			service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 			value, err := service.Create(ctx, owner, incidentCreation(sport))
 			if err != nil {
@@ -91,8 +91,8 @@ func TestIntegrationLeagueIncidentCorrectionAndWithdrawal(t *testing.T) {
 		t.Run(string(sport), func(t *testing.T) {
 			pool := integrationPool(t)
 			ctx := context.Background()
-			owner := createVerifiedLocalAccount(t, ctx, pool, "league-incident@example.test", "incident_owner", "password123")
-			outsider := createVerifiedLocalAccount(t, ctx, pool, "outsider-incident@example.test", "incident_other", "password123")
+			owner := createVerifiedLocalAccount(ctx, t, pool, "league-incident@example.test", "incident_owner", "password123")
+			outsider := createVerifiedLocalAccount(ctx, t, pool, "outsider-incident@example.test", "incident_other", "password123")
 			service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 			value, err := service.Create(ctx, owner, incidentCreation(sport))
 			if err != nil {

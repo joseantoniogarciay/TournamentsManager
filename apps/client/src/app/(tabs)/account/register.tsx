@@ -91,7 +91,11 @@ export default function RegisterScreen() {
   };
 
   return (
-    <Screen bottomInset="none" topInset="navigation-bar">
+    <Screen
+      navigationTitle={t("account_register_title")}
+      bottomInset="none"
+      topInset="navigation-bar"
+    >
       <KeyboardAwareScrollView
         contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}

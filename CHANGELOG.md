@@ -6,6 +6,52 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-11
+
+### Added
+
+- Web desktop con marco máximo centrado, columnas en Inicio y biblioteca y
+  laterales útiles en gestión de equipos y fichas de liga; una columna en móvil.
+- Hosting productivo en Cloudflare Workers Static Assets Free, con previews
+  seguros de torneo, redirección canónica y rollback al origen doméstico.
+
+### Changed
+
+- Cliente actualizado a Expo 57.0.26 / React Native 0.86.3 y dependencias
+  compatibles maduras; lockfile revisado, Metro Config alineado, plugins de
+  fuentes/localización explícitos y parche Symbols conservado para 57.0.3.
+- Retirado el parche Metro antiguo al incorporar upstream su lector de imágenes.
+  Se mantienen la espera de siete días y las incidencias Android de ADR-0152.
+
+### Security
+
+- Toolchain Go 1.26.9 y `golang.org/x/net` 0.60.0 fijados en los módulos de
+  aplicación y herramientas para corregir los avisos detectados por CI.
+
+### Fixed
+
+- Scroll de formularios y listados conserva el área segura dentro del contenido;
+  Notificaciones permite corte silábico y clasificación mantiene texto compacto
+  según la excepción de accesibilidad aceptada.
+- Home productiva indexable en Cloudflare; previews, dev y rutas de aplicación
+  conservan noindex. El lint excluye candidatos de despliegue generados.
+
+- Crear torneo aprovecha el área inferior: safe area y separación quedan dentro
+  del contenido desplazable, sin recortar su viewport con padding del padre.
+
+- Texto iOS recalculado al cambiar Dynamic Type con una pantalla abierta; chips
+  y etiquetas ajustan su altura sin reiniciar ni perder el borrador o foco de campos.
+
+- Títulos iOS adaptables al espacio real (ADR-0151): permanecen en la barra
+  mientras quepan y se muestran completos debajo solo cuando lo necesitan,
+  conservando botones nativos y el tamaño de texto solicitado.
+
+- Análisis Go de tests restaurado en el gate: contextos explícitos, comprobación
+  de cierres y errores envueltos; sin supresiones de linters.
+
+- Cabeceras de Cuenta Android con texto ampliado: títulos completos en dos
+  líneas y espacio frente a Volver; etiquetas multilínea de Button centradas.
+
 ## [1.10.0] - 2026-10-08
 
 ### Added

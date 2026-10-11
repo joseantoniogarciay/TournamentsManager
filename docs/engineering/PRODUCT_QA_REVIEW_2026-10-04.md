@@ -1,6 +1,8 @@
 # Revisión de producto — 2026-10-04
 
-> Estado: en curso. No acredita todas las casuísticas ni todas las plataformas.
+> Estado: cierre parcial por riesgo autorizado el 2026-10-10; ver
+> [lista vigente de cierre](PRODUCT_QA_CLOSE_2026-10-10.md).
+> Este informe histórico no acredita todas las casuísticas ni plataformas.
 > Base: `189acc7`, con las correcciones de rotación de enlaces y copy descritas
 > aquí. Entorno local, cuentas ficticias; sin desplegar ni activar observabilidad.
 
@@ -102,6 +104,17 @@ esperado. No se suman estos contadores como cobertura exhaustiva.
     ganar el partido, manteniendo las ayudas específicas y la validación existente.
     Android reproduce el error y confirma el mensaje corregido.
 
+13. Cabecera Android al 200 %: Cambiar contraseña quedaba pegado a Volver,
+    con ambos límites en x=168. Se sustituye el título estándar de Cuenta en
+    Android por Text compartido con dos líneas y ancho calculado según ventana,
+    control y separación. Español confirma 53 px físicos (aprox. 20 dp) frente
+    al botón, con y sin teclado. Datos de acceso y Cambiar contraseña se revisan
+    al 200 % también en inglés, italiano y francés; los títulos quedan completos.
+14. La etiqueta francesa de Guardar contraseña ocupa dos líneas al 200 % y
+    quedaba alineada a la izquierda dentro del botón centrado. La primitiva
+    Button centra también las líneas de su texto; captura real confirma ambas
+    líneas completas y centradas, sin cambiar el escalado ni el envío.
+
 ## Diferencias y cobertura visual abierta
 
 [La revisión entre plataformas](CROSS_PLATFORM_VISUAL_REVIEW_2026-10-04.md)
@@ -120,15 +133,18 @@ limitación vigente universal. La solución queda abierta: evaluar una capa en l
 misma ventana frente a una adaptación nativa sin romper fullScreenModal iOS.
 
 Faltan recorridos completos de todas las rutas de la matriz, cuatro idiomas,
-texto ampliado autenticado, orientación, VoiceOver/TalkBack, otras versiones de
-SO, release y dispositivos físicos. Android por tres botones tiene el alcance parcial descrito más abajo; orientación horizontal de la app no se acredita. El usuario aplaza explícitamente el OAuth real a futuras pruebas en dev/prod;
+texto ampliado autenticado en rutas aún no acreditadas, orientación, VoiceOver/TalkBack, otras versiones de
+SO, builds de distribución y dispositivos físicos. La variante release local Android
+se acredita parcialmente en la continuación del 2026-10-08. Android por tres botones tiene el alcance parcial descrito más abajo; orientación horizontal de la app no se acredita. El usuario aplaza explícitamente el OAuth real a futuras pruebas en dev/prod;
 no se bloquea esta sesión local ni se solicita su configuración ahora. Mailpit
 no prueba entrega externa.
 
 La apertura de un enlace de torneo en Android produjo una caída de DevLauncher
 el 2026-10-06. Recuperar la app permitió continuar y un segundo intento abrió
 el destino; la incidencia de arranque/enlace permanece abierta, con evidencia
-en la continuación de tenis de mesa. No se acredita el comportamiento en release.
+en la continuación de tenis de mesa. La tanda del 2026-10-08 añade arranques y
+enlaces en una variante release local; no demuestra que el defecto de
+development build esté corregido.
 
 ## Retrospectiva técnica
 
@@ -4067,3 +4083,1755 @@ La comprobación en seco confirma que el gate incluye la suite.
 Retrospectiva: tener un test versionado y aprobado no asegura que CI lo ejecute.
 Mantener la nueva regresión en la entrada compartida evita perder esa protección
 en futuras subidas; no requiere otro workflow ni una herramienta nueva.
+
+
+#### 2026-10-08 — Android autenticado con texto al 200 %
+
+Se arranca Pixel_API_34 para esta tanda; no había dispositivo ADB activo.
+API/PostgreSQL/Mailpit locales y Metro se encienden sin observabilidad. La build
+instalada es com.fasttourney.app.local: Metro se ejecuta con APP_ENV=local y los
+reverses 8080/8083 de esta sesión, sin reconstruir ni cambiar dependencias.
+
+Con la app ya cargada se cambia font_scale de 1.0 a 2.0. La recreación conserva
+la sesión y vuelve a Inicio. Se recorre Actividad reciente, QA formulario football,
+la ficha y Editar resultado. El título de la ficha usa dos líneas; las etiquetas
+largas del formulario se ajustan, y el scroll permite alcanzar los campos y el
+botón inferior. El alcance es español, tema claro y emulador Android API 34.
+
+En el editor se elige Incidencia, Abandono y Equipo local. Se conserva el tanteo
+local 1 y se vacía el visitante. Tras ocultar el teclado y desplazar el diálogo,
+«Completa ambos tanteos o deja el parcial vacío.» se lee completo en dos líneas;
+Guardar resultado queda desactivado tanto en el contenedor del árbol como en la
+captura revisada. No se guarda: se descarta por backdrop. GET confirma igualdad
+exacta de todos los partidos y estado con la línea base previa. El log de esta
+sesión del emulador registra cero FATAL EXCEPTION y cero guard de contexto; no
+reproduce ni cierra el fallo de solapamiento durante arranque de DevLauncher.
+
+Se restaura font_scale=1.0 y se confirma Inicio autenticado. Se detienen Metro,
+los tres servicios locales y el emulador que se arrancó para esta prueba;
+se retiran únicamente los reverses ADB de la sesión. Volúmenes y evidencia
+permanecen. La suspensión productiva de esta fecha responde a una autorización
+explícita separada, documentada en DEPLOYMENT.md; no es parte del QA local.
+
+Evidencia privada: android-large-font-*-20261008.{png,xml,json,log},
+qa-large-font-{runtime,metro,shutdown}-20261008.log y
+qa-large-font-final-state-20261008.json, bajo /private/tmp/tm-product-qa-20261004.
+La evidencia no acredita lectores de pantalla, todas las rutas/idiomas, otros
+SO, release ni dispositivos físicos. No se modifica código de producto.
+
+Retrospectiva: un árbol puede incluir controles fuera del viewport con bounds
+invertidos; desplazar y revisar la captura evita confundir contenido todavía no
+visible con recorte definitivo. Probar el error y su botón juntos, restaurar la
+preferencia del SO y comparar datos después acredita una tanda reproducible.
+
+
+#### 2026-10-08 — Biblioteca y Cuenta Android con texto al 200 %
+
+Se continúa la sesión autorizada con Pixel_API_34, API/PostgreSQL/Mailpit locales
+y Metro en 8083, APP_ENV=local; sin observabilidad. Se arranca el emulador para
+esta tanda y se conecta la build instalada por ADB, sin reinstalar ni actualizar
+dependencias. El arranque carga Inicio autenticado. font_scale pasa de 1.0 a
+2.0; la recreación conserva la sesión. Alcance: español, tema claro, API 34,
+orientación vertical y development build.
+
+Biblioteca muestra Administro 45 y Sigo 5. Los títulos largos se ajustan a
+varias líneas. Se cambia a Sigo y se desplaza hasta el quinto torneo, visible
+completo por encima de la botonera; el botón flotante permite abrir Crear torneo.
+En creación se ven los ocho deportes y los campos; el scroll alcanza el equipo
+precompletado y Crear torneo. Se cierra sin introducir nombre ni enviar.
+No se acredita en esta tanda el envío, la validación ni la paginación de Administro.
+
+Cuenta conserva el usuario ficticio y permite abrir Datos de acceso y Cambiar
+contraseña. El correo y la explicación se ajustan a varias líneas. El formulario
+vacío muestra ambas etiquetas, los campos y Guardar contraseña deshabilitado;
+enfocar Nueva contraseña mantiene el formulario y su acción visibles con teclado.
+No se introduce ni cambia contraseña, no se vincula proveedor, no se cierra sesión
+ni se solicita baja.
+
+Se detecta la incidencia 13 de cabecera: Cambiar contraseña queda pegado al botón
+Volver al 200 %, tanto con teclado como sin él. El título y el control comparten
+x=168 como límite en el árbol; la captura confirma falta de separación. No se
+presenta este recorrido como aprobado íntegramente. La inspección del layout
+nativo de Cuenta muestra el título estándar centrado y un headerLeft propio.
+Recomendación: adaptar la cabecera al espacio disponible reutilizando el patrón
+compartido y conservando el escalado; reducir globalmente el texto penalizaría
+la accesibilidad. Falta implementar y verificar la corrección, incluidas las
+otras cabeceras largas. No se toma una decisión nueva de producto.
+
+Se restaura font_scale=1.0 y se confirma Inicio autenticado. Se detienen Metro,
+el emulador arrancado aquí y los servicios locales; se retiran los reverses
+8080/8083 de esta sesión. La comprobación final encuentra cero contenedores,
+cero listeners de QA y las seis tareas dev conocidas suspendidas; el volumen
+PostgreSQL local permanece. No se opera sobre producción/K3s ni se altera su
+suspensión autorizada preexistente.
+
+Evidencia privada bajo /private/tmp/tm-product-qa-20261004:
+android-large-navigation-*-20261008.{png,xml,log},
+qa-large-font-navigation-{emulator,runtime}-20261008.log,
+qa-large-navigation-shutdown-20261008.log y
+qa-large-navigation-final-state-20261008.json. Se revisan las capturas de
+Biblioteca, final de Sigo, final de creación, Cuenta, Datos de acceso y contraseña
+con/sin teclado. El log del emulador de esta tanda contiene cero FATAL EXCEPTION;
+no reproduce ni cierra el fallo histórico de DevLauncher. No se modifica código
+de producto ni se repiten suites aprobadas sin cambios. git diff --check pasa.
+
+Retrospectiva: los campos pueden adaptarse correctamente al texto ampliado
+mientras la cabecera conserva una restricción distinta. Revisar ambos evita
+acreditar una pantalla entera solo por su contenido. Esperar y volver a leer
+el árbol tras una recreación o transición evita interpretar un toque prematuro
+como un fallo de navegación. Esta evidencia no sustituye TalkBack, otros idiomas,
+release ni dispositivos físicos.
+
+
+#### 2026-10-08 — Corrección de cabecera de Cuenta y etiqueta multilínea
+
+Se reproduce de nuevo la incidencia 13 antes de editar. El layout de Cuenta
+Android conserva NavigationHeaderButton y reemplaza solo su título estándar por
+Text compartido, semántica header y dos líneas. El máximo se calcula con el ancho
+actual menos el control de 44 dp, margen exterior y separación de 20 dp a cada
+lado, siguiendo el patrón existente en web. No se fija un ancho de pantalla ni
+se desactiva el escalado. iOS conserva su configuración nativa y web su layout
+específico; no se modifica la navegación, autorización ni operaciones OpenAPI.
+
+Al 200 %, Cambiar contraseña en español deja 53 px frente a Volver y se muestra
+completo en dos líneas, también con Nueva contraseña enfocada y teclado visible.
+Datos de acceso queda igualmente completo; Volver permite regresar a Cuenta.
+En inglés, italiano y francés se recorren Cuenta → Datos de acceso → Cambiar
+contraseña; las separaciones del editor son 53 px en los tres casos y las
+capturas confirman título íntegro, sin solapamiento. Ajustes y Notificaciones
+se revisan en español al 200 % y no muestran el defecto de separación.
+
+En francés se detecta y corrige la incidencia 14 añadiendo textAlign center a la
+etiqueta de Button compartido. La segunda captura confirma Enregistrer le mot de
+passe en dos líneas centradas, con Guardar deshabilitado en formulario vacío.
+No se introduce ni cambia contraseña, no se guarda ningún formulario ni se
+modifican datos de torneos. El truncado de la etiqueta nativa inglesa de Torneos
+al 200 % permanece como observación de alcance; no se acredita su locución.
+
+pnpm run typecheck, pnpm run check (formato, lint, tipos y OpenAPI) y exportación
+web de 36 rutas pasan con ambos cambios. Expo regenera expo-env.d.ts sin salto
+final: se restaura únicamente ese salto antes del gate, sin incluir un cambio
+funcional generado. No se añaden tests que reproduzcan estilos; la regresión
+se contrasta con el árbol y las capturas reales del caso reproducido.
+
+Checklist cliente: catálogos existentes es/en/it/fr; tokens, Text y Button
+compartidos; cierre circular existente; reserva dinámica y dos líneas sin
+reducir texto; rutas y transporte intactos; no se tocan endpoints ni se añaden
+reglas de negocio. Siguen abiertos lectores, otras rutas/versiones de SO,
+dispositivos físicos, distribución y proveedores reales aplazados.
+
+Evidencia privada bajo /private/tmp/tm-product-qa-20261004:
+android-header-*-20261008.{png,xml,json}, qa-header-locales.py,
+qa-header-locales-20261008.log y qa-header-{button-check,button-web-export,
+typecheck}-20261008.log. La corrección se prueba sin editar JavaScript durante
+las secuencias de navegación.
+
+Retrospectiva: el título estándar de una toolbar y un control propio pueden
+medirse con límites diferentes. Reutilizar el cálculo de espacio aceptado es
+suficiente; no hace falta cambiar el router ni reducir la preferencia de texto.
+Revisar el idioma más largo descubre también etiquetas multilínea cuyo bloque
+está centrado pero cuyas líneas no lo están.
+
+
+#### 2026-10-08 — Intento de TalkBack, sin acreditar recorrido completo
+
+TalkBack 14.2.0.618048417 está instalado en Pixel_API_34. Se guardan los valores
+previos enabled_accessibility_services=null, accessibility_enabled=0 y
+touch_exploration_enabled=0. Tras activar el servicio y resolver su solicitud
+inicial de notificaciones, dumpsys acredita servicio enlazado y exploración
+táctil activa. La notificación se rechaza; no se habilitan permisos del producto.
+
+El primer intento combina UIAutomator events/dump con el lector. La inspección
+altera el estado de exploración: no se usa como evidencia de navegación TalkBack.
+Se detiene el proceso UIAutomator y se contrasta servicio activo con capturas.
+Los intentos con gestos ADB y atajos de teclado no acreditan un recorrido fiable
+del foco dentro de la app; el borde de foco permanece en Tools de la development
+build aunque otros eventos naveguen. No se equipara navegar mediante una
+inyección a usar correctamente el lector ni se acredita calidad de locución.
+Los [atajos oficiales](https://support.google.com/accessibility/android/answer/6110948?hl=en)
+son referencia, no prueba de ejecución satisfactoria en este emulador.
+
+Durante la reconexión y el lanzamiento explícito de MainActivity se registran
+dos FATAL EXCEPTION de DevLauncher con el guard App react context shouldn't be
+created before. Reconectar una vez la URL exacta de Metro recupera Inicio
+autenticado. Es evidencia nueva del fallo ya abierto de development build;
+no se atribuye al formulario ni se declara corregido. Los logs y capturas
+android-talkback-*-20261008 se conservan privados. Se restauran los tres valores
+seguros previos de accesibilidad y el estado sin decisión del permiso de
+notificaciones de TalkBack. El caso de lector permanece abierto.
+
+Retrospectiva: validar un lector exige comprobar que el instrumento no lo
+suspende y que las acciones realmente recorren su foco. Un servicio activo,
+un árbol completo o una pulsación que navega no bastan por separado.
+
+
+#### 2026-10-08 — APK release local, bundle incluido y recuperación de conexión
+
+Se compila assembleRelease para ARM64 con el JDK incluido en Android Studio,
+APP_ENV=local y API loopback. La APK com.fasttourney.app.local no es debuggable y
+comparte el certificado de QA con la development build: adb install -r conserva
+sus datos. Se guarda antes una copia de la APK debug. Es una prueba local,
+firmada con la clave de desarrollo; no es un artefacto de tienda ni una
+publicación de producción. La fuente es ea57150 más las dos correcciones de
+cabecera y Button descritas arriba, todavía sin commit al compilar.
+
+La primera APK, con política de red por defecto, abre Inicio en tres arranques
+pero no conecta con la API HTTP local. Para aislar bundle y navegación, se
+crea un overlay release temporal en el Android generado e ignorado: base HTTP
+denegada y excepción únicamente para 127.0.0.1, sin subdominios. El primer
+intento del overlay falla lintVitalRelease por omitir includeSubdomains; se
+corrige explícitamente a false y la compilación pasa sin omitir tareas. El
+overlay se conserva privado y se retira del árbol de trabajo. No cambia
+app.config.ts, la política del producto ni la infraestructura pública.
+
+Con Metro apagado y esa APK de QA se comprueba:
+
+- Tres arranques fríos recuperan Inicio autenticado y actividad reciente.
+  am start informa 5560, 6652 y 6748 ms; son medidas de este emulador, no un
+  presupuesto de rendimiento. El log acotado registra cero FATAL EXCEPTION.
+- El enlace fasttourney-local de QA formulario football abre la ficha con la
+  app abierta y cerrada. La captura conserva 1–1, penaltis 4–6 y ganador visitante.
+- Al detener solo la API local y abrir el enlace en frío, RequestErrorCard
+  muestra common_network_error y Reintentar, sin cuerpo interno ni aviso
+  duplicado. Tras restaurar la API, Reintentar recupera la ficha. La proyección
+  pública completa coincide con la lectura previa, sin cambios en partidos.
+- Un nuevo arranque con API disponible recupera la sesión. Cuenta → Datos de
+  acceso → Cambiar contraseña al 200 % mantiene el título completo y 53 px
+  físicos frente a Volver. El formulario permanece vacío y no se envía.
+
+La compilación normal y la variante temporal pasan las tareas vitales de lint
+release. Esto no cierra el gate anterior de lint Android completo ni acredita
+iOS release, otras arquitecturas, firma de distribución, App Links verificados
+por el SO, OAuth real, dispositivos físicos o todas las rutas de la matriz.
+La caída de DevLauncher permanece abierta: no se reproduce en estos arranques
+release, pero esa muestra no corrige ni invalida la evidencia de development.
+
+Se reintenta TalkBack en la APK release sin Tools ni UIAutomator. El servicio
+muestra foco en el título de Inicio, pero los siguientes gestos ADB no acreditan
+avances sucesivos fiables. Se conservan las capturas, se restauran los valores
+previos y no se declara aprobado el lector ni su locución.
+
+Evidencia privada: android-local-release-{build,loopback-rebuild}-20261008.log,
+android-local-release-{default-policy,loopback}-20261008.apk,
+android-local-release-artifacts-20261008.json, android-release-*-20261008,
+qa-release-{startup-loopback,recovery}-20261008.log y scripts asociados.
+SHA256 de la APK temporal: 67cc5cee4501fdd4251834e9c3bd2d0949f3e205246066d2b90632b7f96255f2.
+Producción/K3s permanece apagada y no se activa observabilidad.
+
+Retrospectiva: un bundle release puede arrancar correctamente y fallar por la
+política de transporte del entorno local. Separar ambos hechos permite probar
+navegación y recuperación con una excepción estrecha, sin debilitar la
+configuración distribuible ni presentar un binario de QA como producción.
+
+
+#### 2026-10-08 — TalkBack con entrada táctil del emulador y enlaces negativos
+
+Se resuelve el bloqueo instrumental de la muestra anterior con `adb emu event
+mouse`: los eventos atraviesan el dispositivo táctil del emulador, acreditado
+con getevent. No se ejecuta UIAutomator mientras TalkBack está activo. Capturas
+sucesivas muestran avance real del borde de foco y la doble pulsación activa
+el elemento previamente verificado. Esto amplía la evidencia anterior; no
+convierte sus intentos fallidos en pruebas aprobadas.
+
+- Inicio: foco en descripción, Crear torneo y Actividad reciente. Crear abre
+  el formulario; el recorrido alcanza deportes y el campo Nombre vacío. La
+  activación abre el teclado, sin escribir ni crear un torneo.
+- Cuenta: Cerrar sesión abre su diálogo. El recorrido alcanza título, cuerpo,
+  confirmación y Cancelar; activar Cancelar conserva la cuenta autenticada.
+- Datos de acceso → Cambiar contraseña: el foco alcanza cabecera y campo
+  actual. Al 200 %, alcanza además el campo nuevo y Guardar deshabilitado;
+  la cabecera conserva sus dos líneas y separación. No se introducen ni
+  cambian credenciales.
+- Enlaces a torneo: UUID inexistente devuelve 404 y muestra «Este torneo ya
+  no está disponible» con Cerrar. Identificador malformado devuelve 400 y
+  muestra common_request_error con Reintentar, sin exponer el cuerpo interno.
+
+La muestra acredita foco y activación, no calidad de locución, todas las rutas
+ni dispositivos físicos. Un primer toque no adquirió el foco esperado y una
+URL enviada durante recreación por font_scale terminó en Inicio: se descartan
+esas capturas como prueba de contraseña y se repite después de verificar foco
+y pantalla estables. No se atribuyen estos fallos del harness al producto.
+
+Al cerrar Android se restauran exactamente los tres valores de accesibilidad,
+font_scale=1 y locales vacíos; se reinstala la APK debug guardada con install -r,
+se retiran los reverses propios y se apaga el emulador iniciado para esta tanda.
+La proyección completa del torneo sigue idéntica. El log release desde las
+20:43 registra cero FATAL nuevos y cero ANR observados: no cierra incidencias
+históricas ni el fallo de DevLauncher. Metro queda apagado; la API local se
+conserva únicamente para continuar el QA iOS. Producción continúa apagada.
+
+Evidencia privada: android-release-negative-links-20261008.json,
+android-talkback-hardware-*-20261008, android-release-cleanup-20261008.json,
+android-release-complete-logcat-20261008.log y scripts qa-talkback-hardware y
+qa-android-release-cleanup asociados. El directorio privado tiene modo 700.
+
+Retrospectiva: verificar el foco antes de activar evita confundir navegación
+por coordenadas con uso del lector. Comprobar respuestas HTTP junto al mensaje
+visible distingue el rechazo de negocio recuperable del fallback común seguro.
+
+
+#### 2026-10-08 — iOS release de simulador y VoiceOver acotado
+
+Xcode 27 compila FastTourneyLocal Release para iPhone 17, iOS 27.0, ARM64,
+con bundle incluido y Metro apagado. Se interrumpe deliberadamente el primer
+build de dos arquitecturas y se usa ONLY_ACTIVE_ARCH=YES. La build sin firma
+compila y abre Inicio, pero la ficha muestra common_request_error sin petición
+correlacionada. Recompilar con CODE_SIGNING_ALLOWED=YES y CODE_SIGN_IDENTITY=-
+genera entitlements de simulador y permite cargar la ficha. Es una limitación
+del harness sin firma; no se demuestra una causa interna concreta de SecureStore.
+No se añaden perfiles ni excepciones de transporte: ATS conserva
+NSAllowsArbitraryLoads=false y NSAllowsLocalNetworking=true. No había app
+FastTourney instalada en este simulador. Es firma ad hoc, no distribución.
+Fuente 80a0d41, seguida solo por documentación. SHA256 de main.jsbundle:
+3f2be6d7f6a588a88c5c9e19972cc9e6b2734e02124b6ff139054345f5d51e10.
+
+Con la build firmada se comprueba visualmente:
+
+- Tres arranques fríos llegan a Inicio anónimo sin Metro. No acredita sesión
+  persistida en esta instalación nueva ni rendimiento de dispositivo físico.
+- Enlace tournament con app abierta y cerrada: QA formulario football, 1–1,
+  penaltis 4–6 y ganador visitante. El primer comando usó una ruta plural
+  incorrecta; se descarta como prueba del enlace válido.
+- UUID inexistente: HTTP 404 real, torneo no disponible y Cerrar. Identificador
+  malformado: HTTP 400 real, common_request_error y Reintentar. Logs de API
+  corroboran ambos estados; no se muestran cuerpos internos.
+- API local detenida: common_network_error y Reintentar, sin aviso duplicado.
+  Tras restaurar HTTP 200, el toque recupera la ficha. Las proyecciones públicas
+  completas anterior y posterior coinciden byte a byte.
+- Text Size 11 mantiene separados los controles, pero recorta verticalmente
+  el título en la toolbar nativa. Reproduce la limitación abierta a Text Size 7,
+  sin acreditar lectura completa. Text Size vuelve a 3.
+
+Antes de recompilar con firma, VoiceOver muestra avance real desde el título
+de Inicio a descripción y Crear torneo. La doble pulsación abre el formulario
+y el siguiente gesto alcanza su cabecera. No se escribe ni envía. Es evidencia
+de foco y activación sobre la build sin firma, no locución ni toda la matriz.
+VoiceOver vuelve a off; Capture Keyboard permanece off. Tras reinstalar,
+Device Hub deja de exponer el subárbol de la app en esta sesión: las pruebas
+posteriores usan capturas y coordenadas observadas. La falta del árbol
+instrumental no se presenta como una auditoría accesible del producto.
+
+Evidencia privada: ios-local-release-{arm64,adhoc}-build-20261008.log,
+ios-release-artifacts-20261008.json, ios-release-{cold-1,cold-2,cold-3,
+football-warm,football-cold,link-missing,link-malformed,offline,retry,
+text-size-11}-20261008.png, ios-voiceover-{create-focus,form-heading}-20261008.png,
+ios-api-links-log-20261008.log e ios-release-complete-log-20261008.log.
+El log acotado no contiene coincidencias fatal/uncaught/crash; no certifica
+ausencia de cualquier fallo. Producción y observabilidad permanecen apagadas.
+
+Se repite :app:lintDebug sin excluir dependencias. Falla nuevamente en
+:react-native-worklets:lintAnalyzeDebug con Cannot find a KaModule for the
+VirtualFile, una excepción del analizador. Log privado
+android-full-lint-retry-20261008.log. El gate completo continúa abierto;
+no se desactivan reglas ni se actualizan dependencias para ocultar el fallo.
+
+Retrospectiva: xcodebuild aprobado no garantiza un harness instalado adecuado
+para servicios nativos. Contrastar firma, HTTP y pantalla evita modificar
+negocio o transporte por un problema de instrumentación. Conservar explícito
+el límite de altura de cabecera, sin desactivar el escalado para ocultarlo.
+
+
+Cierre operativo verificado el 2026-10-09: make dev-down retira API, PostgreSQL
+y Mailpit sin borrar volúmenes; no quedan contenedores locales activos ni
+listeners de QA en 8080/5432/8025/1025/8083. La app iOS de QA se termina; se
+conserva el simulador que ya estaba arrancado antes de la tanda. Text Size=3,
+VoiceOver=off y Capture Keyboard=off restaurados. Android permanece apagado
+con la APK debug restaurada. UTM informa K3s stopped y las tareas de dev,
+producción y autostart siguen disabled. No se reinicia producción ni se publica
+un nuevo release. El primer cierre fue rechazado por un fallo de revisión
+automática debido al límite de uso; no ejecutó la acción y se completó tras
+reanudar la sesión. Evidencia y backups se conservan.
+
+
+#### 2026-10-09 — Parche de seguridad descubierto durante el cierre de CI
+
+CI de 787444c falla en govulncheck con once avisos publicados el 8 de octubre:
+GO-2026-6617, 6613, 6612, 6611, 6610, 6608, 6607, 6605, 6603, 6600 y 6599.
+La CI anterior aprobada no invalida una detección posterior de la base viva.
+Se aplica la política de parches aceptada en ADR-0012: toolchain Go 1.26.9
+en ambos módulos y x/net 0.60.0; go get resuelve además los mínimos requeridos
+de crypto, sync, sys, text y mod, con tidy y checksums separados.
+Docker Hub publica 1.26.9-bookworm para amd64 y arm64: se alinea la base.
+No se construyen ni despliegan imágenes de servicio en esta tanda. Los binarios
+de producción siguen siendo los de v1.10.0 y K3s permanece apagado.
+
+GOTOOLCHAIN=go1.26.9 make verify local termina con exit 0: formato, lint,
+tests, generación, tidy de ambos grafos, build, exportación web y govulncheck.
+La integración PostgreSQL opt-in queda omitida localmente con los servicios
+apagados; CI la ejecuta en su base efímera. El análisis detallado conserva
+GO-2026-5932 de OpenPGP en el módulo x/crypto, sin versión corregida: cero
+vulnerabilidades en símbolos y paquetes importados, un aviso de módulo cuyo
+paquete no usa este backend. No se declara limpio todo el grafo por ese exit 0.
+Fuente: [aviso oficial](https://pkg.go.dev/vuln/GO-2026-6617).
+
+Se revisa el disparador de lint de tests: con --tests=true ahora carga los
+paquetes y muestra 38 hallazgos (informe limitado por regla) (errcheck 3, errorlint 3, gosec 5,
+misspell 8, noctx 7, revive 8, staticcheck 3, unused 1). Se actualiza la deuda
+y el comentario de configuración; tests:false permanece hasta resolverlos.
+No se atribuye ya ese pendiente a una excepción del cargador ni se suprimen
+reglas para declararlo aprobado. Las pruebas funcionales siguen ejecutándose.
+
+Evidencia privada: qa-close-ci-failed-20261009.log,
+qa-go-security-verify-20261009.log, qa-go-security-vuln-verbose-20261009.log,
+qa-go-lint-tests-20261009.log y go-1.26.9-docker-manifest-20261009.json.
+Retrospectiva: la base de vulnerabilidades cambia sin cambios de código.
+Una actualización mínima puede corregir el gate de seguridad y, a la vez,
+permitir revisar una excepción antigua; distinguir ambas deudas evita
+confundir un parche probado con una certificación global o un despliegue.
+
+
+#### 2026-10-09 — Cierre del análisis de tests Go
+
+Se restaura run.tests: true y se retira la deuda de DECISIONS_TO_REVISIT.
+El informe inicial de 38 incidencias estaba limitado por regla; la revisión
+posterior usa --max-same-issues=0 --max-issues-per-linter=0 y acaba con 0 issues.
+No se eliminan reglas, aserciones ni escenarios y no se añaden nolint.
+
+Peticiones y sockets de test usan contexto explícito; el cierre HTTP comprueba
+lectura y cierre antes de publicar su resultado. Los errores de dominio se
+comparan con errors.Is. Los helpers siguen validando las mismas cuentas y
+resultados; los ocho tokens concurrentes conservan sus bytes únicos mediante
+un índice byte acotado por constante. Las cookies entrantes se representan
+como cabecera Cookie: Secure corresponde a la cookie emitida por servidor.
+Se elimina parser.ParseDir obsoleto conservando la inspección de imports de
+todos los archivos Go de producción en cada directorio. Los falsos positivos
+del corrector inglés se resuelven reformulando diagnósticos españoles.
+
+Evidencia privada: qa-tests-lint-unlimited-20261009.log (inventario restante)
+y qa-tests-lint-complete-20261009.log (cero incidencias).
+
+Retrospectiva: un informe resumido no es un inventario exhaustivo. Revisar sin
+límites de presentación permite cerrar la excepción sin debilitar el gate.
+Esta fase no acredita Android Lint completo, la cabecera iOS a texto máximo
+ni el recorrido global con lectores. Local, dev y producción siguen apagados.
+
+Validación final: GOTOOLCHAIN=go1.26.9 make verify y go test -race ./...
+terminan con exit 0. PostgreSQL permanece apagado y las pruebas que exigen
+TM_INTEGRATION_DATABASE_URL se omiten localmente; CI ejecutará esa integración.
+Govulncheck conserva el aviso de módulo OpenPGP previamente documentado,
+con cero vulnerabilidades alcanzables. Logs privados:
+qa-tests-enabled-verify-20261009.log y qa-tests-enabled-race-20261009.log.
+
+
+#### 2026-10-09 — Títulos iOS adaptables al espacio real (ADR-0151)
+
+El usuario acepta ADR-0151 y precisa que el cambio de posición solo ocurra
+cuando no haya otra opción; además extiende la regla a todos los títulos de
+navegación. La primitiva mide el texto completo con ancho reservado para
+controles y separación, y compara su altura con useHeaderHeight del Router
+sin el inset superior. No limita el escalado ni decide por fontScale.
+La clave de medición cambia con nombre, ancho, escala y peso tipográfico.
+
+Screen.navigationTitle aplica la regla en rutas de Cuenta, Ajustes, avisos,
+crear, unirse, legales y gestión del torneo. La ficha usa el mismo hook y
+sitúa el nombre en su cabecera desplazable. Las pantallas sin título no
+reciben uno. La medición oculta queda fuera de accesibilidad y de los toques.
+La primera prueba detecta que devolver null permite al stack recuperar el
+nombre técnico de ruta; se corrige devolviendo un View vacío y declarando
+el título nativo vacío cuando se presenta el nombre debajo.
+
+Xcode 27 compila Release ARM64 con firma ad hoc para iPhone 17/iOS 27, sin
+Metro. Pruebas visuales en español sobre el simulador existente:
+
+- Ficha football: tamaño 3 conserva el nombre completo en la barra; tamaños
+  7 y 11 lo muestran completo debajo sin cruzar Cerrar ni Acciones.
+- Equipos a tamaño 7: permanece completo en la barra. Demuestra que texto
+  ampliado no activa por sí solo la adaptación.
+- Crear torneo: tamaño 3 mantiene el título en la barra; tamaño 11 lo muestra
+  completo debajo. El toque CUA sobre Cerrar vuelve a Inicio, sin enviar.
+- Ajustes a tamaño 11: título completo debajo y sin identificador técnico.
+- Las proyecciones públicas del fixture antes y después son idénticas por cmp.
+
+Cambiar Text Size en caliente mediante Device Hub deja algunos textos del
+contenido con cajas anteriores; se registran capturas separadas y se contrasta
+mediante arranque frío. El arranque frío recompone el contenido. No se presenta
+la prueba del inspector como certificación del cambio de tamaño en dispositivo
+físico. Device Hub sigue sin exponer el subárbol de la app tras reinstalar:
+esto acredita disposición y cierre por capturas/toque, no locución VoiceOver
+ni toda la matriz. Idiomas restantes y todas las rutas aún requieren recorrido
+nativo; la implementación compartida no equivale a verificar cada combinación.
+La app admite orientación portrait: no se fuerza otra orientación para el QA.
+
+Checklist apps/client/AGENTS.md revisada: catálogos existentes, tokens y
+primitivas compartidos, márgenes, separación frente a botones, cierre nativo,
+semántica de cabecera y escalado intactos. Ninguna operación OpenAPI cambia;
+los adaptadores y apiFetch se conservan. No se añade dependencia ni módulo
+nativo. La compilación final incluye la ruta de vinculación de Google; no se
+prueba aquí su acceso social real.
+
+Evidencia privada: ios-title-reflow-{normal,size7-fixed,size11-fixed}-20261009.png,
+ios-title-teams-size7-20261009.png, ios-title-create-{normal,size11,close-size11}
+-20261009.png, ios-title-settings-size11-20261009.png; logs de build y verify
+ios-title-reflow-*-20261009.log. Se conserva también el intento inicial para
+mostrar el fallback detectado.
+
+Android: :react-native-worklets:lintAnalyzeDebug --rerun-tasks --stacktrace
+--no-daemon --max-workers=2, con LINT_PRINT_STACKTRACE=true, vuelve a fallar
+en Cannot find a KaModule for the VirtualFile. La traza pasa por análisis de
+script Gradle Kotlin; no identifica aquí un arreglo validado. Evidencia:
+android-worklets-lint-diagnostic-20261009.log. El gate completo sigue abierto,
+sin supresiones ni actualización de dependencias.
+
+Retrospectiva: medir texto y espacio reales permite adaptar solo cuando hace
+falta. Una devolución vacía de un renderer puede activar un fallback nativo;
+comprobar barra y contenido juntos evita mostrar identificadores internos.
+Las pruebas de título corto/largo al mismo tamaño son más útiles que un umbral
+arbitrario de escala. No confundir el arreglo del título con toda la matriz
+de accesibilidad o con un despliegue.
+
+Cierre local de la fase: typecheck, make verify y compilación final Xcode
+Release ARM64 terminan con exit 0; Xcode registra BUILD SUCCEEDED. El análisis
+de vulnerabilidades no encuentra casos alcanzables ni paquetes importados
+afectados; mantiene un aviso en un módulo requerido no llamado por el código.
+La integración PostgreSQL completa corresponde al CI, no se atribuye a una
+ejecución local que omita su URL. git diff --check pasa.
+
+Se restaura Text Size a 3, VoiceOver y captura de teclado permanecen apagados
+y se termina la app de QA. make dev-down completa el cierre, docker ps queda
+vacío y utmctl confirma producción/K3s stopped. Se conservan volúmenes, backups
+y evidencia; no hay publicación de producción ni activación de observabilidad.
+
+#### 2026-10-09 — Contraste del motor Android Lint e inventario alcanzable
+
+El [análisis de herramientas](ANDROID_LINT_ENGINE_ANALYSIS_2026-10-09.md)
+registra los contrastes y fuentes primarias. La propiedad efectiva de AGP
+-Pandroid.lint.useK2Uast=false permite completar Worklets. El contraste completo
+:app:lintDebug :global-feedback:lintDebug alcanza lintReportDebug y termina
+exit 1: 924 tareas, 191 ejecutadas. La app tiene dos errores y 45 avisos,
+contados desde el XML, sin asumir que un build exitoso equivalga a cero avisos.
+MissingPrefix procede de la marca data-generated del generador de filtros de
+Expo; NewApi procede del atributo API 33 del generador de estilos de splash.
+
+El módulo local se ejecuta después por separado con K1: exit 0, 166 tareas,
+28 ejecutadas; cero errores, seis avisos (ViewConstructor una vez y UseKtx
+cinco). ViewConstructor concierne al constructor requerido por herramientas
+XML, no demuestra un fallo de creación del ExpoView por su AppContext. No se
+introduce un constructor inválido ni una dependencia para silenciar avisos.
+Los avisos de la app incluyen recursos generados, iconos, APIs, orientación,
+permisos heredados y recomendaciones de actualización; el XML conserva todo
+el inventario para priorizarlo con contexto, sin actualizaciones automáticas.
+
+ADR-0152 queda Propuesto para decidir el coste de dos parches de generación.
+No se aplican; ningún archivo fuente del cliente, dependencia, configuración
+nativa o regla de lint cambia en esta fase. K1 aporta evidencia complementaria;
+el gate K2 continúa abierto. Lint 9.0.1 también falla por una segunda excepción
+FIR. El cambio upstream integrado el 7 de octubre no prueba disponibilidad de
+un artefacto publicado, ni autoriza saltar la espera de ADR-0138.
+
+Se vuelve a comprobar iOS desde CUA: Home visible, Text Size 3, VoiceOver y
+captura de teclado apagados; Device Hub sigue sin el subárbol de la app. Se
+termina la app después. Captura ios-accessibility-channel-recheck-20261009.png.
+No se atribuye a ese contraste locución, orden de foco ni una matriz accesible.
+API, PostgreSQL, Metro, emulador Android y producción no se arrancan.
+
+Evidencia privada: android-full-lint-k1-20261009.log, android-feedback-lint-k1
+-20261009.log e informes android-{app,global-feedback}-lint-k1-report-20261009.xml.
+Retrospectiva: un crash de herramienta puede ocultar errores reales de recursos.
+Separar motor, ejecución, informe y decisión permite avanzar el inventario sin
+rebajar el gate ni confundir un workaround diagnóstico con un arreglo aprobado.
+
+Decisión posterior del usuario: «Esperar versiones corregidas de Expo».
+ADR-0152 pasa a Aceptado con alternativa B; no se implementan los dos parches.
+Los dos errores, los avisos y el bloqueo K2 se conservan abiertos.
+
+
+#### 2026-10-09 — Títulos de creación por idioma y revisión de updates
+
+Se instala el artefacto final Release ARM64 ya compilado y se prueba creación
+con Text Size 11 y idiomas por proceso: inglés muestra Create tournament en
+dos líneas; italiano Crea torneo en una; francés Créer un tournoi en dos.
+En los tres el nombre completo aparece bajo la barra y Cerrar queda separado.
+La pulsación de Cerrar en inglés vuelve a Home. No se envían formularios ni
+se afirma que se haya probado el cierre en italiano/francés.
+
+Capturas privadas: ios-title-create-{en,it,fr}-size11-20261009.png,
+ios-title-create-en-close-20261009.png e ios-locale-restore-es-20261009.png.
+Se restaura Text Size 3, español, VoiceOver y captura de teclado apagados;
+se termina la app. El canal de accesibilidad de la app continúa ausente,
+por lo que esta evidencia visual no cierra foco ni locución VoiceOver.
+
+El usuario solicita revisar actualizaciones pendientes. La
+[revisión Expo/RN](EXPO_UPDATE_REVIEW_2026-10-09.md) encuentra una matriz madura
+57.0.26 / RN 0.86.3, pero los generadores inspeccionados aún conservan los dos
+errores Android. No se modifica paquete, lockfile, parche ni motor lint.
+La expectativa CLI más reciente incluye versiones jóvenes. La resolución
+transitiva y las builds de una nueva matriz quedan pendientes de su adopción.
+
+Retrospectiva: completar evidencia visual por idioma y comprobar paquetes
+oficiales permite avanzar QA sin certificar accesibilidad o correcciones no
+probadas. API, PostgreSQL, Metro, emulador Android, observabilidad y producción
+no se arrancan en esta fase; se conservan evidencia y datos.
+
+
+#### 2026-10-09 — Instalación autorizada de la matriz madura
+
+El usuario pide instalar lo actualizable tras revisar Expo/RN. Se aplica Expo
+57.0.26 / RN 0.86.3, se actualizan paquetes compatibles y transitivas maduras,
+sin exclusiones de edad. El [informe de actualización](EXPO_UPDATE_REVIEW_2026-10-09.md)
+registra versiones, pares, parches, compatibilidad y evidencia privada.
+Instalación congelada, typecheck, web, make verify y regresiones de dependencias
+pasan; el check online conserva los cinco directos jóvenes. Se mantienen los
+avisos altos de node-forge/braces con correcciones todavía no publicadas.
+
+Android Debug ARM64 compila, se instala conservando datos y recorre Home ->
+Crear torneo -> Cerrar -> Home con Router 57.0.24 tras limpiar el caché Metro.
+No se envían formularios ni se modifican fixtures. El emulador de esta sesión
+queda apagado. K2 sigue fallando en Worklets; el XML diagnóstico K1 conserva dos
+errores y 45 avisos de app. Global-feedback pasa con cero errores y seis avisos.
+No se debilita el gate ni se aplican los dos parches rechazados por el usuario.
+
+Las primeras builds nativas se interrumpen por disco lleno. Se conserva el
+último binario iOS y la evidencia y se elimina su DerivedData antiguo; la
+recompilación Android pasa. Después del desbloqueo confirmado por el usuario,
+iOS Debug ARM64 compila, se instala y muestra Home con Router 57.0.24. Crear
+torneo conserva título en barra a Text Size 3 y debajo a 11; al relanzar a 11
+los chips hacen reflow y el cierre nativo vuelve a Home. Cambiar la escala en
+caliente recorta otros textos: se registra el contraste sin atribuirlo al
+upgrade ni cerrar accesibilidad. El árbol AX de la app sigue ausente.
+
+Se restaura tamaño 3 y español; se termina la app iOS y Metro. No se arranca API,
+PostgreSQL, observabilidad ni producción. La revisión vinculada conserva toda
+la evidencia y la retrospectiva; no se presenta este smoke test como QA total.
+
+
+#### 2026-10-09 — Recalcular texto iOS al cambiar Dynamic Type en caliente
+
+Problema reproducido en la development build Expo 57.0.26 / RN 0.86.3: pasar
+Text Size 3 -> 11 con Crear torneo montado conserva las alturas antiguas de
+etiquetas y chips, aunque los glifos crecen. La captura privada
+`dynamic-type-live-before-20261009.png` vuelve a mostrar el recorte; el arranque
+previo usa el binario actualizado y Metro con Router 57.0.24.
+
+El [reporte upstream #57512](https://github.com/react/react-native/issues/57512)
+describe el mismo patrón y documenta que una actualización de propiedades basta
+para volver a medir. Es evidencia de contexto, no prueba de que toda su causa
+interna coincida con esta app. La dependencia instalada conserva contenido del
+párrafo y marca su medición como sucia cuando cambia props.
+
+Se concreta la accesibilidad aceptada en ADR-0054/0055/0151 en la primitiva
+`Text`: `useWindowDimensions().fontScale` actualiza un `nativeID` único (`useId`
++ escala) solo en iOS. No se altera la etiqueta accesible ni se remonta el texto,
+la ruta o el formulario. Se conserva `allowFontScaling` nativo y los tokens;
+no se introduce un parche de dependencia ni una librería. Frente a remontar con
+`key={fontScale}`, evita sustituir nodos; frente a un parche Fabric, tiene menor
+coste de actualización. La adaptación se retira cuando el renderer pase esta
+misma prueba sin la propiedad de invalidación.
+
+Prueba con la pantalla montada tras cargar el cambio: 3 -> 11 muestra Deporte y
+chips completos y reordenados (`dynamic-type-live-candidate-20261009.png`),
+conserva el deporte Tenis y el borrador QA escala, comprobados también en AX.
+11 -> 3 -> 7 muestra etiquetas completas y campo activo; escribir después de
+cambiar a 7 añade texto al mismo borrador sin reenfocarlo. La captura
+`dynamic-type-size7-focus-20261009.png` muestra cursor, borde de foco y
+QA escala viva 7. Otra transición 7 -> 11 -> 3 conserva edición y añade 11 al
+valor. A 7 el título cabe en barra; a 11 pasa completo debajo: la regla sigue
+basada en medición y no en un umbral de escala.
+
+El árbol AX de la app está disponible en esta sesión: hay una sola cabecera
+Crear torneo, Cerrar es botón, Tenis consta seleccionado y los campos tienen
+nombre localizado. Esto avanza la evidencia semántica, pero no certifica locución
+ni recorrido VoiceOver. El gesto de scroll solicitado a Device Hub no desplaza
+el formulario; no se acredita aquí lectura visual del último control a 11.
+No se envían formularios ni se cambia ningún fixture. Se limpia el borrador,
+Cerrar vuelve a Inicio y se restaura Text Size 3, VoiceOver apagado y captura
+de teclado apagada.
+
+Checklist de cliente: cambio compartido y acotado a iOS, sin copy nuevo ni
+colores/medidas locales, semántica y escalado conservados, sin operación OpenAPI
+ni endpoint modificado. Typecheck y exportación web pasan. Los bloqueos Android
+K2/generadores de ADR-0152 y el resto de la matriz global siguen abiertos.
+
+Retrospectiva: una captura tras relanzar no cubre el cambio de preferencia con
+contenido montado. La comprobación de altura debe acompañarse de estado y
+edición retenidos; una propiedad de invalidación permite corregir el defecto
+observado sin asumir la complejidad de mantener el renderer nativo.
+
+Cierre del gate: `make verify` pasa, además de typecheck y exportación web
+independientes. La integración PostgreSQL local se omite sin URL de pruebas;
+la comprobación remota se realiza en CI tras subir a develop. Metro queda
+apagado y se termina la app y el simulador arrancado en esta sesión. API,
+PostgreSQL, observabilidad y producción no se han arrancado.
+
+
+#### 2026-10-09 — Safe area inferior en Crear torneo
+
+El usuario identifica la franja inferior desaprovechada y precisa la regla:
+aprovechar el safe area y añadir la separación dentro del contenido. El código
+confirma que `Screen` sumaba inset + `space[4]` como padding del padre: el
+viewport de `KeyboardAwareScrollView` terminaba antes de esa franja.
+
+Se conserva el cálculo y se cambia su propietario: Crear torneo usa
+`Screen bottomInset="none"`; la primitiva compartida admite
+`bottomInset="safe-area"` y reserva inset nativo + 16 px al final de
+`contentContainerStyle`. Web conserva 16 px sin inset nativo. El valor por
+defecto de la nueva opción es none para respetar los cálculos específicos de
+las rutas con tabs. No se cambia navegación, títulos, escalado ni operación
+OpenAPI. La decisión concreta del usuario mantiene los tokens y la regla de
+layout compartido de ADR-0054/0055; no requiere una nueva dirección de stack.
+
+La vista compacta de Device Hub permite observar desplazamiento del formulario
+previo a la corrección. Arranque con Text Size 11 alcanza el botón completo
+(`accessibility-create-bottom-size11-cold-20261009.png`); pulsarlo vacío muestra
+los errores localizados de ambos campos y sus etiquetas AX incluyen el mensaje.
+No se crea un torneo ni se inicia sesión. En el cambio en caliente, la captura
+previa `accessibility-create-bottom-size11-20261009.png` muestra el viewport
+cortado antes del borde inferior. No se declara que ese gesto hubiese alcanzado
+su límite máximo ni se infiere de él un fallo del motor de scroll.
+
+Tras el cambio, `accessibility-create-safe-area-after-20261009.png` muestra el
+contenido llegando a la zona inferior antes vacía a Text Size 11.
+`accessibility-create-safe-area-size3-20261009.png` muestra formulario completo,
+botón y card a tamaño normal. La separación final queda dentro del scroll,
+según el código. Los gestos posteriores del canal no aportan evidencia adicional
+del último control a 11 después del cambio; esa comprobación visual y VoiceOver
+continúan pendientes. Se restaura tamaño 3 y se cierra a Inicio sin conservar
+borrador; VoiceOver y captura de teclado permanecen apagados.
+
+Typecheck, formato de los archivos modificados y exportación web pasan. La
+checklist de cliente conserva copy localizado, tokens, cierre nativo y API
+sin cambios; no se desactiva el escalado. Metro, app y simulador de esta sesión
+se apagan. API, PostgreSQL, observabilidad y producción no se arrancan.
+
+Retrospectiva: safe area y separación no obligan a recortar el viewport. En
+contenido desplazable, reservarlos dentro de su contenido permite recorrer la
+superficie hasta el borde y mantiene protegido el último control. La captura
+de viewport y la de final de scroll responden a preguntas distintas.
+
+Gate final: `make verify` pasa. Integración PostgreSQL local omitida por no
+definir TM_INTEGRATION_DATABASE_URL; no se presenta como ejecutada localmente.
+El commit anterior de Dynamic Type `ebb6649` cerró CI con éxito en
+[run 37939253169](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37939253169).
+
+#### 2026-10-09 — Cierre visual del safe area a tamaño 11
+
+Se carga el commit `456d9a3` en la development build instalada del simulador
+iPhone 17 (iOS 27.0), sin arrancar API ni PostgreSQL. Desde Crear torneo a
+Text Size 3 se cambia a 11 con la pantalla montada y se desplaza el formulario
+en la ventana compacta de Device Hub. La captura privada
+`accessibility-create-safe-area-bottom-live11-20261009.png` acredita el botón
+«Inicia sesión para crearlo» completo, con sus dos líneas dentro de la
+superficie y separación inferior. Cierra la comprobación visual pendiente
+tras el ajuste del safe area; no certifica VoiceOver ni todas las rutas.
+
+Pulsar el botón con los campos vacíos muestra los dos errores localizados;
+las etiquetas AX de los campos incluyen su respectivo mensaje. No se inicia
+sesión ni se crea un torneo. Cerrar vuelve a Inicio y se restaura Text Size 3.
+VoiceOver y captura de teclado permanecen apagados; el simulador ya estaba
+arrancado al comenzar esta comprobación y se conserva así. Metro y la app se
+terminan. Dev, observabilidad y producción no se arrancan.
+
+CI del cambio `456d9a3` termina correctamente en
+[run 37944204703](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37944204703).
+Esta fase añade evidencia y documentación, sin cambios de implementación.
+Los bloqueos Android de ADR-0152 y los recorridos pendientes de la matriz
+global continúan abiertos.
+
+Retrospectiva: la prueba en caliente acredita el último control después de
+la nueva medición de texto. Combinar captura y validación local permite
+comprobar su lectura y acción sin introducir datos ni depender de servicios.
+
+#### 2026-10-09 — VoiceOver: foco y scroll de Crear torneo
+
+Development build instalada en iPhone 17, iOS 27.0, con JavaScript de
+`fd4f83d` y Metro local. API, PostgreSQL y observabilidad permanecen apagados.
+VoiceOver se activa temporalmente en Device Hub. En Inicio, gestos horizontales
+avanzan el rectángulo de foco desde título a descripción y Crear torneo.
+En el formulario avanzan por cabecera, Deporte y los deportes en orden.
+
+El foco está en Tenis al cambiar Text Size 3 → 11 con la vista montada:
+permanece en ese control y el layout recompone el contenido. Pádel está
+seleccionado por una pulsación del canal, sin introducir nombres. Los gestos
+del lector continúan por Voleibol, Tenis de mesa, Bádminton, Pádel, explicación
+de sets, etiqueta y campo del torneo, sección y ayuda del participante,
+etiqueta y campo del participante y botón final. VoiceOver desplaza el
+formulario automáticamente al alcanzar contenido fuera del viewport.
+El botón completo queda enfocado y visible a 11. El gesto inverso alcanza el
+campo anterior y la navegación inversa completa alcanza Cerrar nativo.
+
+Evidencia privada en el directorio habitual:
+`ios-voiceover-create-bottom-focus-size11-20261009.png`,
+`ios-voiceover-create-reverse-field-size11-20261009.png` y
+`ios-voiceover-create-close-focus-size11-20261009.png`.
+Las capturas del canal durante el recorrido corroboran los focos intermedios.
+No se acredita locución, escritura con lector ni activación por doble toque:
+un doble clic de CUA en otro punto cambió Pádel mientras el foco seguía en
+Tenis. Por eso las pulsaciones del canal no se equiparan a la activación
+del elemento enfocado. Esto acota también la evidencia de apertura del
+formulario de esta pasada; la navegación por gesto sí muestra avance real.
+No se infiere un defecto de activación del producto por esa diferencia.
+
+Se restaura Text Size 3 y VoiceOver off; Capture Keyboard continúa off y se
+conserva el volumen original. Cerrar vuelve a Inicio sin guardar ni enviar.
+Metro y la app se terminan, conservando el simulador previamente arrancado.
+No cambia implementación ni se repiten los gates de código ya aprobados.
+Producción sigue apagada por la decisión previa del usuario. El inventario
+global conserva locución, activación/edición con lector, otras rutas y gates
+Android pendientes.
+
+Retrospectiva: un árbol AX estable puede coexistir con foco y scroll reales
+del lector. Sus capturas permiten acreditar navegación; una pulsación enviada
+por instrumentación no demuestra por sí sola activación VoiceOver.
+
+#### 2026-10-09 — TalkBack y safe area Android tras la actualización
+
+Pixel_API_34 (API 34) se arranca para esta tanda con la APK Debug actualizada
+del 9 de octubre y JavaScript de `d1c83e3`. Metro está activo; API, PostgreSQL,
+dev, observabilidad y producción permanecen apagados. Se conservan antes de
+probar los tres ajustes de accesibilidad, font_scale=1.0 y reverses vacíos.
+Cambiar a font_scale=2.0 recrea la actividad y vuelve a Inicio; se abre Crear
+torneo desde esa pantalla estable. No se presenta esa recreación como un
+recorrido aprobado de conservación de ruta.
+
+UIAutomator se usa únicamente antes de activar TalkBack. Con el lector activo
+se emplea entrada táctil `adb emu event mouse` y capturas. La petición de
+notificaciones de la Suite de Accesibilidad se rechaza; no es necesaria para
+el recorrido. La muestra acredita foco en cabecera, Deporte, Fútbol,
+Baloncesto, Pádel y campo del torneo. El doble toque fuera de Pádel activa
+el deporte enfocado, conserva el foco y actualiza su descripción y etiquetas.
+Activar el campo del torneo vacío abre el teclado; no se escribe. Cerrar
+teclado permite continuar hasta la sección de participante y el botón final.
+
+El recorrido de foco desplaza automáticamente el formulario. La captura
+`android-talkback-safe-area-focus-19-20261009.png` muestra Crear torneo
+completo y enfocado, con separación respecto a la barra de gestos y final de
+card visible. Se cierra la comprobación Android de acceso al último control
+en este formulario al 200 %, sin acreditar locución ni todos los lectores,
+rutas o versiones. La variante autenticada conserva un borrador previo con
+nombre de torneo vacío y participante «Incidencia Local». No se pulsa Crear,
+no se guarda ni se crea ningún fixture.
+
+La navegación inversa vuelve a Fútbol; el doble toque restaura la selección
+original. El foco alcanza Cerrar y activarlo vuelve a Inicio. El aviso común
+de conexión allí es coherente con la API apagada y no muestra detalles internos.
+No se modifica la sesión ni se cambian nombres. Se restauran y comprueban
+exactamente los ajustes originales, se retira únicamente reverse tcp:8082,
+se termina la app y se apaga el emulador iniciado para QA. Metro queda apagado.
+
+Evidencia privada: `android-talkback-safe-area-{before,restored}-20261009.json`,
+capturas `android-talkback-safe-area-*`, estado del servicio, logs de Metro y
+emulador y script `qa-talkback-safe-area-20261009.py` en el directorio habitual.
+La secuencia de navegación inversa rápida no avanzó un elemento por cada
+evento; se vuelve a verificar visualmente Fútbol y Cerrar antes de activarlos.
+No se deduce un defecto del producto de la cadencia del instrumento.
+No cambia implementación. El gate lint Android de ADR-0152 continúa abierto;
+no se repite con la misma matriz ni se aplican los parches rechazados.
+
+Retrospectiva: comprobar entrada táctil, foco y resultado permite distinguir
+activación del lector de un toque por coordenadas. El acceso al teclado y al
+último botón aporta evidencia específica tras el upgrade sin enviar un
+formulario ni arrancar servicios adicionales.
+
+#### 2026-10-09 — Inventario del safe area restante
+
+La siguiente pasada visual iOS no puede iniciarse: CUA informa que el Mac está
+bloqueado y no puede desbloquearlo. Se solicita desbloqueo manual; no se arranca
+Metro, API ni otro servicio mientras no haya acceso al simulador. Se continúa
+con revisión estática del propietario del inset inferior. El cierre de Crear
+torneo no se extiende implícitamente al resto del cliente.
+
+| Ruta | Evidencia en código | QA y aplicación restantes |
+| --- | --- | --- |
+| join-team | Screen declara safe-area; el formulario usa KeyboardAwareScrollView sin reserva propia | Comprobar formulario y último control; conservar protección de las ramas estáticas de carga/error |
+| link/password-reset | Las ramas de error y formulario usan Screen por defecto y KeyboardAwareScrollView sin inset propio | Revisar ambos layouts; el cambio efectivo de credencial continúa reservado a intervención humana |
+| tournament/[id]/administrators/add | Screen por defecto; scroll con paddingBottom space[5] | Revisar viewport, teclado y último resultado; evitar duplicar separación al mover el inset |
+| tournament/[id]/transfer | Screen por defecto; scroll con paddingBottom space[5] | Revisar viewport y último resultado sin ejecutar transferencia |
+| account/notifications | Screen por defecto; ScrollView con paddingBottom space[8] | Completar desplazamiento real iOS; conservar padding de contenido y no borrar notificaciones |
+| tournament/[id]/standings | Screen por defecto; ScrollView de tabla con paddingBottom space[5] | Revisar final vertical y control horizontal/sticky antes de adaptar layout |
+
+En estas seis rutas, Screen reserva inset + space[4] fuera del scroll y por
+tanto recorta su viewport. Es un hecho de implementación; no acredita por sí
+solo un control inaccesible ni una reproducción visual de recorte. No se
+modifica código durante este inventario. Las rutas bajo tabs ya usan su
+cálculo específico dentro del contenido; equipos y administradores declaran
+bottomInset none y reserva propia en su scroll. Los documentos legales tienen
+bottomInset none y padding propio, y requieren una revisión distinta del
+inset nativo; no se clasifican como la misma franja fija del padre.
+
+Las tres integraciones anteriores de evidencia cierran CI con éxito:
+`fd4f83d` ([37946222813](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37946222813)),
+`d1c83e3` ([37947317466](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37947317466)) y
+`03ed43c` ([37958638867](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37958638867)).
+No se publica producción ni se repite un gate nativo con la misma matriz.
+
+Retrospectiva: localizar quién reserva el inset permite priorizar la siguiente
+pasada sin declarar una migración global terminada. Las ramas sin scroll y
+los paddings propios deben revisarse antes de trasladar la reserva.
+
+#### 2026-10-09 — Desplazamiento real de notificaciones iOS y enlace sin token
+
+Tras desbloquear el Mac se retoma iPhone 17, iOS 27, con el Debug actualizado.
+La ruta de recuperación sin token muestra mensaje localizado y Volver a la
+home completos a Text Size 11. Activar la salida vuelve a Inicio. No se introduce
+ni cambia ninguna credencial; esta rama no reproduce un último control recortado.
+
+Se inicia Metro y el entorno local API/PostgreSQL/Mailpit sin observabilidad.
+Metro se detiene durante la pasada y aparece el error del servidor de desarrollo;
+se reinicia y se reconecta antes de continuar. Se inicia sesión por el formulario
+normal con la cuenta ficticia qa_visual_player, sin insertar sesión por archivos.
+El teclado del instrumento requiere Alt+2 para la arroba con su distribución
+española; no se atribuyen los intentos de entrada a un fallo del producto.
+
+La lista conservada alcanza por gesto su notificación más antigua,
+4/10/2026 16:34:26. A Text Size 3 su tarjeta completa y separación inferior
+son visibles. A Text Size 11 el texto de una tarjeta supera el viewport,
+pero el recorrido permite leer su extremo inferior y la fecha completa,
+con separación respecto al borde. Tocar el cuerpo abre «QA Liga de equipos
+con acentos y nombres largos»; Cerrar regresa a la misma posición inferior.
+No se activa ningún borrado ni se crea un fixture. Se cierra el pendiente de
+desplazamiento real iOS de esta lista; no se acredita lectura con VoiceOver.
+
+A tamaño 11 el título Notificaciones parte la «s» final en otra línea;
+queda pendiente revisar esa presentación. El acceso al final no demuestra
+que el propietario actual del inset siga la regla de viewport aprovechable: la
+reserva externa inventariada continúa sin migrar. No se modifica implementación
+ni se extiende el cierre de Crear torneo a las seis rutas restantes.
+
+Evidencia privada en /private/tmp/tm-product-qa-20261004/:
+ios-reset-no-token-size11-20261009.png,
+ios-notifications-bottom-size3-20261009.png,
+ios-notifications-bottom-size11-20261009.png y logs de Metro y dev-up de esta
+pasada. AX del instrumento no expone el subtree de la app; se contrastan
+resultados mediante capturas y gestos observados. Un fotograma de rebote de
+scroll no se considera posición final: se comprueba después de estabilizarse.
+
+Se restaura Text Size 3, VoiceOver y Capture Keyboard quedan desactivados.
+Se termina la app, se conserva el simulador que ya estaba arrancado y se
+apagan Metro y el entorno local con dev-down, conservando volúmenes.
+
+Retrospectiva: llegar al final y regresar desde un destino aporta evidencia
+distinta de activar un elemento fuera de pantalla mediante AX. Acceso al
+contenido, presentación del título y propiedad del inset son comprobaciones
+separadas; esta pasada cierra únicamente lo observado.
+
+#### 2026-10-09 — Mover el inset de notificaciones al contenido
+
+Se aplica la regla de viewport aprovechable ya pedida por el usuario a una
+ruta concreta. Con items cargados y sin error, Screen declara bottomInset none;
+el ScrollView reserva inset inferior nativo + space[8]. Se conserva el padding
+propio de 32 px y se elimina la reserva adicional fija del padre. Web mantiene
+32 px sin inset nativo. El vacío continúa dentro del mismo ScrollView; carga y
+error estáticos conservan safe-area en Screen. No cambia operación HTTP,
+contrato, mapping de errores ni comportamiento de borrado.
+
+La alternativa de conservar Screen con safe-area seguiría dejando una franja
+fuera del viewport. Una nueva primitiva compartida para una sola lista añadiría
+mantenimiento innecesario: se usa el hook de insets existente y tokens.
+
+Preflight: baseline cerrado, manifiesto original, ADR-0054/0055/0056 y reglas
+cliente revisados. Cierre: no se añaden textos, medidas literales, controles,
+permisos ni lógica de negocio. Los márgenes de Card y el espacio entre tarjetas
+se conservan. Typecheck, ESLint y Prettier del archivo y exportación web pasan.
+
+La build Debug iOS carga la lista conservada con sesión QA previa y muestra
+contenido hasta el borde inferior, incluida parte de la siguiente card dentro
+del área que antes reservaba Screen. Evidencia privada:
+notifications-safe-area-corrected-size3-20261009.png y logs
+notifications-safe-area-{metro,dev,web}-20261009.log en el directorio habitual.
+Device Hub dibuja el puntero, pero esta pasada no entrega acciones táctiles a
+la app: tampoco responde Cerrar. Ampliar y renovar la ventana, arrastre y scroll
+no resuelven esa limitación. No se acredita una nueva prueba del extremo final,
+texto máximo, estado vacío ni Android con la implementación corregida. La
+pasada anterior de scroll corresponde al código previo y no se reutiliza como
+validación de este cambio.
+
+Metro, API, Mailpit y PostgreSQL quedan apagados; los volúmenes y el simulador
+preexistente se conservan. No se activa observabilidad ni producción. No se
+crean ni borran notificaciones. Cinco rutas del inventario conservan aún la
+reserva externa; el título partido de Notificaciones permanece pendiente.
+
+Retrospectiva: la propiedad del inset puede corregirse sin alterar estados
+estáticos ni duplicar padding. Una captura del viewport demuestra su extensión,
+pero no sustituye el recorrido del último elemento tras el cambio.
+
+#### 2026-10-09 — Extender la propiedad del inset a las cinco rutas restantes
+
+Se aplica la regla ya solicitada de aprovechar el viewport y añadir separación
+al final del contenido. No se introduce una decisión de stack ni una nueva
+primitiva. La alternativa de cambiar el default global de Screen afectaría
+ramas estáticas y rutas no revisadas; se mantiene la selección explícita por
+ruta. Preflight del manifiesto, baseline y ADR-0054/0055/0056 sigue vigente.
+
+| Ruta | Reserva de contenido implementada | Rama estática conservada |
+| --- | --- | --- |
+| join-team | KeyboardAwareScrollView safe-area: inset + 16 px; Screen none solo con invitación válida y lista para mostrar | Carga y RequestErrorCard conservan Screen safe-area |
+| link/password-reset | Formulario y error desplazable: KeyboardAwareScrollView safe-area, Screen none | LoadingTransition conserva Screen safe-area |
+| administrators/add | KeyboardAwareScrollView: inset + 20 px, Screen none | Sus estados parciales siguen dentro del formulario |
+| transfer | KeyboardAwareScrollView: inset + 20 px, Screen none | Sus estados parciales siguen dentro del formulario |
+| standings | ScrollView vertical: inset + 20 px, Screen none con liga cargada | Sin liga, carga/error conservan Screen safe-area |
+
+En los tres últimos casos se conserva el padding propio de 20 px mediante el
+hook existente; no se activa la opción de 16 px que lo reemplazaría. Web no
+suma inset nativo. Clasificación mantiene su scroll horizontal, cabecera sticky,
+selectors y diálogo de reglas. No se cambia navegación, copy, objetivos táctiles,
+features HTTP ni reglas de recuperación. No se ejecutan asignaciones,
+transferencias, adhesiones ni cambios de contraseña.
+
+Cierre explícito de checklist cliente: mismos tokens, localización, controles
+nativos, márgenes de contenido y Card, y cabeceras existentes; no se introducen
+librerías ni bypass del cliente generado. Typecheck, ESLint de las cinco rutas,
+Prettier y exportación web final pasan. No se añaden tests que reflejen los
+mismos estilos; la validación pendiente es de viewport, teclado y gestos reales.
+
+Se renueva la sesión CUA. Home de iOS expone su árbol nativo, pero la app React
+Native continúa sin subtree y los toques no activan ni la salida de recuperación.
+La rama sin token corregida muestra mensaje y CTA completos tanto a tamaño 3
+como a Text Size 11, sin iniciar API. Se conserva
+reset-safe-area-corrected-size11-20261009.png en el directorio privado habitual,
+junto a invitation-reset-safe-area-metro-20261009.log y
+remaining-safe-area-web-20261009.log. No se acredita la activación de la salida
+con este cambio. Tampoco se acredita formulario válido de recuperación, invitación
+válida, búsqueda con teclado/último resultado o tabla vertical/horizontal.
+La nueva revalidación de notificaciones sigue bloqueada por entrada táctil.
+
+La corrección de propiedad del inset está implementada en las seis rutas del
+inventario (incluida Notificaciones, 71b1b52), pero su QA nativo completo no está
+cerrado. La presentación del título partido de Notificaciones permanece pendiente.
+Se restaura Text Size 3 y se confirma VoiceOver y Capture Keyboard apagados;
+se termina la app y Metro, conservando el simulador preexistente. API y resto de
+servicios locales no se arrancan en esta pasada. No se activa observabilidad ni
+producción.
+
+Retrospectiva: elegir la reserva según la rama conserva las protecciones estáticas
+sin renunciar al viewport desplazable. Conservar padding propio evita uniformar
+listas distintas por accidente. Una limitación de entrada del instrumento debe
+mantener abierto el QA, aunque typecheck y bundling confirmen la implementación.
+
+#### 2026-10-09 — Revalidación táctil de notificaciones y clasificación
+
+Se continúa sobre `8eccca9` en iPhone 17, iOS 27, Debug local. CUA vuelve a
+entregar toques y arrastres: Cuenta, apertura de Notificaciones, reintento,
+destino y cierre responden. El subtree React Native sigue sin exponerse al
+instrumento; la evidencia de interacción son las capturas y estados observados
+en esta conversación. No se crean archivos PNG adicionales en esta pasada.
+Metro se inicia en terminal persistente; API, PostgreSQL y Mailpit se arrancan
+con `make dev-up`, sin observabilidad. Se conserva la sesión qa_visual_player y
+los datos existentes. El fallo inicial de conexión muestra el fallback común;
+Reintentar carga la lista cuando la API está disponible.
+
+Notificaciones alcanza por arrastre la tarjeta más antigua, 4/10/2026 16:34:26,
+a Text Size 3 y 11. Tras estabilizarse se ven la fecha, el borde inferior de
+la tarjeta y separación respecto al borde del dispositivo. Con tamaño 11 se
+abre el torneo desde el cuerpo de esa tarjeta; Cerrar devuelve a la misma
+posición inferior. Se cierra la revalidación de scroll y destino de esta lista
+con el inset corregido (`71b1b52`). No se acredita vacío, Android ni VoiceOver
+con esta implementación. El título sigue partiendo la «s» en otra línea a
+tamaño 11: permanece abierto como defecto de presentación.
+
+La clasificación del mismo torneo carga tres equipos. A tamaño 3, el arrastre
+horizontal revela GC y DG conservando equipos y puntos en sus columnas fijas.
+El diálogo de reglas abre y OK lo cierra. El control flotante de Expo intercepta
+inicialmente el área de acciones; moverlo permite comprobar el botón nativo.
+No se atribuye esa interferencia a una ausencia de respuesta del producto.
+
+**Hallazgo abierto:** a Text Size 11 las cabeceras se fragmentan y las filas
+de estadísticas y puntos dejan de coincidir verticalmente con las de equipos.
+Se observa también tras un gesto vertical y una captura estabilizada. No se
+aprueba la tabla ampliada ni se cierra su QA de inset/scroll vertical por esta
+muestra. El código conserva anchos fijos y tres listas de filas independientes
+con `minHeight`, sin altura común por fila; esto aporta una causa probable,
+no una prueba de que el traslado reciente del inset haya causado el defecto.
+
+Recomendación de siguiente corrección: conservar la tabla y sincronizar la altura
+de cada fila, con espacio de columnas compatible con texto ampliado. Tiene menos
+coste que sustituirla por una nueva composición; desactivar el escalado no
+cumple la accesibilidad aceptada. No se modifica implementación en esta pasada.
+Quedan pendientes los formularios de invitación/recuperación válidos, búsqueda
+de administradores y transferencia, y la matriz nativa restante. El menú de
+este torneo solo ofrece Actualizar y Compartir; no acredita acceso a las rutas
+de administración con la sesión conservada.
+
+Se restaura Text Size 3; VoiceOver y Capture Keyboard permanecen apagados.
+Se conserva el simulador preexistente y se apagan Metro y el stack local,
+conservando volúmenes. No se borran notificaciones ni se envían formularios,
+transferencias o credenciales. Producción y observabilidad no se activan.
+
+Retrospectiva: revalidar el gesto tras una corrección cierra una evidencia
+específica, no toda la matriz. En una tabla dividida en columnas, ampliar texto
+debe mantener la relación entre entidad y valores además de permitir scroll.
+
+
+#### 2026-10-09 — Corte silábico autorizado y límite de columnas fijas
+
+El usuario acepta «Permitir corte silábico» para el título de Notificaciones.
+Los cuatro catálogos incorporan un guion opcional Unicode en notifications_title;
+se conserva la palabra, escala, navegación y las claves existentes. El guion no
+se muestra a tamaño normal. La medición invisible de la cabecera iOS se renueva
+mediante su key al cambiar título, ancho, tamaño o énfasis; no se remonta la
+cabecera visible ni se altera el foco de controles. Conserva medición de líneas
+y la comparación de altura de ADR-0151.
+
+En iPhone 17/iOS 27 Debug, después de recargar el código y recorrer Cuenta →
+Notificaciones, Text Size 11 muestra el título completo con corte silábico
+«Notificacio- / nes», sin dejar la «s» aislada. Abrir el torneo desde el cuerpo
+funciona y su nombre largo se lee debajo de la barra a tamaño máximo; restaurar
+Text Size 3 lo devuelve a la barra. Las capturas constan en esta conversación;
+no se exportan PNG adicionales. No se acredita locución de VoiceOver ni los
+otros tres locales o Android con el guion opcional.
+
+Un ensayo de tabla comparte alturas medidas por fila y amplía los anchos de
+celdas. La muestra a tamaño 11 mantiene alineados equipos y valores, pero deja
+un viewport de estadísticas ilegible y el nombre demasiado estrecho. Restaurar
+el tamaño recupera las alturas normales. El ensayo no pasa QA ni se integra:
+se conserva en el archivo privado standings-measured-rows-draft-20261009.tsx,
+en /private/tmp/tm-product-qa-20261004/, y se restaura standings.tsx al código
+integrado. No se presenta la desalineación anterior como resuelta en develop.
+
+ADR-0153 propone desplazar la tabla completa únicamente cuando el espacio no
+permita columnas fijas y una estadística legible. Se solicita decisión explícita;
+la alternativa de cards añade otra composición y más mantenimiento. La rama
+adaptativa no se implementa mientras el ADR siga Propuesto, según AGENTS.md.
+El título sí es una corrección de copy ya autorizada y dentro de ADR-0151.
+
+Preflight: manifiesto, baseline cerrado, reglas cliente, ADR-0054/0055/0056 y
+0151, diseño, arquitectura y desarrollo revisados. Cierre de checklist: textos
+en los cuatro catálogos, sin medidas nuevas, reducción de escalado, librerías,
+controles, navegación, sesión, operaciones HTTP ni reglas de negocio nuevas.
+La key solo afecta a la medición invisible y conserva su exclusión de
+accesibilidad. Typecheck, lint, Prettier y exportación web del estado final pasan.
+
+Se restaura Text Size 3 y se conservan VoiceOver/Capture Keyboard apagados.
+Metro y API/PostgreSQL/Mailpit se apagan, conservando volúmenes y el simulador
+preexistente. No se activa observabilidad ni producción; no se borran datos.
+El QA restante y la tabla ampliada continúan abiertos.
+
+Retrospectiva: alinear filas y garantizar espacio legible son requisitos
+separados. Una prueba que descubre el segundo límite debe detener la integración
+del ensayo y preparar una decisión concreta, sin ocultarlo detrás de checks verdes.
+
+### 2026-10-09 — Tabla compacta por decisión explícita del usuario
+
+La instrucción «La tabla de clasificación no puede ser tan accesible, la dejamos
+usable pero que no crezca con texto porque va a reventar» sustituye la propuesta
+anterior de ADR-0153. El ADR queda aceptado con tamaño fijo exclusivamente en
+las celdas. Se añade una prop optativa a Text; el resto conserva el default
+nativo. No se implementan alturas compartidas ni una nueva rama de scroll.
+
+Evidencia nativa: development build local en iPhone 17/iOS 27, sesión
+qa_visual_player, liga de equipos con acentos y nombres largos. Tras recarga
+completa de Metro, Text Size 3 y 11 conservan tamaño y correspondencia de filas:
+posiciones 1/1/3 y puntos 3/3/0. Se recorre el scroll horizontal con cabecera
+sincronizada hasta PE/PP/GF/GC/DG (última fila 0/2/0/6/-6), equipos y puntos
+fijos, y se vuelve a PJ/PG con tamaño máximo. Un gesto corto que empieza y
+termina dentro del área de estadísticas da evidencia estable; los primeros
+gestos largos no confirmaron el desplazamiento y no se contaron como éxito.
+Título y ayuda se amplían. El diálogo de reglas se abre con texto ampliado y
+se cierra con Ok; se restaura Text Size 3. Las capturas están en la conversación,
+sin archivo PNG nuevo exportado.
+
+Validación: typecheck, ESLint de los dos archivos modificados y exportación web
+correctos; salida y log en /private/tmp/tm-product-qa-20261004/ con prefijo
+fixed-standings-web-20261009. Checklist cliente: textos/locales existentes,
+tokens, márgenes y controles nativos conservados; sin operación OpenAPI tocada.
+La exportación no certifica interacción web. Android y lector siguen pendientes.
+El QA global no queda cerrado por esta pasada.
+
+Retrospectiva: separar la decisión de densidad de tabla de la adaptación del
+resto de la pantalla reduce el cambio y evita un layout paralelo. La limitación
+visual del texto fijo queda explícita en ADR-0153. Al finalizar se apagan Metro
+y servicios dev conservando volúmenes; no se activa observabilidad.
+
+### 2026-10-09 — Revalidación web de clasificación y búsquedas
+
+Sobre develop 1062432 se arranca Metro y el stack local sin observabilidad.
+El navegador integrado conserva la sesión ficticia. La clasificación de la liga
+de equipos con nombres largos se observa a 1280 × 720 y 390 × 844, en español
+y tema oscuro. En escritorio caben todas las estadísticas; en ancho móvil el
+scroll horizontal llega a GC/DG con cabecera sincronizada y equipos/puntos
+fijos. Se conservan posiciones 1/1/3 y puntos 3/3/0. Las filas permanecen
+alineadas. El diálogo de reglas permite desplazar hasta el texto de retirada
+con Ok visible; cerrar y Volver regresan al torneo. No se acredita zoom: el
+atajo de ampliación no cambió la presentación del navegador integrado.
+
+En el torneo propio QA Web refresh 20261007, Administradores muestra el vacío.
+Añadir administrador comprueba ayuda de mínimo con dos caracteres, ocho
+resultados ficticios con qa_ y vacío con una búsqueda sin coincidencias. A
+390 × 480 se desplaza hasta el último resultado completo, con margen inferior.
+Tras cerrar, la lista continúa sin delegados. Transferir torneo muestra su aviso,
+los mismos ocho candidatos y alcanza el último en el viewport bajo; Cerrar
+regresa al torneo con las acciones de creador. No se selecciona destinatario,
+se concede permiso ni se transfiere propiedad. La espera de búsqueda se observa
+antes de juzgar su estado final; no se cuenta el estado intermedio como resultado.
+
+No hay nuevos defectos confirmados ni cambios de implementación en esta pasada.
+Las capturas y estados constan en la conversación, sin PNG exportado. Se restaura
+el viewport del navegador y se cierra la pestaña de QA. Metro y API/PostgreSQL/
+Mailpit se apagan al terminar, conservando volúmenes. No se activa producción.
+Android, lectores, zoom web y búsquedas nativas con teclado continúan pendientes;
+un viewport bajo no acredita teclado ni safe area de iOS o Android.
+
+Retrospectiva: la exportación web anterior solo probaba construcción. El scroll
+real confirma sincronización y alcance de columnas; una ventana baja comprueba
+alcance del último resultado sin atribuirle evidencia de teclado móvil.
+
+### 2026-10-09 — Búsquedas iOS y límite de evidencia con teclado
+
+Sobre a2d8e00, iPhone 17/iOS 27 development build local y sesión ficticia
+conservada. Se recarga Metro y se abre el torneo propio QA formulario table_tennis
+por Actividad reciente. Administradores muestra el vacío y Añadir abre el campo
+con foco y ayuda de mínimo. Capture Keyboard permite introducir qa_ y carga
+los ocho resultados. El teclado en pantalla permanece oculto; los controles
+visibles de Device Hub no ofrecen una opción para mostrarlo y el instrumento
+no encuentra la app Simulator. No se acredita oclusión por teclado.
+
+En Añadir administrador, Text Size 11 conserva la consulta, coloca el título
+completo bajo la barra y permite alcanzar el último resultado. Tras estabilizar
+el rebote se ven sus dos líneas completas, borde y separación inferior. Text
+Size 3 restaura presentación normal y Cerrar vuelve a la lista sin delegados.
+No se selecciona cuenta ni se concede permiso.
+
+Transferir muestra aviso y ayuda; qa_ carga ocho destinatarios. Se ven completos
+a Text Size 3 y 7. A tamaño 11, el aviso ocupa el viewport y los gestos sobre
+texto, margen y borde inferior no permiten confirmar acceso a los resultados.
+Terminar edición con Return y repetir el cambio 3→11 no cierra esa evidencia.
+El caso permanece abierto: no se atribuye aún a código ni al instrumento, y no
+se modifica el layout por una causa no aislada. Cerrar funciona y conserva
+las acciones del creador. No se selecciona destinatario ni se transfiere.
+
+Capturas y estados observados en la conversación; sin PNG adicional exportado.
+Se restauran Text Size 3, Capture Keyboard off y VoiceOver off; se sale a Home.
+Metro y API/PostgreSQL/Mailpit se apagan conservando volúmenes; sin observabilidad
+ni producción. No cambia implementación, por lo que no se repiten checks del
+cliente ya aprobados. Android, lectores, teclado visible y transferencia iOS
+ampliada siguen pendientes. El QA global continúa en curso.
+
+Retrospectiva: entrada por teclado del host y teclado visible son evidencias
+separadas. Un gesto que mueve Administradores no certifica Transferir, donde
+el aviso ampliado cambia la zona inicial del recorrido; conservar el caso abierto
+hasta aislar el comportamiento evita una corrección especulativa.
+
+
+### 2026-10-09 — Cierre del alcance de resultados en Transferir iOS ampliado
+
+Sobre abc566b, mismo iPhone 17/iOS 27, sesión y torneo ficticios. Se añaden
+trazas temporales de dimensiones y offset, sin consulta ni datos de usuarios,
+para aislar el caso anterior. La recarga de desarrollo deja una pantalla negra;
+Reload y Go home del menú de Expo no recuperan la interfaz. Cerrar Fast Tourney
+Local mediante la acción del selector de apps y abrirla de nuevo restaura Home
+con sesión y actividad reciente. Se registra como incidencia de la sesión de
+desarrollo, sin atribuirla a Transferir ni certificar una causa de producto.
+
+Transferir con qa_ vuelve a cargar ocho resultados. A Text Size 11, el contenido
+mide aproximadamente 2.310 puntos y el viewport 562. El scroll del instrumento
+sobre el aviso no genera eventos. Un arrastre ascendente desde el margen izquierdo
+sí genera offsets y un rebote muy grande; tras estabilizarse alcanza aproximadamente
+1.748 puntos, el final del contenido. Se observan el último candidato completo en
+dos líneas, el separador y margen inferior. El título permanece completo bajo la
+barra. Se retiran las tres trazas y se comprueba que la misma presentación final
+se conserva. El caso abierto de alcance de resultados queda cerrado para este
+simulador sin modificar el layout; no se acredita el comportamiento de todos los
+gestos ni del teclado visible.
+
+Text Size vuelve a 3, Capture Keyboard y VoiceOver permanecen apagados. Cerrar
+regresa al torneo con las acciones del creador y se vuelve a Home. No se selecciona
+ninguna cuenta ni se cambia la propiedad. Evidencia visual y medidas en la
+conversación, sin PNG exportado. Solo queda documentación versionada; no se
+repiten checks de código al haber retirado íntegramente la instrumentación.
+Metro y API/PostgreSQL/Mailpit se apagan al cerrar, conservando volúmenes y sin
+activar observabilidad. Android, lectores, teclado visible y zoom web siguen
+pendientes; el QA global continúa en curso.
+
+Retrospectiva: dimensiones correctas no prueban por sí solas interacción. Los
+eventos de offset permiten distinguir un gesto no entregado de un scroll real;
+el gran rebote del instrumento exige esperar a su estabilización antes de juzgar
+el alcance. No se introduce una corrección de layout sin defecto confirmado.
+
+
+### 2026-10-09 — VoiceOver de Notificaciones y bloqueo de la sesión siguiente
+
+Sobre eaeeaf9, iPhone 17/iOS 27, sesión ficticia qa_visual_player conservada,
+Metro y API/PostgreSQL/Mailpit locales sin observabilidad. Cuenta abre
+Notificaciones. VoiceOver se activa a Text Size 3: el gesto horizontal alcanza
+Cerrar y después el primer aviso; el árbol AX muestra Eliminar todas, el título
+y 31 pares independientes de Abrir torneo / Eliminar notificación.
+
+Con el primer aviso enfocado se cambia a Text Size 11. El título mantiene el
+corte Notificacio- / nes y los gestos avanzan por avisos y acciones, desplazando
+la lista automáticamente. La barra AX pasa por 3 %, 23 %, 92 % y 99 %. Desde
+la barra final, un gesto inverso enfoca el último botón de eliminar, visible
+por completo; otro vuelve al cuerpo del último aviso. Las cards ampliadas son
+más altas que el viewport: esta pasada acredita foco y desplazamiento del
+lector, no una card completa en una sola captura, locución ni activación.
+No se abre un torneo ni se elimina ninguna notificación. Se restaura Text Size
+3 y VoiceOver off, con Capture Keyboard off, y Cerrar vuelve a Cuenta.
+
+Android Studio termina mostrando el AVD existente Pixel API 34. Se intenta
+arrancarlo desde Device Manager; no se obtiene una vista interactiva del teléfono.
+Tras una parada desde el gestor se abre el proyecto Android y se vuelve a
+solicitar el arranque desde su panel, sin modificar código ni configuración.
+El navegador integrado carga Home; Safari se abre con una pestaña nueva para
+comprobar zoom mediante controles de navegador. Antes de navegar a localhost,
+CUA informa que el Mac está bloqueado y el desbloqueo automático no es posible.
+Se solicita al usuario desbloqueo manual. No se acredita Android, teclado visible
+ni zoom web y tampoco se puede verificar/cerrar el emulador o la pestaña Safari
+con el escritorio bloqueado. Quedan como limpieza pendiente al recuperar acceso.
+
+Metro y los contenedores locales se apagan conservando volúmenes. No se modifica
+implementación ni se repiten sus checks. Evidencia AX y capturas en la conversación.
+El QA global sigue abierto.
+
+Retrospectiva: el porcentaje de scroll junto al rectángulo de foco permite
+verificar navegación aunque las notificaciones tengan texto repetido. Un árbol
+AX con controles separados no certifica su locución o activación. El bloqueo del
+host interrumpe la evidencia UI y requiere recuperar acceso antes de juzgar
+Android o zoom.
+
+
+### 2026-10-09 — Zoom web real en Safari tras recuperar el host
+
+Tras el desbloqueo manual del usuario se retoma Metro y dev sin observabilidad.
+Safari abre una pestaña temporal de localhost:8082 sin sesión. Visualización /
+Ampliar cambia la presentación y Menú de página confirma 115 %. Su selector
+permite fijar 200 %, porcentaje explícitamente observado en AX. Home y Crear
+torneo se recomponen a ese zoom: título, deportes, campos, ayudas y botón final
+se ven completos en la ventana de 1.440 × 1.410, sin solapamientos observados.
+
+La revisión automática rechaza pulsar Inicia sesión para crearlo por la posible
+apertura de autenticación. No se reintenta ni se elude ese rechazo. Enfocar cada
+campo vacío y abandonarlo verifica sus dos errores localizados; se ven completos
+y sus respectivas etiquetas AX incluyen el mensaje. No se introduce dato, se
+inicia sesión ni se crea torneo. Cerrar vuelve a Home; el selector confirma
+restauración al 100 % y se cierra solo la pestaña temporal, conservando la previa.
+Se cierra también la pestaña temporal del navegador integrado.
+
+Esta evidencia cierra zoom del 200 % en Home y Crear torneo para esta ventana
+y navegador; no certifica clasificación, vistas autenticadas ni reflow del 400 %.
+Capturas y estados en la conversación, sin PNG exportado. No cambia implementación.
+
+Retrospectiva: confirmar el porcentaje en el navegador evita equiparar viewport
+reducido a zoom. La validación al perder foco permite observar errores sin entrar
+en autenticación ni accionar un envío.
+
+
+Android tras el desbloqueo: Running Devices muestra la build instalada y Home
+con sesión ficticia. Abrir el torneo muestra el mensaje común de conexión;
+reverse --list está vacío y EXPO_PUBLIC_API_BASE_URL apunta a localhost:8080.
+Se añade únicamente reverse tcp:8080 y Reintentar carga el torneo. Se añade
+tcp:8082 para recargar Metro. Abrir el menú Expo funciona en el panel integrado,
+pero la ventana separada de Running Devices aporta una captura del teléfono
+mientras los clics posteriores se dirigen al IDE principal. No se confirma
+Reload ni bundle Android de la revisión actual. Los controles Dock y los menús
+no recuperan un control fiable; se solicita al usuario acoplar manualmente.
+No se modifica la app por un problema del instrumento. La búsqueda Android con
+teclado y la clasificación actual permanecen sin acreditar.
+
+Al cerrar esta tanda se retiran exclusivamente los reverses tcp:8080 y tcp:8082;
+la lista vuelve a estar vacía. Device Manager muestra Shutting down y después
+el Pixel sin indicador activo, con Play disponible. Se cierra Android Studio y
+se confirma ausencia de ventanas tras aceptar terminar sus tareas de indexación.
+No se cambia el escalado Android, TalkBack ni datos del emulador. iOS conserva
+Text Size 3, VoiceOver y Capture Keyboard apagados. La comprobación adicional
+del menú View de Device Hub no ofrece control de teclado en pantalla. Metro y
+API/PostgreSQL/Mailpit quedan apagados, sin tareas de dev activas. El QA global
+continúa abierto: lectores de otras rutas/locución, teclado visible, Android
+actual y zoom de clasificación/vistas autenticadas requieren otra pasada.
+
+
+### 2026-10-10 — Safari al 300 % y recuperación parcial del Pixel
+
+Sobre 4451e08, se retoma la sesión autorizada después del desbloqueo manual.
+Safari abre una pestaña temporal de localhost:8082, sin sesión. El selector
+de página confirma 300 %; es su última opción y Visualización / Ampliar queda
+deshabilitado. Esta pasada no acredita 400 %.
+
+En la captura de 2.880 × 2.100 píxeles, Home conserva título, descripción,
+Crear torneo y tabs sin recortes horizontales observados. Crear torneo conserva
+título y cierre, y los ocho deportes se distribuyen en tres filas. Enfocar
+los campos desplaza el contenido hasta ellos; abandonar cada campo vacío
+muestra su error localizado y lo incorpora a su etiqueta AX. Se observan
+completos ambos errores y el botón final, con borde y separación inferior.
+No se introduce dato ni se acciona autenticación o creación. Se restaura
+100 %, se confirma en el selector y se cierra únicamente la pestaña temporal.
+La evidencia queda en las capturas y estados de la conversación, sin PNG
+exportado. Clasificación y vistas autenticadas con zoom siguen pendientes.
+
+Android Studio devuelve noWindowsAvailable en los clics por coordenadas del
+gestor. Running Devices permite abrir la lista del AVD existente mediante AX;
+tras elevar el selector y usar teclado, el Pixel arranca. Dock consigue
+acoplarlo al IDE. La captura muestra el torneo ficticio conservado y el menú
+Expo con Reload. Se añaden únicamente los reverses tcp:8080 y tcp:8082, cuya
+lista inicial estaba vacía. Pulsar Reload por coordenadas vuelve a fallar
+con noWindowsAvailable; Metro no registra bundle Android. No se acredita
+versión actual, búsqueda con teclado ni clasificación Android. Se solicita
+ayuda manual para el arranque; no se modifica código por este fallo de control.
+
+Metro y API/PostgreSQL/Mailpit quedan apagados, conservando volúmenes y sin
+observabilidad. Se retiran los dos reverses temporales y se restaura el único
+cambio generado por Expo en expo-env.d.ts. Al intentar cerrar el IDE, AX deja
+de ofrecer controles y getApp termina en timeoutReached: el cierre del Pixel
+y Android Studio queda pendiente de intervención manual. No se modifica
+escalado, lector ni datos del emulador. No hay cambios de implementación ni
+se repiten checks de código. El QA global permanece abierto.
+
+Retrospectiva: el límite explícito del navegador debe registrarse como límite
+de cobertura. La recuperación del panel y el arranque del emulador no prueban
+la recarga de JavaScript; esa evidencia requiere observar el bundle actual
+antes de certificar comportamiento Android.
+
+
+### 2026-10-10 — VoiceOver en búsquedas de administradores y transferencia
+
+Sobre a6d368b, Android Studio devuelve cgWindowNotFound al recuperar su ventana,
+aunque el inventario lo muestra abierto. Se solicita al usuario cerrar y abrir
+el IDE con el Pixel acoplado. No se añade ningún túnel ni se acredita Android
+actual en esta pasada. Device Hub sí responde y permite continuar en iOS.
+
+Se arranca Metro y dev sin observabilidad. Reload del menú Expo recarga iPhone
+17/iOS 27; Metro confirma bundle iOS de 1.674 módulos. La sesión ficticia
+qa_visual_player y su torneo QA formulario table_tennis se conservan. Añadir
+administrador permite introducir qa_ mediante Capture Keyboard y carga ocho
+candidatos. VoiceOver recorre Cerrar, título, campo y primer candidato. Text
+Size 11 conserva la consulta y el foco del primer resultado, cuyo nombre
+se distribuye en tres líneas. Siete gestos siguientes alcanzan el último
+candidato, completo en dos líneas, con rectángulo de foco y margen inferior.
+No se selecciona ninguna cuenta. Cerrar regresa a la lista sin delegados.
+
+Transferir carga los mismos ocho destinatarios. A Text Size 3, VoiceOver
+enfoca el aviso de pérdida de permisos antes del campo. Cambiar a 11 vuelve
+a enfocar el título adaptado; el aviso conserva su texto en AX. Los gestos
+avanzan por aviso, campo y primer candidato, llevando el scroll al 25 %.
+Siete gestos siguientes alcanzan el último destinatario completo, con foco,
+y la barra AX marca 100 %. No se selecciona destinatario ni se transfiere.
+La evidencia acredita foco y desplazamiento; no locución, activación de
+candidatos ni oclusión por teclado, que sigue oculto en pantalla.
+
+Se restauran Text Size 3, VoiceOver off y Capture Keyboard off, confirmados
+en AX. Cerrar vuelve al torneo y su menú conserva Administradores, Transferir
+y Cancelar; se vuelve a Home. Metro y API/PostgreSQL/Mailpit se apagan
+conservando volúmenes. Se restaura el único archivo generado por Expo. No se
+modifica implementación ni se repiten checks de código. Evidencia AX y visual
+en la conversación, sin PNG exportado. El QA global sigue abierto: Android
+actual, teclado visible, locución/otras rutas y zoom autenticado permanecen
+pendientes; el cierre del IDE/Pixel del bloqueo anterior no se puede confirmar.
+
+Retrospectiva: verificar el rectángulo de foco entre etapas evita deducir la
+navegación solo del número de gestos enviados. Un cambio de escala puede
+reubicar el foco cuando el título adaptado se remonta; comprobar nuevamente
+el recorrido permite distinguir esa transición del acceso a los resultados.
+
+
+### 2026-10-10 — Reinicio del Pixel y bloqueo del panel Android
+
+Sobre f9f47f8, Android Studio recupera inicialmente la ventana del proyecto.
+El IDE muestra avisos de memoria insuficiente e internal IDE error; no se
+atribuyen a la app ni se modifica el heap o la configuración. El Pixel conserva
+la pantalla del torneo y el menú Expo, pero los clics de cierre no producen
+un cambio visible y Back por AX devuelve cannotClickOffscreenElement.
+
+Cerrar el proyecto permite abrir el gestor de dispositivos independiente.
+Pulsar Stop detiene el Pixel: adb devices queda vacío y el gestor cambia a Play.
+Esto confirma el cierre que estaba pendiente en la pasada anterior. Play lo
+arranca de nuevo; adb identifica emulator-5554 como device. Se reabre el mismo
+proyecto apps/client/android. Tras terminar el diálogo de configuración C/C++,
+Running Devices conserva «Disconnected from the Emulator» y los controles
+deshabilitados. Intentar cerrar esa conexión devuelve noWindowsAvailable;
+recuperar la ventana y leer AX termina en timeoutReached. Finder sí responde.
+Se solicita recuperación manual del IDE y un Pixel que responda a clics.
+
+No se inicia Metro ni dev, no se añade ningún reverse y docker ps confirma
+que no hay contenedores activos. La lista final de reverses está vacía. El
+Pixel reiniciado sigue activo; su cierre final y el del IDE no se acreditan por
+el bloqueo de control. No hay cambios de implementación ni datos, y no se
+repiten checks de código. La evidencia visual/AX permanece en la conversación.
+Android actual, teclado visible y el resto de cobertura pendiente siguen
+abiertos: reiniciar el AVD no acredita recarga del bundle ni interacción.
+
+Retrospectiva: distinguir proceso Android disponible, transmisión del panel
+y respuesta a clics evita confundir adb device con un instrumento de QA usable.
+Una captura del IDE y sus avisos sirve para delimitar el bloqueo; no prueba
+un defecto funcional del cliente.
+
+
+### 2026-10-10 — Teclado visible en búsquedas iOS
+
+Sobre 4902b73, Android Studio vuelve a ofrecer AX. Reconnect devuelve
+cannotClickOffscreenElement; sacar Running Devices a ventana independiente
+mantiene «Disconnected from the Emulator» y controles deshabilitados. No se
+acredita Android actual ni se añaden reverses. El panel queda independiente;
+el cierre final del Pixel y la recuperación del IDE siguen pendientes.
+
+Device Hub permite ahora mostrar el teclado iOS al enfocar Sugerencias con
+Capture Keyboard off. Se observa oclusión parcial inicial del campo; esta
+observación no certifica todavía el formulario ni su recuperación mediante
+scroll. No se introduce ni envía sugerencia. Se inicia Metro y dev sin
+observabilidad, y Reload desde el botón de herramientas Expo recarga iPhone
+17/iOS 27; Metro confirma bundle iOS de 1.645 módulos. La sesión ficticia y
+el torneo QA formulario table_tennis se conservan.
+
+Añadir administrador: a Text Size 3, enfocar el campo y setValue qa_ conservan
+el teclado visible. Se ven siete candidatos sobre él; el último de los ocho
+queda oculto. Un gesto de arrastre en el margen izquierdo oculta el teclado
+y deja visible qa_web_register_263be8 completo. A Text Size 11, volver a
+enfocar muestra título y campo completos, con el primer nombre parcialmente
+oculto por el teclado. Arrastrar en el margen oculta el teclado y desplaza
+la lista al último candidato, completo en dos líneas con separador y margen
+inferior. Se cierra sin seleccionar; la lista confirma que no hay delegados.
+
+Transferir: a Text Size 3, la búsqueda qa_ muestra aviso, campo y seis
+candidatos sobre el teclado. Arrastrar oculta el teclado y deja visibles los
+ocho destinatarios, incluido el último completo. A Text Size 11, enfocar
+desplaza el contenido hasta el campo, cuyo borde inferior queda por encima
+del teclado; la parte inicial del aviso queda fuera del viewport. Arrastrar
+en el margen oculta el teclado y alcanza el último destinatario completo en
+dos líneas, con separador y margen inferior. No se selecciona ni transfiere.
+La recuperación observada usa ocultación del teclado al arrastrar; no se
+certifica alcance del último resultado manteniendo el teclado abierto.
+
+Se restaura Text Size 3 y se confirma VoiceOver off y Capture Keyboard off.
+El menú del torneo conserva Administradores, Transferir y Cancelar; se vuelve
+a Home sin teclado. Metro y API/PostgreSQL/Mailpit se apagan, conservando
+volúmenes. Se restaura únicamente el salto de línea generado en expo-env.d.ts.
+No hay cambios de implementación ni se repiten checks de código. Evidencia
+visual y AX en la conversación, sin PNG exportado. El QA global sigue abierto:
+Android actual, otros formularios con teclado, locución/otras rutas y zoom
+autenticado permanecen pendientes.
+
+Retrospectiva: la lista puede recuperar espacio ocultando el teclado durante
+el arrastre. Registrar esa transición evita afirmar que el último resultado
+se alcanza con el teclado todavía abierto; verificar campo, resultado final
+y salida sin cambios distingue oclusión temporal de un bloqueo de uso.
+
+
+### 2026-10-10 — VoiceOver en Crear torneo y recuperación visual de sugerencias
+
+Sobre c7c215d, se conserva en iPhone 17/iOS 27 el bundle recargado en la pasada
+anterior. No se inicia Metro ni dev, ni se acredita una nueva recarga. En Home,
+enfocar Sugerencias muestra cursor, pero el teclado no aparece. El botón queda
+inicialmente bajo las pestañas; arrastrar en el margen izquierdo recupera el
+campo completo y Enviar sugerencia por encima de ellas. El campo permanece
+vacío, el botón deshabilitado y no se envía nada. Esta observación acredita
+recuperación visual sin teclado, no cierra la prueba de oclusión por teclado.
+
+Crear torneo conserva Fútbol seleccionado, nombre vacío y el equipo ya
+presente «Incidencia Local». Enfocar nombre y después equipo muestra solo
+«Introduce el nombre del torneo.»; AX incorpora ese error a la etiqueta del
+campo inválido. No se modifica ningún valor ni se pulsa Crear. El teclado
+sigue oculto incluso tras activar y desactivar Capture Keyboard. Se solicita
+al usuario mostrarlo manualmente para continuar esa cobertura.
+
+A Text Size 11 se activa VoiceOver. Un toque enfoca Cerrar y un gesto siguiente
+enfoca el título adaptado, confirmado por el rectángulo visible. Diez gestos
+siguientes atraviesan el bloque de deportes y alcanzan la etiqueta Nombre
+del torneo. Los gestos siguientes enfocan campo inválido y error: este último
+se muestra completo en tres líneas con foco. Cuatro gestos siguientes alcanzan
+el campo del equipo; AX conserva su valor completo aunque el texto del input
+se recorte horizontalmente. El siguiente enfoca Crear torneo, visible completo
+en dos líneas con borde de foco y margen inferior. No se activa el botón.
+La evidencia acredita foco y desplazamiento hasta el final; no locución,
+entrada con lector ni envío. Las capturas intermedias no acreditan por sí
+solas el foco individual de cada opción de deporte.
+
+Se restaura Text Size 3, VoiceOver off y Capture Keyboard off, confirmados
+en AX. Se deja Crear torneo abierto con Nombre de tu equipo enfocado para la
+recuperación manual solicitada; no se crean datos ni se cambia el borrador.
+docker ps confirma que no hay contenedores activos. No hay cambios de código
+ni se repiten checks de implementación. Evidencia AX y visual en la conversación,
+sin PNG exportado. Android, formularios con teclado, locución y zoom autenticado
+siguen pendientes; el QA global permanece abierto.
+
+Retrospectiva: el error forma parte de la etiqueta del input y también es un
+elemento recorrible. Comprobar su foco y texto visible completo acredita
+alcance, pero no permite inferir cómo lo pronuncia el lector. No confundir
+un cursor visible con teclado visible ni cerrar esa cobertura por un recorrido
+sin oclusión.
+
+### 2026-10-10 — VoiceOver en sugerencias de Home
+
+Sobre 04b95bc, se reutiliza el bundle iOS de la sesión anterior, sin arrancar
+Metro ni dev ni acreditar otra recarga. Crear torneo conserva nombre vacío,
+equipo «Incidencia Local» y su validación previa. Capture Keyboard se activa
+con Command-K y se vuelve a desactivar: no aparece teclado software. Escape
+no desactiva esa captura. El menú View de Device Hub no ofrece un control
+visible para mostrar el teclado. Se cierra el formulario sin modificar valores
+ni crear torneo; la cobertura con teclado permanece pendiente.
+
+En Home, a Text Size 11 y con VoiceOver activo, el recorrido alcanza «¿Te
+falta algo?» y su descripción completa en cuatro líneas. El siguiente gesto
+enfoca el campo vacío: su rectángulo queda visible y el placeholder se recorta
+con puntos suspensivos, mientras AX conserva la descripción completa y el
+requisito de longitud. El siguiente enfoca «Escribe entre 8 y 1.000 caracteres.»:
+el desplazamiento lo deja completo en tres líneas por encima de las pestañas.
+Otro gesto enfoca Enviar sugerencia, deshabilitado, completo en dos líneas
+con margen hasta la barra inferior. No se introduce texto ni se activa el
+botón. Esta evidencia acredita foco y desplazamiento con texto máximo, no
+locución, edición ni recuperación con teclado abierto.
+
+Se restaura Text Size 3 y se confirma VoiceOver off y Capture Keyboard off.
+Se deja Home en sugerencias, vacío y sin envío. docker ps no muestra contenedores
+activos. No se cambian archivos del cliente ni se repiten checks de código.
+Evidencia visual y AX en la conversación, sin PNG exportado. El QA global
+permanece abierto: Android actual, formularios con teclado, locución y zoom
+autenticado siguen pendientes.
+
+Retrospectiva: un botón deshabilitado puede recibir foco del lector y provocar
+el desplazamiento necesario para verlo completo. Observarlo con foco acredita
+su alcance; no prueba activación ni el comportamiento con teclado. La
+truncación visual del placeholder debe distinguirse de su descripción AX.
+
+### 2026-10-10 — Recuperación parcial del instrumento Android y conexión Metro
+
+Sobre dd84424, Running Devices sigue inicialmente desconectado; Reconnect
+devuelve cannotClickOffscreenElement. Device Manager permite detener Pixel
+API 34 y adb confirma ausencia de dispositivos. Se sale del IDE con Confirm
+Exit y se observa guardado de ajustes, splash y reapertura del proyecto.
+No se cambia heap, modo de ahorro, dependencias ni código. El nuevo arranque
+del Pixel recupera imagen y controles habilitados. Tras Cerrar torneo se
+observa Home con los datos QA conservados. La imagen tarda en reflejar
+acciones; cambiar entre ventana independiente y panel acoplado permite
+observar estados posteriores. Esto recupera navegación parcial, no un
+instrumento estable para certificar formularios o lector.
+
+Se inician Metro en 8082 y dev sin observabilidad. Se añaden reverses 8082 y
+8080, ausentes al inicio. Reload del menú Expo termina en «Unable to load
+script»; Metro no confirma ningún bundle Android. Go home permite observar
+el lanzador: el proyecto reciente apunta a http://127.0.0.1:8083 y el servidor
+detectado a http://192.168.1.167:8082. Esa diferencia es una causa probable de
+la recarga fallida, no una recuperación acreditada. Intentar abrir el servidor
+detectado devuelve AXError.cannotComplete y después noWindowsAvailable;
+seleccionarlo de nuevo no permite confirmar carga. Recuperar Android Studio
+termina en timeoutReached. No se valida implementación Android actual ni se
+introducen datos, seleccionan destinatarios o cambian resultados.
+
+Metro se detiene y dev-down finaliza conservando volúmenes; docker ps queda
+vacío. Se retiran ambos reverses añadidos y reverse --list queda vacío. Se
+restaura únicamente el salto de línea generado en expo-env.d.ts; no hay
+cambios de cliente ni checks de código repetidos. adb aún identifica
+emulator-5554 como device: el apagado final del Pixel queda pendiente por
+falta de acceso al IDE. No se acredita una presentación final estable del
+panel. Evidencia visual y errores del instrumento en la conversación, sin
+PNG exportado. El QA global sigue abierto.
+
+Retrospectiva: separar recuperación de imagen, navegación y recarga efectiva.
+Un servidor detectado no acredita que la build lo haya abierto; exigir
+confirmación de bundle en Metro antes de evaluar código actual. Registrar la
+dirección reciente evita atribuir un fallo de carga del entorno a la feature.
+
+### 2026-10-10 — Teclado software iOS en Crear torneo y sugerencias
+
+Sobre 6230977, seleccionar Android Studio vuelve a terminar en timeoutReached.
+Se solicita recuperación manual del IDE y Pixel. No se arranca Metro ni dev;
+se reutiliza en iPhone 17/iOS 27 el bundle de la sesión iOS anterior, sin nueva
+recarga. Device Hub ofrece Device → Keyboard → Toggle Software Keyboard:
+invocar esa acción con equipo enfocado muestra el teclado, manteniendo Capture
+Keyboard off. Los menús Controls y View no son la ubicación de este control.
+
+Crear torneo, Text Size 3: equipo «Incidencia Local» y su campo quedan completos
+por encima del teclado; el botón queda oculto. Arrastrar en el margen izquierdo
+cierra el teclado y recupera Crear torneo completo con margen inferior. A
+Text Size 11, enfocar equipo vuelve a mostrar teclado: etiqueta y límites del
+campo quedan completos sobre él, aunque su valor se recorta horizontalmente.
+El arrastre cierra el teclado y alcanza el botón completo en dos líneas.
+Enfocar nombre vacío también muestra el campo completo por encima del teclado;
+su etiqueta queda parcialmente fuera del viewport superior. Arrastrar cierra
+el teclado y el blur incorpora «Introduce el nombre del torneo.» a la etiqueta
+AX. No se introduce texto ni se activa Crear; se restaura tamaño 3 y se cierra.
+
+Sugerencias, Text Size 3: enfocar el campo vacío muestra teclado y oclusión
+parcial del campo. El arrastre lo cierra y deja campo, error y botón deshabilitado
+completos por encima de las pestañas. A Text Size 11, enfocar mantiene teclado
+visible con parte del campo oculta; el arrastre lo cierra y deja error completo
+en tres líneas y botón completo en dos por encima de las pestañas. En ese
+viewport final el borde superior del campo queda fuera de pantalla; no se
+afirma visibilidad simultánea de todo el campo y botón a tamaño máximo.
+No se introduce ni envía sugerencia.
+
+Se restaura Text Size 3 y AX confirma VoiceOver off, Capture Keyboard off y
+Enviar sugerencia deshabilitado. Se deja Home en sugerencias sin teclado.
+docker ps queda vacío; no hay servicios o túneles iniciados en esta pasada.
+No hay cambios de cliente ni checks de código repetidos. Evidencia visual y AX
+en la conversación, sin PNG exportado. La cobertura acredita oclusión inicial
+y recuperación al ocultar teclado; no alcance del botón manteniéndolo abierto,
+edición con lector ni envío. Android actual, locución, otras rutas y zoom
+autenticado mantienen el QA global abierto.
+
+Retrospectiva: localizar el control software en Device → Keyboard resuelve el
+bloqueo del instrumento sin modificar la app. Observar por separado límites
+del campo, texto recortado y botón final; un arrastre que cierra teclado
+acredita recuperación por ocultación, no scroll con teclado abierto.
+### 2026-10-10 — Foco de clasificación compacta en iOS
+
+Sobre develop ade4498, iPhone 17/iOS 27 y la sesión ficticia existente,
+se arranca dev sin observabilidad y se abre desde Torneos la liga «QA Liga
+de equipos con acentos y nombres largos». Se reutiliza el bundle iOS cargado;
+esta pasada no ejecuta Metro ni acredita una nueva recarga.
+
+La tabla carga tres equipos, posiciones 1/1/3 y puntos 3/3/0. Text Size 11
+amplía título y ayuda; las celdas conservan el tamaño fijo de ADR-0153.
+Con VoiceOver on se observa foco sobre Equipo, Pts y PJ/PG de la primera
+fila. La navegación observada pasa por bloques de estadísticas y columnas
+fijas; no se acredita orden completo por filas. Una tanda de seis gestos
+solo deja evidencia final en PG: no se cuenta cada gesto como avance confirmado.
+
+La exploración táctil enfoca el nombre de la última fila, visualmente truncado
+pero con descripción AX «Peñas del Mediterráneo» completa. El siguiente gesto
+lleva el foco a sus puntos 0. Con el lector apagado, un arrastre corto dentro
+del bloque estadístico desplaza cabeceras y valores hasta PE/PP/GF/GC/DG,
+con última fila 0/2/0/6/-6 y equipo/puntos fijos. Tras reactivar VoiceOver,
+la exploración táctil enfoca DG de esa última fila. El primer toque tras
+activar el lector deja foco en Volver; se confirma DG en un toque posterior.
+
+Alcance: foco visible y etiquetas AX de las muestras indicadas. No se captura
+audio ni se certifican asociación hablada de cabecera/equipo/valor, recorrido
+exhaustivo o desplazamiento horizontal mediante gestos del lector. Android
+sigue pendiente de recuperación manual del instrumento; el QA global continúa
+abierto. No se cambian datos, resultados ni permisos.
+
+Cierre: Text Size 3, VoiceOver off y Capture Keyboard off verificados; regreso
+a Inicio. Dev se apaga conservando volúmenes. Cambio exclusivamente documental,
+sin pruebas de código adicionales; capturas visibles en la conversación.
+
+Retrospectiva: mantener densidad visual permite conservar nombres completos
+en AX. El foco de una muestra no demuestra lectura contextual ni orden de toda
+la tabla; separar esos límites de la evidencia de layout estable.
+### 2026-10-10 — Muestra finita de zoom web autenticado
+
+Se completa en Safari la muestra de clasificación y reglas al 200 %/300 %,
+con sesión ficticia normal, valores y correspondencia de las tres filas,
+scroll hasta el último párrafo y cierre con Ok. Se restaura 100 % y se cierra
+la pestaña QA. El [inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md)
+registra detalles y límites; solo teclado Android y TalkBack siguen sin
+ejecutar dentro de las tres muestras, por timeout del instrumento.
+No se amplía la matriz a otras rutas, idiomas o componentes con VoiceOver.
+
+### 2026-10-10 — Recuperación Android sin muestra aprobada
+
+Con cierre del IDE autorizado se verifica apps/client/android en bienvenida
+y se recupera parcialmente Pixel API 34. La apertura de la app no es fiable:
+Android muestra «UI del sistema no responde» y el IDE vuelve a indicar memoria
+baja. El [inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md) conserva teclado
+ampliado y TalkBack como no ejecutados por entorno; no como defectos del producto.
+No se modifican ajustes de accesibilidad. Se apagan Metro/dev y se retiran los
+túneles añadidos en la tanda. No se amplía el alcance.
+
+### 2026-10-10 — Cierre de las muestras Android acotadas
+
+Con emulador separado y ADB autorizados se carga el bundle actual. Crear torneo
+al 200 % permite editar y desplazar con teclado abierto: segundo campo y botón
+completos sobre el teclado, sin envío. TalkBack activo muestra foco inicial;
+se inspeccionan nombres y roles Android en un detalle ficticio. Avance de foco,
+activación mediante lector y audio quedan sin acreditar. El
+[inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md) sustituye el bloqueo previo
+por estos resultados: dos muestras completadas y una parcial, sin más intentos
+pendientes en esta tanda. Se restauran ajustes y se apagan Pixel, Metro y dev.
+
+### 2026-10-10 — TalkBack: recorrido y activación acreditados
+
+Sobre 35a770f, un arranque frío del bundle actual recupera Inicio autenticado;
+el aviso React y FATAL no aparecen en Metro/logcat de la tanda. Reutilizando
+adb emu event mouse ya validado el 8 de octubre se verifica foco sucesivo en
+Inicio, activación de Crear torneo, foco del nombre, apertura de teclado y
+retorno mediante Volver con TalkBack. No se escribe ni envía; el borrador
+anterior sigue presente. No se acredita audio. El
+[inventario vigente](PRODUCT_QA_CLOSE_2026-10-10.md) registra las tres muestras
+ejecutadas, sus límites y evidencia. Se restauran accesibilidad y túneles;
+Pixel, Metro y dev quedan apagados, sin observabilidad ni cambios de cliente.
+
+### 2026-10-10 — DevLauncher diagnosticado con identidad APK comprobada
+
+El usuario elige diagnosticar la caída. Se encuentra instalado el APK del
+8 de octubre y se reemplaza con install -r por el Debug recompilado del 9,
+verificando hash y conservando datos. En seis casos de recreación de arranque,
+dos producen el guard de DevLauncherAppLoader, uno con TalkBack y otro sin él.
+El [diagnóstico](DEVLAUNCHER_DIAGNOSIS_2026-10-10.md) registra tiempos, traza,
+fuente, alternativas y límites. Incidencia localizada y reproducida, sin parche.
+Las muestras previas del día acreditan bundle y gestos en el binario observado,
+no la versión nativa de la matriz actual. No se repite la matriz funcional.

@@ -221,7 +221,11 @@ export default function JoinTeamScreen() {
           }}
         />
       ) : null}
-      <Screen bottomInset="safe-area" topInset="navigation-bar">
+      <Screen
+        navigationTitle={t("team_invitation_title")}
+        bottomInset={initialized && !isLoading && !loadError && invitation ? "none" : "safe-area"}
+        topInset="navigation-bar"
+      >
         {!initialized || isLoading ? (
           <LoadingTransition active message={t("common_loading")} />
         ) : loadError || !invitation ? (
@@ -235,6 +239,7 @@ export default function JoinTeamScreen() {
           />
         ) : (
           <KeyboardAwareScrollView
+            bottomInset="safe-area"
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >

@@ -11,8 +11,8 @@ import (
 func TestIntegrationTournamentTeamInvitationCreatesTeamAndFollowWithoutAdministration(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	organizerID := createVerifiedLocalAccount(t, ctx, pool, "invite-organizer@example.test", "inviteorganizer", "correct password")
-	participantID := createVerifiedLocalAccount(t, ctx, pool, "invite-participant@example.test", "inviteparticipant", "correct password")
+	organizerID := createVerifiedLocalAccount(ctx, t, pool, "invite-organizer@example.test", "inviteorganizer", "correct password")
+	participantID := createVerifiedLocalAccount(ctx, t, pool, "invite-participant@example.test", "inviteparticipant", "correct password")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, organizerID, tournaments.CreateInput{
 		Name: "Copa por invitación", Sport: tournaments.SportFootball,
@@ -67,14 +67,14 @@ func TestIntegrationTournamentTeamInvitationCreatesTeamAndFollowWithoutAdministr
 	}
 	repository := NewAccountTournamentRepository(pool)
 	if _, err := repository.ScheduleAccountDeletion(ctx, participantID); err != nil {
-		t.Fatalf("programar baja de participante = %v", err)
+		t.Fatalf("programar baja de la persona inscrita = %v", err)
 	}
 	var linkedAfterDeletion, followsAfterDeletion, teamRemains bool
 	if err := pool.QueryRow(ctx, `SELECT
 		EXISTS (SELECT 1 FROM tournament_team_accounts WHERE tournament_id=$1 AND account_id=$2),
 		EXISTS (SELECT 1 FROM tournament_followers WHERE tournament_id=$1 AND account_id=$2),
 		EXISTS (SELECT 1 FROM tournament_teams WHERE tournament_id=$1 AND id=$3)`, created.ID, participantID, joined.Team.ID).Scan(&linkedAfterDeletion, &followsAfterDeletion, &teamRemains); err != nil {
-		t.Fatalf("comprobar baja de participante = %v", err)
+		t.Fatalf("comprobar baja de la persona inscrita = %v", err)
 	}
 	if linkedAfterDeletion || followsAfterDeletion || !teamRemains {
 		t.Fatalf("baja = vínculo %v, seguimiento %v, equipo %v; se esperaban relaciones retiradas y equipo conservado", linkedAfterDeletion, followsAfterDeletion, teamRemains)

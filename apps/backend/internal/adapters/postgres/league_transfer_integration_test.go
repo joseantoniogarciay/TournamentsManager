@@ -11,8 +11,8 @@ import (
 func TestIntegrationTransferTournamentOwnershipWithPostgres(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	previous := createVerifiedLocalAccount(t, ctx, pool, "previous@example.test", "previous", "correct password")
-	recipient := createVerifiedLocalAccount(t, ctx, pool, "recipient@example.test", "recipient", "correct password")
+	previous := createVerifiedLocalAccount(ctx, t, pool, "previous@example.test", "previous", "correct password")
+	recipient := createVerifiedLocalAccount(ctx, t, pool, "recipient@example.test", "recipient", "correct password")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, previous, tournaments.CreateInput{Name: "Liga transferida", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "Uno"}, {Name: "Dos"}}})
 	if err != nil {
@@ -28,7 +28,7 @@ func TestIntegrationTransferTournamentOwnershipWithPostgres(t *testing.T) {
 		t.Fatalf("anterior organizadora conserva acceso: %v", err)
 	}
 	if _, err := service.ListAdministrators(ctx, recipient, created.ID); err != nil {
-		t.Fatalf("nueva organizadora no puede administrar: %v", err)
+		t.Fatalf("nueva organizadora no puede gestionar: %v", err)
 	}
 	var delegated, notifications int
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM tournament_administrators WHERE tournament_id = $1 AND account_id = $2`, created.ID, recipient).Scan(&delegated); err != nil || delegated != 0 {

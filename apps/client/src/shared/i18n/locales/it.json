@@ -441,7 +441,7 @@
   "tournaments_loaded_count": "{count}{more}",
   "tournaments_followed_empty": "Non segui ancora alcun torneo.",
   "tournaments_open_league": "Apri {name}",
-  "notifications_title": "Notifiche",
+  "notifications_title": "Noti\u00adfiche",
   "notifications_empty": "Non hai notifiche.",
   "notifications_administrator_assigned": "Ora gestisci {league}.",
   "notifications_ownership_transferred": "Ora sei il proprietario di {league}.",

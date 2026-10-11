@@ -8,12 +8,15 @@ import {
   type KeyboardEvent,
   type ScrollViewProps,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { space } from "@tournaments-manager/design-tokens";
 
 /** Reserva el espacio ocluido y mantiene visible el campo enfocado, también con autoFocus. */
 export function KeyboardAwareScrollView({
   children,
+  bottomInset = "none",
+  contentContainerStyle,
   keyboardShouldPersistTaps = "handled",
   keyboardDismissMode = "none",
   onFocus,
@@ -23,7 +26,8 @@ export function KeyboardAwareScrollView({
   onContentSizeChange,
   scrollEventThrottle = 16,
   ...props
-}: ScrollViewProps) {
+}: ScrollViewProps & { bottomInset?: "safe-area" | "none" }) {
+  const insets = useSafeAreaInsets();
   const scroll = useRef<ScrollView>(null);
   const focusedInput = useRef<ReturnType<typeof TextInput.State.currentlyFocusedInput>>(null);
   const keyboardTop = useRef<number | undefined>(undefined);
@@ -78,6 +82,12 @@ export function KeyboardAwareScrollView({
   return (
     <ScrollView
       {...props}
+      contentContainerStyle={[
+        contentContainerStyle,
+        bottomInset === "safe-area" && {
+          paddingBottom: (Platform.OS === "web" ? 0 : insets.bottom) + space[4],
+        },
+      ]}
       ref={scroll}
       automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
       keyboardDismissMode={keyboardDismissMode}

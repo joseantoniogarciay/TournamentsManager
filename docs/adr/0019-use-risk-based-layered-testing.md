@@ -176,6 +176,18 @@ Con el primer vertical slice se demostrará que:
 
 ## Documentación afectada
 
+### Aplicación al cierre de QA del 2026-10-10
+
+El usuario acepta un cierre parcial por riesgo: revisión única de patrones
+compartidos, reutilización de evidencia y como máximo tres muestras manuales
+adicionales. No exige VoiceOver por componente ni completar combinaciones
+de deportes, plataformas, idiomas y lectores. Los defectos reproducidos y
+límites de instrumentación permanecen explícitos; no equivale a aprobar
+distribución. Es una aplicación de esta estrategia a una fase concreta,
+no una sustitución de pruebas de persistencia o autorización por inspección.
+El alcance y resultado se registran en el
+[cierre de QA](../engineering/PRODUCT_QA_CLOSE_2026-10-10.md).
+
 - [TESTING.md](../engineering/TESTING.md)
 - [TECHNICAL_BASELINE.md](../governance/TECHNICAL_BASELINE.md)
 - [DECISIONS.md](../governance/DECISIONS.md)

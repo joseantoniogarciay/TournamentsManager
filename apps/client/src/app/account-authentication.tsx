@@ -54,6 +54,7 @@ export default function AccountAuthenticationScreen() {
         ) : null}
       </Stack.Screen>
       <AccountScreen
+        navigationTitle={t("account_title")}
         sessionReplacementDestination={sessionReplacementDestination}
         transferTournamentDraft={sessionReplacementDestination !== "/join-team"}
       />

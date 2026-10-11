@@ -22,7 +22,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: api
-          image: tournaments-manager-api:git-11138a1100db853d04a2e388bae029c013f55843
+          image: tournaments-manager-api:git-b002b4b99fc44a6ec0662b94ec962b8cce9cbea5
           imagePullPolicy: Never
           lifecycle:
             preStop:

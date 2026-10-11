@@ -7,12 +7,12 @@ import {
   SectionList,
   Share,
   StyleSheet,
-  useWindowDimensions,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
+import { control, radius, space, typography, webLayout } from "@tournaments-manager/design-tokens";
 
 import { APISessionInvalidatedError, APIUnexpectedResponseError } from "@/api/fetch";
 import { useTournamentFollow } from "@/features/league-creation/use-tournament-follow";
@@ -73,6 +73,7 @@ import {
   Text,
   TextField,
   useConfirmationDialog,
+  useAdaptiveNavigationTitle,
   usesLiquidGlassNavigation,
 } from "@/shared/ui";
 
@@ -137,10 +138,11 @@ export default function TournamentScreen() {
   const { user } = useSession();
   const { colors } = usePreferences();
   const insets = useSafeAreaInsets();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: viewportWidth } = useWindowDimensions();
   const { show } = useFeedback();
   const { confirm } = useConfirmationDialog();
   const league = useTournament(id);
+  const navigationTitle = useAdaptiveNavigationTitle(league?.name);
   const { loadTournament, putTournament, refreshTournament } = useTournamentStore();
   const [relationship, setRelationship] = useState<string | null>();
   const following = useTournamentFollow(id, relationship, setRelationship);
@@ -571,7 +573,7 @@ export default function TournamentScreen() {
             </Stack.Toolbar>
           ) : null}
         </Stack.Screen>
-        <Screen topInset="navigation-bar">
+        <Screen navigationTitle={t("league_title")} topInset="navigation-bar" webWidth="wide">
           {loadErrorMessage ? (
             <RequestErrorCard
               actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}
@@ -798,25 +800,8 @@ export default function TournamentScreen() {
     headerStyle: { backgroundColor: colors.surface.canvas },
     headerTintColor: colors.text.primary,
     headerTitleAlign: "center" as const,
-    headerTitle: () => (
-      <Text
-        numberOfLines={2}
-        style={[
-          styles.navigationTitle,
-          Platform.OS === "ios" && {
-            maxWidth: Math.max(
-              0,
-              windowWidth -
-                2 * (Math.max(insets.left, insets.right) + space[5] + control.minHeight + space[5]),
-            ),
-            marginHorizontal: 0,
-          },
-        ]}
-        variant="bodyLarge"
-      >
-        {league.name}
-      </Text>
-    ),
+    title: navigationTitle.nativeTitle,
+    headerTitle: navigationTitle.headerTitle,
   };
   const bracketRounds = [...new Set(bracketMatches.map((match) => match.round))].sort(
     (first, second) => first - second,
@@ -837,6 +822,13 @@ export default function TournamentScreen() {
     league.format === "league_then_single_elimination" && (hasTieBreak || hasBracket);
   const showsBracket =
     hasBracket && (!phaseSelectionAvailable || displayedCompetitionPhase === "bracket");
+  const showWebSidebar =
+    Platform.OS === "web" &&
+    viewportWidth >= webLayout.columnsMinWidth &&
+    hasStarted &&
+    !showsBracket &&
+    !hasTieBreak &&
+    league.format !== "single_elimination";
   const showsTieBreak = hasTieBreak && displayedCompetitionPhase === "tiebreak";
   const bracketTournament = { ...league, matches: bracketMatches };
   const showsBracketHorizontalControl =
@@ -1013,390 +1005,418 @@ export default function TournamentScreen() {
           </Stack.Toolbar>
         </>
       )}
-      <Screen bottomInset="none" topInset="navigation-bar">
-        <View ref={matchListViewport} style={styles.listViewport}>
-          {showsBracket ? (
+      <Screen bottomInset="none" topInset="navigation-bar" webWidth="wide">
+        {navigationTitle.measurement}
+        <View style={[styles.listViewport, showWebSidebar && styles.sidebarLayout]}>
+          {showWebSidebar ? (
             <ScrollView
-              ref={bracketList}
+              style={styles.sidebar}
               contentContainerStyle={[
-                styles.content,
-                {
-                  paddingBottom:
-                    insets.bottom +
-                    (primaryTournamentAction ? control.minHeight + space[3] + space[5] : space[4]),
-                },
+                styles.listHeader,
+                { paddingBottom: insets.bottom + control.minHeight + space[5] },
               ]}
-              onScroll={(event) => {
-                matchListOffset.current = event.nativeEvent.contentOffset.y;
-              }}
-              scrollEventThrottle={16}
               showsVerticalScrollIndicator={false}
-              stickyHeaderIndices={Platform.OS === "web" ? undefined : [1]}
             >
-              <View style={styles.listHeader}>
-                {tournamentSummary}
-                {phaseSelector}
-                <BracketIntro />
-              </View>
-              <BracketRoundNavigation
-                onLayout={(event) => {
-                  bracketRoundTopOffset.current = event.nativeEvent.layout.y;
-                }}
-                onSelect={selectBracketRound}
-                rounds={bracketRounds}
-                selectedRound={selectedBracketRound}
-              />
-              <BracketView
-                ref={bracketView}
-                tournament={bracketTournament}
-                canManage={canManageResults}
-                onHorizontalMetricsChange={updateBracketHorizontalMetrics}
-                onHorizontalScroll={syncBracketHorizontalControl}
-                onMatchFocus={ensureBracketMatchVisible}
-                onEdit={openResultEditor}
-                onRoundChange={setSelectedBracketRound}
-                roundSelectionRevision={bracketRoundSelectionRevision}
-                selectedRound={selectedBracketRound}
-              />
+              {tournamentSummary}
             </ScrollView>
-          ) : (
-            <SectionList
-              ref={matchList}
-              contentContainerStyle={[
-                styles.content,
-                {
-                  paddingBottom:
-                    insets.bottom +
-                    (primaryTournamentAction ? control.minHeight + space[3] + space[5] : space[4]),
-                },
-              ]}
-              ItemSeparatorComponent={() => <View style={styles.matchSeparator} />}
-              onScroll={(event) => {
-                matchListOffset.current = event.nativeEvent.contentOffset.y;
-              }}
-              scrollEventThrottle={16}
-              sections={
-                league.format === "single_elimination"
-                  ? []
-                  : showsTieBreak
-                    ? tieBreakMatchSections
-                    : matchSections
-              }
-              showsVerticalScrollIndicator={false}
-              stickySectionHeadersEnabled
-              ListHeaderComponent={
-                <View style={styles.listHeader}>
-                  {tournamentSummary}
-                  {phaseSelector}
-                  {showsTieBreak ? (
-                    <Card>
-                      <View style={styles.stack}>
-                        <Text style={styles.configurationTitle} variant="bodyLarge">
-                          {t("tournament_mixed_tiebreak_title")}
-                        </Text>
-                        <Text color="secondary">{t("tournament_mixed_tiebreak_help")}</Text>
-                      </View>
-                    </Card>
-                  ) : null}
-                  {league.state === "published" && isOrganizer ? (
-                    <Card>
-                      <View style={styles.stack}>
-                        <Text style={styles.configurationTitle} variant="bodyLarge">
-                          {t("league_start_title")}
-                        </Text>
-                        <View style={styles.configurationOptions}>
-                          {!isRacketSport(league.sport) ? (
-                            <ConfigurationOption
-                              label={t("tournament_format_league")}
-                              selected={format === "league"}
-                              disabled={isStarting}
-                              onPress={() => setFormat("league")}
-                            />
-                          ) : null}
-                          <ConfigurationOption
-                            label={t("tournament_format_bracket")}
-                            selected={format === "single_elimination"}
-                            disabled={isStarting}
-                            onPress={() => setFormat("single_elimination")}
-                          />
-                          {!isRacketSport(league.sport) ? (
-                            <ConfigurationOption
-                              label={t("tournament_format_mixed")}
-                              selected={format === "league_then_single_elimination"}
-                              disabled={isStarting}
-                              onPress={() => setFormat("league_then_single_elimination")}
-                            />
-                          ) : null}
-                        </View>
-                        {isRacketSport(league.sport) ? (
-                          <Text color="secondary">{t("racket_elimination_only_help")}</Text>
-                        ) : null}
-                        {format === "single_elimination" ? (
-                          <Text color="secondary">{t("bracket_configuration_help")}</Text>
-                        ) : (
-                          <View style={styles.stack}>
-                            <View
-                              style={[
-                                styles.configurationOptions,
-                                { borderColor: colors.border.default },
-                              ]}
-                            >
-                              <ConfigurationOption
-                                label={t("league_start_one_leg")}
-                                selected={roundRobinLegs === 1}
-                                disabled={isStarting}
-                                onPress={() => setRoundRobinLegs(1)}
-                              />
-                              <ConfigurationOption
-                                label={t("league_start_two_legs")}
-                                selected={roundRobinLegs === 2}
-                                disabled={isStarting}
-                                onPress={() => setRoundRobinLegs(2)}
-                              />
-                            </View>
-                            {format === "league_then_single_elimination" ? (
-                              <View style={styles.stack}>
-                                <Text color="secondary">
-                                  {t("tournament_mixed_configuration_help")}
-                                </Text>
-                                <View style={styles.configurationOptions}>
-                                  <ConfigurationOption
-                                    label={t("tournament_mixed_single_table")}
-                                    selected={leagueStructure === "single_table"}
-                                    disabled={isStarting}
-                                    onPress={() => setLeagueStructure("single_table")}
-                                  />
-                                  <ConfigurationOption
-                                    label={t("tournament_mixed_groups")}
-                                    selected={leagueStructure === "groups"}
-                                    disabled={isStarting}
-                                    onPress={() => setLeagueStructure("groups")}
-                                  />
-                                </View>
-                                {leagueStructure === "single_table" ? (
-                                  <View style={styles.configurationOptions}>
-                                    {fullBracketSizes.map((count) => (
-                                      <ConfigurationOption
-                                        key={count}
-                                        label={t("tournament_mixed_qualifiers_option").replace(
-                                          "{count}",
-                                          String(count),
-                                        )}
-                                        selected={qualifierCount === count}
-                                        disabled={isStarting}
-                                        onPress={() => setQualifierCount(count)}
-                                      />
-                                    ))}
-                                  </View>
-                                ) : (
-                                  <View style={styles.configurationFields}>
-                                    <TextField
-                                      accessibilityLabel={t("tournament_mixed_group_count")}
-                                      error={
-                                        !mixedConfiguration.valid &&
-                                        mixedConfiguration.reason === "groups"
-                                          ? t("tournament_mixed_group_count_invalid")
-                                          : undefined
-                                      }
-                                      inputMode="numeric"
-                                      keyboardType="number-pad"
-                                      label={t("tournament_mixed_group_count")}
-                                      onBlur={() =>
-                                        setGroupCount((value) =>
-                                          normalizeIntegerInput(
-                                            value,
-                                            minimumGroupCount,
-                                            maximumGroupCount,
-                                          ),
-                                        )
-                                      }
-                                      onChangeText={(value) =>
-                                        setGroupCount(sanitizeIntegerInput(value))
-                                      }
-                                      value={groupCount}
-                                    />
-                                    <TextField
-                                      accessibilityLabel={t(
-                                        "tournament_mixed_qualifiers_per_group",
-                                      )}
-                                      error={
-                                        !mixedConfiguration.valid &&
-                                        mixedConfiguration.reason === "qualifiers"
-                                          ? t("tournament_mixed_qualifiers_per_group_invalid")
-                                          : undefined
-                                      }
-                                      inputMode="numeric"
-                                      keyboardType="number-pad"
-                                      label={t("tournament_mixed_qualifiers_per_group")}
-                                      onBlur={() =>
-                                        setQualifiersPerGroup((value) =>
-                                          normalizeIntegerInput(
-                                            value,
-                                            minimumQualifiersPerGroup,
-                                            maximumQualifiersPerGroup,
-                                          ),
-                                        )
-                                      }
-                                      onChangeText={(value) =>
-                                        setQualifiersPerGroup(sanitizeIntegerInput(value))
-                                      }
-                                      value={qualifiersPerGroup}
-                                    />
-                                  </View>
-                                )}
-                                {!mixedConfiguration.valid &&
-                                (mixedConfiguration.reason === "teams" ||
-                                  mixedConfiguration.reason === "bracket") ? (
-                                  <Text color="error">
-                                    {mixedConfiguration.reason === "teams"
-                                      ? t("tournament_mixed_required_teams")
-                                          .replace(
-                                            "{required}",
-                                            String(mixedConfiguration.required),
-                                          )
-                                          .replace("{current}", String(league.teams.length))
-                                      : t("tournament_mixed_bracket_size")}
-                                  </Text>
-                                ) : null}
-                              </View>
-                            ) : null}
-                          </View>
-                        )}
-                      </View>
-                    </Card>
-                  ) : null}
-                  {league.state === "published" && !isOrganizer ? (
-                    <Card>
-                      <View style={styles.stack}>
-                        <Text color="secondary">{t("league_start_waiting_for_owner")}</Text>
-                        <Button disabled label={t("league_start")} onPress={() => undefined} />
-                      </View>
-                    </Card>
-                  ) : null}
-                  {waitingForOwnerToStartElimination ? (
-                    <Card>
-                      <View style={styles.stack}>
-                        <Text color="secondary">
-                          {t(
-                            tieBreakStageReady
-                              ? "tournament_mixed_waiting_for_owner_elimination"
-                              : "tournament_mixed_waiting_for_owner",
-                          )}
-                        </Text>
-                        <Button
-                          disabled
-                          label={t(
-                            tieBreakStageReady
-                              ? "tournament_mixed_start_elimination"
-                              : "tournament_mixed_finish_league",
-                          )}
-                          onPress={() => undefined}
-                        />
-                      </View>
-                    </Card>
-                  ) : null}
-                  {eliminationBlockedByWithdrawals ? (
-                    <Card>
-                      <View style={styles.stack}>
-                        <Text color="error">{t("tournament_mixed_not_enough_eligible_teams")}</Text>
-                        <Button
-                          disabled
-                          label={t("tournament_mixed_start_elimination")}
-                          onPress={() => undefined}
-                        />
-                      </View>
-                    </Card>
-                  ) : null}
-                </View>
-              }
-              renderItem={({ item: match }) => {
-                return (
-                  <Card>
-                    <View style={styles.match}>
-                      <View style={styles.matchSummary}>
-                        <Text style={styles.teamName} variant="bodyLarge">
-                          {teamsByID.get(match.homeTeamId)}
-                        </Text>
-                        <Text style={styles.matchScore} variant="title">
-                          {match.state === "completed"
-                            ? match.incident
-                              ? t("result_mode_incident")
-                              : `${match.homeScore} – ${match.awayScore}${
-                                  match.homePenalties !== undefined &&
-                                  match.awayPenalties !== undefined
-                                    ? ` (${match.homePenalties}–${match.awayPenalties} ${t("bracket_penalties_short")})`
-                                    : ""
-                                }`
-                            : "–"}
-                        </Text>
-                        <Text style={styles.teamName} variant="bodyLarge">
-                          {teamsByID.get(match.awayTeamId)}
-                        </Text>
-                      </View>
-                      {match.sets.length > 0 && !match.incident ? (
-                        <Text color="secondary" style={styles.setSummary}>
-                          {match.sets.map((set) => `${set.homeScore}–${set.awayScore}`).join(" · ")}
-                        </Text>
-                      ) : null}
-                      <IncidentSummary match={match} teams={teamsByID} showAdministrativeScore />
-                      {canEditMatchResult(match) ? (
-                        <Button
-                          label={
-                            match.state === "completed"
-                              ? t("league_result_edit")
-                              : t("league_result_add")
-                          }
-                          onPress={() => openResultEditor(match.id)}
-                          variant={match.state === "completed" ? "secondary" : "primary"}
-                        />
-                      ) : null}
-                    </View>
-                  </Card>
-                );
-              }}
-              renderSectionHeader={({ section }) => (
-                <View style={[styles.roundHeader, { backgroundColor: colors.surface.canvas }]}>
-                  <Text variant="title">
-                    {showsTieBreak
-                      ? `${t("tournament_mixed_tiebreak_pool").replace("{number}", String(section.group))} · ${t("tournament_mixed_tiebreak_cycle").replace("{number}", String(section.round))}`
-                      : `${
-                          section.group
-                            ? `${t("tournament_group_label").replace("{number}", String(section.group))} · `
-                            : ""
-                        }${t("league_match_round").replace("{number}", String(section.round))}`}
-                  </Text>
-                </View>
-              )}
-            />
-          )}
-          {showsBracketHorizontalControl ? (
-            <View
-              style={[
-                styles.bracketHorizontalControl,
-                {
-                  backgroundColor: colors.surface.canvas,
-                  borderColor: colors.border.default,
-                  bottom: primaryTournamentAction
-                    ? insets.bottom + space[3] + control.minHeight + space[2]
-                    : insets.bottom,
-                },
-              ]}
-            >
+          ) : null}
+          <View
+            ref={matchListViewport}
+            style={[styles.listViewport, showWebSidebar && styles.mainColumn]}
+          >
+            {showsBracket ? (
               <ScrollView
-                ref={bracketHorizontalControl}
-                accessibilityLabel={t("bracket_horizontal_scroll")}
-                horizontal
+                ref={bracketList}
+                contentContainerStyle={[
+                  styles.content,
+                  {
+                    paddingBottom:
+                      insets.bottom +
+                      (primaryTournamentAction
+                        ? control.minHeight + space[3] + space[5]
+                        : space[4]),
+                  },
+                ]}
                 onScroll={(event) => {
-                  const nextOffset = event.nativeEvent.contentOffset.x;
-                  bracketHorizontalControlOffset.current = nextOffset;
-                  bracketView.current?.scrollHorizontallyTo(nextOffset);
+                  matchListOffset.current = event.nativeEvent.contentOffset.y;
                 }}
                 scrollEventThrottle={16}
+                showsVerticalScrollIndicator={false}
+                stickyHeaderIndices={Platform.OS === "web" ? undefined : [1]}
               >
-                <View style={{ height: 1, width: bracketHorizontalMetrics.contentWidth }} />
+                <View style={styles.listHeader}>
+                  {navigationTitle.contentTitle}
+                  {tournamentSummary}
+                  {phaseSelector}
+                  <BracketIntro />
+                </View>
+                <BracketRoundNavigation
+                  onLayout={(event) => {
+                    bracketRoundTopOffset.current = event.nativeEvent.layout.y;
+                  }}
+                  onSelect={selectBracketRound}
+                  rounds={bracketRounds}
+                  selectedRound={selectedBracketRound}
+                />
+                <BracketView
+                  ref={bracketView}
+                  tournament={bracketTournament}
+                  canManage={canManageResults}
+                  onHorizontalMetricsChange={updateBracketHorizontalMetrics}
+                  onHorizontalScroll={syncBracketHorizontalControl}
+                  onMatchFocus={ensureBracketMatchVisible}
+                  onEdit={openResultEditor}
+                  onRoundChange={setSelectedBracketRound}
+                  roundSelectionRevision={bracketRoundSelectionRevision}
+                  selectedRound={selectedBracketRound}
+                />
               </ScrollView>
-            </View>
-          ) : null}
+            ) : (
+              <SectionList
+                ref={matchList}
+                contentContainerStyle={[
+                  styles.content,
+                  {
+                    paddingBottom:
+                      insets.bottom +
+                      (primaryTournamentAction
+                        ? control.minHeight + space[3] + space[5]
+                        : space[4]),
+                  },
+                ]}
+                ItemSeparatorComponent={() => <View style={styles.matchSeparator} />}
+                onScroll={(event) => {
+                  matchListOffset.current = event.nativeEvent.contentOffset.y;
+                }}
+                scrollEventThrottle={16}
+                sections={
+                  league.format === "single_elimination"
+                    ? []
+                    : showsTieBreak
+                      ? tieBreakMatchSections
+                      : matchSections
+                }
+                showsVerticalScrollIndicator={false}
+                stickySectionHeadersEnabled
+                ListHeaderComponent={
+                  <View style={styles.listHeader}>
+                    {navigationTitle.contentTitle}
+                    {!showWebSidebar ? tournamentSummary : null}
+                    {phaseSelector}
+                    {showsTieBreak ? (
+                      <Card>
+                        <View style={styles.stack}>
+                          <Text style={styles.configurationTitle} variant="bodyLarge">
+                            {t("tournament_mixed_tiebreak_title")}
+                          </Text>
+                          <Text color="secondary">{t("tournament_mixed_tiebreak_help")}</Text>
+                        </View>
+                      </Card>
+                    ) : null}
+                    {league.state === "published" && isOrganizer ? (
+                      <Card>
+                        <View style={styles.stack}>
+                          <Text style={styles.configurationTitle} variant="bodyLarge">
+                            {t("league_start_title")}
+                          </Text>
+                          <View style={styles.configurationOptions}>
+                            {!isRacketSport(league.sport) ? (
+                              <ConfigurationOption
+                                label={t("tournament_format_league")}
+                                selected={format === "league"}
+                                disabled={isStarting}
+                                onPress={() => setFormat("league")}
+                              />
+                            ) : null}
+                            <ConfigurationOption
+                              label={t("tournament_format_bracket")}
+                              selected={format === "single_elimination"}
+                              disabled={isStarting}
+                              onPress={() => setFormat("single_elimination")}
+                            />
+                            {!isRacketSport(league.sport) ? (
+                              <ConfigurationOption
+                                label={t("tournament_format_mixed")}
+                                selected={format === "league_then_single_elimination"}
+                                disabled={isStarting}
+                                onPress={() => setFormat("league_then_single_elimination")}
+                              />
+                            ) : null}
+                          </View>
+                          {isRacketSport(league.sport) ? (
+                            <Text color="secondary">{t("racket_elimination_only_help")}</Text>
+                          ) : null}
+                          {format === "single_elimination" ? (
+                            <Text color="secondary">{t("bracket_configuration_help")}</Text>
+                          ) : (
+                            <View style={styles.stack}>
+                              <View
+                                style={[
+                                  styles.configurationOptions,
+                                  { borderColor: colors.border.default },
+                                ]}
+                              >
+                                <ConfigurationOption
+                                  label={t("league_start_one_leg")}
+                                  selected={roundRobinLegs === 1}
+                                  disabled={isStarting}
+                                  onPress={() => setRoundRobinLegs(1)}
+                                />
+                                <ConfigurationOption
+                                  label={t("league_start_two_legs")}
+                                  selected={roundRobinLegs === 2}
+                                  disabled={isStarting}
+                                  onPress={() => setRoundRobinLegs(2)}
+                                />
+                              </View>
+                              {format === "league_then_single_elimination" ? (
+                                <View style={styles.stack}>
+                                  <Text color="secondary">
+                                    {t("tournament_mixed_configuration_help")}
+                                  </Text>
+                                  <View style={styles.configurationOptions}>
+                                    <ConfigurationOption
+                                      label={t("tournament_mixed_single_table")}
+                                      selected={leagueStructure === "single_table"}
+                                      disabled={isStarting}
+                                      onPress={() => setLeagueStructure("single_table")}
+                                    />
+                                    <ConfigurationOption
+                                      label={t("tournament_mixed_groups")}
+                                      selected={leagueStructure === "groups"}
+                                      disabled={isStarting}
+                                      onPress={() => setLeagueStructure("groups")}
+                                    />
+                                  </View>
+                                  {leagueStructure === "single_table" ? (
+                                    <View style={styles.configurationOptions}>
+                                      {fullBracketSizes.map((count) => (
+                                        <ConfigurationOption
+                                          key={count}
+                                          label={t("tournament_mixed_qualifiers_option").replace(
+                                            "{count}",
+                                            String(count),
+                                          )}
+                                          selected={qualifierCount === count}
+                                          disabled={isStarting}
+                                          onPress={() => setQualifierCount(count)}
+                                        />
+                                      ))}
+                                    </View>
+                                  ) : (
+                                    <View style={styles.configurationFields}>
+                                      <TextField
+                                        accessibilityLabel={t("tournament_mixed_group_count")}
+                                        error={
+                                          !mixedConfiguration.valid &&
+                                          mixedConfiguration.reason === "groups"
+                                            ? t("tournament_mixed_group_count_invalid")
+                                            : undefined
+                                        }
+                                        inputMode="numeric"
+                                        keyboardType="number-pad"
+                                        label={t("tournament_mixed_group_count")}
+                                        onBlur={() =>
+                                          setGroupCount((value) =>
+                                            normalizeIntegerInput(
+                                              value,
+                                              minimumGroupCount,
+                                              maximumGroupCount,
+                                            ),
+                                          )
+                                        }
+                                        onChangeText={(value) =>
+                                          setGroupCount(sanitizeIntegerInput(value))
+                                        }
+                                        value={groupCount}
+                                      />
+                                      <TextField
+                                        accessibilityLabel={t(
+                                          "tournament_mixed_qualifiers_per_group",
+                                        )}
+                                        error={
+                                          !mixedConfiguration.valid &&
+                                          mixedConfiguration.reason === "qualifiers"
+                                            ? t("tournament_mixed_qualifiers_per_group_invalid")
+                                            : undefined
+                                        }
+                                        inputMode="numeric"
+                                        keyboardType="number-pad"
+                                        label={t("tournament_mixed_qualifiers_per_group")}
+                                        onBlur={() =>
+                                          setQualifiersPerGroup((value) =>
+                                            normalizeIntegerInput(
+                                              value,
+                                              minimumQualifiersPerGroup,
+                                              maximumQualifiersPerGroup,
+                                            ),
+                                          )
+                                        }
+                                        onChangeText={(value) =>
+                                          setQualifiersPerGroup(sanitizeIntegerInput(value))
+                                        }
+                                        value={qualifiersPerGroup}
+                                      />
+                                    </View>
+                                  )}
+                                  {!mixedConfiguration.valid &&
+                                  (mixedConfiguration.reason === "teams" ||
+                                    mixedConfiguration.reason === "bracket") ? (
+                                    <Text color="error">
+                                      {mixedConfiguration.reason === "teams"
+                                        ? t("tournament_mixed_required_teams")
+                                            .replace(
+                                              "{required}",
+                                              String(mixedConfiguration.required),
+                                            )
+                                            .replace("{current}", String(league.teams.length))
+                                        : t("tournament_mixed_bracket_size")}
+                                    </Text>
+                                  ) : null}
+                                </View>
+                              ) : null}
+                            </View>
+                          )}
+                        </View>
+                      </Card>
+                    ) : null}
+                    {league.state === "published" && !isOrganizer ? (
+                      <Card>
+                        <View style={styles.stack}>
+                          <Text color="secondary">{t("league_start_waiting_for_owner")}</Text>
+                          <Button disabled label={t("league_start")} onPress={() => undefined} />
+                        </View>
+                      </Card>
+                    ) : null}
+                    {waitingForOwnerToStartElimination ? (
+                      <Card>
+                        <View style={styles.stack}>
+                          <Text color="secondary">
+                            {t(
+                              tieBreakStageReady
+                                ? "tournament_mixed_waiting_for_owner_elimination"
+                                : "tournament_mixed_waiting_for_owner",
+                            )}
+                          </Text>
+                          <Button
+                            disabled
+                            label={t(
+                              tieBreakStageReady
+                                ? "tournament_mixed_start_elimination"
+                                : "tournament_mixed_finish_league",
+                            )}
+                            onPress={() => undefined}
+                          />
+                        </View>
+                      </Card>
+                    ) : null}
+                    {eliminationBlockedByWithdrawals ? (
+                      <Card>
+                        <View style={styles.stack}>
+                          <Text color="error">
+                            {t("tournament_mixed_not_enough_eligible_teams")}
+                          </Text>
+                          <Button
+                            disabled
+                            label={t("tournament_mixed_start_elimination")}
+                            onPress={() => undefined}
+                          />
+                        </View>
+                      </Card>
+                    ) : null}
+                  </View>
+                }
+                renderItem={({ item: match }) => {
+                  return (
+                    <Card>
+                      <View style={styles.match}>
+                        <View style={styles.matchSummary}>
+                          <Text style={styles.teamName} variant="bodyLarge">
+                            {teamsByID.get(match.homeTeamId)}
+                          </Text>
+                          <Text style={styles.matchScore} variant="title">
+                            {match.state === "completed"
+                              ? match.incident
+                                ? t("result_mode_incident")
+                                : `${match.homeScore} – ${match.awayScore}${
+                                    match.homePenalties !== undefined &&
+                                    match.awayPenalties !== undefined
+                                      ? ` (${match.homePenalties}–${match.awayPenalties} ${t("bracket_penalties_short")})`
+                                      : ""
+                                  }`
+                              : "–"}
+                          </Text>
+                          <Text style={styles.teamName} variant="bodyLarge">
+                            {teamsByID.get(match.awayTeamId)}
+                          </Text>
+                        </View>
+                        {match.sets.length > 0 && !match.incident ? (
+                          <Text color="secondary" style={styles.setSummary}>
+                            {match.sets
+                              .map((set) => `${set.homeScore}–${set.awayScore}`)
+                              .join(" · ")}
+                          </Text>
+                        ) : null}
+                        <IncidentSummary match={match} teams={teamsByID} showAdministrativeScore />
+                        {canEditMatchResult(match) ? (
+                          <Button
+                            label={
+                              match.state === "completed"
+                                ? t("league_result_edit")
+                                : t("league_result_add")
+                            }
+                            onPress={() => openResultEditor(match.id)}
+                            variant={match.state === "completed" ? "secondary" : "primary"}
+                          />
+                        ) : null}
+                      </View>
+                    </Card>
+                  );
+                }}
+                renderSectionHeader={({ section }) => (
+                  <View style={[styles.roundHeader, { backgroundColor: colors.surface.canvas }]}>
+                    <Text variant="title">
+                      {showsTieBreak
+                        ? `${t("tournament_mixed_tiebreak_pool").replace("{number}", String(section.group))} · ${t("tournament_mixed_tiebreak_cycle").replace("{number}", String(section.round))}`
+                        : `${
+                            section.group
+                              ? `${t("tournament_group_label").replace("{number}", String(section.group))} · `
+                              : ""
+                          }${t("league_match_round").replace("{number}", String(section.round))}`}
+                    </Text>
+                  </View>
+                )}
+              />
+            )}
+            {showsBracketHorizontalControl ? (
+              <View
+                style={[
+                  styles.bracketHorizontalControl,
+                  {
+                    backgroundColor: colors.surface.canvas,
+                    borderColor: colors.border.default,
+                    bottom: primaryTournamentAction
+                      ? insets.bottom + space[3] + control.minHeight + space[2]
+                      : insets.bottom,
+                  },
+                ]}
+              >
+                <ScrollView
+                  ref={bracketHorizontalControl}
+                  accessibilityLabel={t("bracket_horizontal_scroll")}
+                  horizontal
+                  onScroll={(event) => {
+                    const nextOffset = event.nativeEvent.contentOffset.x;
+                    bracketHorizontalControlOffset.current = nextOffset;
+                    bracketView.current?.scrollHorizontallyTo(nextOffset);
+                  }}
+                  scrollEventThrottle={16}
+                >
+                  <View style={{ height: 1, width: bracketHorizontalMetrics.contentWidth }} />
+                </ScrollView>
+              </View>
+            ) : null}
+          </View>
         </View>
         {primaryTournamentAction ? (
           <View style={[styles.floatingAction, { bottom: insets.bottom + space[3] }]}>
@@ -1896,7 +1916,15 @@ export default function TournamentScreen() {
 const styles = StyleSheet.create({
   sportOptions: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   content: { paddingBottom: space[4] },
-  listViewport: { flex: 1 },
+  listViewport: { flex: 1, minWidth: 0, minHeight: 0 },
+  sidebarLayout: { flexDirection: "row", marginHorizontal: space[5] / 2 },
+  sidebar: {
+    width: webLayout.sidebarWidth,
+    flexGrow: 0,
+    flexShrink: 0,
+    marginHorizontal: -space[5] / 2,
+  },
+  mainColumn: { marginHorizontal: -space[5] / 2 },
   bracketHorizontalControl: {
     borderTopWidth: StyleSheet.hairlineWidth,
     height: space[5],
@@ -1953,11 +1981,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight,
   },
-  navigationTitle: {
-    flexShrink: 1,
-    marginHorizontal: space[5],
-    textAlign: "center",
-  },
+
   menuActions: { gap: space[5] },
   matchSeparator: { height: space[5] },
   match: { gap: space[3] },

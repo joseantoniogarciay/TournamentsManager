@@ -132,6 +132,12 @@ Dockerfile y usa Air con el código montado; el target `runtime` valida el
 artefacto sin compilador ni Air y es también la imagen desplegada en K3s para
 `prod`. Expo se ejecuta en host por sus simuladores y herramientas nativas.
 
+ADR-0155 acepta mover la web productiva a Workers Static Assets, conservando
+API y dev domésticos. El 2026-10-10 se prepara la implementación; la conmutación
+todavía no está confirmada. Véase el [flujo Cloudflare](../../infra/cloudflare/README.md)
+para candidatos trazables, previews, publicación y recuperación. Hasta verificar
+las rutas activas en la cuenta, sigue vigente el hosting doméstico siguiente.
+
 Una beta doméstica usa Cloudflare Tunnel como entrada HTTPS pública (ADR-0090).
 El conector del Mac inicia una conexión saliente y alcanza Caddy solo por
 loopback; no se reenvían puertos en UniFi ni se publica PostgreSQL o el puerto
@@ -315,7 +321,6 @@ Los agregados de PostgreSQL coinciden antes/después y `pgbackrest check` pasa.
 La [revisión operativa](OPERATIONAL_BLOCK_REVIEW_2026-10-03.md) recoge los límites
 y el manifiesto privado. No cambia el release v1.9.0 de producción.
 
-
 ## Promoción y retrospectiva — 2026-10-04
 
 Se despliega la revisión limpia `11138a1100db853d04a2e388bae029c013f55843`,
@@ -382,7 +387,6 @@ relay de email y Google OAuth móvil, y se validan builds reales. El [runbook](.
 conserva los gates, incluida revocación Apple al eliminar cuenta. La preparación
 no activa Apple, no despliega dev/prod y no autoriza distribución.
 
-
 ## Preparación autorizada de v1.10.0 — 2026-10-08
 
 El usuario autoriza actualizar dev y prod con el bloque acumulado. La revisión
@@ -403,3 +407,99 @@ Dev se enciende para desplegar y probar y volverá a apagarse al cerrar, conform
 a ADR-0146; observabilidad dev permanece apagada. Producción conserva sus
 servicios operativos. La release productiva sigue ADR-0119: merge no-ff a main,
 tag anotado, GitHub Release y artefactos del SHA etiquetado.
+
+### Cierre de v1.10.0 — 2026-10-08
+
+Publicada [v1.10.0](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.10.0)
+sobre el merge no-ff `b002b4b99fc44a6ec0662b94ec962b8cce9cbea5` de main.
+La [CI del SHA productivo](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37818973693)
+y la [CI de preparación en develop](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/37818687061)
+terminan aprobadas. Develop avanza por fast-forward hasta el merge antes del
+cierre documental. No se crean ramas temporales.
+
+- Dev: API, web y renderer `08b7deb3a2def89a11fc8e53600a242bf424fb18`;
+  migración Goose 20 y ocho comprobaciones HTTP/TLS/CORS/revisión correctas.
+- Prod: API, migrator, web y renderer `b002b4b99fc44a6ec0662b94ec962b8cce9cbea5`;
+  dos réplicas API listas, Goose 20 y nueve comprobaciones públicas correctas.
+  Caddy versionado validado y recargado; Secret migrador efímero eliminado.
+- Ambos: sesión y biblioteca anónimas devuelven 401, torneo inexistente 404,
+  cuerpos JSON válidos. Comparación de recuentos y huellas completas de filas
+  de cuentas, torneos, equipos y partidos coincide con las copias previas.
+  La identidad runtime productiva conserva los grants de la tabla Apple.
+- La preparación productiva ejecuta por primera vez la subida real de sourcemaps
+  mediante PostHog CLI; no quedan `.map` en la web pública. Esto no acredita
+  recepción de un error real ni simbolicación en el panel.
+
+Backups pgBackRest previos: dev `20261004-014505F_20261008-174057I` y prod
+`20261004-021506F_20261008-174058I`, ambos con estado correcto. Copias lógicas,
+manifiestos anteriores, logs y comprobaciones permanecen privados en
+`/private/tmp/tm-release-20261008`; no son un archivo duradero ni se versionan.
+El rollback de aplicación conserva web `69533ac6cae53bf7245248221cf8143c13329f40`
+y API `11138a1100db853d04a2e388bae029c013f55843`; no revierte la migración.
+
+Al cerrar se ejecuta `make dev-public-down`: API, PostgreSQL y renderer dev
+apagados, seis LaunchAgents descargados y volúmenes conservados. Observabilidad
+dev no se inicia. Producción/K3s y su renderer permanecen activos. Dev queda
+actualizado para el siguiente arranque autorizado, no permanentemente encendido.
+Apple real, distribución móvil y los límites registrados de QA siguen pendientes.
+
+Retrospectiva: verificar la cuenta activa de `gh` antes de atribuir el rechazo de
+una Release a permisos ausentes. Había otra cuenta activa; usar la sesión ya
+guardada de la propietaria resuelve la publicación sin ampliar scopes. Separar
+salud pública, revisión desplegada, migración y conservación de datos permite
+cerrar el deploy con evidencia concreta sin convertirlo en un QA universal.
+
+### Suspensión productiva autorizada — 2026-10-08
+
+Después del despliegue verificado, el usuario solicita reducir consumo y confirma
+explícitamente «Apagar producción/K3s, aceptando que la API pública quede fuera
+de servicio». Esta instrucción autoriza excepcionalmente el apagado de esta
+sesión frente a la regla ordinaria de conservar producción activa de ADR-0146;
+no modifica durabilidad ni borra recursos.
+
+Se solicita apagado del SO invitado con `utmctl stop --request` para
+fasttourney-k3s-lab (9494026F-7DD1-4FFC-9229-851A9391DBB5); UTM confirma stopped.
+Se deshabilitan y descargan los LaunchAgents del Mac
+com.fasttourney.prod-league-preview-renderer,
+com.fasttourney.prod-postgresql-backup-full,
+com.fasttourney.prod-postgresql-backup-incremental y
+com.fasttourney.utm-autostart. Así no se reenciende la VM automáticamente ni se
+siguen lanzando tareas contra una BD apagada. Se conservan plists, VM, discos,
+volúmenes, releases y backups. Local/dev se apagan al cerrar el QA.
+
+La API pública devuelve 502 esperado mientras está suspendida. La home estática
+sigue respondiendo 200 mediante Caddy/Tunnel; no representa disponibilidad del
+producto ni de sus previews de torneo. No se cambia el router ni el túnel.
+Producción permanece apagada hasta una nueva petición explícita.
+
+Para reactivar, con autorización: arrancar la VM existente con `utmctl start`
+y esperar K3s/PostgreSQL y ambas réplicas API; comprobar healthz público. Después
+rehabilitar con `launchctl enable` y cargar con `launchctl bootstrap` los tres
+plists productivos anteriores del directorio ~/Library/LaunchAgents. Solo si se
+quiere recuperar el arranque automático del Mac, rehabilitar también el plist
+com.fasttourney.utm-autostart. Comprobar renderer 8091, revisión web/API
+b002b4b99fc44a6ec0662b94ec962b8cce9cbea5 y programación de backups, sin redesplegar
+ni migrar por el mero hecho de arrancar. La CI del cierre documental f1e59e0
+termina aprobada antes de esta suspensión.
+
+Retrospectiva: apagar producción es una decisión de disponibilidad, no solo de
+consumo. Registrar consentimiento, estado público esperado y tareas suspendidas
+hace reversible la operación sin confundir una API 502 deliberada con regresión.
+
+### Recuperación productiva y hosting de borde — 2026-10-11
+
+El usuario autoriza completar ADR-0155 y levantar K3s. Se recupera la VM
+existente, PostgreSQL y ambas réplicas API con revisión `b002b4b…`, sin
+redesplegar ni migrar. API pública 200 y CORS productivo 204. Se rehabilitan
+renderer de rollback y los dos LaunchAgents de backup con programación original;
+UTM autostart permanece deshabilitado. Dev/local siguen apagados; no se inicia
+observabilidad dev. Los recursos de observabilidad de producción preexistentes
+reanudarán junto con su cluster.
+
+Web productiva conmutada a Workers Static Assets Free usando el mismo bundle.
+Caddy/Tunnel web se conserva como origen de rollback; API y DNS no cambian.
+Ver versiones activas, pruebas y retrospectiva en
+[publicación web](../runbooks/production-web-publication.md). La home consume
+una ejecución Worker para conservar su indexación; el resto de assets sigue
+estático. Un certificado de interceptación del operador no se interpreta como
+fallo de emisión Cloudflare: se contrasta la huella y la conexión.

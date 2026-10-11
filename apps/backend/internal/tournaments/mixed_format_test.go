@@ -1,6 +1,9 @@
 package tournaments
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestValidateMixedConfiguration(t *testing.T) {
 	tests := []struct {
@@ -61,7 +64,7 @@ func TestQualifiedTeamIDsRejectsTooFewEligibleTeams(t *testing.T) {
 		Stages:  []Stage{stage},
 		Matches: []Match{{StageID: "stage", HomeTeamID: "withdrawn", AwayTeamID: "active", State: "completed", HomeScore: integer(0), AwayScore: integer(3)}},
 	}
-	if _, err := QualifiedTeamIDs(tournament, stage); err != ErrTournamentStageTransitionConflict {
+	if _, err := QualifiedTeamIDs(tournament, stage); !errors.Is(err, ErrTournamentStageTransitionConflict) {
 		t.Fatalf("error = %v, want transition conflict", err)
 	}
 }
@@ -84,7 +87,7 @@ func TestQualifiedTeamIDsRejectsAGroupWithoutEnoughEligibleTeams(t *testing.T) {
 			{StageID: "stage", GroupNumber: 2, HomeTeamID: "c", AwayTeamID: "d", State: "completed", HomeScore: integer(1), AwayScore: integer(0)},
 		},
 	}
-	if _, err := QualifiedTeamIDs(tournament, stage); err != ErrTournamentStageTransitionConflict {
+	if _, err := QualifiedTeamIDs(tournament, stage); !errors.Is(err, ErrTournamentStageTransitionConflict) {
 		t.Fatalf("error = %v, want transition conflict", err)
 	}
 }
@@ -109,7 +112,7 @@ func TestPlanQualificationRequiresATieBreakAtAnExactCutoffTie(t *testing.T) {
 	if len(plan.Direct) != 0 || len(plan.Pools) != 1 || plan.Pools[0].QualifierCount != 2 || len(plan.Pools[0].Standings) != 3 {
 		t.Fatalf("plan = %#v, want one three-team pool for two places", plan)
 	}
-	if _, err := QualifiedTeamIDs(tournament, stage); err != ErrQualificationTieBreakRequired {
+	if _, err := QualifiedTeamIDs(tournament, stage); !errors.Is(err, ErrQualificationTieBreakRequired) {
 		t.Fatalf("error = %v, want qualification tiebreak", err)
 	}
 }

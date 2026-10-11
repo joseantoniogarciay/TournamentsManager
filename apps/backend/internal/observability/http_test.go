@@ -27,7 +27,7 @@ func TestHTTPHandlerClassifiesUnexplainedServerFailuresOnTheRootSpan(t *testing.
 	handler := HTTPHandler(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
 		writer.WriteHeader(http.StatusInternalServerError)
 	}))
-	handler.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/unavailable", nil))
+	handler.ServeHTTP(httptest.NewRecorder(), httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/unavailable", nil))
 
 	spans := exporter.GetSpans()
 	if len(spans) != 1 {
@@ -63,7 +63,7 @@ func TestHTTPHandlerLogsValidInteractionIDOutsideSpans(t *testing.T) {
 	handler := HTTPHandler(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
 		writer.WriteHeader(http.StatusNoContent)
 	}))
-	request := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/healthz", nil)
 	request.Header.Set(interactionIDHeader, "019abcde-1111-4111-8111-111111111111")
 	handler.ServeHTTP(httptest.NewRecorder(), request)
 

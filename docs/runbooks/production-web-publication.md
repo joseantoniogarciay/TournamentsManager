@@ -1,15 +1,24 @@
 # Publicación de la web de producción
 
-- **Servicio/componente:** web estática `fasttourney.com`, Caddy y Cloudflare Tunnel
+- **Servicio/componente:** web `fasttourney.com` en Workers Static Assets; API doméstica vía Tunnel; Caddy de rollback
 - **Propietario:** operador de FastTourney
 - **Última prueba:** 2026-09-05 — TLS, CORS, publicación y rollback operativo verificados
 - **Severidad aplicable:** alta mientras afecte a acceso, registro o recuperación
 
 ## Síntoma e impacto
 
+ADR-0155 está conmutado desde el 2026-10-11: producción sirve el artefacto
+`b002b4b99fc44a6ec0662b94ec962b8cce9cbea5` desde Workers Static Assets Free.
+K3s y PostgreSQL están recuperados; la API pública devuelve 200. El
+[procedimiento Cloudflare](../../infra/cloudflare/README.md) separa staging,
+comprobación y publicación. Los pasos Caddy de este runbook quedan como
+recuperación del origen anterior: cambiar `current` no publica la web del borde.
+La API conserva sus DNS y Tunnel. Dev permanece doméstico y apagado.
+
 Este runbook cubre una nueva publicación o la recuperación de la SPA de
 producción. No despliega API, PostgreSQL ni Secrets. Ante una publicación que no
-supere las verificaciones, `fasttourney.com` vuelve al `503` versionado.
+supere las verificaciones, aplicar el rollback Cloudflare documentado; retirar
+solo las dos rutas Workers devuelve el tráfico al origen doméstico conservado.
 
 ## Prerequisitos y seguridad
 
@@ -252,3 +261,44 @@ retención/observabilidad no se incluyen en este release.
 Retrospectiva: aislar desde la base remota preservó seguridad publicada y
 trabajo pendiente. Probar migraciones sobre restauraciones reales evita
 confundir una base de fixtures con compatibilidad de los datos existentes.
+
+## Evidencia de conmutación Cloudflare — 2026-10-11
+
+App conservada `b002b4b99fc44a6ec0662b94ec962b8cce9cbea5`, infraestructura
+`1da88c2df876b6196991ec974ddd1673bb1b9ac1`. Versiones activas:
+
+- `fasttourney-web`: `b878e160-71cf-4a76-83ee-c9c3992edb59`.
+- `fasttourney-web-redirect`: `629c2b56-f91d-4879-a91a-a66c9d8612b2`.
+- Rutas: `fasttourney.com/*` y `www.fasttourney.com/*`, confirmadas por API.
+
+TLS válido, home 200 indexable, cuenta/legales/subruta de clasificación 200
+noindex; torneo público 200 con canonical y metadatos reales; UUID inexistente 404. JS y asociación móvil inexistentes 404. Manifiesto coincide con la app
+anterior; `www` devuelve 308 conservando ruta y query. Preview mantiene noindex.
+Cabeceras de seguridad y MIME comprobados. Ocho pruebas workerd pasan, además
+de ESLint, formato y dry-run de ambos Workers. Navegador carga home y navega a
+Cuenta con formulario local y Google visibles. No se repitió login autenticado
+ni envío de correo; bundle, dominio y audiencia OAuth permanecen iguales.
+
+La comprobación real detectó noindex en la home pese a pasar en Miniflare. Se
+resuelve solo esa ruta en el Worker para retirar la cabecera en el dominio
+canónico, incluyendo query y HEAD; previews y otras rutas permanecen noindex.
+La home consume ahora ejecución Workers Free. Los demás assets conservan el
+servicio estático; no se contrató pago.
+
+K3s se arrancó antes del corte para cumplir el gate de salud de API. UTM CLI
+no completó el arranque (OSStatus -609); la interfaz de UTM sí lo completó.
+Nodo Ready, PostgreSQL y dos API Running/Ready, revisión productiva anterior.
+Healthz público 200 y preflight CORS 204 con origen exacto. Se rehabilitaron
+renderer de rollback (ready con revisión correcta) y ambos LaunchAgents de
+backup, con programación 04:15 conservada. Autostart del Mac sigue deshabilitado.
+No se redesplegó API, no se ejecutaron migraciones y dev/local permanecen apagados.
+
+El certificado `core1.netops.test` observado antes del corte coincidía en
+sujeto y huella con la interceptación Digi documentada por
+[OONI](https://ooni.org/post/2026-laliga-collateral/). No demostraba falta de
+certificado de Cloudflare. El 11 de octubre HTTPS volvió a validar con Google
+Trust Services WE1. Universal SSL permanece activado; no se repitió la reemisión.
+
+Retrospectiva: separar salud API, TLS desde la conexión y hosting evita atribuir
+todas las caídas a una sola causa. Comprobar el dominio después del corte es
+necesario aunque la prueba local y la URL de versión hayan pasado.

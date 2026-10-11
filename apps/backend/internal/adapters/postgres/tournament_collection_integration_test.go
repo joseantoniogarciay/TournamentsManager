@@ -10,8 +10,8 @@ import (
 func TestIntegrationRecentTournamentsOrdersActivityAndDeduplicatesRelationships(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "person@example.test", "person", "correct password")
-	otherAccountID := createVerifiedLocalAccount(t, ctx, pool, "other@example.test", "other", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "person@example.test", "person", "correct password")
+	otherAccountID := createVerifiedLocalAccount(ctx, t, pool, "other@example.test", "other", "correct password")
 	var administeredID, followedID, newestID, oldestID string
 	if err := pool.QueryRow(ctx, `INSERT INTO tournaments (organizer_account_id, name, published_at, last_activity_at) VALUES ($1, 'Administrada', now(), now() - interval '2 hours') RETURNING id::text`, accountID).Scan(&administeredID); err != nil {
 		t.Fatalf("crear liga administrada: %v", err)
@@ -55,7 +55,7 @@ func TestIntegrationRecentTournamentsOrdersActivityAndDeduplicatesRelationships(
 func TestIntegrationTournamentPagesIncludeEveryBoundaryItem(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "pagination@example.test", "pagination", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "pagination@example.test", "pagination", "correct password")
 	for range 5 {
 		if _, err := pool.Exec(ctx, `INSERT INTO tournaments (organizer_account_id, name, published_at) VALUES ($1, 'Página', now())`, accountID); err != nil {
 			t.Fatalf("create fixture: %v", err)

@@ -128,6 +128,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: control.minHeight - 2,
   },
-  label: { fontFamily: typography.family.semibold },
+  label: { fontFamily: typography.family.semibold, textAlign: "center" },
   disabled: { opacity: 0.55 },
 });

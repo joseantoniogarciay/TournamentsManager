@@ -14,7 +14,11 @@ export default function AccountSettingsScreen() {
   const tabContentBottomPadding = useTabContentBottomPadding();
 
   return (
-    <Screen bottomInset="none" topInset="navigation-bar">
+    <Screen
+      navigationTitle={t("account_settings_title")}
+      bottomInset="none"
+      topInset="navigation-bar"
+    >
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}

@@ -116,7 +116,14 @@ export default function TournamentTeamsScreen() {
           />
         </Stack.Toolbar>
       ) : null}
-      <Screen bottomInset="none" topInset="navigation-bar">
+      <Screen
+        webWidth="wide"
+        navigationTitle={t(
+          league && isRacketSport(league.sport) ? "racket_participants" : "league_teams",
+        )}
+        bottomInset="none"
+        topInset="navigation-bar"
+      >
         {loadErrorMessage ? (
           <RequestErrorCard
             actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}

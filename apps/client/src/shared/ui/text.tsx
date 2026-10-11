@@ -1,10 +1,12 @@
-import { type PropsWithChildren } from "react";
+import { type PropsWithChildren, useId } from "react";
 import {
+  Platform,
   StyleSheet,
   Text as NativeText,
   type StyleProp,
   type TextProps as NativeTextProps,
   type TextStyle,
+  useWindowDimensions,
 } from "react-native";
 
 import { color, typography } from "@tournaments-manager/design-tokens";
@@ -13,25 +15,31 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 type Props = PropsWithChildren<{
   accessibilityLabel?: NativeTextProps["accessibilityLabel"];
+  allowFontScaling?: NativeTextProps["allowFontScaling"];
   accessibilityRole?: NativeTextProps["accessibilityRole"];
   variant?: "body" | "bodyLarge" | "caption" | "title" | "display";
   color?: "primary" | "secondary" | "inverse" | "onBrand" | "error" | "success";
   numberOfLines?: number;
   onPress?: NativeTextProps["onPress"];
+  onTextLayout?: NativeTextProps["onTextLayout"];
   style?: StyleProp<TextStyle>;
 }>;
 
 export function Text({
   accessibilityLabel,
+  allowFontScaling,
   accessibilityRole,
   children,
   variant = "body",
   color: textColor = "primary",
   numberOfLines,
   onPress,
+  onTextLayout,
   style,
 }: Props) {
   const { colors } = usePreferences();
+  const textId = useId();
+  const { fontScale } = useWindowDimensions();
   const textColors = {
     primary: { color: colors.text.primary },
     secondary: { color: colors.text.secondary },
@@ -42,10 +50,15 @@ export function Text({
   };
   return (
     <NativeText
+      // RN 0.86 iOS keeps stale paragraph measurements after Dynamic Type changes.
+      // Commit a native prop update without remounting text or changing its scaling.
+      nativeID={Platform.OS === "ios" ? `${textId}-${fontScale}` : undefined}
       accessibilityLabel={accessibilityLabel}
+      allowFontScaling={allowFontScaling}
       accessibilityRole={accessibilityRole}
       numberOfLines={numberOfLines}
       onPress={onPress}
+      onTextLayout={onTextLayout}
       style={[styles.base, variants[variant], textColors[textColor], style]}
     >
       {children}

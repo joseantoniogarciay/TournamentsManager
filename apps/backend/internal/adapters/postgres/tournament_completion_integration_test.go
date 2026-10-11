@@ -12,7 +12,7 @@ import (
 func TestIntegrationTournamentCompletionPersistsCoChampions(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "completion@example.test", "completion", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "completion@example.test", "completion", "correct password")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, accountID, tournaments.CreateInput{Name: "Liga empate", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
 	if err != nil {
@@ -51,7 +51,7 @@ func TestIntegrationTournamentCompletionPersistsCoChampions(t *testing.T) {
 func TestIntegrationConcurrentTournamentCompletionAllowsOneTransition(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "concurrent-completion@example.test", "concurrent_completion", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "concurrent-completion@example.test", "concurrent_completion", "correct password")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, accountID, tournaments.CreateInput{Name: "Liga cierre simultáneo", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}}})
 	if err != nil {
@@ -91,7 +91,7 @@ func TestIntegrationConcurrentTournamentCompletionAllowsOneTransition(t *testing
 		}
 	}
 	if successes != 1 || conflicts != 1 {
-		t.Fatalf("finalizaciones simultáneas: éxitos/conflictos = %d/%d; se esperaba 1/1", successes, conflicts)
+		t.Fatalf("finalizaciones simultáneas: éxitos/rechazos = %d/%d; se esperaba 1/1", successes, conflicts)
 	}
 	var state string
 	var champions int
@@ -109,7 +109,7 @@ func TestIntegrationConcurrentTournamentCompletionAllowsOneTransition(t *testing
 func TestIntegrationTournamentStandingsReadPersistedResults(t *testing.T) {
 	ctx := context.Background()
 	pool := integrationPool(t)
-	accountID := createVerifiedLocalAccount(t, ctx, pool, "standings@example.test", "standings", "correct password")
+	accountID := createVerifiedLocalAccount(ctx, t, pool, "standings@example.test", "standings", "correct password")
 	service := tournaments.NewCreationService(NewAccountTournamentRepository(pool))
 	created, err := service.Create(ctx, accountID, tournaments.CreateInput{Name: "Liga clasificación", Sport: tournaments.SportFootball, Teams: []tournaments.TeamInput{{Name: "Azules"}, {Name: "Rojos"}, {Name: "Verdes"}}})
 	if err != nil {
@@ -132,9 +132,9 @@ func TestIntegrationTournamentStandingsReadPersistedResults(t *testing.T) {
 	if !found {
 		t.Fatal("no se encontró el partido Rojos-Verdes")
 	}
-	recordWin(t, ctx, service, accountID, created.ID, azulesRojos, azules.ID, 2, 0)
-	recordWin(t, ctx, service, accountID, created.ID, azulesVerdes, verdes.ID, 1, 0)
-	recordWin(t, ctx, service, accountID, created.ID, rojosVerdes, rojos.ID, 3, 0)
+	recordWin(ctx, t, service, accountID, created.ID, azulesRojos, azules.ID, 2, 0)
+	recordWin(ctx, t, service, accountID, created.ID, azulesVerdes, verdes.ID, 1, 0)
+	recordWin(ctx, t, service, accountID, created.ID, rojosVerdes, rojos.ID, 3, 0)
 
 	league, err := service.GetPublic(ctx, created.ID)
 	if err != nil {

@@ -5325,3 +5325,574 @@ puede coexistir con una API 502 porque la VM esté detenida. Recuperar primero
 la instancia existente permite distinguir disponibilidad previa de regresiones
 de la versión nueva. Conservar backups y ensayar migraciones sobre datos
 restaurados, sin usar la base productiva como banco de pruebas.
+
+
+## 2026-10-08 — Cierre productivo y credencial activa
+
+Una subida Git correcta no demuestra que `gh` esté usando la misma identidad:
+SSH y la API de GitHub pueden tener cuentas distintas. Ante un rechazo al crear
+la Release, comprobar `gh auth status` y la cuenta propietaria ya autenticada
+antes de ampliar permisos. La sesión guardada adecuada permite publicar v1.10.0
+sin pedir nuevos scopes ni introducir credenciales.
+
+Registrar la versión de cada componente y comprobar datos de negocio después
+de migrar, además de healthz y réplicas. La subida real de sourcemaps no sustituye
+la prueba de recepción y simbolicación de errores. Al acabar una actualización
+autorizada de dev, apagar servicios y LaunchAgents conservando datos, y mantener
+producción activa: estar actualizado no exige que dev permanezca encendido.
+
+
+## 2026-10-08 — Suspensión autorizada y texto ampliado
+
+Una excepción explícita de disponibilidad debe distinguirse de la regla normal
+que mantiene producción activa. Apagar el invitado ordenadamente y suspender
+renderer, backups externos y autoarranque conserva el estado sin tareas fallidas
+ni reencendidos. La home estática 200 no demuestra salud de la API suspendida.
+
+Al probar texto al 200 %, el árbol Android puede conservar nodos fuera del
+viewport con bounds invertidos. Desplazar el diálogo y contrastar captura y
+contenedor del botón permite acreditar mensaje completo y acción deshabilitada.
+Restaurar font_scale y comparar todos los partidos tras descartar el borrador
+cierra esta prueba sin introducir cambios de datos ni extrapolar accesibilidad.
+
+
+## 2026-10-08 — Cabeceras y texto ampliado en Android
+
+Probar un formulario al 200 % exige revisar también su cabecera. En Cambiar
+contraseña, los campos y Guardar caben incluso con teclado, pero el título
+estándar centrado queda pegado al botón Volver propio. Contrastar captura con
+los límites del árbol permite registrar la falta de separación sin confundirla
+con recorte del contenido desplazable. La corrección debe reservar espacio al
+control y adaptar el título; reducir globalmente el tamaño de texto anularía
+parte de la preferencia de accesibilidad.
+
+Tras una recreación por font_scale o el cierre de un modal, leer de nuevo el
+árbol antes del siguiente toque: una coordenada correcta enviada durante la
+transición puede no navegar. Restaurar la preferencia y apagar solo los recursos
+arrancados para la tanda mantiene reproducible el QA sin tocar producción.
+
+
+## 2026-10-08 — Corrección mínima y límites de instrumentación accesible
+
+La cabecera Android de Cuenta se corrige con Text compartido, dos líneas y el
+cálculo de reserva lateral ya existente en web. Comprobar español, inglés,
+italiano y francés al 200 % descubre tanto el margen frente a Volver como la
+alineación interna de un botón multilínea. No desactivar el escalado para hacer
+caber un título ni ampliar la corrección a otra navegación sin evidencia.
+
+UIAutomator puede alterar temporalmente la exploración del lector que se intenta
+probar. Separar inspección, servicio enlazado y recorrido efectivo del foco;
+no declarar TalkBack aprobado por obtener XML o navegar con eventos inyectados.
+Registrar también las caídas nuevas de DevLauncher aunque reconectar recupere
+la app, y conservar esa limitación separada del formulario corregido.
+
+
+## 2026-10-08 — Separar APK release local y distribución
+
+Una APK release no implica firma de tienda ni conectividad con HTTP local.
+Conservar el binario original, comparar certificado antes de install -r y
+apagar Metro permite comprobar el bundle incluido sin borrar la sesión.
+Una excepción de transporte para QA debe ser explícita, limitada a loopback,
+privada y retirada del árbol; nunca convertirla en una relajación del producto.
+Lint vital detectó que el dominio temporal necesitaba includeSubdomains=false:
+se corrige el harness, sin desactivar el gate. No confundir ese subconjunto de
+lint con el análisis Android completo.
+
+Tres arranques y enlaces correctos en release son evidencia acotada. No cierran
+una caída de DevLauncher en development ni las pruebas de distribución o lector.
+El corte/reintento debe contrastarse con la proyección previa para comprobar
+recuperación real y conservación de datos, además del mensaje seguro.
+
+
+## 2026-10-08 — Entrada táctil y evidencia de lector
+
+En este emulador, la inyección shell input no avanzaba de forma fiable el foco
+TalkBack. La entrada táctil del emulador, comprobada con getevent, sí permitió
+recorrer y activar controles. Mantener UIAutomator fuera de la sesión de lector
+y comprobar el borde de foco antes de cada doble pulsación. Una recreación de
+Activity puede consumir una URL y volver a Inicio: esperar una pantalla estable
+y descartar evidencia de la ruta incorrecta antes de reintentar.
+
+Un recorrido satisfactorio de foco no acredita locución ni toda la matriz.
+Registrar por separado controles alcanzados, activaciones, campos sin enviar y
+restauración exacta de preferencias, APK y recursos propios al cerrar la tanda.
+
+
+## 2026-10-08 — Release de simulador y límites de evidencia iOS
+
+La build sin firma abría Inicio pero fallaba antes de una petición pública.
+La firma ad hoc permitió completar el recorrido conservando ATS. Comprobar
+entitlements y correlación HTTP antes de relajar transporte; no inferir una
+causa concreta de SecureStore solo por el resultado comparativo.
+
+Device Hub puede perder el subárbol tras reinstalar aunque la pantalla siga
+operativa. Separar pruebas visuales por capturas del recorrido real VoiceOver.
+Tres arranques, enlaces negativos y recuperación aportan evidencia acotada;
+el recorte de cabecera al tamaño máximo sigue abierto. Repetir Android Lint
+sin exclusiones confirma el bloqueo del analizador de worklets, sin sustituir
+el gate completo por su subconjunto vital de release.
+
+
+## 2026-10-09 — Seguridad y revisión de excepciones tras un parche
+
+Una CI aprobada ayer puede fallar hoy por nuevos avisos de govulncheck.
+Actualizar dentro de la línea aceptada, respetar el grafo mínimo del módulo y
+verificar ambos tidy, tests y build. Cero símbolos vulnerables no equivale a
+cero avisos de módulo: OpenPGP sigue señalado en x/crypto aunque no se importa.
+
+Go 1.26.9 permite cargar tests en lint; aparecen 38 hallazgos antes ocultos por
+la limitación instrumental. Actualizar la causa de la deuda y conservar la
+validación funcional, sin suprimir reglas ni mezclar ese trabajo con el parche.
+Producción apagada conserva sus binarios: el parche en develop requiere una
+publicación verificada antes de volver a servirlos.
+
+
+## 2026-10-09 — Restaurar lint de tests con evidencia completa
+
+Los límites de presentación de golangci-lint pueden ocultar ocurrencias del
+mismo diagnóstico. Usar --max-same-issues=0 --max-issues-per-linter=0 antes de
+contar o cerrar deuda: los 38 hallazgos iniciales eran una muestra.
+
+El contexto del test debe llegar a las peticiones y sockets. Comprobar el
+cierre antes de señalar la finalización evita perder errores de limpieza.
+Una cookie de petición no necesita atributos de una cookie de respuesta;
+representar el protocolo real evita un falso positivo sin suprimir gosec.
+Mantener imports por archivo sustituye ParseDir sin añadir carga de paquetes
+ni cambiar el alcance del test de arquitectura.
+
+Retrospectiva: restaurado run.tests: true, cero incidencias en el análisis
+completo y ningún linter desactivado. Las aserciones y escenarios se conservan.
+
+Validación: make verify y go test -race ./... aprobados; la integración
+PostgreSQL depende de CI mientras los entornos de sesión están apagados.
+
+
+## 2026-10-09 — Un título ampliado solo cambia de posición si no cabe
+
+ADR-0151 aceptado: comparar la medición del nombre completo con el ancho
+reservado y la altura real de navegación. El tamaño de texto no es un umbral
+de diseño: Equipos permanece arriba a tamaño 7 mientras el nombre largo de
+la ficha pasa debajo. Compartir medición y semántica con las rutas estáticas
+conserva comportamiento uniforme sin sustituir los botones de UIKit.
+
+Una función de headerTitle que devuelve null puede activar el título de ruta
+por defecto. Un View vacío y el título nativo vacío evitan ese fallback cuando
+el título visible pasa al contenido. La copia usada para medir debe quedar
+oculta a lectores y toques; no se duplica el nombre visible.
+
+El cambio de tamaño en caliente del inspector puede conservar cajas de
+contenido anteriores. Contrastar captura y arranque frío, declarar el límite
+y no atribuir por esa señal una causa a toda la plataforma. Las pruebas
+visuales no acreditan VoiceOver ni cada idioma. Android Lint sigue pendiente
+por fallo del analizador de scripts Kotlin; la traza adicional no lo corrige.
+
+Retrospectiva: medir el caso corto y el largo al mismo tamaño prueba la
+condición que importa. Compartir el arreglo evita excepciones por pantalla,
+pero no reemplaza el recorrido nativo de cada ruta.
+
+### 2026-10-09 — Contrastar lint sin sustituir su criterio de cierre
+
+Una propiedad JVM puede quedar reemplazada por la configuración que AGP envía
+al worker: la traza K2 demuestra que JAVA_TOOL_OPTIONS no logró el contraste.
+-Pandroid.lint.useK2Uast=false sí permite analizar Worklets y alcanzar el
+informe de la app. Eso descubre dos errores de generación de recursos que
+quedaban ocultos detrás del fallo de herramienta. K1 complementa el diagnóstico;
+no acredita haber corregido K2 ni habilita cambiar el motor permanente.
+
+Contar severidades desde el XML evita presentar un build exitoso como un
+informe sin avisos: el módulo local tiene cero errores y seis avisos; la app,
+dos errores y 45 avisos. Corregir CNG en su origen, conservar idempotencia y
+calificar recursos por API exige una decisión sobre mantenimiento temporal.
+El usuario acepta ADR-0152 con alternativa B: esperar versiones corregidas
+de Expo, conservando los errores y el gate K2 abiertos.
+
+
+### 2026-10-09 — Revisar versiones antes de atribuir correcciones
+
+La matriz exacta de Expo 57.0.26 ofrece directos maduros y RN 0.86.3;
+latest de RN es otra línea y la CLI pide ahora paquetes de menos de siete días.
+La madurez de directos no certifica todo el grafo. Los tarballs oficiales
+inspeccionados conservan ambos defectos de generación Android; actualizar
+por antigüedad o por advertencia no prueba que se corrijan. El changelog
+separa memoria Hermes (ya corregida en el conjunto actual) y arranque dev
+(corregido en el candidato); no prometer ahorro de producción sin evidencia.
+
+El soporte oficial de escenas puede reducir mantenimiento propio, pero solo
+tras validar generación, arranque y enlaces. Un parche de Symbols sigue
+necesitando revisión si la nueva fuente conserva su defecto. No retirar
+adaptadores por una nota de release ni instalar cambios durante una revisión.
+
+Retrospectiva de QA: al máximo tamaño, el título de creación es completo en
+en/it/fr; los saltos varían con el texto real. Se comprueba Cerrar en inglés y
+se restaura español y tamaño 3. Capturas visuales no acreditan VoiceOver ni
+el recorrido accesible de todas las pantallas.
+
+
+### 2026-10-09 — Aplicar una matriz madura y verificar la resolución real
+
+La autorización de instalar permite actualizar el SDK actual; no elimina la
+espera de siete días. Fijar Expo 57.0.26, alinear sus paquetes y resolver las
+transitivas evita que --fix arrastre cinco directos jóvenes. La instalación
+congelada posterior valida la reproducibilidad del nuevo lockfile. Los peers
+de RN requieren Metro Config 0.86.3, no la revisión antigua elegida antes.
+
+Al cambiar paquetes parcheados, actualizar versión y entrada de patch juntos:
+la instalación por etapas de Expo puede dejar un parche sin consumidor. Revisar
+la nueva fuente permitió retirar el parche de Metro: su lector propio supera
+las pruebas reales de imágenes. Symbols todavía necesita su corrección y se
+mantiene para 57.0.3. Añadir los config plugins que la CLI no puede escribir
+automáticamente en app.config.ts completa CNG sin editar sus salidas.
+
+CocoaPods y Gradle no heredan minimumReleaseAge de pnpm: contrastar publicaciones
+nativas en sus fuentes. Un build interrumpido por disco lleno no demuestra
+incompatibilidad: conservar logs y último binario, limpiar caches de QA y
+compilar solo la arquitectura necesaria permitió recuperar Android. Metro
+puede mantener el realpath anterior de un symlink; reiniciar con --clear y
+comprobar la versión del entry usado evita validar código antiguo.
+
+Retrospectiva: separar instalación, compatibilidad, reproducción y QA funcional
+permite retirar mantenimiento obsoleto sin cerrar incidencias que siguen reales.
+El upgrade conserva el crash K2 y los dos errores del generador Expo; se respeta
+la espera aceptada de ADR-0152. Dos avisos altos de seguridad conservan la espera
+porque sus correcciones anunciadas aún no están publicadas en npm.
+
+
+La build iOS pasa tras recuperar espacio y permite navegar y cerrar con el nuevo
+Router. Cambiar Dynamic Type en una vista montada y abrirla de nuevo desde frío
+son escenarios distintos: en el primero se observaron alturas desactualizadas;
+el segundo recompone chips y contenido. No atribuir el contraste al upgrade
+sin comparar el baseline. El título adaptativo funciona en ambos casos, pero
+eso no certifica todo el layout ni el canal VoiceOver ausente.
+
+
+### 2026-10-09 — Dynamic Type con pantallas ya montadas
+
+RN 0.86.3 iOS puede dibujar glifos ampliados sobre mediciones anteriores al
+cambio de escala. El contraste relanzado/en caliente y el
+[reporte upstream](https://github.com/react/react-native/issues/57512) orientan
+el diagnóstico; la reproducción local decide la corrección. `Text` actualiza
+un ID nativo único al cambiar `fontScale` para volver a medir sin `key`, sin
+limitar escala y sin remontar campos/rutas. QA conserva deporte, borrador y
+edición después de ampliar; hay que probar aumento y reducción con contenido
+montado. Retirar esta adaptación cuando RN pase el recorrido sin ella. Tener
+AX disponible no acredita por sí solo locución o foco VoiceOver.
+
+
+### 2026-10-09 — Safe area dentro del contenido desplazable
+
+El padding inferior de un padre recorta el viewport y deja una franja fija.
+En Crear torneo, la instrucción del usuario se concreta moviendo inset +
+`space[4]` a `KeyboardAwareScrollView.contentContainerStyle`: el scroll llega
+al borde y la separación final sigue disponible. La opción compartida es
+explícita para no duplicar la reserva específica de tabs. Verificar por separado
+el alcance del viewport y la lectura del último control con texto ampliado;
+no confundir un gesto insuficiente del automatizador con un defecto del scroll.
+
+La comprobación final con cambio 3 → 11 en una pantalla montada muestra el
+último botón completo tras desplazar el formulario; su acción vacía conserva
+la validación localizada de ambos campos. Captura y AX se complementan, pero
+no sustituyen la prueba de lectura y navegación con VoiceOver.
+
+### 2026-10-09 — Evidencia de navegación con VoiceOver
+
+Los gestos horizontales con VoiceOver activo muestran avance del foco y scroll
+automático hasta el botón final a tamaño 11, aunque AX no cambie. La vuelta
+hasta Cerrar acredita navegación inversa. Un doble clic del canal puede actuar
+sobre un punto distinto del foco; no equivale a activar ese foco con el lector.
+Separar navegación, activación, edición y locución evita declarar accesibilidad
+completa a partir de una captura o una acción instrumental.
+
+### 2026-10-09 — TalkBack con formulario ampliado y servicios apagados
+
+La entrada táctil del emulador permite verificar activación del elemento
+enfocado con doble toque fuera de su posición. Al 200 %, TalkBack alcanza el
+botón final y desplaza el contenido para separarlo de la barra de gestos;
+activar un campo vacío permite comprobar el teclado sin escribir ni enviar.
+Conservar borrador y ajustes originales hace reversible la pasada. No asumir
+que cada evento rápido produce un avance de foco: verificar antes de activar.
+
+### 2026-10-09 — Auditar el propietario del inset antes de extender una corrección
+
+Corregir un formulario compartido no migra automáticamente sus otras rutas.
+La búsqueda conjunta de Screen, bottomInset y contentContainerStyle identifica
+seis casos con reserva del padre aún pendiente. Separar ramas estáticas,
+paddings propios y reserva de tabs evita aplicar dos veces el inset o perder
+separación al extender el patrón. La revisión estática orienta el QA, pero no
+sustituye evidencia visual del último control.
+
+### 2026-10-09 — Verificar el final estable de una lista ampliada
+
+El rebote de un gesto puede mostrar temporalmente una gran zona vacía.
+Comprobar el fotograma estabilizado evita confundirlo con padding permanente.
+Una tarjeta mayor que el viewport sigue siendo recorrible si texto y fecha
+se alcanzan por scroll; abrir su destino y volver permite comprobar conservación
+de posición. Eso no valida por sí solo la presentación del título ni que el
+inset se reserve dentro del contenido. La recuperación sin token tiene una
+rama de error verificable sin cambiar una credencial.
+
+### 2026-10-09 — Migrar el inset según la rama de contenido
+
+Si una ruta alterna lista desplazable y bloques estáticos, la reserva inferior
+puede depender de la rama: dentro del ScrollView para contenido cargado,
+en Screen para carga/error. Conservar el padding propio de la lista y sumar
+solo el inset evita duplicar la separación heredada del padre. No cambiar
+los contratos de la feature para resolver una cuestión de layout.
+
+### 2026-10-09 — Conservar separación propia al trasladar el inset
+
+La opción safe-area de KeyboardAwareScrollView escribe inset + 16 px después
+del estilo recibido. Para una lista que requiere 20 px propios, sumar el inset
+a ese padding explícito conserva su separación; activar ambas vías sobrescribe
+el valor. Las ramas de carga/error estático necesitan revisar su propietario
+por separado. Migración de código y cierre del QA nativo son hitos distintos.
+
+### 2026-10-09 — Conservar la relación entre columnas con texto ampliado
+
+Tres columnas que renderizan filas por separado pueden aumentar su altura de
+forma distinta aunque compartan minHeight. La revisión a Text Size 11 de la
+clasificación muestra equipos, estadísticas y puntos desalineados. El QA de
+una tabla debe comprobar la correspondencia entre entidad y valores, además
+del desplazamiento y acceso al extremo final. Una altura común por fila y
+anchos compatibles con el escalado son una corrección más acotada que sustituir
+la tabla; esa recomendación aún requiere implementación y revalidación.
+
+
+### 2026-10-09 — Distinguir alineación y espacio legible
+
+Una altura compartida puede alinear filas y seguir dejando una columna sin
+ancho suficiente. Comprobar el viewport real tras ampliar celdas evita cerrar
+un arreglo incompleto. El guion opcional en un catálogo permite un corte de
+palabra autorizado sin cambiar su tamaño ni mostrar un guion permanente;
+requiere comprobar la cabecera tras recarga y cambios de tamaño. La medición
+invisible puede remontarse con su clave de contexto sin remontar controles
+visibles ni desplazar el foco.
+
+### 2026-10-09 — Excepción localizada de escalado en clasificación
+
+Una tabla con columnas fijas puede perder correspondencia entre filas cuando
+solo algunos textos crecen; compartir alturas no resuelve la falta de ancho.
+Comparar una tabla desplazable completa con una excepción de escalado permite
+que el usuario decida el coste en densidad y lectura. ADR-0153 acepta tamaño
+fijo solo en las celdas de clasificación. Text expone allowFontScaling como prop
+optativa y mantiene el default nativo para el resto; no convertir esta excepción
+en una política global. Verificar datos, cabecera sincronizada y ambos extremos
+del scroll, además de que título, ayuda y reglas sigan ampliándose. Restaurar
+ajustes y apagar servicios al cerrar la sesión.
+
+### 2026-10-09 — Delimitar evidencia de viewport en QA
+
+Una exportación web no acredita gestos ni sincronización de cabeceras. Probar
+scroll real en ancho móvil verifica el alcance de estadísticas y conserva la
+relación entre equipo y puntos. Reducir la altura del navegador sirve para
+alcanzar el último resultado de una búsqueda, pero no sustituye pruebas con
+teclado y safe area nativos. Esperar el estado final de una búsqueda antes de
+juzgarla; registrar por separado instrumentos que no aplican zoom.
+
+### 2026-10-10 — Evidencia de navegación con lector
+
+El número de gestos enviados no demuestra dónde está el foco: comprobar su
+rectángulo al llegar a título, campo, primer y último resultado. Un cambio
+de escala puede reubicarlo al remontar un título adaptado; volver a recorrer
+la pantalla y contrastar foco con porcentaje de scroll acredita alcance.
+Conservar por separado la evidencia de locución, activación y teclado visible:
+un recorrido completo de VoiceOver no certifica esas tres condiciones.
+
+### 2026-10-10 — Disponibilidad del proceso y del panel Android
+
+adb puede identificar un AVD como device mientras Running Devices permanece
+desconectado y no permite interacción. Verificar por separado el arranque,
+la imagen del panel, la respuesta a clics y la recarga del bundle antes de
+certificar QA. Un aviso de memoria del IDE delimita un problema del instrumento;
+no justifica cambiar código de la app ni ajustar el heap sin decisión del usuario.
+
+### 2026-10-10 — Teclado visible y recuperación por desplazamiento
+
+Una búsqueda puede dejar resultados bajo el teclado y recuperarlos al ocultarlo
+durante un arrastre. Observar teclado, borde del campo y último resultado en
+etapas separadas: llegar al final después de ocultarlo no acredita scroll con
+teclado abierto. Introducir una consulta mediante el text field AX settable
+permite conservar Capture Keyboard off y comprobar la oclusión real del
+teclado del simulador. Salir sin activar candidatos y verificar permisos
+conservados mantiene el QA de búsquedas separado de delegación o transferencia.
+
+### 2026-10-10 — Errores recorribles en formularios con lector
+
+Verificar por separado foco del input inválido y del mensaje de validación:
+una etiqueta AX que incorpora el error no demuestra su locución, y un error
+fuera del viewport inicial puede quedar completo al recibir foco. Alcanzar el
+botón final con texto máximo prueba desplazamiento del formulario, sin requerir
+activarlo. Un cursor visible con Capture Keyboard off no prueba que el teclado
+software esté abierto; conservar esa cobertura como pendiente hasta observarlo.
+
+### 2026-10-10 — Botón deshabilitado y foco del lector
+
+Recorrer también el botón final deshabilitado: VoiceOver puede enfocarlo y
+llevarlo por encima de la barra de pestañas. Verificar el rectángulo, texto
+completo y margen inferior antes de acreditar alcance. Registrar por separado
+placeholder truncado y descripción AX completa; ninguno demuestra locución.
+No confundir Capture Keyboard del instrumento con la aparición del teclado
+software del dispositivo.
+
+### 2026-10-10 — Dirección de Metro y evidencia de recarga Android
+
+Contrastar el servidor reciente del lanzador con el puerto de Metro activo
+antes de atribuir «Unable to load script» al cliente. Un servidor detectado
+y una imagen recuperada no acreditan carga del bundle; comprobar su emisión
+en Metro y después la pantalla. Si el panel pierde AX o muestra estados
+con retraso, delimitar la cobertura y retirar túneles y servicios temporales
+aunque el apagado del AVD quede bloqueado por el instrumento.
+
+### 2026-10-10 — Mostrar teclado software en Device Hub
+
+Device → Keyboard → Toggle Software Keyboard muestra el teclado del simulador
+con un campo enfocado, conservando Capture Keyboard off. El control de captura
+no sustituye esa acción. Comprobar también la reapertura al enfocar otro campo
+y registrar si el arrastre oculta el teclado. A texto máximo, distinguir campo
+con límites completos, valor recortado y etiqueta fuera del viewport; no
+afirmar visibilidad simultánea de elementos observados en posiciones distintas.
+### 2026-10-10 — Foco y contexto de una tabla compacta
+
+Una celda truncada puede conservar el nombre completo en AX y recibir foco.
+Validar por separado densidad visual, foco visible, orden del recorrido y
+asociación hablada de cabecera, equipo y valor. Las tandas rápidas de gestos
+no acreditan todos sus avances: contar únicamente estados observados. Tras
+activar VoiceOver, comprobar dónde queda el foco antes de interpretar el
+primer toque como exploración del objetivo.
+### 2026-10-10 — Cerrar QA por riesgo con inventario vigente
+
+Un diario de evidencia no sirve como lista de pendientes: mantiene límites
+históricos aunque otra pasada ya los haya resuelto. Consolidar una lista
+vigente, revisar patrones compartidos una vez y limitar las muestras manuales
+evita una matriz sin final. Registrar por separado defecto reproducido,
+variante fuera de alcance y bloqueo instrumental. La revisión de código
+demuestra implementación; no se presenta como gesto, locución o zoom ejecutado.
+### 2026-10-10 — Zoom real con sesión de QA
+
+La falta de sesión conservada no bloquea una prueba si el login ficticio está
+autorizado. Preparar el acceso normal y descartar guardar contraseña. Verificar
+el porcentaje en el menú del navegador: una sucesión de atajos no demuestra
+el zoom alcanzado. allowFontScaling=false limita Dynamic Type nativo, pero
+no impide que el navegador amplíe las celdas. Renovar coordenadas cuando cambie
+la captura y registrar solo el desplazamiento cuyo resultado se observa.
+
+### 2026-10-10 — Recuperación parcial del instrumento Android
+
+ADB conectado e imagen de Home no acreditan una sesión de QA utilizable.
+Comprobar apertura fiable de la app y bundle actual antes de activar texto
+ampliado o lector. Un aviso «UI del sistema no responde» y memoria baja del
+IDE conservan el bloqueo del entorno; no atribuirlos al producto. La ruta
+Help de un módulo seleccionado tampoco demuestra la raíz del proyecto:
+contrastarla con el proyecto reciente de la pantalla de bienvenida. Acotar
+reintentos y apagar servicios evita convertir la recuperación en otra matriz.
+
+### 2026-10-10 — Cerrar una muestra con evidencia diferenciada
+
+Un IDE saturado puede impedir QA aunque el emulador funcione por separado.
+Usar esa alternativa con autorización y restaurar la preferencia al terminar.
+En teclado ampliado, observar campo enfocado, desplazamiento y botón con el
+teclado todavía visible acredita más que abrir el formulario. En lector,
+servicio enlazado, foco inicial y nombres/roles expuestos no prueban avance,
+activación ni locución. Registrar cada límite y detener reintentos mantiene
+finita la fase; no convertir una muestra parcial en aprobación completa.
+
+### 2026-10-10 — No parchear por un aviso sin componente identificado
+
+Distinguir una actualización después de desmontar de la advertencia de React
+antes del montaje. El mensaje del renderer identifica el detector, no la causa.
+Revisar efectos y callbacks de arranque no sustituye una traza del componente.
+No añadir guards o demoras repartidos para silenciar un aviso sin demostrar
+su origen; conservarlo y capturar la traza cuando vuelva a aparecer.
+
+### 2026-10-10 — Reutilizar el instrumento de QA ya validado
+
+Consultar la solución instrumental del histórico antes de repetir entradas
+fallidas. En este Pixel, adb emu event mouse permite verificar foco TalkBack y
+activar con doble toque donde input swipe y atajos no lo acreditaban. No usar
+UIAutomator durante ese recorrido. Capturar cada foco antes de activar y
+verificar la pantalla resultante; un retorno a Home no demuestra eliminación
+de un borrador. Un arranque sin warning se registra como no reproducido,
+sin cerrar la incidencia histórica ni certificar locución.
+
+### 2026-10-10 — Verificar APK y separar una carrera de arranque
+
+El hash del APK instalado puede diferir del recompilado aunque Metro entregue
+JavaScript actual. Comparar identidad antes de atribuir resultados al upgrade;
+conservar datos mediante install -r y comprobar de nuevo. Un snapshot puede
+recuperar estado antiguo: contrastar arranque sin snapshot. En DevLauncher,
+ActivityRelaunchItem más el guard de contexto existente localiza el fallo en
+recreación durante carga. El control sin TalkBack muestra que no lo requiere;
+una espera sin fallo no demuestra corrección ni una tasa de incidencia.
+
+### 2026-10-10 — Limitar contenido y conservar el fondo web
+
+Limitar solo Card deja cabeceras y tabs desalineados. El marco del navegador
+y una botonera fixed deben compartir límite y centrado. Para lectura, limitar
+un hijo de Screen permite que su canvas cubra el marco: limitar Screen crea
+bandas del fondo del navegador, visibles en tema oscuro. Medir el viewport y
+scrollWidth complementa la muestra visual; reflow a 320 px no certifica por
+sí solo zoom real del navegador. Las mejoras de columnas se deciden por
+contenido, sin deducir su autorización de una petición de ancho máximo. Tras
+aceptarlas, una media query mantiene DOM y estado al cambiar el ancho. Revisar
+componentes que devuelven null antes de reservarles una celda evita huecos.
+Compensar medio margen por celda permite compartir el gutter sin cambiar Card.
+
+### 2026-10-10 — Separar contexto y trabajo solo donde aporta utilidad
+
+Un lateral resulta útil cuando conserva controles junto a una lista extensa;
+sin controles, una columna vacía no mejora la consulta. En React Native Web,
+ScrollView conserva flexGrow por defecto: width por sí solo no limita su
+reparto de espacio. Fijar flexGrow a cero y verificar ambos anchos. En una
+lista virtualizada, conservar instancia y referencia del viewport en la
+columna principal al mover el resumen entre lateral y encabezado.
+
+### 2026-10-10 — Separar hosting estático de disponibilidad de API
+
+Cloudflare Tunnel transporta solicitudes al origen; Wrangler publica los archivos
+en el borde. Alojar assets gratuitamente elimina la dependencia doméstica para
+cargar la interfaz, pero no para consultar o escribir datos. Una migración debe
+conservar CSP, SEO, fallback de rutas, asociaciones móviles y previews, además
+del HTML inicial. El candidato registra SHA distintos para app e infraestructura
+y hashes de contenido; copiar el release productivo evita publicar trabajo de
+develop por accidente. Las pruebas con workerd detectaron incompatibilidad de
+`redirect: "error"` y una regla de noindex que no cubría el hostname de versión.
+El estado local preparado y el hosting efectivo se documentan por separado;
+la conmutación exige acreditar el dominio real. No se activa pago ni
+observabilidad por preparar el despliegue.
+
+### 2026-10-10 — Validar permisos y primer despliegue en Cloudflare
+
+`versions upload` necesita un Worker existente; crearlo primero sin rutas y con
+workers.dev desactivado permite validar la versión sin conmutar producción.
+La API actual exigió `workers_scripts:write` aunque el scope genérico
+`workers:write` describe scripts; elegir permisos específicos evita conceder
+todos los servicios del login por defecto. Los assets y el SHA pueden ser
+correctos mientras la API suspendida produce 503 y el dominio falla TLS.
+Comprobar certificado de borde y salud de API por separado, conservar Universal
+SSL activado tras solicitar reemisión y no dar el corte por terminado antes de
+verificar HTTPS real.
+
+
+### 2026-10-11 — Corte Cloudflare y diagnóstico de TLS
+
+Un certificado ajeno al dominio no demuestra que el proveedor no haya emitido
+el suyo: contrastar sujeto y huella con mediciones independientes antes de
+atribuir la causa. `core1.netops.test` coincidió con la interceptación Digi
+documentada por OONI. Al desaparecer, HTTPS volvió a validarse.
+
+El hosting local y el borde real pueden diferir al aplicar `_headers` a la
+home. Verificar indexación en el dominio productivo después del corte; resolver
+la home en el Worker permite retirar noindex explícitamente sin ejecutar la
+función para todos los archivos. Esto añade la home a la cuota Workers Free.
+Recuperar K3s exige readiness real, no solo rollout guardado: las réplicas
+conservaron inicialmente estados anteriores hasta recuperar PostgreSQL.
+
+
+### 2026-10-11 — Gate de v1.11.0
+
+La migración de hosting dejó candidatos inmutables bajo `.config/cloudflare`.
+ESLint no hereda automáticamente las exclusiones Git: excluir únicamente ese
+árbol generado evita analizar bundles minificados sin relajar reglas de fuente.
+El gate completo local pasa tras esa corrección; persistencia se verifica en
+PostgreSQL efímero aislado. La publicación siguiente agrupa responsive web,
+mejoras de accesibilidad y parches de Expo/Go sin nuevas migraciones ni cambios
+en datos de negocio. Backup cifrado y huellas agregadas preceden al despliegue.

@@ -1,7 +1,5 @@
-# El tag 1.26.6-bookworm no está publicado todavía. Esta imagen 1.26.5 solo
-# arranca el bootstrap: la directiva toolchain del módulo descarga y ejecuta
-# Go 1.26.6 antes de resolver o compilar el backend.
-FROM golang:1.26.5-bookworm AS modules
+# El compilador y los módulos usan el mismo parche de seguridad fijado.
+FROM golang:1.26.9-bookworm AS modules
 ENV GOTOOLCHAIN=auto
 WORKDIR /app
 COPY go.mod go.sum ./

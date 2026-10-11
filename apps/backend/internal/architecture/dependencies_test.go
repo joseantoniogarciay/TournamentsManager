@@ -37,22 +37,26 @@ func backendRoot(t *testing.T) string {
 
 func assertNoImportPrefix(t *testing.T, directory, forbiddenPrefix string) {
 	t.Helper()
-	packages, err := parser.ParseDir(token.NewFileSet(), directory, func(info os.FileInfo) bool {
-		return !strings.HasSuffix(info.Name(), "_test.go")
-	}, parser.ImportsOnly)
+	entries, err := os.ReadDir(directory)
 	if err != nil {
-		t.Fatalf("parse %s: %v", directory, err)
+		t.Fatalf("read %s: %v", directory, err)
 	}
-	for _, pkg := range packages {
-		for filename, file := range pkg.Files {
-			for _, importSpec := range file.Imports {
-				path, err := strconv.Unquote(importSpec.Path.Value)
-				if err != nil {
-					t.Fatalf("decode import in %s: %v", filename, err)
-				}
-				if strings.HasPrefix(path, forbiddenPrefix) {
-					t.Errorf("%s imports forbidden dependency %s", filename, path)
-				}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") || strings.HasSuffix(entry.Name(), "_test.go") {
+			continue
+		}
+		filename := filepath.Join(directory, entry.Name())
+		file, err := parser.ParseFile(token.NewFileSet(), filename, nil, parser.ImportsOnly)
+		if err != nil {
+			t.Fatalf("parse %s: %v", filename, err)
+		}
+		for _, importSpec := range file.Imports {
+			path, err := strconv.Unquote(importSpec.Path.Value)
+			if err != nil {
+				t.Fatalf("decode import in %s: %v", filename, err)
+			}
+			if strings.HasPrefix(path, forbiddenPrefix) {
+				t.Errorf("%s imports forbidden dependency %s", filename, path)
 			}
 		}
 	}
