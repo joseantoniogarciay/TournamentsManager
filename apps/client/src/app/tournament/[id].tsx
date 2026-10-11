@@ -16,6 +16,7 @@ import { control, radius, space, typography, webLayout } from "@tournaments-mana
 
 import { APISessionInvalidatedError, APIUnexpectedResponseError } from "@/api/fetch";
 import { useTournamentFollow } from "@/features/league-creation/use-tournament-follow";
+import { useStoreReview } from "@/features/store-review/use-store-review";
 import type { PublicTournament } from "@/api/generated/models";
 import {
   cancelTournamentRequest,
@@ -140,7 +141,7 @@ export default function TournamentScreen() {
   const insets = useSafeAreaInsets();
   const { width: viewportWidth } = useWindowDimensions();
   const { show } = useFeedback();
-  const { confirm } = useConfirmationDialog();
+  const { confirm, isOpen: confirmationOpen } = useConfirmationDialog();
   const league = useTournament(id);
   const navigationTitle = useAdaptiveNavigationTitle(league?.name);
   const { loadTournament, putTournament, refreshTournament } = useTournamentStore();
@@ -170,6 +171,34 @@ export default function TournamentScreen() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [completionConfirmationOpen, setCompletionConfirmationOpen] = useState(false);
   const [completionOpen, setCompletionOpen] = useState(false);
+  const [completionDismissing, setCompletionDismissing] = useState(false);
+  const completionDestination = useRef<string | undefined>(undefined);
+  const requestCompletionReview = useStoreReview(
+    id,
+    Boolean(league) && !isLoading && !loadErrorMessage,
+    confirmationOpen ||
+      menuOpen ||
+      completionConfirmationOpen ||
+      completionOpen ||
+      completionDismissing ||
+      Boolean(editingMatchID),
+  );
+  const closeCompletion = (showStandings = false) => {
+    completionDestination.current = showStandings ? id : undefined;
+    setCompletionDismissing(true);
+    setCompletionOpen(false);
+  };
+  const afterCompletionDismissed = useCallback(() => {
+    setCompletionDismissing(false);
+    // Commit the free surface before consulting the shared request guard.
+    requestAnimationFrame(() => {
+      void requestCompletionReview().then(() => {
+        const destination = completionDestination.current;
+        completionDestination.current = undefined;
+        if (destination) router.push(`/tournament/${destination}/standings`);
+      });
+    });
+  }, [requestCompletionReview]);
   const [selectedCompetitionPhase, setSelectedCompetitionPhase] = useState<
     "league" | "tiebreak" | "bracket"
   >("bracket");
@@ -259,6 +288,9 @@ export default function TournamentScreen() {
   useFocusEffect(
     useCallback(() => {
       void load();
+      return () => {
+        completionDestination.current = undefined;
+      };
     }, [load]),
   );
   useEffect(() => {
@@ -1871,7 +1903,8 @@ export default function TournamentScreen() {
         </ModalDialog>
         <ModalDialog
           dismissAccessibilityLabel={t("common_close")}
-          onDismiss={() => setCompletionOpen(false)}
+          onDismiss={() => closeCompletion()}
+          onAfterDismiss={afterCompletionDismissed}
           visible={completionOpen}
         >
           <View style={styles.completionSuccessContent}>
@@ -1896,14 +1929,13 @@ export default function TournamentScreen() {
               <Button
                 label={t("league_completion_view_standings")}
                 onPress={() => {
-                  setCompletionOpen(false);
-                  router.push(`/tournament/${league.id}/standings`);
+                  closeCompletion(true);
                 }}
               />
             ) : null}
             <Button
               label={t("common_close")}
-              onPress={() => setCompletionOpen(false)}
+              onPress={() => closeCompletion()}
               variant="secondary"
             />
           </View>

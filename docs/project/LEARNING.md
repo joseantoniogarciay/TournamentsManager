@@ -5863,3 +5863,19 @@ ausencia absoluta; actualizar pgBackRest tampoco regenera esas claves.
 Retrospectiva: un proxy puede validar su configuración y fallar al acceder
 a una VM desde launchd. Comparar la conexión del proceso con curl y comprobar
 permisos del sistema es necesario antes de declarar disponible el servicio.
+
+## 2026-10-11 — Las valoraciones registran intentos, no resultados
+
+Apple y Google deciden si mostrar el diálogo y no comunican si se envió una
+valoración. Persistir el intento antes de llamar y serializar los dos disparadores
+evita duplicados incluso con fallos o cuotas. El contador por instalación no
+requiere backend ni eventos de analítica. La política pura se prueba con puertos
+de almacenamiento y tienda; el adaptador limita la ejecución a Release de
+producción nativa. Un cierre de Modal en iOS necesita su callback nativo: desmontar
+el componente al poner visible=false puede perderlo. Android carece de ese
+callback; el popup que solicita revisión se cierra sin animación y espera un frame.
+
+Retrospectiva: una promesa resuelta no acredita diálogo ni reseña. Compilar valida
+el módulo, mientras que la distribución por tienda y sus cuotas condicionan la
+prueba final. Revisar un parche de pgBackRest exige considerar las claves
+persistidas: cambiar el binario no las reemplaza.

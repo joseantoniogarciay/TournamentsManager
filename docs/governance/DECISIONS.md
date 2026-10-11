@@ -280,3 +280,10 @@ El usuario autoriza PostgreSQL 18.6, pgBackRest 2.59.3 y Caddy 2.11.7 mediante
 «Hacemos los 3», con excepción puntual de las horas restantes de madurez para
 pgBackRest. [ADR-0157](../adr/0157-upgrade-postgresql-pgbackrest-and-caddy.md).
 ADR-0138 mantiene el plazo general; no se modifica retención, datos ni durabilidad.
+
+## 2026-10-11 — Valoraciones nativas
+
+El usuario acepta los dos disparadores (cierre del popup tras finalizar y décima
+entrada al detalle de cualquier torneo) con 60 días entre intentos.
+[ADR-0156](../adr/0156-request-native-store-reviews-at-tournament-milestones.md)
+registra el contador local, las cuotas de tienda y el alcance de producción móvil.

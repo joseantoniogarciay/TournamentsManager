@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -47,6 +48,7 @@ type ModalDialogProps = {
   visible: boolean;
   dismissAccessibilityLabel: string;
   onDismiss: () => void;
+  onAfterDismiss?: () => void;
   children: ReactNode;
   dialogStyle?: StyleProp<ViewStyle>;
   avoidKeyboard?: boolean;
@@ -92,7 +94,7 @@ export function useConfirmationDialog() {
   const value = useContext(ConfirmationDialogContext);
   if (!value)
     throw new Error("useConfirmationDialog debe usarse dentro de ConfirmationDialogProvider");
-  return { confirm: value.confirm };
+  return { confirm: value.confirm, isOpen: value.dialog !== null };
 }
 
 export function ConfirmationDialogHost() {
@@ -150,12 +152,23 @@ export function ModalDialog({
   visible,
   dismissAccessibilityLabel,
   onDismiss,
+  onAfterDismiss,
   children,
   dialogStyle,
   avoidKeyboard = false,
 }: ModalDialogProps) {
   const { colors } = usePreferences();
   const [webScrimVisible, setWebScrimVisible] = useState(false);
+  const wasVisible = useRef(visible);
+
+  useEffect(() => {
+    const closed = wasVisible.current && !visible;
+    wasVisible.current = visible;
+    if (!closed || !onAfterDismiss || Platform.OS === "ios") return;
+    // Android removes its Dialog when visible becomes false; wait for that commit.
+    const frame = requestAnimationFrame(onAfterDismiss);
+    return () => cancelAnimationFrame(frame);
+  }, [visible, onAfterDismiss]);
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -176,12 +189,18 @@ export function ModalDialog({
     };
   }, [visible]);
 
-  if (!visible) return null;
+  // iOS must keep the Modal mounted until its native dismissal callback fires.
+  if (!visible && !(onAfterDismiss && Platform.OS === "ios")) return null;
 
   return (
     <Modal
-      animationType={Platform.OS === "web" ? "none" : "fade"}
+      // Android has no native onDismiss callback. This opt-in closes immediately
+      // so the next-frame callback cannot overlap an exiting window animation.
+      animationType={
+        Platform.OS === "web" || (Platform.OS === "android" && onAfterDismiss) ? "none" : "fade"
+      }
       onRequestClose={onDismiss}
+      onDismiss={onAfterDismiss}
       transparent
       visible={visible}
     >

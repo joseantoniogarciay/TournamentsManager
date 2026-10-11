@@ -6,6 +6,13 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Added
+
+- Solicitud de valoración nativa al cerrar el popup de torneo finalizado o
+  alcanzar diez entradas a detalles de torneos, con 60 días entre intentos
+  por instalación. Solo builds Release de producción; la tienda controla
+  la aparición del diálogo. ADR-0156.
+
 ## [1.11.1] - 2026-10-11
 
 ### Changed
