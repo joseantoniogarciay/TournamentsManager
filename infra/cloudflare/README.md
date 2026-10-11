@@ -162,3 +162,14 @@ Retrospectiva: un dry-run no comprueba permisos remotos ni el requisito de crear
 el Worker antes de subir versiones. Separar esa creación sin rutas evita cortar
 el origen antes de validar. El HTTPS de la URL de versión y el del dominio son
 gates independientes; restaurar K3s no corrige una interceptación TLS del operador.
+
+## Evidencia de cierre — 2026-10-11
+
+Infraestructura publicada `1da88c2df876b6196991ec974ddd1673bb1b9ac1`, app
+productiva sin cambios `b002b4b99fc44a6ec0662b94ec962b8cce9cbea5`. Worker web
+`b878e160-71cf-4a76-83ee-c9c3992edb59`; redirect
+`629c2b56-f91d-4879-a91a-a66c9d8612b2`. API confirma exactamente las dos rutas
+productivas previstas. Home indexable 200, cuenta noindex 200, torneo público
+con metadatos 200, UUID ausente 404, www 308 con query y preview noindex.
+K3s recuperado, API 200/CORS 204 y tareas de backup rehabilitadas. Evidencia y
+límites de verificación en el runbook de publicación.

@@ -321,7 +321,6 @@ Los agregados de PostgreSQL coinciden antes/después y `pgbackrest check` pasa.
 La [revisión operativa](OPERATIONAL_BLOCK_REVIEW_2026-10-03.md) recoge los límites
 y el manifiesto privado. No cambia el release v1.9.0 de producción.
 
-
 ## Promoción y retrospectiva — 2026-10-04
 
 Se despliega la revisión limpia `11138a1100db853d04a2e388bae029c013f55843`,
@@ -388,7 +387,6 @@ relay de email y Google OAuth móvil, y se validan builds reales. El [runbook](.
 conserva los gates, incluida revocación Apple al eliminar cuenta. La preparación
 no activa Apple, no despliega dev/prod y no autoriza distribución.
 
-
 ## Preparación autorizada de v1.10.0 — 2026-10-08
 
 El usuario autoriza actualizar dev y prod con el bloque acumulado. La revisión
@@ -409,7 +407,6 @@ Dev se enciende para desplegar y probar y volverá a apagarse al cerrar, conform
 a ADR-0146; observabilidad dev permanece apagada. Producción conserva sus
 servicios operativos. La release productiva sigue ADR-0119: merge no-ff a main,
 tag anotado, GitHub Release y artefactos del SHA etiquetado.
-
 
 ### Cierre de v1.10.0 — 2026-10-08
 
@@ -452,7 +449,6 @@ guardada de la propietaria resuelve la publicación sin ampliar scopes. Separar
 salud pública, revisión desplegada, migración y conservación de datos permite
 cerrar el deploy con evidencia concreta sin convertirlo en un QA universal.
 
-
 ### Suspensión productiva autorizada — 2026-10-08
 
 Después del despliegue verificado, el usuario solicita reducir consumo y confirma
@@ -489,3 +485,21 @@ termina aprobada antes de esta suspensión.
 Retrospectiva: apagar producción es una decisión de disponibilidad, no solo de
 consumo. Registrar consentimiento, estado público esperado y tareas suspendidas
 hace reversible la operación sin confundir una API 502 deliberada con regresión.
+
+### Recuperación productiva y hosting de borde — 2026-10-11
+
+El usuario autoriza completar ADR-0155 y levantar K3s. Se recupera la VM
+existente, PostgreSQL y ambas réplicas API con revisión `b002b4b…`, sin
+redesplegar ni migrar. API pública 200 y CORS productivo 204. Se rehabilitan
+renderer de rollback y los dos LaunchAgents de backup con programación original;
+UTM autostart permanece deshabilitado. Dev/local siguen apagados; no se inicia
+observabilidad dev. Los recursos de observabilidad de producción preexistentes
+reanudarán junto con su cluster.
+
+Web productiva conmutada a Workers Static Assets Free usando el mismo bundle.
+Caddy/Tunnel web se conserva como origen de rollback; API y DNS no cambian.
+Ver versiones activas, pruebas y retrospectiva en
+[publicación web](../runbooks/production-web-publication.md). La home consume
+una ejecución Worker para conservar su indexación; el resto de assets sigue
+estático. Un certificado de interceptación del operador no se interpreta como
+fallo de emisión Cloudflare: se contrasta la huella y la conexión.
