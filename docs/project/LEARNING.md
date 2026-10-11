@@ -5901,3 +5901,19 @@ Down/Up de la migración aislada y revisión web a 390×844 y escritorio.
 Se confirmó visualmente la ausencia de controles y bloques de planificación
 en lectura sin datos. No se arrancaron local/dev ni observabilidad; los recursos
 efímeros de pruebas se eliminaron. Falta QA visual en dispositivos nativos.
+
+## 2026-10-11 — Cierre del recorrido nativo de programación opcional
+
+La continuación acredita guardado, validación, herencia, eliminación y permisos
+en iOS 27.0 y Android 14 con builds actuales y una API ficticia aislada.
+El [informe](../engineering/PRODUCT_QA_SCHEDULING_2026-10-11.md) distingue esa
+evidencia de la suite PostgreSQL real. Una fixture también debe cumplir el
+contrato: devolver un lugar vacío en vez de omitirlo produjo un rechazo correcto
+del parser, que se resolvió corrigiendo la fixture y repitiendo el recorrido.
+
+Retrospectiva: un teclado de hardware oculta una parte de la QA. Device Hub
+permite mostrar el teclado de software desde Device → Keyboard. La indexación
+del IDE puede consumir más CPU que el emulador; separar compilación de QA,
+usar un dispositivo cada vez y cerrarlo al terminar evita carga acumulada.
+Los banners transitorios requieren una captura inmediata, no solo un árbol de
+accesibilidad posterior. Metro, fixture y ambos dispositivos quedaron apagados.

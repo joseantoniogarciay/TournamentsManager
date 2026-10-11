@@ -116,3 +116,16 @@ La entrada de campos se acredita mediante accesibilidad del simulador; el
 teclado en pantalla aún no se acredita porque el dispositivo usa teclado de
 hardware. Android sigue pendiente más allá de compilación e Inicio. No se
 cierra la QA de ambas plataformas con esta muestra parcial.
+
+### Cierre de los recorridos nativos
+
+La continuación recupera el control iOS y completa Android mediante ADB con
+autorización explícita del usuario. Pasan guardado, validación, reapertura,
+herencia, eliminación, roles de creador/delegado/lector, ausencia de bloques
+vacíos y rechazo del enlace directo sin permiso en ambas plataformas. Se
+observan teclados de software y salida al contenido; Android añade HTTP 500
+seguro con conservación de campos y recuperación. No se modificó código del
+producto. El [informe de QA](../engineering/PRODUCT_QA_SCHEDULING_2026-10-11.md)
+registra la matriz, capturas, fixture y límites de esta evidencia. Los pendientes
+descritos arriba conservan la historia del primer intento; el recorrido funcional
+nativo del incremento queda comprobado en estos dos simuladores.
