@@ -6,6 +6,14 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.13.1] - 2026-10-12
+
+### Fixed
+
+- Mis partidos elimina el título de sección y su margen para alinear la entrada
+  de Pendientes/Resultados con la biblioteca de Torneos. Publicación web;
+  API y base de datos conservan v1.13.0. No distribuye binarios nativos.
+
 ## [1.13.0] - 2026-10-12
 
 ### Added

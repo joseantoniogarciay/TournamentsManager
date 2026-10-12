@@ -525,6 +525,9 @@ y usan feedback seguro. Todos los textos están en es/en/it/fr.
 ## Colecciones personales e históricas (ADR-0161/0162)
 
 La tab bar tiene Inicio, Torneos, Mis partidos y Cuenta. Mis partidos usa la
+misma entrada sin título de sección que Torneos: Pendientes/Resultados comienza
+directamente bajo el espaciado superior de `Screen`, sin una cabecera adicional.
+La sección se identifica mediante la tab bar. Conserva la
 composición existente de tarjetas, controles Pendientes/Resultados de 44 px,
 con selección accesible mediante `aria-selected` en web y apps,
 20 px exteriores y ResponsiveColumns en web. Ediciones conserva la cabecera
