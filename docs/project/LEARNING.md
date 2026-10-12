@@ -6006,7 +6006,6 @@ Se conserva la matriz madura; las fuentes de los generadores Android todavía
 contienen los dos defectos pendientes. Una fecha candidata no certifica el
 grafo completo ni sustituye builds limpias y QA después de la actualización.
 
-
 ## 2026-10-11 — Cierre de v1.12.0
 
 PostHog estaba configurado también en web para fiabilidad, sin analítica de uso.
@@ -6048,7 +6047,6 @@ La recuperación se comprueba contra la misma colección y conserva el contexto.
 La validación web no acredita gestos ni navegación en dispositivos nativos.
 El aviso de hidratación por idioma español se reproduce en Inicio existente
 y queda separado de los errores nuevos del incremento.
-
 
 ## 2026-10-11 — Primer recorrido nativo de Mis partidos y Ediciones
 
@@ -6129,7 +6127,6 @@ filas eliminadas/cambiadas, fallo de una continuación y cambio de identidad,
 además del caso de éxito. La regresión Android requiere recarga completa:
 Fast Refresh conservaba el comportamiento anterior de la instancia montada.
 
-
 ### Recuperar QA iOS en Device Hub
 
 Show in Device Hub permite probar toques en la ventana completa cuando la
@@ -6139,7 +6136,6 @@ Verificar el cambio de pantalla: enviar una acción no demuestra éxito.
 El margen de una lista puede permitir desplazamiento cuando empezar encima
 de un botón no lo produce. Filas conservadas no acreditan posición exacta
 ni navegación con VoiceOver; requieren evidencia independiente.
-
 
 ### QA con VoiceOver del simulador
 
@@ -6232,7 +6228,6 @@ aprobar el segundo caso. Mantener la QA por build y escenario: un caso anterior
 aprobado no cubre cambios posteriores ni convierte una limitación de la
 herramienta en una aprobación del producto.
 
-
 ### Volver a la tarjeta con lector (2026-10-12)
 
 Conservar pestaña y scroll no restaura por sí solo el foco accesible. Un origen
@@ -6248,7 +6243,6 @@ real y verificar el resultado; no convertir inyección de un toque o atajo sin
 respuesta en aprobación de gestos. La revelación de encuentros lejanos todavía
 falla con lectores activos; cierre/retorno aprobados no amplían esa evidencia.
 
-
 ### Diagnosticar antes de ampliar reintentos (2026-10-12)
 
 En iOS Release, los logs JS de React Native llegan al registro unificado
@@ -6262,7 +6256,6 @@ en otro destino: se descartan, sin acumularlas en el producto. La implementació
 instalada de SectionList distingue cabecera y primera fila; la prueba aislada
 de ese índice tiene un primer PASS en J22 y sigue pendiente de regresión.
 Una hipótesis plausible y una apertura correcta no bastan para aprobarla.
-
 
 La variante aislada de índice pasa cinco aperturas iOS, incluyendo Jornada 23
 en frío con VoiceOver activo. Aplicarla a Android produce 4 PASS/1 FAIL (J22),
@@ -6280,7 +6273,6 @@ toque real, locución ni orden completo de lectura. Mantener esa separación
 permite ampliar cobertura automatizada sin convertir una captura en aprobación
 completa de accesibilidad. La sesión termina con lectores, emuladores y dev
 apagados, conservando evidencia y volúmenes.
-
 
 ### Cierre productivo de Mis partidos y Ediciones — 2026-10-12
 
@@ -6318,3 +6310,15 @@ la activación; preview, SHA público, rutas y navegador cierran la entrega.
 Retrospectiva: compartir repositorio no obliga a redesplegar componentes sin
 cambios. Registrar la revisión efectiva por componente conserva trazabilidad
 sin añadir una operación innecesaria sobre PostgreSQL.
+
+### Publicar contención de recursos — 2026-10-12
+
+v1.13.2 publica ADR-0163 con API y web del mismo SHA. Se recupera primero la VM
+productiva detenida, luego se verifica rollout sin errores de salud, cuotas y
+respuestas seguras con tokens ficticios e integridad de datos por huellas.
+Retrospectiva: una cuota local de diez admite hasta veinte en dos réplicas;
+documentar el alcance evita prometer un límite global. El rollback de código
+sin DDL conserva los datos activos. Una copia cifrada de hoy con restauración
+probada permite usar la recuperación existente sin exportar otro backup cuyo
+traslado fue rechazado por revisión automática. No se confunden pruebas aisladas
+de carreras/SQL con los smokes de producción ni con publicación de apps nativas.
