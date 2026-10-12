@@ -6268,3 +6268,12 @@ para comenzar directamente con Pendientes/Resultados, como Torneos con sus
 filtros. La tab bar identifica la sección; `Screen` conserva la separación
 superior segura. Retrospectiva: retirar el bloque redundante resuelve el desfase
 sin compensaciones locales de padding ni nuevas abstracciones.
+
+### Entrega independiente de una corrección web — 2026-10-12
+
+v1.13.1 publica únicamente la eliminación del título redundante de Mis partidos.
+La API y la persistencia conservan v1.13.0. El gate local y ambas CI preceden a
+la activación; preview, SHA público, rutas y navegador cierran la entrega.
+Retrospectiva: compartir repositorio no obliga a redesplegar componentes sin
+cambios. Registrar la revisión efectiva por componente conserva trazabilidad
+sin añadir una operación innecesaria sobre PostgreSQL.
