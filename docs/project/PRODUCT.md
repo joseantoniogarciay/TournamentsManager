@@ -519,3 +519,24 @@ no aumenta la composición, también cuando ya contiene 64 equipos. Una cuenta
 no puede inscribirse dos veces y una selección ocupada se rechaza. El enlace
 permite ocupar un equipo libre; no acredita que sea su participante anterior.
 La organizadora controla la distribución y revocación de la invitación.
+
+## Mis partidos y Ediciones (ADR-0161 / ADR-0162)
+
+Mis partidos es la cuarta sección de navegación, antes de Cuenta. Reúne los
+encuentros del equipo vinculado a la cuenta, con Pendientes y Resultados;
+administrar o seguir un torneo no implica participar. Pendientes requiere
+torneo y fase en curso, equipo propio activo y dos rivales conocidos. Los
+resultados conservan los encuentros resueltos, también por incidencia.
+Los encuentros con programación van primero; resultados por última resolución.
+Pulsar abre el detalle en su fase/ronda y sitúa brevemente el partido destacado.
+
+Sin sesión se ofrece acceso; sin encuentros se distingue el vacío global del
+vacío de una vista. Error inicial ofrece Reintentar, actualizar conserva datos
+y muestra feedback seguro, y paginar conserva la lista con reintento al pie.
+En apps se actualiza mediante pull to refresh.
+
+Ediciones aparece en el detalle únicamente si existen otras ediciones
+relacionadas por repetición. La familia incluye descendientes y ramas desde
+ediciones antiguas, ordenada de más reciente a más antigua. Cada tarjeta
+conserva nombre, estado y campeones propios y marca la edición consultada.
+Un nombre coincidente no crea relación ni se mezclan permisos o resultados.

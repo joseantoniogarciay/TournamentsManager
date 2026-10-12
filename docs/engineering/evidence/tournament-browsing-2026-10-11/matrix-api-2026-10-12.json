@@ -1,0 +1,250 @@
+{
+  "pending": {
+    "sizes": [20, 8],
+    "total": 28,
+    "unique": 28,
+    "pages": 2,
+    "sameOrderAsLimit50": true
+  },
+  "results": {
+    "sizes": [8],
+    "total": 8,
+    "unique": 8,
+    "pages": 1,
+    "sameOrderAsLimit50": true
+  },
+  "editions": {
+    "sizes": [20, 2],
+    "total": 22,
+    "unique": 22,
+    "pages": 2,
+    "sameFamilyFromTwoBranches": true,
+    "newestFirst": true,
+    "champion": ["Matriz 1"]
+  },
+  "groups": {
+    "tournamentId": "01a12cfb-458e-7182-a8f8-18f81b8602c1",
+    "targets": [
+      {
+        "matchId": "01a12cfb-45a9-7d34-84b6-c75835e99821",
+        "stage": "league",
+        "round": 1,
+        "groupNumber": 1
+      },
+      {
+        "matchId": "01a12cfb-45af-7c9c-9557-2843ad0f6625",
+        "stage": "league",
+        "round": 2,
+        "groupNumber": 1
+      },
+      {
+        "matchId": "01a12cfb-45b0-78c3-bdab-9c47fb613d87",
+        "stage": "league",
+        "round": 3,
+        "groupNumber": 1
+      }
+    ]
+  },
+  "tiebreak": {
+    "tournamentId": "01a12cfb-45e2-7be5-86c5-8b6bb8b9fab6",
+    "targets": [
+      {
+        "matchId": "01a12cfb-462a-7009-9189-663f0a1328dd",
+        "stage": "qualification_tiebreak",
+        "round": 1,
+        "groupNumber": 1
+      },
+      {
+        "matchId": "01a12cfb-462a-7739-bbfc-1a3f4f02f2e7",
+        "stage": "qualification_tiebreak",
+        "round": 1,
+        "groupNumber": 1
+      }
+    ]
+  },
+  "pagination": {
+    "tournamentId": "01a12cfe-1c3a-7cff-b432-50a2da5d6783",
+    "targets": [
+      {
+        "matchId": "01a12cfe-1c47-76ab-8ef4-e99556dea12e",
+        "stage": "league",
+        "round": 1,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c4e-7844-8b69-cd0abefc9527",
+        "stage": "league",
+        "round": 2,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c53-7aa1-b6a7-804f9422c9f6",
+        "stage": "league",
+        "round": 3,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c59-78a7-9c07-328255301cd4",
+        "stage": "league",
+        "round": 4,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c5f-7341-b24b-f0308eb1e664",
+        "stage": "league",
+        "round": 5,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c63-7f25-898d-591f500fc71f",
+        "stage": "league",
+        "round": 6,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c68-716f-97cf-2b54756cabd1",
+        "stage": "league",
+        "round": 7,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c6b-7fe3-b7a1-8697ac28cc76",
+        "stage": "league",
+        "round": 8,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c6f-7c3e-ad0e-63ef21bcdc77",
+        "stage": "league",
+        "round": 9,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c74-738f-b9de-90f757a3d80d",
+        "stage": "league",
+        "round": 10,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c7a-7968-a570-1711f327a261",
+        "stage": "league",
+        "round": 11,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c7d-7a9d-a925-a873e5267840",
+        "stage": "league",
+        "round": 12,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c82-7f79-82de-7ad58187f3aa",
+        "stage": "league",
+        "round": 13,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c87-74f3-a7fd-3a825247c8eb",
+        "stage": "league",
+        "round": 14,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c8a-7a26-8ddc-cb2c158c8fb7",
+        "stage": "league",
+        "round": 15,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c8f-7dcd-9263-f4b5e7ad973d",
+        "stage": "league",
+        "round": 16,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c92-7b85-b77a-74a7a0030fff",
+        "stage": "league",
+        "round": 17,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c97-77cb-9b35-181c40287aae",
+        "stage": "league",
+        "round": 18,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1c9e-7d96-942a-6f68ce023aa8",
+        "stage": "league",
+        "round": 19,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1ca3-7578-8173-45ecd2295221",
+        "stage": "league",
+        "round": 20,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1ca8-7ade-9e1a-c0e66a6ca1c5",
+        "stage": "league",
+        "round": 21,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1cad-7b8b-9417-2472ec3af020",
+        "stage": "league",
+        "round": 22,
+        "groupNumber": null
+      },
+      {
+        "matchId": "01a12cfe-1cb2-7e50-ab63-cacc5af09c03",
+        "stage": "league",
+        "round": 23,
+        "groupNumber": null
+      }
+    ]
+  },
+  "bracket": {
+    "tournamentId": "01a12cfb-45c4-7fd7-8ae9-6e4a1a913f3a",
+    "finalMatchId": "01a12cfb-45da-78ce-a9af-345f21daed78"
+  },
+  "errors": [
+    {
+      "case": "anonymous",
+      "status": 401,
+      "contentType": "application/problem+json",
+      "fields": ["status", "title", "type"]
+    },
+    {
+      "case": "view",
+      "status": 400,
+      "contentType": "application/problem+json",
+      "fields": ["status", "title", "type"]
+    },
+    {
+      "case": "limitZero",
+      "status": 400,
+      "contentType": "application/problem+json",
+      "fields": ["status", "title", "type"]
+    },
+    {
+      "case": "limit51",
+      "status": 400,
+      "contentType": "application/problem+json",
+      "fields": ["status", "title", "type"]
+    },
+    {
+      "case": "cursor",
+      "status": 400,
+      "contentType": "application/problem+json",
+      "fields": ["status", "title", "type"]
+    },
+    {
+      "case": "missing",
+      "status": 404,
+      "contentType": "application/problem+json",
+      "fields": ["status", "title", "type"]
+    }
+  ]
+}

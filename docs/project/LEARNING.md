@@ -5964,3 +5964,278 @@ inspeccionados no completan siete días hasta el 13 a las 14:14:47 de Madrid.
 Se conserva la matriz madura; las fuentes de los generadores Android todavía
 contienen los dos defectos pendientes. Una fecha candidata no certifica el
 grafo completo ni sustituye builds limpias y QA después de la actualización.
+
+
+## 2026-10-11 — Cierre de v1.12.0
+
+PostHog estaba configurado también en web para fiabilidad, sin analítica de uso.
+Un rechazo de aprobación al enviar mapas fuente no es un fallo de PostHog.
+Tras autorización explícita del contenido/destino, la CLI completa la preparación
+y se retiran los mapas públicos. El certificado ajeno de la red no se corrige
+modificando la aplicación ni desactivando TLS: despliegue autorizado, preview
+y origen comprobados, verificación pública limitada declarada.
+
+## 2026-10-11 — Preparación de Mis partidos y Ediciones
+
+Propuestas ADR-0161/0162, pendientes de revisión: separar vacío confirmado,
+fallo inicial y fallo de actualización evita ocultar errores o borrar contenido.
+Una cuenta administradora no necesariamente participa; la consulta personal
+usa el equipo vinculado. La migración 00022 ya registra repetition_source_id:
+la lectura de familia puede aprovechar procedencia explícita antes de añadir
+una entidad Serie. Diseño y matriz en
+[la propuesta](../engineering/PRODUCT_PROPOSAL_MATCHES_EDITIONS_2026-10-11.md).
+
+La revisión añade pull to refresh en apps y detecta un fallo de la maqueta:
+seleccionar un escenario de otra colección debe abrir esa pantalla; reintentar
+debe conservarla también cuando el host devuelve el estado persistido. Se
+comprueban destino y contenido tras recuperar, no solo la presencia del botón.
+Varias ediciones tiene un escenario explícito y cada ficha histórica conserva
+sus propios datos de ejemplo. Comprobación de maqueta separada de QA nativa.
+
+## 2026-10-11 — Implementación de Mis partidos y Ediciones
+
+ADR-0161/0162 aceptados tras aprobación explícita. Se implementan proyecciones
+de lectura sobre relaciones existentes: no hace falta una entidad Serie para
+recorrer procedencia y ramas, ni identificar participación mediante permisos.
+La repetición cambia el indicador derivado del torneo original, pero conserva
+sus datos deportivos; la prueba de inmutabilidad distingue ambos conceptos.
+
+Retrospectiva: una prueba que solo encuentra el texto de un partido en el DOM
+no demuestra que esté a la vista. La lista virtualizada necesita aproximar
+primero y ajustar después con medidas reales; se verifica posición en viewport.
+La recuperación se comprueba contra la misma colección y conserva el contexto.
+La validación web no acredita gestos ni navegación en dispositivos nativos.
+El aviso de hidratación por idioma español se reproduce en Inicio existente
+y queda separado de los errores nuevos del incremento.
+
+
+## 2026-10-11 — Primer recorrido nativo de Mis partidos y Ediciones
+
+La revisión iOS detecta que /account/access significa gestionar datos de acceso,
+no iniciar sesión. Se reutiliza /account y se verifica el destino del botón de
+invitado con la interfaz real; tipos y tests de API no prueban la intención de
+una ruta. Error/reintento se comprueba interrumpiendo solo la API local, y un
+regreso fallido conserva las ediciones. Un arrastre que la automatización no
+reproduce no se etiqueta como bug ni como gesto validado. La evidencia distingue
+simulador, API real local, fixture y revisión manual pendiente.
+
+## 2026-10-11 — Alineación de partidos y revisión Android
+
+Un objetivo situado al final de una lista corta puede quedar visible sin poder
+alcanzar el borde superior deseado. Se limita el offset al recorrido real del
+contenido y se da por terminada la alineación al llegar a ese límite; de lo
+contrario el scroll de la persona vuelve a activar el ajuste. Las vistas que
+se miden conservan `collapsable={false}` para existir también en Android.
+
+Retrospectiva: la validación incluye desplazar manualmente después del deep
+link, además de encontrar visible el partido. Una recarga completa confirma
+el comportamiento desde una pantalla nueva cuando Fast Refresh conserva refs.
+Los gestos Android se contrastan con una nueva consulta de la API local;
+el fallo de refresh conserva datos y el fallo inicial ofrece reintento.
+
+### QA iOS por casos: apariencia y escalado — 2026-10-11
+
+Mis partidos y Ediciones se revisan con API local real, tema oscuro y uno/cuatro
+incrementos de texto desde el tamaño inicial. La selección accesible de edición
+y el regreso a Resultados se comprueban por separado del aspecto visual. Se
+restauran tamaño y tema tras la revisión.
+
+Retrospectiva: un árbol accesible no sustituye VoiceOver y una tarjeta legible
+no acredita el desplazamiento. Los gestos que requieren intervención de la
+persona permanecen pendientes por petición explícita, sin marcar toda iOS
+como aprobada. Evidencia y límites en PRODUCT_QA_MATCHES_EDITIONS_2026-10-11.md.
+
+### Selección accesible entre adaptadores — 2026-10-11
+
+En la versión instalada, React Native Web no convierte
+`accessibilityState.selected` en `aria-selected`; React Native sí traduce el
+alias `aria-selected` al estado accesible nativo. Pendientes/Resultados usa
+ese alias universal y se valida el DOM tras recarga y al regresar de la ficha.
+Typecheck y exportación no sustituyen esa comprobación semántica.
+
+Retrospectiva: el color activo o el foco no acreditan selección para un lector.
+Se prefiere la propiedad compatible ya disponible a cambiar el adaptador o
+crear una abstracción nueva. En QA de sesión local, página y API comparten
+host para evitar mezclar localhost con 127.0.0.1 y confundir cookies con fallos
+de la feature. TalkBack activo tampoco demuestra navegación o locución si la
+automatización no produce foco observable.
+
+### Límites omitidos frente a límites explícitos — 2026-10-12
+
+El cero interno usado como valor predeterminado por el servicio no autoriza
+`limit=0` en HTTP cuando OpenAPI declara mínimo 1. El adaptador de Mis partidos
+y Ediciones distingue presencia y valor: omisión válida, vacío/cero inválidos.
+La regresión comprueba ambos endpoints y el motivo seguro de validación; la
+API local real confirma 400 sin detalles internos.
+
+Retrospectiva: probar únicamente el máximo deja abierto el extremo inferior.
+La paginación se contrasta uniendo páginas y comparándolas con una consulta de
+mayor límite: mismo orden, mismos IDs y ninguno repetido. Esa prueba de API
+no acredita que un botón nativo sea alcanzable mediante gesto.
+
+### Regreso a una colección con varias páginas — 2026-10-12
+
+El refresh de foco que sustituye una lista de 28 filas por sus primeras 20
+desplaza el scroll al regresar de una ficha, aunque conserve la vista elegida.
+Mis partidos y Ediciones reconstruyen desde el inicio hasta cubrir el tramo
+cargado, o hasta agotar el cursor, y publican la actualización de forma atómica.
+Un fallo posterior conserva toda la colección anterior; una identidad nueva
+cancela y descarta también la continuación. No se retienen filas obsoletas ni
+se añade caché persistente. Coste: una petición por página necesaria del tramo.
+
+Retrospectiva: la paginación y el regreso deben probarse juntos. Se validan
+filas eliminadas/cambiadas, fallo de una continuación y cambio de identidad,
+además del caso de éxito. La regresión Android requiere recarga completa:
+Fast Refresh conservaba el comportamiento anterior de la instancia montada.
+
+
+### Recuperar QA iOS en Device Hub
+
+Show in Device Hub permite probar toques en la ventana completa cuando la
+compacta falla por coordenadas y Safari no expone Abrir al árbol accesible.
+Capture Keyboard requiere enfocar la pantalla simulada antes de Return.
+Verificar el cambio de pantalla: enviar una acción no demuestra éxito.
+El margen de una lista puede permitir desplazamiento cuando empezar encima
+de un botón no lo produce. Filas conservadas no acreditan posición exacta
+ni navegación con VoiceOver; requieren evidencia independiente.
+
+
+### QA con VoiceOver del simulador
+
+La ventana completa de Device Hub permite observar el marco de foco.
+Con captura de teclado activa, Control+Option+Right/Left desplaza foco;
+el doble toque permite activar el selector y una tarjeta. Verificar ambos
+por separado: foco visible no equivale a activación. No acreditar locución
+audible cuando solo se observan pantalla y árbol accesible.
+
+### QA iOS Release independiente de Metro
+
+Una build local de simulador con `CODE_SIGNING_ALLOWED=NO` puede compilar y
+abrir la ruta, pero no constituye por sí sola una preparación válida para
+comprobar una sesión persistida. En este QA, el mismo código recompilado con
+firma ad hoc (`CODE_SIGN_IDENTITY=-`, `CODE_SIGN_STYLE=Manual`) cargó sesión y
+datos. No se demostró la causa del error anterior; no atribuirlo al Keychain
+sin evidencia. Comprobar el destino visible con Metro detenido, además del
+éxito de xcodebuild. Mantener separadas las aprobaciones de esquema local,
+universal links, simulador y dispositivo físico.
+
+### Android Release local y smoke por ADB
+
+Release empaqueta JavaScript y permite probar enlaces desde force-stop sin
+Metro. Su política de HTTP puede diferir de Debug. Un overlay optativo de QA
+limitado a `10.0.2.2`, con HTTP bloqueado por defecto y guard de applicationId
+local, permite conservar fixtures sin alterar configuración del producto.
+Confirmar APK no depurable y `LaunchState: COLD`; comprobar destino mediante
+texto exacto, descripción accesible y captura. No confundir el esquema local
+con app links HTTPS o una firma de distribución.
+
+TalkBack enlazado no implica exploración táctil activa. Verificar los flags
+efectivos y observar foco/activación. Un toque ADB puede activar directamente
+el control; Tab/Enter prueba teclado con lector activo, no gestos del lector.
+Evitar inspecciones UIAutomator durante el recorrido del lector: pueden
+interferir con su foco. El smoke de enlaces exige lectores apagados y conserva
+evidencia; requiere emulador y fixtures existentes, sin otro framework de E2E.
+
+Apagar TalkBack no restaura necesariamente el modo táctil nativo tras Tab/Enter.
+`dumpsys input` puede conservar `TouchMode: 0`; registrar ese contexto, sin
+atribuirle un fallo por sí solo. En este QA, el smoke enlazaba Matriz 1–Matriz 2
+pero exigía Matriz 1–Matriz 3. La revisión del fixture y el resaltado retiró la
+primera atribución del fallo. Verificar correspondencia ID/equipos
+antes de investigar geometría; la presencia de otros partidos en pantalla puede
+ocultar una expectativa errónea. Se corrigió el caso y se retiraron la guarda
+de dimensiones, los logs y la restricción del smoke a modo táctil.
+
+Con el ID corregido se reprodujo además una regresión real en modo táctil:
+la lista podía alinearse antes de resolver la relación de cuenta. Los controles
+de administración modificaban luego la altura, pero la alineación se daba por
+terminada. Reutilizar `linkHandled` como condición de la búsqueda y alineación
+espera a que el efecto del enlace tenga torneo y relación disponibles, sin
+añadir esperas fijas. Probar la preparación completa en Release, no solo un
+enlace sobre una pantalla ya montada con permisos resueltos.
+
+La misma guarda pasó cuatro aperturas en frío de Release iOS mediante Safari:
+grupos, dos desempates y final. Contrastar captura con árbol accesible: iOS puede
+exponer elementos fuera del viewport. Un simulador Booted con instalación
+correcta puede seguir sin pantalla en Device Hub; un reinicio de ese simulador
+recuperó «Connecting display» sin modificar el producto.
+
+QA ampliado de lectores: VoiceOver permite recorrer pestañas y tarjetas con
+Control+Option+Right; en Android la flecha abajo alcanza tarjetas con TalkBack
+activo aunque Tab tenga otro recorrido. No equiparar esos focos ni tomar una
+captura inmediata como estado final. En ambos sistemas la liga de 24 equipos
+quedó en Jornada 7 al abrir partidos de jornadas 22/23 con lector activo; causa
+pendiente de aislar. Android vuelve por Atrás con foco en Pendientes, no en la
+tarjeta. La activación del cierre no pudo certificarse con las entradas usadas.
+Sin audio del dispositivo no se puede aprobar la locución.
+
+### Enlaces lejanos y presupuesto de revelación (2026-10-12)
+
+La liga de QA de 24 equipos demuestra que un límite global de 20 callbacks
+puede abandonar el destino cuando el índice medido es 115 y el solicitado 308.
+Contabilizar ausencia de progreso y agrupar intentos por fotograma conserva la
+virtualización sin inventar alturas. Un layout anterior a la preparación exige
+un disparador explícito cuando el enlace queda listo: confirmado en iOS al pasar
+de Jornada 1 al destino de Jornada 23, también verificado para Jornada 22.
+El fallo se reproduce con lector apagado; su corrección no certifica TalkBack,
+VoiceOver, retorno de foco ni locución. Logs temporales retirados antes de entregar.
+
+La convergencia del offset no prueba la revelación: con contenido todavía en
+crecimiento puede estar limitado por un tamaño anterior. Exigir medidas válidas
+y tarjeta dentro del viewport evita declarar completado ese recorrido. La
+regresión de desempate detectada en una build intermedia queda registrada como
+fallo; la build final Android vuelve a pasar los cinco casos en frío.
+
+La condición final se verifica también en iOS para Jornada 23 y el desempate,
+ambos con arranque en frío. El bloqueo temporal del Mac se resolvió antes de
+aprobar el segundo caso. Mantener la QA por build y escenario: un caso anterior
+aprobado no cubre cambios posteriores ni convierte una limitación de la
+herramienta en una aprobación del producto.
+
+
+### Volver a la tarjeta con lector (2026-10-12)
+
+Conservar pestaña y scroll no restaura por sí solo el foco accesible. Un origen
+local y referencias a tarjetas montadas bastan para Mis partidos: restaurar
+tras la aparición nativa de la ruta, únicamente si esa pantalla está enfocada
+y hay lector activo. Cambiar cuenta/segmento descarta el origen; no elegir una
+tarjeta diferente cuando desaparece. Dos retornos iOS y retornos Android a las
+primeras dos tarjetas confirman el marco sobre el origen con las Release finales.
+
+El marco del lector no prueba foco de teclado: Enter en Android activó el
+control de programación mientras TalkBack enmarcaba la X. Consultar el keymap
+real y verificar el resultado; no convertir inyección de un toque o atajo sin
+respuesta en aprobación de gestos. La revelación de encuentros lejanos todavía
+falla con lectores activos; cierre/retorno aprobados no amplían esa evidencia.
+
+
+### Diagnosticar antes de ampliar reintentos (2026-10-12)
+
+En iOS Release, los logs JS de React Native llegan al registro unificado
+(`com.facebook.react.log`), no necesariamente a la consola de lanzamiento.
+Medir solo con capturas permite detectar un fallo, pero no confirmar su causa.
+En el fallo con VoiceOver se observa progreso de medición y retorno del offset
+a cero antes de montar el destino; no una alineación final incorrecta.
+
+Las variantes de transición, foco y reintento producen PASS parciales y FAIL
+en otro destino: se descartan, sin acumularlas en el producto. La implementación
+instalada de SectionList distingue cabecera y primera fila; la prueba aislada
+de ese índice tiene un primer PASS en J22 y sigue pendiente de regresión.
+Una hipótesis plausible y una apertura correcta no bastan para aprobarla.
+
+
+La variante aislada de índice pasa cinco aperturas iOS, incluyendo Jornada 23
+en frío con VoiceOver activo. Aplicarla a Android produce 4 PASS/1 FAIL (J22),
+por lo que se limita a iOS. Android vuelve a pasar los cinco enlaces en frío
+con su índice anterior; dos enlaces en frío con TalkBack también muestran
+destinos completos. Esto no certifica gestos, locución ni el recorrido cálido
+con lector. El código de una dependencia orienta el diagnóstico, pero sus
+resultados visuales y de regresión deciden el alcance mínimo del ajuste.
+
+La regresión final de TalkBack añade dos aperturas desde Mis partidos (J22/J23)
+y retorno con Atrás a la tarjeta correspondiente, además de las dos aperturas
+en frío. El toque inyectado comprueba el handler y la visibilidad; el marco verde
+comprueba la ubicación observada del foco al volver. Ninguno certifica doble
+toque real, locución ni orden completo de lectura. Mantener esa separación
+permite ampliar cobertura automatizada sin convertir una captura en aprobación
+completa de accesibilidad. La sesión termina con lectores, emuladores y dev
+apagados, conservando evidencia y volúmenes.

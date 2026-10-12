@@ -107,6 +107,7 @@ func run(args []string) error {
 	}
 	tournamentCreation := tournaments.NewCreationService(accountTournaments)
 	tournamentScheduling := tournaments.NewSchedulingService(accountTournaments)
+	tournamentBrowsing := tournaments.NewBrowsingService(accountTournaments)
 
 	server := &http.Server{
 		Addr: appConfig.HTTPAddr,
@@ -127,6 +128,7 @@ func run(args []string) error {
 				TournamentList:       tournaments.NewService(accountTournaments),
 				TournamentCreation:   &tournamentCreation,
 				TournamentScheduling: &tournamentScheduling,
+				TournamentBrowsing:   &tournamentBrowsing,
 				Suggestions:          &suggestionService,
 				RISCReceiver:         riscReceiver,
 			},

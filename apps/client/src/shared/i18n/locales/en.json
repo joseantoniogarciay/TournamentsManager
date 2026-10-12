@@ -572,5 +572,20 @@
   "tournament_repeat_available_teams": "Available teams",
   "tournament_repeat_no_available_teams": "No teams are available. You can create one with another name if there is room.",
   "tournament_repeat_invitation_share": "Join {tournament}: choose an available team or create your own. {url}",
-  "team_invitation_occupied": "This place has already been taken. Choose another available team."
+  "team_invitation_occupied": "This place has already been taken. Choose another available team.",
+  "nav_matches": "My matches",
+  "matches_guest_title": "Your matches, in one place",
+  "matches_guest_description": "Sign in to see matches for the teams you participate with.",
+  "matches_pending": "Pending",
+  "matches_results": "Results",
+  "matches_empty": "You have no matches yet. They will appear when you join a tournament and its matches are generated.",
+  "matches_pending_empty": "You have no pending matches. You can view completed matches in Results.",
+  "matches_results_empty": "You have no results yet. Your pending matches are in the other view.",
+  "matches_unscheduled": "No date",
+  "matches_open": "Open {home} versus {away} in {tournament}",
+  "matches_unavailable": "This match is no longer available. You can still view the tournament.",
+  "matches_selected": "Selected match",
+  "tournament_editions": "Editions",
+  "editions_current": "Current edition",
+  "editions_champions": "Champions: {names}"
 }

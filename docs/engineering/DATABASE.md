@@ -193,3 +193,19 @@ nuevo y se restablece su estado sin retirada. La copia transaccional vincula
 solo el primer equipo a la propietaria; los demás se pueden inscribir mediante
 la invitación nueva. El lock de torneo evita reclamaciones duplicadas de equipos
 sin cuenta; crear un nombre nuevo continúa sujeto a la composición máxima.
+
+## Proyecciones de consulta: partidos y familia de ediciones
+
+ADR-0161/0162 no requieren migración adicional. ListPersonalMatches cruza
+tournament_team_accounts con encuentros y fase, devuelve Match con sets,
+incidencia y programación, y hereda el lugar del torneo. `hasMatches` se
+calcula en la misma sentencia sobre los candidatos de ambas vistas. La fecha
+de resolución usa el historial existente de cambios de resultado.
+
+ListTournamentEditions recorre ancestros hasta la raíz y descendientes de
+repetition_source_id (migración 00022), incluyendo ramas. UNION evita repetir
+nodos. Cada página y la existencia del torneo se leen en una sentencia.
+hasOtherEditions se deriva de padre o hijo dentro de la transacción de lectura
+del detalle; no se persiste un contador ni se añade una entidad Serie.
+Las proyecciones se generan con sqlc y el puerto BrowsingRepository mantiene
+el dominio independiente de PostgreSQL.

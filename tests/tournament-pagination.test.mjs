@@ -35,6 +35,7 @@ function load(path, imports) {
 }
 const parser = load("apps/client/src/features/league-creation/response-parser.ts", {
   "@/shared/tournaments/sport": {},
+  "@/features/scheduling/values": {},
 });
 class APIUnexpectedResponseError extends Error {}
 class APISessionInvalidatedError extends Error {}

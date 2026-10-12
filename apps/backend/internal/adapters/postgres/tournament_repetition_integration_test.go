@@ -110,6 +110,11 @@ func TestIntegrationRepetitionIsIndependentIdempotentAndOwnerOnly(t *testing.T) 
 		t.Fatalf("copied relations: %d %d %d %d", admins, followers, links, invitations)
 	}
 	unchanged, err := service.GetPublic(ctx, original.ID)
+	// The source remains immutable; its derived family indicator changes when a child exists.
+	if !unchanged.HasOtherEditions {
+		t.Fatal("source must expose the new edition relationship")
+	}
+	finished.HasOtherEditions = true
 	if err != nil || !reflect.DeepEqual(finished, unchanged) {
 		t.Fatalf("source changed: %v", err)
 	}

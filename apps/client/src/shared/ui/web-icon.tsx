@@ -8,6 +8,7 @@ type IconName =
   | "chevronRight"
   | "close"
   | "home"
+  | "matches"
   | "info"
   | "more"
   | "settings"
@@ -28,6 +29,7 @@ const paths: Record<IconName, readonly string[]> = {
   chevronRight: ["m9 18 6-6-6-6"],
   close: ["m18 6-12 12", "m6 6 12 12"],
   home: ["m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10Z", "M9 21v-6h6v6"],
+  matches: ["M4 4h16v16H4Z", "M12 4v16", "M4 9h16", "M4 15h16"],
   info: ["M12 17v-5", "M12 7h.01", "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"],
   more: ["M5 12h.01", "M12 12h.01", "M19 12h.01"],
   settings: [

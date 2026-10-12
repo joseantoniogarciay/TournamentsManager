@@ -521,3 +521,21 @@ existente comparten una única acción de inscripción. No se muestran cuentas
 ni se afirma que el enlace compruebe identidad. La carga completa y el error
 usan LoadingTransition y RequestErrorCard; fallos al enviar conservan los campos
 y usan feedback seguro. Todos los textos están en es/en/it/fr.
+
+## Colecciones personales e históricas (ADR-0161/0162)
+
+La tab bar tiene Inicio, Torneos, Mis partidos y Cuenta. Mis partidos usa la
+composición existente de tarjetas, controles Pendientes/Resultados de 44 px,
+con selección accesible mediante `aria-selected` en web y apps,
+20 px exteriores y ResponsiveColumns en web. Ediciones conserva la cabecera
+y navegación adaptadas a cada plataforma; no incorpora una tab bar propia.
+LoadingTransition cubre la carga inicial, RequestErrorCard permite reintentar
+y los vacíos no muestran tarjetas ficticias. Actualización con RefreshControl
+en apps; fallo de actualización conserva contenido y usa feedback común.
+Paginación fallida conserva las tarjetas y ofrece Reintentar al pie.
+Actualizar una colección paginada recupera también el tramo ya cargado antes
+de sustituirlo; un fallo intermedio conserva el contenido completo anterior.
+Así, regresar de una ficha no reduce la lista a su primera página ni desplaza
+la posición solo por retirar temporalmente las páginas adicionales.
+El destino de un partido selecciona fase/ronda, mide su posición y lo resalta
+con tokens existentes; anuncia el destino para accesibilidad. Textos es/en/it/fr.

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "groups",
+    "url": "fasttourney-local://tournament/01a12cfb-458e-7182-a8f8-18f81b8602c1?matchId=01a12cfb-45b0-78c3-bdab-9c47fb613d87",
+    "text": ["QA matriz · Grupos", "Matriz 1", "Matriz 4", "Grupo 1 · Jornada 3"],
+    "description": []
+  },
+  {
+    "name": "tiebreak",
+    "url": "fasttourney-local://tournament/01a12cfb-45e2-7be5-86c5-8b6bb8b9fab6?matchId=01a12cfb-462a-7739-bbfc-1a3f4f02f2e7",
+    "text": ["QA matriz · Desempate", "Matriz 1", "Matriz 3", "Desempate 1 · Ciclo 1"],
+    "description": []
+  },
+  {
+    "name": "bracket",
+    "url": "fasttourney-local://tournament/01a12cfb-45c4-7fd7-8ae9-6e4a1a913f3a?matchId=01a12cfb-45da-78ce-a9af-345f21daed78",
+    "text": ["QA matriz · Cuadro", "Final", "Matriz 1", "Matriz 3", "2", "0"],
+    "description": ["Ganador"]
+  }
+]

@@ -186,7 +186,7 @@ function parseTournamentTeams(value: unknown): TournamentTeam[] | null {
   });
 }
 
-function parseMatch(value: unknown): Match | null {
+export function parseMatch(value: unknown): Match | null {
   if (
     !isRecord(value) ||
     !isUUID(value.id) ||
@@ -457,6 +457,7 @@ function parseSuggestedStart(value: unknown): PublicTournament["suggestedStart"]
 
 export function parsePublicTournament(value: unknown): PublicTournament | null {
   if (!isRecord(value)) return null;
+  if ("hasOtherEditions" in value && typeof value.hasOtherEditions !== "boolean") return null;
   if (
     "venue" in value &&
     (typeof value.venue !== "string" || !value.venue || !validVenue(value.venue))
@@ -503,6 +504,9 @@ export function parsePublicTournament(value: unknown): PublicTournament | null {
     return null;
   return {
     ...(suggestedStart ? { suggestedStart } : {}),
+    ...(typeof value.hasOtherEditions === "boolean"
+      ? { hasOtherEditions: value.hasOtherEditions }
+      : {}),
     id: value.id,
     name: value.name,
     ...(value.venue ? { venue: value.venue as string } : {}),

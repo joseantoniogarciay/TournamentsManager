@@ -1,0 +1,2 @@
+TalkBackService enlazado; touchExplorationEnabled=true.
+UIAutomator no usado durante los recorridos con lector activo.

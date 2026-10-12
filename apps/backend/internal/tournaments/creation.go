@@ -186,23 +186,24 @@ const (
 
 // Tournament is the projection of a visible league.
 type Tournament struct {
-	SuggestedStart  *StartInput                 `json:"suggestedStart,omitempty"`
-	Venue           string                      `json:"venue,omitempty"`
-	Stages          []Stage                     `json:"stages"`
-	StageTeams      []StageTeam                 `json:"stageTeams"`
-	TieBreakPools   []QualificationTieBreakPool `json:"tieBreakPools"`
-	ID              string                      `json:"id"`
-	Name            string                      `json:"name"`
-	Sport           Sport                       `json:"sport"`
-	BestOfSets      int                         `json:"bestOfSets,omitempty"`
-	PointsPerGame   int                         `json:"pointsPerGame,omitempty"`
-	Format          string                      `json:"format"`
-	State           string                      `json:"state"`
-	RoundRobinLegs  int                         `json:"roundRobinLegs"`
-	Teams           []Team                      `json:"teams"`
-	Matches         []Match                     `json:"matches"`
-	Standings       []Standing                  `json:"standings"`
-	ChampionTeamIDs []string                    `json:"championTeamIds"`
+	HasOtherEditions bool                        `json:"hasOtherEditions"`
+	SuggestedStart   *StartInput                 `json:"suggestedStart,omitempty"`
+	Venue            string                      `json:"venue,omitempty"`
+	Stages           []Stage                     `json:"stages"`
+	StageTeams       []StageTeam                 `json:"stageTeams"`
+	TieBreakPools    []QualificationTieBreakPool `json:"tieBreakPools"`
+	ID               string                      `json:"id"`
+	Name             string                      `json:"name"`
+	Sport            Sport                       `json:"sport"`
+	BestOfSets       int                         `json:"bestOfSets,omitempty"`
+	PointsPerGame    int                         `json:"pointsPerGame,omitempty"`
+	Format           string                      `json:"format"`
+	State            string                      `json:"state"`
+	RoundRobinLegs   int                         `json:"roundRobinLegs"`
+	Teams            []Team                      `json:"teams"`
+	Matches          []Match                     `json:"matches"`
+	Standings        []Standing                  `json:"standings"`
+	ChampionTeamIDs  []string                    `json:"championTeamIds"`
 }
 
 // Stage scopes sporting rules and match ordering inside a tournament.

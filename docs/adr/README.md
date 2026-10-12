@@ -71,3 +71,6 @@ Usa [template.md](template.md) y el
 
 - [ADR-0159: Repetir torneos finalizados como nuevas ediciones](0159-repeat-completed-tournaments-as-new-editions.md) — Aceptado.
 - [ADR-0160: Elegir equipos libres o crear otros mediante invitación](0160-choose-unlinked-teams-or-create-through-invitations.md) — Aceptado.
+
+- [ADR-0161: Mis partidos y acceso al encuentro dentro del torneo](0161-add-personal-matches-tab-and-match-deep-links.md) — Aceptado; implementación autorizada.
+- [ADR-0162: Consultar ediciones relacionadas desde el torneo](0162-browse-related-tournament-editions.md) — Aceptado; implementación autorizada.

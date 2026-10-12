@@ -10,16 +10,21 @@ import type {
   AccountTournamentPage,
   AuthenticationProblemResponse,
   ListCurrentAccountTournamentsParams,
+  ListPersonalMatchesParams,
+  ListTournamentEditionsParams,
   MatchResultInput,
   MatchScheduleInput,
+  PersonalMatchPage,
   Problem,
   PublicTournament,
   PublishedTournament,
   RepeatTournamentInput,
   RequestProblemResponse,
+  ServiceUnavailableProblemResponse,
   StartTournamentRequest,
   TeamInput,
   TournamentAdministrators,
+  TournamentEditionPage,
   TournamentInput,
   TournamentOwnershipTransferRequest,
   TournamentTeam,
@@ -33,6 +38,160 @@ import type {
   Uuid,
   ValidationProblemResponse,
 } from "../models";
+
+export type listPersonalMatchesResponse200 = {
+  data: PersonalMatchPage;
+  status: 200;
+};
+
+export type listPersonalMatchesResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type listPersonalMatchesResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type listPersonalMatchesResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type listPersonalMatchesResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
+export type listPersonalMatchesResponseSuccess = listPersonalMatchesResponse200 & {
+  headers: Headers;
+};
+export type listPersonalMatchesResponseError = (
+  | listPersonalMatchesResponse400
+  | listPersonalMatchesResponse401
+  | listPersonalMatchesResponse500
+  | listPersonalMatchesResponse503
+) & {
+  headers: Headers;
+};
+
+export type listPersonalMatchesResponse =
+  listPersonalMatchesResponseSuccess | listPersonalMatchesResponseError;
+
+export const getListPersonalMatchesUrl = (params: ListPersonalMatchesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/me/matches?${stringifiedParams}` : `/me/matches`;
+};
+
+/**
+ * Excluye byes y rivales indeterminados. Pendientes exige torneo y fase en curso y participación activa; resultados conserva encuentros resueltos. Orden civil fecha/hora ascendente, sin fecha al final; resultados por última resolución descendente. El ID desempata. hasMatches se refiere a ambas vistas y permite distinguir un vacío global de uno por vista.
+ * @summary Consulta los partidos del equipo vinculado a la cuenta
+ */
+export const listPersonalMatches = async (
+  params: ListPersonalMatchesParams,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<listPersonalMatchesResponse> => {
+  const res = await (fetchFn ?? fetch)(getListPersonalMatchesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listPersonalMatchesResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as listPersonalMatchesResponse;
+};
+
+export type listTournamentEditionsResponse200 = {
+  data: TournamentEditionPage;
+  status: 200;
+};
+
+export type listTournamentEditionsResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type listTournamentEditionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listTournamentEditionsResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type listTournamentEditionsResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
+export type listTournamentEditionsResponseSuccess = listTournamentEditionsResponse200 & {
+  headers: Headers;
+};
+export type listTournamentEditionsResponseError = (
+  | listTournamentEditionsResponse400
+  | listTournamentEditionsResponse404
+  | listTournamentEditionsResponse500
+  | listTournamentEditionsResponse503
+) & {
+  headers: Headers;
+};
+
+export type listTournamentEditionsResponse =
+  listTournamentEditionsResponseSuccess | listTournamentEditionsResponseError;
+
+export const getListTournamentEditionsUrl = (
+  tournamentId: Uuid,
+  params?: ListTournamentEditionsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/tournaments/${tournamentId}/editions?${stringifiedParams}`
+    : `/tournaments/${tournamentId}/editions`;
+};
+
+/**
+ * Lectura pública según el acceso al torneo por identificador. Incluye raíz, descendientes y ramas de repetición; creación descendente e ID como desempate. No concede gestión. Torneos sin relación devuelven una edición.
+ * @summary Consulta la familia de ediciones de un torneo
+ */
+export const listTournamentEditions = async (
+  tournamentId: Uuid,
+  params?: ListTournamentEditionsParams,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<listTournamentEditionsResponse> => {
+  const res = await (fetchFn ?? fetch)(getListTournamentEditionsUrl(tournamentId, params), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listTournamentEditionsResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as listTournamentEditionsResponse;
+};
 
 export type listCurrentAccountTournamentsResponse200 = {
   data: AccountTournamentPage;

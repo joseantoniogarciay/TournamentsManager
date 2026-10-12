@@ -6,6 +6,35 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-10-12
+
+### Added
+
+- Mis partidos en la tab bar: encuentros del equipo propio, Pendientes/Resultados,
+  programación e incidencias, con apertura directa de fase/ronda/partido.
+- Ediciones relacionadas desde el detalle cuando existen al menos dos, incluyendo
+  ramas, estado y campeones de cada edición. ADR-0161/0162.
+- Vacíos por contexto, reintento inicial y de paginación, conservación de datos
+  al fallar una actualización y pull to refresh en apps.
+
+### Fixed
+
+- Ajustado el índice inicial de revelación de encuentros en iOS, verificado con VoiceOver en jornadas lejanas; Android y web conservan su índice previo.
+- Mis partidos restaura el foco del lector a la tarjeta de origen al cerrar la ficha nativa; la X de la ficha conserva la etiqueta localizada Cerrar.
+
+- Los enlaces a jornadas lejanas continúan mientras la lista mide nuevos partidos,
+  agrupan intentos por fotograma y comienzan al quedar preparado el destino.
+- Iniciar sesión desde Mis partidos abre el acceso habitual de Cuenta; la revisión
+  iOS detectó que la ruta inicial apuntaba a los ajustes de datos de acceso.
+- La alineación de un partido respeta el final de la lista y libera el scroll
+  posterior; el contenedor medido conserva su vista nativa en Android.
+- Pendientes y Resultados exponen su selección accesible también en el DOM web
+  mediante el alias universal `aria-selected`.
+- Mis partidos y Ediciones rechazan límites explícitos vacíos o cero según
+  OpenAPI; solo la ausencia del parámetro usa el tamaño predeterminado.
+- Volver desde un partido o una edición conserva las páginas ya cargadas:
+  la actualización reconstruye ese tramo antes de sustituir la colección.
+
 ## [1.12.0] - 2026-10-11
 
 ### Added
