@@ -9,8 +9,10 @@ import type {
   AccessMethods,
   AccountDeletionConflictProblemResponse,
   AccountDeletionScheduled,
+  ActiveSessionPage,
   AuthenticationProblemResponse,
   CurrentSession,
+  ListCurrentAccountSessionsParams,
   LocalCredentialRequest,
   LoginRequest,
   RateLimitProblemResponse,
@@ -19,6 +21,7 @@ import type {
   ReauthenticationTicketRequest,
   RequestProblemResponse,
   SessionEstablishment,
+  Uuid,
   ValidationProblemResponse,
   VerificationConflictProblemResponse,
 } from "../models";
@@ -77,6 +80,220 @@ export const scheduleAccountDeletion = async (
 
   const data: scheduleAccountDeletionResponse["data"] = body ? JSON.parse(body) : {};
   return { data, status: res.status, headers: res.headers } as scheduleAccountDeletionResponse;
+};
+
+export type listCurrentAccountSessionsResponse200 = {
+  data: ActiveSessionPage;
+  status: 200;
+};
+
+export type listCurrentAccountSessionsResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type listCurrentAccountSessionsResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type listCurrentAccountSessionsResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
+export type listCurrentAccountSessionsResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type listCurrentAccountSessionsResponseSuccess = listCurrentAccountSessionsResponse200 & {
+  headers: Headers;
+};
+export type listCurrentAccountSessionsResponseError = (
+  | listCurrentAccountSessionsResponse400
+  | listCurrentAccountSessionsResponse401
+  | listCurrentAccountSessionsResponse429
+  | listCurrentAccountSessionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listCurrentAccountSessionsResponse =
+  listCurrentAccountSessionsResponseSuccess | listCurrentAccountSessionsResponseError;
+
+export const getListCurrentAccountSessionsUrl = (params?: ListCurrentAccountSessionsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/me/sessions?${stringifiedParams}` : `/me/sessions`;
+};
+
+/**
+ * Incluye sesiones con acceso vigente o renovación todavía utilizable. Las categorías de cliente son orientativas.
+ * @summary Lista una página de sesiones propias activas
+ */
+export const listCurrentAccountSessions = async (
+  params?: ListCurrentAccountSessionsParams,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<listCurrentAccountSessionsResponse> => {
+  const res = await (fetchFn ?? fetch)(getListCurrentAccountSessionsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listCurrentAccountSessionsResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as listCurrentAccountSessionsResponse;
+};
+
+export type revokeOtherCurrentAccountSessionsResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type revokeOtherCurrentAccountSessionsResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type revokeOtherCurrentAccountSessionsResponse403 = {
+  data: RequestProblemResponse;
+  status: 403;
+};
+
+export type revokeOtherCurrentAccountSessionsResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
+export type revokeOtherCurrentAccountSessionsResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type revokeOtherCurrentAccountSessionsResponseSuccess =
+  revokeOtherCurrentAccountSessionsResponse204 & {
+    headers: Headers;
+  };
+export type revokeOtherCurrentAccountSessionsResponseError = (
+  | revokeOtherCurrentAccountSessionsResponse401
+  | revokeOtherCurrentAccountSessionsResponse403
+  | revokeOtherCurrentAccountSessionsResponse429
+  | revokeOtherCurrentAccountSessionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type revokeOtherCurrentAccountSessionsResponse =
+  revokeOtherCurrentAccountSessionsResponseSuccess | revokeOtherCurrentAccountSessionsResponseError;
+
+export const getRevokeOtherCurrentAccountSessionsUrl = () => {
+  return `/me/sessions/others`;
+};
+
+/**
+ * Revoca atómicamente las familias y todos sus refresh tokens; no impide nuevos logins posteriores.
+ * @summary Revoca todas las sesiones propias salvo la actual
+ */
+export const revokeOtherCurrentAccountSessions = async (
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<revokeOtherCurrentAccountSessionsResponse> => {
+  const res = await (fetchFn ?? fetch)(getRevokeOtherCurrentAccountSessionsUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: revokeOtherCurrentAccountSessionsResponse["data"] = body
+    ? JSON.parse(body)
+    : undefined;
+  return {
+    data,
+    status: res.status,
+    headers: res.headers,
+  } as revokeOtherCurrentAccountSessionsResponse;
+};
+
+export type revokeCurrentAccountSessionResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type revokeCurrentAccountSessionResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type revokeCurrentAccountSessionResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type revokeCurrentAccountSessionResponse403 = {
+  data: RequestProblemResponse;
+  status: 403;
+};
+
+export type revokeCurrentAccountSessionResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
+export type revokeCurrentAccountSessionResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type revokeCurrentAccountSessionResponseSuccess = revokeCurrentAccountSessionResponse204 & {
+  headers: Headers;
+};
+export type revokeCurrentAccountSessionResponseError = (
+  | revokeCurrentAccountSessionResponse400
+  | revokeCurrentAccountSessionResponse401
+  | revokeCurrentAccountSessionResponse403
+  | revokeCurrentAccountSessionResponse429
+  | revokeCurrentAccountSessionResponse500
+) & {
+  headers: Headers;
+};
+
+export type revokeCurrentAccountSessionResponse =
+  revokeCurrentAccountSessionResponseSuccess | revokeCurrentAccountSessionResponseError;
+
+export const getRevokeCurrentAccountSessionUrl = (sessionId: Uuid) => {
+  return `/me/sessions/${sessionId}`;
+};
+
+/**
+ * Una sesión inexistente, de otra cuenta o la actual no se modifica y devuelve el mismo 204. El logout actual conserva DELETE /sessions.
+ * @summary Revoca una sesión propia distinta de la actual
+ */
+export const revokeCurrentAccountSession = async (
+  sessionId: Uuid,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<revokeCurrentAccountSessionResponse> => {
+  const res = await (fetchFn ?? fetch)(getRevokeCurrentAccountSessionUrl(sessionId), {
+    ...options,
+    method: "DELETE",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: revokeCurrentAccountSessionResponse["data"] = body ? JSON.parse(body) : undefined;
+  return { data, status: res.status, headers: res.headers } as revokeCurrentAccountSessionResponse;
 };
 
 export type getAccessMethodsResponse200 = {

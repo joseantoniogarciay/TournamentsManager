@@ -540,3 +540,14 @@ relacionadas por repetición. La familia incluye descendientes y ramas desde
 ediciones antiguas, ordenada de más reciente a más antigua. Cada tarjeta
 conserva nombre, estado y campeones propios y marca la edición consultada.
 Un nombre coincidente no crea relación ni se mezclan permisos o resultados.
+
+## Sesiones activas — ADR-0164
+
+Cuenta incorpora Sesiones activas (/account/sessions), página normal en el stack
+de Cuenta con navegación existente en web, iOS y Android. Lista sesiones propias
+activas, marca la actual y muestra categorías orientativas de aplicación/navegador
+y plataforma, creación y última actividad (hasta cinco minutos de retraso).
+Permite actualizar, cargar más y confirmar cierre de una o todas las demás.
+La actual conserva su cierre desde Cuenta; no se presenta como inventario físico
+de dispositivos ni como borrado remoto. Carga inicial, vacío, error con reintento,
+fallo parcial conservando datos y estado de mutación bloqueada son explícitos.

@@ -6322,3 +6322,28 @@ sin DDL conserva los datos activos. Una copia cifrada de hoy con restauración
 probada permite usar la recuperación existente sin exportar otro backup cuyo
 traslado fue rechazado por revisión automática. No se confunden pruebas aisladas
 de carreras/SQL con los smokes de producción ni con publicación de apps nativas.
+
+## 2026-10-12 — Sesiones revocables y retrospectiva de ADR-0164
+
+**Fundamento:** token y sesión son conceptos distintos. Un UUID estable de familia
+permite revocar access y refresh aunque sus secretos roten. JWT con estado de
+revocación mantendría la consulta y añadiría validación criptográfica y claves.
+Para este monolito, extender sesiones opacas conserva el coste mínimo suficiente.
+
+**Aprendizaje reutilizable:** una sesión con access vencido puede seguir activa
+por su refresh; ocultarla impediría reconocer y revocar ese acceso. Plataforma y
+cliente son pistas falsificables, no autorización ni identidad de dispositivo.
+Actividad acotada evita escribir por cada lectura; la primera captura de categorías
+es una excepción explícita, sin IP ni User-Agent persistidos.
+
+**Retrospectiva técnica:** antes de añadir cierre remoto, refresh bloqueaba el
+refresh token y después la sesión, mientras revocación hacía lo inverso.
+Ordenar ambos por familia primero elimina esa inversión. Pruebas con renovaciones
+concurrentes comprueban que ningún token posterior revive una familia revocada.
+La UX espera confirmación remota y conserva datos ante fallo; el logout local
+mantiene su comportamiento independiente. Salir cancela peticiones y evita avisos.
+
+**Límite práctico:** cerrar sesiones no borra almacenamiento de otro dispositivo
+ni deshace peticiones ya autorizadas. Publicación y QA visual nativo no forman
+parte de este cambio; migración 00023 debe preceder a la API nueva. El incremento
+no introduce JWT, push, fingerprinting ni infraestructura de observabilidad.

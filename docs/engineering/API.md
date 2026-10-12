@@ -474,3 +474,20 @@ cuotas de identidad/repetición/lecturas y contexto de 15 s se detallan en
 autenticación en autorización por recurso. Nuevos estados 429 no reciben copy
 de negocio: las features conservan el fallback localizado común y no muestran
 title/detail del servidor.
+
+## Sesiones propias activas — ADR-0164
+
+- GET /v1/me/sessions?cursor=<uuid>: hasta 50 familias activas por ID descendente,
+  con id, createdAt, lastSeenAt, platform, client y current; nextCursor nulo o el
+  último ID entregado cuando hay más. 200/400/401/429/500.
+- DELETE /v1/me/sessions/{sessionId}: cierre selectivo de otra sesión propia;
+  inexistente, ajena o actual conserva el mismo 204 sin mutación.
+  204/400/401/403/429/500.
+- DELETE /v1/me/sessions/others: cierre atómico de las demás, sin tocar la actual.
+  204/401/403/429/500. Las mutaciones son idempotentes.
+
+Auth cookie/Bearer y CSRF existentes; no-store. El cliente usa operaciones
+OpenAPI generadas, authenticatedApiFetch (que delega en apiFetch), parsing completo
+antes de mostrar datos y feedback común: conexión identificada usa
+common_network_error; otros estados/cuerpos usan common_request_error; salir
+cancela las peticiones sin feedback. Ningún title/detail del backend se muestra.

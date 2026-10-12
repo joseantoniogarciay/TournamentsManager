@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/sessions"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
@@ -39,7 +40,15 @@ func requireSession(authenticator sessionAuthenticator) func(http.Handler) http.
 				writeProblem(writer, http.StatusUnauthorized, "Invalid session")
 				return
 			}
-			accountID, err := authenticator.Authenticate(request.Context(), credential.token)
+			var accountID string
+			var err error
+			if aware, ok := authenticator.(interface {
+				AuthenticateWithClient(context.Context, string, sessions.Client) (string, error)
+			}); ok {
+				accountID, err = aware.AuthenticateWithClient(request.Context(), credential.token, sessionClient(request, credential.transport))
+			} else {
+				accountID, err = authenticator.Authenticate(request.Context(), credential.token)
+			}
 			if err != nil {
 				if errors.Is(err, tournaments.ErrUnauthenticated) {
 					writeProblem(writer, http.StatusUnauthorized, "Invalid session")

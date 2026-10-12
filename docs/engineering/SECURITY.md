@@ -205,3 +205,19 @@ runtime usa statement_timeout 5 s y lock_timeout 2 s. Paginar no garantiza un
 trabajo SQL constante: las consultas conservan semántica y se contienen mediante
 cuota y tiempo, con evidencia de volumen local y sin prometer capacidad de
 producción. CORS, proxy y autorización no se sustituyen por estos límites.
+
+## Revocación remota de sesiones — ADR-0164
+
+La sesión autenticada autoriza revocar únicamente otras familias de su cuenta;
+no añade autenticadores y no requiere ticket adicional. La mutación revalida y
+bloquea la sesión solicitante, y revoca familia y refresh tokens en una sentencia
+atómica. Refresh bloquea primero la familia y después su token para coordinarse
+con revocación. Una familia de otra cuenta, inexistente o la actual devuelve 204
+sin cambios ni distinción de existencia. La actual usa DELETE /sessions.
+
+GET /me/sessions limita páginas a 50 (lee una fila adicional) y 60 peticiones por
+minuto/cuenta. Las dos mutaciones comparten 20/minuto/cuenta, con CSRF para cookie.
+Las operaciones responden no-store. Los hints y categorías no son una prueba de
+dispositivo, no intervienen en autorización y no contienen IP ni agente bruto.
+El cierre afecta a familias presentes en esa operación; no impide logins futuros
+ni deshace peticiones ya autorizadas. Sin JWT, nuevas claves o infraestructura.
