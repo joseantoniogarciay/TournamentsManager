@@ -6,6 +6,21 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-10-12
+
+### Added
+
+- Cuenta > Sesiones activas: lista paginada, plataforma/cliente orientativos,
+  creación, última actividad y cierre de una o todas las demás con confirmación.
+  Cuatro idiomas y recuperación segura ante errores. ADR-0164.
+
+### Security
+
+- Revocación atómica por familia, limitada a la cuenta y preservando la sesión
+  actual. Refresh y revocación bloquean primero la sesión para evitar inversión
+  de locks; las categorías de cliente no autorizan y no almacenan IP ni agente
+  bruto. Requiere migración 00023 antes de activar la API nueva.
+
 ## [1.13.2] - 2026-10-12
 
 ### Security

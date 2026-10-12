@@ -139,6 +139,59 @@ paths:
               schema: { $ref: "#/components/schemas/AccountDeletionScheduled" }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
         "409": { $ref: "#/components/responses/AccountDeletionConflictProblem" }
+  /me/sessions:
+    get:
+      tags: [Session]
+      operationId: listCurrentAccountSessions
+      summary: Lista una página de sesiones propias activas
+      description: Incluye sesiones con acceso vigente o renovación todavía utilizable. Las categorías de cliente son orientativas.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: cursor
+          in: query
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Hasta 50 sesiones, ordenadas por ID descendente.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ActiveSessionPage" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
+  /me/sessions/others:
+    delete:
+      tags: [Session]
+      operationId: revokeOtherCurrentAccountSessions
+      summary: Revoca todas las sesiones propias salvo la actual
+      description: Revoca atómicamente las familias y todos sus refresh tokens; no impide nuevos logins posteriores.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      responses:
+        "204": { description: Otras sesiones revocadas; operación idempotente. }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { $ref: "#/components/responses/RequestProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
+  /me/sessions/{sessionId}:
+    delete:
+      tags: [Session]
+      operationId: revokeCurrentAccountSession
+      summary: Revoca una sesión propia distinta de la actual
+      description: Una sesión inexistente, de otra cuenta o la actual no se modifica y devuelve el mismo 204. El logout actual conserva DELETE /sessions.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "204": { description: Cierre procesado de forma idempotente. }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "403": { $ref: "#/components/responses/RequestProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
   /me/access-methods:
     get:
       tags: [Session]
@@ -1436,6 +1489,33 @@ components:
       description: La cuenta todavía organiza algún torneo.
       content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
   schemas:
+    ActiveSession:
+      type: object
+      additionalProperties: false
+      required: [id, createdAt, lastSeenAt, platform, client, current]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        createdAt: { type: string, format: date-time }
+        lastSeenAt: { type: string, format: date-time }
+        platform:
+          type: string
+          enum: [unknown, ios, android, windows, macos, linux]
+        client:
+          type: string
+          enum: [unknown, app, chrome, safari, firefox, edge, web]
+        current: { type: boolean }
+    ActiveSessionPage:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/ActiveSession" }
+        nextCursor:
+          type: [string, "null"]
+          format: uuid
     SuggestionInput:
       type: object
       additionalProperties: false

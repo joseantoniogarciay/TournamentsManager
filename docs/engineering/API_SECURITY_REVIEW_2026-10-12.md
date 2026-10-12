@@ -5,7 +5,9 @@
 **Estado actual:** correcciones implementadas en código según
 [ADR-0163](../adr/0163-bound-api-resource-work-and-revalidate-invitations.md).
 El [cierre de implementación](#cierre-de-implementación-autorizada) registra
-pruebas y riesgos residuales. No se despliega ni se certifica producción.
+pruebas y riesgos residuales. Las correcciones se publican posteriormente en
+[v1.13.2](../operations/DEPLOYMENT.md#publicación-de-seguridad-v1132--2026-10-12),
+con comprobaciones productivas limitadas; no constituyen certificación exhaustiva.
 La sección inicial conserva los hallazgos sobre el código previo.
 
 **Resultado inicial: revisión abierta por hallazgos; sin certificación de seguridad.**
@@ -229,13 +231,13 @@ El usuario autoriza «Sí vamos a corregir todo eso». ADR-0163 queda aceptado a
 de implementar la política técnica. Se corrige en el checkout de develop, sin
 publicación ni cambios de durabilidad, infraestructura o dependencias.
 
-| Hallazgo | Corrección y comprobación | Riesgo residual |
-| --- | --- | --- |
-| F1, revocación concurrente | Relectura de hash vigente después de obtener el bloqueo; tests deterministas de revocación, rotación e inicio sin inscripción parcial. | La invitación sigue siendo una capacidad reenviable según política aceptada. |
-| F2, hash con enlace inválido | Inspección previa sin Argon2id, consumo final atómico, 10 intentos/minuto/IP y cupo compartido de dos peticiones de contraseña; tests de cero hashes y saturación/liberación. | Un hash iniciado no se interrumpe; conserva su cupo hasta finalizar. |
-| F3, cuerpo y tiempos | 64 KiB global antes de decode, límites menores conservados, secretos acotados; HTTP 15 s de contexto, lectura 10 s, escritura 20 s, idle 60 s; SQL 5 s/lock 2 s. | Runtime de producción no inspeccionado ni desplegado. |
-| R1, coste de colecciones | 60/minuto/cuenta personal, 60/minuto/IP Ediciones, 5/minuto/cuenta repetición y presupuesto SQL; prueba local de 5001 ediciones y liga de 64 equipos / 2016 partidos. | LIMIT no hace constante el trabajo previo. La muestra no es un benchmark de producción ni cubre todos los tamaños/distribuciones. |
-| R2, entrada compartida | Normalización copia Teams antes de modificarlo; suite PostgreSQL con detector de carreras pasa, incluido el reintento concurrente original. | Cada llamada conserva entrada propia; no se introduce estado global de negocio. |
+| Hallazgo                     | Corrección y comprobación                                                                                                                                                     | Riesgo residual                                                                                                                   |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| F1, revocación concurrente   | Relectura de hash vigente después de obtener el bloqueo; tests deterministas de revocación, rotación e inicio sin inscripción parcial.                                        | La invitación sigue siendo una capacidad reenviable según política aceptada.                                                      |
+| F2, hash con enlace inválido | Inspección previa sin Argon2id, consumo final atómico, 10 intentos/minuto/IP y cupo compartido de dos peticiones de contraseña; tests de cero hashes y saturación/liberación. | Un hash iniciado no se interrumpe; conserva su cupo hasta finalizar.                                                              |
+| F3, cuerpo y tiempos         | 64 KiB global antes de decode, límites menores conservados, secretos acotados; HTTP 15 s de contexto, lectura 10 s, escritura 20 s, idle 60 s; SQL 5 s/lock 2 s.              | Runtime de producción no inspeccionado ni desplegado.                                                                             |
+| R1, coste de colecciones     | 60/minuto/cuenta personal, 60/minuto/IP Ediciones, 5/minuto/cuenta repetición y presupuesto SQL; prueba local de 5001 ediciones y liga de 64 equipos / 2016 partidos.         | LIMIT no hace constante el trabajo previo. La muestra no es un benchmark de producción ni cubre todos los tamaños/distribuciones. |
+| R2, entrada compartida       | Normalización copia Teams antes de modificarlo; suite PostgreSQL con detector de carreras pasa, incluido el reintento concurrente original.                                   | Cada llamada conserva entrada propia; no se introduce estado global de negocio.                                                   |
 
 Los limitadores admiten como máximo 4096 claves y evitan escanear toda la tabla
 en cada intento. La cuota de credenciales se comparte por cuenta entre sesiones

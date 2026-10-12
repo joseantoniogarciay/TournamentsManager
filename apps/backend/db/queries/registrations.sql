@@ -186,10 +186,17 @@ CROSS JOIN created_session
 CROSS JOIN created_refresh;
 
 -- name: RotateSessionTokens :one
-WITH consumed_refresh AS (
+WITH locked_session AS MATERIALIZED (
+    SELECT sessions.id
+    FROM sessions JOIN session_refresh_tokens ON session_refresh_tokens.session_id = sessions.id
+    WHERE session_refresh_tokens.token_hash = $1
+      AND sessions.revoked_at IS NULL
+    FOR UPDATE OF sessions
+), consumed_refresh AS (
     UPDATE session_refresh_tokens
     SET consumed_at = now()
     WHERE session_refresh_tokens.token_hash = $1
+      AND session_id IN (SELECT id FROM locked_session)
       AND session_refresh_tokens.consumed_at IS NULL
       AND session_refresh_tokens.revoked_at IS NULL
       AND session_refresh_tokens.expires_at > now()

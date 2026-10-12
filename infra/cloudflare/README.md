@@ -5,13 +5,12 @@ en K3s doméstico vía Tunnel/Caddy. Dominio y audiencia OAuth no cambian.
 
 ## Estado efectivo
 
-Última publicación web: v1.13.1,
-`9c9d01e5f26a46078265c77b17b65ff48f5791a4`. API conserva v1.13.0,
-`ef4b1776866a17c96bd504e44e00a57698879606`. Workers web
-`9a8afff4-913d-472a-abeb-25a2b089b96f` y www
-`b1bbb26c-9dc2-408e-a4af-6ea2d2f93e06`. Preview y dominio productivo verificados
-con TLS válido; diez checks web, health API y redirección www pasan.
-[Evidencia y rollback](../../docs/operations/DEPLOYMENT.md#publicación-web-v1131--2026-10-12).
+Última publicación web/API: v1.13.2,
+`28a9dfa51fed73437dcce09db9d73d486105d9ef`. Workers web
+`a588241e-4707-4753-a9b3-e227d71c9a61` y www
+`953e1e7c-67ea-4e01-9dcd-e23ab08bf3a0`. Preview y dominio productivo verificados
+con TLS válido; once checks web, ocho API y controles públicos de seguridad pasan.
+[Evidencia y rollback](../../docs/operations/DEPLOYMENT.md#publicación-de-seguridad-v1132--2026-10-12).
 
 2026-10-11: rutas productivas activadas en Workers Free. La primera migración
 conservó `b002b4b…`; después se publicó v1.11.0 autorizada, con web y API

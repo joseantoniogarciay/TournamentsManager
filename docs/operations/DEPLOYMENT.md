@@ -584,7 +584,6 @@ la conciliación corrige esa pérdida temporal de trazabilidad.
 Retrospectiva: las siguientes actualizaciones deben guardar y promocionar
 el bloque verificado antes de cambiar producción, conforme a ADR-0119.
 
-
 ## Publicación v1.12.0 — 2026-10-11
 
 El usuario autoriza publicar web y backend, continuar pese al certificado ajeno
@@ -631,7 +630,6 @@ contenido enviado y limitaciones de la red. Publicación confirmada por el plano
 de control y comprobación del origen no equivalen al recorrido HTTPS completo
 desde todas las redes; conservar explícitamente ese límite.
 
-
 ### Arranque productivo solicitado — 2026-10-12
 
 El usuario solicita levantar producción con UTM. Se arranca la VM existente
@@ -652,7 +650,6 @@ Retrospectiva: arrancar la VM y esperar readiness permite recuperar el release
 existente sin convertir una solicitud de disponibilidad en una publicación.
 Se verifica el servicio público después del estado del cluster, pues durante
 el arranque el borde devuelve temporalmente 502.
-
 
 ## Publicación v1.13.0 — 2026-10-12
 
@@ -747,3 +744,63 @@ no se crean ramas temporales. Local/dev permanecen apagados y producción activa
 Retrospectiva: una corrección visual puede entregarse de forma independiente
 sin reconstruir la API ni tocar persistencia. Conservar versiones diferentes
 por componente y el manifiesto público evita atribuir un nuevo SHA al backend.
+
+## Publicación de seguridad v1.13.2 — 2026-10-12
+
+El usuario autoriza desplegar las correcciones de ADR-0163. Tag anotado
+v1.13.2 y merge no-ff `28a9dfa51fed73437dcce09db9d73d486105d9ef`,
+[Release](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.13.2).
+API, renderer, web Cloudflare y origen Caddy conservado coinciden con ese SHA.
+No distribuye binarios nativos ni añade migraciones; Goose confirma esquema 22.
+
+`make verify` local y la [CI del candidato](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/38293272215)
+pasan; PostgreSQL real se verifica en CI y en la suite local separada con -race.
+La [CI del merge productivo](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/38293939396)
+también pasa.
+La VM estaba detenida y el health público devolvía 502. Se arranca UTM sin
+cambiar autostart; nodo Ready, PostgreSQL y API recuperados antes del rollout.
+
+API queda 2/2 Ready sin reinicios nuevos; renderer readiness identifica el tag.
+Job migrador completado y Secret efímero eliminado. Durante el rollout las
+35 lecturas HTTPS de healthz devuelven 200, sin fallos de transporte ni 5xx.
+No se conserva evidencia del log de drenaje de los pods antiguos ya eliminados;
+la continuidad observada no sustituye esa evidencia ni prueba carga sostenida.
+Ocho checks API públicos verifican lecturas, autenticación, validación y CORS.
+Pruebas adicionales con tokens ficticios verifican rechazo 400 de cuerpo >64 KiB
+y token >512 bytes; 22 confirmaciones inválidas dan veinte 400 y dos 429 con
+Retry-After. Las cuotas son por proceso: dos réplicas pueden admitir veinte
+solicitudes por minuto en total. Respuestas problem+json seguras y no-store.
+Las huellas completas de siete tablas de negocio coinciden antes/después:
+cuentas/torneos/equipos/partidos 3/10/26/21. No se mutan cuentas ni torneos reales.
+
+Dry-run, preview HTTPS y once checks web públicos pasan: SHA, home indexable,
+colecciones/cuenta/legales noindex, torneo existente, inexistente 404, asset y
+asociación ausentes 404, www 308 conservando query. Versiones activas:
+
+- web `a588241e-4707-4753-a9b3-e227d71c9a61`;
+- www `953e1e7c-67ea-4e01-9dcd-e23ab08bf3a0`;
+- preview `f205d3ea-dd2f-4536-b8a7-49889c7f7791`.
+
+Rollback: API/renderer v1.13.0 `ef4b1776866a17c96bd504e44e00a57698879606`
+con manifiesto y binario anteriores conservados; web/origen v1.13.1
+`9c9d01e5f26a46078265c77b17b65ff48f5791a4`, Workers web
+`9a8afff4-913d-472a-abeb-25a2b089b96f` y www
+`b1bbb26c-9dc2-408e-a4af-6ea2d2f93e06`. No requiere Down ni restaurar datos.
+Se conserva el backup cifrado de hoy restaurado en aislamiento antes de v1.13.0.
+La revisión automática rechazó crear/exportar otra copia a iCloud por requerir
+consentimiento específico para ese traslado sensible; no se ejecutó ni se rodeó
+el rechazo. Esta promoción de código sin DDL usa el backup probado existente y
+rollback de artefactos. No se afirma haber creado un backup nuevo.
+
+Evidencia operativa privada: `/private/tmp/tm-release-v1132-20261012` y
+`/private/tmp/tm-v1132-verify.log`. No se repite login real, envío de correo,
+QA visual nativa ni prueba de saturación de Argon2 en producción. La concurrencia,
+revocación, límites SQL y volumen se prueban en aislamiento. Local/dev y sus
+LaunchAgents permanecen apagados; no se activa observabilidad dev ni cambia DNS,
+plan Cloudflare o durabilidad PostgreSQL. Develop vuelve a contener el merge;
+no se crean ramas temporales.
+
+Retrospectiva: recuperar el runtime y desplegar un artefacto son comprobaciones
+distintas. Probar límites con tokens ficticios acredita el contrato público sin
+alterar identidades reales. Las cuotas en memoria deben documentarse por réplica;
+el smoke no equivale a protección global contra ataques distribuidos.

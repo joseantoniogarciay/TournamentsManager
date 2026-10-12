@@ -279,6 +279,15 @@ export function AccountScreen({
               <Text variant="bodyLarge">{t("account_access_data_title")}</Text>
               <DisclosureIndicator />
             </Pressable>
+            <Pressable
+              accessibilityLabel={t("sessions_title")}
+              accessibilityRole="button"
+              onPress={() => router.push("/account/sessions" as never)}
+              style={[styles.navigationRow, { borderColor: colors.border.default }]}
+            >
+              <Text variant="bodyLarge">{t("sessions_title")}</Text>
+              <DisclosureIndicator />
+            </Pressable>
             <Button
               label={t("account_logout")}
               onPress={confirmSignOut}

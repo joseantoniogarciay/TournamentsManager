@@ -562,3 +562,31 @@ Los contadores permanecen en memoria y las causas no se deducen del estado HTTP.
 El refresh nativo acepta solo 200 antes de guardar sesión: 400/429/500 preservan
 almacenamiento y usan APIUnexpectedResponseError; 401 conserva invalidación
 existente. El contrato declara 400 de cuerpos y 429 donde se aplica el limitador.
+
+## Inventario: sesiones propias activas — ADR-0164
+
+El span raíz conserva GET /v1/me/sessions, DELETE /v1/me/sessions/others y
+DELETE /v1/me/sessions/{sessionId}. Los límites técnicos son autenticación con
+captura acotada de categorías, lectura y revocación PostgreSQL. CTE, hash rápido,
+clasificación del agente y ramas de validación no crean spans. IDs, token,
+huella, plataforma, agente, cuenta, cursor y PII no se añaden a telemetría.
+
+| Salida | Causa segura en raíz | Recuperación y evidencia |
+| --- | --- | --- |
+| 200 con página o vacío | Ninguna | Integración comprueba familias activas, cursor y marca actual; cliente valida todo el cuerpo |
+| 204 selectivo o todas las demás | Ninguna | Idempotencia, misma respuesta para ajena/inexistente/actual, aislamiento y revocación de refresh con PostgreSQL |
+| 400 cursor o UUID inválido | validation.rejected | HTTP: rechazo antes de consultar la colección; fallback común cliente |
+| 401 credencial ausente/inválida | Política existente del middleware | HTTP: sin acceso al repositorio de gestión; fallback común del transporte autenticado |
+| 401 sesión solicitante cambiada o revocada durante la mutación | session.invalid | Revalidación SQL bajo bloqueo; HTTP prueba causa cerrada |
+| 403 CSRF cookie | Política existente de CSRF | HTTP: origen ajeno no muta; cliente usa fallback común |
+| 429 cuota por cuenta | rate_limit.exceeded | 60/min lectura, 20/min compartidos entre mutaciones; HTTP prueba Retry-After y ausencia de consulta |
+| Fallo de autenticación/captura, lectura, lock o revocación PostgreSQL | database.unavailable / database.constraint_failed / database.query_failed | Cada salida SQL propaga error al borde HTTP, sin mensajes internos; HTTP inyecta las tres categorías, no una falla por cada CTE |
+| Deadline | request.timeout | HTTP prueba categoría y cuerpo seguro |
+| Cancelación | request.cancelled | HTTP no escribe cuerpo si se cancela; integración cancela sin mutación; cliente aborta al abandonar la ruta sin aviso |
+
+session_management_test.go verifica salidas, un único span raíz y ausencia de
+texto privado para fallos técnicos tanto en lectura como en mutación.
+session_management_integration_test.go verifica persistencia, aislamiento,
+paginación, coordinación de refresh y recorrido HTTP real sobre PostgreSQL.
+El cliente prueba estados desconocidos, cuerpo malformado y paso intacto de
+fallo de conexión/cancelación. No se activa observabilidad en local/dev.

@@ -86,6 +86,7 @@ export default function AccountLayout() {
         }}
       />
       <Stack.Screen name="access" options={{ title: t("account_access_data_title") }} />
+      <Stack.Screen name="sessions" options={{ title: t("sessions_title") }} />
       <Stack.Screen name="register" options={{ title: t("account_register_title") }} />
       <Stack.Screen name="forgot-password" options={{ title: t("password_recovery_title") }} />
       <Stack.Screen

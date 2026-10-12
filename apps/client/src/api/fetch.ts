@@ -86,6 +86,8 @@ function isMobileSession(value: unknown): value is MobileSession {
 
 async function fetchWithAPIBase(input: RequestInfo | URL, init?: RequestInit) {
   const headers = new Headers(init?.headers);
+  if (Platform.OS === "ios" || Platform.OS === "android")
+    headers.set("X-TM-Client-Platform", Platform.OS);
   const interaction = createAPIInteraction(init?.method);
   if (interaction) headers.set(interactionIDHeader, interaction.id);
 

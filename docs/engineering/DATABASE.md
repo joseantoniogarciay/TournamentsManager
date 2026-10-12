@@ -218,3 +218,19 @@ request.timeout seguro. No es una configuración de durabilidad ni afecta a
 comandos de migración. Las invitaciones se revalidan en una sentencia nueva
 después de obtener el bloqueo del torneo: un snapshot previo a la espera no
 conserva autorización sobre un secreto revocado o rotado.
+
+## Categorías de cliente y coordinación de sesión — ADR-0164
+
+La migración 00023 añade sessions.client_platform y client_kind con default
+unknown y CHECK de valores cerrados. Aplicar la migración antes de arrancar la
+nueva API; no se modifica el esquema inicial histórico. Sesiones existentes se
+enriquecen al autenticar peticiones. La huella del token y la familia permanecen
+privadas; solo el UUID estable y la proyección segura salen a la cuenta propietaria.
+
+ListSessions usa cursor por ID e índices existentes de cuenta y refresh por
+sesión. RevokeOtherSessions revalida la sesión actual bajo bloqueo y revoca
+familias y refresh en una sentencia. RotateSessionTokens bloquea primero sessions
+para mantener el mismo orden que logout/revocación; no crea una familia nueva.
+La actividad se toca como máximo cada cinco minutos, salvo captura inicial,
+con una CTE en la consulta de autenticación, sin una segunda ida a PostgreSQL.
+No se afirma coste SQL constante ni se añade caché sin medición.

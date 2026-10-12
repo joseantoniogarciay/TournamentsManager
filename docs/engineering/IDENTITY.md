@@ -281,3 +281,19 @@ pendiente no crea sesión; la solicitud de recuperación responde 202 tanto para
 cuentas elegibles como desconocidas. Fallos técnicos de recuperación conservan
 el 500 seguro, ahora explícito también en OpenAPI. Tres regresiones PostgreSQL
 cubren reenvíos, ocho renovaciones simultáneas, enlaces anteriores y cancelación.
+
+## Administración de sesiones — ADR-0164
+
+Cuenta > Sesiones activas consulta familias propias; el ID permanece al rotar
+access y refresh. Se incluye una familia si tiene acceso vigente o refresh
+utilizable; las revocadas no aparecen. La sesión actual se identifica en backend.
+Cerrar una o todas las demás espera respuesta del servidor, conserva datos ante
+fallo de red y nunca afecta a otra cuenta. El logout actual mantiene ADR-0068.
+
+Plataforma y cliente son categorías cerradas orientativas (no identidad física).
+Se capturan al autenticar una petición protegida; sesiones anteriores pueden
+mostrar desconocido hasta volver a usarse. Native añade X-TM-Client-Platform
+(ios/android); web clasifica el agente sin persistirlo. La última actividad se
+actualiza con cadencia de cinco minutos, salvo la primera captura de categorías;
+refresh también la actualiza. No hay push ni borrado remoto de almacenamiento:
+una sesión cerrada pierde acceso y renovación en peticiones posteriores.
