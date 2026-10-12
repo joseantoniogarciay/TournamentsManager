@@ -18,3 +18,5 @@
 - [SECURITY.md](SECURITY.md): principios y amenazas.
 - [STYLEGUIDE.md](STYLEGUIDE.md): estilo de código y documentación.
 - [TESTING.md](TESTING.md): estrategia de pruebas.
+
+- [Mis partidos y Ediciones: implementación y QA](PRODUCT_QA_MATCHES_EDITIONS_2026-10-11.md).

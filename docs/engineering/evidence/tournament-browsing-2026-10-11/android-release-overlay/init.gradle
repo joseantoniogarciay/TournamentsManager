@@ -1,0 +1,16 @@
+// Opt-in local QA overlay; never applied by the product build configuration.
+allprojects {
+    afterEvaluate { project ->
+        if (project.path == ':app') {
+            if (project.android.defaultConfig.applicationId != 'com.fasttourney.app.local') {
+                throw new GradleException('This QA overlay only supports the local application.')
+            }
+            def overlay = System.getenv('TM_QA_ANDROID_OVERLAY')
+            if (!overlay || !new File(overlay, 'AndroidManifest.xml').isFile()) {
+                throw new GradleException('Set TM_QA_ANDROID_OVERLAY to the QA overlay directory.')
+            }
+            project.android.sourceSets.release.manifest.srcFile(new File(overlay, 'AndroidManifest.xml'))
+            project.android.sourceSets.release.res.srcDir(new File(overlay, 'res'))
+        }
+    }
+}

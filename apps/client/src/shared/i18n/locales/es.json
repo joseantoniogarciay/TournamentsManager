@@ -572,5 +572,20 @@
   "tournament_repeat_available_teams": "Equipos disponibles",
   "tournament_repeat_no_available_teams": "No quedan equipos libres. Puedes crear uno con otro nombre si hay hueco.",
   "tournament_repeat_invitation_share": "Únete a {tournament}: elige un equipo libre o crea el tuyo. {url}",
-  "team_invitation_occupied": "Esta plaza ya ha sido ocupada. Elige otro equipo disponible."
+  "team_invitation_occupied": "Esta plaza ya ha sido ocupada. Elige otro equipo disponible.",
+  "nav_matches": "Mis partidos",
+  "matches_guest_title": "Tus encuentros, en un solo lugar",
+  "matches_guest_description": "Accede para consultar los partidos de los equipos con los que participas.",
+  "matches_pending": "Pendientes",
+  "matches_results": "Resultados",
+  "matches_empty": "Todavía no tienes partidos. Aparecerán aquí cuando participes en un torneo y se generen sus encuentros.",
+  "matches_pending_empty": "No tienes partidos pendientes. Puedes consultar los encuentros resueltos en Resultados.",
+  "matches_results_empty": "Todavía no tienes resultados. Tus encuentros pendientes están en la otra vista.",
+  "matches_unscheduled": "Sin fecha",
+  "matches_open": "Abrir {home} contra {away} en {tournament}",
+  "matches_unavailable": "Este partido ya no está disponible. Puedes seguir consultando el torneo.",
+  "matches_selected": "Partido seleccionado",
+  "tournament_editions": "Ediciones",
+  "editions_current": "Edición consultada",
+  "editions_champions": "Campeones: {names}"
 }

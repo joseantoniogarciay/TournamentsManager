@@ -582,6 +582,74 @@ paths:
         "429": { $ref: "#/components/responses/RateLimitProblem" }
         "500": { $ref: "#/components/responses/RequestProblem" }
         "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
+  /me/matches:
+    get:
+      tags: [Tournaments]
+      operationId: listPersonalMatches
+      summary: Consulta los partidos del equipo vinculado a la cuenta
+      description: >-
+        Excluye byes y rivales indeterminados. Pendientes exige torneo y fase en
+        curso y participación activa; resultados conserva encuentros resueltos.
+        Orden civil fecha/hora ascendente, sin fecha al final; resultados por
+        última resolución descendente. El ID desempata. hasMatches se refiere
+        a ambas vistas y permite distinguir un vacío global de uno por vista.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: view
+          in: query
+          required: true
+          schema: { type: string, enum: [pending, results] }
+        - name: cursor
+          in: query
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Página personal; sin IDs de cuenta.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PersonalMatchPage" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
+  /tournaments/{tournamentId}/editions:
+    get:
+      tags: [Tournaments]
+      operationId: listTournamentEditions
+      security: []
+      summary: Consulta la familia de ediciones de un torneo
+      description: >-
+        Lectura pública según el acceso al torneo por identificador. Incluye raíz,
+        descendientes y ramas de repetición; creación descendente e ID como
+        desempate. No concede gestión. Torneos sin relación devuelven una edición.
+      parameters:
+        - name: tournamentId
+          in: path
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: cursor
+          in: query
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Página de ediciones relacionadas.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TournamentEditionPage" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "404":
+          description: El torneo no está disponible.
+          content:
+            application/problem+json:
+              schema: { $ref: "#/components/schemas/Problem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
   /me/tournaments:
     get:
       tags: [Tournaments]
@@ -1712,6 +1780,50 @@ components:
         createdAt: { type: string, format: date-time }
         lastActivityAt: { type: string, format: date-time }
         relationship: { $ref: "#/components/schemas/AccountTournamentRelationship" }
+    PersonalMatch:
+      type: object
+      required: [tournamentId, tournamentName, sport, stageType, homeTeamName, awayTeamName, match]
+      properties:
+        tournamentId: { $ref: "#/components/schemas/UUID" }
+        tournamentName: { type: string }
+        sport:
+          {
+            type: string,
+            enum:
+              [football, basketball, handball, tennis, padel, table_tennis, volleyball, badminton],
+          }
+        stageType: { type: string, enum: [league, single_elimination, qualification_tiebreak] }
+        homeTeamName: { type: string }
+        awayTeamName: { type: string }
+        match: { $ref: "#/components/schemas/Match" }
+    PersonalMatchPage:
+      type: object
+      required: [items, hasMatches]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/PersonalMatch" }
+        hasMatches: { type: boolean }
+        nextCursor: { $ref: "#/components/schemas/UUID" }
+    TournamentEdition:
+      type: object
+      required: [id, name, state, createdAt, champions]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        name: { type: string }
+        state: { type: string, enum: [published, in_progress, completed, cancelled] }
+        createdAt: { type: string, format: date-time }
+        champions:
+          type: array
+          items: { type: string }
+    TournamentEditionPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/TournamentEdition" }
+        nextCursor: { $ref: "#/components/schemas/UUID" }
     AccountTournamentPage:
       type: object
       required: [items]
@@ -1914,6 +2026,9 @@ components:
           championTeamIds,
         ]
       properties:
+        hasOtherEditions:
+          type: boolean
+          description: Relación confirmada con otra edición, sin inferencia por nombre.
         suggestedStart: { $ref: "#/components/schemas/SuggestedTournamentStart" }
         venue: { type: string, minLength: 1, maxLength: 160 }
         id: { $ref: "#/components/schemas/UUID" }

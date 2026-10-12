@@ -294,3 +294,11 @@ registra el contador local, las cuotas de tienda y el alcance de producción mó
 
 - [ADR-0159: Repetir torneos finalizados como nuevas ediciones](../adr/0159-repeat-completed-tournaments-as-new-editions.md) — Aceptado; histórico independiente y revisión previa.
 - [ADR-0160: Elegir equipos libres o crear otros mediante invitación](../adr/0160-choose-unlinked-teams-or-create-through-invitations.md) — Aceptado; amplía la elección a todos los torneos publicados.
+
+## Incrementos de producto aceptados — 2026-10-11
+
+- [ADR-0161](../adr/0161-add-personal-matches-tab-and-match-deep-links.md): Mis partidos, cuarta tab y acceso al encuentro. Aceptado; implementación autorizada.
+- [ADR-0162](../adr/0162-browse-related-tournament-editions.md): Ediciones desde cualquier torneo relacionado. Aceptado; implementación autorizada.
+
+El usuario acepta los diseños corregidos y autoriza implementar ambos
+incrementos conservando el estilo actual. [Recorridos y estados](../engineering/PRODUCT_PROPOSAL_MATCHES_EDITIONS_2026-10-11.md).

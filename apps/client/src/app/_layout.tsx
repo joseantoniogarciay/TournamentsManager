@@ -227,6 +227,13 @@ function SessionNavigator() {
         }}
       />
       <Stack.Screen
+        name="tournament/[id]/editions"
+        options={{
+          headerShown: true,
+          presentation: Platform.OS === "web" ? "card" : "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
         name="tournament/[id]/venue"
         options={{
           headerShown: true,

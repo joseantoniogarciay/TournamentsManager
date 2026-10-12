@@ -4,6 +4,7 @@ import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
   Platform,
   ScrollView,
   SectionList,
@@ -14,7 +15,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { control, radius, space, typography, webLayout } from "@tournaments-manager/design-tokens";
+import {
+  color,
+  control,
+  radius,
+  space,
+  typography,
+  webLayout,
+} from "@tournaments-manager/design-tokens";
 
 import { APISessionInvalidatedError, APIUnexpectedResponseError } from "@/api/fetch";
 import { useTournamentFollow } from "@/features/league-creation/use-tournament-follow";
@@ -137,7 +145,7 @@ function getMixedConfigurationRequirement(
 
 export default function TournamentScreen() {
   const t = getTranslator();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, matchId } = useLocalSearchParams<{ id: string; matchId?: string }>();
   const { user } = useSession();
   const { colors } = usePreferences();
   const insets = useSafeAreaInsets();
@@ -215,7 +223,61 @@ export default function TournamentScreen() {
   const [bracketHorizontalMetrics, setBracketHorizontalMetrics] =
     useState<BracketHorizontalMetrics>({ contentWidth: 0, viewportWidth: 0 });
   const matchListOffset = useRef(0);
+  const matchListContentHeight = useRef(0);
   const matchListViewport = useRef<View>(null);
+  const linkedMatchView = useRef<View>(null);
+  const linkedMatchAligned = useRef(false);
+  const linkedMatchHeaderHeight = useRef(0);
+  const linkHandled = useRef<string | undefined>(undefined);
+  const [highlightedMatch, setHighlightedMatch] = useState<string>();
+  const revealAttempts = useRef(0);
+  const highestRevealedMatchIndex = useRef(-1);
+  const revealPending = useRef(false);
+  useEffect(() => {
+    linkHandled.current = undefined;
+    revealAttempts.current = 0;
+    highestRevealedMatchIndex.current = -1;
+    revealPending.current = false;
+    linkedMatchAligned.current = false;
+    linkedMatchHeaderHeight.current = 0;
+    setHighlightedMatch(undefined);
+  }, [id, matchId]);
+  useEffect(() => {
+    if (
+      !matchId ||
+      !league ||
+      isLoading ||
+      relationship === undefined ||
+      linkHandled.current === matchId
+    )
+      return;
+    const target = league.matches.find((match) => match.id === matchId);
+    linkHandled.current = matchId;
+    if (!target) {
+      show({ kind: "generic-error", message: t("matches_unavailable") });
+      return;
+    }
+    const stage = league.stages.find((stage) => stage.id === target.stageId);
+    setSelectedCompetitionPhase(
+      stage?.type === "single_elimination"
+        ? "bracket"
+        : stage?.type === "qualification_tiebreak"
+          ? "tiebreak"
+          : "league",
+    );
+    setSelectedBracketRound(target.round);
+    setHighlightedMatch(matchId);
+    AccessibilityInfo.announceForAccessibility(t("matches_selected"));
+  }, [isLoading, league, matchId, relationship, show, t]);
+  useEffect(() => {
+    if (!highlightedMatch) return;
+    const frame = requestAnimationFrame(() => revealLinkedMatch());
+    const timer = setTimeout(() => setHighlightedMatch(undefined), 2500);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [highlightedMatch]);
   const updateBracketHorizontalMetrics = useCallback((metrics: BracketHorizontalMetrics) => {
     setBracketHorizontalMetrics((current) =>
       current.contentWidth === metrics.contentWidth &&
@@ -229,33 +291,36 @@ export default function TournamentScreen() {
     bracketHorizontalControlOffset.current = nextOffset;
     bracketHorizontalControl.current?.scrollTo({ x: nextOffset, animated: false });
   }, []);
-  const ensureBracketMatchVisible = useCallback((matchView: View) => {
-    const viewport = matchListViewport.current;
-    if (!viewport) return;
-    viewport.measureInWindow((_viewportX, viewportY, _viewportWidth, viewportHeight) => {
-      matchView.measureInWindow((_matchX, matchY, _matchWidth, matchHeight) => {
-        const visibleTop = viewportY + control.minHeight + space[6];
-        const visibleBottom = viewportY + viewportHeight - control.minHeight - space[5];
-        const visibleHeight = visibleBottom - visibleTop;
-        const offsetDelta =
-          matchHeight > visibleHeight || matchY < visibleTop
-            ? matchY - visibleTop
-            : matchY + matchHeight > visibleBottom
-              ? matchY + matchHeight - visibleBottom
-              : 0;
-        if (Math.abs(offsetDelta) < 1) return;
-        bracketList.current?.scrollTo({
-          animated: true,
-          y: Math.max(0, matchListOffset.current + offsetDelta),
+  const ensureBracketMatchVisible = useCallback(
+    (matchView: View) => {
+      const viewport = matchListViewport.current;
+      if (!viewport) return;
+      viewport.measureInWindow((_viewportX, viewportY, _viewportWidth, viewportHeight) => {
+        matchView.measureInWindow((_matchX, matchY, _matchWidth, matchHeight) => {
+          const visibleTop = viewportY + control.minHeight + space[6];
+          const visibleBottom = viewportY + viewportHeight - control.minHeight - space[5];
+          const visibleHeight = visibleBottom - visibleTop;
+          const offsetDelta =
+            matchHeight > visibleHeight || matchY < visibleTop
+              ? matchY - visibleTop
+              : matchY + matchHeight > visibleBottom
+                ? matchY + matchHeight - visibleBottom
+                : 0;
+          if (Math.abs(offsetDelta) < 1) return;
+          bracketList.current?.scrollTo({
+            animated: !matchId,
+            y: Math.max(0, matchListOffset.current + offsetDelta),
+          });
         });
       });
-    });
-  }, []);
+    },
+    [matchId],
+  );
   useEffect(() => {
-    setSelectedBracketRound(1);
+    if (!matchId) setSelectedBracketRound(1);
     setBracketRoundSelectionRevision(0);
     setBracketHorizontalMetrics({ contentWidth: 0, viewportWidth: 0 });
-  }, [id]);
+  }, [id, matchId]);
   const initializedConfigurationID = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!league || initializedConfigurationID.current === league.id) return;
@@ -922,6 +987,78 @@ export default function TournamentScreen() {
       });
     });
   };
+  const revealLinkedMatch = () => {
+    if (
+      !matchId ||
+      linkHandled.current !== matchId ||
+      showsBracket ||
+      linkedMatchAligned.current ||
+      revealAttempts.current >= 20 ||
+      revealPending.current
+    )
+      return;
+    if (linkedMatchView.current) {
+      alignLinkedMatch();
+      return;
+    }
+    const sections = showsTieBreak ? tieBreakMatchSections : matchSections;
+    const sectionIndex = sections.findIndex((section) =>
+      section.data.some((match) => match.id === matchId),
+    );
+    if (sectionIndex < 0) return;
+    const itemIndex = sections[sectionIndex].data.findIndex((match) => match.id === matchId);
+    revealPending.current = true;
+    requestAnimationFrame(() => {
+      revealPending.current = false;
+      revealAttempts.current++;
+      if (linkedMatchAligned.current) return;
+      if (linkedMatchView.current) {
+        alignLinkedMatch();
+        return;
+      }
+      matchList.current?.scrollToLocation({
+        sectionIndex,
+        // iOS must request the row after the section header; keep the
+        // existing index on other platforms, whose Release links already pass.
+        itemIndex: itemIndex + (Platform.OS === "ios" ? 1 : 0),
+        animated: false,
+        viewPosition: 0.25,
+      });
+    });
+  };
+  const alignLinkedMatch = () => {
+    const target = linkedMatchView.current;
+    const viewport = matchListViewport.current;
+    if (!target || !viewport || linkHandled.current !== matchId || linkedMatchAligned.current)
+      return;
+    viewport.measureInWindow((_x, top, _width, height) =>
+      target.measureInWindow((_matchX, y, matchWidth, matchHeight) => {
+        if (
+          linkedMatchAligned.current ||
+          !matchListContentHeight.current ||
+          !height ||
+          !matchWidth ||
+          !matchHeight
+        )
+          return;
+        const inset = linkedMatchHeaderHeight.current + space[5];
+        const maximumOffset = Math.max(0, matchListContentHeight.current - height);
+        const offset = Math.min(
+          maximumOffset,
+          Math.max(0, matchListOffset.current + y - top - inset),
+        );
+        if (Math.abs(matchListOffset.current - offset) < 3) {
+          // The content size can still describe an earlier render. A clamped
+          // offset is final only when the target actually fits in the viewport.
+          const visibleHeight = Math.min(matchHeight, height - inset);
+          linkedMatchAligned.current =
+            y >= top + inset - 3 && y + visibleHeight <= top + height + 3;
+          return;
+        }
+        matchList.current?.getScrollResponder()?.scrollTo({ y: offset, animated: false });
+      }),
+    );
+  };
   const tournamentSummary = (
     <>
       <Card>
@@ -1000,6 +1137,17 @@ export default function TournamentScreen() {
           ) : null}
         </Card>
       ) : null}
+      {league.hasOtherEditions ? (
+        <View style={styles.summaryActions}>
+          <View style={styles.summaryAction}>
+            <Button
+              label={t("tournament_editions")}
+              variant="secondary"
+              onPress={() => router.push(`/tournament/${league.id}/editions`)}
+            />
+          </View>
+        </View>
+      ) : null}
       {!showExpandedTeamManagement ? (
         <View style={styles.summaryActions}>
           <View style={styles.summaryAction}>
@@ -1035,7 +1183,7 @@ export default function TournamentScreen() {
           options={{
             headerLeft: () => (
               <NavigationHeaderButton
-                accessibilityLabel={t("common_back")}
+                accessibilityLabel={t("common_close")}
                 icon="close"
                 nativeIcon={{ android: "close", ios: "xmark", web: "close" }}
                 onPress={returnToPreviousScreen}
@@ -1056,7 +1204,7 @@ export default function TournamentScreen() {
         <>
           <Stack.Toolbar placement="left">
             <Stack.Toolbar.Button
-              accessibilityLabel={t("common_back")}
+              accessibilityLabel={t("common_close")}
               icon="xmark"
               onPress={returnToPreviousScreen}
             />
@@ -1087,6 +1235,7 @@ export default function TournamentScreen() {
           ) : null}
           <View
             ref={matchListViewport}
+            collapsable={false}
             style={[styles.listViewport, showWebSidebar && styles.mainColumn]}
           >
             {showsBracket ? (
@@ -1126,6 +1275,7 @@ export default function TournamentScreen() {
                 <BracketView
                   ref={bracketView}
                   tournament={bracketTournament}
+                  focusMatchId={highlightedMatch}
                   canManage={canManageResults}
                   onSchedule={(matchId) =>
                     router.push({ pathname: "/tournament/[id]/schedule", params: { id, matchId } })
@@ -1142,6 +1292,31 @@ export default function TournamentScreen() {
             ) : (
               <SectionList
                 ref={matchList}
+                onContentSizeChange={(_width, height) => {
+                  matchListContentHeight.current = height;
+                  revealLinkedMatch();
+                }}
+                onScrollToIndexFailed={({
+                  averageItemLength,
+                  index,
+                  highestMeasuredFrameIndex,
+                }) => {
+                  if (linkedMatchAligned.current) return;
+                  // Large lists measure more rows after each estimated scroll. Only
+                  // exhaust the retry budget when that measured window stops advancing.
+                  if (highestMeasuredFrameIndex > highestRevealedMatchIndex.current) {
+                    highestRevealedMatchIndex.current = highestMeasuredFrameIndex;
+                    revealAttempts.current = 0;
+                  }
+                  if (linkedMatchView.current) {
+                    requestAnimationFrame(alignLinkedMatch);
+                    return;
+                  }
+                  matchList.current
+                    ?.getScrollResponder()
+                    ?.scrollTo({ y: averageItemLength * index, animated: false });
+                  setTimeout(revealLinkedMatch, 120);
+                }}
                 contentContainerStyle={[
                   styles.content,
                   {
@@ -1155,6 +1330,8 @@ export default function TournamentScreen() {
                 ItemSeparatorComponent={() => <View style={styles.matchSeparator} />}
                 onScroll={(event) => {
                   matchListOffset.current = event.nativeEvent.contentOffset.y;
+                  if (matchId && !linkedMatchAligned.current)
+                    requestAnimationFrame(alignLinkedMatch);
                 }}
                 scrollEventThrottle={16}
                 sections={
@@ -1397,7 +1574,26 @@ export default function TournamentScreen() {
                 renderItem={({ item: match }) => {
                   return (
                     <Card>
-                      <View style={styles.match}>
+                      <View
+                        ref={match.id === matchId ? linkedMatchView : undefined}
+                        collapsable={false}
+                        onLayout={
+                          match.id === matchId
+                            ? () => requestAnimationFrame(alignLinkedMatch)
+                            : undefined
+                        }
+                        style={[
+                          styles.match,
+                          highlightedMatch === match.id
+                            ? {
+                                borderColor: color.brand.primary,
+                                borderWidth: 1,
+                                borderRadius: radius.card,
+                                padding: space[2],
+                              }
+                            : undefined,
+                        ]}
+                      >
                         <View style={styles.matchSummary}>
                           <Text style={styles.teamName} variant="bodyLarge">
                             {teamsByID.get(match.homeTeamId)}
@@ -1455,7 +1651,21 @@ export default function TournamentScreen() {
                   );
                 }}
                 renderSectionHeader={({ section }) => (
-                  <View style={[styles.roundHeader, { backgroundColor: colors.surface.canvas }]}>
+                  <View
+                    style={[styles.roundHeader, { backgroundColor: colors.surface.canvas }]}
+                    onLayout={
+                      section.data.some((match) => match.id === matchId)
+                        ? (event) => {
+                            const height = event.nativeEvent.layout.height;
+                            if (height !== linkedMatchHeaderHeight.current) {
+                              linkedMatchHeaderHeight.current = height;
+                              linkedMatchAligned.current = false;
+                              requestAnimationFrame(alignLinkedMatch);
+                            }
+                          }
+                        : undefined
+                    }
+                  >
                     <Text variant="title">
                       {showsTieBreak
                         ? `${t("tournament_mixed_tiebreak_pool").replace("{number}", String(section.group))} · ${t("tournament_mixed_tiebreak_cycle").replace("{number}", String(section.round))}`

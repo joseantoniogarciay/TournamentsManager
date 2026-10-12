@@ -58,6 +58,13 @@ export default function TabLayout() {
           sf={{ default: "trophy", selected: "trophy.fill" }}
         />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="matches">
+        <NativeTabs.Trigger.Label>{t("nav_matches")}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          md={{ default: "sports", selected: "sports" }}
+          sf={{ default: "sportscourt", selected: "sportscourt.fill" }}
+        />
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="account">
         <NativeTabs.Trigger.Label>{t("nav_account")}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon

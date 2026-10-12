@@ -21,6 +21,8 @@ import type { TournamentTeam } from "./tournamentTeam.js";
 import type { Uuid } from "./uuid.js";
 
 export interface PublicTournament {
+  /** Relación confirmada con otra edición, sin inferencia por nombre. */
+  hasOtherEditions?: boolean;
   suggestedStart?: SuggestedTournamentStart;
   /**
    * @minLength 1

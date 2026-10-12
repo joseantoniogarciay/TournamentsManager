@@ -630,3 +630,25 @@ Retrospectiva: distinguir fallos del proveedor, bloqueos de aprobación del
 contenido enviado y limitaciones de la red. Publicación confirmada por el plano
 de control y comprobación del origen no equivalen al recorrido HTTPS completo
 desde todas las redes; conservar explícitamente ese límite.
+
+
+### Arranque productivo solicitado — 2026-10-12
+
+El usuario solicita levantar producción con UTM. Se arranca la VM existente
+`fasttourney-k3s-lab`; UTM confirma `started`. La comprobación remota con la
+configuración operativa existente confirma nodo `Ready`, API `2/2` y PostgreSQL
+`1/1`. Tras la recuperación, API pública `/healthz` y web responden HTTP 200.
+El renderer responde en `/-/ready` con revisión
+`3a9d41086ce158daf145a2930c477e4fa213244f`, coincidente con la imagen API.
+No se redespliega, migra ni publica el trabajo pendiente del workspace.
+
+Renderer y LaunchAgents productivos de backup ya estaban habilitados y cargados:
+se conservan sus calendarios (full domingo 04:15, incremental lunes a sábado
+04:15). El último estado de salida histórico del incremental no es cero; esta
+comprobación confirma programación, no ejecución exitosa de un nuevo backup.
+UTM autostart permanece deshabilitado y dev/local permanecen apagados.
+
+Retrospectiva: arrancar la VM y esperar readiness permite recuperar el release
+existente sin convertir una solicitud de disponibilidad en una publicación.
+Se verifica el servicio público después del estado del cluster, pues durante
+el arranque el borde devuelve temporalmente 502.

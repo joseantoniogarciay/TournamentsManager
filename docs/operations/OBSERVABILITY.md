@@ -506,3 +506,33 @@ La inscripción en una plaza ya vinculada devuelve 409 seguro con tipo
 `urn:tournaments-manager:problem:team-occupied` y causa raíz
 `tournament.team_occupied`. Se prueba la carrera de reclamación real: solo una
 cuenta gana, la otra recibe ese rechazo sin duplicar equipos ni exportar cuentas.
+
+## Inventario: Mis partidos y Ediciones — ADR-0161 / ADR-0162
+
+Se mantienen las plantillas `GET /v1/me/matches` y
+`GET /v1/tournaments/{tournamentId}/editions` en el span HTTP raíz. Las dos
+consultas sqlc constituyen el límite PostgreSQL; CTE, ordenación, comprobación
+de existencia y fila extra no añaden spans. No hay limitador específico.
+
+| Salida | failure.reason seguro | Recuperación y evidencia |
+| --- | --- | --- |
+| Éxito 200, vacío o página | Ninguno | Pruebas PostgreSQL de participación, orden, cursores y familia |
+| Parámetros inválidos 400 | validation.rejected | HTTP prueba vista, límite y cursor, incluido límite explícito vacío/cero frente a omisión válida; fallback seguro cliente |
+| Sesión ausente 401 personal | Política de sesión existente | Middleware; HTTP comprueba rechazo sin consultar colección |
+| Torneo inexistente 404 ediciones | tournament.not_found | HTTP y PostgreSQL; reintento seguro en cliente |
+| Rate limit | No existe limitador de estas lecturas | Sin nueva salida 429 ni motivo inferido por estado |
+| Conexión PostgreSQL fallida 500 | database.unavailable | HTTP con SQLSTATE 08006; no exporta mensaje bruto |
+| Restricción PostgreSQL 500 | database.constraint_failed | HTTP con SQLSTATE 23514; sin SQL ni inputs |
+| Consulta/decodificación fallida 500 | database.query_failed | HTTP con error privado; cuerpo común seguro |
+| Deadline del límite técnico | request.timeout | HTTP; feedback seguro si el transporte no cancela |
+| Petición cancelada | request.cancelled | Contexto cancelado sin cuerpo ni feedback intencionado |
+| Cierre del servidor 503 | Política de cierre existente | Middleware compartido; fallback común cliente |
+
+Los tests verifican estados y motivos estables sin cuenta, torneo, cursor,
+SQL ni PII en atributos nuevos. El adaptador cliente prueba estados no
+reconocidos y cuerpos inválidos. No se inicia observabilidad para estas pruebas.
+
+QA local 2026-10-12: límite cero rechazado de extremo a extremo tras corregir
+su confusión con la ausencia del parámetro. La regresión de ambas rutas prueba
+omisión, extremos válidos 1/50 y límites vacío/0/-1/51, conservando el motivo
+de validación en el span raíz y el cuerpo problem seguro. No añade spans.

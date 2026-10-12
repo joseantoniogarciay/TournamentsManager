@@ -62,6 +62,7 @@ export const BracketView = forwardRef<
     onRoundChange: (round: number) => void;
     roundSelectionRevision: number;
     selectedRound: number;
+    focusMatchId?: string;
   }
 >(function BracketView(
   {
@@ -75,6 +76,7 @@ export const BracketView = forwardRef<
     onRoundChange,
     roundSelectionRevision,
     selectedRound,
+    focusMatchId,
   },
   ref,
 ) {
@@ -84,6 +86,12 @@ export const BracketView = forwardRef<
   const overview = width >= columnWidth * 2 + space[5] * 2;
   const [focusedMatch, setFocusedMatch] = useState<string>();
   const [focusRevision, setFocusRevision] = useState(0);
+  useEffect(() => {
+    if (focusMatchId) {
+      setFocusedMatch(focusMatchId);
+      setFocusRevision((revision) => revision + 1);
+    } else setFocusedMatch(undefined);
+  }, [focusMatchId]);
   const [boardViewportWidth, setBoardViewportWidth] = useState<number>();
   const boardScroll = useRef<ScrollView>(null);
   const columnHeaders = useRef<ScrollView>(null);
@@ -138,11 +146,13 @@ export const BracketView = forwardRef<
     if (overview) {
       boardScroll.current?.scrollTo({
         x: (selectedRound - 1) * columnWidth,
-        animated: true,
+        animated: !focusMatchId,
       });
     }
   }, [overview, selectedRound]);
-  useEffect(() => setFocusedMatch(undefined), [roundSelectionRevision]);
+  useEffect(() => {
+    if (!focusMatchId) setFocusedMatch(undefined);
+  }, [roundSelectionRevision, focusMatchId]);
   useEffect(() => {
     if (!focusedMatch) return;
     const frame = requestAnimationFrame(() => {

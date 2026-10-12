@@ -447,3 +447,20 @@ Un equipo ya vinculado al inscribirse produce 409 RFC 9457 con
 `type: urn:tournaments-manager:problem:team-occupied`. La UI conserva el nombre,
 refresca opciones y muestra el aviso localizado de plaza ocupada. Tipos desconocidos
 o cuerpos inválidos usan el error común seguro.
+
+## Colecciones de partidos y ediciones
+
+ADR-0161/0162 añaden `GET /v1/me/matches?view=pending|results` autenticado
+y `GET /v1/tournaments/{tournamentId}/editions` público. Ambos aceptan cursor
+UUID y límite 1–50 (20 por defecto); nextCursor es el último elemento
+entregado y se detecta continuación leyendo una fila adicional. Partidos
+devuelve `hasMatches` independientemente de la vista, además de datos del
+torneo, rivales y Match completo. Ediciones devuelve nombre, estado, fecha de
+creación y nombres de campeones; el detalle expone `hasOtherEditions` derivado.
+
+Contrato: 400 por parámetros inválidos; 401 en la colección personal; 404 por
+torneo inexistente en ediciones; 500 seguro por fallo técnico y 503 durante
+cierre del servidor. El cliente valida íntegramente los cuerpos; transporte
+usa common_network_error, y HTTP/cuerpos desconocidos common_request_error.
+No hay caso de negocio que necesite un mensaje distinto. Cancelar no presenta
+feedback. Véase inventario de observabilidad y pruebas de browsing.

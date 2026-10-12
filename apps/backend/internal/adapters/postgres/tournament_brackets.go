@@ -22,6 +22,9 @@ func readTournament(ctx context.Context, db tournamentReader, id string) (tourna
 	if err != nil {
 		return value, err
 	}
+	if err = db.QueryRow(ctx, `SELECT repetition_source_id IS NOT NULL OR EXISTS(SELECT 1 FROM tournaments child WHERE child.repetition_source_id=t.id) FROM tournaments t WHERE t.id=$1`, id).Scan(&value.HasOtherEditions); err != nil {
+		return value, err
+	}
 	rows, err := db.Query(ctx, `SELECT id::text,name,position,withdrawn_at IS NOT NULL FROM tournament_teams WHERE tournament_id=$1 ORDER BY position`, id)
 	if err != nil {
 		return value, err

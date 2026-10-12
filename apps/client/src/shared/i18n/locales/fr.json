@@ -572,5 +572,20 @@
   "tournament_repeat_available_teams": "Équipes disponibles",
   "tournament_repeat_no_available_teams": "Aucune équipe n’est libre. Vous pouvez en créer une avec un autre nom s’il reste de la place.",
   "tournament_repeat_invitation_share": "Rejoignez {tournament} : choisissez une équipe libre ou créez la vôtre. {url}",
-  "team_invitation_occupied": "Cette place est déjà prise. Choisissez une autre équipe disponible."
+  "team_invitation_occupied": "Cette place est déjà prise. Choisissez une autre équipe disponible.",
+  "nav_matches": "Mes matchs",
+  "matches_guest_title": "Vos rencontres, au même endroit",
+  "matches_guest_description": "Connectez-vous pour consulter les matchs des équipes avec lesquelles vous participez.",
+  "matches_pending": "À jouer",
+  "matches_results": "Résultats",
+  "matches_empty": "Vous n’avez pas encore de matchs. Ils apparaîtront après votre participation à un tournoi et la génération des rencontres.",
+  "matches_pending_empty": "Vous n’avez aucun match à jouer. Consultez les rencontres terminées dans Résultats.",
+  "matches_results_empty": "Vous n’avez pas encore de résultats. Vos matchs à jouer sont dans l’autre vue.",
+  "matches_unscheduled": "Sans date",
+  "matches_open": "Ouvrir {home} contre {away} dans {tournament}",
+  "matches_unavailable": "Ce match n’est plus disponible. Vous pouvez toujours consulter le tournoi.",
+  "matches_selected": "Match sélectionné",
+  "tournament_editions": "Éditions",
+  "editions_current": "Édition consultée",
+  "editions_champions": "Champions : {names}"
 }

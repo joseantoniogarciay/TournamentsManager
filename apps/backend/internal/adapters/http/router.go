@@ -26,6 +26,7 @@ type HandlerConfig struct {
 
 // HandlerDependencies contains the application services exposed over HTTP.
 type HandlerDependencies struct {
+	TournamentBrowsing   *tournaments.BrowsingService
 	Registration         registration.Service
 	Federated            *federated.Service
 	Apple                *federated.AppleService
@@ -122,6 +123,10 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 	mux.Handle("DELETE /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteLocalCredential(accessService)))))
 	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
 	mux.Handle("GET /v1/me/tournaments", requireSession(authenticator)(http.HandlerFunc(listAccountTournaments(tournamentService))))
+	if dependencies.TournamentBrowsing != nil {
+		mux.Handle("GET /v1/me/matches", requireSession(authenticator)(http.HandlerFunc(browseTournaments(*dependencies.TournamentBrowsing, true))))
+		mux.Handle("GET /v1/tournaments/{tournamentId}/editions", http.HandlerFunc(browseTournaments(*dependencies.TournamentBrowsing, false)))
+	}
 	mux.Handle("GET /v1/me/recent-tournaments", requireSession(authenticator)(http.HandlerFunc(listRecentAccountTournaments(tournamentService))))
 	if suggestionService != nil {
 		suggestionLimiter := newRequestLimiter(suggestionLimit, suggestionWindow)
