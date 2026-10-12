@@ -1,36 +1,26 @@
 {
   "pending": {
-    "sizes": [
-      20,
-      8
-    ],
+    "sizes": [20, 8],
     "total": 28,
     "unique": 28,
     "pages": 2,
     "sameOrderAsLimit50": true
   },
   "results": {
-    "sizes": [
-      8
-    ],
+    "sizes": [8],
     "total": 8,
     "unique": 8,
     "pages": 1,
     "sameOrderAsLimit50": true
   },
   "editions": {
-    "sizes": [
-      20,
-      2
-    ],
+    "sizes": [20, 2],
     "total": 22,
     "unique": 22,
     "pages": 2,
     "sameFamilyFromTwoBranches": true,
     "newestFirst": true,
-    "champion": [
-      "Matriz 1"
-    ]
+    "champion": ["Matriz 1"]
   },
   "groups": {
     "tournamentId": "01a12cfb-458e-7182-a8f8-18f81b8602c1",
@@ -224,61 +214,37 @@
       "case": "anonymous",
       "status": 401,
       "contentType": "application/problem+json",
-      "fields": [
-        "status",
-        "title",
-        "type"
-      ]
+      "fields": ["status", "title", "type"]
     },
     {
       "case": "view",
       "status": 400,
       "contentType": "application/problem+json",
-      "fields": [
-        "status",
-        "title",
-        "type"
-      ]
+      "fields": ["status", "title", "type"]
     },
     {
       "case": "limitZero",
       "status": 400,
       "contentType": "application/problem+json",
-      "fields": [
-        "status",
-        "title",
-        "type"
-      ]
+      "fields": ["status", "title", "type"]
     },
     {
       "case": "limit51",
       "status": 400,
       "contentType": "application/problem+json",
-      "fields": [
-        "status",
-        "title",
-        "type"
-      ]
+      "fields": ["status", "title", "type"]
     },
     {
       "case": "cursor",
       "status": 400,
       "contentType": "application/problem+json",
-      "fields": [
-        "status",
-        "title",
-        "type"
-      ]
+      "fields": ["status", "title", "type"]
     },
     {
       "case": "missing",
       "status": 404,
       "contentType": "application/problem+json",
-      "fields": [
-        "status",
-        "title",
-        "type"
-      ]
+      "fields": ["status", "title", "type"]
     }
   ]
 }
