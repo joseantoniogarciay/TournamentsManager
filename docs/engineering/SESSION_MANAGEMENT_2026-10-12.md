@@ -52,13 +52,28 @@ Local/dev permanecen apagados y no se inició observabilidad.
   eliminados tras 204 y cancelación al abandonar la ruta sin aviso.
 - Autorización y pertenencia revalidadas en backend, nunca deducidas por hints.
 
+## Validación previa a publicación
+
+El usuario autorizó continuar con «Adelante». `make verify` pasa completo;
+la integración PostgreSQL se ejecuta separadamente en una base exclusiva.
+La revisión visual web con datos sintéticos verifica entrada desde Cuenta,
+lista, confirmación, cierre selectivo y cierre de todas las demás, preservando
+la sesión actual. Vista oscura de escritorio (1280 × 720) y teléfono
+(390 × 844), márgenes, scroll y reserva de tabs correctos. La prueba de conexión
+mostró el fallback común seguro. Se corrigió la lista de encabezados permitidos
+en el preflight CORS y la prueba ahora envía el hint móvil.
+
+Se intentó cargar el cliente iOS local existente: el simulador arrancó, pero
+el control de apps no encuentra una ventana de Simulator ni su aplicación
+en la ruta de Xcode; no se declara comprobación visual nativa. Metro y el
+simulador se apagaron tras el intento. No se distribuyen binarios nativos.
+
 ## Límites y siguiente operación
 
 No se ha publicado ni aplicado la migración a bases de local/dev/producción.
 Aplicar **00023_add_session_client_categories.sql antes de arrancar la API nueva**.
 No hay migración de secretos ni de identidad. Las sesiones previas conservan
-unknown hasta volver a usarse. La comprobación visual en navegador y en binarios
-nativos queda fuera de la validación ejecutada; no se declara como realizada.
+unknown hasta volver a usarse. La comprobación visual nativa queda pendiente; la web se validó como se describe arriba.
 
 La retrospectiva está en [LEARNING.md](../project/LEARNING.md): familia estable,
 refresh activo con access vencido, pistas de cliente falsificables y orden de locks.
