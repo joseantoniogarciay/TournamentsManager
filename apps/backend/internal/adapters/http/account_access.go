@@ -94,6 +94,10 @@ func createReauthenticationTicket(service access.Service, federatedService *fede
 			return
 		}
 		if err != nil {
+			observability.RecordDatabaseEndpointFailure(r.Context(), err)
+			if r.Context().Err() != nil {
+				return
+			}
 			writeProblem(w, http.StatusInternalServerError, "Could not reauthenticate")
 			return
 		}
@@ -110,7 +114,7 @@ func createGoogleIdentity(service federated.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body googleIdentityLinkRequest
 		credential, ok := sessionToken(r)
-		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" || body.IDToken == "" || !uuidPattern.MatchString(body.ChallengeID) {
+		if !ok || decodeBody(r, &body) != nil || (body.Ticket == "" || len(body.Ticket) > 512) || body.IDToken == "" || !uuidPattern.MatchString(body.ChallengeID) {
 			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
@@ -137,7 +141,7 @@ func deleteGoogleIdentity(service federated.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body reauthenticationTicketRequest
 		credential, ok := sessionToken(r)
-		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" {
+		if !ok || decodeBody(r, &body) != nil || (body.Ticket == "" || len(body.Ticket) > 512) {
 			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
@@ -159,7 +163,7 @@ func putLocalCredential(service access.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body localCredentialRequest
 		credential, ok := sessionToken(r)
-		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" || len(body.Password) < 8 || len(body.Password) > 1024 {
+		if !ok || decodeBody(r, &body) != nil || (body.Ticket == "" || len(body.Ticket) > 512) || len(body.Password) < 8 || len(body.Password) > 1024 {
 			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
@@ -169,6 +173,10 @@ func putLocalCredential(service access.Service) http.HandlerFunc {
 			writeProblem(w, http.StatusUnauthorized, "Invalid reauthentication")
 			return
 		} else if err != nil {
+			observability.RecordDatabaseEndpointFailure(r.Context(), err)
+			if r.Context().Err() != nil {
+				return
+			}
 			writeProblem(w, http.StatusInternalServerError, "Could not change password")
 			return
 		}
@@ -180,7 +188,7 @@ func deleteLocalCredential(service access.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body reauthenticationTicketRequest
 		credential, ok := sessionToken(r)
-		if !ok || decodeBody(r, &body) != nil || body.Ticket == "" {
+		if !ok || decodeBody(r, &body) != nil || (body.Ticket == "" || len(body.Ticket) > 512) {
 			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return

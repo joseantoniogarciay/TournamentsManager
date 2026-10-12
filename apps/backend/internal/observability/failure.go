@@ -69,6 +69,8 @@ func databaseFailureReason(err error) string {
 	var postgresError *pgconn.PgError
 	if errors.As(err, &postgresError) {
 		switch {
+		case postgresError.Code == "57014" || postgresError.Code == "55P03":
+			return "request.timeout"
 		case strings.HasPrefix(postgresError.Code, "08"):
 			return "database.unavailable"
 		case strings.HasPrefix(postgresError.Code, "23"):

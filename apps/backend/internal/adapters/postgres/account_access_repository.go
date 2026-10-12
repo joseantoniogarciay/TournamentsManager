@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres/sqlc"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
@@ -66,13 +67,20 @@ func (r AccountTournamentRepository) GetAccessMethods(ctx context.Context, accou
 // CurrentPasswordHash gets the verifier associated with an active session.
 func (r AccountTournamentRepository) CurrentPasswordHash(ctx context.Context, sessionToken string) (string, error) {
 	hash := sha256.Sum256([]byte("session:" + sessionToken))
-	return r.queries.GetCurrentPasswordHash(ctx, hash[:])
+	stored, err := r.queries.GetCurrentPasswordHash(ctx, hash[:])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", access.ErrReauthenticationInvalid
+	}
+	return stored, err
 }
 
 // CreateReauthenticationTicket stores a reauthentication ticket for a session.
 func (r AccountTournamentRepository) CreateReauthenticationTicket(ctx context.Context, sessionToken string, ticketHash []byte) error {
 	sessionHash := sha256.Sum256([]byte("session:" + sessionToken))
 	_, err := r.queries.CreateReauthenticationTicket(ctx, sqlc.CreateReauthenticationTicketParams{TokenHash: sessionHash[:], TokenHash_2: ticketHash})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return access.ErrReauthenticationInvalid
+	}
 	return err
 }
 
@@ -84,7 +92,7 @@ func (r AccountTournamentRepository) ConsumeReauthenticationTicketAndSetPassword
 		return err
 	}
 	if rows != 1 {
-		return pgx.ErrNoRows
+		return access.ErrReauthenticationInvalid
 	}
 	return nil
 }
@@ -98,7 +106,7 @@ func (r AccountTournamentRepository) ConsumeReauthenticationTicketAndRemovePassw
 		return err
 	}
 	if rows != 1 {
-		return pgx.ErrNoRows
+		return access.ErrReauthenticationInvalid
 	}
 	return nil
 }

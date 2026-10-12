@@ -28,6 +28,11 @@ export type scheduleAccountDeletionResponse200 = {
   status: 200;
 };
 
+export type scheduleAccountDeletionResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type scheduleAccountDeletionResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -42,7 +47,9 @@ export type scheduleAccountDeletionResponseSuccess = scheduleAccountDeletionResp
   headers: Headers;
 };
 export type scheduleAccountDeletionResponseError = (
-  scheduleAccountDeletionResponse401 | scheduleAccountDeletionResponse409
+  | scheduleAccountDeletionResponse400
+  | scheduleAccountDeletionResponse401
+  | scheduleAccountDeletionResponse409
 ) & {
   headers: Headers;
 };
@@ -134,6 +141,16 @@ export type createReauthenticationTicketResponse409 = {
   status: 409;
 };
 
+export type createReauthenticationTicketResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
+export type createReauthenticationTicketResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
 export type createReauthenticationTicketResponseSuccess =
   createReauthenticationTicketResponse201 & {
     headers: Headers;
@@ -142,6 +159,8 @@ export type createReauthenticationTicketResponseError = (
   | createReauthenticationTicketResponse400
   | createReauthenticationTicketResponse401
   | createReauthenticationTicketResponse409
+  | createReauthenticationTicketResponse429
+  | createReauthenticationTicketResponse500
 ) & {
   headers: Headers;
 };
@@ -189,11 +208,24 @@ export type putLocalCredentialResponse401 = {
   status: 401;
 };
 
+export type putLocalCredentialResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
+export type putLocalCredentialResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
 export type putLocalCredentialResponseSuccess = putLocalCredentialResponse204 & {
   headers: Headers;
 };
 export type putLocalCredentialResponseError = (
-  putLocalCredentialResponse400 | putLocalCredentialResponse401
+  | putLocalCredentialResponse400
+  | putLocalCredentialResponse401
+  | putLocalCredentialResponse429
+  | putLocalCredentialResponse500
 ) & {
   headers: Headers;
 };
@@ -231,6 +263,11 @@ export type deleteCurrentAccountLocalCredentialResponse204 = {
   status: 204;
 };
 
+export type deleteCurrentAccountLocalCredentialResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type deleteCurrentAccountLocalCredentialResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -240,10 +277,11 @@ export type deleteCurrentAccountLocalCredentialResponseSuccess =
   deleteCurrentAccountLocalCredentialResponse204 & {
     headers: Headers;
   };
-export type deleteCurrentAccountLocalCredentialResponseError =
-  deleteCurrentAccountLocalCredentialResponse401 & {
-    headers: Headers;
-  };
+export type deleteCurrentAccountLocalCredentialResponseError = (
+  deleteCurrentAccountLocalCredentialResponse400 | deleteCurrentAccountLocalCredentialResponse401
+) & {
+  headers: Headers;
+};
 
 export type deleteCurrentAccountLocalCredentialResponse =
   | deleteCurrentAccountLocalCredentialResponseSuccess
@@ -396,6 +434,11 @@ export type revokeCurrentSessionResponse204 = {
   status: 204;
 };
 
+export type revokeCurrentSessionResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type revokeCurrentSessionResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -404,7 +447,9 @@ export type revokeCurrentSessionResponse401 = {
 export type revokeCurrentSessionResponseSuccess = revokeCurrentSessionResponse204 & {
   headers: Headers;
 };
-export type revokeCurrentSessionResponseError = revokeCurrentSessionResponse401 & {
+export type revokeCurrentSessionResponseError = (
+  revokeCurrentSessionResponse400 | revokeCurrentSessionResponse401
+) & {
   headers: Headers;
 };
 
@@ -438,15 +483,27 @@ export type refreshSessionResponse200 = {
   status: 200;
 };
 
+export type refreshSessionResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type refreshSessionResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
 };
 
+export type refreshSessionResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
 export type refreshSessionResponseSuccess = refreshSessionResponse200 & {
   headers: Headers;
 };
-export type refreshSessionResponseError = refreshSessionResponse401 & {
+export type refreshSessionResponseError = (
+  refreshSessionResponse400 | refreshSessionResponse401 | refreshSessionResponse500
+) & {
   headers: Headers;
 };
 

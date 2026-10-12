@@ -65,3 +65,39 @@ func (r *passwordResetRepositoryStub) ConsumePasswordReset(context.Context, []by
 	r.consumed = true
 	return Session{AccountID: "account-id", Username: "person"}, nil
 }
+
+func (*passwordResetRepositoryStub) InspectPasswordReset(context.Context, []byte) (string, error) {
+	return "person@example.test", nil
+}
+
+type resetFailureRepository struct {
+	Repository
+	inspectErr, consumeErr error
+}
+
+func (r resetFailureRepository) InspectPasswordReset(context.Context, []byte) (string, error) {
+	return "person@example.test", r.inspectErr
+}
+func (r resetFailureRepository) ConsumePasswordReset(context.Context, []byte, string, []byte, []byte) (Session, error) {
+	return Session{}, r.consumeErr
+}
+
+func TestResetPasswordPreservesInspectionAndConsumptionFailures(t *testing.T) {
+	technical := errors.New("private database failure")
+	for _, failure := range []error{technical, context.DeadlineExceeded, context.Canceled, ErrPasswordResetInvalid} {
+		for _, duringInspection := range []bool{true, false} {
+			repo := resetFailureRepository{consumeErr: failure}
+			if duringInspection {
+				repo.inspectErr = failure
+			}
+			protector := &passwordProtectorStub{}
+			_, _, _, err := NewService(repo, nil, protector).ResetPassword(t.Context(), "token", "password")
+			if !errors.Is(err, failure) {
+				t.Fatalf("lost failure %v: %v", failure, err)
+			}
+			if duringInspection && protector.hashed {
+				t.Fatal("inspection failure caused hash")
+			}
+		}
+	}
+}

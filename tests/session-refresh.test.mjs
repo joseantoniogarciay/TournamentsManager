@@ -11,11 +11,19 @@ const code = ts.transpileModule(readFileSync(path, "utf8"), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 
-function fixture(refreshResponse) {
+function fixture(refreshResponse, platform = "web") {
   let authorized = false;
   let refreshes = 0;
   let invalidations = 0;
   const module = { exports: {} };
+  let writes = 0;
+  const serializedSession = JSON.stringify({
+    accessToken: "old-access-token",
+    refreshToken: "old-refresh-token",
+    expiresAt: new Date(Date.now() + 30_000).toISOString(),
+    refreshExpiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+    user: { id: "019abcde-1111-7111-8111-111111111111", username: "person" },
+  });
   const context = {
     exports: module.exports,
     Headers,
@@ -32,7 +40,17 @@ function fixture(refreshResponse) {
       return new Response("{}", { status: authorized ? 200 : 401 });
     },
     require: (name) => {
-      if (name === "react-native") return { Platform: { OS: "web" } };
+      if (name === "react-native") return { Platform: { OS: platform } };
+      if (name === "expo-secure-store") {
+        return {
+          getItemAsync: async () => serializedSession,
+          setItemAsync: async () => {
+            writes++;
+          },
+        };
+      }
+      if (name === "expo-crypto")
+        return { randomUUID: () => "00000000-0000-4000-8000-000000000000" };
       if (name === "./generated/session/session") {
         return {
           refreshSession: async (_, fetchFn) => {
@@ -52,7 +70,26 @@ function fixture(refreshResponse) {
   api.setMobileSessionInvalidationHandler(async () => {
     invalidations++;
   });
-  return { api, refreshes: () => refreshes, invalidations: () => invalidations };
+  return {
+    api,
+    refreshes: () => refreshes,
+    invalidations: () => invalidations,
+    writes: () => writes,
+  };
+}
+
+for (const status of [400, 429, 500]) {
+  test(`native: refresh ${status} preserves stored session and uses safe request error`, async () => {
+    const f = fixture(() => new Response('{"detail":"private backend error"}', { status }), "ios");
+    await assert.rejects(f.api.authenticatedApiFetch("/me/tournaments"), (error) => {
+      assert.ok(error instanceof f.api.APIUnexpectedResponseError);
+      assert.equal(error.status, status);
+      assert.ok(!error.message.includes("private"));
+      return true;
+    });
+    assert.equal(f.writes(), 0);
+    assert.equal(f.invalidations(), 0);
+  });
 }
 
 test("web: a network failure during refresh keeps the session and permits retry", async () => {

@@ -9,6 +9,7 @@ import (
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications"
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/suggestions"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
@@ -65,6 +66,12 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 	mux := http.NewServeMux()
 	resolveClientIP := newClientIPResolver(config.TrustedProxyCIDRs, config.EdgeProxyAuthToken)
 	cookies := sessionCookies(config.CookieSecure)
+	passwordWork := passwordWorkAdmission{slots: make(chan struct{}, 2)}
+	credentialLimiter := newRequestLimiter(10, time.Minute)
+	resetConfirmationLimiter := newRequestLimiter(10, time.Minute)
+	repetitionLimiter := newRequestLimiter(5, time.Minute)
+	personalLimiter := newRequestLimiter(60, time.Minute)
+	editionsLimiter := newRequestLimiter(60, time.Minute)
 	var accessService access.Service
 	if repository, ok := authenticator.(access.Repository); ok {
 		accessService = access.NewService(repository)
@@ -82,8 +89,8 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 	}
 	mux.HandleFunc("GET /v1/usernames/{username}/availability", usernameAvailability(registrationService, availabilityLimiter, resolveClientIP))
 	mux.HandleFunc("GET /v1/users", searchUsers(registrationService, userSearchLimiter, resolveClientIP))
-	mux.HandleFunc("POST /v1/registrations", register(registrationService, registrationLimiter, resolveClientIP))
-	mux.HandleFunc("POST /v1/sessions", createLocalSession(registrationService, localLoginLimiter, cookies, resolveClientIP))
+	mux.HandleFunc("POST /v1/registrations", passwordWork.wrap(register(registrationService, registrationLimiter, resolveClientIP)))
+	mux.HandleFunc("POST /v1/sessions", passwordWork.wrap(createLocalSession(registrationService, localLoginLimiter, cookies, resolveClientIP)))
 	googleChallengeLimiter := newRequestLimiter(20, time.Minute)
 	googleSessionLimiter := newRequestLimiter(10, time.Minute)
 	if federatedService != nil {
@@ -112,20 +119,20 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 	passwordResetLimiter := newRequestLimiter(10, time.Minute)
 	mux.HandleFunc("POST /v1/password-resets", requestPasswordReset(registrationService, passwordResetLimiter, resolveClientIP))
 	mux.HandleFunc("POST /v1/password-reset-links", inspectPasswordReset(registrationService))
-	mux.HandleFunc("POST /v1/password-reset-confirmations", confirmPasswordReset(registrationService, cookies))
+	mux.HandleFunc("POST /v1/password-reset-confirmations", resourceRateLimit(passwordWork.wrap(confirmPasswordReset(registrationService, cookies)), resetConfirmationLimiter, func(r *http.Request) string { return resolveClientIP(r) }))
 	mux.HandleFunc("POST /v1/registration-verifications", verifyRegistration(registrationService, cookies))
 	mux.Handle("GET /v1/sessions", requireSession(authenticator)(http.HandlerFunc(getCurrentSession(authenticator))))
 	mux.Handle("POST /v1/sessions/refresh", refreshCookieCSRF(config.CORSAllowedOrigins, cookies, refreshSession(registrationService, cookies)))
 	mux.Handle("DELETE /v1/sessions", cookieCSRF(http.HandlerFunc(revokeCurrentSession(authenticator, cookies))))
 	mux.Handle("GET /v1/me/access-methods", requireSession(authenticator)(http.HandlerFunc(getAccessMethods(authenticator))))
-	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createReauthenticationTicket(accessService, federatedService)))))
-	mux.Handle("PUT /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(putLocalCredential(accessService)))))
+	mux.Handle("POST /v1/me/reauthentication-tickets", requireSession(authenticator)(cookieCSRF(resourceRateLimit(passwordWork.wrap(createReauthenticationTicket(accessService, federatedService)), credentialLimiter, accountResourceKey))))
+	mux.Handle("PUT /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(resourceRateLimit(passwordWork.wrap(putLocalCredential(accessService)), credentialLimiter, accountResourceKey))))
 	mux.Handle("DELETE /v1/me/local-credential", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(deleteLocalCredential(accessService)))))
 	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
 	mux.Handle("GET /v1/me/tournaments", requireSession(authenticator)(http.HandlerFunc(listAccountTournaments(tournamentService))))
 	if dependencies.TournamentBrowsing != nil {
-		mux.Handle("GET /v1/me/matches", requireSession(authenticator)(http.HandlerFunc(browseTournaments(*dependencies.TournamentBrowsing, true))))
-		mux.Handle("GET /v1/tournaments/{tournamentId}/editions", http.HandlerFunc(browseTournaments(*dependencies.TournamentBrowsing, false)))
+		mux.Handle("GET /v1/me/matches", requireSession(authenticator)(resourceRateLimit(browseTournaments(*dependencies.TournamentBrowsing, true), personalLimiter, accountResourceKey)))
+		mux.Handle("GET /v1/tournaments/{tournamentId}/editions", resourceRateLimit(browseTournaments(*dependencies.TournamentBrowsing, false), editionsLimiter, func(r *http.Request) string { return resolveClientIP(r) }))
 	}
 	mux.Handle("GET /v1/me/recent-tournaments", requireSession(authenticator)(http.HandlerFunc(listRecentAccountTournaments(tournamentService))))
 	if suggestionService != nil {
@@ -148,7 +155,7 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 		mux.Handle("PUT /v1/tournaments/{tournamentId}/matches/{matchId}/schedule", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(setTournamentScheduling(*dependencies.TournamentScheduling, true)))))
 	}
 	if creationService != nil {
-		mux.Handle("POST /v1/tournaments/{tournamentId}/repeat", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(repeatTournament(*creationService)))))
+		mux.Handle("POST /v1/tournaments/{tournamentId}/repeat", requireSession(authenticator)(cookieCSRF(resourceRateLimit(repeatTournament(*creationService), repetitionLimiter, accountResourceKey))))
 		mux.Handle("POST /v1/tournaments", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createTournament(*creationService)))))
 		mux.Handle("POST /v1/tournaments/{tournamentId}/team-invitation", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(createTournamentTeamInvitation(*creationService)))))
 		mux.Handle("DELETE /v1/tournaments/{tournamentId}/team-invitation", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(revokeTournamentTeamInvitation(*creationService)))))
@@ -169,7 +176,25 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 		mux.HandleFunc("GET /v1/tournaments/{tournamentId}", getPublicTournament(*creationService))
 	}
 	withCookieName := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		routedRequest := r.WithContext(context.WithValue(r.Context(), sessionCookieNameContextKey{}, cookies.name))
+		_, r.Pattern = mux.Handler(r)
+		budgetRequest, cancel := withResourceBudget(r)
+		defer cancel()
+		if r.Context().Err() != nil {
+			if r.Context().Err() == context.DeadlineExceeded {
+				observability.RecordEndpointFailure(r.Context(), "request.timeout")
+			} else {
+				observability.RecordEndpointFailure(r.Context(), "request.cancelled")
+			}
+			return
+		}
+		w.Header().Set("Cache-Control", "no-store")
+		if r.ContentLength > maxRequestBodyBytes {
+			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
+			writeValidationProblem(w)
+			return
+		}
+		budgetRequest.Body = http.MaxBytesReader(w, r.Body, maxRequestBodyBytes)
+		routedRequest := budgetRequest.WithContext(context.WithValue(budgetRequest.Context(), sessionCookieNameContextKey{}, cookies.name))
 		mux.ServeHTTP(w, routedRequest)
 		// ServeMux writes the matched template on the request it serves. Preserve
 		// it for the outer observability middleware after adding request context.

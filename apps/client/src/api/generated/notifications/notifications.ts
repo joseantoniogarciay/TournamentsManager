@@ -10,6 +10,7 @@ import type {
   Notifications,
   UnreadNotificationCount,
   Uuid,
+  ValidationProblemResponse,
 } from "../models";
 
 export type listCurrentAccountNotificationsResponse200 = {
@@ -65,6 +66,11 @@ export type deleteAllCurrentAccountNotificationsResponse204 = {
   status: 204;
 };
 
+export type deleteAllCurrentAccountNotificationsResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type deleteAllCurrentAccountNotificationsResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -74,10 +80,11 @@ export type deleteAllCurrentAccountNotificationsResponseSuccess =
   deleteAllCurrentAccountNotificationsResponse204 & {
     headers: Headers;
   };
-export type deleteAllCurrentAccountNotificationsResponseError =
-  deleteAllCurrentAccountNotificationsResponse401 & {
-    headers: Headers;
-  };
+export type deleteAllCurrentAccountNotificationsResponseError = (
+  deleteAllCurrentAccountNotificationsResponse400 | deleteAllCurrentAccountNotificationsResponse401
+) & {
+  headers: Headers;
+};
 
 export type deleteAllCurrentAccountNotificationsResponse =
   | deleteAllCurrentAccountNotificationsResponseSuccess
@@ -116,6 +123,11 @@ export type markAllCurrentAccountNotificationsReadResponse204 = {
   status: 204;
 };
 
+export type markAllCurrentAccountNotificationsReadResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type markAllCurrentAccountNotificationsReadResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -125,10 +137,12 @@ export type markAllCurrentAccountNotificationsReadResponseSuccess =
   markAllCurrentAccountNotificationsReadResponse204 & {
     headers: Headers;
   };
-export type markAllCurrentAccountNotificationsReadResponseError =
-  markAllCurrentAccountNotificationsReadResponse401 & {
-    headers: Headers;
-  };
+export type markAllCurrentAccountNotificationsReadResponseError = (
+  | markAllCurrentAccountNotificationsReadResponse400
+  | markAllCurrentAccountNotificationsReadResponse401
+) & {
+  headers: Headers;
+};
 
 export type markAllCurrentAccountNotificationsReadResponse =
   | markAllCurrentAccountNotificationsReadResponseSuccess
@@ -218,6 +232,11 @@ export type deleteCurrentAccountNotificationResponse204 = {
   status: 204;
 };
 
+export type deleteCurrentAccountNotificationResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type deleteCurrentAccountNotificationResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -227,10 +246,11 @@ export type deleteCurrentAccountNotificationResponseSuccess =
   deleteCurrentAccountNotificationResponse204 & {
     headers: Headers;
   };
-export type deleteCurrentAccountNotificationResponseError =
-  deleteCurrentAccountNotificationResponse401 & {
-    headers: Headers;
-  };
+export type deleteCurrentAccountNotificationResponseError = (
+  deleteCurrentAccountNotificationResponse400 | deleteCurrentAccountNotificationResponse401
+) & {
+  headers: Headers;
+};
 
 export type deleteCurrentAccountNotificationResponse =
   deleteCurrentAccountNotificationResponseSuccess | deleteCurrentAccountNotificationResponseError;

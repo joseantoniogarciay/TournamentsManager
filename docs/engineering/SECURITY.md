@@ -158,6 +158,13 @@ La gestión de configuración sigue
 
 ## Gates permanentes por cambio
 
+La [revisión de API del 12 de octubre de 2026](API_SECURITY_REVIEW_2026-10-12.md)
+registra los hallazgos iniciales y su cierre en código mediante
+[ADR-0163](../adr/0163-bound-api-resource-work-and-revalidate-invitations.md):
+revalidación de invitaciones, contención de contraseña, cuerpos y tiempos y
+normalización sin mutar entradas. La validación usa PostgreSQL efímero real y
+race detector. No se ha desplegado ni auditado el runtime de producción.
+
 | Gate       | Evidencia                                                    |
 | ---------- | ------------------------------------------------------------ |
 | Diseño     | Modelo de amenazas y clasificación de datos                  |
@@ -175,3 +182,26 @@ SHA-256 con prefijo de propósito y se consumen transaccionalmente junto con la
 mutación. El ticket exige la misma sesión opaca válida y no se registra. La
 verificación de contraseña decodifica el formato Argon2id y compara la salida
 en tiempo constante; un formato inválido se trata como credencial no válida.
+
+## Contención de recursos — ADR-0163
+
+La API aplica 64 KiB antes de decodificar; callback, programación y repetición
+conservan sus límites menores. Exceso devuelve validación 400 segura. Dos
+peticiones de contraseña pueden estar activas por proceso; se rechaza saturación
+con 429/Retry-After. Se incluyen alta, login, recuperación, reautenticación y
+cambio local. Un hash empezado termina; cancelarlo no libera prematuramente
+su cupo. Un enlace de recuperación inválido no alcanza Argon2id y el consumo
+final sigue siendo atómico frente a concurrencia.
+
+Confirmación de recuperación tiene 10 intentos/minuto/IP; credenciales y
+reautenticación comparten 10/minuto/cuenta; repetición 5/minuto/cuenta; Mis
+partidos 60/minuto/cuenta; Ediciones 60/minuto/IP. Las claves de cuenta proceden
+de la sesión, no de inputs. Cada limitador admite como máximo 4096 claves; no
+evicta un contador activo para admitir otro. Todos estos presupuestos son por
+proceso: varias réplicas requieren revisar el total agregado.
+
+Contexto HTTP 15 s, lectura 10 s, escritura 20 s e idle 60 s; PostgreSQL de
+runtime usa statement_timeout 5 s y lock_timeout 2 s. Paginar no garantiza un
+trabajo SQL constante: las consultas conservan semántica y se contienen mediante
+cuota y tiempo, con evidencia de volumen local y sin prometer capacidad de
+producción. CORS, proxy y autorización no se sustituyen por estos límites.

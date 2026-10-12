@@ -15,6 +15,9 @@ type PasswordProtector struct{}
 
 // Hash derives an Argon2id password verifier while recording only safe telemetry.
 func (PasswordProtector) Hash(ctx context.Context, password string) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
 	_, span := otel.Tracer(serviceName+"/authentication").Start(ctx, "auth.password.hash", trace.WithAttributes(attribute.String("auth.password.algorithm", "argon2id")))
 	defer span.End()
 	hash, err := registration.HashPassword(password)
@@ -26,6 +29,9 @@ func (PasswordProtector) Hash(ctx context.Context, password string) (string, err
 
 // Verify compares an Argon2id password verifier without recording credential data.
 func (PasswordProtector) Verify(ctx context.Context, password, encoded string) bool {
+	if ctx.Err() != nil {
+		return false
+	}
 	_, span := otel.Tracer(serviceName+"/authentication").Start(ctx, "auth.password.verify", trace.WithAttributes(attribute.String("auth.password.algorithm", "argon2id")))
 	defer span.End()
 	return registration.VerifyPassword(password, encoded)

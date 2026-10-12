@@ -13,6 +13,30 @@ type repositoryStub struct {
 	created, consumed bool
 }
 
+type failureRepository struct {
+	Repository
+	err error
+}
+
+func (r failureRepository) CurrentPasswordHash(context.Context, string) (string, error) {
+	return "", r.err
+}
+func (r failureRepository) ConsumeReauthenticationTicketAndSetPassword(context.Context, string, []byte, string) error {
+	return r.err
+}
+
+func TestTechnicalCredentialFailuresRemainTechnical(t *testing.T) {
+	for _, failure := range []error{context.Canceled, context.DeadlineExceeded, errors.New("database unavailable")} {
+		service := NewService(failureRepository{err: failure})
+		if _, _, err := service.ReauthenticateWithPassword(t.Context(), "session", "password", SetLocalPassword); !errors.Is(err, failure) {
+			t.Fatalf("reauthentication lost technical failure: %v", err)
+		}
+		if err := service.SetPassword(t.Context(), "session", "ticket", "correct password"); !errors.Is(err, failure) {
+			t.Fatalf("password change lost technical failure: %v", err)
+		}
+	}
+}
+
 func (r *repositoryStub) CurrentPasswordHash(context.Context, string) (string, error) {
 	return r.passwordHash, nil
 }

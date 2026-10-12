@@ -1,5 +1,46 @@
 # Registro de aprendizaje
 
+## 2026-10-12 — Revisión de seguridad API y snapshots durante esperas
+
+La [revisión de seguridad de la API](../engineering/API_SECURITY_REVIEW_2026-10-12.md)
+reproduce una inscripción que espera el bloqueo del torneo y se completa después
+de la revocación de su invitación. Bajo READ COMMITTED, el bloqueo de una fila
+no fuerza una nueva lectura de todas las relaciones del snapshot inicial.
+La garantía requiere revalidar la capacidad después de obtener el bloqueo.
+
+Las sondas de identidad confirman trabajo de contraseña con token inválido sin
+limitador y decodificación de un token de 2 MiB. Se usa un contador en lugar de
+Argon2id para evitar un ataque de carga. Las 52 integraciones funcionales pasan;
+la ejecución con detector de carreras descubre normalización sobre un slice
+compartido en el test de repetición. No se acredita un exploit entre peticiones
+HTTP independientes ni se confunde ese resultado con una suite verde.
+
+Retrospectiva: cero CVE alcanzables no cubre autorización concurrente ni abuso.
+Hay que distinguir límite de respuesta y coste de consulta, y ejecutar el
+detector de carreras con integración activada. Se conserva evidencia, se eliminan
+contenedores efímeros y se documentan hallazgos sin cambiar implementación,
+decisiones importantes, entornos local/dev u observabilidad.
+
+## 2026-10-12 — Cierre de correcciones de seguridad API
+
+El usuario autoriza corregir los hallazgos y ADR-0163 registra la política antes
+de implementarla. Una nueva lectura bajo el bloqueo rechaza invitaciones
+revocadas o rotadas durante la espera; un enlace de recuperación inválido no
+alcanza el hash y su consumo final sigue siendo atómico. Se contienen cuerpos,
+cuotas, contraseña y tiempos HTTP/SQL sin añadir Redis, WAF ni un nuevo agregado.
+
+La normalización copia la lista de equipos. Las 55 integraciones con PostgreSQL
+real y detector de carreras pasan. Familia de 5001 ediciones y liga de 64 equipos
+con 2016 partidos se consultan dentro del presupuesto en la muestra local; eso
+no acredita capacidad ni runtime de producción. LIMIT acota salida, no todo el
+trabajo previo. Los fallos SQL por timeout se categorizan sin error bruto.
+
+Retrospectiva: el nuevo contrato destapó el guardado de una respuesta no exitosa
+durante refresh nativo; exigir 200 conserva tokens ante 400/429/500. Las cuotas
+por cuenta sobreviven a cambios de sesión. Un generador que limpia carpetas no
+debe solaparse con typecheck. Lint, tipos, exportación y dobles del transporte
+no se presentan como QA visual nativa. No se despliega ni se arranca observabilidad.
+
 ## 2026-10-04 — Investigación de coherencia entre sistemas operativos
 
 Se contrasta el código de primitivas y navegación con las auditorías previas.

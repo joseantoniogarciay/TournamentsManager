@@ -66,7 +66,7 @@ func TestAccessEndpointFailuresUseClosedSafeReasons(t *testing.T) {
 		testFederatedRepository{authenticateErr: errors.New("transaction failed")},
 		testGoogleVerifier{identity: federated.Identity{Email: "person@example.test", EmailVerified: true, Issuer: federated.GoogleIssuer, Nonce: "nonce", Subject: "google-account"}},
 	)
-	accessService := access.NewService(accessObservabilityRepository{setErr: errors.New("ticket absent"), removeErr: access.ErrLastAccessMethod})
+	accessService := access.NewService(accessObservabilityRepository{setErr: access.ErrReauthenticationInvalid, removeErr: access.ErrLastAccessMethod})
 
 	tests := []struct {
 		name    string

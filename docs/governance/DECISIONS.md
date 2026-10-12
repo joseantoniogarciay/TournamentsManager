@@ -302,3 +302,11 @@ registra el contador local, las cuotas de tienda y el alcance de producción mó
 
 El usuario acepta los diseños corregidos y autoriza implementar ambos
 incrementos conservando el estilo actual. [Recorridos y estados](../engineering/PRODUCT_PROPOSAL_MATCHES_EDITIONS_2026-10-11.md).
+
+## Correcciones de seguridad aceptadas — 2026-10-12
+
+[ADR-0163](../adr/0163-bound-api-resource-work-and-revalidate-invitations.md)
+registra la autorización «Sí vamos a corregir todo eso» tras la auditoría API.
+Se corrigen revocación concurrente, coste de contraseña, cuerpos, tiempos y
+normalización; sin infraestructura nueva, cambios de visibilidad o publicación
+de producción. Los límites iniciales quedan sujetos a medición y revisión.

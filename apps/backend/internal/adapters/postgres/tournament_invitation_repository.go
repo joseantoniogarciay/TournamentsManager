@@ -99,7 +99,13 @@ func (r AccountTournamentRepository) JoinTeamInvitation(ctx context.Context, acc
 	} else if err != nil {
 		return tournaments.TeamRegistration{}, err
 	}
-	if state != "published" {
+	// The locking SELECT may have waited using an older statement snapshot.
+	// Revalidate the capability in a fresh statement after acquiring the lock.
+	var active bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM tournament_team_invitations WHERE tournament_id=$1 AND token_hash=$2)`, registration.TournamentID, tokenHash[:]).Scan(&active); err != nil {
+		return tournaments.TeamRegistration{}, err
+	}
+	if !active || state != "published" {
 		return tournaments.TeamRegistration{}, tournaments.ErrTournamentInvitationNotFound
 	}
 	// Historical tournaments predate the account-team relation, so the explicit
