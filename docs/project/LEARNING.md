@@ -6239,3 +6239,24 @@ toque real, locución ni orden completo de lectura. Mantener esa separación
 permite ampliar cobertura automatizada sin convertir una captura en aprobación
 completa de accesibilidad. La sesión termina con lectores, emuladores y dev
 apagados, conservando evidencia y volúmenes.
+
+
+### Cierre productivo de Mis partidos y Ediciones — 2026-10-12
+
+Publicar v1.13.0 conserva una sola revisión entre tag anotado, API, renderer y
+web. El gate local y CI con PostgreSQL, backup recibido/restaurado y smoke dev
+preceden a la activación; las huellas de siete tablas y checks HTTPS la cierran.
+Una build nativa de QA no es una distribución en tiendas. Los pendientes de
+locución y gestos siguen explícitos al publicar web/API.
+
+Un registro repetido con cuenta ya verificada devuelve 202 sin enviar correo
+para evitar enumeración. Diagnosticar existencia/estado y creación de token
+antes de atribuirlo a SMTP; no consultar hashes ni credenciales para ese diagnóstico.
+Un 403 de un cliente HTTP no basta para atribuir caída a la API: contrastar el
+origen y otro cliente preservando TLS y sin relajar la protección del borde.
+
+Las notas públicas de Release necesitan información suficiente de alcance,
+validación, límites y rollback, sin trasladar logs privados ni datos personales.
+Acreditar el repositorio propio y simplificar el payload permitió resolver el
+rechazo automático de aprobación sin rodear el control. Dev y sus tareas se
+apagan al cerrar; producción y backups conservan su configuración.

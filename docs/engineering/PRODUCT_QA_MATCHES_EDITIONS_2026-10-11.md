@@ -1104,3 +1104,12 @@ de refresco iOS, locución y orden completo de lectores se conservan explícitos
 No hay migración nueva: las consultas usan el esquema 00022 ya productivo.
 Antes de activar se exige make verify y CI, promoción a main con tag anotado,
 validación dev, backup/restauración y artefactos del mismo SHA con rollback.
+
+
+Cierre productivo: v1.13.0 publicada en web/API con SHA
+`ef4b1776866a17c96bd504e44e00a57698879606`; gate local y CI develop/main aprobados,
+backup replicado/restaurado, dev comprobado y apagado, ocho checks API y once web
+productivos PASS. Navegador confirma Mis partidos → Cuenta y Ediciones. Las
+huellas de datos existentes se conservan. No se amplía a login autenticado,
+SMTP nuevo ni distribución nativa; permanecen los pendientes manuales anteriores.
+Ver [despliegue y rollback](../operations/DEPLOYMENT.md#publicación-v1130--2026-10-12).

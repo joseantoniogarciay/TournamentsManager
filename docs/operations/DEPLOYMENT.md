@@ -652,3 +652,62 @@ Retrospectiva: arrancar la VM y esperar readiness permite recuperar el release
 existente sin convertir una solicitud de disponibilidad en una publicación.
 Se verifica el servicio público después del estado del cluster, pues durante
 el arranque el borde devuelve temporalmente 502.
+
+
+## Publicación v1.13.0 — 2026-10-12
+
+El usuario autoriza publicar las features y fixes pendientes con el proceso
+completo. Tag anotado v1.13.0 y merge main
+`ef4b1776866a17c96bd504e44e00a57698879606`. Incluye Mis partidos y Ediciones
+(ADR-0161/0162), revelación de destinos, conservación de páginas, acceso a Cuenta,
+selección accesible web y retorno de foco nativo. No distribuye binarios de tienda.
+
+`make verify` local y CI develop/main pasan; integración PostgreSQL real en CI.
+Se corrige únicamente el formato de dos JSON de evidencia detectado por el gate.
+Dev se despliega desde el candidato limpio, pasa ocho checks públicos/origen de
+lectura, autenticación, límites y CORS, y su UI abre Cuenta y Ediciones. El primer
+smoke urllib recibe 403 en el borde mientras curl y origen responden 200; el mismo
+smoke con user-agent ordinario pasa, sin omitir TLS ni cambiar protección del borde.
+
+Backup incremental cifrado replicado y restaurado desde la copia recibida, montada
+solo lectura, en volumen Docker aislado: `fasttourney_prod|f`; ensayo limpiado.
+Goose confirma versión 22 sin nuevas migraciones. API 2/2 y renderer coinciden
+con el SHA del tag, y el secreto migrador efímero queda eliminado. Huellas completas
+de siete tablas coinciden antes/después; cuentas/torneos/equipos/partidos: 3/10/26/21.
+
+Web conserva la configuración de fiabilidad y símbolos PostHog UE existentes:
+preparación completada, mapas retirados del artefacto público. No demuestra recepción
+ni simbolicación de un fallo real. Preview TLS válido y cinco checks pasan.
+Cloudflare confirma triggers productivos y versiones:
+
+- web: `9dc57060-fa07-40db-9100-fedd566c44fe`;
+- www: `b8a591b7-7127-4114-888a-a43a32d7270b`.
+
+Tras publicar pasan ocho checks API y once web por HTTPS: SHA, home indexable,
+Mis partidos/Cuenta/legales/Ediciones noindex, torneo existente, inexistente 404,
+asset/asociación inexistentes 404 y www 308 conservando query. Navegador confirma
+Mis partidos, acceso a Cuenta y Ediciones con datos reales existentes, sin mutarlos.
+Origen Caddy de rollback actualizado al mismo SHA. No se certifica login autenticado,
+nuevo envío de correo ni locución/gestos pendientes de la matriz nativa.
+
+El aviso de correo de registro se diagnostica en la versión anterior: la dirección
+indicada ya tenía cuenta verificada, no se creó cuenta ni token nuevos. El alta
+repetida devuelve 202 genérico sin envío por la política contra enumeración.
+No demuestra un fallo SMTP ni exige cambiar autenticación. No se publica la dirección.
+
+Rollback conservado: API/web v1.12.0, manifiesto y binario renderer anterior,
+Workers web `e97c2239-325e-4b46-9076-6206b772cad0` y www
+`97d3f0e0-0f4b-400b-b52b-574d007c43f5`. No requiere Down ni restaurar datos para
+volver al código previo. Evidencia privada: `/private/tmp/tm-release-v113-20261012`.
+Dev/local y sus tareas programadas apagados; producción permanece activa y UTM
+autostart conserva su estado deshabilitado.
+
+La revisión automática rechaza las notas iniciales de Release por detalle interno
+sin destino acreditado. Se verifica repositorio público propio con permiso ADMIN
+y se reduce el texto a producto, SHA, validación, límites y versión de rollback;
+la creación de Release queda confirmada sin ampliar permisos ni omitir controles.
+
+Retrospectiva: una respuesta genérica de alta repetida no prueba entrega de correo.
+Separar el diagnóstico de identidad del despliegue evita introducir fixes sin causa.
+Un release debe conservar la cadena tag–SHA–artefactos y sus límites de QA: las
+capturas nativas no acreditan publicación en tiendas ni accesibilidad completa.
