@@ -6260,3 +6260,11 @@ validación, límites y rollback, sin trasladar logs privados ni datos personale
 Acreditar el repositorio propio y simplificar el payload permitió resolver el
 rechazo automático de aprobación sin rodear el control. Dev y sus tareas se
 apagan al cerrar; producción y backups conservan su configuración.
+
+### Coherencia de entrada en las tabs de colecciones — 2026-10-12
+
+Por decisión del usuario, Mis partidos elimina el título de sección y su margen
+para comenzar directamente con Pendientes/Resultados, como Torneos con sus
+filtros. La tab bar identifica la sección; `Screen` conserva la separación
+superior segura. Retrospectiva: retirar el bloque redundante resuelve el desfase
+sin compensaciones locales de padding ni nuevas abstracciones.

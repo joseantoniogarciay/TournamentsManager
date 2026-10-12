@@ -79,9 +79,6 @@ export function PersonalMatchesScreen() {
   const { page, error, loading, refreshing, loadingMore, moreError, load } = collection;
   return (
     <Screen bottomInset="none" webWidth="wide">
-      <View style={styles.heading}>
-        <Text variant="title">{t("nav_matches")}</Text>
-      </View>
       {!isRestoring && !user ? (
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottom }]}>
           <Card>
@@ -274,7 +271,6 @@ function PersonalMatchCard({
   );
 }
 const styles = StyleSheet.create({
-  heading: { paddingHorizontal: space[5], marginBottom: space[5] },
   content: { flexGrow: 1, gap: space[5] },
   copy: { flex: 1, gap: space[2] },
   card: { flexDirection: "row", alignItems: "center", gap: space[3], minHeight: control.minHeight },
