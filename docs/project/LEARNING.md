@@ -6347,3 +6347,18 @@ mantiene su comportamiento independiente. Salir cancela peticiones y evita aviso
 ni deshace peticiones ya autorizadas. Publicación y QA visual nativo no forman
 parte de este cambio; migración 00023 debe preceder a la API nueva. El incremento
 no introduce JWT, push, fingerprinting ni infraestructura de observabilidad.
+
+## 2026-10-12 — Espacio de build compartido con producción
+
+Un build de goose agotó el disco del Mac y provocó ENOSPC en QEMU: producción
+dejó de responder antes de migrar o desplegar. Un GiB libre no era un margen
+suficiente. Preflight debe medir el coste de recompilar herramientas y reservar
+margen para los procesos productivos; no basta con el tamaño final de la imagen.
+No se debe repetir un build pesado hasta recuperar espacio suficiente.
+
+Se recuperó la VM existente tras liberar temporales y caché recreable, sin cambiar
+durabilidad ni restaurar datos vivos. Backup probado y huellas de negocio antes
+y después aportaron evidencia de conservación. Si se usa otro empaquetado,
+registrar toolchain, fuente limpia, piezas reutilizadas sin cambios y hashes;
+no presentar un build fallido como exitoso. Docker local quedó detenido; el
+borrado de su fixture sintético no se pudo confirmar.

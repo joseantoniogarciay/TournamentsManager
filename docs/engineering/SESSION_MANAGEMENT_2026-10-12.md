@@ -70,10 +70,16 @@ simulador se apagaron tras el intento. No se distribuyen binarios nativos.
 
 ## Límites y siguiente operación
 
-No se ha publicado ni aplicado la migración a bases de local/dev/producción.
-Aplicar **00023_add_session_client_categories.sql antes de arrancar la API nueva**.
-No hay migración de secretos ni de identidad. Las sesiones previas conservan
-unknown hasta volver a usarse. La comprobación visual nativa queda pendiente; la web se validó como se describe arriba.
-
+Publicada web/API como **v1.14.0**, SHA
+`791d087e6a92ee2b1a8b09064826360a8837a793`; migración 00023 aplicada en producción
+antes del rollout. CI develop/main pasan. Backup nuevo probado mediante restore
+exacto aislado. Verificación pública y huellas de negocio pasan.
+La preparación agotó disco y detuvo UTM; se recuperó producción antes de
+retomar el despliegue. Docker falló; el empaquetado alternativo y sus verificaciones
+están documentados, sin afirmar build exitoso.
+[Publicación, incidente, retrospectiva y rollback](../operations/DEPLOYMENT.md#publicación-de-sesiones-activas-v1140--2026-10-12).
+Local/dev sin migrar y apagados. QA sintético detenido con Docker; su borrado no
+pudo confirmarse. Sin observabilidad de desarrollo. La comprobación visual nativa
+queda pendiente y no se distribuyeron binarios móviles.
 La retrospectiva está en [LEARNING.md](../project/LEARNING.md): familia estable,
 refresh activo con access vencido, pistas de cliente falsificables y orden de locks.

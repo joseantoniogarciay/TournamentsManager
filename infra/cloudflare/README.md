@@ -5,12 +5,14 @@ en K3s doméstico vía Tunnel/Caddy. Dominio y audiencia OAuth no cambian.
 
 ## Estado efectivo
 
-Última publicación web/API: v1.13.2,
-`28a9dfa51fed73437dcce09db9d73d486105d9ef`. Workers web
-`a588241e-4707-4753-a9b3-e227d71c9a61` y www
-`953e1e7c-67ea-4e01-9dcd-e23ab08bf3a0`. Preview y dominio productivo verificados
-con TLS válido; once checks web, ocho API y controles públicos de seguridad pasan.
-[Evidencia y rollback](../../docs/operations/DEPLOYMENT.md#publicación-de-seguridad-v1132--2026-10-12).
+Última publicación web/API: v1.14.0,
+`791d087e6a92ee2b1a8b09064826360a8837a793`. Workers web
+`528216d2-50bb-44c1-8999-5ff406594888` y www
+`2aa52d9f-d0a7-46fd-afaf-6a847ad1ec94`. Preview y dominio productivo verificados
+con TLS válido; doce checks web y doce API pasan. Migración 00023 aplicada;
+API 2/2 y renderer con el mismo SHA. Incidente ENOSPC del host recuperado antes
+del despliegue, con huellas de negocio conservadas.
+[Evidencia, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-de-sesiones-activas-v1140--2026-10-12).
 
 2026-10-11: rutas productivas activadas en Workers Free. La primera migración
 conservó `b002b4b…`; después se publicó v1.11.0 autorizada, con web y API
