@@ -18,6 +18,7 @@ import type {
   Problem,
   PublicTournament,
   PublishedTournament,
+  RateLimitProblemResponse,
   RepeatTournamentInput,
   RequestProblemResponse,
   ServiceUnavailableProblemResponse,
@@ -54,6 +55,11 @@ export type listPersonalMatchesResponse401 = {
   status: 401;
 };
 
+export type listPersonalMatchesResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
 export type listPersonalMatchesResponse500 = {
   data: RequestProblemResponse;
   status: 500;
@@ -70,6 +76,7 @@ export type listPersonalMatchesResponseSuccess = listPersonalMatchesResponse200 
 export type listPersonalMatchesResponseError = (
   | listPersonalMatchesResponse400
   | listPersonalMatchesResponse401
+  | listPersonalMatchesResponse429
   | listPersonalMatchesResponse500
   | listPersonalMatchesResponse503
 ) & {
@@ -128,6 +135,11 @@ export type listTournamentEditionsResponse404 = {
   status: 404;
 };
 
+export type listTournamentEditionsResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
 export type listTournamentEditionsResponse500 = {
   data: RequestProblemResponse;
   status: 500;
@@ -144,6 +156,7 @@ export type listTournamentEditionsResponseSuccess = listTournamentEditionsRespon
 export type listTournamentEditionsResponseError = (
   | listTournamentEditionsResponse400
   | listTournamentEditionsResponse404
+  | listTournamentEditionsResponse429
   | listTournamentEditionsResponse500
   | listTournamentEditionsResponse503
 ) & {
@@ -549,6 +562,11 @@ export type repeatTournamentResponse409 = {
   status: 409;
 };
 
+export type repeatTournamentResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
 export type repeatTournamentResponse500 = {
   data: Problem;
   status: 500;
@@ -563,6 +581,7 @@ export type repeatTournamentResponseError = (
   | repeatTournamentResponse403
   | repeatTournamentResponse404
   | repeatTournamentResponse409
+  | repeatTournamentResponse429
   | repeatTournamentResponse500
 ) & {
   headers: Headers;
@@ -1167,6 +1186,11 @@ export type withdrawTournamentTeamResponse200 = {
   status: 200;
 };
 
+export type withdrawTournamentTeamResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type withdrawTournamentTeamResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -1191,6 +1215,7 @@ export type withdrawTournamentTeamResponseSuccess = withdrawTournamentTeamRespon
   headers: Headers;
 };
 export type withdrawTournamentTeamResponseError = (
+  | withdrawTournamentTeamResponse400
   | withdrawTournamentTeamResponse401
   | withdrawTournamentTeamResponse403
   | withdrawTournamentTeamResponse404
@@ -1232,6 +1257,11 @@ export type cancelTournamentResponse200 = {
   status: 200;
 };
 
+export type cancelTournamentResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type cancelTournamentResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -1256,6 +1286,7 @@ export type cancelTournamentResponseSuccess = cancelTournamentResponse200 & {
   headers: Headers;
 };
 export type cancelTournamentResponseError = (
+  | cancelTournamentResponse400
   | cancelTournamentResponse401
   | cancelTournamentResponse403
   | cancelTournamentResponse404
@@ -1296,6 +1327,11 @@ export type completeTournamentResponse200 = {
   status: 200;
 };
 
+export type completeTournamentResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type completeTournamentResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -1320,6 +1356,7 @@ export type completeTournamentResponseSuccess = completeTournamentResponse200 & 
   headers: Headers;
 };
 export type completeTournamentResponseError = (
+  | completeTournamentResponse400
   | completeTournamentResponse401
   | completeTournamentResponse403
   | completeTournamentResponse404
@@ -1652,6 +1689,11 @@ export type assignTournamentAdministratorResponse204 = {
   status: 204;
 };
 
+export type assignTournamentAdministratorResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type assignTournamentAdministratorResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -1677,6 +1719,7 @@ export type assignTournamentAdministratorResponseSuccess =
     headers: Headers;
   };
 export type assignTournamentAdministratorResponseError = (
+  | assignTournamentAdministratorResponse400
   | assignTournamentAdministratorResponse401
   | assignTournamentAdministratorResponse403
   | assignTournamentAdministratorResponse404
@@ -1725,6 +1768,11 @@ export type removeTournamentAdministratorResponse204 = {
   status: 204;
 };
 
+export type removeTournamentAdministratorResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type removeTournamentAdministratorResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -1745,6 +1793,7 @@ export type removeTournamentAdministratorResponseSuccess =
     headers: Headers;
   };
 export type removeTournamentAdministratorResponseError = (
+  | removeTournamentAdministratorResponse400
   | removeTournamentAdministratorResponse401
   | removeTournamentAdministratorResponse403
   | removeTournamentAdministratorResponse404

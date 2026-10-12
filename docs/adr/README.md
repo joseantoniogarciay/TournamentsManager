@@ -74,3 +74,5 @@ Usa [template.md](template.md) y el
 
 - [ADR-0161: Mis partidos y acceso al encuentro dentro del torneo](0161-add-personal-matches-tab-and-match-deep-links.md) — Aceptado; implementación autorizada.
 - [ADR-0162: Consultar ediciones relacionadas desde el torneo](0162-browse-related-tournament-editions.md) — Aceptado; implementación autorizada.
+
+- [ADR-0163: Contener recursos API y revalidar invitaciones](0163-bound-api-resource-work-and-revalidate-invitations.md) — Aceptado; corrección autorizada por el usuario.

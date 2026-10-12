@@ -54,7 +54,13 @@ func (s Service) ReauthenticateWithPassword(ctx context.Context, sessionToken, p
 		return "", "", ErrReauthenticationInvalid
 	}
 	stored, err := s.repository.CurrentPasswordHash(ctx, sessionToken)
-	if err != nil || !registration.VerifyPassword(password, stored) {
+	if err != nil {
+		return "", "", err
+	}
+	if err := ctx.Err(); err != nil {
+		return "", "", err
+	}
+	if !registration.VerifyPassword(password, stored) {
 		return "", "", ErrReauthenticationInvalid
 	}
 	ticket, hash, err := newTicket(purpose)
@@ -62,20 +68,23 @@ func (s Service) ReauthenticateWithPassword(ctx context.Context, sessionToken, p
 		return "", "", err
 	}
 	if err := s.repository.CreateReauthenticationTicket(ctx, sessionToken, hash); err != nil {
-		return "", "", ErrReauthenticationInvalid
+		return "", "", err
 	}
 	return ticket, time.Now().Add(5 * time.Minute).UTC().Format(time.RFC3339Nano), nil
 }
 
 // SetPassword consumes a reauthentication ticket and updates the password.
 func (s Service) SetPassword(ctx context.Context, sessionToken, ticket, password string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	hash := ticketHash(ticket, SetLocalPassword)
 	passwordHash, err := registration.HashPassword(password)
 	if err != nil {
 		return err
 	}
 	if err := s.repository.ConsumeReauthenticationTicketAndSetPassword(ctx, sessionToken, hash[:], passwordHash); err != nil {
-		return ErrReauthenticationInvalid
+		return err
 	}
 	return nil
 }

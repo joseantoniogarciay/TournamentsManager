@@ -252,6 +252,7 @@ async function refreshMobileSession(session: MobileSession) {
         await expireMobileSession();
         return null;
       }
+      if (response.status !== 200) throw new APIUnexpectedResponseError(response.status);
       await saveMobileSession(response.data);
       return getMobileSession();
     })().finally(() => {

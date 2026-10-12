@@ -82,6 +82,11 @@ export type inspectPasswordResetLinkResponse200 = {
   status: 200;
 };
 
+export type inspectPasswordResetLinkResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type inspectPasswordResetLinkResponse409 = {
   data: VerificationConflictProblemResponse;
   status: 409;
@@ -92,11 +97,19 @@ export type inspectPasswordResetLinkResponse410 = {
   status: 410;
 };
 
+export type inspectPasswordResetLinkResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
 export type inspectPasswordResetLinkResponseSuccess = inspectPasswordResetLinkResponse200 & {
   headers: Headers;
 };
 export type inspectPasswordResetLinkResponseError = (
-  inspectPasswordResetLinkResponse409 | inspectPasswordResetLinkResponse410
+  | inspectPasswordResetLinkResponse400
+  | inspectPasswordResetLinkResponse409
+  | inspectPasswordResetLinkResponse410
+  | inspectPasswordResetLinkResponse500
 ) & {
   headers: Headers;
 };
@@ -149,6 +162,16 @@ export type confirmPasswordResetResponse410 = {
   status: 410;
 };
 
+export type confirmPasswordResetResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
+export type confirmPasswordResetResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
 export type confirmPasswordResetResponseSuccess = confirmPasswordResetResponse200 & {
   headers: Headers;
 };
@@ -156,6 +179,8 @@ export type confirmPasswordResetResponseError = (
   | confirmPasswordResetResponse400
   | confirmPasswordResetResponse409
   | confirmPasswordResetResponse410
+  | confirmPasswordResetResponse429
+  | confirmPasswordResetResponse500
 ) & {
   headers: Headers;
 };

@@ -495,7 +495,7 @@ mismo límite transaccional de autorización sin participar en reglas deportivas
 | Begin, lock, lectura del origen/intención, INSERT de edición/equipos/vínculo, preferencia, proyección y commit | database.query_failed, database.unavailable o database.constraint_failed según categoría segura existente | Cada salida devuelve su error al límite HTTP; pruebas HTTP de categorización y ausencia de detalles, integración de atomicidad y reintentos. No se afirma inyección individual de fallos en cada sentencia |
 | Cancelación / deadline | request.cancelled / request.timeout | HTTP y cancelación de acceso PostgreSQL; el cliente aborta sin banner al salir |
 | Inspección y registro en equipo libre | Éxito sin causa; rechazos conservan tournament.invitation_not_found / tournament.invitation_conflict | Elección, carrera, cuenta duplicada, revocación, inicio y capacidad 64; la inspección solo muestra nombres libres |
-| Límite de tasa | No hay un nuevo limitador en estos recorridos; no se inventa un 429 | Se conserva la política de alta/invitaciones; el cliente usa fallback seguro si recibe un estado no tratado |
+| Límite de tasa | ADR-0163: repetición 5/minuto/cuenta, con 429 y rate_limit.exceeded; invitaciones no añaden limitador propio | HTTP comprueba rechazo temprano de repetición y su causa segura; invitaciones conservan política actual y cliente usa fallback común |
 
 El span raíz conserva la plantilla de ruta; no se añade un span por rama,
 validación, generación de intención o selección de equipo. Los spans técnicos
@@ -509,10 +509,17 @@ cuenta gana, la otra recibe ese rechazo sin duplicar equipos ni exportar cuentas
 
 ## Inventario: Mis partidos y Ediciones — ADR-0161 / ADR-0162
 
+La [revisión de seguridad API de 2026-10-12](../engineering/API_SECURITY_REVIEW_2026-10-12.md)
+complementa este inventario y documenta el cierre mediante ADR-0163: límites de
+estas lecturas, presupuestos HTTP/SQL y revalidación de invitaciones tras esperar
+el bloqueo. La paginación sigue sin implicar trabajo SQL constante. No se añaden
+atributos ni spans por controles y no se activa observabilidad local/dev.
+
 Se mantienen las plantillas `GET /v1/me/matches` y
 `GET /v1/tournaments/{tournamentId}/editions` en el span HTTP raíz. Las dos
 consultas sqlc constituyen el límite PostgreSQL; CTE, ordenación, comprobación
-de existencia y fila extra no añaden spans. No hay limitador específico.
+de existencia y fila extra no añaden spans. ADR-0163 limita ambas lecturas a
+60/minuto: por cuenta en Mis partidos y por IP confiable en Ediciones.
 
 | Salida | failure.reason seguro | Recuperación y evidencia |
 | --- | --- | --- |
@@ -520,7 +527,7 @@ de existencia y fila extra no añaden spans. No hay limitador específico.
 | Parámetros inválidos 400 | validation.rejected | HTTP prueba vista, límite y cursor, incluido límite explícito vacío/cero frente a omisión válida; fallback seguro cliente |
 | Sesión ausente 401 personal | Política de sesión existente | Middleware; HTTP comprueba rechazo sin consultar colección |
 | Torneo inexistente 404 ediciones | tournament.not_found | HTTP y PostgreSQL; reintento seguro en cliente |
-| Rate limit | No existe limitador de estas lecturas | Sin nueva salida 429 ni motivo inferido por estado |
+| Límite de tasa 429 | rate_limit.exceeded | Limitador explícito, Retry-After; HTTP por cuenta e integración cliente con fallback seguro |
 | Conexión PostgreSQL fallida 500 | database.unavailable | HTTP con SQLSTATE 08006; no exporta mensaje bruto |
 | Restricción PostgreSQL 500 | database.constraint_failed | HTTP con SQLSTATE 23514; sin SQL ni inputs |
 | Consulta/decodificación fallida 500 | database.query_failed | HTTP con error privado; cuerpo común seguro |
@@ -536,3 +543,22 @@ QA local 2026-10-12: límite cero rechazado de extremo a extremo tras corregir
 su confusión con la ausencia del parámetro. La regresión de ambas rutas prueba
 omisión, extremos válidos 1/50 y límites vacío/0/-1/51, conservando el motivo
 de validación en el span raíz y el cuerpo problem seguro. No añade spans.
+
+## Inventario: endurecimiento de recursos — ADR-0163
+
+| Salida o frontera | Causa raíz segura | Evidencia / recuperación |
+| --- | --- | --- |
+| Éxito de identidad o lectura dentro de presupuesto | Sin nueva causa | Suites HTTP y PostgreSQL; límites no cambian datos ni permisos |
+| Cuerpo >64 KiB, token/ticket demasiado largo | validation.rejected, 400 | Content-Length conocido y chunked, sin alcanzar hash; plantilla de ruta conservada |
+| Cupo de contraseña o cuota de recuperación/credenciales/repetición/lecturas | rate_limit.exceeded, 429 | Rechazo antes de trabajo, Retry-After; liberación de cupo y cuenta entre sesiones; sin datos ni claves exportadas |
+| Enlace de recuperación inválido antes de hash | credential.reset_link_invalid, 409 | Cero hashes, consumo final atómico; feedback seguro existente |
+| Invitación revocada/rotada/inicio mientras inscripción espera | tournament.invitation_not_found, 404 | PostgreSQL real con intercalado controlado; ningún vínculo parcial |
+| Fallo de inspección o consumo de recuperación; consulta/emisión/consumo de ticket | database.* según error técnico, 500 | Servicio preserva error; HTTP lo categoriza sin exponerlo; no se trata como credencial incorrecta |
+| statement_timeout / lock_timeout | request.timeout | SQLSTATE 57014 / 55P03; mismo motivo en span técnico y raíz; pg_sleep y bloqueo reales |
+| Cancelación | request.cancelled | Sin trabajo nuevo cuando contexto ya está cancelado; abortar cliente no muestra feedback. Hash iniciado termina antes de liberar cupo |
+
+No hay spans por cuotas, semáforo, snapshot, validación ni generación de secreto.
+Los contadores permanecen en memoria y las causas no se deducen del estado HTTP.
+El refresh nativo acepta solo 200 antes de guardar sesión: 400/429/500 preservan
+almacenamiento y usan APIUnexpectedResponseError; 401 conserva invalidación
+existente. El contrato declara 400 de cuerpos y 429 donde se aplica el limitador.

@@ -6,10 +6,11 @@ import (
 )
 
 type requestLimiter struct {
-	entries map[string]requestLimit
-	limit   int
-	mu      sync.Mutex
-	window  time.Duration
+	entries   map[string]requestLimit
+	limit     int
+	mu        sync.Mutex
+	window    time.Duration
+	cleanupAt time.Time
 }
 
 type loginLimiter struct {
@@ -22,6 +23,9 @@ func newLoginLimiter(limit int, window time.Duration) *loginLimiter {
 
 func (l *loginLimiter) allow(ip, email string) (bool, int) {
 	allowedIP, retryIP := l.byIP.allow(ip)
+	if !allowedIP {
+		return false, retryIP
+	}
 	allowedEmail, retryEmail := l.byEmail.allow(email)
 	if allowedIP && allowedEmail {
 		return true, 0
@@ -46,13 +50,23 @@ func (l *requestLimiter) allow(key string) (bool, int) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	for entryKey, entry := range l.entries {
-		if !entry.resetAt.After(now) {
-			delete(l.entries, entryKey)
+	if !now.Before(l.cleanupAt) {
+		for entryKey, entry := range l.entries {
+			if !entry.resetAt.After(now) {
+				delete(l.entries, entryKey)
+			}
 		}
+		l.cleanupAt = now.Add(time.Second)
 	}
 
 	entry := l.entries[key]
+	if !entry.resetAt.IsZero() && !entry.resetAt.After(now) {
+		delete(l.entries, key)
+		entry = requestLimit{}
+	}
+	if entry.resetAt.IsZero() && len(l.entries) >= 4096 {
+		return false, 1
+	}
 	if entry.resetAt.IsZero() {
 		entry.resetAt = now.Add(l.window)
 	}

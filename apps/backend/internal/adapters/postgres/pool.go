@@ -17,6 +17,11 @@ func NewPool(ctx context.Context, databaseURL string, tracer pgx.QueryTracer) (*
 		return nil, fmt.Errorf("configurar el pool PostgreSQL: %w", err)
 	}
 	poolConfig.ConnConfig.Tracer = tracer
+	if poolConfig.ConnConfig.RuntimeParams == nil {
+		poolConfig.ConnConfig.RuntimeParams = make(map[string]string)
+	}
+	poolConfig.ConnConfig.RuntimeParams["statement_timeout"] = "5000"
+	poolConfig.ConnConfig.RuntimeParams["lock_timeout"] = "2000"
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {

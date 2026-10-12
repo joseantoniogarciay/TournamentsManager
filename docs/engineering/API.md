@@ -464,3 +464,13 @@ cierre del servidor. El cliente valida íntegramente los cuerpos; transporte
 usa common_network_error, y HTTP/cuerpos desconocidos common_request_error.
 No hay caso de negocio que necesite un mensaje distinto. Cancelar no presenta
 feedback. Véase inventario de observabilidad y pruebas de browsing.
+
+## Presupuestos de recursos — ADR-0163
+
+El contrato expone la política técnica en x-resource-policy y declara 400/429
+seguros. Cuerpos máximos de 64 KiB, dos peticiones simultáneas de contraseña,
+cuotas de identidad/repetición/lecturas y contexto de 15 s se detallan en
+[Seguridad](SECURITY.md#contención-de-recursos--adr-0163). No convierten CORS ni
+autenticación en autorización por recurso. Nuevos estados 429 no reciben copy
+de negocio: las features conservan el fallback localizado común y no muestran
+title/detail del servidor.

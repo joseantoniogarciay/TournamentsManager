@@ -711,3 +711,39 @@ Retrospectiva: una respuesta genérica de alta repetida no prueba entrega de cor
 Separar el diagnóstico de identidad del despliegue evita introducir fixes sin causa.
 Un release debe conservar la cadena tag–SHA–artefactos y sus límites de QA: las
 capturas nativas no acreditan publicación en tiendas ni accesibilidad completa.
+
+## Publicación web v1.13.1 — 2026-10-12
+
+El usuario solicita desplegar la retirada del título de Mis partidos. Tag anotado
+v1.13.1 sobre merge no-ff `9c9d01e5f26a46078265c77b17b65ff48f5791a4`;
+[Release](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.13.1).
+Solo se publica web; API, renderer y PostgreSQL conservan v1.13.0 y esquema 22.
+No se ejecutan migraciones ni se distribuyen binarios nativos.
+
+`make verify` local pasa; integración PostgreSQL local omitida por ausencia de
+base efímera. La [CI del candidato](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/38268949626)
+y la [CI del tag](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/38269633582)
+pasan con PostgreSQL real. El merge conserva exactamente el árbol del candidato.
+Exportación productiva, preparación de símbolos y dry-run de ambos Workers pasan;
+los mapas fuente se retiran del artefacto público. No acredita recepción ni
+simbolicación de un error real.
+
+Preview `f2cc92ee-669b-48f6-9b26-01eb689e13df`: diez checks HTTPS pasan.
+Workers activos web `9a8afff4-913d-472a-abeb-25a2b089b96f` y www
+`b1bbb26c-9dc2-408e-a4af-6ea2d2f93e06`. Diez checks públicos verifican SHA,
+home indexable, colecciones/cuenta/legales noindex y 404 de torneo UUID v4,
+asset y asociación ausentes. API health 200 y www 308 conservando query.
+El navegador confirma entrada sin título adicional en Mis partidos sin sesión;
+no se repite login autenticado ni QA nativa. El origen Caddy de recuperación
+apunta a la misma web. No cambia DNS ni plan Free.
+
+Rollback: web v1.13.0 con Worker `9dc57060-fa07-40db-9100-fedd566c44fe`,
+www `b8a591b7-7127-4114-888a-a43a32d7270b` y artefacto local
+`ef4b1776866a17c96bd504e44e00a57698879606`. No requiere restaurar datos.
+Evidencia operativa en `/private/tmp/tm-v1131-*.log` y
+`/private/tmp/tm-ui-header-*.log`. Develop vuelve a contener el merge productivo;
+no se crean ramas temporales. Local/dev permanecen apagados y producción activa.
+
+Retrospectiva: una corrección visual puede entregarse de forma independiente
+sin reconstruir la API ni tocar persistencia. Conservar versiones diferentes
+por componente y el manifiesto público evita atribuir un nuevo SHA al backend.

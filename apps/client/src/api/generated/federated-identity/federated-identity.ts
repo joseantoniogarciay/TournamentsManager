@@ -95,6 +95,11 @@ export type deleteCurrentAccountGoogleIdentityResponse204 = {
   status: 204;
 };
 
+export type deleteCurrentAccountGoogleIdentityResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type deleteCurrentAccountGoogleIdentityResponse401 = {
   data: AuthenticationProblemResponse;
   status: 401;
@@ -104,10 +109,11 @@ export type deleteCurrentAccountGoogleIdentityResponseSuccess =
   deleteCurrentAccountGoogleIdentityResponse204 & {
     headers: Headers;
   };
-export type deleteCurrentAccountGoogleIdentityResponseError =
-  deleteCurrentAccountGoogleIdentityResponse401 & {
-    headers: Headers;
-  };
+export type deleteCurrentAccountGoogleIdentityResponseError = (
+  deleteCurrentAccountGoogleIdentityResponse400 | deleteCurrentAccountGoogleIdentityResponse401
+) & {
+  headers: Headers;
+};
 
 export type deleteCurrentAccountGoogleIdentityResponse =
   | deleteCurrentAccountGoogleIdentityResponseSuccess
@@ -149,6 +155,11 @@ export type createGoogleLoginChallengeResponse201 = {
   status: 201;
 };
 
+export type createGoogleLoginChallengeResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
 export type createGoogleLoginChallengeResponse429 = {
   data: RateLimitProblemResponse;
   status: 429;
@@ -168,6 +179,7 @@ export type createGoogleLoginChallengeResponseSuccess = createGoogleLoginChallen
   headers: Headers;
 };
 export type createGoogleLoginChallengeResponseError = (
+  | createGoogleLoginChallengeResponse400
   | createGoogleLoginChallengeResponse429
   | createGoogleLoginChallengeResponse500
   | createGoogleLoginChallengeResponse503

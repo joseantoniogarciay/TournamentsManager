@@ -16,6 +16,7 @@
 - [DEVELOPMENT.md](DEVELOPMENT.md): flujo y Definition of Done.
 - [IDENTITY.md](IDENTITY.md): credenciales locales, proveedores y vinculación.
 - [SECURITY.md](SECURITY.md): principios y amenazas.
+- [Revisión de seguridad API 2026-10-12](API_SECURITY_REVIEW_2026-10-12.md): hallazgos, pruebas de concurrencia y límites de evidencia.
 - [STYLEGUIDE.md](STYLEGUIDE.md): estilo de código y documentación.
 - [TESTING.md](TESTING.md): estrategia de pruebas.
 

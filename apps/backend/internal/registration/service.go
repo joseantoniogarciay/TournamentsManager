@@ -95,11 +95,17 @@ type PasswordProtector interface {
 
 type localPasswordProtector struct{}
 
-func (localPasswordProtector) Hash(_ context.Context, password string) (string, error) {
+func (localPasswordProtector) Hash(ctx context.Context, password string) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
 	return HashPassword(password)
 }
 
-func (localPasswordProtector) Verify(_ context.Context, password, encoded string) bool {
+func (localPasswordProtector) Verify(ctx context.Context, password, encoded string) bool {
+	if ctx.Err() != nil {
+		return false
+	}
 	return VerifyPassword(password, encoded)
 }
 
@@ -298,13 +304,19 @@ func (s Service) InspectPasswordReset(ctx context.Context, token string) (string
 	hash := sha256.Sum256([]byte("password-reset:" + token))
 	email, err := s.repository.InspectPasswordReset(ctx, hash[:])
 	if err != nil {
-		return "", ErrPasswordResetInvalid
+		return "", err
 	}
 	return email, nil
 }
 
 // ResetPassword consumes the link, changes the credential, and issues a new session.
 func (s Service) ResetPassword(ctx context.Context, token, password string) (Session, string, string, error) {
+	if _, err := s.InspectPasswordReset(ctx, token); err != nil {
+		return Session{}, "", "", err
+	}
+	if err := ctx.Err(); err != nil {
+		return Session{}, "", "", err
+	}
 	passwordHash, err := s.passwordProtector.Hash(ctx, password)
 	if err != nil {
 		return Session{}, "", "", err
@@ -321,7 +333,7 @@ func (s Service) ResetPassword(ctx context.Context, token, password string) (Ses
 	accessHash, refreshHash := sha256.Sum256([]byte("session:"+accessToken)), sha256.Sum256([]byte("refresh:"+refreshToken))
 	session, err := s.repository.ConsumePasswordReset(ctx, resetHash[:], passwordHash, accessHash[:], refreshHash[:])
 	if err != nil {
-		return Session{}, "", "", ErrPasswordResetInvalid
+		return Session{}, "", "", err
 	}
 	return session, accessToken, refreshToken, nil
 }

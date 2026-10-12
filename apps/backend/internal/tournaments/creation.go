@@ -665,6 +665,7 @@ func validCreateInput(input CreateInput) bool {
 	return true
 }
 func normalizedInput(input CreateInput) CreateInput {
+	input.Teams = append([]TeamInput(nil), input.Teams...)
 	input.Name = strings.TrimSpace(input.Name)
 	for i := range input.Teams {
 		input.Teams[i].Name = strings.TrimSpace(input.Teams[i].Name)

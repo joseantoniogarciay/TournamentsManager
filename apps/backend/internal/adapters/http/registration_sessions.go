@@ -49,7 +49,7 @@ func requestPasswordReset(service registration.Service, limiter *requestLimiter,
 func inspectPasswordReset(service registration.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body passwordResetTokenRequest
-		if err := decodeBody(r, &body); err != nil || body.Token == "" {
+		if err := decodeBody(r, &body); err != nil || (body.Token == "" || len(body.Token) > 512) {
 			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
@@ -61,6 +61,7 @@ func inspectPasswordReset(service registration.Service) http.HandlerFunc {
 			return
 		}
 		if err != nil {
+			observability.RecordDatabaseEndpointFailure(r.Context(), err)
 			writeProblem(w, http.StatusInternalServerError, "Could not inspect link")
 			return
 		}
@@ -72,7 +73,7 @@ func inspectPasswordReset(service registration.Service) http.HandlerFunc {
 func confirmPasswordReset(service registration.Service, cookies sessionCookieSettings) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body passwordResetConfirmationRequest
-		if err := decodeBody(r, &body); err != nil || body.Token == "" || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
+		if err := decodeBody(r, &body); err != nil || (body.Token == "" || len(body.Token) > 512) || len(body.Password) < 8 || len(body.Password) > 1024 || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") {
 			observability.RecordEndpointFailure(r.Context(), "validation.rejected")
 			writeValidationProblem(w)
 			return
@@ -84,6 +85,7 @@ func confirmPasswordReset(service registration.Service, cookies sessionCookieSet
 			return
 		}
 		if err != nil {
+			observability.RecordDatabaseEndpointFailure(r.Context(), err)
 			writeProblem(w, http.StatusInternalServerError, "Could not change password")
 			return
 		}
@@ -193,7 +195,7 @@ func verifyRegistration(service registration.Service, cookies sessionCookieSetti
 		var body verificationRequest
 		decoder := json.NewDecoder(request.Body)
 		decoder.DisallowUnknownFields()
-		if err := decoder.Decode(&body); err != nil || decoder.Decode(&struct{}{}) != io.EOF || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || body.Token == "" {
+		if err := decoder.Decode(&body); err != nil || decoder.Decode(&struct{}{}) != io.EOF || (body.SessionTransport != "cookie" && body.SessionTransport != "bearer") || (body.Token == "" || len(body.Token) > 512) {
 			observability.RecordEndpointFailure(request.Context(), "validation.rejected")
 			writeValidationProblem(writer)
 			return

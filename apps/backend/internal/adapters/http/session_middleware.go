@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
 )
 
@@ -42,6 +43,10 @@ func requireSession(authenticator sessionAuthenticator) func(http.Handler) http.
 			if err != nil {
 				if errors.Is(err, tournaments.ErrUnauthenticated) {
 					writeProblem(writer, http.StatusUnauthorized, "Invalid session")
+					return
+				}
+				observability.RecordDatabaseEndpointFailure(request.Context(), err)
+				if request.Context().Err() == context.Canceled {
 					return
 				}
 				writeProblem(writer, http.StatusInternalServerError, "Could not validate session")

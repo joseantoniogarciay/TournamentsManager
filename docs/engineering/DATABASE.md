@@ -209,3 +209,12 @@ hasOtherEditions se deriva de padre o hijo dentro de la transacción de lectura
 del detalle; no se persiste un contador ni se añade una entidad Serie.
 Las proyecciones se generan con sqlc y el puerto BrowsingRepository mantiene
 el dominio independiente de PostgreSQL.
+
+## Presupuesto de consultas de runtime — ADR-0163
+
+NewPool impone statement_timeout=5000 y lock_timeout=2000 por conexión de la
+API, sin modificar roles ni esquema. SQLSTATE 57014/55P03 se categoriza como
+request.timeout seguro. No es una configuración de durabilidad ni afecta a
+comandos de migración. Las invitaciones se revalidan en una sentencia nueva
+después de obtener el bloqueo del torneo: un snapshot previo a la espera no
+conserva autorización sobre un secreto revocado o rotado.

@@ -6,6 +6,19 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.13.2] - 2026-10-12
+
+### Security
+
+- Revalida invitaciones después de esperar el bloqueo del torneo: revocar,
+  rotar o iniciar impide una inscripción pendiente con capacidad anterior.
+- Evita hashes con enlaces de recuperación inválidos y limita trabajo de
+  contraseña, cuotas, cuerpos y tiempos HTTP/SQL según ADR-0163.
+- Contiene nuevas lecturas y repetición; copia equipos al normalizar para
+  eliminar la carrera de entrada compartida.
+- Preserva errores técnicos de credenciales y sesión nativa ante refresh
+  400/429/500; contrato y cliente generado actualizados. Publicación API y web; sin binarios nativos.
+
 ## [1.13.1] - 2026-10-12
 
 ### Fixed

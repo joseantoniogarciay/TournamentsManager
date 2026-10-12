@@ -1,0 +1,39 @@
+package http
+
+import (
+ "context"
+ "net/http/httptest"
+ "strings"
+ "testing"
+ "github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration"
+)
+
+type auditResetRepository struct { registration.Repository }
+func (auditResetRepository) ConsumePasswordReset(context.Context,[]byte,string,[]byte,[]byte)(registration.Session,error){ return registration.Session{},registration.ErrPasswordResetInvalid }
+type auditPasswordProtector struct { calls int }
+func (p *auditPasswordProtector) Hash(context.Context,string)(string,error){ p.calls++; return "audit-hash",nil }
+func (*auditPasswordProtector) Verify(context.Context,string,string)bool { return false }
+
+// Audit probes characterize the present behavior without running a load attack.
+func TestSecurityReviewInvalidResetRepeatedHashing(t *testing.T){
+ p:= &auditPasswordProtector{}
+ handler:=NewHandlerWithConfig(HandlerConfig{},HandlerDependencies{Registration:registration.NewService(auditResetRepository{},nil,p)})
+ for range 12 {
+  req:=httptest.NewRequest("POST","/v1/password-reset-confirmations",strings.NewReader(`{"token":"invalid","password":"long password","sessionTransport":"bearer"}`))
+  req.RemoteAddr="203.0.113.20:1000"
+  response:=httptest.NewRecorder()
+  handler.ServeHTTP(response,req)
+  if response.Code != 409 { t.Fatalf("behavior changed: %d",response.Code) }
+ }
+ if p.calls != 12 { t.Fatalf("hash calls: %d",p.calls) }
+ t.Log("CONFIRMED: 12 invalid-token requests from one IP caused 12 password hashes, no 429")
+}
+func TestSecurityReviewOversizedResetBody(t *testing.T){
+ p:= &auditPasswordProtector{}
+ handler:=NewHandlerWithConfig(HandlerConfig{},HandlerDependencies{Registration:registration.NewService(auditResetRepository{},nil,p)})
+ body:=`{"token":"`+strings.Repeat("a",2*1024*1024)+`","password":"long password","sessionTransport":"bearer"}`
+ response:=httptest.NewRecorder()
+ handler.ServeHTTP(response,httptest.NewRequest("POST","/v1/password-reset-confirmations",strings.NewReader(body)))
+ if response.Code != 409 || p.calls != 1 { t.Fatalf("behavior changed: status=%d hashes=%d",response.Code,p.calls) }
+ t.Log("CONFIRMED: JSON with a 2 MiB token decoded and reached password hashing")
+}

@@ -5,6 +5,18 @@ info:
   description: >-
     Contrato de diseño del primer incremento. No implica que los endpoints estén
     implementados. Los secretos de sesión y verificación son opacos.
+x-resource-policy:
+  decision: ADR-0163
+  maxBodyBytes: 65536
+  requestBudgetSeconds: 15
+  concurrentPasswordRequestsPerProcess: 2
+  countersPerLimiter: 4096
+  quotasPerMinute:
+    passwordResetConfirmationPerIP: 10
+    credentialChangesPerAccountShared: 10
+    repetitionPerAccount: 5
+    personalMatchesPerAccount: 60
+    editionsPerIP: 60
 servers:
   - url: http://127.0.0.1:8080/v1
     description: API local de desarrollo.
@@ -67,6 +79,7 @@ paths:
       summary: Elimina todas las notificaciones de la cuenta actual
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "204": { description: Buzón eliminado. }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /me/notifications/read:
@@ -76,6 +89,7 @@ paths:
       summary: Marca como leídas todas las notificaciones de la cuenta actual
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "204": { description: Buzón marcado como leído. }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /me/notifications/unread-count:
@@ -107,6 +121,7 @@ paths:
           required: true
           schema: { $ref: "#/components/schemas/UUID" }
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "204": { description: Notificación eliminada o inexistente. }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /me/account:
@@ -116,6 +131,7 @@ paths:
       summary: Programa la eliminación de la cuenta actual
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "200":
           description: Baja programada y accesos revocados.
           content:
@@ -148,6 +164,8 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/ReauthenticationRequest" }
       responses:
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
         "201":
           description: Ticket emitido; vence en cinco minutos y solo sirve para la sesión actual.
           content:
@@ -170,6 +188,8 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/LocalCredentialRequest" }
       responses:
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
         "204": { description: Contraseña local establecida. }
         "400": { $ref: "#/components/responses/ValidationProblem" }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
@@ -184,6 +204,7 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/ReauthenticationTicketRequest" }
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "204": { description: Contraseña local eliminada. }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /me/google-identities:
@@ -213,6 +234,7 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/ReauthenticationTicketRequest" }
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "204": { description: Google desvinculado. }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /password-resets:
@@ -247,6 +269,8 @@ paths:
               properties:
                 token: { $ref: "#/components/schemas/OpaqueToken" }
       responses:
+        "500": { $ref: "#/components/responses/RequestProblem" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "200":
           description: Enlace válido; la inspección no lo consume.
           content:
@@ -266,6 +290,8 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/PasswordResetConfirmationRequest" }
       responses:
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
         "200":
           description: Contraseña cambiada y sesión nueva establecida.
           content:
@@ -437,6 +463,7 @@ paths:
       summary: Revoca la sesión actual
       security: [{ sessionCookie: [] }, { bearerSession: [] }]
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "204": { description: "Sesión revocada; para cookie, también se expira la cookie." }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
   /sessions/refresh:
@@ -446,6 +473,8 @@ paths:
       summary: Rota una sesión mediante su refresh token
       security: [{ refreshCookie: [] }, { bearerRefresh: [] }]
       responses:
+        "500": { $ref: "#/components/responses/RequestProblem" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "200":
           description: Access y refresh token rotados.
           headers:
@@ -465,6 +494,7 @@ paths:
       summary: Crea un nonce de un solo uso para iniciar Google
       security: []
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "201":
           description: Challenge creado; vence en cinco minutos.
           content:
@@ -606,6 +636,7 @@ paths:
           in: query
           schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
       responses:
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
         "200":
           description: Página personal; sin IDs de cuenta.
           content:
@@ -637,6 +668,7 @@ paths:
           in: query
           schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
       responses:
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
         "200":
           description: Página de ediciones relacionadas.
           content:
@@ -803,6 +835,7 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/RepeatTournamentInput" }
       responses:
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
         "201":
           description: Edición creada o recuperada por la misma intención.
           content:
@@ -1070,6 +1103,7 @@ paths:
           required: true
           schema: { $ref: "#/components/schemas/UUID" }
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "200":
           description: Baja aplicada y proyección pública actualizada.
           content:
@@ -1094,6 +1128,7 @@ paths:
           required: true
           schema: { $ref: "#/components/schemas/UUID" }
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "200":
           description: Torneo cancelado y aún visible en modo de solo lectura.
           content:
@@ -1119,6 +1154,7 @@ paths:
           required: true
           schema: { $ref: "#/components/schemas/UUID" }
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "200":
           description: Torneo finalizado con campeonas oficiales.
           content:
@@ -1302,6 +1338,7 @@ paths:
           required: true
           schema: { $ref: "#/components/schemas/Username" }
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "204": { description: La cuenta ya administra el torneo. }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
         "403": { description: La sesión no pertenece a la organizadora. }
@@ -1323,6 +1360,7 @@ paths:
           required: true
           schema: { $ref: "#/components/schemas/Username" }
       responses:
+        "400": { $ref: "#/components/responses/ValidationProblem" }
         "204": { description: La cuenta ya no administra el torneo. }
         "401": { $ref: "#/components/responses/AuthenticationProblem" }
         "403": { description: La sesión no pertenece a la organizadora. }
