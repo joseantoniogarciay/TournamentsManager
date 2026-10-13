@@ -590,3 +590,37 @@ session_management_integration_test.go verifica persistencia, aislamiento,
 paginación, coordinación de refresh y recorrido HTTP real sobre PostgreSQL.
 El cliente prueba estados desconocidos, cuerpo malformado y paso intacto de
 fallo de conexión/cancelación. No se activa observabilidad en local/dev.
+
+## Revisión de salidas de escritura — ADR-0165, 2026-10-13
+
+Inicio de torneo, transición eliminatoria/ciclos de desempate y registro de
+resultado conservan sus plantillas HTTP y contrato. Éxito devuelve 200;
+validación rechazada conserva 400 y validation.rejected; ausencia, permisos y
+conflictos conservan 404/403/409 y las causas de negocio de cada operación.
+La configuración mixta incompatible conserva 422 y
+tournament.configuration_rejected. No hay limitador específico de inicio o
+resultado; no se añade un 429 por lote. El rechazo de recursos compartidos
+conserva la política de ADR-0163 y rate_limit.exceeded cuando aplica.
+
+Se recorren los límites de adquisición/BEGIN, lectura, inserción de cada lote,
+actualización, historial, sets, COMMIT y lectura posterior. Las categorías seguras
+continúan siendo database.unavailable, database.constraint_failed,
+database.query_failed o request.failed según el fallo; timeout de consulta,
+bloqueo o petición conserva request.timeout y cancelación request.cancelled.
+Un fallo previo al commit revierte el conjunto; un fallo de lectura posterior
+no convierte un commit confirmado en rollback. Nunca se exportan errores brutos,
+cantidades, IDs, SQL ni inputs como failure.reason.
+
+TestTournamentBatchedWritesKeepSafeHTTPFailures recorre respuestas de éxito,
+validación, ausencia, permiso, conflicto, conexión, restricción, consulta, timeout
+de sentencia/bloqueo/deadline y cancelación en las tres rutas. Comprueba respuesta
+segura, plantilla del span raíz, causa cerrada y ausencia de datos internos.
+Las pruebas SQL reales cubren rollback de un lote posterior y las invariantes
+de calendario, resultado e historial. No se crean spans propios por lote,
+comparación de campos o rama; el tracer de consulta existente conserva el límite
+PostgreSQL. La temporización del probe es solo evidencia de pruebas.
+
+El cliente mantiene sus casos contractuales existentes: rechazos de transporte
+usan common_network_error, fallos técnicos/no reconocidos common_request_error,
+y cancelaciones intencionadas no muestran feedback. No se modifica ni amplía el
+mapeo de negocio por estado. [Informe y retrospectiva](../engineering/TRANSACTION_WORK_REVIEW_2026-10-13.md).

@@ -6362,3 +6362,22 @@ y después aportaron evidencia de conservación. Si se usa otro empaquetado,
 registrar toolchain, fuente limpia, piezas reutilizadas sin cambios y hashes;
 no presentar un build fallido como exitoso. Docker local quedó detenido; el
 borrado de su fixture sintético no se pudo confirmar.
+
+## 2026-10-13 — Menos trabajo dentro de una transacción
+
+**Fundamento:** agrupar INSERT reduce viajes a PostgreSQL, pero no libera bloqueos
+ni permite confirmar parcialmente el calendario. El límite de sentencia de cinco
+segundos tampoco limita por sí mismo una transacción con muchas sentencias.
+
+**Evidencia:** la comparación del commit anterior con la implementación de
+ADR-0165 conserva el mismo PostgreSQL aislado y los mismos escenarios. Una liga
+de 4032 partidos pasa de 4032 INSERT a 16; un resultado en un cuadro de 64 equipos
+pasa de 63 UPDATE a 2. El [informe](../engineering/TRANSACTION_WORK_REVIEW_2026-10-13.md)
+conserva muestras, metodología y límites de la medición.
+
+**Retrospectiva técnica:** la purga acotada tiene más coste total para una
+acumulación pequeña; su beneficio es limitar el trabajo por ejecución. Medir ambos
+objetivos evita presentar cualquier cambio como una aceleración. Reducir escrituras
+innecesarias conserva la garantía simple de bloqueo por torneo y evita introducir
+concurrencia más fina antes de tener evidencia que justifique su mantenimiento.
+El límite de entidades raíz no equivale a limitar todas sus cascadas.

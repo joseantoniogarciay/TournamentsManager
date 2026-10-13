@@ -1,0 +1,22 @@
+=== RUN   TestIntegrationTransactionPerformance
+    transaction_performance_integration_test.go:82: MEASURE league sample=0 total_ms=77.416 inserts=16 insert_total_ms=61.457 insert_max_ms=4.700
+    transaction_performance_integration_test.go:98: MEASURE bracket sample=0 total_ms=5.438 updates=2
+    transaction_performance_integration_test.go:82: MEASURE league sample=1 total_ms=77.521 inserts=16 insert_total_ms=61.396 insert_max_ms=4.215
+    transaction_performance_integration_test.go:98: MEASURE bracket sample=1 total_ms=4.624 updates=2
+    transaction_performance_integration_test.go:82: MEASURE league sample=2 total_ms=76.376 inserts=16 insert_total_ms=61.482 insert_max_ms=4.192
+    transaction_performance_integration_test.go:98: MEASURE bracket sample=2 total_ms=5.383 updates=2
+    transaction_performance_integration_test.go:82: MEASURE league sample=3 total_ms=76.808 inserts=16 insert_total_ms=60.948 insert_max_ms=3.998
+    transaction_performance_integration_test.go:98: MEASURE bracket sample=3 total_ms=4.105 updates=2
+    transaction_performance_integration_test.go:82: MEASURE league sample=4 total_ms=72.195 inserts=16 insert_total_ms=60.620 insert_max_ms=3.946
+    transaction_performance_integration_test.go:98: MEASURE bracket sample=4 total_ms=4.971 updates=2
+    transaction_performance_integration_test.go:82: MEASURE league sample=5 total_ms=75.460 inserts=16 insert_total_ms=62.952 insert_max_ms=4.416
+    transaction_performance_integration_test.go:98: MEASURE bracket sample=5 total_ms=4.893 updates=2
+    transaction_performance_integration_test.go:138: MEASURE purge sample=0 first_ms=2.066 first_deleted=300 drain_ms=11.519 passes=10
+    transaction_performance_integration_test.go:138: MEASURE purge sample=1 first_ms=1.360 first_deleted=300 drain_ms=9.897 passes=10
+    transaction_performance_integration_test.go:138: MEASURE purge sample=2 first_ms=1.450 first_deleted=300 drain_ms=10.000 passes=10
+    transaction_performance_integration_test.go:138: MEASURE purge sample=3 first_ms=1.474 first_deleted=300 drain_ms=10.486 passes=10
+    transaction_performance_integration_test.go:138: MEASURE purge sample=4 first_ms=1.370 first_deleted=300 drain_ms=10.016 passes=10
+    transaction_performance_integration_test.go:138: MEASURE purge sample=5 first_ms=1.333 first_deleted=300 drain_ms=9.736 passes=10
+--- PASS: TestIntegrationTransactionPerformance (0.87s)
+PASS
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres	1.124s

@@ -13,10 +13,14 @@ func (r AccountTournamentRepository) PurgeExpired(ctx context.Context, limit int
 	if limit < 1 {
 		return 0, fmt.Errorf("límite de purga debe ser positivo")
 	}
-	if _, err := r.pool.Exec(ctx, `DELETE FROM google_risc_events WHERE expires_at <= now()`); err != nil {
+	if _, err := r.pool.Exec(ctx, `DELETE FROM google_risc_events WHERE id IN (
+		SELECT id FROM google_risc_events WHERE expires_at <= now()
+		ORDER BY expires_at, id LIMIT $1)`, limit); err != nil {
 		return 0, err
 	}
-	if _, err := r.pool.Exec(ctx, `DELETE FROM apple_login_challenges WHERE expires_at <= now()`); err != nil {
+	if _, err := r.pool.Exec(ctx, `DELETE FROM apple_login_challenges WHERE id IN (
+		SELECT id FROM apple_login_challenges WHERE expires_at <= now()
+		ORDER BY expires_at, id LIMIT $1)`, limit); err != nil {
 		return 0, err
 	}
 	command, err := r.pool.Exec(ctx, `
@@ -41,8 +45,12 @@ func (r AccountTournamentRepository) PurgeExpired(ctx context.Context, limit int
 		)
 		, expired_legal_evidence AS (
 			DELETE FROM legal_account_acceptances
-			WHERE retention_until IS NOT NULL
-				AND retention_until <= now()
+			WHERE id IN (
+				SELECT id FROM legal_account_acceptances
+				WHERE retention_until IS NOT NULL AND retention_until <= now()
+					AND (account_id IS NULL OR account_id NOT IN (SELECT id FROM candidates))
+				ORDER BY retention_until, id LIMIT $1
+			)
 		)
 		DELETE FROM accounts
 		USING candidates

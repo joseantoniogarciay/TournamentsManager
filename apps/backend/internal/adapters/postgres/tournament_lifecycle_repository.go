@@ -442,12 +442,11 @@ func insertLeagueFixtures(ctx context.Context, tx pgx.Tx, tournamentID, stageID 
 	if groupNumber > 0 {
 		sequenceOffset = (groupNumber - 1) * ((len(teamIDs) + 1) / 2)
 	}
-	for _, fixture := range fixtures(teamIDs, legs) {
-		if _, err := tx.Exec(ctx, `INSERT INTO matches (tournament_id,round_number,sequence,home_team_id,away_team_id,stage_id,group_number) VALUES ($1,$2,$3,$4,$5,$6,NULLIF($7,0))`, tournamentID, fixture.round, fixture.sequence+sequenceOffset, fixture.home, fixture.away, stageID, groupNumber); err != nil {
-			return err
-		}
+	values := fixtures(teamIDs, legs)
+	for i := range values {
+		values[i].sequence += sequenceOffset
 	}
-	return nil
+	return insertFixtures(ctx, tx, tournamentID, stageID, values, groupNumber)
 }
 
 func insertQualificationTieBreakCycle(ctx context.Context, tx pgx.Tx, tournamentID, stageID string, poolNumber, cycle int, teamIDs []string) error {
@@ -458,15 +457,14 @@ func insertQualificationTieBreakCycle(ctx context.Context, tx pgx.Tx, tournament
 	if err := tx.QueryRow(ctx, `SELECT COALESCE(MAX(sequence),0) FROM matches WHERE stage_id=$1 AND round_number=$2`, stageID, cycle).Scan(&sequence); err != nil {
 		return err
 	}
+	var values []fixture
 	for home := 0; home < len(teamIDs); home++ {
 		for away := home + 1; away < len(teamIDs); away++ {
 			sequence++
-			if _, err := tx.Exec(ctx, `INSERT INTO matches(tournament_id,stage_id,round_number,sequence,group_number,home_team_id,away_team_id) VALUES ($1,$2,$3,$4,$5,$6,$7)`, tournamentID, stageID, cycle, sequence, poolNumber, teamIDs[home], teamIDs[away]); err != nil {
-				return err
-			}
+			values = append(values, fixture{round: cycle, sequence: sequence, home: teamIDs[home], away: teamIDs[away]})
 		}
 	}
-	return nil
+	return insertFixtures(ctx, tx, tournamentID, stageID, values, poolNumber)
 }
 
 func recordQualificationTieBreakResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID, matchID string, sport tournaments.Sport, input tournaments.MatchResultInput) error {

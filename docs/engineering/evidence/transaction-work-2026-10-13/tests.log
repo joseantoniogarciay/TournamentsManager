@@ -1,0 +1,23 @@
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/cmd/api	1.524s
+?   	github.com/joseantoniogarciay/TournamentsManager/apps/backend/cmd/league-preview-renderer	[no test files]
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/cmd/legal-audit-backup	1.298s
+?   	github.com/joseantoniogarciay/TournamentsManager/apps/backend/cmd/legal-audit-restore	[no test files]
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/access	3.559s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/accounts	1.268s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/apple	2.364s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/google	2.698s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/http	4.093s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres	39.393s
+?   	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres/sqlc	[no test files]
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/smtp	1.298s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/architecture	1.298s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/config	1.142s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/federated	1.144s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/leaguepreview	1.185s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/legal	1.120s
+?   	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/notifications	[no test files]
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/observability	1.675s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/registration	1.145s
+?   	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/sessions	[no test files]
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/suggestions	1.131s
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments	1.207s

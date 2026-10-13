@@ -1,0 +1,8 @@
+=== RUN   TestIntegrationBracketWritesOnlyChangedMatchesAndKeepsHistory
+--- PASS: TestIntegrationBracketWritesOnlyChangedMatchesAndKeepsHistory (0.33s)
+=== RUN   TestIntegrationFixtureLaterBatchFailureRollsBackEarlierBatches
+--- PASS: TestIntegrationFixtureLaterBatchFailureRollsBackEarlierBatches (0.28s)
+=== RUN   TestIntegrationPurgeBoundsEveryExpiredCategory
+--- PASS: TestIntegrationPurgeBoundsEveryExpiredCategory (0.04s)
+PASS
+ok  	github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/adapters/postgres	2.069s
