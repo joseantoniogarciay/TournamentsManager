@@ -6381,3 +6381,17 @@ objetivos evita presentar cualquier cambio como una aceleración. Reducir escrit
 innecesarias conserva la garantía simple de bloqueo por torneo y evita introducir
 concurrencia más fina antes de tener evidencia que justifique su mantenimiento.
 El límite de entidades raíz no equivale a limitar todas sus cascadas.
+
+### Publicación de mejoras transaccionales — 2026-10-13
+
+v1.14.1 publica API y renderer; web conserva v1.14.0. Gates local y CI en verde,
+backup dentro de la VM restaurado en aislamiento, huellas de negocio idénticas,
+rollout 2/2 y 36 lecturas de salud correctas. Docker indisponible no se presenta
+como build exitoso: el empaquetado alternativo conserva procedencia y verifica
+que certificados, migrator y comandos legales no cambiaron.
+
+Retrospectiva: una ruta de fallback web puede devolver 200 para un endpoint
+inexistente. Usar el hostname contractual y comprobar estados de validación,
+ausencia y autenticación impide tomar ese HTML como evidencia de salud. La
+mejora de rendimiento se mide en aislamiento; producción se verifica con lecturas
+sin mutar torneos reales. No hay DDL: el rollback recupera artefactos anteriores.

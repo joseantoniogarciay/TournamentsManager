@@ -822,3 +822,55 @@ Rollback: web/www de v1.13.2 y su API `28a9dfa51fed73437dcce09db9d73d486105d9ef`
 Cierre: web/API disponibles, Job de restore aislado retirado, Metro y simulador apagados. Docker local queda detenido tras terminar el backend bloqueado; no se borraron volúmenes. No pudo confirmarse el borrado del contenedor desechable `tm-sessions-release-qa` porque el motor dejó de responder. Sus datos son sintéticos, con restart desactivado; retirarlo al recuperar Docker. Local/dev y sus tareas permanecen apagados; no se inició observabilidad de desarrollo. Binarios móviles y QA visual nativo pendientes. Disco host ~1,2 GiB libre: no realizar otro build Docker pesado sin recuperar margen.
 
 Retrospectiva: el ~1 GiB inicial era insuficiente para reconstruir goose y no se debía usar para un build que comparte disco con producción. Un gate de espacio debe preceder builds pesados en ese host. La restauración previa y las huellas facilitaron recuperar y verificar sin alterar datos; la procedencia explícita del empaquetado alternativo evita declarar un build Docker que falló.
+
+## Publicación backend v1.14.1 — 2026-10-13
+
+Usuario autoriza con «Despliega prod». [Release v1.14.1](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.14.1),
+tag anotado sobre merge main `7591d1a0b974e60080193c6f71fc8b2f512f014f`.
+ADR-0165 agrupa calendarios, evita escrituras eliminatorias sin cambios y acota
+purgas auxiliares. API y renderer se publican; web conserva v1.14.0 y su SHA
+`791d087e6a92ee2b1a8b09064826360a8837a793`. Sin binarios nativos ni nuevas migraciones.
+
+Gate local make verify con PostgreSQL 18.6 desechable pasa, además de la suite
+real con -race. [CI del candidato](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/38352066643)
+y [CI del merge](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/38352720773)
+pasan antes del rollout. Espacio previo: aproximadamente 40 GiB en Mac y 14 GiB
+en VM. Docker permanece indisponible; no se intenta un build Docker ni cambia
+su instalación. API linux/arm64 compilada desde el tag limpio con Go 1.26.9 y
+flags del Dockerfile. Se reutilizan certificados, comandos legales y migrator
+del artefacto anterior tras verificar ausencia de cambios en sus fuentes,
+módulos, Dockerfile y migraciones. Proveniencia, metadata VCS, hashes de archivos,
+referencias internas y hashes después de transferencia conservados en privado.
+
+Backup incremental cifrado dentro de la VM `20261011-080242F_20261013-053240I`,
+status ok. Restauración exacta en Job aislado con repositorio solo lectura y
+emptyDir, sin montar datos activos: completa, base fuera de recovery. No se
+exportan datos fuera de la VM; el Job de ensayo se retira tras comprobarlo.
+
+Dry-run contra K3s pasa; Goose confirma no migrations to run, versión 23.
+Secret migrador efímero retirado y Job completado. API nueva 2/2 Ready con el
+tag esperado y cero reinicios; renderer readiness coincide con el SHA del tag.
+Durante el rollout pasan 36 lecturas HTTPS de healthz sin fallos de transporte
+ni 5xx. Se conserva inicio y cierre normal del drenaje de un pod anterior; no
+se acredita la secuencia de ambos pods ni una prueba de carga sostenida.
+
+Diez checks públicos de lectura verifican salud, autenticación requerida,
+Ediciones, límites de paginación, inexistencia, CORS, sesiones y continuidad
+de la web anterior. El primer smoke apuntaba erróneamente al fallback web de
+fasttourney.com/api; se corrige a api.fasttourney.com antes de activar la versión.
+No se interpreta un 200 HTML como salud de la API ni se omite TLS. Las huellas
+agregadas de siete tablas de negocio coinciden antes/después; no se crean ni
+modifican torneos reales para probar el rendimiento.
+
+Rollback: API y renderer v1.14.0, imagen anterior, manifiesto limpio y binario
+conservados. No requiere Down ni restaurar datos. Evidencia privada en
+`/private/tmp/tm-release-v1141-20261013`; métricas comparativas sintéticas en
+el informe de ADR-0165. Develop vuelve a contener main, sin ramas temporales.
+PostgreSQL de pruebas apagado; local/dev y sus tareas permanecen apagados.
+No se inicia observabilidad de desarrollo ni cambia durabilidad productiva.
+
+Retrospectiva: los datos aislados acreditan la mejora y el rollback transaccional;
+el smoke productivo acredita disponibilidad y contrato. No mezclar ambos como
+capacidad medida de producción. Conservar el host contractual y comprobar el
+artefacto por componente evita falsos positivos de un fallback HTML o de una
+web que no forma parte de esta entrega.
