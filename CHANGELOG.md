@@ -6,6 +6,16 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.14.1] - 2026-10-13
+
+### Changed
+
+- Calendarios de liga y desempates en lotes de hasta 256 partidos, manteniendo
+  la transacción completa; resultados eliminatorios actualizan únicamente los
+  partidos modificados. ADR-0165 y comparación anterior/nueva con PostgreSQL real.
+- Purgas auxiliares de eventos RISC, desafíos Apple y evidencias legales
+  caducadas acotadas por ejecución. Publicación de backend; sin nuevas migraciones.
+
 ## [1.14.0] - 2026-10-12
 
 ### Added

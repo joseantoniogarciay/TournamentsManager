@@ -804,3 +804,21 @@ Retrospectiva: recuperar el runtime y desplegar un artefacto son comprobaciones
 distintas. Probar límites con tokens ficticios acredita el contrato público sin
 alterar identidades reales. Las cuotas en memoria deben documentarse por réplica;
 el smoke no equivale a protección global contra ataques distribuidos.
+
+## Publicación de sesiones activas v1.14.0 — 2026-10-12
+
+Usuario autoriza con «Adelante». ADR-0164 aceptado: sesiones opacas, lista y cierre de otras familias; sin cambio a JWT. Tag anotado v1.14.0, merge main `791d087e6a92ee2b1a8b09064826360a8837a793`. Gates: make verify local; PostgreSQL 18.6 real con -race separado (49,919 s); CI develop 38299037389 y main 38299074673 pasan. QA web oscuro escritorio y teléfono, cuenta sintética, cierre selectivo y todas las demás. No validación visual nativa ni distribución de binarios.
+
+Backup previo nuevo dentro de la VM `20261011-080242F_20261012-193318I`, pgBackRest cifrado y status ok. Restauración exacta en Job aislado, repositorio solo lectura, emptyDir y sin montar datos activos: completa, base fuera de recovery. No exportación iCloud.
+
+Incidente de preparación: espacio libre inicial ~1 GiB. Docker build goose agotó disco del host y su filesystem quedó en solo lectura. UTM informó ENOSPC y la VM dejó de responder (API 502), antes de ejecutar migración o rollout. Se retiraron solo temporales QA y caché Go recreable de esta tarea. Docker no recuperó su motor mediante CLI stop/restart; se terminaron sus procesos locales bloqueados, sin borrar volúmenes. Se prepararon archivos de imagen verificables sin Docker: API linux/arm64 compilada en host con Go 1.26.9, tag limpio, flags de Dockerfile; certificados, comandos de auditoría y goose de un artefacto existente cuya fuente y dependencias no cambiaron, más nueva capa con todas las migraciones y los roles productivos. Hashes y procedencia privados en artifact-provenance.json; lectura de retorno y referencias comprobadas antes de transferir. No se oculta como un docker build exitoso.
+
+Recuperación: UTM se cerró y reabrió tras el estado bloqueado; se arrancó la VM existente, PostgreSQL recuperó y K3s volvió a servir. API antigua 2/2 y healthz 200 antes de retomar publicación. Huellas de siete tablas de negocio idénticas antes/después de recuperación y migración; no fue necesario restaurar datos productivos.
+
+Migración 00023 aplicada con Goose antes de la API, versión 23. Secret efímero retirado. API nueva 2/2 con la imagen del SHA etiquetado; renderer productivo verificado con el mismo SHA. Cloudflare web `528216d2-50bb-44c1-8999-5ff406594888` y www `2aa52d9f-d0a7-46fd-afaf-6a847ad1ec94`, mismo deployment.json. Preview HTTPS y doce checks web productivos pasan, incluida /account/sessions noindex; ocho checks API existentes y cuatro de sesiones (401 sin credenciales, preflight móvil 204) pasan. No se crearon ni revocaron sesiones reales para el smoke.
+
+Rollback: web/www de v1.13.2 y su API `28a9dfa51fed73437dcce09db9d73d486105d9ef`; conservar columnas aditivas 00023. Release: https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.14.0. `develop` avanzado a `main`; sin rama temporal para borrar. Evidencia privada en `/private/tmp/tm-release-v114-20261012`.
+
+Cierre: web/API disponibles, Job de restore aislado retirado, Metro y simulador apagados. Docker local queda detenido tras terminar el backend bloqueado; no se borraron volúmenes. No pudo confirmarse el borrado del contenedor desechable `tm-sessions-release-qa` porque el motor dejó de responder. Sus datos son sintéticos, con restart desactivado; retirarlo al recuperar Docker. Local/dev y sus tareas permanecen apagados; no se inició observabilidad de desarrollo. Binarios móviles y QA visual nativo pendientes. Disco host ~1,2 GiB libre: no realizar otro build Docker pesado sin recuperar margen.
+
+Retrospectiva: el ~1 GiB inicial era insuficiente para reconstruir goose y no se debía usar para un build que comparte disco con producción. Un gate de espacio debe preceder builds pesados en ese host. La restauración previa y las huellas facilitaron recuperar y verificar sin alterar datos; la procedencia explícita del empaquetado alternativo evita declarar un build Docker que falló.

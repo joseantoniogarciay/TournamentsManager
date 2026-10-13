@@ -6347,3 +6347,37 @@ mantiene su comportamiento independiente. Salir cancela peticiones y evita aviso
 ni deshace peticiones ya autorizadas. Publicación y QA visual nativo no forman
 parte de este cambio; migración 00023 debe preceder a la API nueva. El incremento
 no introduce JWT, push, fingerprinting ni infraestructura de observabilidad.
+
+## 2026-10-12 — Espacio de build compartido con producción
+
+Un build de goose agotó el disco del Mac y provocó ENOSPC en QEMU: producción
+dejó de responder antes de migrar o desplegar. Un GiB libre no era un margen
+suficiente. Preflight debe medir el coste de recompilar herramientas y reservar
+margen para los procesos productivos; no basta con el tamaño final de la imagen.
+No se debe repetir un build pesado hasta recuperar espacio suficiente.
+
+Se recuperó la VM existente tras liberar temporales y caché recreable, sin cambiar
+durabilidad ni restaurar datos vivos. Backup probado y huellas de negocio antes
+y después aportaron evidencia de conservación. Si se usa otro empaquetado,
+registrar toolchain, fuente limpia, piezas reutilizadas sin cambios y hashes;
+no presentar un build fallido como exitoso. Docker local quedó detenido; el
+borrado de su fixture sintético no se pudo confirmar.
+
+## 2026-10-13 — Menos trabajo dentro de una transacción
+
+**Fundamento:** agrupar INSERT reduce viajes a PostgreSQL, pero no libera bloqueos
+ni permite confirmar parcialmente el calendario. El límite de sentencia de cinco
+segundos tampoco limita por sí mismo una transacción con muchas sentencias.
+
+**Evidencia:** la comparación del commit anterior con la implementación de
+ADR-0165 conserva el mismo PostgreSQL aislado y los mismos escenarios. Una liga
+de 4032 partidos pasa de 4032 INSERT a 16; un resultado en un cuadro de 64 equipos
+pasa de 63 UPDATE a 2. El [informe](../engineering/TRANSACTION_WORK_REVIEW_2026-10-13.md)
+conserva muestras, metodología y límites de la medición.
+
+**Retrospectiva técnica:** la purga acotada tiene más coste total para una
+acumulación pequeña; su beneficio es limitar el trabajo por ejecución. Medir ambos
+objetivos evita presentar cualquier cambio como una aceleración. Reducir escrituras
+innecesarias conserva la garantía simple de bloqueo por torneo y evita introducir
+concurrencia más fina antes de tener evidencia que justifique su mantenimiento.
+El límite de entidades raíz no equivale a limitar todas sus cascadas.

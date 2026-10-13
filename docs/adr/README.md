@@ -78,3 +78,5 @@ Usa [template.md](template.md) y el
 - [ADR-0163: Contener recursos API y revalidar invitaciones](0163-bound-api-resource-work-and-revalidate-invitations.md) — Aceptado; corrección autorizada por el usuario.
 
 - [ADR-0164: Gestionar sesiones opacas activas](0164-manage-active-opaque-sessions.md) — Aceptado.
+
+- [ADR-0165: Agrupar calendarios y acotar escrituras y purgas](0165-bound-tournament-writes-and-expired-data-purges.md) — Aceptado.

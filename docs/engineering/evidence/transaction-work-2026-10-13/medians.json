@@ -1,0 +1,38 @@
+{
+  "baseline": {
+    "league": {
+      "total_ms": 689.978,
+      "inserts": 4032.0,
+      "insert_total_ms": 673.845,
+      "insert_max_ms": 0.271
+    },
+    "bracket": {
+      "total_ms": 13.114,
+      "updates": 63.0
+    },
+    "purge": {
+      "first_ms": 1.114,
+      "first_deleted": 3000.0,
+      "drain_ms": 1.114,
+      "passes": 1.0
+    }
+  },
+  "updated": {
+    "league": {
+      "total_ms": 76.376,
+      "inserts": 16.0,
+      "insert_total_ms": 61.396,
+      "insert_max_ms": 4.192
+    },
+    "bracket": {
+      "total_ms": 4.893,
+      "updates": 2.0
+    },
+    "purge": {
+      "first_ms": 1.37,
+      "first_deleted": 300.0,
+      "drain_ms": 10.0,
+      "passes": 10.0
+    }
+  }
+}

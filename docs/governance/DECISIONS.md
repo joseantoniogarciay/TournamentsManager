@@ -314,3 +314,9 @@ de producción. Los límites iniciales quedan sujetos a medición y revisión.
 ## Gestión de sesiones aceptada — 2026-10-12
 
 [ADR-0164](../adr/0164-manage-active-opaque-sessions.md) registra «Ok vamos con eso»: conservar tokens opacos, consultar sesiones activas y cerrar una o todas las demás. La sesión actual conserva el logout existente. Implementación en Cuenta y API; publicación no solicitada.
+
+[ADR-0165](../adr/0165-bound-tournament-writes-and-expired-data-purges.md) registra
+«Pues hagamos los ajustes que dices»: calendarios en lotes de 256 partidos,
+escrituras solo de partidos eliminatorios modificados y purgas auxiliares
+acotadas. El usuario pide medir tanto la solución anterior como la nueva;
+la evidencia compara ambas sobre PostgreSQL aislado. No autoriza despliegue.

@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"reflect"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/joseantoniogarciay/TournamentsManager/apps/backend/internal/tournaments"
@@ -254,6 +255,14 @@ func recordBracketResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID
 			incident = match.Result.Incident
 			resultType = tournaments.MatchResultType(tournaments.MatchResultInput(*match.Result))
 		}
+		previous := stageMatches[i]
+		if previous.HomeTeamID == match.HomeTeamID && previous.AwayTeamID == match.AwayTeamID &&
+			previous.WinnerTeamID == match.WinnerTeamID && previous.State == state &&
+			previous.ResultType == resultType && equalOptional(previous.HomeScore, home) &&
+			equalOptional(previous.AwayScore, away) && equalOptional(previous.HomePenalties, hp) &&
+			equalOptional(previous.AwayPenalties, ap) && reflect.DeepEqual(previous.Incident, incident) {
+			continue
+		}
 		_, err = tx.Exec(ctx, `UPDATE matches SET home_team_id=NULLIF($2,'')::uuid,away_team_id=NULLIF($3,'')::uuid,winner_team_id=NULLIF($4,'')::uuid,state=$5,home_score=$6,away_score=$7,home_penalties=$8,away_penalties=$9,result_type=NULLIF($10,''),incident=$11 WHERE id=$1`, stageMatches[i].ID, match.HomeTeamID, match.AwayTeamID, match.WinnerTeamID, state, home, away, hp, ap, resultType, incident)
 		if err != nil {
 			return err
@@ -264,6 +273,10 @@ func recordBracketResult(ctx context.Context, tx pgx.Tx, accountID, tournamentID
 		return err
 	}
 	return replaceMatchSets(ctx, tx, matchID, changeID, input.Sets)
+}
+
+func equalOptional[T comparable](left, right *T) bool {
+	return left == nil && right == nil || left != nil && right != nil && *left == *right
 }
 
 // Current sets and immutable change snapshots share the surrounding transaction.

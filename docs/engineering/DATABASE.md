@@ -234,3 +234,29 @@ para mantener el mismo orden que logout/revocación; no crea una familia nueva.
 La actividad se toca como máximo cada cinco minutos, salvo captura inicial,
 con una CTE en la consulta de autenticación, sin una segunda ida a PostgreSQL.
 No se afirma coste SQL constante ni se añade caché sin medición.
+
+## Trabajo bajo bloqueos y purgas — ADR-0165
+
+Los calendarios de liga y ciclos de desempate usan INSERT con arrays tipados y
+UNNEST, hasta 256 partidos por sentencia. La liga máxima de 64 equipos a dos
+vueltas conserva sus 4032 partidos y necesita 16 inserciones. Todas comparten
+la transacción y el bloqueo actuales; un fallo posterior revierte también las
+inserciones previas. Los lotes no liberan el bloqueo entre sentencias.
+
+El cuadro eliminatorio compara la proyección persistida antes de ejecutar UPDATE:
+participantes, ganadora, estado, tanteos, penaltis, tipo de resultado e incidente.
+Se siguen guardando los sets y el historial de la operación solicitada incluso
+si el marcador se repite. La propagación de ganadoras y sus restricciones no cambia.
+
+PurgeExpired selecciona como máximo el límite recibido por cada categoría:
+cuentas, eventos RISC, desafíos Apple y evidencias legales caducadas. El caso de
+uso actual pasa 100. No hay un bucle productivo que vacíe toda la acumulación.
+Los borrados RISC no usan FOR UPDATE porque su rol runtime no tiene UPDATE.
+Los timeouts actuales acotan esperas concurrentes. La evidencia de cuentas
+seleccionadas se excluye del borrado caducado de la misma sentencia, conservando
+su extensión de retención y evitando modificar dos veces una fila en CTE hermanos.
+El límite de cuentas no acota el número de filas dependientes borradas por cascada.
+
+La [comparación reproducible](TRANSACTION_WORK_REVIEW_2026-10-13.md) mide las dos
+versiones en PostgreSQL real. 256 es una elección inicial; los tiempos locales
+no constituyen un SLO ni demuestran capacidad bajo carga concurrente de producción.
