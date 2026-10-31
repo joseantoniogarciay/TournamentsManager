@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Security
 
+- ADR-0173: Forge 1.4.2 corrige los 12 registros restantes de ese paquete,
+  incluidos los seis altos. Excepción de edad exacta autorizada; auditoría
+  final con 3 moderados, cero altos, bajos o críticos. Regresión de firma Expo.
+
 - ADR-0172: correcciones transitivas maduras y acotadas; auditoría npm de 43 a
   15 registros (6 altos, 6 moderados, 3 bajos; cero críticos), sin avisos nuevos.
   Quedan Forge, glob, minimatch y Hono 1; se conservan edad mínima y matriz Expo.

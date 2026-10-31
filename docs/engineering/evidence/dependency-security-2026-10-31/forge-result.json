@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-31",
+  "version": "node-forge@1.4.2",
+  "published": "2026-10-27T14:09:15.471Z",
+  "age_exception_expires": "2026-11-03T14:09:15.471Z",
+  "lockfile_sha256": "813999b9b5475eb988fe5a2660ce6ccff48edb6c891fa210fdfda619682f6aad",
+  "audit_sha256": "9db6c1d87d63a026e5fb57df0b318cf582a658417cda78b94a852899265bcfde",
+  "removed_npm_ids": [
+    "1240912",
+    "1244014",
+    "1244015",
+    "1244016",
+    "1244017",
+    "1244018",
+    "1244019",
+    "1244020",
+    "1244021",
+    "1244022",
+    "1244023",
+    "1244024"
+  ],
+  "new_npm_ids": [],
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 3,
+      "high": 0,
+      "critical": 0
+    },
+    "dependencies": 536,
+    "devDependencies": 730,
+    "optionalDependencies": 196,
+    "totalDependencies": 1303
+  },
+  "remaining": [
+    {
+      "npm_id": 1243661,
+      "package": "@hono/node-server",
+      "severity": "moderate",
+      "source": "https://github.com/advisories/GHSA-rmxm-3fg6-px4f"
+    },
+    {
+      "npm_id": 1244012,
+      "package": "minimatch",
+      "severity": "moderate",
+      "source": "https://github.com/advisories/GHSA-g3hv-75wg-m249"
+    },
+    {
+      "npm_id": 1244013,
+      "package": "glob",
+      "severity": "moderate",
+      "source": "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4"
+    }
+  ],
+  "upstream_tests": {
+    "tag": "v1.4.1",
+    "against": "npm node-forge@1.4.2",
+    "passed": 254,
+    "skipped": [
+      "rsa / should generate same 512 bit key pair (prng+sync,prng+sync+purejs)",
+      "rsa / should generate same 512 bit key pair (prng+sync,prng+async)",
+      "rsa / should generate same 512 bit key pair (prng+async,prng+sync)",
+      "rsa / should generate same 512 bit key pair (prng+async,prng+async)"
+    ]
+  },
+  "source_checks": {
+    "rsa": "6632e195295ce76f6bb9131ee770dcd6cc1ee4ffac7906302208b00faf95a87f",
+    "pem": "e8924037685f22dfb10ea9d1b780a7ae4f4eb3e6c601cef4079e7747bb4c8922"
+  },
+  "rsa_negative_control": "Official nested DigestAlgorithm vector accepted by 1.4.0, rejected by 1.4.2",
+  "maintainer_advisory": "https://github.com/digitalbazaar/forge/security/advisories/GHSA-2g46-22mc-6gwp",
+  "validation": {
+    "expo_install_check": "passed against local bundledNativeModules map in offline mode; remote versions endpoint not checked",
+    "expo_signing_regression": "passed",
+    "make_verify": "passed",
+    "node_regressions": 126,
+    "postgres_integration_this_session": "skipped: no isolated database configured"
+  }
+}

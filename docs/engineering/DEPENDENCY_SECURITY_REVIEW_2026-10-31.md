@@ -1,5 +1,9 @@
 # Revisión del inventario de dependencias — 2026-10-31
 
+> Actualización posterior: [Forge 1.4.2 / ADR-0173](FORGE_SECURITY_FIX_2026-10-31.md)
+> elimina otros 12 registros. El estado actual del checkout es 3 moderados,
+> cero altos, bajos o críticos. Los 15 siguientes son el resultado del primer lote.
+
 ## Evaluación inicial y alcance
 
 Se revisan los 43 registros del inventario de la migración TS 7: 15 altos,

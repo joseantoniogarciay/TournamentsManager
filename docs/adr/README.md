@@ -94,3 +94,5 @@ Usa [template.md](template.md) y el
 - [ADR-0171: TypeScript 7 y Oxlint conservando Prettier](0171-use-typescript-7-and-oxlint-with-prettier.md) — Aceptado; supera el aplazamiento de TypeScript de ADR-0170.
 
 - [ADR-0172: Corregir avisos maduros por lotes](0172-remediate-mature-dependency-security-advisories.md) — Aceptado; 28 registros eliminados y 15 pendientes.
+
+- [ADR-0173: Corrección Forge con excepción exacta de edad](0173-apply-forge-security-fix-with-exact-age-exception.md) — Aceptado; Forge 1.4.2 elimina los seis altos y otros seis registros.

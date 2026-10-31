@@ -6,8 +6,9 @@
 ## Principio
 
 La [revisión de dependencias del 2026-10-31](DEPENDENCY_SECURITY_REVIEW_2026-10-31.md)
-clasifica los 43 registros iniciales del checkout. El lote aceptado de ADR-0172
-elimina 28 y conserva 15 abiertos: 6 altos, 6 moderados y 3 bajos, cero críticos.
+clasifica los 43 registros iniciales del checkout. ADR-0172 elimina 28;
+[ADR-0173 y la corrección de Forge](FORGE_SECURITY_FIX_2026-10-31.md) eliminan
+otros 12. Quedan 3 moderados, cero altos, bajos o críticos.
 No describe el estado de los artefactos publicados.
 
 La seguridad se diseña con el flujo, no se añade al final. Toda decisión debe

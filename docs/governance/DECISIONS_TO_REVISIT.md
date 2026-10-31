@@ -49,6 +49,13 @@ ADR: enlaza la decisión y define qué evidencia obliga a reabrirla.
 | Cloud agnostic                                      | Principio                                                                                                                                                                                                                                                                                           | Cuando una abstracción añada más coste que portabilidad                                                                                                                          | [ARCHITECTURE.md](../engineering/ARCHITECTURE.md)                                                                                                                                                                                                     |
 | Modelo inicial de liga                              | Liga de fútbol a una vuelta; publicación editable hasta inicio; resultados 3-1-0, bajas a 3-0 uniforme y visibilidad no listada                                                                                                                                                                     | Doble vuelta, incidencias tipadas, cambios tras inicio, abuso de enlaces/asignaciones, avisos o jugadores                                                                        | [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md), [ADR-0041](../adr/0041-continue-league-after-team-withdrawal-with-3-0-results.md)                                                                                             |
 
+## Excepción puntual de Forge — ADR-0173
+
+Retirar únicamente `node-forge@1.4.2` de `minimumReleaseAgeExclude` cuando
+cumpla siete días, el **2026-11-03T14:09:15.471Z**. Conservar el override
+y la resolución corregida. La excepción autorizada no cambia la política
+general; véase [ADR-0173](../adr/0173-apply-forge-security-fix-with-exact-age-exception.md).
+
 ## Cómo revisar
 
 1. Cambiar el ADR afectado a **En revisión** o crear una propuesta sucesora.

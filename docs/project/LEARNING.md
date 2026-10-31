@@ -6671,3 +6671,21 @@ presente y exige otro selector exacto antes de repetir audit. Un peer que exige
 Hono 1 no se convierte en compatible con Hono 2 ampliando su declaración.
 Quedan 15 avisos: 12 Forge, glob, minimatch y Hono 1. Subir a develop conserva
 el trabajo sin confundir integración con publicación de producción.
+
+## 2026-10-31 — Contrastar el parche y probar el consumidor de Forge
+
+**Decisión:** instalar la corrección si resuelve los seis altos (ADR-0173).
+La evidencia del mantenedor vincula el CVE del aviso RSA antiguo con otro GHSA
+que sí declara 1.4.1 corregida. Se usa 1.4.2 para restaurar además PEM Buffer,
+con una excepción de edad exacta autorizada y fecha de retirada.
+
+**Evidencia:** 254 pruebas oficiales pasan; cuatro comparaciones de generación
+PRNG determinista se omiten por el generador nativo de Node. El vector RSA
+anidado detecta el fallo en 1.4.0 y se rechaza en 1.4.2. La regresión permanente
+prueba certificado, claves, PEM Buffer y payload alterado mediante Expo.
+Audit elimina los doce registros Forge y conserva tres moderados.
+
+**Retrospectiva:** revisar el changelog del hotfix evita una regresión conocida.
+Comparar el código npm con el tag y ejecutar un control negativo aporta evidencia
+que no ofrece un conteo de avisos por sí solo. No se confunde excepción puntual
+con autorización general para instalar versiones jóvenes.

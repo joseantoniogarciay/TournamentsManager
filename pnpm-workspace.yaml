@@ -22,8 +22,11 @@ minimumReleaseAgeIgnoreMissingTime: false
 minimumReleaseAgeStrict: true
 
 # ADR-0167: excepción puntual de Expo 58.0.22 y sus dependencias necesarias.
+# ADR-0173: excepción exacta de node-forge 1.4.2 por corrección autorizada.
 # Autorizada explícitamente; retirar al cumplir siete días. Sin comodines.
 minimumReleaseAgeExclude:
+  # ADR-0173: retirar el 2026-11-03T14:09:15.471Z.
+  - "node-forge@1.4.2"
   - "expo-system-ui@58.0.7"
   - "@react-native/babel-preset@0.88.1"
   - "@react-native/metro-babel-transformer@0.88.1"
@@ -111,6 +114,7 @@ overrides:
   "sharp@0.35.4": 0.35.5
   "vite@8.0.16": 8.1.6
   "zod@4.6.5": 4.6.6
+  "node-forge@1.4.0": 1.4.2
   "xcode>uuid": 11.1.1
 
 # Correcciones de seguridad de 2026-10-03 y ADR-0172 (2026-10-31).

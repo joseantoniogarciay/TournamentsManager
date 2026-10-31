@@ -5,7 +5,7 @@
 - **Decisor:** Usuario, mediante decisión explícita en la conversación
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0077, en su excepción por compatibilidad de Expo; complementa ADR-0075
-- **Superado por:** ADR-0167 solo para las versiones exactas de la migración a Expo 58.0.22; la política general permanece vigente. ADR-0169 añade la excepción exacta autorizada para x/net 0.62.0.
+- **Superado por:** ADR-0167 solo para las versiones exactas de la migración a Expo 58.0.22; la política general permanece vigente. ADR-0169 añade la excepción exacta autorizada para x/net 0.62.0. ADR-0173 añade la excepción puntual autorizada para node-forge 1.4.2 hasta el 2026-11-03T14:09:15.471Z.
 
 ## Problema y contexto
 

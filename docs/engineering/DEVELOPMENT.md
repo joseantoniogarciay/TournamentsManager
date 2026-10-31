@@ -424,6 +424,10 @@ ya no detecta vulnerabilidades en paquetes importados por la aplicación ni en
 funciones alcanzables. Conserva el aviso GO-2026-5932 sobre `openpgp`, paquete
 obsoleto dentro de x/crypto que la aplicación no importa y sin versión corregida.
 
+El siguiente párrafo y su tabla conservan el resultado histórico del 3 de
+octubre. El [estado actual tras ADR-0173](FORGE_SECURITY_FIX_2026-10-31.md)
+es tres moderados; Forge ya está corregido con 1.4.2.
+
 El árbol JavaScript se ha actualizado con overrides exactos, por rama o por
 consumidor, conservando el lockfile y la política de siete días. La auditoría
 pasa de 94 a 5 avisos (cuatro altos y uno moderado; conteos de pnpm, no de
@@ -431,7 +435,7 @@ funciones alcanzables). Los overrides deben retirarse cuando los consumidores
 incorporen las revisiones corregidas por sus propios rangos. No se modifican
 las dependencias directas nativas para forzar una auditoría a cero.
 
-| Paquete pendiente | Motivo y siguiente paso                                                                                                |
+| Paquete pendiente entonces | Motivo y siguiente paso                                                                                                |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | node-forge 1.4.0  | La corrección indicada 1.4.1 no está publicada en npm al comprobarla. Esperar una revisión oficial publicada y madura. |
 | braces 3.0.3      | La corrección indicada 3.0.4 no está publicada en npm. Esperar una revisión oficial publicada y madura.                |
@@ -691,8 +695,17 @@ resultados y límites. No equivale a una publicación ni cambia binarios despleg
 ADR-0171 migra el compilador a 7.0.2 y el linter a Oxlint 1.89.0, conservando
 Prettier y Orval. El [informe](TYPESCRIPT_7_OXLINT_MIGRATION_2026-10-31.md)
 registra las reglas, 125 regresiones, resolución privada de TS 6 para TypeDoc
-y generación determinista. La auditoría npm actual devuelve 43 avisos heredados
+y generación determinista. La auditoría npm inicial devolvió 43 avisos heredados
 (15 altos, 18 moderados, 10 bajos; ninguno crítico), agrupados en 12 paquetes.
 Todas las versiones afectadas ya existían antes de esta migración. Ese
 inventario requiere una revisión de seguridad aparte y no acredita exposición
 ni ausencia de ella. Los conteos históricos anteriores no son el estado actual.
+
+
+## Corrección Forge posterior — ADR-0173
+
+El usuario autoriza aplicar la corrección de los seis altos; Forge pasa a 1.4.2
+con una excepción exacta de edad que se retira el 2026-11-03T14:09:15.471Z.
+Solo cambia ese paquete y se conserva la matriz Expo. Audit final: 3 moderados,
+cero altos, bajos o críticos. Make verify, 126 regresiones y las pruebas de
+firma de Expo pasan. Véase [la evidencia y retrospectiva](FORGE_SECURITY_FIX_2026-10-31.md).

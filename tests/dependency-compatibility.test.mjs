@@ -101,3 +101,33 @@ test("Expo JSI strips private C++ extensions from both Swift interface syntaxes"
     assert.equal(result.stdout, publicAPI + publicAPI);
   }
 });
+
+test("Expo code signing retains PEM Buffer input and verifies certificates and payloads", () => {
+  const expoRequire = createRequire(clientRequire.resolve("expo/package.json"));
+  const expoCLIRequire = createRequire(expoRequire.resolve("@expo/cli/package.json"));
+  const signing = expoCLIRequire("@expo/code-signing-certificates");
+  const signingRequire = createRequire(expoCLIRequire.resolve("@expo/code-signing-certificates"));
+  const forge = signingRequire("node-forge");
+  const pair = signing.generateKeyPair();
+  const certificate = signing.generateSelfSignedCodeSigningCertificate({
+    keyPair: pair,
+    validityNotBefore: new Date(Date.now() - 60_000),
+    validityNotAfter: new Date(Date.now() + 60_000),
+    commonName: "Dependency compatibility fixture",
+  });
+  const pem = signing.convertCertificateToCertificatePEM(certificate);
+  assert.deepEqual(forge.pem.decode(Buffer.from(pem)), forge.pem.decode(pem));
+  const restored = signing.convertCertificatePEMToCertificate(pem);
+  const restoredPair = signing.convertKeyPairPEMToKeyPair(signing.convertKeyPairToPEM(pair));
+  signing.validateSelfSignedCertificate(restored, restoredPair);
+  const payload = Buffer.from("local test payload");
+  const signature = signing.signBufferRSASHA256AndVerify(
+    restoredPair.privateKey,
+    restored,
+    payload,
+  );
+  const digest = (value) => forge.md.sha256.create().update(value).digest().getBytes();
+  const signatureBytes = forge.util.decode64(signature);
+  assert.equal(restored.publicKey.verify(digest(payload.toString("binary")), signatureBytes), true);
+  assert.equal(restored.publicKey.verify(digest("altered payload"), signatureBytes), false);
+});

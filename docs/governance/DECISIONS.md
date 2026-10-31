@@ -389,3 +389,12 @@ exportación web y generación determinista correctos. Fixtures de librsvg, Vite
 Hono y Miniflare pasan. El usuario autoriza expresamente enviar el grafo a npm
 tras el rechazo inicial de revisión automática. También pide subir el trabajo
 acumulado a develop; no se promociona main ni producción.
+
+## 2026-10-31 — Corregir Forge ahora (ADR-0173)
+
+El usuario decide «Si soluciona lo metemos» tras conocer los seis altos y la
+espera pendiente. El mantenedor confirma el parche de RSA bajo otro GHSA para
+el mismo CVE. Se elige 1.4.2 porque 1.4.1 rompe pem.decode(Buffer); se añade
+una excepción exacta a la edad mínima, sin cambiar la política general.
+Retirar esa excepción el 2026-11-03T14:09:15.471Z. Solo cambia Forge en el grafo.
+Audit pasa de 15 a 3 moderados; cero altos, bajos o críticos, sin IDs nuevos.
