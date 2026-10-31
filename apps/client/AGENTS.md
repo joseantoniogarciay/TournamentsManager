@@ -38,6 +38,10 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   `unstable_nativeProps={{ colorScheme: resolvedTheme }}`: de otro modo iOS
   hereda su propio esquema al crear o reutilizar una tab y muestra la apariencia
   equivocada. No se fuerza `Appearance.setColorScheme` para corregir este efecto.
+  Desde SDK 58, iOS declara `UIViewControllerBasedStatusBarAppearance=true` en
+  app.config: iOS 27 ignora la API anterior de apariencia a nivel de aplicación.
+  `StatusBar` en la raíz conserva el estilo desde el tema resuelto; no se reparten
+  estilos de barra de estado entre pantallas ni se vuelve a fijar esa clave a false.
   iOS y Android no muestran selector de idioma.
 - Las pantallas usan tokens semánticos y primitivas de `shared/ui`; no introducen
   hexadecimales, medidas repetidas, fuentes remotas ni una librería de UI sin ADR
@@ -63,6 +67,22 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   lista: eso desplazaría las cards 40 px desde el borde.
 - `Screen` no añade padding horizontal: ese margen exterior pertenece a `Card`.
   Añadirlo en ambos sitios duplica la separación lateral.
+- **Apps móviles/tablet — ADR-0166:** todas las rutas admiten rotación y
+  redimensionado/Split View. Usa el espacio real del contenedor y los cuatro
+  insets dinámicos; nunca presupongas que la barra está arriba, tampoco en
+  iPhone Duo. `Screen` delimita en nativo un marco interior con los insets
+  izquierdo/derecho: protege también acciones absolutas. Estos insets se suman
+  a los 20 px de Card/contenido; no son margen de diseño ni se duplican en hijos.
+  Cada ruta nativa mide sus insets con el provider de su propia escena: el de
+  una ruta cubierta puede dejar de actualizarse al girar. No se sustituyen
+  estas medidas por las de una tab subyacente.
+  Fondos y carruseles pueden recorrer los bordes seguros. Los overlays fuera de
+  ese marco necesitan protección propia. `ModalDialog` permite cuatro giros y
+  desplaza su contenido si falta altura, con safe area de su propia ventana.
+  No remontes pantallas al girar ni fuerces orientación o anchuras por modelo.
+  Comprueba Duo cerrado/abierto, ambos horizontales, verticales admitidas,
+  tablet, Split View estrecho/ancho, teclado y último control. Distingue siempre
+  comprobación de configuración y ejecución visual. Web conserva ADR-0154.
 - Según ADR-0154, web centra navegación y tabs en `webLayout.maxWidth` (1200 px).
   `Screen` limita su contenido a `webLayout.readingMaxWidth` (720 px) por defecto;
   Inicio, biblioteca, ficha y clasificación declaran `webWidth="wide"`.

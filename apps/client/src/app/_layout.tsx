@@ -10,6 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { type PropsWithChildren, useEffect, useState } from "react";
 import { Platform, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { typography, webLayout } from "@tournaments-manager/design-tokens";
 
@@ -101,6 +102,12 @@ function RootNavigator() {
   );
 }
 
+function RouteSafeArea({ children }: PropsWithChildren) {
+  // A presented native route has its own view controller. Its underlying route
+  // can stop receiving inset changes while covered, so measure in the visible scene.
+  return Platform.OS === "web" ? <>{children}</> : <SafeAreaProvider>{children}</SafeAreaProvider>;
+}
+
 function SessionNavigator() {
   const { finishSessionReplacement, replacementDestination, revision, transition } = useSession();
 
@@ -146,7 +153,9 @@ function SessionNavigator() {
 
   return (
     <Stack
+      screenLayout={({ children }) => <RouteSafeArea>{children}</RouteSafeArea>}
       screenOptions={{
+        headerTransparent: false,
         headerShown: false,
         headerTitleStyle: { fontFamily: typography.family.semibold },
       }}
@@ -345,10 +354,6 @@ function WebPageAppearance({
 
   return (
     <Head>
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
-      />
       <style>{`
         @supports selector(div:has(> [role="tablist"])) {
           div:has(> [role="tablist"] a[role="tab"][href="/tournaments"]) {

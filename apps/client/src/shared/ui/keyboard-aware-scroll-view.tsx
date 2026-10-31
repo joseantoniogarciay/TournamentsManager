@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from "react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
@@ -28,7 +29,7 @@ export function KeyboardAwareScrollView({
   ...props
 }: ScrollViewProps & { bottomInset?: "safe-area" | "none" }) {
   const insets = useSafeAreaInsets();
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
   const focusedInput = useRef<ReturnType<typeof TextInput.State.currentlyFocusedInput>>(null);
   const keyboardTop = useRef<number | undefined>(undefined);
   const offset = useRef(0);

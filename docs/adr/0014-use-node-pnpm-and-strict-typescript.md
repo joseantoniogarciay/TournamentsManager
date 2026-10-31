@@ -5,7 +5,7 @@
 - **Decisor:** Usuario, mediante confirmación explícita
 - **Propietario del análisis:** Asistente como mentor técnico
 - **Supera a:** Ninguno
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0171 en compilador, linter y configuración del editor; los demás principios permanecen vigentes.
 
 ## Problema
 

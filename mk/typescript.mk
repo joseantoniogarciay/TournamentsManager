@@ -40,6 +40,11 @@ openapi-ui:
 test-dependencies:
 	$(PNPM) run test:dependencies
 
+# Verifica rechazos reales de lint/tipos y el modo estricto de CommonJS.
+.PHONY: test-toolchain
+test-toolchain:
+	$(PNPM) run test:toolchain
+
 .PHONY: test-match-incidents
 test-match-incidents:
 	$(PNPM) run test:match-incidents
@@ -47,3 +52,8 @@ test-match-incidents:
 .PHONY: test-scheduling
 test-scheduling:
 	$(PNPM) run test:scheduling
+
+# Preserve native rotation and multi-window configuration through CNG.
+.PHONY: test-native-adaptive-window
+test-native-adaptive-window:
+	node --test tests/native-adaptive-window.test.mjs

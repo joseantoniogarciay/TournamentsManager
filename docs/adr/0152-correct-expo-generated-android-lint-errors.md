@@ -5,7 +5,7 @@
 - **Decisor:** Usuario
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** Ninguno; concreta el mantenimiento CNG de ADR-0015.
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0168 en la decisión de esperar correcciones oficiales.
 
 ## Problema
 
@@ -116,3 +116,28 @@ idempotencia, error de recursos o cambio visual de splash en una API soportada.
 - [Android: recursos alternativos y calificadores de versión](https://developer.android.com/guide/topics/resources/providing-resources).
 - [Android: atributos del namespace tools](https://developer.android.com/studio/write/tool-attributes).
 - Generadores fijados de Expo y los informes XML privados de lint de esta fase.
+
+
+## Contraste con SDK 58 — 2026-10-31
+
+ADR-0167 autoriza migrar a Expo 58.0.22 con su conjunto compatible. La build
+Android Debug arm64 termina correctamente. El lint normal, sin cambiar de motor
+ni añadir supresiones, alcanza el informe: conserva MissingPrefix en la marca
+data-generated de App Links y NewApi en windowSplashScreenBehavior del estilo
+base (minSdk 24), con 46 avisos. El crash de motor previo no se reproduce en
+esta ejecución; los dos errores de generación siguen abiertos conforme a la
+alternativa B elegida. No se declara cerrado el QA completo de ADR-0152.
+Evidencia en [la revisión de SDK 58](../engineering/EXPO_SDK_58_UPGRADE_2026-10-31.md).
+
+
+## Corrección autorizada — 2026-10-31
+
+Tras la revisión de SDK 58, el usuario solicita solucionar los dos errores.
+ADR-0168 adopta dos parches de los generadores fijados: propiedad mediante
+comentario XML reservado y estilo completo values-v33. La alternativa inicial
+de marca tools arbitraria no es válida para el merger y se descarta.
+Build y lint de app/módulo local pasan con cero errores; quedan 46/6 avisos.
+El APK confirma minSdk 24, filtros y recursos válidos sin marca de propiedad.
+Esto cierra los dos errores y el bloqueo del gate lint, sin certificar la matriz
+visual completa de dispositivos de este ADR.
+Véase [el informe de corrección](../engineering/ANDROID_LINT_FIX_2026-10-31.md).

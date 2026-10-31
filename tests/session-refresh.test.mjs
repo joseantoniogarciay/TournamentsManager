@@ -3,13 +3,11 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import test from "node:test";
 import { setImmediate } from "node:timers";
-import ts from "typescript";
+import { transpileForTest } from "./helpers/transpile-typescript.mjs";
 
 const { Headers, Response } = globalThis;
 const path = "apps/client/src/api/fetch.ts";
-const code = ts.transpileModule(readFileSync(path, "utf8"), {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-}).outputText;
+const code = transpileForTest(readFileSync(path, "utf8"));
 
 function fixture(refreshResponse, platform = "web") {
   let authorized = false;
@@ -25,6 +23,7 @@ function fixture(refreshResponse, platform = "web") {
     user: { id: "019abcde-1111-7111-8111-111111111111", username: "person" },
   });
   const context = {
+    module,
     exports: module.exports,
     Headers,
     Date,

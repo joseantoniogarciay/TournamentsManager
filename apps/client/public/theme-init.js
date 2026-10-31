@@ -1,5 +1,3 @@
-/* global document, window */
-
 (() => {
   try {
     const root = document.documentElement;

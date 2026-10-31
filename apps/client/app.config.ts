@@ -72,7 +72,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: "fast-tourney",
   scheme: [environmentConfig[appEnvironment].scheme, ...googleRedirectSchemes],
   version: "1.0.0",
-  orientation: "portrait",
+  orientation: "default",
   web: {
     description: "Crea, organiza y sigue ligas de fútbol con FastTourney.",
     favicon: "./public/apple-touch-icon.png",
@@ -81,6 +81,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   icon: "./public/apple-touch-icon.png",
   ios: {
+    supportsTablet: true,
+    requireFullScreen: false,
+    infoPlist: { UIViewControllerBasedStatusBarAppearance: true },
     bundleIdentifier: environmentConfig[appEnvironment].bundleIdentifier,
     associatedDomains: [`applinks:${appLinkDomain}`, `webcredentials:${appLinkDomain}`],
   },
@@ -104,6 +107,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     "expo-font",
     "expo-localization",
+    "expo-status-bar",
     ...(appEnvironment !== "production"
       ? []
       : [
@@ -119,7 +123,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
             },
           ] as [string, Record<string, unknown>],
         ]),
-    "./plugins/with-ios-scene-lifecycle.cjs",
+    "./plugins/with-android-adaptive-window.cjs",
     [
       "expo-build-properties",
       {

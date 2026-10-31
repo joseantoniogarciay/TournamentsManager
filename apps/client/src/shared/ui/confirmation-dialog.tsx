@@ -1,6 +1,7 @@
 import { BlurView } from "expo-blur";
 import {
   createContext,
+  Fragment,
   type PropsWithChildren,
   useCallback,
   useContext,
@@ -18,11 +19,14 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -60,6 +64,8 @@ type ConfirmationDialogContextValue = {
   accept: () => void;
   cancel: () => void;
 };
+
+const DialogSafeAreaProvider = Platform.OS === "web" ? Fragment : SafeAreaProvider;
 
 const ConfirmationDialogContext = createContext<ConfirmationDialogContextValue | null>(null);
 
@@ -192,6 +198,18 @@ export function ModalDialog({
   // iOS must keep the Modal mounted until its native dismissal callback fires.
   if (!visible && !(onAfterDismiss && Platform.OS === "ios")) return null;
 
+  const dialog = (
+    <View
+      style={[
+        styles.dialog,
+        { backgroundColor: colors.surface.default, borderColor: colors.border.default },
+        dialogStyle,
+      ]}
+    >
+      {children}
+    </View>
+  );
+
   return (
     <Modal
       // Android has no native onDismiss callback. This opt-in closes immediately
@@ -201,52 +219,72 @@ export function ModalDialog({
       }
       onRequestClose={onDismiss}
       onDismiss={onAfterDismiss}
+      supportedOrientations={[
+        "portrait",
+        "portrait-upside-down",
+        "landscape-left",
+        "landscape-right",
+      ]}
       transparent
       visible={visible}
     >
-      <KeyboardAvoidingView
-        accessibilityViewIsModal
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        enabled={avoidKeyboard && Platform.OS !== "web"}
-        style={styles.backdrop}
-      >
-        {Platform.OS === "android" ? <FeedbackWindowAnchor /> : null}
-        {Platform.OS === "web" ? (
-          <View
-            pointerEvents="none"
-            style={[styles.webScrim, webScrimVisible && styles.webScrimVisible]}
-          />
-        ) : (
-          <BlurView
-            blurMethod="none"
-            intensity={45}
-            pointerEvents="none"
-            style={styles.scrim}
-            tint="dark"
-          />
-        )}
-        {Platform.OS === "android" ? (
-          <View
-            pointerEvents="none"
-            style={[styles.androidDimmingLayer, { backgroundColor: colors.surface.canvas }]}
-          />
-        ) : null}
-        <Pressable
-          accessibilityLabel={dismissAccessibilityLabel}
-          accessibilityRole="button"
-          onPress={onDismiss}
-          style={styles.dismissArea}
-        />
-        <View
-          style={[
-            styles.dialog,
-            { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-            dialogStyle,
-          ]}
+      <DialogSafeAreaProvider>
+        <KeyboardAvoidingView
+          accessibilityViewIsModal
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          enabled={avoidKeyboard && Platform.OS !== "web"}
+          style={[styles.backdrop, Platform.OS === "web" && { padding: space[5] }]}
         >
-          {children}
-        </View>
-      </KeyboardAvoidingView>
+          {Platform.OS === "android" ? <FeedbackWindowAnchor /> : null}
+          {Platform.OS === "web" ? (
+            <View
+              pointerEvents="none"
+              style={[styles.webScrim, webScrimVisible && styles.webScrimVisible]}
+            />
+          ) : (
+            <BlurView
+              blurMethod="none"
+              intensity={45}
+              pointerEvents="none"
+              style={styles.scrim}
+              tint="dark"
+            />
+          )}
+          {Platform.OS === "android" ? (
+            <View
+              pointerEvents="none"
+              style={[styles.androidDimmingLayer, { backgroundColor: colors.surface.canvas }]}
+            />
+          ) : null}
+          <Pressable
+            accessibilityElementsHidden={Platform.OS !== "web"}
+            importantForAccessibility={Platform.OS === "web" ? "auto" : "no-hide-descendants"}
+            accessibilityLabel={dismissAccessibilityLabel}
+            accessibilityRole="button"
+            onPress={onDismiss}
+            style={styles.dismissArea}
+          />
+          {Platform.OS === "web" ? (
+            dialog
+          ) : (
+            <SafeAreaView style={styles.safeViewport} pointerEvents="box-none">
+              <ScrollView
+                contentContainerStyle={styles.dialogContent}
+                keyboardShouldPersistTaps="handled"
+                style={styles.safeViewport}
+              >
+                <Pressable
+                  accessibilityLabel={dismissAccessibilityLabel}
+                  accessibilityRole="button"
+                  onPress={onDismiss}
+                  style={styles.dismissArea}
+                />
+                {dialog}
+              </ScrollView>
+            </SafeAreaView>
+          )}
+        </KeyboardAvoidingView>
+      </DialogSafeAreaProvider>
     </Modal>
   );
 }
@@ -289,8 +327,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 1,
     justifyContent: "center",
-    padding: space[5],
     zIndex: 1,
+  },
+  safeViewport: { flex: 1, width: "100%" },
+  dialogContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: space[5],
   },
   copy: { gap: space[2] },
   closeButton: {

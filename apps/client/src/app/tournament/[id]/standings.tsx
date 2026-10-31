@@ -1,3 +1,4 @@
+import type { ScrollViewInstance, ViewInstance } from "react-native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Platform, ScrollView, StyleSheet, View } from "react-native";
@@ -29,6 +30,12 @@ import {
   usesLiquidGlassNavigation,
 } from "@/shared/ui";
 
+// React Native Web exposes DOM handles beyond the native ScrollView instance API.
+type WebScrollViewInstance = {
+  getInnerViewNode(): HTMLElement | null;
+  getScrollableNode(): HTMLElement | null;
+};
+
 const leftColumnWidth = 144;
 const pointsColumnWidth = 44;
 const statisticsColumnWidth = 36;
@@ -51,9 +58,9 @@ export default function TournamentStandingsScreen() {
   const [statisticsContentWidth, setStatisticsContentWidth] = useState(0);
   const [statisticsViewportWidth, setStatisticsViewportWidth] = useState(0);
   const [tableViewportWidth, setTableViewportWidth] = useState(0);
-  const statisticsHeaderRef = useRef<View>(null);
-  const statisticsTimelineScopeRef = useRef<ScrollView>(null);
-  const statisticsWebScrollRef = useRef<ScrollView>(null);
+  const statisticsHeaderRef = useRef<ViewInstance>(null);
+  const statisticsTimelineScopeRef = useRef<ScrollViewInstance>(null);
+  const statisticsWebScrollRef = useRef<ScrollViewInstance>(null);
   const statisticsScrollOffset = useRef(new Animated.Value(0)).current;
   const statisticsOverflow = statisticsContentWidth > statisticsViewportWidth + 1;
   const tableFitsViewport =
@@ -69,9 +76,13 @@ export default function TournamentStandingsScreen() {
       return;
     }
 
-    const scope = statisticsTimelineScopeRef.current?.getInnerViewNode() as HTMLElement | null;
+    const scope = (
+      statisticsTimelineScopeRef.current as unknown as WebScrollViewInstance | null
+    )?.getInnerViewNode();
     const header = statisticsHeaderRef.current as unknown as HTMLElement | null;
-    const scrollSource = statisticsWebScrollRef.current?.getScrollableNode() as HTMLElement | null;
+    const scrollSource = (
+      statisticsWebScrollRef.current as unknown as WebScrollViewInstance | null
+    )?.getScrollableNode();
     if (!scope || !header || !scrollSource) {
       return;
     }

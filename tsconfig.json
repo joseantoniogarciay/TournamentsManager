@@ -8,6 +8,6 @@
     "target": "ES2022",
     "tsBuildInfoFile": "node_modules/.cache/typescript/root.tsbuildinfo"
   },
-  "files": ["eslint.config.mjs"],
+  "files": [".pnpmfile.mjs", "tests/helpers/transpile-typescript.mjs"],
   "references": []
 }

@@ -33,6 +33,7 @@ export default function AccountLayout() {
   return (
     <Stack
       screenOptions={{
+        headerTransparent: false,
         headerShadowVisible: false,
         headerBackButtonDisplayMode: "minimal",
         headerBackVisible: usesLiquidGlassNavigation,

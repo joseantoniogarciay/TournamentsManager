@@ -1,3 +1,4 @@
+import type { Metadata } from "expo-router/server";
 import { router, type Href, useFocusEffect } from "expo-router";
 import Head from "expo-router/head";
 import { useCallback, useEffect, useState } from "react";
@@ -155,9 +156,7 @@ export default function HomeScreen() {
   );
 }
 
-function HomeMetadata() {
-  if (Platform.OS !== "web") return null;
-
+function getHomeMetadataValues() {
   const t = getTranslator();
   const title = t("home_web_title");
   const description = t("home_web_description");
@@ -168,6 +167,30 @@ function HomeMetadata() {
   );
   const homeURL = `${publicBaseURL}/`;
   const previewImageURL = `${publicBaseURL}/fasttourney-league-preview.png`;
+
+  return { title, description, imageAlt, homeURL, previewImageURL };
+}
+
+export function generateMetadata(): Metadata {
+  const { title, description, imageAlt, homeURL, previewImageURL } = getHomeMetadataValues();
+  return {
+    title,
+    description,
+    alternates: { canonical: homeURL },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: homeURL,
+      images: [{ url: previewImageURL, width: 1200, height: 630, alt: imageAlt }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [previewImageURL] },
+  };
+}
+
+function HomeMetadata() {
+  if (Platform.OS !== "web") return null;
+  const { title, description, imageAlt, homeURL, previewImageURL } = getHomeMetadataValues();
 
   return (
     <Head>

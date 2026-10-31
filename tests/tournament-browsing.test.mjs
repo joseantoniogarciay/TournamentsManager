@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runInThisContext } from "node:vm";
 import test from "node:test";
-import ts from "typescript";
+import { transpileForTest } from "./helpers/transpile-typescript.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const clientSource = join(root, "apps/client/src");
@@ -17,9 +17,7 @@ function loadModule(path) {
   if (file.endsWith("/api/generated/tournaments/tournaments.ts")) return generatedStub;
   const module = { exports: {} };
   modules.set(file, module);
-  const code = ts.transpileModule(readFileSync(file, "utf8"), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
+  const code = transpileForTest(readFileSync(file, "utf8"));
   const requireSource = (specifier) =>
     loadModule(
       specifier.startsWith("@/")
@@ -212,10 +210,9 @@ function collectionHarness(fetchPage) {
     "@/shared/i18n/locale": { getTranslator: () => (key) => key },
   };
   const module = { exports: {} };
-  const source = ts.transpileModule(
+  const source = transpileForTest(
     readFileSync(join(clientSource, "features/tournament-browsing/use-collection.ts"), "utf8"),
-    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
-  ).outputText;
+  );
   runInThisContext(`(function(require,module,exports){${source}\n})`)(
     (name) => imports[name],
     module,
