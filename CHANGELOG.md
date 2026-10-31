@@ -6,6 +6,47 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+### Security
+
+- ADR-0172: correcciones transitivas maduras y acotadas; auditoría npm de 43 a
+  15 registros (6 altos, 6 moderados, 3 bajos; cero críticos), sin avisos nuevos.
+  Quedan Forge, glob, minimatch y Hono 1; se conservan edad mínima y matriz Expo.
+
+### Fixed
+
+- Android Lint: corregidos MissingPrefix de App Links y NewApi de splash mediante
+  parches exactos de los generadores Expo. Regeneración idempotente, API 24
+  conservada, variante v33 completa y marca de propiedad ausente del APK.
+  Build y lint de app/módulo local pasan con cero errores. ADR-0168.
+
+### Changed
+
+- TypeScript 7.0.2 y Oxlint 1.89.0 con Prettier conservado (ADR-0171).
+  Reglas efectivas migradas, pruebas desacopladas de la API del compilador,
+  TypeDoc con TS 6 privado y editor configurado para el servicio nativo.
+  Tres regresiones del tooling incluidas en `make verify`.
+  Auditoría npm: inventariados 43 avisos sobre versiones previas a la migración;
+  lote posterior ADR-0172: 28 corregidos y 15 pendientes, sin avisos críticos.
+
+- PostHog React Native 4.83.0 y plugin 2.12.6, fijados mediante Expo y con siete
+  días de maduración (ADR-0170). Su aplazamiento inicial de TypeScript queda
+  superado por la migración autorizada de ADR-0171.
+
+- Mantenimiento autorizado (ADR-0169): Go 1.26.10, pgx 5.11.0,
+  OpenTelemetry Go 1.47.0/otelhttp 0.72.0, pnpm 12.15.0, Prettier 3.9.10,
+  ESLint 10.13.0/typescript-eslint 8.72.0 y Orval 8.44.0/Redocly CLI 2.71.0.
+  Cliente regenerado; cabeceras de parches Expo compatibles con pnpm 12.
+  TypeScript y PostHog inicialmente aplazados; revisión posterior en ADR-0170.
+  Corrección x/net 0.62.0 con excepción puntual
+  autorizada por dos avisos alcanzables del parser HTML. Sin despliegue de producción.
+
+- Cliente actualizado a Expo 58.0.22, Router 58.0.29, React 19.3.0 y React Native
+  0.88.1. Excepción puntual de maduración aprobada en ADR-0167, versiones exactas
+  y política general de siete días conservada. Adaptación de refs, tabs y metadatos
+  estáticos; generación UIScene oficial, retiro de parches JSI/query-string y
+  conservación del parche de escala de iconos para Symbols 58.0.4. Barra de estado
+  iOS adaptada al control por controlador requerido en iOS 27, con tema compartido.
+
 ## [1.14.1] - 2026-10-13
 
 ### Changed

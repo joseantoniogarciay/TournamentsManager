@@ -1,0 +1,1761 @@
+{
+  "date": "2026-10-31",
+  "audit_sha256": "b0457140f26a5f41a25f1cb6ed7c5bcf0069801c37df8391074208d9228f0423",
+  "scope": "Revisión del inventario existente; sin nueva auditoría ni cambios de resolución.",
+  "registry_source": "https://registry.npmjs.org/",
+  "registry": {
+    "node-forge": {
+      "versions": {
+        "1.4.1": {
+          "published": "2026-10-27T04:44:07.718Z",
+          "engines": {
+            "node": ">= 6.13.0"
+          },
+          "dependencies": null,
+          "peerDependencies": null,
+          "exists": true
+        }
+      },
+      "latest": "1.4.2"
+    },
+    "sharp": {
+      "versions": {
+        "0.35.5": {
+          "published": "2026-09-27T13:46:24.509Z",
+          "engines": {
+            "node": ">=20.9.0"
+          },
+          "dependencies": {
+            "semver": "^7.8.5",
+            "@img/colour": "^1.1.0",
+            "detect-libc": "^2.1.2"
+          },
+          "peerDependencies": null,
+          "exists": true
+        }
+      },
+      "latest": "0.35.5"
+    },
+    "hono": {
+      "versions": {
+        "4.13.11": {
+          "published": "2026-09-29T06:15:49.676Z",
+          "engines": {
+            "node": ">=16.9.0"
+          },
+          "dependencies": null,
+          "peerDependencies": null,
+          "exists": true
+        }
+      },
+      "latest": "4.13.14"
+    },
+    "markdown-it": {
+      "versions": {
+        "14.3.3": {
+          "published": "2026-10-16T01:47:54.675Z",
+          "engines": null,
+          "dependencies": {
+            "mdurl": "^2.0.0",
+            "argparse": "^2.0.1",
+            "entities": "^4.5.0",
+            "uc.micro": "^2.1.0",
+            "linkify-it": "^5.0.2",
+            "punycode.js": "^2.3.1"
+          },
+          "peerDependencies": null,
+          "exists": true
+        }
+      },
+      "latest": "15.0.3"
+    },
+    "vite": {
+      "versions": {
+        "8.1.6": {
+          "published": "2026-10-06T04:51:51.393Z",
+          "engines": {
+            "node": "^20.19.0 || >=22.12.0"
+          },
+          "dependencies": {
+            "postcss": "^8.5.17",
+            "rolldown": "~1.1.5",
+            "picomatch": "^4.0.5",
+            "tinyglobby": "^0.2.17",
+            "lightningcss": "^1.32.0"
+          },
+          "peerDependencies": {
+            "tsx": "^4.8.1",
+            "jiti": ">=1.21.0",
+            "less": "^4.0.0",
+            "sass": "^1.70.0",
+            "yaml": "^2.4.2",
+            "stylus": ">=0.54.8",
+            "terser": "^5.16.0",
+            "esbuild": "^0.27.0 || ^0.28.0",
+            "sugarss": "^5.0.0",
+            "@types/node": "^20.19.0 || >=22.12.0",
+            "sass-embedded": "^1.70.0",
+            "@vitejs/devtools": "^0.3.0"
+          },
+          "exists": true
+        }
+      },
+      "latest": "8.3.5"
+    },
+    "fastify": {
+      "versions": {
+        "5.12.6": {
+          "published": "2026-10-13T06:50:58.498Z",
+          "engines": null,
+          "dependencies": {
+            "pino": "^9.14.0 || ^10.1.0",
+            "rfdc": "^1.3.1",
+            "avvio": "^9.0.0",
+            "semver": "^7.6.0",
+            "toad-cache": "^3.7.0",
+            "find-my-way": "^9.6.0",
+            "@fastify/error": "^4.0.0",
+            "process-warning": "^5.1.0",
+            "abstract-logging": "^2.0.1",
+            "light-my-request": "^6.0.0",
+            "secure-json-parse": "^4.0.0",
+            "@fastify/proxy-addr": "^5.0.0",
+            "fast-json-stringify": "^7.0.0",
+            "@fastify/ajv-compiler": "^4.0.5",
+            "@fastify/fast-json-stringify-compiler": "^5.0.0"
+          },
+          "peerDependencies": null,
+          "exists": true
+        }
+      },
+      "latest": "5.12.7"
+    },
+    "zod": {
+      "versions": {
+        "4.6.6": {
+          "published": "2026-10-11T16:18:23.878Z",
+          "engines": null,
+          "dependencies": null,
+          "peerDependencies": null,
+          "exists": true
+        }
+      },
+      "latest": "4.6.7"
+    },
+    "undici": {
+      "versions": {
+        "7.30.1": {
+          "published": "2026-10-15T14:18:31.283Z",
+          "engines": {
+            "node": ">=20.18.1"
+          },
+          "dependencies": null,
+          "peerDependencies": null,
+          "exists": true
+        }
+      },
+      "latest": "8.12.3"
+    },
+    "fast-uri": {
+      "versions": {
+        "3.1.9": {
+          "published": "2026-10-19T23:05:26.357Z",
+          "engines": null,
+          "dependencies": null,
+          "peerDependencies": null,
+          "exists": true
+        },
+        "4.2.3": {
+          "published": "2026-10-19T22:51:36.634Z",
+          "engines": null,
+          "dependencies": null,
+          "peerDependencies": null,
+          "exists": true
+        }
+      },
+      "latest": "4.2.3"
+    },
+    "@hono/node-server": {
+      "versions": {
+        "2.1.3": {
+          "published": "2026-09-29T06:10:34.512Z",
+          "engines": {
+            "node": ">=20"
+          },
+          "dependencies": null,
+          "peerDependencies": {
+            "hono": "^4"
+          },
+          "exists": true
+        }
+      },
+      "latest": "2.1.5"
+    },
+    "minimatch": {
+      "versions": {
+        "11.0.1": {
+          "published": "2026-10-27T22:26:03.755Z",
+          "engines": {
+            "node": "18 || 20 || >=22"
+          },
+          "dependencies": {
+            "brace-expansion": "^5.0.12",
+            "@isaacs/nonrecursive-glob-match": "^1.0.1"
+          },
+          "peerDependencies": null,
+          "exists": true
+        }
+      },
+      "latest": "11.0.3"
+    },
+    "glob": {
+      "versions": {
+        "14.0.2": {
+          "published": "2026-10-27T22:07:00.325Z",
+          "engines": {
+            "node": "18 || 20 || >=22"
+          },
+          "dependencies": {
+            "minipass": "^7.1.3",
+            "minimatch": "^11.0.0",
+            "path-scurry": "^3.0.0"
+          },
+          "peerDependencies": null,
+          "exists": true
+        }
+      },
+      "latest": "14.0.3"
+    }
+  },
+  "advisories": [
+    {
+      "npm_id": 1240912,
+      "ghsa": "GHSA-86w9-cpqp-85rv",
+      "package": "node-forge",
+      "severity": "high",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": null,
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-86w9-cpqp-85rv"
+    },
+    {
+      "npm_id": 1241331,
+      "ghsa": "GHSA-wq5f-xc86-pv6w",
+      "package": "sharp",
+      "severity": "high",
+      "installed_versions": ["0.35.4"],
+      "npm_vulnerable_versions": "<0.35.5",
+      "npm_patched_versions": ">=0.35.5",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "sharp"
+          },
+          "vulnerable_version_range": "< 0.35.5",
+          "first_patched_version": "0.35.5",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-wq5f-xc86-pv6w"
+    },
+    {
+      "npm_id": 1242595,
+      "ghsa": "GHSA-5r4p-p66f-jhc7",
+      "package": "hono",
+      "severity": "moderate",
+      "installed_versions": ["4.13.7"],
+      "npm_vulnerable_versions": ">=4.12.4 <4.13.11",
+      "npm_patched_versions": ">=4.13.11",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "hono"
+          },
+          "vulnerable_version_range": ">= 4.12.4, < 4.13.11",
+          "first_patched_version": "4.13.11",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-5r4p-p66f-jhc7"
+    },
+    {
+      "npm_id": 1242600,
+      "ghsa": "GHSA-r7fv-28h4-cvq7",
+      "package": "markdown-it",
+      "severity": "high",
+      "installed_versions": ["14.3.1"],
+      "npm_vulnerable_versions": "<14.3.2",
+      "npm_patched_versions": ">=14.3.2",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "markdown-it"
+          },
+          "vulnerable_version_range": ">= 15.0.0, < 15.0.2",
+          "first_patched_version": "15.0.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "markdown-it"
+          },
+          "vulnerable_version_range": "< 14.3.2",
+          "first_patched_version": "14.3.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-r7fv-28h4-cvq7"
+    },
+    {
+      "npm_id": 1242624,
+      "ghsa": "GHSA-698v-4r3x-3vcv",
+      "package": "vite",
+      "severity": "moderate",
+      "installed_versions": ["8.0.16"],
+      "npm_vulnerable_versions": ">=8.0.0 <=8.1.5",
+      "npm_patched_versions": ">=8.1.6",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "launch-editor"
+          },
+          "vulnerable_version_range": "<= 2.14.1",
+          "first_patched_version": "2.14.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.3.0, <= 8.3.2",
+          "first_patched_version": "8.3.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.2.0, <= 8.2.3",
+          "first_patched_version": "8.2.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.1.5",
+          "first_patched_version": "8.1.6",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 7.0.0, <= 7.3.6",
+          "first_patched_version": "7.3.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": "<= 6.4.3",
+          "first_patched_version": "6.4.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite-plus"
+          },
+          "vulnerable_version_range": "<= 1.0.0",
+          "first_patched_version": "1.1.0",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-698v-4r3x-3vcv"
+    },
+    {
+      "npm_id": 1242646,
+      "ghsa": "GHSA-vfgh-jcmw-g37q",
+      "package": "markdown-it",
+      "severity": "low",
+      "installed_versions": ["14.3.1"],
+      "npm_vulnerable_versions": "<14.3.3",
+      "npm_patched_versions": ">=14.3.3",
+      "github_severity": "low",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "markdown-it"
+          },
+          "vulnerable_version_range": "< 14.3.3",
+          "first_patched_version": "14.3.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "markdown-it"
+          },
+          "vulnerable_version_range": ">= 15.0.0, < 15.0.3",
+          "first_patched_version": "15.0.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-vfgh-jcmw-g37q"
+    },
+    {
+      "npm_id": 1242653,
+      "ghsa": "GHSA-r825-w8mm-5pxw",
+      "package": "vite",
+      "severity": "moderate",
+      "installed_versions": ["8.0.16"],
+      "npm_vulnerable_versions": ">=8.0.0 <=8.1.5",
+      "npm_patched_versions": ">=8.1.6",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "launch-editor"
+          },
+          "vulnerable_version_range": "<= 2.14.1",
+          "first_patched_version": "2.14.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.3.0, <= 8.3.2",
+          "first_patched_version": "8.3.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.2.0, <= 8.2.3",
+          "first_patched_version": "8.2.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.1.5",
+          "first_patched_version": "8.1.6",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 7.0.0, <= 7.3.6",
+          "first_patched_version": "7.3.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": "<= 6.4.3",
+          "first_patched_version": "6.4.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite-plus"
+          },
+          "vulnerable_version_range": "<= 1.0.0",
+          "first_patched_version": "1.1.0",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-r825-w8mm-5pxw"
+    },
+    {
+      "npm_id": 1242660,
+      "ghsa": "GHSA-587h-7wmj-h5pm",
+      "package": "vite",
+      "severity": "high",
+      "installed_versions": ["8.0.16"],
+      "npm_vulnerable_versions": ">=8.0.0 <=8.1.5",
+      "npm_patched_versions": ">=8.1.6",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "launch-editor"
+          },
+          "vulnerable_version_range": "<= 2.14.1",
+          "first_patched_version": "2.14.2",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.3.0, <= 8.3.2",
+          "first_patched_version": "8.3.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.2.0, <= 8.2.3",
+          "first_patched_version": "8.2.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.1.5",
+          "first_patched_version": "8.1.6",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 7.0.0, <= 7.3.6",
+          "first_patched_version": "7.3.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": "<= 6.4.3",
+          "first_patched_version": "6.4.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite-plus"
+          },
+          "vulnerable_version_range": "<= 1.0.0",
+          "first_patched_version": "1.1.0",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-587h-7wmj-h5pm"
+    },
+    {
+      "npm_id": 1242672,
+      "ghsa": "GHSA-gfr2-rv44-r23c",
+      "package": "markdown-it",
+      "severity": "high",
+      "installed_versions": ["14.3.1"],
+      "npm_vulnerable_versions": ">=14.1.0 <14.3.3",
+      "npm_patched_versions": ">=14.3.3",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "markdown-it"
+          },
+          "vulnerable_version_range": ">= 14.1.0, < 14.3.3",
+          "first_patched_version": "14.3.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "markdown-it"
+          },
+          "vulnerable_version_range": ">= 15.0.0, < 15.0.3",
+          "first_patched_version": "15.0.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-gfr2-rv44-r23c"
+    },
+    {
+      "npm_id": 1242726,
+      "ghsa": "GHSA-9jrq-w75r-8gcw",
+      "package": "vite",
+      "severity": "low",
+      "installed_versions": ["8.0.16"],
+      "npm_vulnerable_versions": ">=8.0.0 <=8.1.5",
+      "npm_patched_versions": ">=8.1.6",
+      "github_severity": "low",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.3.0, <= 8.3.2",
+          "first_patched_version": "8.3.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.2.0, <= 8.2.3",
+          "first_patched_version": "8.2.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.1.5",
+          "first_patched_version": "8.1.6",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 7.0.0, <= 7.3.6",
+          "first_patched_version": "7.3.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": "<= 6.4.3",
+          "first_patched_version": "6.4.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite-plus"
+          },
+          "vulnerable_version_range": "<= 1.0.0",
+          "first_patched_version": "1.1.0",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-9jrq-w75r-8gcw"
+    },
+    {
+      "npm_id": 1242732,
+      "ghsa": "GHSA-rq7h-c2jc-7f22",
+      "package": "vite",
+      "severity": "moderate",
+      "installed_versions": ["8.0.16"],
+      "npm_vulnerable_versions": ">=8.0.0 <=8.1.5",
+      "npm_patched_versions": ">=8.1.6",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.3.0, <= 8.3.2",
+          "first_patched_version": "8.3.3",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.2.0, <= 8.2.3",
+          "first_patched_version": "8.2.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 8.0.0, <= 8.1.5",
+          "first_patched_version": "8.1.6",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": ">= 7.0.0, <= 7.3.6",
+          "first_patched_version": "7.3.7",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite"
+          },
+          "vulnerable_version_range": "<= 6.4.3",
+          "first_patched_version": "6.4.4",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "vite-plus"
+          },
+          "vulnerable_version_range": "<= 1.0.0",
+          "first_patched_version": "1.1.0",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-rq7h-c2jc-7f22"
+    },
+    {
+      "npm_id": 1242860,
+      "ghsa": "GHSA-389g-gv7q-r4x8",
+      "package": "fastify",
+      "severity": "low",
+      "installed_versions": ["5.12.5"],
+      "npm_vulnerable_versions": ">=5.12.2 <5.12.6",
+      "npm_patched_versions": ">=5.12.6",
+      "github_severity": "low",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fastify"
+          },
+          "vulnerable_version_range": ">= 5.12.2, < 5.12.6",
+          "first_patched_version": "5.12.6",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-389g-gv7q-r4x8"
+    },
+    {
+      "npm_id": 1243066,
+      "ghsa": "GHSA-mrhx-c7xc-m3w5",
+      "package": "zod",
+      "severity": "high",
+      "installed_versions": ["4.6.5"],
+      "npm_vulnerable_versions": "<4.6.6",
+      "npm_patched_versions": ">=4.6.6",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "zod"
+          },
+          "vulnerable_version_range": "< 4.6.6",
+          "first_patched_version": "4.6.6",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5"
+    },
+    {
+      "npm_id": 1243078,
+      "ghsa": "GHSA-4qv8-2p9j-2685",
+      "package": "undici",
+      "severity": "moderate",
+      "installed_versions": ["7.29.1"],
+      "npm_vulnerable_versions": ">=7.0.0 <7.30.1",
+      "npm_patched_versions": ">=7.30.1",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 6.5.0, < 6.29.1",
+          "first_patched_version": "6.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.30.1",
+          "first_patched_version": "7.30.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.12.2",
+          "first_patched_version": "8.12.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-4qv8-2p9j-2685"
+    },
+    {
+      "npm_id": 1243081,
+      "ghsa": "GHSA-f72v-6w45-q472",
+      "package": "undici",
+      "severity": "moderate",
+      "installed_versions": ["7.29.1"],
+      "npm_vulnerable_versions": ">=7.15.0 <7.30.1",
+      "npm_patched_versions": ">=7.30.1",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.15.0, < 7.30.1",
+          "first_patched_version": "7.30.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.12.2",
+          "first_patched_version": "8.12.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-f72v-6w45-q472"
+    },
+    {
+      "npm_id": 1243097,
+      "ghsa": "GHSA-w74x-v6f9-j3xg",
+      "package": "fast-uri",
+      "severity": "moderate",
+      "installed_versions": ["4.1.5"],
+      "npm_vulnerable_versions": ">=4.0.0 <4.2.3",
+      "npm_patched_versions": ">=4.2.3",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "< 2.4.8",
+          "first_patched_version": "2.4.8",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.1.9",
+          "first_patched_version": "3.1.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 4.2.3",
+          "first_patched_version": "4.2.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-w74x-v6f9-j3xg"
+    },
+    {
+      "npm_id": 1243098,
+      "ghsa": "GHSA-w74x-v6f9-j3xg",
+      "package": "fast-uri",
+      "severity": "moderate",
+      "installed_versions": ["3.1.8"],
+      "npm_vulnerable_versions": ">=3.0.0 <3.1.9",
+      "npm_patched_versions": ">=3.1.9",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "< 2.4.8",
+          "first_patched_version": "2.4.8",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.1.9",
+          "first_patched_version": "3.1.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 4.2.3",
+          "first_patched_version": "4.2.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-w74x-v6f9-j3xg"
+    },
+    {
+      "npm_id": 1243100,
+      "ghsa": "GHSA-xhq7-xmqj-769h",
+      "package": "fast-uri",
+      "severity": "low",
+      "installed_versions": ["4.1.5"],
+      "npm_vulnerable_versions": ">=4.0.0 <4.2.3",
+      "npm_patched_versions": ">=4.2.3",
+      "github_severity": "low",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "< 2.4.8",
+          "first_patched_version": "2.4.8",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.1.9",
+          "first_patched_version": "3.1.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 4.2.3",
+          "first_patched_version": "4.2.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-xhq7-xmqj-769h"
+    },
+    {
+      "npm_id": 1243101,
+      "ghsa": "GHSA-xhq7-xmqj-769h",
+      "package": "fast-uri",
+      "severity": "low",
+      "installed_versions": ["3.1.8"],
+      "npm_vulnerable_versions": ">=3.0.0 <3.1.9",
+      "npm_patched_versions": ">=3.1.9",
+      "github_severity": "low",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "< 2.4.8",
+          "first_patched_version": "2.4.8",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.1.9",
+          "first_patched_version": "3.1.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 4.2.3",
+          "first_patched_version": "4.2.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-xhq7-xmqj-769h"
+    },
+    {
+      "npm_id": 1243103,
+      "ghsa": "GHSA-wjr9-j795-jxcr",
+      "package": "fast-uri",
+      "severity": "moderate",
+      "installed_versions": ["4.1.5"],
+      "npm_vulnerable_versions": ">=4.0.1 <4.2.3",
+      "npm_patched_versions": ">=4.2.3",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 2.4.2, < 2.4.8",
+          "first_patched_version": "2.4.8",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 3.1.3, < 3.1.9",
+          "first_patched_version": "3.1.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.0.1, < 4.2.3",
+          "first_patched_version": "4.2.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-wjr9-j795-jxcr"
+    },
+    {
+      "npm_id": 1243104,
+      "ghsa": "GHSA-wjr9-j795-jxcr",
+      "package": "fast-uri",
+      "severity": "moderate",
+      "installed_versions": ["3.1.8"],
+      "npm_vulnerable_versions": ">=3.1.3 <3.1.9",
+      "npm_patched_versions": ">=3.1.9",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 2.4.2, < 2.4.8",
+          "first_patched_version": "2.4.8",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 3.1.3, < 3.1.9",
+          "first_patched_version": "3.1.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.0.1, < 4.2.3",
+          "first_patched_version": "4.2.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-wjr9-j795-jxcr"
+    },
+    {
+      "npm_id": 1243106,
+      "ghsa": "GHSA-333x-w4r6-6crp",
+      "package": "fast-uri",
+      "severity": "low",
+      "installed_versions": ["4.1.5"],
+      "npm_vulnerable_versions": ">=4.0.0 <4.2.3",
+      "npm_patched_versions": ">=4.2.3",
+      "github_severity": "low",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "< 2.4.8",
+          "first_patched_version": "2.4.8",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.1.9",
+          "first_patched_version": "3.1.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 4.2.3",
+          "first_patched_version": "4.2.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-333x-w4r6-6crp"
+    },
+    {
+      "npm_id": 1243107,
+      "ghsa": "GHSA-333x-w4r6-6crp",
+      "package": "fast-uri",
+      "severity": "low",
+      "installed_versions": ["3.1.8"],
+      "npm_vulnerable_versions": ">=3.0.0 <3.1.9",
+      "npm_patched_versions": ">=3.1.9",
+      "github_severity": "low",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": "< 2.4.8",
+          "first_patched_version": "2.4.8",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 3.0.0, < 3.1.9",
+          "first_patched_version": "3.1.9",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "fast-uri"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 4.2.3",
+          "first_patched_version": "4.2.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-333x-w4r6-6crp"
+    },
+    {
+      "npm_id": 1243113,
+      "ghsa": "GHSA-xjj6-f33q-929c",
+      "package": "undici",
+      "severity": "high",
+      "installed_versions": ["7.29.1"],
+      "npm_vulnerable_versions": ">=7.18.0 <7.30.1",
+      "npm_patched_versions": ">=7.30.1",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 6.23.0, < 6.29.1",
+          "first_patched_version": "6.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.18.0, < 7.30.1",
+          "first_patched_version": "7.30.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.12.2",
+          "first_patched_version": "8.12.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-xjj6-f33q-929c"
+    },
+    {
+      "npm_id": 1243473,
+      "ghsa": "GHSA-4w7w-5xrc-9h26",
+      "package": "undici",
+      "severity": "high",
+      "installed_versions": ["7.29.1"],
+      "npm_vulnerable_versions": ">=7.0.0 <7.30.1",
+      "npm_patched_versions": ">=7.30.1",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.30.1",
+          "first_patched_version": "7.30.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.12.2",
+          "first_patched_version": "8.12.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-4w7w-5xrc-9h26"
+    },
+    {
+      "npm_id": 1243475,
+      "ghsa": "GHSA-2m5v-pch6-74hx",
+      "package": "undici",
+      "severity": "high",
+      "installed_versions": ["7.29.1"],
+      "npm_vulnerable_versions": ">=7.0.0 <7.30.1",
+      "npm_patched_versions": ">=7.30.1",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 4.0.0, < 6.29.1",
+          "first_patched_version": "6.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.30.1",
+          "first_patched_version": "7.30.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.12.2",
+          "first_patched_version": "8.12.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-2m5v-pch6-74hx"
+    },
+    {
+      "npm_id": 1243478,
+      "ghsa": "GHSA-qrxm-fqhp-jwvm",
+      "package": "undici",
+      "severity": "high",
+      "installed_versions": ["7.29.1"],
+      "npm_vulnerable_versions": ">=7.0.0 <7.30.1",
+      "npm_patched_versions": ">=7.30.1",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 4.2.1, < 6.29.1",
+          "first_patched_version": "6.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.30.1",
+          "first_patched_version": "7.30.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.12.2",
+          "first_patched_version": "8.12.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-qrxm-fqhp-jwvm"
+    },
+    {
+      "npm_id": 1243481,
+      "ghsa": "GHSA-9fm3-97px-rjf6",
+      "package": "undici",
+      "severity": "moderate",
+      "installed_versions": ["7.29.1"],
+      "npm_vulnerable_versions": ">=7.0.0 <7.30.1",
+      "npm_patched_versions": ">=7.30.1",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 5.15.0, < 6.29.1",
+          "first_patched_version": "6.29.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.0.0, < 7.30.1",
+          "first_patched_version": "7.30.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.12.2",
+          "first_patched_version": "8.12.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-9fm3-97px-rjf6"
+    },
+    {
+      "npm_id": 1243484,
+      "ghsa": "GHSA-55wc-3pg8-jfw6",
+      "package": "undici",
+      "severity": "moderate",
+      "installed_versions": ["7.29.1"],
+      "npm_vulnerable_versions": ">=7.15.0 <7.30.1",
+      "npm_patched_versions": ">=7.30.1",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 7.15.0, < 7.30.1",
+          "first_patched_version": "7.30.1",
+          "vulnerable_functions": []
+        },
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "undici"
+          },
+          "vulnerable_version_range": ">= 8.0.0, < 8.12.2",
+          "first_patched_version": "8.12.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-55wc-3pg8-jfw6"
+    },
+    {
+      "npm_id": 1243661,
+      "ghsa": "GHSA-rmxm-3fg6-px4f",
+      "package": "@hono/node-server",
+      "severity": "moderate",
+      "installed_versions": ["1.19.17", "2.0.10"],
+      "npm_vulnerable_versions": ">=1.19.10 <2.1.3",
+      "npm_patched_versions": ">=2.1.3",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "@hono/node-server"
+          },
+          "vulnerable_version_range": ">= 1.19.10, < 2.1.3",
+          "first_patched_version": "2.1.3",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-rmxm-3fg6-px4f"
+    },
+    {
+      "npm_id": 1244012,
+      "ghsa": "GHSA-g3hv-75wg-m249",
+      "package": "minimatch",
+      "severity": "moderate",
+      "installed_versions": ["10.2.6", "3.1.5"],
+      "npm_vulnerable_versions": "<11.0.1",
+      "npm_patched_versions": ">=11.0.1",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "minimatch"
+          },
+          "vulnerable_version_range": "< 11.0.1",
+          "first_patched_version": "11.0.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-g3hv-75wg-m249"
+    },
+    {
+      "npm_id": 1244013,
+      "ghsa": "GHSA-3g3m-2fjr-6pw4",
+      "package": "glob",
+      "severity": "moderate",
+      "installed_versions": ["13.0.6"],
+      "npm_vulnerable_versions": ">=9.0.0 <=14.0.1",
+      "npm_patched_versions": ">=14.0.2",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "glob"
+          },
+          "vulnerable_version_range": ">= 9.0.0, <= 14.0.1",
+          "first_patched_version": "14.0.2",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4"
+    },
+    {
+      "npm_id": 1244014,
+      "ghsa": "GHSA-4642-5mcj-2rqw",
+      "package": "node-forge",
+      "severity": "low",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "low",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-4642-5mcj-2rqw"
+    },
+    {
+      "npm_id": 1244015,
+      "ghsa": "GHSA-6wvx-3r32-xmcg",
+      "package": "node-forge",
+      "severity": "moderate",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-6wvx-3r32-xmcg"
+    },
+    {
+      "npm_id": 1244016,
+      "ghsa": "GHSA-525v-9gp9-w22h",
+      "package": "node-forge",
+      "severity": "moderate",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-525v-9gp9-w22h"
+    },
+    {
+      "npm_id": 1244017,
+      "ghsa": "GHSA-7wch-p9px-956x",
+      "package": "node-forge",
+      "severity": "high",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-7wch-p9px-956x"
+    },
+    {
+      "npm_id": 1244018,
+      "ghsa": "GHSA-h6cr-wjv9-3cpp",
+      "package": "node-forge",
+      "severity": "low",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "low",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-h6cr-wjv9-3cpp"
+    },
+    {
+      "npm_id": 1244019,
+      "ghsa": "GHSA-4487-j8r4-4g2f",
+      "package": "node-forge",
+      "severity": "low",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "low",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-4487-j8r4-4g2f"
+    },
+    {
+      "npm_id": 1244020,
+      "ghsa": "GHSA-5cwg-6vw7-rj6p",
+      "package": "node-forge",
+      "severity": "moderate",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "medium",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-5cwg-6vw7-rj6p"
+    },
+    {
+      "npm_id": 1244021,
+      "ghsa": "GHSA-jc66-7q78-782g",
+      "package": "node-forge",
+      "severity": "high",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-jc66-7q78-782g"
+    },
+    {
+      "npm_id": 1244022,
+      "ghsa": "GHSA-8hrf-8g6f-7xwp",
+      "package": "node-forge",
+      "severity": "high",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-8hrf-8g6f-7xwp"
+    },
+    {
+      "npm_id": 1244023,
+      "ghsa": "GHSA-hqq3-7jhf-c5jx",
+      "package": "node-forge",
+      "severity": "high",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-hqq3-7jhf-c5jx"
+    },
+    {
+      "npm_id": 1244024,
+      "ghsa": "GHSA-5x38-2vff-x55p",
+      "package": "node-forge",
+      "severity": "high",
+      "installed_versions": ["1.4.0"],
+      "npm_vulnerable_versions": "<=1.4.0",
+      "npm_patched_versions": ">=1.4.1",
+      "github_severity": "high",
+      "github_vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "node-forge"
+          },
+          "vulnerable_version_range": "<= 1.4.0",
+          "first_patched_version": "1.4.1",
+          "vulnerable_functions": []
+        }
+      ],
+      "github_withdrawn_at": null,
+      "source": "https://github.com/advisories/GHSA-5x38-2vff-x55p"
+    }
+  ]
+}

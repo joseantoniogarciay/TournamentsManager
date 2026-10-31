@@ -10,6 +10,23 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 
 ## Fundaciones
 
+- **Apps, rotación y ventanas (ADR-0166):** los insets seguros son dinámicos en
+  los cuatro lados; no se deduce su posición del modelo ni de portrait/landscape.
+  `Screen` conserva el fondo completo y delimita un marco interior con los insets
+  laterales. Card y contenido añaden dentro sus 20 px habituales; también quedan
+  protegidas las acciones absolutas. No se duplica la reserva lateral en sus
+  hijos. Carruseles y cuadros usan el ancho disponible seguro; `BracketView`
+  decide su distribución con `onLayout` del contenedor, no con el ancho físico.
+  Modales y avisos, fuera de ese marco, se protegen por separado. `ModalDialog`
+  admite las cuatro orientaciones, mide safe area dentro de su propia ventana
+  y permite scroll para alcanzar todos los controles en una ventana baja.
+  Ningún cambio de postura/ancho debe remontar rutas ni borrar formularios.
+  La web conserva el marco responsive de ADR-0154.
+  La escena nativa visible mide sus propios insets mediante el provider de ruta
+  del stack raíz. No se heredan medidas de una ruta cubierta: pueden quedar
+  obsoletas al girar un fullScreenModal. El banner iOS hace lo mismo dentro de
+  FullWindowOverlay; su margen habitual se suma una sola vez al marco seguro.
+
 - **Iconos y texto ampliado:** los glifos de iconos mantienen el tamaño del token
   dentro de su caja; el texto de la interfaz conserva el escalado de accesibilidad.
   `expo-symbols` 57.0.3 dibuja Material Symbols mediante `Text` en Android/web:
@@ -130,8 +147,11 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 - **Barra de estado nativa:** la raíz consume el tema resuelto para el estilo
   de `StatusBar`, renovado con la revisión de sesión. Los iconos deben ser
   oscuros en claro y claros en oscuro; ninguna pantalla controla por separado
-  esta apariencia. No se configura `statusBarStyle` en el stack: el binario iOS
-  actual usa control global de apariencia. La revisión de QA del 2026-10-04
+  esta apariencia. No se configura `statusBarStyle` por pantalla: el componente raíz conserva
+  la preferencia común. Desde SDK 58, iOS declara
+  `UIViewControllerBasedStatusBarAppearance=true`; iOS 27 ignora la antigua API
+  de apariencia a nivel de aplicación y React Native aplica el estilo mediante
+  sus controladores. La revisión de QA del 2026-10-04
   registra el contraste de los retornos contextuales por plataforma.
 - **Sustitución de sesión:** el stack raíz conserva su identidad nativa mientras
   se cierran rutas anteriores y se abre el destino contextual. La revisión de

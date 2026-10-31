@@ -32,7 +32,7 @@
 | 5     | Identidad propia con Apple/Google federados           | Aceptada  | [ADR-0010](../adr/0010-own-identity-with-federated-login.md)                |
 | 6     | Persistencia y acceso a datos                         | Aceptada  | [ADR-0011](../adr/0011-use-postgresql-pgx-sqlc-and-goose.md)                |
 | 7     | Toolchain Go                                          | Aceptada  | [ADR-0012](../adr/0012-pin-go-toolchain-and-isolate-tools.md)               |
-| 8     | Toolchain TypeScript                                  | Aceptada  | [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md)              |
+| 8     | Toolchain TypeScript                                  | Aceptada  | [ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md), [ADR-0171](../adr/0171-use-typescript-7-and-oxlint-with-prettier.md)              |
 | 9     | Framework del cliente universal: Expo                 | Aceptada  | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
 | 10    | Routing y generación nativa: Expo Router + CNG        | Aceptada  | [ADR-0015](../adr/0015-use-expo-router-and-continuous-native-generation.md) |
 | 11    | Rendering y adaptación por plataforma                 | Actualizada | [ADR-0016](../adr/0016-use-client-side-web-rendering-initially.md), [ADR-0120](../adr/0120-index-public-home-without-indexing-app-routes.md) |

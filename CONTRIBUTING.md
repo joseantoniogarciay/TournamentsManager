@@ -76,6 +76,11 @@ Durante un cambio:
 pnpm run check
 ```
 
+El compilador del proyecto es TypeScript 7.0.2; Oxlint aplica el lint y Prettier
+el formato (ADR-0171). `pnpm run test:toolchain` verifica errores deliberados
+y las garantías migradas. VS Code recomienda Oxc y TypeScript 7; las dependencias
+privadas de herramientas externas pueden conservar TS 6 sin cambiar `tsc`.
+
 `make check` ejecuta las comprobaciones aplicables de Go y TypeScript desde una
 única entrada. `make verify` añade la exportación web del cliente Expo a un
 directorio temporal, además de las comprobaciones de generación, build y

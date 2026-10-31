@@ -47,12 +47,14 @@ concreto, no como una decisión pendiente global.
 ## TypeScript
 
 El baseline está aceptado en
-[ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md):
+[ADR-0014](../adr/0014-use-node-pnpm-and-strict-typescript.md) y actualizado por
+[ADR-0171](../adr/0171-use-typescript-7-and-oxlint-with-prettier.md):
 
 - TypeScript estricto desde el primer workspace;
 - propiedades opcionales y accesos por índice tratados con precisión;
 - overrides de clases marcados explícitamente;
-- ESLint detecta problemas y Prettier decide el formato;
+- Oxlint detecta problemas y Prettier decide el formato;
+- los módulos CommonJS declaran `"use strict"` para conservar los rechazos del parser;
 - las excepciones de lint deben ser locales y justificar el motivo;
 - el código generado no se modifica manualmente.
 
