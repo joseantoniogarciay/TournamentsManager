@@ -58,10 +58,9 @@ export default function RootLayout() {
   const [allowSystemFontFallback, setAllowSystemFontFallback] = useState(false);
 
   useEffect(() => {
-    if (fontsLoaded) return;
-
-    // Una fuente mejora la apariencia, pero no puede dejar vacía la web si un
-    // perfil privado de Safari retrasa o restringe su carga.
+    // Web keeps only its initial theme background until the local fonts load.
+    // Native retains the existing availability fallback.
+    if (fontsLoaded || Platform.OS === "web") return;
     const timeout = setTimeout(
       () => setAllowSystemFontFallback(true),
       fontLoadFallbackDelayMilliseconds,
@@ -70,7 +69,7 @@ export default function RootLayout() {
   }, [fontsLoaded]);
 
   if (fontError) throw fontError;
-  if (!fontsLoaded && !allowSystemFontFallback) return null;
+  if (!fontsLoaded && (Platform.OS === "web" || !allowSystemFontFallback)) return null;
 
   return (
     <PreferencesProvider>
@@ -117,6 +116,7 @@ function RouteSafeArea({ children }: PropsWithChildren) {
 }
 
 function SessionNavigator() {
+  const { colors } = usePreferences();
   const { finishSessionReplacement, replacementDestination, revision, transition } = useSession();
 
   useEffect(() => {
@@ -163,8 +163,16 @@ function SessionNavigator() {
     <Stack
       screenLayout={({ children }) => <RouteSafeArea>{children}</RouteSafeArea>}
       screenOptions={{
+        // A route can be visible before its screen applies navigation.setOptions.
+        // Never let that first header fall back to the internal route name.
+        title: "",
         headerTransparent: false,
         headerShown: false,
+        headerBackVisible: false,
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: colors.surface.canvas },
+        headerTintColor: colors.text.primary,
+        headerTitleAlign: "center",
         headerTitleStyle: { fontFamily: typography.family.semibold },
       }}
     >
