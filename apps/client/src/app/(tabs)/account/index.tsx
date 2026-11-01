@@ -395,7 +395,7 @@ export function AccountScreen({
                     )}
                     accessibilityRole="button"
                     accessibilityState={{
-                      busy: isGooglePreparing || isGoogleAuthenticating,
+                      busy: isGoogleAuthenticating,
                       disabled: !isGoogleConfigured || isGooglePreparing || socialBusy,
                     }}
                     disabled={!isGoogleConfigured || isGooglePreparing || socialBusy}
@@ -408,7 +408,7 @@ export function AccountScreen({
                         : undefined,
                     ]}
                   >
-                    {isGooglePreparing || isGoogleAuthenticating ? (
+                    {isGoogleAuthenticating ? (
                       <ActivityIndicator color={colors.indicator.default} />
                     ) : (
                       <Image source={googleLogo} style={styles.googleLogo} />
