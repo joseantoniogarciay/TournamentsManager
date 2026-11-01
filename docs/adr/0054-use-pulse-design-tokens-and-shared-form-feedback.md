@@ -8,6 +8,8 @@
 - **Superado por:** [ADR-0096](0096-use-figtree-as-the-universal-client-font.md), solo en la
   elección de familia tipográfica; ADR-0176 en color y tipografía del cliente
   (implementado, con QA visual pendiente).
+  ADR-0178 incorpora secciones abiertas y filas para listas simples; conserva
+  tokens, controles y feedback.
 
 ## Problema
 

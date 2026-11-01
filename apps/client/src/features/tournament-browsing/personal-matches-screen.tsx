@@ -21,6 +21,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import {
   Button,
   Card,
+  ContentSection,
   DisclosureIndicator,
   LoadingTransition,
   RequestErrorCard,
@@ -82,13 +83,13 @@ export function PersonalMatchesScreen() {
     <Screen bottomInset="none" webWidth="wide">
       {!isRestoring && !user ? (
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottom }]}>
-          <Card>
+          <ContentSection>
             <View style={styles.copy}>
               <Text variant="title">{t("matches_guest_title")}</Text>
               <Text color="secondary">{t("matches_guest_description")}</Text>
               <Button label={t("home_sign_in")} onPress={() => router.push("/account")} />
             </View>
-          </Card>
+          </ContentSection>
         </ScrollView>
       ) : null}
       {user ? (

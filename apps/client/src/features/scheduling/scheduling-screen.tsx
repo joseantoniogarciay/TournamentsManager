@@ -14,7 +14,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import {
   Button,
-  Card,
+  ContentSection,
   KeyboardAwareScrollView,
   LoadingTransition,
   NavigationHeaderButton,
@@ -225,7 +225,7 @@ export function SchedulingScreen({ mode }: { mode: "match" | "venue" }) {
           />
         ) : (
           <KeyboardAwareScrollView bottomInset="safe-area" contentContainerStyle={styles.content}>
-            <Card>
+            <ContentSection>
               <Text variant="title">{tournament?.name}</Text>
               {match ? (
                 <Text color="secondary">
@@ -233,8 +233,8 @@ export function SchedulingScreen({ mode }: { mode: "match" | "venue" }) {
                   {teams.get(match.awayTeamId) ?? t("bracket_awaiting_winner")}
                 </Text>
               ) : null}
-            </Card>
-            <Card>
+            </ContentSection>
+            <ContentSection>
               <View style={styles.fields}>
                 {rejected ? (
                   <Button
@@ -317,7 +317,7 @@ export function SchedulingScreen({ mode }: { mode: "match" | "venue" }) {
                   />
                 ) : null}
               </View>
-            </Card>
+            </ContentSection>
           </KeyboardAwareScrollView>
         )}
       </Screen>

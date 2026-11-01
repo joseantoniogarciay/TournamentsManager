@@ -22,7 +22,7 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
-  Card,
+  ContentSection,
   ConfigurationOption,
   KeyboardAwareScrollView,
   NavigationHeaderButton,
@@ -170,7 +170,7 @@ export default function CreateTournamentScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <Card>
+          <ContentSection>
             <View style={styles.form}>
               <View style={styles.sportSelector}>
                 <Text variant="bodyLarge">{t("tournament_sport_label")}</Text>
@@ -335,7 +335,7 @@ export default function CreateTournamentScreen() {
                 onPress={() => void publish()}
               />
             </View>
-          </Card>
+          </ContentSection>
         </KeyboardAwareScrollView>
       </Screen>
     </>

@@ -11,7 +11,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
-  Card,
+  ContentSection,
   KeyboardAwareScrollView,
   LoadingTransition,
   Screen,
@@ -71,19 +71,19 @@ export default function PasswordResetScreen() {
     return (
       <Screen bottomInset="none">
         <KeyboardAwareScrollView bottomInset="safe-area">
-          <Card>
+          <ContentSection>
             <View style={styles.form}>
               <Text>{t("password_recovery_link_invalid")}</Text>
               <Button label={t("link_confirmation_action")} onPress={() => router.replace("/")} />
             </View>
-          </Card>
+          </ContentSection>
         </KeyboardAwareScrollView>
       </Screen>
     );
   return (
     <Screen bottomInset="none">
       <KeyboardAwareScrollView bottomInset="safe-area">
-        <Card>
+        <ContentSection>
           <View style={styles.form}>
             <Text variant="title">{t("password_recovery_new_title")}</Text>
             <TextField
@@ -112,7 +112,7 @@ export default function PasswordResetScreen() {
               onPress={() => void submit()}
             />
           </View>
-        </Card>
+        </ContentSection>
       </KeyboardAwareScrollView>
     </Screen>
   );

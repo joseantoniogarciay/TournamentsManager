@@ -8,7 +8,7 @@ import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
 import {
   Button,
-  Card,
+  ContentSection,
   InteractionBlocker,
   KeyboardAwareScrollView,
   Screen,
@@ -100,7 +100,7 @@ export default function RegisterScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
-        <Card>
+        <ContentSection>
           <View style={styles.form}>
             <Text color="secondary">{t("account_register_description")}</Text>
             <TextField
@@ -164,7 +164,7 @@ export default function RegisterScreen() {
               onPress={() => void register()}
             />
           </View>
-        </Card>
+        </ContentSection>
       </KeyboardAwareScrollView>
       {isSubmitting ? (
         <InteractionBlocker accessibilityLabel={t("account_registration_submitting")} />

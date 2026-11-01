@@ -20,7 +20,7 @@ import { useSession } from "@/shared/session/session-provider";
 import { consumeDeferredInitialDeepLink } from "@/shared/navigation/deep-link-gate";
 import {
   Button,
-  Card,
+  ContentSection,
   ResponsiveColumns,
   Screen,
   Text,
@@ -102,7 +102,7 @@ export default function HomeScreen() {
           style={styles.scroll}
         >
           <ResponsiveColumns gap={space[6]} fullWidthLast>
-            <Card>
+            <ContentSection>
               <View style={styles.hero}>
                 <Text variant="display">{t("home_hero")}</Text>
                 <Text color="secondary" variant="bodyLarge">
@@ -113,7 +113,7 @@ export default function HomeScreen() {
                   onPress={() => router.push("/create-tournament" as Href)}
                 />
               </View>
-            </Card>
+            </ContentSection>
 
             {user ? (
               <View style={styles.homeSection}>
@@ -216,13 +216,13 @@ function HomeMetadata() {
 function GuestOnboarding({ t }: { t: ReturnType<typeof getTranslator> }) {
   return (
     <View style={styles.content}>
-      <Card>
+      <ContentSection>
         <View style={styles.section}>
           <Text variant="title">{t("home_section_title")}</Text>
           <Text color="secondary">{t("home_section_description")}</Text>
         </View>
-      </Card>
-      <Card>
+      </ContentSection>
+      <ContentSection>
         <View style={styles.steps}>
           <Step
             description={t("home_step_1_description")}
@@ -240,7 +240,7 @@ function GuestOnboarding({ t }: { t: ReturnType<typeof getTranslator> }) {
             title={t("home_step_3_title")}
           />
         </View>
-      </Card>
+      </ContentSection>
     </View>
   );
 }

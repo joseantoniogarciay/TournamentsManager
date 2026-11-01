@@ -1,4 +1,6 @@
 {
+  "team_list_count": "Squadre: {count}",
+  "participant_list_count": "Partecipanti: {count}",
   "tournament_format_league": "Campionato",
   "tournament_format_bracket": "Eliminazione diretta",
   "tournament_format_mixed": "Campionato + eliminazione",

@@ -6,7 +6,8 @@ import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";
 import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
-  Card,
+  ContentSection,
+  ListRow,
   LoadingTransition,
   RequestErrorCard,
   Screen,
@@ -52,7 +53,7 @@ export default function SessionsScreen() {
         <LoadingTransition active message={t("common_loading")} />
       ) : (
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]}>
-          <Card>
+          <ContentSection>
             <View style={styles.section}>
               <Text color="secondary">{t("sessions_description")}</Text>
               <Button
@@ -73,9 +74,9 @@ export default function SessionsScreen() {
                 onPress={() => void load()}
               />
             </View>
-          </Card>
+          </ContentSection>
           {page.items.map((item) => (
-            <Card key={item.id}>
+            <ListRow key={item.id}>
               <View style={styles.section}>
                 <Text variant="title">
                   {t(`sessions_client_${item.client}`)} · {t(`sessions_platform_${item.platform}`)}
@@ -98,7 +99,7 @@ export default function SessionsScreen() {
                   />
                 ) : null}
               </View>
-            </Card>
+            </ListRow>
           ))}
           {page.items.length === 0 ? (
             <View style={styles.empty}>
@@ -106,7 +107,7 @@ export default function SessionsScreen() {
             </View>
           ) : null}
           {page.nextCursor ? (
-            <Card>
+            <ContentSection>
               <Button
                 label={t("sessions_more")}
                 variant="secondary"
@@ -115,7 +116,7 @@ export default function SessionsScreen() {
                 disabledReason={t("common_action_in_progress")}
                 onPress={() => void load(page.nextCursor ?? undefined)}
               />
-            </Card>
+            </ContentSection>
           ) : null}
         </ScrollView>
       )}
@@ -123,7 +124,7 @@ export default function SessionsScreen() {
   );
 }
 const styles = StyleSheet.create({
-  content: { gap: space[5] },
+  content: { gap: 0 },
   section: { gap: space[3] },
   empty: { paddingHorizontal: space[5] },
 });

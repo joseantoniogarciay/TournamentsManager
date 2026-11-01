@@ -13,7 +13,7 @@ import { usePendingVerification } from "@/features/registration/pending-verifica
 import { getPendingTeamInvitation } from "@/features/league-creation/team-invitation";
 import { getTranslator } from "@/shared/i18n/locale";
 import { useSession } from "@/shared/session/session-provider";
-import { Button, Card, LoadingTransition, Screen, Text } from "@/shared/ui";
+import { Button, ContentSection, LoadingTransition, Screen, Text } from "@/shared/ui";
 
 const minimumConfirmationTransitionDuration = 2_000;
 
@@ -104,7 +104,7 @@ export default function LinkConfirmationScreen() {
   return (
     <Screen>
       <View style={styles.content}>
-        <Card>
+        <ContentSection>
           <View style={styles.cardContent}>
             <Text color="secondary">
               {confirmationFailure === "unexpected"
@@ -121,7 +121,7 @@ export default function LinkConfirmationScreen() {
               onPress={returnHome}
             />
           </View>
-        </Card>
+        </ContentSection>
       </View>
     </Screen>
   );

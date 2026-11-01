@@ -424,3 +424,16 @@ con adaptadores node-server 2.1.3/2.1.5. No se añaden excepciones de edad.
 Audit termina con cero avisos, make verify y 131 pruebas pasan. HTTP, estados,
 WebSocket y comandos Scalar --once verificados con limpieza. Permanecen los
 peers anteriores de node-ws y neverpanic; no se falsean sus declaraciones.
+
+
+## 2026-11-01 — Secciones abiertas y listas (ADR-0178)
+
+Tras comparar Lista abierta, Hoja de inscripción y Recorrido guiado, se recomienda
+Lista abierta. El usuario acepta «Me gusta apliquemos esto en todos los sitios
+donde sea evidente». Se extiende a equipos, administradores, sesiones,
+notificaciones, ediciones, texto y formularios; las fichas independientes de torneo
+y encuentro conservan Card. Dos primitivas compartidas mantienen márgenes y
+separadores; no cambian API, permisos ni navegación nativa.
+
+Véanse [ADR-0178](../adr/0178-use-open-sections-and-separated-list-rows.md) y
+[la evidencia de alcance y validación](../engineering/OPEN_SECTIONS_2026-11-01.md).

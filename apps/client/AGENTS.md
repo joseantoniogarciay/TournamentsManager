@@ -46,6 +46,15 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
 - Las pantallas usan tokens semánticos y primitivas de `shared/ui`; no introducen
   hexadecimales, medidas repetidas, fuentes remotas ni una librería de UI sin ADR
   aceptado.
+- Según ADR-0178, listas simples usan `ListRow` y texto, ayudas y formularios usan
+  `ContentSection` sobre el canvas. Se distinguen por tipografía, espacio y
+  separadores, sin una tarjeta por elemento. `Card` se reserva para fichas
+  independientes de torneos/encuentros y estados recuperables; los diálogos
+  mantienen `ModalDialog`. No se elimina la superficie de Card globalmente.
+- `ContentSection` y `ListRow` poseen sus 20 px exteriores, igual que Card:
+  no añadir padding horizontal al scroll que los contiene ni anidarlos entre sí.
+  Los hijos usan View normal para no duplicar márgenes. Una lista de filas no
+  conserva el gap de 20 px entre tarjetas: cada fila aporta su separación vertical.
 - **Muy importante — consistencia de controles de cierre:** toda ruta modal o de
   pantalla completa reutiliza el patrón visual de cierre existente: objetivo de
   44 px circular, con superficie y borde en web/Android, y
@@ -91,7 +100,8 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   Inicio y biblioteca reutilizan `ResponsiveColumns`: dos columnas web a
   partir de `webLayout.columnsMinWidth` (960 px), una debajo y en nativo.
   La compensación de medio margen por celda conserva los 20 px entre cards.
-  Equipos con alta/invitación usa la variante `sidebar`; sin controles mantiene
+  Equipos con alta/invitación usa la variante `sidebar-end`: lista primero y
+  acciones a la derecha en web ancha; sin controles mantiene
   lectura. En liga iniciada la ficha reserva `webLayout.sidebarWidth` al resumen
   sin mover ni remontar la lista de partidos. No aplicar a cuadros/desempates.
 - **Muy importante — márgenes de contenido móvil:** un formulario, listado o

@@ -9,7 +9,7 @@ import { getTournamentStateLabel } from "@/shared/i18n/league-state";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import {
   Button,
-  Card,
+  ListRow,
   DisclosureIndicator,
   LoadingTransition,
   NavigationHeaderButton,
@@ -95,7 +95,7 @@ export function EditionsScreen() {
             />
           ) : null}
           {page?.items.map((edition) => (
-            <Card key={edition.id}>
+            <ListRow key={edition.id}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t("tournaments_open_league").replace("{name}", edition.name)}
@@ -117,7 +117,7 @@ export function EditionsScreen() {
                 </View>
                 <DisclosureIndicator />
               </Pressable>
-            </Card>
+            </ListRow>
           ))}
           {moreError ? (
             <View style={styles.pagination}>
@@ -145,8 +145,8 @@ export function EditionsScreen() {
   );
 }
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, gap: space[5] },
+  content: { flexGrow: 1, gap: 0 },
   copy: { flex: 1, gap: space[2] },
   row: { flexDirection: "row", alignItems: "center", gap: space[3], minHeight: control.minHeight },
-  pagination: { paddingHorizontal: space[5] },
+  pagination: { paddingHorizontal: space[5], paddingVertical: space[3] },
 });

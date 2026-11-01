@@ -7,7 +7,8 @@
 - **Supera a:** ADR-0054 en dirección cromática y ADR-0096 en dirección tipográfica,
   en la implementación del cliente. La validación visual de la transición sigue
   pendiente; no se cambia la anatomía de las primitivas ni la navegación.
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0178, solo en la composición con tarjetas de listas
+  simples, texto y formularios; identidad, controles y navegación siguen vigentes.
 
 ## Problema
 

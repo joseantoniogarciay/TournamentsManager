@@ -18,7 +18,7 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import {
-  Card,
+  ListRow,
   LoadingTransition,
   NavigationHeaderButton,
   RequestErrorCard,
@@ -206,7 +206,7 @@ export default function TournamentAdministratorsScreen() {
               </View>
             ) : null}
             {administrators.map((username) => (
-              <Card density="compact" key={username}>
+              <ListRow key={username}>
                 <View style={styles.row}>
                   <Text style={styles.username} variant="bodyLarge">
                     {username}
@@ -233,7 +233,7 @@ export default function TournamentAdministratorsScreen() {
                     )}
                   </ActionPressable>
                 </View>
-              </Card>
+              </ListRow>
             ))}
           </ScrollView>
         )}
@@ -243,7 +243,7 @@ export default function TournamentAdministratorsScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, gap: space[5], paddingBottom: space[5] },
+  content: { flexGrow: 1, gap: 0, paddingBottom: space[5] },
   emptyState: {
     alignItems: "center",
     flex: 1,

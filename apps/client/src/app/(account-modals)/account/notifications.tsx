@@ -18,7 +18,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import {
   NavigationHeaderButton,
-  Card,
+  ListRow,
   LoadingTransition,
   RequestErrorCard,
   Screen,
@@ -160,7 +160,7 @@ export default function NotificationsScreen() {
             ) : (
               <>
                 {items.map((item) => (
-                  <Card density="compact" key={item.id}>
+                  <ListRow key={item.id}>
                     <View style={styles.row}>
                       <Pressable
                         accessibilityRole="button"
@@ -208,7 +208,7 @@ export default function NotificationsScreen() {
                         )}
                       </ActionPressable>
                     </View>
-                  </Card>
+                  </ListRow>
                 ))}
               </>
             )}
@@ -225,7 +225,7 @@ function formatNotificationDate(value: string, fallback: string) {
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, gap: space[5] },
+  content: { flexGrow: 1, gap: 0 },
   empty: { alignItems: "center", flex: 1, justifyContent: "center", paddingHorizontal: space[5] },
   row: { alignItems: "center", flexDirection: "row", gap: space[3] },
   message: { flex: 1, gap: space[1] },
