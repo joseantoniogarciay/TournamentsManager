@@ -713,6 +713,20 @@ export default function TournamentScreen() {
     league.teams.length >= minimumTournamentTeamsToStart &&
     (!isRacketSport(league.sport) || format === "single_elimination") &&
     (format !== "league_then_single_elimination" || mixedConfiguration.valid);
+  const startDisabledReason =
+    league.teams.length < minimumTournamentTeamsToStart
+      ? t("league_start_requires_two_teams")
+      : isRacketSport(league.sport) && format !== "single_elimination"
+        ? t("racket_elimination_only_help")
+        : !mixedConfiguration.valid && mixedConfiguration.reason === "teams"
+          ? t("tournament_mixed_required_teams")
+              .replace("{required}", String(mixedConfiguration.required))
+              .replace("{current}", String(league.teams.length))
+          : !mixedConfiguration.valid && mixedConfiguration.reason === "groups"
+            ? t("tournament_mixed_group_count_invalid")
+            : !mixedConfiguration.valid && mixedConfiguration.reason === "qualifiers"
+              ? t("tournament_mixed_qualifiers_per_group_invalid")
+              : t("tournament_mixed_bracket_size");
   const showExpandedTeamManagement = league.state === "published" && isOrganizer;
   const hasStarted =
     league.state === "in_progress" ||
@@ -1373,6 +1387,7 @@ export default function TournamentScreen() {
                                 label={t("tournament_format_league")}
                                 selected={format === "league"}
                                 disabled={isStarting}
+                                disabledReason={t("common_action_in_progress")}
                                 onPress={() => setFormat("league")}
                               />
                             ) : null}
@@ -1380,6 +1395,7 @@ export default function TournamentScreen() {
                               label={t("tournament_format_bracket")}
                               selected={format === "single_elimination"}
                               disabled={isStarting}
+                              disabledReason={t("common_action_in_progress")}
                               onPress={() => setFormat("single_elimination")}
                             />
                             {!isRacketSport(league.sport) ? (
@@ -1387,6 +1403,7 @@ export default function TournamentScreen() {
                                 label={t("tournament_format_mixed")}
                                 selected={format === "league_then_single_elimination"}
                                 disabled={isStarting}
+                                disabledReason={t("common_action_in_progress")}
                                 onPress={() => setFormat("league_then_single_elimination")}
                               />
                             ) : null}
@@ -1408,12 +1425,14 @@ export default function TournamentScreen() {
                                   label={t("league_start_one_leg")}
                                   selected={roundRobinLegs === 1}
                                   disabled={isStarting}
+                                  disabledReason={t("common_action_in_progress")}
                                   onPress={() => setRoundRobinLegs(1)}
                                 />
                                 <ConfigurationOption
                                   label={t("league_start_two_legs")}
                                   selected={roundRobinLegs === 2}
                                   disabled={isStarting}
+                                  disabledReason={t("common_action_in_progress")}
                                   onPress={() => setRoundRobinLegs(2)}
                                 />
                               </View>
@@ -1427,12 +1446,14 @@ export default function TournamentScreen() {
                                       label={t("tournament_mixed_single_table")}
                                       selected={leagueStructure === "single_table"}
                                       disabled={isStarting}
+                                      disabledReason={t("common_action_in_progress")}
                                       onPress={() => setLeagueStructure("single_table")}
                                     />
                                     <ConfigurationOption
                                       label={t("tournament_mixed_groups")}
                                       selected={leagueStructure === "groups"}
                                       disabled={isStarting}
+                                      disabledReason={t("common_action_in_progress")}
                                       onPress={() => setLeagueStructure("groups")}
                                     />
                                   </View>
@@ -1447,6 +1468,7 @@ export default function TournamentScreen() {
                                           )}
                                           selected={qualifierCount === count}
                                           disabled={isStarting}
+                                          disabledReason={t("common_action_in_progress")}
                                           onPress={() => setQualifierCount(count)}
                                         />
                                       ))}
@@ -1532,7 +1554,12 @@ export default function TournamentScreen() {
                       <Card>
                         <View style={styles.stack}>
                           <Text color="secondary">{t("league_start_waiting_for_owner")}</Text>
-                          <Button disabled label={t("league_start")} onPress={() => undefined} />
+                          <Button
+                            disabled
+                            disabledReason={t("league_start_waiting_for_owner")}
+                            label={t("league_start")}
+                            onPress={() => undefined}
+                          />
                         </View>
                       </Card>
                     ) : null}
@@ -1548,6 +1575,11 @@ export default function TournamentScreen() {
                           </Text>
                           <Button
                             disabled
+                            disabledReason={t(
+                              tieBreakStageReady
+                                ? "tournament_mixed_waiting_for_owner_elimination"
+                                : "tournament_mixed_waiting_for_owner",
+                            )}
                             label={t(
                               tieBreakStageReady
                                 ? "tournament_mixed_start_elimination"
@@ -1566,6 +1598,7 @@ export default function TournamentScreen() {
                           </Text>
                           <Button
                             disabled
+                            disabledReason={t("tournament_mixed_not_enough_eligible_teams")}
                             label={t("tournament_mixed_start_elimination")}
                             onPress={() => undefined}
                           />
@@ -1716,6 +1749,7 @@ export default function TournamentScreen() {
           <View style={[styles.floatingAction, { bottom: insets.bottom + space[3] }]}>
             <Button
               disabled={league.state === "published" && !canStartTournament}
+              disabledReason={startDisabledReason}
               label={primaryTournamentAction.label}
               loading={primaryTournamentAction.loading}
               onPress={primaryTournamentAction.onPress}
@@ -1810,6 +1844,7 @@ export default function TournamentScreen() {
             />
             <Button
               disabled={isCompleting}
+              disabledReason={t("common_action_in_progress")}
               label={t("common_cancel")}
               onPress={() => setCompletionConfirmationOpen(false)}
               variant="secondary"
@@ -2151,6 +2186,19 @@ export default function TournamentScreen() {
                 ) : null}
                 <Button
                   disabled={!canSaveResult}
+                  disabledReason={
+                    editingScore.incidentType
+                      ? t(
+                          isSetSport(league.sport)
+                            ? "result_incident_partial_invalid"
+                            : "result_incident_partial_score_invalid",
+                        )
+                      : needsShootout
+                        ? t("bracket_penalties_help")
+                        : isSetSport(league.sport)
+                          ? t("racket_result_invalid")
+                          : t("league_result_invalid")
+                  }
                   label={t("league_result_save")}
                   loading={savingMatchID === editingMatch.id}
                   onPress={() => void saveResult(editingMatch.id)}

@@ -6,6 +6,14 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.15.1] - 2026-11-01
+
+### Fixed
+
+- ADR-0177: botones no disponibles opacos, con motivo localizado al pulsar y
+  protección de la acción original, también durante cargas. Se aplica a las
+  variantes compartidas, opciones y botones de icono/sociales existentes.
+
 ## [1.15.0] - 2026-11-01
 
 ### Security

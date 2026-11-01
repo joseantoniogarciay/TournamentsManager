@@ -184,6 +184,7 @@ function TournamentLibrary({
               label={t("tournaments_load_more")}
               loading={isLoadingMore}
               disabled={isRefreshing}
+              disabledReason={t("common_action_in_progress")}
               onPress={onLoadMore}
               variant="secondary"
             />

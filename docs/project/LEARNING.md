@@ -6781,3 +6781,19 @@ La release conserva QA parcial y no afirma distribución móvil. La revisión
 automática exige concretar payload/destino de símbolos privados; se obtiene
 autorización específica y se mantienen los source maps fuera del artefacto público.
 Retrospectiva y rollback en DEPLOYMENT.md y el informe de Grada.
+
+### ADR-0177 — estados bloqueados explicables
+
+La transparencia en el contenedor de un botón mezcla también texto y contenido
+subyacente. Cambiar solo el color de fondo no basta: el estado bloqueado necesita
+su propia superficie sólida y opacity 1, también en variantes ghost y seleccionadas.
+El bloqueo funcional se separa del evento que explica el requisito, con un guard
+compartido y motivos locales en los cuatro idiomas.
+
+Retrospectiva: la prueba del HTML real detectó que RN Web convierte el atributo
+accesible en `disabled` nativo sobre un botón y cancela la explicación. Un
+contenedor `display: contents` permite heredar `aria-disabled` sin perder el foco
+ni la activación estándar del botón. Las regresiones cubren este detalle, la
+protección del callback, carga, reactivación, variantes y ambos temas. La ejecución
+visual con lector de pantalla y dispositivos sigue siendo una comprobación
+separada; las pruebas de callbacks para iOS/Android no equivalen a esa QA.

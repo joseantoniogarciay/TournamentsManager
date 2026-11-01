@@ -285,6 +285,7 @@ export default function JoinTeamScreen() {
                             label={teamName}
                             selected={name === teamName}
                             disabled={isSubmitting}
+                            disabledReason={t("common_action_in_progress")}
                             onPress={() => {
                               setNameEdited(true);
                               setName(teamName);

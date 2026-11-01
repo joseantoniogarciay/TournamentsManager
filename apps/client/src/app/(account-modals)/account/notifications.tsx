@@ -1,3 +1,4 @@
+import { ActionPressable } from "@/shared/ui/action-pressable";
 import { router, Stack } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useState } from "react";
@@ -181,11 +182,12 @@ export default function NotificationsScreen() {
                           {formatNotificationDate(item.createdAt, t("notifications_invalid_date"))}
                         </Text>
                       </Pressable>
-                      <Pressable
+                      <ActionPressable
                         accessibilityRole="button"
                         accessibilityLabel={t("notifications_delete")}
                         accessibilityState={{ busy: removingNotificationID === item.id }}
                         disabled={removingNotificationID !== undefined || removingAll}
+                        disabledReason={t("common_action_in_progress")}
                         onPress={() => confirmRemove(item.id)}
                         style={styles.delete}
                       >
@@ -204,7 +206,7 @@ export default function NotificationsScreen() {
                             tintColor={colors.text.primary}
                           />
                         )}
-                      </Pressable>
+                      </ActionPressable>
                     </View>
                   </Card>
                 ))}

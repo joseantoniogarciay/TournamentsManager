@@ -570,3 +570,19 @@ con tokens existentes; anuncia el destino para accesibilidad. Textos es/en/it/fr
 El [informe de implementación](GRADA_IDENTITY_2026-11-01.md) distingue checks
 estáticos, contraste y exportaciones de la revisión visual pendiente. Las cinco
 regresiones de contraste están incluidas en `make verify` (`test-design-tokens`).
+
+## Acciones no disponibles (ADR-0177)
+
+Un botón bloqueado conserva `opacity: 1` y usa superficie `surface.subtle`,
+borde `border.default` y texto `text.secondary`, todos sólidos en ambos temas.
+También se aplica a variantes ghost, destructiva, opciones seleccionadas y
+botones con icono: el contenido inferior nunca se transparenta.
+
+`ActionPressable` mantiene la interacción para explicar el `disabledReason`
+localizado mediante el banner común, pero protege la acción y la pulsación larga.
+`Button` y `ConfigurationOption` lo reutilizan. Cada feature aporta el requisito
+concreto; una operación pendiente usa `common_action_in_progress` y bloquea
+reenvíos. Se conserva la semántica accesible de no disponibilidad y el foco.
+En web, `aria-disabled` se hereda de un contenedor sin caja: ponerlo directamente
+en RN Web Pressable genera HTML `disabled` y suprime también la explicación.
+No cambia el layout ni la navegación nativa.

@@ -65,6 +65,7 @@ export default function ForgotPasswordScreen() {
             />
             <Button
               disabled={!valid}
+              disabledReason={t("validation_email")}
               label={t("password_recovery_submit")}
               loading={sending}
               onPress={() => void submit()}

@@ -232,6 +232,7 @@ export default function AccountAccessScreen() {
           />
           <Button
             disabled={googleUnlinkPassword.length < 8}
+            disabledReason={t("validation_password_length")}
             label={t("account_google_unlink")}
             loading={googleUnlinking}
             onPress={() => void confirmGoogleUnlink()}
@@ -249,6 +250,7 @@ export default function AccountAccessScreen() {
           <Text color="secondary">{t("account_password_remove_description")}</Text>
           <Button
             disabled={!removePasswordGoogle.isConfigured}
+            disabledReason={t("common_social_unavailable")}
             label={t("account_password_google_reauthenticate")}
             loading={removePasswordGoogle.isLoading}
             onPress={() => void removePasswordGoogle.start()}

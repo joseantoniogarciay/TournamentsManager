@@ -184,6 +184,7 @@ export function PersonalMatchesScreen() {
                   label={t(moreError ? "common_retry" : "tournaments_load_more")}
                   loading={loadingMore}
                   disabled={refreshing}
+                  disabledReason={t("common_action_in_progress")}
                   variant="secondary"
                   onPress={() => void load("more")}
                 />

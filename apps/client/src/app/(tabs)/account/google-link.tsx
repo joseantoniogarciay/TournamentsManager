@@ -147,6 +147,11 @@ export function GoogleLinkDialog({
             <Text color="secondary">{t("account_google_link_google_reauth_description")}</Text>
             <Button
               disabled={!proof.isConfigured || proof.isLoading}
+              disabledReason={
+                !proof.isConfigured
+                  ? t("common_social_unavailable")
+                  : t("common_action_in_progress")
+              }
               label={t("account_google_link_reauthenticate")}
               loading={proof.isLoading}
               onPress={startGoogle}
@@ -165,6 +170,7 @@ export function GoogleLinkDialog({
             />
             <Button
               disabled={password.length < 8 || reauthenticating}
+              disabledReason={t("validation_password_length")}
               label={t("account_google_link_reauthenticate")}
               loading={reauthenticating}
               onPress={() => void confirmPassword()}
@@ -176,6 +182,11 @@ export function GoogleLinkDialog({
             <Text color="secondary">{t("account_google_link_ready_description")}</Text>
             <Button
               disabled={!proof.isConfigured || proof.isLoading}
+              disabledReason={
+                !proof.isConfigured
+                  ? t("common_social_unavailable")
+                  : t("common_action_in_progress")
+              }
               label={t("account_google_link_continue")}
               loading={proof.isLoading}
               onPress={startGoogle}

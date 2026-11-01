@@ -59,6 +59,9 @@ export default function SessionsScreen() {
                 label={t("sessions_revoke_others")}
                 variant="destructive"
                 disabled={busy || (!page.nextCursor && !page.items.some((item) => !item.current))}
+                disabledReason={
+                  busy ? t("common_action_in_progress") : t("common_no_other_sessions")
+                }
                 loading={pending === "others"}
                 onPress={() => confirmRevoke()}
               />
@@ -66,6 +69,7 @@ export default function SessionsScreen() {
                 label={t("sessions_refresh")}
                 variant="secondary"
                 disabled={busy}
+                disabledReason={t("common_action_in_progress")}
                 onPress={() => void load()}
               />
             </View>
@@ -88,6 +92,7 @@ export default function SessionsScreen() {
                     label={t("sessions_revoke")}
                     variant="destructive"
                     disabled={busy}
+                    disabledReason={t("common_action_in_progress")}
                     loading={pending === item.id}
                     onPress={() => confirmRevoke(item.id)}
                   />
@@ -107,6 +112,7 @@ export default function SessionsScreen() {
                 variant="secondary"
                 loading={busy && !pending}
                 disabled={busy}
+                disabledReason={t("common_action_in_progress")}
                 onPress={() => void load(page.nextCursor ?? undefined)}
               />
             </Card>
