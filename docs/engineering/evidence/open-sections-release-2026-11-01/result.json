@@ -1,0 +1,219 @@
+{
+  "release": "v1.15.3",
+  "webCommit": "ab32cea8a01e96f965cd08084aa907f26488bdc6",
+  "unchangedComponents": {
+    "apiCommit": "8c8c7ca153820538629f6a1a219f935e7796615b",
+    "rendererCommit": "8c8c7ca153820538629f6a1a219f935e7796615b",
+    "database": "No deployment or migration"
+  },
+  "ci": {
+    "candidate": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41322085200",
+    "main": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41322615762",
+    "result": "success; including PostgreSQL integration"
+  },
+  "localGate": "make verify passed; PostgreSQL integration omitted locally and executed in both CI runs",
+  "sourceMaps": {
+    "host": "https://eu.posthog.com",
+    "project": 255144,
+    "authorization": "User explicitly approved upload of JavaScript bundles and source maps after automatic review rejection.",
+    "upload": "completed by the existing production staging procedure",
+    "publicMaps": 0,
+    "publicSourceMappingReferences": 0
+  },
+  "cloudflare": {
+    "web": "f98480b9-c14c-424a-9b1c-2799f02434ee",
+    "redirect": "4bd50222-dcf2-4076-95dc-fc5d940e58e4",
+    "preview": "1ff723b9-9439-40ae-a48d-c4369b3623df"
+  },
+  "previewChecks": [
+    {
+      "path": "/deployment.json",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/account",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/create-tournament",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/tournament/00000000-0000-4000-8000-000000000000/teams",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/privacy-policy",
+      "status": 200,
+      "noindex": true
+    }
+  ],
+  "rollback": {
+    "webCommit": "40723d41d3b7c9e3dec048195cf2a1353ff87981",
+    "cloudflareWeb": "128e3826-b2fa-4766-8cb4-eedca64ffcd0",
+    "cloudflareRedirect": "abb2ac85-986f-4198-856b-10219a7ef5ec"
+  },
+  "limitations": [
+    "No visual web/native QA: Mac locked and local browser use disabled in Work settings.",
+    "No native binary or store distribution."
+  ],
+  "networkLimitation": {
+    "host": "fasttourney.com",
+    "defaultPath": "curl rejected a self-signed certificate during post-deployment verification.",
+    "verifiedAlternative": "104.21.1.205 with valid TLS/SNI and expected SHA; complete HTTPS checks passed.",
+    "configurationChanges": "No DNS/certificate changes; certificate verification was never disabled."
+  },
+  "recoveryOriginCommit": "ab32cea8a01e96f965cd08084aa907f26488bdc6",
+  "closure": "No local/dev services or development observability started. Production remains running. develop contains the main release merge; no temporary branch was created.",
+  "httpsChecks": [
+    {
+      "path": "https://fasttourney.com/deployment.json",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/account",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/privacy-policy",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/terms-of-use",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000/standings",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/favicon.ico",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/apple-touch-icon.png",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/fasttourney-league-preview.png",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/font-licenses/dm-sans.txt",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000",
+      "status": 404,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/tournament/01a0c9b0-1d38-7d47-8825-86c5af8b1237",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://api.fasttourney.com/healthz",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/registrations",
+      "status": 204,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://www.fasttourney.com/tournaments?release=1.15.3",
+      "status": 308,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/theme-init.js",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-a49f9e5167253536a0667877e06a0664.js",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-6489db3f6774b880cb714b0157c145c3.js",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/index-052f83e1b6e154cd7501ec8c0ae3e766.js",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__common-8da3470dabfda3eccfad33b19ca82568.js",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/entry-6eaf458b56223fc2f202479235b74214.js",
+      "status": 200,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205 with valid TLS/SNI; default canonical-host path failed certificate validation during verification."
+    }
+  ],
+  "entryAssets": [
+    {
+      "path": "/theme-init.js",
+      "sha256": "38d3ff1eaf6469d3d348c668628b1b08f23689f6eb96731e470d841918efe4d4"
+    },
+    {
+      "path": "/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "845e66fd20c5d98712b6f6282421fa31009d477e3468f5bde5a1f456f60f4884"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-a49f9e5167253536a0667877e06a0664.js",
+      "sha256": "41f5e7c95fddd19042286b3806fba7f81b0f1d939749f494cfff969fae4d13ed"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-6489db3f6774b880cb714b0157c145c3.js",
+      "sha256": "b5ec32385368dd174b75be53af49329ee127737c3536f17dc4f41a067da28e47"
+    },
+    {
+      "path": "/_expo/static/js/web/index-052f83e1b6e154cd7501ec8c0ae3e766.js",
+      "sha256": "9a381687fe800475c0813579c46a6f6f616752df365b60009ff73c64bee14114"
+    },
+    {
+      "path": "/_expo/static/js/web/__common-8da3470dabfda3eccfad33b19ca82568.js",
+      "sha256": "30eb12f937fcf110e4e69bcf502772d04a029eaa004224a27a399473335c56b0"
+    },
+    {
+      "path": "/_expo/static/js/web/entry-6eaf458b56223fc2f202479235b74214.js",
+      "sha256": "e6f1d12fba5de7b65838cc0ef9d4ecaea9d25a3b675031f5cd5303b51bb6eea9"
+    }
+  ]
+}

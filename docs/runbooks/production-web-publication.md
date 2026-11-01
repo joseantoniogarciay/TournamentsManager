@@ -8,7 +8,7 @@
 ## Síntoma e impacto
 
 ADR-0155 está conmutado desde el 2026-10-11: producción sirve el artefacto
-`40723d41d3b7c9e3dec048195cf2a1353ff87981` (v1.15.2) desde Workers Static
+`ab32cea8a01e96f965cd08084aa907f26488bdc6` (v1.15.3) desde Workers Static
 Assets Free; la primera conmutación reutilizó b002b4b.
 K3s y PostgreSQL están recuperados; la API pública devuelve 200. El
 [procedimiento Cloudflare](../../infra/cloudflare/README.md) separa staging,
@@ -340,3 +340,15 @@ Gates local y ambas CI correctos; preview y siete scripts servidos verificados.
 `www` presenta un certificado ajeno por la ruta habitual de esta conexión y se
 verifica por un edge Cloudflare alternativo manteniendo TLS. No se cambia DNS.
 Véanse [cierre, límites y rollback](../operations/DEPLOYMENT.md#publicación-v1152--2026-11-01).
+
+
+## Evidencia v1.15.3 — 2026-11-01
+
+Composición abierta publicada solo en web; ambos gates CI con PostgreSQL y el
+gate local correctos. Seis comprobaciones de preview y 22 HTTPS productivas,
+incluidos los siete hashes de entrada, correctas. El check canónico rechaza un
+certificado autofirmado por la ruta habitual de esta conexión; el edge alternativo
+conserva TLS/SNI válidos. No se modifica DNS ni se omite validación de certificados.
+La subida privada de bundles/source maps requiere y recibe autorización explícita
+tras el rechazo automático inicial. Origen de recuperación alineado; rollback
+Cloudflare a v1.15.2. [Evidencia y límites](../operations/DEPLOYMENT.md#publicación-v1153--2026-11-01).

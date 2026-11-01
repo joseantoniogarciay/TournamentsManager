@@ -80,3 +80,11 @@ compilación Go y govulncheck. La integración PostgreSQL se omite localmente po
 no configurar TM_INTEGRATION_DATABASE_URL y se comprobará en CI con su servicio
 desechable. No se levantan local/dev ni observabilidad. La publicación web se
 versiona como v1.15.3 conforme a ADR-0119; conserva el límite de QA visual.
+
+## Publicación web
+
+v1.15.3 activada en Cloudflare, SHA `ab32cea8a01e96f965cd08084aa907f26488bdc6`.
+Ambas CI pasan con PostgreSQL. Seis checks de preview y 22 productivos verifican
+el artefacto; conserva el límite de QA visual. La autorización específica de
+bundles/mapas a PostHog se recibe antes de ejecutar su subida. API, datos y
+binarios móviles no se despliegan. [Cierre y rollback](../operations/DEPLOYMENT.md#publicación-v1153--2026-11-01).

@@ -6875,3 +6875,17 @@ local deshabilitado. El mock de navegación había quedado sin usePreferences tr
 un cambio previo de tema; se completa el fixture, sin tocar la lógica de sesión.
 
 [Alcance, checklist y comprobaciones](../engineering/OPEN_SECTIONS_2026-11-01.md).
+
+
+### Publicación web v1.15.3 — 2026-11-01
+
+ADR-0178 publicado con gates local y ambas CI correctos, incluida PostgreSQL.
+El usuario autoriza específicamente bundles/source maps a PostHog UE 255144
+tras el rechazo automático inicial; se respeta el bloqueo hasta esa respuesta.
+Seis checks de preview y 22 productivos verifican el SHA y siete scripts. La ruta
+habitual entrega un certificado autofirmado durante el check canónico: el edge
+alternativo conserva TLS/SNI válidos y evita cambiar DNS/certificados. QA visual
+pendiente, API/renderer sin cambios y sin migraciones. Origen de recuperación
+alineado y rollback a v1.15.2 conservado.
+
+Retrospectiva y [evidencia de cierre](../operations/DEPLOYMENT.md#publicación-v1153--2026-11-01).
