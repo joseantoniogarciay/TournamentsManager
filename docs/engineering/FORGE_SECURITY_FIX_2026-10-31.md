@@ -1,5 +1,8 @@
 # Corrección de Forge — 2026-10-31
 
+> Actualización posterior: [glob/minimatch y ADR-0174](GLOB_MINIMATCH_SECURITY_FIX_2026-11-01.md)
+> eliminan dos de los tres registros restantes. Queda únicamente Hono moderado.
+
 ## Decisión y resultado
 
 El usuario autoriza «Si soluciona lo metemos» tras revisar los seis altos.

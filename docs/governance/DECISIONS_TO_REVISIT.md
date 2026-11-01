@@ -56,6 +56,21 @@ cumpla siete días, el **2026-11-03T14:09:15.471Z**. Conservar el override
 y la resolución corregida. La excepción autorizada no cambia la política
 general; véase [ADR-0173](../adr/0173-apply-forge-security-fix-with-exact-age-exception.md).
 
+## Excepciones puntuales de glob/minimatch — ADR-0174
+
+Retirar estas exclusiones exactas cuando cumplan siete días, conservando las
+resoluciones corregidas y el control global. Fechas UTC:
+
+| Exclusión | Retirada |
+| --- | --- |
+| path-scurry@3.0.0 | 2026-11-03T21:14:48.842Z |
+| glob@14.0.3 | 2026-11-04T04:08:39.624Z |
+| @isaacs/nonrecursive-glob-match@1.0.3 | 2026-11-04T19:50:48.349Z |
+| minimatch@11.0.3 | 2026-11-04T20:00:34.713Z |
+
+Las [opciones Hono](../engineering/GLOB_MINIMATCH_SECURITY_FIX_2026-11-01.md)
+quedan pendientes de decisión; no se implementa la alternativa recomendada.
+
 ## Cómo revisar
 
 1. Cambiar el ADR afectado a **En revisión** o crear una propuesta sucesora.

@@ -2,7 +2,7 @@
 
 - **Estado:** Aceptado
 - **Fecha:** 2026-10-31
-- **Superado parcialmente por:** ADR-0173 solo en la espera de node-forge, mediante excepción exacta autorizada para 1.4.2.
+- **Superado parcialmente por:** ADR-0173 en la espera de node-forge, mediante excepción exacta autorizada para 1.4.2; ADR-0174 en glob/minimatch y sus transitivas exactas.
 - **Decisor:** Usuario: «Ok vamos», tras la revisión de los 43 registros y la recomendación de lotes.
 
 ## Problema, contexto y evidencia

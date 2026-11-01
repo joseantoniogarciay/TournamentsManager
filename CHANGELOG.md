@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Security
 
+- ADR-0174: glob 14.0.3/minimatch 11.0.3 con excepciones exactas autorizadas.
+  Compatibilidad Spectral, Rollup y TypeDoc cubierta por regresiones; audit
+  deja únicamente un moderado de Hono. Make verify y 130 pruebas Node correctos.
+
 - ADR-0173: Forge 1.4.2 corrige los 12 registros restantes de ese paquete,
   incluidos los seis altos. Excepción de edad exacta autorizada; auditoría
   final con 3 moderados, cero altos, bajos o críticos. Regresión de firma Expo.

@@ -96,3 +96,5 @@ Usa [template.md](template.md) y el
 - [ADR-0172: Corregir avisos maduros por lotes](0172-remediate-mature-dependency-security-advisories.md) — Aceptado; 28 registros eliminados y 15 pendientes.
 
 - [ADR-0173: Corrección Forge con excepción exacta de edad](0173-apply-forge-security-fix-with-exact-age-exception.md) — Aceptado; Forge 1.4.2 elimina los seis altos y otros seis registros.
+
+- [ADR-0174: Corregir glob y minimatch con compatibilidad acotada](0174-correct-glob-and-minimatch-with-scoped-compatibility.md) — Aceptado; queda solo el moderado de Hono, con opciones pendientes de decisión.

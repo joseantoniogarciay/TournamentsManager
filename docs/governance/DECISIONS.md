@@ -398,3 +398,16 @@ el mismo CVE. Se elige 1.4.2 porque 1.4.1 rompe pem.decode(Buffer); se añade
 una excepción exacta a la edad mínima, sin cambiar la política general.
 Retirar esa excepción el 2026-11-03T14:09:15.471Z. Solo cambia Forge en el grafo.
 Audit pasa de 15 a 3 moderados; cero altos, bajos o críticos, sin IDs nuevos.
+
+## 2026-11-01 — Cerrar glob/minimatch y comparar Hono (ADR-0174)
+
+El usuario decide corregir ahora glob/minimatch y reservar Hono para comparar
+opciones. Se instalan glob 14.0.3 y minimatch 11.0.3 con sus dos transitivas
+necesarias y cuatro excepciones exactas. Las pruebas exigen adaptar dos
+importaciones Spectral, migrar el único consumidor de glob 7 y sustituir
+matchOne por coincidencia parcial pública en TypeDoc.
+
+Pasan make verify y 130 regresiones; audit deja un moderado de Hono, sin IDs
+nuevos. Su opción recomendada es actualizar únicamente void-server a 2.5.19;
+la resolución aislada añade tres versiones maduras y elimina Hono 1, sin
+aplicarse al checkout. Requiere decisión y pruebas HTTP/WebSocket de integración.

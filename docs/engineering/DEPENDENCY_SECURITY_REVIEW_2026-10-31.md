@@ -1,5 +1,9 @@
 # Revisión del inventario de dependencias — 2026-10-31
 
+> Estado posterior actual: [ADR-0174 / glob y minimatch](GLOB_MINIMATCH_SECURITY_FIX_2026-11-01.md)
+> deja únicamente el moderado de Hono. Los conteos siguientes conservan la
+> historia de cada lote.
+>
 > Actualización posterior: [Forge 1.4.2 / ADR-0173](FORGE_SECURITY_FIX_2026-10-31.md)
 > elimina otros 12 registros. El estado actual del checkout es 3 moderados,
 > cero altos, bajos o críticos. Los 15 siguientes son el resultado del primer lote.

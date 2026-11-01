@@ -6689,3 +6689,21 @@ Audit elimina los doce registros Forge y conserva tres moderados.
 Comparar el código npm con el tag y ejecutar un control negativo aporta evidencia
 que no ofrece un conteo de avisos por sí solo. No se confunde excepción puntual
 con autorización general para instalar versiones jóvenes.
+
+## 2026-11-01 — Probar los consumidores de una major transitiva
+
+**Decisión:** corregir glob/minimatch ahora y presentar opciones Hono (ADR-0174).
+Las excepciones son cuatro versiones exactas, con retirada documentada.
+
+**Evidencia:** las pruebas descubren tres incompatibilidades: importación
+CommonJS de Spectral, dependencia de glob 7 de propiedades internas del matcher
+y matchOne retirada en TypeDoc. Dos parches de importación, un enlace actualizado
+de Rollup y un parche a la API pública de coincidencia parcial conservan los
+recorridos. Se ejecuta el CommonJS generado y una conversión TypeDoc real.
+Make verify y 130 regresiones pasan. Audit conserva solo Hono moderado.
+
+**Retrospectiva:** una auditoría menor y una exportación web no ejercitan todas
+las herramientas opcionales. Las pruebas de consumidor convierten el riesgo
+del override major en recorridos concretos. Para Hono, resolver un candidato
+acotado de void-server demuestra una opción de grafo viable, pero no sustituye
+pruebas HTTP/WebSocket ni la decisión final del usuario.

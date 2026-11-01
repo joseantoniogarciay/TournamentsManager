@@ -709,3 +709,12 @@ con una excepción exacta de edad que se retira el 2026-11-03T14:09:15.471Z.
 Solo cambia ese paquete y se conserva la matriz Expo. Audit final: 3 moderados,
 cero altos, bajos o críticos. Make verify, 126 regresiones y las pruebas de
 firma de Expo pasan. Véase [la evidencia y retrospectiva](FORGE_SECURITY_FIX_2026-10-31.md).
+
+
+## Corrección glob/minimatch posterior — ADR-0174
+
+Glob pasa a 14.0.3 y minimatch a 11.0.3 con cuatro exclusiones exactas de edad.
+Se adaptan Spectral y TypeDoc; el único consumidor de glob 7 conserva glob.sync
+mediante glob 14. Make verify y 130 regresiones pasan. Audit: un moderado de
+Hono, que se mantiene mientras el usuario compara opciones. Véase
+[el informe y las fechas de retirada](GLOB_MINIMATCH_SECURITY_FIX_2026-11-01.md).

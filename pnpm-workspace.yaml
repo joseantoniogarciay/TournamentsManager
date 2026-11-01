@@ -25,6 +25,11 @@ minimumReleaseAgeStrict: true
 # ADR-0173: excepción exacta de node-forge 1.4.2 por corrección autorizada.
 # Autorizada explícitamente; retirar al cumplir siete días. Sin comodines.
 minimumReleaseAgeExclude:
+  # ADR-0174: correcciones y transitivas necesarias, sin comodines.
+  - "glob@14.0.3"
+  - "minimatch@11.0.3"
+  - "path-scurry@3.0.0"
+  - "@isaacs/nonrecursive-glob-match@1.0.3"
   # ADR-0173: retirar el 2026-11-03T14:09:15.471Z.
   - "node-forge@1.4.2"
   - "expo-system-ui@58.0.7"
@@ -115,6 +120,10 @@ overrides:
   "vite@8.0.16": 8.1.6
   "zod@4.6.5": 4.6.6
   "node-forge@1.4.0": 1.4.2
+  "glob@13.0.6": 14.0.3
+  "@rollup/plugin-commonjs@22.0.2>glob": 14.0.3
+  "minimatch@3.1.5": 11.0.3
+  "minimatch@10.2.6": 11.0.3
   "xcode>uuid": 11.1.1
 
 # Correcciones de seguridad de 2026-10-03 y ADR-0172 (2026-10-31).
@@ -130,3 +139,6 @@ patchedDependencies:
   "@expo/config-plugins@58.0.11": patches/@expo__config-plugins@58.0.11.patch
   expo-splash-screen@58.0.12: patches/expo-splash-screen@58.0.12.patch
   expo-symbols@58.0.4: patches/expo-symbols@58.0.4.patch
+  "@stoplight/spectral-core@1.22.0": patches/@stoplight__spectral-core@1.22.0.patch
+  "@stoplight/spectral-core@1.24.0": patches/@stoplight__spectral-core@1.24.0.patch
+  "typedoc@0.28.20": patches/typedoc@0.28.20.patch
