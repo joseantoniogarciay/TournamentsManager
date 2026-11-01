@@ -6840,3 +6840,14 @@ de ambos archivos de cliente, y `git diff --check` correctos.
 La comprobación visual de primera navegación sigue pendiente; los checks de
 compilación no acreditan por sí solos la ausencia del destello.
 No se arrancan servicios local/dev, no se activa observabilidad ni se despliega.
+
+
+### Publicación web v1.15.2
+
+Gate local y ambas CI con PostgreSQL correctos. Preview antes de activar, mapas
+privados retirados y hashes de los siete scripts públicos iguales al candidato.
+La cabecera inicial queda vacía y web espera a fuentes locales; la QA visual de
+primera navegación sigue pendiente por navegador deshabilitado en Work.
+El certificado ajeno de www se rechaza sin desactivar TLS; otro edge Cloudflare
+verifica el 308 con certificado válido. No se modifica DNS ni se redespliega API.
+Retrospectiva y rollback en DEPLOYMENT.md y evidencia saneada de la publicación.

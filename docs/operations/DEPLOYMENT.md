@@ -977,3 +977,47 @@ Retrospectiva: mantener la publicación de interfaz independiente evita un rollo
 y migraciones innecesarios. Distinguir preview, activación y hashes realmente
 servidos permite comprobar qué versión llega al navegador. La autorización de
 símbolos identifica el contenido y destino antes de transferir código fuente.
+
+
+## Publicación v1.15.2 — 2026-11-01
+
+El usuario autoriza «Despliega». Se publica
+[v1.15.2](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.15.2)
+con tag anotado sobre el merge no-ff
+`40723d41d3b7c9e3dec048195cf2a1353ff87981`. La web espera a cargar las fuentes
+locales sin pasar a la fuente del sistema tras tres segundos. Las cabeceras
+inician vacías hasta recibir título y estilo, y la ficha omite el título genérico
+mientras carga. API y renderer conservan v1.15.0; no se ejecutan migraciones ni
+se distribuyen binarios móviles.
+
+`make verify` local correcto, con PostgreSQL omitido localmente y ejecutado en
+[CI del candidato](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41309149774)
+y [CI del merge](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41309403975),
+ambas correctas. Símbolos subidos mediante el procedimiento productivo existente
+a PostHog UE 255144; cero mapas y referencias sourceMappingURL en el artefacto
+público. Dry-run de ambos Workers y cinco rutas de preview correctos.
+
+Cloudflare activo: web `128e3826-b2fa-4766-8cb4-eedca64ffcd0`, redirect
+`abb2ac85-986f-4198-856b-10219a7ef5ec`, preview
+`5a9f3434-9ce4-43b3-a6f2-2d276eaaa1a5`. Origen de recuperación alineado.
+Veintidós checks HTTPS, incluidos los siete scripts cuyos SHA-256 coinciden con
+el candidato. Dominio canónico, rutas, metadatos, salud API y CORS correctos.
+
+Límite de red: la resolución habitual de `www` en esta conexión entrega
+188.114.96.5/188.114.97.5; se observa el certificado autofirmado ajeno
+`core1.netops.test`, rechazado por curl. Contra el edge Cloudflare 104.21.1.205,
+con nombre/SNI y verificación TLS conservados, `www` devuelve el 308 correcto
+con ruta/query. No se modifica DNS, Universal SSL ni se usa `--insecure`.
+No se atribuye ese certificado al artefacto. La QA visual de primera navegación
+y carga lenta queda pendiente: el navegador local está deshabilitado en Work.
+
+Rollback solo web: v1.15.1, SHA `b920d81dd1747df995f36878ea42fdda5aeaa906`,
+Worker web `f132f7cf-9d96-4aea-be34-d727a0272d04` y redirect
+`55c3165e-08bf-465c-b52b-be26d764b649`, con sus configuraciones conservadas.
+Develop incorpora el merge de main; no se crean ramas temporales. Local/dev y
+observabilidad dev permanecen apagados; producción continúa activa.
+[Evidencia saneada](../engineering/evidence/header-readiness-release-2026-11-01/result.json).
+
+Retrospectiva: verificar los hashes realmente servidos acredita la entrega del
+código, pero no sustituye observar el primer render. Separar la ruta de red del
+estado del Worker evita modificar certificados o DNS ante un certificado ajeno.
