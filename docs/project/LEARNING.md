@@ -2464,8 +2464,11 @@ Para cada capacidad se sigue el ciclo:
 - **Evidencia:** la carga pasa al foco de Cuenta y sus fallos automáticos no se
   publican como error; el botón sigue reintentando la carga y comunica los
   fallos de una acción iniciada explícitamente.
-- **Coste aceptado:** la primera llegada a Cuenta puede mostrar brevemente el
-  loader del icono. Evita peticiones y feedback ajenos a la ruta visible.
+- **Actualización 2026-11-01:** la precarga de Google conserva el icono y el
+  botón deshabilitado; el loader y el estado accesible de ocupado se reservan
+  para la preparación o autenticación iniciadas al pulsarlo. Se distingue trabajo
+  automático de progreso solicitado con un estado local, sin retrasos artificiales
+  ni cambios en el contrato de identidad.
 - **Regla reutilizable:** una precarga solo puede emitir feedback si la persona
   ve y entiende la acción que la originó.
 
@@ -6724,3 +6727,45 @@ y ambos comandos CLI se prueban y terminan. Los dos peers anteriores permanecen.
 **Retrospectiva:** leer la acción concreta del CLI evita atribuir a producción
 una herramienta opcional. La auditoría a cero corresponde al grafo y fecha
 verificados; no reemplaza pruebas de ejecución ni resuelve todo aviso de peer.
+
+## 2026-11-01 — Implementar identidad sobre primitivas existentes (ADR-0176)
+
+**Decisión:** Grada se aplica desde tokens y fuentes por rol, conservando
+componentes, rutas, escalado y navegación nativa. Centralizar `themeColors`
+evita canvas distintos entre HTML inicial, provider, navegación y splash.
+
+**Evidencia:** texto y placeholders >=4,5:1 sobre todas las superficies;
+foco, bordes e indicadores >=3:1. La regresión detectó 2,98:1 en un borde oscuro,
+corregido antes del cierre. Ocho pesos locales cubren las letras latinas de los
+cuatro catálogos y los dígitos. Se corrige el loader primario para mantener
+blanco en oscuro. Exportar comprueba empaquetado, no rotación ni legibilidad.
+
+**Retrospectiva:** una marca no necesita otra biblioteca ni rediseñar layouts.
+El coste aumenta de cuatro a ocho pesos (705.740 bytes TTF sin comprimir).
+Contraste y glifos no sustituyen QA visual: el navegador local está desactivado
+en Work; web real, builds nativas y adaptación de PNG/emails siguen pendientes.
+Véase [el informe](../engineering/GRADA_IDENTITY_2026-11-01.md).
+
+### Cierre adicional Grada — assets y binarios
+
+La petición «Haz lo que falte» amplía el cierre a icono, marca transparente,
+preview social y correo de verificación. Se conservan composiciones y el fallback
+sólido del email. Sus fuentes de sistema son una adaptación deliberada al soporte
+de los clientes de correo; no se fuerza una descarga remota de las fuentes web.
+Se incluyen licencias OFL en los archivos públicos.
+
+Android compila y pasa lint con cero errores (46 avisos previos). Reinstalar
+paquetes pnpm puede invalidar rutas de Pods aunque las versiones nativas no
+cambien: el recurso EXConstants provocó ese fallo y `pod install` regeneró sus
+enlaces. No se arreglan copiando fuentes ni editando manualmente Pods.
+`make verify` termina correctamente; integración PostgreSQL queda omitida sin
+base desechable. Los límites de QA visual se mantienen en el informe de Grada.
+
+La QA real de iPhone Duo permite ver un contorno secundario demasiado tenue en
+oscuro que la prueba de colores de campo no cubría. Button conserva la forma y
+adapta ese contorno a border.focus. Se valida después de cerrar la secuencia
+anterior; Fast Refresh no se usa para atribuir pérdida de estado a la navegación.
+La misma build se ejecuta en iPad, y los cuatro idiomas se revisan en Inicio de
+Duo con argumentos de lanzamiento temporales. Los gestos no fiables de CUA y el
+acceso bloqueado a navegador/Android obligan a dejar la matriz explícitamente
+parcial, sin confundir compilación y arranque con cobertura visual completa.

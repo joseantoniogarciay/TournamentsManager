@@ -6,7 +6,8 @@
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** Ninguno
 - **Superado por:** [ADR-0096](0096-use-figtree-as-the-universal-client-font.md), solo en la
-  elección de familia tipográfica.
+  elección de familia tipográfica; ADR-0176 en color y tipografía del cliente
+  (implementado, con QA visual pendiente).
 
 ## Problema
 
@@ -79,3 +80,12 @@ colores, medidas, textos de interfaz y reglas de formulario por pantalla.
 - [Desarrollo](../engineering/DEVELOPMENT.md)
 - [Decisiones](../governance/DECISIONS.md)
 - [Aprendizaje](../project/LEARNING.md)
+
+## Transición posterior — 2026-11-01
+
+[ADR-0176](0176-adopt-grada-identity-with-existing-components-and-native-navigation.md)
+sustituye la dirección cromática Pulse y Figtree en el código del cliente por
+Grada y fuentes locales por rol. Se conservan componentes, feedback y navegación
+nativa. Los assets y el email de verificación se adaptan también; la matriz visual
+completa sigue pendiente;
+consúltese [la evidencia](../engineering/GRADA_IDENTITY_2026-11-01.md).

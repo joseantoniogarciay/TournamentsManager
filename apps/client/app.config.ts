@@ -1,3 +1,4 @@
+import { themeColors } from "@tournaments-manager/design-tokens/tokens";
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 type AppEnvironment = "local" | "development" | "production";
@@ -138,11 +139,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       "expo-splash-screen",
       {
-        backgroundColor: "#F8FAFC",
+        backgroundColor: themeColors.light.surface.canvas,
         image: "./assets/fast-tourney-splash-mark.png",
         imageWidth: 160,
         dark: {
-          backgroundColor: "#101828",
+          backgroundColor: themeColors.dark.surface.canvas,
           image: "./assets/fast-tourney-splash-mark.png",
         },
       },

@@ -49,6 +49,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0176](../adr/0176-adopt-grada-identity-with-existing-components-and-native-navigation.md) | Adoptar identidad Grada conservando componentes y navegación nativa | Aceptado; implementado, builds verificadas, QA parcial | 2026-11-01 |
 | [0169](../adr/0169-upgrade-backend-and-development-dependencies.md) | Actualizar backend y herramientas; TypeScript y PostHog aplazados | Aceptado | 2026-10-31 |
 | [0168](../adr/0168-fix-android-lint-at-expo-generators.md) | Corregir Android Lint en los generadores fijados de Expo | Aceptado | 2026-10-31 |
 | [0167](../adr/0167-upgrade-expo-sdk-58-with-a-one-time-release-age-exception.md) | Migrar a Expo SDK 58 con excepción puntual de maduración | Aceptado | 2026-10-31 |
@@ -163,7 +164,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0055](../adr/0055-use-feature-first-client-architecture-and-platform-adaptive-navigation.md) | Usar cliente feature-first y navegación adaptativa                              | Aceptado              | 2026-07-28 |
 | [0056](../adr/0056-support-light-dark-system-theme-and-localized-clients.md)                  | Soportar tema y clientes localizados                                            | Aceptado              | 2026-07-28 |
 | [0057](../adr/0057-define-contextual-home-and-tournament-library.md)                          | Definir home contextual y biblioteca por relación                               | Aceptado              | 2026-07-28 |
-| [0096](../adr/0096-use-figtree-as-the-universal-client-font.md)                               | Usar Figtree como tipografía universal del cliente                              | Aceptado              | 2026-08-14 |
+| [0096](../adr/0096-use-figtree-as-the-universal-client-font.md)                               | Usar Figtree como tipografía universal del cliente                              | Superado por ADR-0176              | 2026-08-14 |
 | [0073](../adr/0073-show-recent-related-leagues-on-home.md)                                    | Mostrar ligas relacionadas recientes en Inicio                                  | Aceptado              | 2026-08-02 |
 | [0074](../adr/0074-schedule-account-deletion-with-a-recovery-window.md)                       | Programar eliminación de cuenta con ventana de recuperación                     | Aceptado              | 2026-08-04 |
 | [0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md)               | Listar ligas relacionadas con colección paginada                                | Aceptado              | 2026-07-28 |

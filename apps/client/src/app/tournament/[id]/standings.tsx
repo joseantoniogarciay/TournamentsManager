@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { control, radius, space } from "@tournaments-manager/design-tokens";
+import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
 import type { PublicTournament } from "@/api/generated/models";
 import { TournamentUnavailableError } from "@/features/league-creation/api";
@@ -653,9 +653,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight,
   },
-  points: { textAlign: "right", width: pointsColumnWidth },
+  points: { fontFamily: typography.numeric.semibold, textAlign: "right", width: pointsColumnWidth },
   pointsColumn: { flexShrink: 0, width: pointsColumnWidth },
-  position: { textAlign: "center", width: 34 },
+  position: { fontFamily: typography.numeric.regular, textAlign: "center", width: 34 },
   row: {
     alignItems: "center",
     borderBottomWidth: 1,
@@ -668,7 +668,11 @@ const styles = StyleSheet.create({
     web: { position: "sticky", top: 0, zIndex: 1 },
   }),
   scrollHint: { paddingTop: space[2], textAlign: "right" },
-  stat: { textAlign: "center", width: statisticsColumnWidth },
+  stat: {
+    fontFamily: typography.numeric.regular,
+    textAlign: "center",
+    width: statisticsColumnWidth,
+  },
   statisticsRow: { flexDirection: "row" },
   statisticsHeaderContent: { borderBottomWidth: 0, minHeight: control.minHeight - 1 },
   statisticsHeaderViewport: {

@@ -6,6 +6,8 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-11-01
+
 ### Security
 
 - ADR-0175: void-server 2.5.19 elimina el último recorrido node-server 1.x.
@@ -26,12 +28,20 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Fixed
 
+- El botón Google conserva su icono durante la preparación anticipada y muestra
+  progreso cuando la persona inicia la autenticación o prepara tras pulsar.
+
 - Android Lint: corregidos MissingPrefix de App Links y NewApi de splash mediante
   parches exactos de los generadores Expo. Regeneración idempotente, API 24
   conservada, variante v33 completa y marca de propiedad ausente del APK.
   Build y lint de app/módulo local pasan con cero errores. ADR-0168.
 
 ### Changed
+
+- ADR-0176: identidad Grada mediante tokens cálidos claro/oscuro y fuentes locales
+  por rol. Conserva componentes, rutas y NativeTabs. Contraste automatizado;
+  icono, splash, preview social y email de verificación adaptados. La matriz
+  visual completa sigue pendiente.
 
 - TypeScript 7.0.2 y Oxlint 1.89.0 con Prettier conservado (ADR-0171).
   Reglas efectivas migradas, pruebas desacopladas de la API del compilador,

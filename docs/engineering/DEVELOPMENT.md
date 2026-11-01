@@ -189,11 +189,19 @@ el layout tenga altura visible.
 raíz de rutas; las primitivas compartidas viven en `src/shared` y los tokens en
 `packages/design-tokens`.
 
-Figtree se distribuye como asset local mediante `@expo-google-fonts/figtree` y
-`expo-font`. El layout raíz carga los pesos 400, 500, 600 y 700 antes de montar
-la interfaz; los nombres de familia viven únicamente en `typography.family`.
-Una pantalla no importa una fuente ni usa `fontWeight` para simular un peso.
-Véase ADR-0096.
+ADR-0176 sustituye Figtree por DM Sans 400/500/600/700, Barlow Condensed
+600/700 e IBM Plex Mono 400/600. Los ocho TTF se distribuyen localmente con
+los paquetes `@expo-google-fonts` fijados y `expo-font`; no añaden módulos
+nativos. El layout raíz registra los pesos antes de montar la interfaz,
+conservando el fallback de arranque existente. Los nombres viven en
+`typography.family`, `typography.heading` y `typography.numeric`; las pantallas
+no importan fuentes ni simulan pesos. Se conservan las licencias OFL de cada
+paquete. Véase [la evidencia y QA pendiente](GRADA_IDENTITY_2026-11-01.md).
+
+`themeColors` es la fuente común para provider, HTML inicial y splash. La
+configuración Expo importa el subpath `design-tokens/tokens`: Node puede leer
+ese módulo sin atravesar los reexports sin extensión del entrypoint de Metro.
+El cambio de fondo de splash requiere regenerar y recompilar las apps.
 
 - Las pantallas futuras vivirán en `apps/client/src/app`; sus rutas derivarán de
   los archivos.
@@ -531,7 +539,7 @@ porque Android admite escalado no lineal. La matriz y el alcance visual están e
 Android mediante expo-module.config.json. No se modifica android/ generado por
 CNG. Tras cambiar Kotlin hay que recompilar e instalar la development build antes
 de validar JavaScript; Fast Refresh no incorpora código nativo. El build.gradle
-reutiliza react-android fijado por el proyecto para cargar la misma fuente Figtree,
+reutiliza react-android fijado por el proyecto para cargar la misma fuente local del cliente,
 sin fijar otra versión ni añadir una librería externa.
 
 El provider raíz mantiene el aviso y su temporizador. El host raíz y ModalDialog

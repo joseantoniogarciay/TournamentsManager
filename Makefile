@@ -29,7 +29,7 @@ lint: lint-go lint-ts
 check: format-check lint typecheck openapi-lint test
 
 # Verificación completa local y de CI.
-verify: check test-toolchain test-session-management test-tournament-browsing test-tournament-repetition test-scheduling test-session-refresh test-client-telemetry test-social-authentication test-app-links test-dependencies test-match-incidents test-store-review test-native-adaptive-window test-cloudflare-web test-operational-safety test-integration client-web-export openapi-generate-check sqlc-generate-check tidy-check tidy-tools-check build vuln
+verify: check test-design-tokens test-toolchain test-session-management test-tournament-browsing test-tournament-repetition test-scheduling test-session-refresh test-client-telemetry test-social-authentication test-app-links test-dependencies test-match-incidents test-store-review test-native-adaptive-window test-cloudflare-web test-operational-safety test-integration client-web-export openapi-generate-check sqlc-generate-check tidy-check tidy-tools-check build vuln
 
 .PHONY: test-tournament-browsing
 test-tournament-browsing:
@@ -84,3 +84,7 @@ test-tournament-repetition:
 .PHONY: test-session-management
 test-session-management:
 	node --test tests/session-management.test.mjs
+
+.PHONY: test-design-tokens
+test-design-tokens:
+	node --test tests/design-tokens.test.mjs

@@ -16,14 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import {
-  color,
-  control,
-  radius,
-  space,
-  typography,
-  webLayout,
-} from "@tournaments-manager/design-tokens";
+import { control, radius, space, typography, webLayout } from "@tournaments-manager/design-tokens";
 
 import { APISessionInvalidatedError, APIUnexpectedResponseError } from "@/api/fetch";
 import { useTournamentFollow } from "@/features/league-creation/use-tournament-follow";
@@ -1596,7 +1589,7 @@ export default function TournamentScreen() {
                           styles.match,
                           highlightedMatch === match.id
                             ? {
-                                borderColor: color.brand.primary,
+                                borderColor: colors.border.focus,
                                 borderWidth: 1,
                                 borderRadius: radius.card,
                                 padding: space[2],
