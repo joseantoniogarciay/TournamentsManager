@@ -100,3 +100,4 @@ Usa [template.md](template.md) y el
 - [ADR-0174: Corregir glob y minimatch con compatibilidad acotada](0174-correct-glob-and-minimatch-with-scoped-compatibility.md) — Aceptado; queda solo el moderado de Hono, con opciones pendientes de decisión.
 
 - [ADR-0175: Actualizar void-server para retirar Hono 1](0175-update-scalar-void-server-to-remove-hono-one.md) — Aceptado; auditoría npm a cero y uso de la utilidad explicado.
+- [ADR-0176: Adoptar identidad Grada conservando componentes y navegación nativa](0176-adopt-grada-identity-with-existing-components-and-native-navigation.md) — Aceptado; implementado, builds verificadas y QA visual parcial.
