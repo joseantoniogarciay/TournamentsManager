@@ -718,3 +718,12 @@ Se adaptan Spectral y TypeDoc; el único consumidor de glob 7 conserva glob.sync
 mediante glob 14. Make verify y 130 regresiones pasan. Audit: un moderado de
 Hono, que se mantiene mientras el usuario compara opciones. Véase
 [el informe y las fechas de retirada](GLOB_MINIMATCH_SECURITY_FIX_2026-11-01.md).
+
+
+## Corrección Hono posterior — ADR-0175
+
+El usuario acepta actualizar solo void-server. Pasa a 2.5.19 y retira
+node-server 1; los adaptadores son 2.1.3/2.1.5 y el framework hono 4.13.13.
+Audit final del checkout: cero avisos. Make verify y 131 regresiones pasan.
+La utilidad de eco pertenece a document void; openapi:ui usa document serve.
+Véase [el uso real y la evidencia](HONO_SECURITY_FIX_2026-11-01.md).

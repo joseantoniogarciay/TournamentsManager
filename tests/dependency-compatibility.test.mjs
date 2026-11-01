@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { Buffer } from "node:buffer";
 import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { once } from "node:events";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
@@ -248,3 +249,62 @@ test("TypeDoc expands nested glob entry points and excludes ignored files", asyn
     ["Visible"],
   );
 });
+
+test(
+  "Scalar void-server preserves HTTP echo, status simulation and WebSocket echo",
+  { timeout: 5000 },
+  async (context) => {
+    const rootRequire = createRequire(join(root, "package.json"));
+    const scalarRequire = createRequire(rootRequire.resolve("@scalar/cli/package.json"));
+    const voidPath = scalarRequire.resolve("@scalar/void-server");
+    const voidRequire = createRequire(voidPath);
+    const { createVoidServer, attachVoidWebSocket } = await import(pathToFileURL(voidPath).href);
+    const { serve } = voidRequire("@hono/node-server");
+    const WebSocket = voidRequire("ws");
+    const app = createVoidServer({ logger: false });
+    const server = serve({ fetch: app.fetch, hostname: "127.0.0.1", port: 0 });
+    const socketServer = attachVoidWebSocket(server, { path: "/echo", connectionTimeoutMs: 1000 });
+    let socket;
+    context.after(async () => {
+      socket?.terminate();
+      for (const client of socketServer.clients) client.terminate();
+      await new Promise((resolve) => socketServer.close(resolve));
+      await new Promise((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
+    });
+    if (!server.listening) await once(server, "listening");
+    const address = server.address();
+    assert.equal(typeof address, "object");
+    const origin = `http://127.0.0.1:${address.port}`;
+    const response = await globalThis.fetch(`${origin}/example?tag=one&tag=two`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Fixture": "synthetic" },
+      body: JSON.stringify({ message: "synthetic payload" }),
+    });
+    const echo = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(echo.method, "POST");
+    assert.equal(echo.path, "/example");
+    assert.equal(echo.headers["x-fixture"], "synthetic");
+    assert.deepEqual(echo.query.tag, ["one", "two"]);
+    assert.deepEqual(echo.body, { message: "synthetic payload" });
+    const rejected = await globalThis.fetch(`${origin}/418`);
+    assert.equal(rejected.status, 418);
+    await rejected.text();
+    socket = new WebSocket(`ws://127.0.0.1:${address.port}/echo`, { handshakeTimeout: 2000 });
+    await once(socket, "open");
+    let received = once(socket, "message");
+    socket.send("synthetic frame");
+    let [data, binary] = await received;
+    assert.equal(data.toString(), "synthetic frame");
+    assert.equal(binary, false);
+    received = once(socket, "message");
+    socket.send(Buffer.from([0, 1, 255]));
+    [data, binary] = await received;
+    assert.deepEqual([...data], [0, 1, 255]);
+    assert.equal(binary, true);
+    const [code] = await once(socket, "close");
+    assert.equal(code, 1000);
+  },
+);

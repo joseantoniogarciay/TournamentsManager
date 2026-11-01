@@ -1,5 +1,10 @@
 # Corrección de glob/minimatch y opciones Hono — 2026-11-01
 
+> Decisión posterior: el usuario acepta la opción 1 mediante ADR-0175.
+> [Void-server actualizado](HONO_SECURITY_FIX_2026-11-01.md) retira Hono 1 y
+> la auditoría actual del checkout queda en cero avisos. La comparación
+> siguiente conserva las alternativas previas a esa decisión.
+
 ## Resultado del bloque autorizado
 
 El usuario autoriza corregir glob y minimatch y pide opciones para Hono.

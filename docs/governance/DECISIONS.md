@@ -411,3 +411,15 @@ Pasan make verify y 130 regresiones; audit deja un moderado de Hono, sin IDs
 nuevos. Su opción recomendada es actualizar únicamente void-server a 2.5.19;
 la resolución aislada añade tres versiones maduras y elimina Hono 1, sin
 aplicarse al checkout. Requiere decisión y pruebas HTTP/WebSocket de integración.
+
+## 2026-11-01 — Actualizar void-server (ADR-0175)
+
+El usuario acepta la primera opción y pide explicar su uso. Se comprueba que
+void-server es la utilidad de eco de scalar document void; el proyecto configura
+scalar document serve para mostrar OpenAPI. No es el backend Go ni el visor
+público de navegador. Se instala void-server 2.5.19 y se consolida hono 4.13.13
+con adaptadores node-server 2.1.3/2.1.5. No se añaden excepciones de edad.
+
+Audit termina con cero avisos, make verify y 131 pruebas pasan. HTTP, estados,
+WebSocket y comandos Scalar --once verificados con limpieza. Permanecen los
+peers anteriores de node-ws y neverpanic; no se falsean sus declaraciones.

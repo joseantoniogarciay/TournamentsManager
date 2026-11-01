@@ -31,7 +31,7 @@ openapi-generate:
 openapi-generate-check:
 	$(PNPM) run openapi:generate:check
 
-# Sirve Swagger UI exclusivamente en loopback para explorar el contrato local.
+# Sirve Scalar API Reference bajo petición para explorar el contrato local.
 openapi-ui:
 	$(PNPM) run openapi:ui
 

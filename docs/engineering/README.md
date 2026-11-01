@@ -24,3 +24,4 @@
 - [Mis partidos y Ediciones: implementación y QA](PRODUCT_QA_MATCHES_EDITIONS_2026-10-11.md).
 - [Corrección Forge 2026-10-31](FORGE_SECURITY_FIX_2026-10-31.md): seis altos corregidos, control negativo RSA y firma Expo compatible.
 - [Glob/minimatch y opciones Hono 2026-11-01](GLOB_MINIMATCH_SECURITY_FIX_2026-11-01.md): corrección autorizada de dos avisos y comparación del último pendiente.
+- [Corrección Hono y uso Scalar 2026-11-01](HONO_SECURITY_FIX_2026-11-01.md): opción aceptada, eco opcional frente a visor configurado y auditoría a cero.

@@ -68,8 +68,10 @@ resoluciones corregidas y el control global. Fechas UTC:
 | @isaacs/nonrecursive-glob-match@1.0.3 | 2026-11-04T19:50:48.349Z |
 | minimatch@11.0.3 | 2026-11-04T20:00:34.713Z |
 
-Las [opciones Hono](../engineering/GLOB_MINIMATCH_SECURITY_FIX_2026-11-01.md)
-quedan pendientes de decisión; no se implementa la alternativa recomendada.
+La opción de actualizar void-server fue aceptada y aplicada en ADR-0175;
+[la auditoría queda en cero](../engineering/HONO_SECURITY_FIX_2026-11-01.md).
+Retirar el selector @scalar/void-server@2.5.2 cuando Scalar incorpore un
+consumidor corregido. El peer anterior de node-ws permanece pendiente.
 
 ## Cómo revisar
 

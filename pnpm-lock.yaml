@@ -198,7 +198,7 @@ overrides:
   fast-uri@3.1.4: 3.1.9
   fast-uri@4.1.1: 4.2.3
   fastify@5.8.5: 5.12.6
-  hono@4.12.32: 4.13.11
+  hono@4.12.32: 4.13.13
   js-yaml@4.3.0: 4.3.2
   markdown-it@14.3.0: 14.3.3
   nanoid@3.3.16: 3.3.18
@@ -213,6 +213,7 @@ overrides:
   '@rollup/plugin-commonjs@22.0.2>glob': 14.0.3
   minimatch@3.1.5: 11.0.3
   minimatch@10.2.6: 11.0.3
+  '@scalar/void-server@2.5.2': 2.5.19
   xcode>uuid: 11.1.1
 
 pnpmfileChecksum: sha256-YVfYcptEEJ3XzIH42luMUX8EeDuEj7nSpJn0IciMKKw=
@@ -1427,24 +1428,24 @@ packages:
     peerDependencies:
       vue: ^3.2.0
 
-  '@hono/node-server@1.19.17':
-    resolution: {integrity: sha512-dSneS5qhiauZWGDCeK4o695Xd9nUNjviSZCMQrj10eetr8Uln1ucn6bbphOM6UynAMMtNIzZNSpL9vnASJwrPQ==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      hono: 4.13.11
-
   '@hono/node-server@2.1.3':
     resolution: {integrity: sha512-TA//nWMqPhbfdfneACk6t5a9eqbS9lABEPyKn0/xZTah3H3U2XaVg85rJFl0/Fyit0I552YDHgXGVSf3GwqbUw==}
     engines: {node: '>=20'}
     peerDependencies:
-      hono: 4.13.11
+      hono: 4.13.13
+
+  '@hono/node-server@2.1.5':
+    resolution: {integrity: sha512-MgP/I06GdvsilDspMk/qmRzpk8LOUStP6jFAbSRi40W09DhoyUn+Mj7eyKICPqeYKybOjVFLVIAQzvu1bfIa7Q==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      hono: 4.13.13
 
   '@hono/node-ws@1.3.1':
     resolution: {integrity: sha512-vo/MwCnpJAVHBkGzWjCJ28wF45fYHAfbPZcH2rodZODHtch2GHA94KtMfusmVycTUtsLAsaNsHhtY6P8X3RQsA==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       '@hono/node-server': ^1.19.11
-      hono: 4.13.11
+      hono: 4.13.13
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -2480,8 +2481,8 @@ packages:
     resolution: {integrity: sha512-tpmmG+/xRE2Kn9RpflU3AIyZv08v10+E1ZrJCx7z6+/91zHVxy0M73kC1LT4/8PbYNt85ywyC8+n+D99JdMcGA==}
     engines: {node: '>=20'}
 
-  '@scalar/void-server@2.5.2':
-    resolution: {integrity: sha512-bdYSmc7YfYBbWAqQqjUQMc+pMOHUB3Y7slc3SndBkBpppz8FDb++V7PrvZxhrQmQXROZqPqT2ZVeN11qatlPYw==}
+  '@scalar/void-server@2.5.19':
+    resolution: {integrity: sha512-4m9kWxqlMHZPI8vEYPLhjfvFxoyBbWnBESP46cPqvCcpfhRq+G9LvlABHc1tVz/F5B1RpUR5M10VWwL+yZ0hog==}
     engines: {node: '>=22'}
 
   '@scalar/workspace-store@0.55.0':
@@ -4132,8 +4133,8 @@ packages:
     resolution: {integrity: sha512-nbfWpyRMcMrPMmDwJB+dhX/eiaPKtc2RB+0QZskqJ3WjRA/FDS0e9hZrx8EC/lbEv8gXy98FcDbNa/dspAaJMg==}
     engines: {node: '>=12.0.0'}
 
-  hono@4.13.11:
-    resolution: {integrity: sha512-/SMX/RQNJn7oNmFwH6DtwDqcrzZU2otm1FD6OJe2cWF6cfy/F8hq0XVBv7xW3FTJshRQwuBnXHDq2kNsdZnshg==}
+  hono@4.13.13:
+    resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@7.0.2:
@@ -7539,18 +7540,18 @@ snapshots:
       '@tanstack/vue-virtual': 3.13.39(vue@3.5.43(typescript@7.0.2))
       vue: 3.5.43(typescript@7.0.2)
 
-  '@hono/node-server@1.19.17(hono@4.13.11)':
+  '@hono/node-server@2.1.3(hono@4.13.13)':
     dependencies:
-      hono: 4.13.11
+      hono: 4.13.13
 
-  '@hono/node-server@2.1.3(hono@4.13.11)':
+  '@hono/node-server@2.1.5(hono@4.13.13)':
     dependencies:
-      hono: 4.13.11
+      hono: 4.13.13
 
-  '@hono/node-ws@1.3.1(@hono/node-server@2.1.3(hono@4.13.11))(hono@4.13.11)':
+  '@hono/node-ws@1.3.1(@hono/node-server@2.1.3(hono@4.13.13))(hono@4.13.13)':
     dependencies:
-      '@hono/node-server': 2.1.3(hono@4.13.11)
-      hono: 4.13.11
+      '@hono/node-server': 2.1.3(hono@4.13.13)
+      hono: 4.13.13
       ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
@@ -8312,16 +8313,16 @@ snapshots:
     dependencies:
       '@clack/prompts': 0.7.0
       '@fastify/static': 10.1.2
-      '@hono/node-server': 2.1.3(hono@4.13.11)
+      '@hono/node-server': 2.1.3(hono@4.13.13)
       '@scalar/json-magic': 0.12.17
-      '@scalar/mock-server': 0.12.1(@hono/node-server@2.1.3(hono@4.13.11))(typescript@7.0.2)
+      '@scalar/mock-server': 0.12.1(@hono/node-server@2.1.3(hono@4.13.13))(typescript@7.0.2)
       '@scalar/oas-utils': 0.19.1(typescript@7.0.2)
       '@scalar/openapi-parser': 0.28.8
       '@scalar/openapi-to-markdown': 0.5.28(supports-color@10.2.2)(tailwindcss@4.1.18)(typescript@7.0.2)
       '@scalar/openapi-types': 0.9.1
       '@scalar/postman-to-openapi': 0.7.11
       '@scalar/themes': 0.16.2
-      '@scalar/void-server': 2.5.2
+      '@scalar/void-server': 2.5.19
       '@scalar/workspace-store': 0.55.0(typescript@7.0.2)
       '@stoplight/spectral-core': 1.22.0(patch_hash=1278e1c4126fbd576e794a0a0bbd8811543cf9f7dc21429a6d02094ce5c9ba5a)
       '@stoplight/spectral-ruleset-bundler': 1.7.0
@@ -8332,7 +8333,7 @@ snapshots:
       esbuild: 0.28.1
       fastify: 5.12.6
       get-port: 7.2.0
-      hono: 4.13.11
+      hono: 4.13.13
       ignore: 7.0.5
       jsonc-parser: 3.2.1
       nanoid: 5.1.16
@@ -8452,10 +8453,10 @@ snapshots:
       ajv-formats: 3.0.1
       yaml: 2.9.1
 
-  '@scalar/mock-server@0.12.1(@hono/node-server@2.1.3(hono@4.13.11))(typescript@7.0.2)':
+  '@scalar/mock-server@0.12.1(@hono/node-server@2.1.3(hono@4.13.13))(typescript@7.0.2)':
     dependencies:
       '@faker-js/faker': 10.6.0
-      '@hono/node-ws': 1.3.1(@hono/node-server@2.1.3(hono@4.13.11))(hono@4.13.11)
+      '@hono/node-ws': 1.3.1(@hono/node-server@2.1.3(hono@4.13.13))(hono@4.13.13)
       '@scalar/helpers': 0.9.0
       '@scalar/json-magic': 0.12.17
       '@scalar/openapi-types': 0.9.1
@@ -8464,7 +8465,7 @@ snapshots:
       '@scalar/workspace-store': 0.55.0(typescript@7.0.2)
       ajv: 8.20.0
       ajv-formats: 3.0.1
-      hono: 4.13.11
+      hono: 4.13.13
       yaml: 2.9.1
     transitivePeerDependencies:
       - '@hono/node-server'
@@ -8606,11 +8607,11 @@ snapshots:
 
   '@scalar/validation@0.6.0': {}
 
-  '@scalar/void-server@2.5.2':
+  '@scalar/void-server@2.5.19':
     dependencies:
-      '@hono/node-server': 1.19.17(hono@4.13.11)
-      '@scalar/helpers': 0.9.0
-      hono: 4.13.11
+      '@hono/node-server': 2.1.5(hono@4.13.13)
+      '@scalar/helpers': 0.16.4
+      hono: 4.13.13
       js-base64: 3.9.4
       ws: 8.22.0
     transitivePeerDependencies:
@@ -10653,7 +10654,7 @@ snapshots:
 
   highlight.js@11.12.0: {}
 
-  hono@4.13.11: {}
+  hono@4.13.13: {}
 
   hosted-git-info@7.0.2:
     dependencies:

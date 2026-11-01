@@ -6707,3 +6707,20 @@ las herramientas opcionales. Las pruebas de consumidor convierten el riesgo
 del override major en recorridos concretos. Para Hono, resolver un candidato
 acotado de void-server demuestra una opción de grafo viable, pero no sustituye
 pruebas HTTP/WebSocket ni la decisión final del usuario.
+
+## 2026-11-01 — Distinguir una dependencia instalada de su uso real
+
+**Decisión:** actualizar solo void-server y explicar su utilidad (ADR-0175).
+El comando de eco viene incluido con Scalar CLI, pero el script del proyecto
+usa document serve para OpenAPI. La importación al cargar la CLI no arranca
+el servidor void. El framework hono 4 y el adaptador node-server 2 son paquetes
+distintos; la rama vulnerable era 1.x del segundo.
+
+**Evidencia:** tres versiones maduras nuevas, sin excepciones de edad. Se ajusta
+el destino de un override previo para evitar un peer nuevo desalineado y se
+retira Hono 1. Audit a cero, make verify y 131 pruebas correctos. HTTP/WebSocket
+y ambos comandos CLI se prueban y terminan. Los dos peers anteriores permanecen.
+
+**Retrospectiva:** leer la acción concreta del CLI evita atribuir a producción
+una herramienta opcional. La auditoría a cero corresponde al grafo y fecha
+verificados; no reemplaza pruebas de ejecución ni resuelve todo aviso de peer.

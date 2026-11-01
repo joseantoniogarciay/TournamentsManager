@@ -8,6 +8,10 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Security
 
+- ADR-0175: void-server 2.5.19 elimina el último recorrido node-server 1.x.
+  Auditoría npm a cero; adaptadores Node 2.x y framework Hono 4.13.13.
+  HTTP/WebSocket, comandos Scalar, make verify y 131 regresiones correctos.
+
 - ADR-0174: glob 14.0.3/minimatch 11.0.3 con excepciones exactas autorizadas.
   Compatibilidad Spectral, Rollup y TypeDoc cubierta por regresiones; audit
   deja únicamente un moderado de Hono. Make verify y 130 pruebas Node correctos.
