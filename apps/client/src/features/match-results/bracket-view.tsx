@@ -1,3 +1,4 @@
+import type { ScrollViewInstance, ViewInstance } from "react-native";
 import { MatchSchedule } from "@/features/scheduling/match-schedule";
 import { IncidentSummary } from "./incident-summary";
 import { SymbolView } from "expo-symbols";
@@ -56,7 +57,7 @@ export const BracketView = forwardRef<
     canManage: boolean;
     onHorizontalMetricsChange: (metrics: BracketHorizontalMetrics) => void;
     onHorizontalScroll: (offset: number) => void;
-    onMatchFocus: (matchView: View) => void;
+    onMatchFocus: (matchView: ViewInstance) => void;
     onEdit: (id: string) => void;
     onSchedule: (id: string) => void;
     onRoundChange: (round: number) => void;
@@ -83,7 +84,9 @@ export const BracketView = forwardRef<
   const t = getTranslator();
   const { colors } = usePreferences();
   const { width } = useWindowDimensions();
-  const overview = width >= columnWidth * 2 + space[5] * 2;
+  const [availableWidth, setAvailableWidth] = useState(0);
+  const overview =
+    (Platform.OS === "web" ? width : availableWidth) >= columnWidth * 2 + space[5] * 2;
   const [focusedMatch, setFocusedMatch] = useState<string>();
   const [focusRevision, setFocusRevision] = useState(0);
   useEffect(() => {
@@ -93,10 +96,10 @@ export const BracketView = forwardRef<
     } else setFocusedMatch(undefined);
   }, [focusMatchId]);
   const [boardViewportWidth, setBoardViewportWidth] = useState<number>();
-  const boardScroll = useRef<ScrollView>(null);
-  const columnHeaders = useRef<ScrollView>(null);
+  const boardScroll = useRef<ScrollViewInstance>(null);
+  const columnHeaders = useRef<ScrollViewInstance>(null);
   const horizontalOffsets = useRef({ board: 0, headers: 0 });
-  const matchViews = useRef(new Map<string, View>());
+  const matchViews = useRef(new Map<string, ViewInstance>());
   const teams = new Map(tournament.teams.map((team) => [team.id, team.name]));
   const byId = new Map(tournament.matches.map((match) => [match.id, match]));
   const rounds = [...new Set(tournament.matches.map((match) => match.round))].sort((a, b) => a - b);
@@ -312,7 +315,14 @@ export const BracketView = forwardRef<
     );
   };
   return (
-    <View style={styles.stack}>
+    <View
+      onLayout={
+        Platform.OS === "web"
+          ? undefined
+          : (event) => setAvailableWidth(event.nativeEvent.layout.width)
+      }
+      style={styles.stack}
+    >
       {overview ? (
         <>
           {Platform.OS === "web" ? (

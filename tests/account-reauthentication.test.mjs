@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import test from "node:test";
 import { setImmediate } from "node:timers";
-import ts from "typescript";
+import { transpileForTest } from "./helpers/transpile-typescript.mjs";
 
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 function deferred() {
@@ -93,16 +93,10 @@ function harness() {
       ["Button", "ModalDialog", "Text", "TextField"].map((v) => [v, v]),
     ),
   };
-  const code = ts.transpileModule(
+  const code = transpileForTest(
     readFileSync("apps/client/src/app/(tabs)/account/google-link.tsx", "utf8"),
-    {
-      compilerOptions: {
-        module: ts.ModuleKind.CommonJS,
-        target: ts.ScriptTarget.ES2022,
-        jsx: ts.JsxEmit.ReactJSX,
-      },
-    },
-  ).outputText;
+    { jsx: true },
+  );
   const module = { exports: {} };
   runInNewContext(`(function(require,module,exports){${code}\n})`, {})(
     (name) => {

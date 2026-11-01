@@ -1,21 +1,44 @@
-// Fundaciones agnósticas de plataforma para la dirección visual Pulse.
+// Fundaciones agnósticas de plataforma para la identidad Grada (ADR-0176).
 export const color = {
-  brand: { primary: "#155EEF", primaryPressed: "#004EEB", accent: "#7F56D9" },
-  surface: { canvas: "#F8FAFC", default: "#FFFFFF", subtle: "#F1F5F9", inverse: "#101828" },
-  text: { primary: "#101828", secondary: "#475467", placeholder: "#98A2B3", inverse: "#FFFFFF" },
-  border: { default: "#D0D5DD", focus: "#155EEF", error: "#D92D20" },
-  feedback: { success: "#027A48", warning: "#B54708", error: "#D92D20", info: "#155EEF" },
+  brand: { primary: "#B93B19", primaryPressed: "#A33216", accent: "#A33216" },
+  surface: { canvas: "#F5F1E8", default: "#FFFDF8", subtle: "#EAE4D8", inverse: "#24241F" },
+  text: { primary: "#24241F", secondary: "#625D52", placeholder: "#6A6358", inverse: "#FFFFFF" },
+  border: { default: "#827A6C", focus: "#B93B19", error: "#B42318" },
+  feedback: { success: "#25623E", warning: "#854A0E", error: "#B42318", info: "#B93B19" },
+} as const;
+
+// El color de tinta/indicador cambia en oscuro; los fondos de marca conservan
+// tinta blanca. No usar el tinte claro como fondo de una acción con texto blanco.
+export const themeColors = {
+  light: {
+    surface: {
+      canvas: color.surface.canvas,
+      default: color.surface.default,
+      subtle: color.surface.subtle,
+    },
+    text: color.text,
+    indicator: { default: color.brand.primary },
+    border: color.border,
+    feedback: { success: color.feedback.success, error: color.feedback.error },
+  },
+  dark: {
+    surface: { canvas: "#1C1B17", default: "#24231E", subtle: "#35332B" },
+    text: { primary: "#F5F1E8", secondary: "#D4CCBD", placeholder: "#B4AA98", inverse: "#24241F" },
+    indicator: { default: "#FF9B73" },
+    border: { default: "#908778", focus: "#FF9B73", error: "#FFB4A4" },
+    feedback: { success: "#91D4A6", error: "#FFB4A4" },
+  },
 } as const;
 
 export const gradient = {
   brand: {
-    colors: ["#7F56D900", "#7F56D900", "#7F56D9"],
+    colors: ["#A3321600", "#A3321600", color.brand.accent],
     end: { x: 1, y: 1 },
     locations: [0, 0.35, 1],
     start: { x: 0, y: 0 },
   },
   brandButton: {
-    colors: ["#7F56D900", "#7F56D900", "#7F56D9"],
+    colors: ["#A3321600", "#A3321600", color.brand.accent],
     end: { x: 1, y: 1 },
     locations: [0, 0.35, 1],
     start: { x: 0, y: 0 },
@@ -46,11 +69,13 @@ export const webLayout = {
 
 export const typography = {
   family: {
-    regular: "Figtree_400Regular",
-    medium: "Figtree_500Medium",
-    semibold: "Figtree_600SemiBold",
-    bold: "Figtree_700Bold",
+    regular: "DMSans_400Regular",
+    medium: "DMSans_500Medium",
+    semibold: "DMSans_600SemiBold",
+    bold: "DMSans_700Bold",
   },
+  heading: { title: "BarlowCondensed_600SemiBold", display: "BarlowCondensed_700Bold" },
+  numeric: { regular: "IBMPlexMono_400Regular", semibold: "IBMPlexMono_600SemiBold" },
   size: { caption: 12, body: 14, bodyLarge: 16, title: 20, display: 32 },
   lineHeight: { compact: 1.2, default: 1.5 },
 } as const;

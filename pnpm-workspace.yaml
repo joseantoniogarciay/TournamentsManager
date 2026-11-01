@@ -21,42 +21,125 @@ minimumReleaseAge: 10080
 minimumReleaseAgeIgnoreMissingTime: false
 minimumReleaseAgeStrict: true
 
-# ADR-0138: solo una vulnerabilidad crítica aplicable permite una excepción
-# exacta y documentada; la compatibilidad de Expo conserva la espera de siete días.
-minimumReleaseAgeExclude: []
+# ADR-0167: excepción puntual de Expo 58.0.22 y sus dependencias necesarias.
+# ADR-0173: excepción exacta de node-forge 1.4.2 por corrección autorizada.
+# Autorizada explícitamente; retirar al cumplir siete días. Sin comodines.
+minimumReleaseAgeExclude:
+  # ADR-0174: correcciones y transitivas necesarias, sin comodines.
+  - "glob@14.0.3"
+  - "minimatch@11.0.3"
+  - "path-scurry@3.0.0"
+  - "@isaacs/nonrecursive-glob-match@1.0.3"
+  # ADR-0173: retirar el 2026-11-03T14:09:15.471Z.
+  - "node-forge@1.4.2"
+  - "expo-system-ui@58.0.7"
+  - "@react-native/babel-preset@0.88.1"
+  - "@react-native/metro-babel-transformer@0.88.1"
+  - "@expo/metro-runtime@58.0.16"
+  - "@react-native/community-cli-plugin@0.88.1"
+  - "@react-native/gradle-plugin@0.88.1"
+  - "@react-native/virtualized-lists@0.88.1"
+  - "expo-dev-launcher@58.0.18"
+  - "expo-dev-menu@58.0.12"
+  - "hermes-compiler@260318099.0.5"
+  - "react-native-screens@4.30.1"
+  - "@expo/cli@58.1.18"
+  - "@expo/config-plugins@58.0.11"
+  - "@expo/config@58.0.10"
+  - "@expo/fingerprint@0.21.8"
+  - "@expo/image-utils@0.12.6"
+  - "@expo/inline-modules@0.2.8"
+  - "@expo/local-build-cache-provider@58.0.10"
+  - "@expo/log-box@58.0.14"
+  - "@expo/metro-config@58.0.20"
+  - "@expo/modules-macros-linux-arm64@0.27.1"
+  - "@expo/modules-macros-linux-x64@0.27.1"
+  - "@expo/modules-macros-win32-arm64@0.27.1"
+  - "@expo/modules-macros-win32-x64@0.27.1"
+  - "@expo/prebuild-config@58.0.18"
+  - "@expo/require-utils@58.0.5"
+  - "@expo/router-server@58.0.20"
+  - "@expo/schema-utils@58.0.3"
+  - "@noxcturnal/noxcturnal-darwin-arm64@0.1.11"
+  - "@noxcturnal/noxcturnal-darwin-x64@0.1.11"
+  - "@noxcturnal/noxcturnal-linux-arm64-gnu@0.1.11"
+  - "@noxcturnal/noxcturnal-linux-arm64-musl@0.1.11"
+  - "@noxcturnal/noxcturnal-linux-x64-gnu@0.1.11"
+  - "@noxcturnal/noxcturnal-linux-x64-musl@0.1.11"
+  - "@noxcturnal/noxcturnal-win32-arm64-msvc@0.1.11"
+  - "@noxcturnal/noxcturnal-win32-x64-msvc@0.1.11"
+  - "@react-native/asset-utils@0.88.1"
+  - "@react-native/babel-plugin-codegen@0.88.1"
+  - "@react-native/codegen@0.88.1"
+  - "@react-native/debugger-frontend@0.88.1"
+  - "@react-native/debugger-shell@0.88.1"
+  - "@react-native/dev-middleware@0.88.1"
+  - "@react-native/js-polyfills@0.88.1"
+  - "@react-native/metro-config@0.88.1"
+  - "@react-native/normalize-colors@0.88.1"
+  - "babel-preset-expo@58.0.23"
+  - "expo-asset@58.0.19"
+  - "expo-auth-session@58.0.16"
+  - "expo-build-properties@58.0.12"
+  - "expo-constants@58.0.14"
+  - "expo-dev-client@58.0.18"
+  - "expo-file-system@58.0.13"
+  - "expo-font@58.0.11"
+  - "expo-linking@58.0.15"
+  - "expo-modules-autolinking@58.0.16"
+  - "expo-modules-cli@0.4.0"
+  - "expo-modules-core@58.0.29"
+  - "expo-modules-jsi@58.0.21"
+  - "expo-modules-macros@0.27.1"
+  - "expo-router@58.0.29"
+  - "expo-splash-screen@58.0.12"
+  - "expo-web-browser@58.0.7"
+  - "expo@58.0.22"
+  - "noxcturnal@0.1.11"
+  - "react-native@0.88.1"
 
-# Los rangos de Expo Router admiten revisiones más nuevas que aún no han
-# madurado. Se fijan a las últimas revisiones anteriores compatibles para que el
-# árbol pueda respetar la política sin una exclusión por edad.
 overrides:
-  "@expo/log-box": 57.0.4
-  "@expo/metro-runtime": 57.0.16
   "@faker-js/faker@10.4.0": 10.6.0
   "@scalar/cli>@fastify/static": 10.1.2
-  "@hono/node-server@2.0.1": 2.0.10
+  "@hono/node-server@2.0.1": 2.1.3
   "@xmldom/xmldom@0.8.13": 0.8.15
   "@xmldom/xmldom@0.9.10": 0.9.12
   "brace-expansion@1.1.16": 1.1.21
   "brace-expansion@5.0.8": 5.0.12
-  "fast-uri@3.1.4": 3.1.8
-  "fast-uri@4.1.1": 4.1.5
-  "fastify@5.8.5": 5.12.5
-  "hono@4.12.32": 4.13.7
+  "fast-uri@3.1.4": 3.1.9
+  "fast-uri@4.1.1": 4.2.3
+  "fastify@5.8.5": 5.12.6
+  "hono@4.12.32": 4.13.13
   "js-yaml@4.3.0": 4.3.2
-  "markdown-it@14.3.0": 14.3.1
+  "markdown-it@14.3.0": 14.3.3
   "nanoid@3.3.16": 3.3.18
   "nanoid@5.0.9": 5.1.16
-  "undici@7.28.0": 7.29.1
+  "undici@7.28.0": 7.30.1
+  "undici@7.29.1": 7.30.1
+  "sharp@0.35.4": 0.35.5
+  "vite@8.0.16": 8.1.6
+  "zod@4.6.5": 4.6.6
+  "node-forge@1.4.0": 1.4.2
+  "glob@13.0.6": 14.0.3
+  "@rollup/plugin-commonjs@22.0.2>glob": 14.0.3
+  "minimatch@3.1.5": 11.0.3
+  "minimatch@10.2.6": 11.0.3
+  "@scalar/void-server@2.5.2": 2.5.19
   "xcode>uuid": 11.1.1
-  "query-string@7.1.3>decode-uri-component": 0.5.0
 
-# Correcciones de seguridad verificadas el 2026-10-03. Los selectores conservan
+# Correcciones de seguridad de 2026-10-03 y ADR-0172 (2026-10-31).
+# Los selectores exactos conservan
 # cada rama compatible; xcode solo consume uuid.v4 y Scalar usa Fastify 5.
-# El parche versionado adapta query-string al export ESM; Metro 0.84.5+
-# incorpora su propio lector de imágenes y ya no depende de image-size.
-# Los paquetes sin corrección publicada quedan inventariados en DEVELOPMENT.md.
+# Metro incorpora su propio lector de imágenes; Router 58 ya no usa query-string.
+# Symbols conserva la escala de iconos (ADR-0167); config-plugins y splash-screen
+# corrigen los generadores Android sin supresiones (ADR-0168).
+# Pendientes y compatibilidad: DEPENDENCY_SECURITY_REVIEW_2026-10-31.md.
 nodeLinker: isolated
 storeDir: .pnpm-store
 patchedDependencies:
-  expo-symbols@57.0.3: patches/expo-symbols@57.0.3.patch
-  query-string@7.1.3: patches/query-string@7.1.3.patch
+  "@expo/config-plugins@58.0.11": patches/@expo__config-plugins@58.0.11.patch
+  expo-splash-screen@58.0.12: patches/expo-splash-screen@58.0.12.patch
+  expo-symbols@58.0.4: patches/expo-symbols@58.0.4.patch
+  "@stoplight/spectral-core@1.22.0": patches/@stoplight__spectral-core@1.22.0.patch
+  "@stoplight/spectral-core@1.24.0": patches/@stoplight__spectral-core@1.24.0.patch
+  "typedoc@0.28.20": patches/typedoc@0.28.20.patch

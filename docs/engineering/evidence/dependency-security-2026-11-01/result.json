@@ -1,0 +1,86 @@
+{
+  "date": "2026-11-01",
+  "lockfile_sha256": "6e25fdade7b4fbc277f94cfd2c75d692748b9cb4fade55002338dadd4df6bc6e",
+  "audit_sha256": "1b9bd1c4ef98ef408acad94bdc7178e4d8f55f2f3c71bbb7188b9d3b08426d8a",
+  "removed_npm_ids": ["1244012", "1244013"],
+  "new_npm_ids": [],
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 1,
+      "high": 0,
+      "critical": 0
+    },
+    "dependencies": 537,
+    "devDependencies": 722,
+    "optionalDependencies": 196,
+    "totalDependencies": 1296
+  },
+  "remaining": [
+    {
+      "npm_id": 1243661,
+      "package": "@hono/node-server",
+      "severity": "moderate",
+      "source": "https://github.com/advisories/GHSA-rmxm-3fg6-px4f"
+    }
+  ],
+  "publication_review": [
+    {
+      "package": "glob",
+      "version": "14.0.3",
+      "published": "2026-10-28T04:08:39.624Z",
+      "exception_expires": "2026-11-04T04:08:39.624000+00:00"
+    },
+    {
+      "package": "minimatch",
+      "version": "11.0.3",
+      "published": "2026-10-28T20:00:34.713Z",
+      "exception_expires": "2026-11-04T20:00:34.713000+00:00"
+    },
+    {
+      "package": "path-scurry",
+      "version": "3.0.0",
+      "published": "2026-10-27T21:14:48.842Z",
+      "exception_expires": "2026-11-03T21:14:48.842000+00:00"
+    },
+    {
+      "package": "@isaacs/nonrecursive-glob-match",
+      "version": "1.0.3",
+      "published": "2026-10-28T19:50:48.349Z",
+      "exception_expires": "2026-11-04T19:50:48.349000+00:00"
+    },
+    {
+      "hono_option_only": true,
+      "package": "@hono/node-server",
+      "version": "2.1.5",
+      "published": "2026-10-13T08:25:17.433Z"
+    },
+    {
+      "hono_option_only": true,
+      "package": "@scalar/void-server",
+      "version": "2.5.19",
+      "published": "2026-10-23T10:15:56.959Z"
+    },
+    {
+      "hono_option_only": true,
+      "package": "hono",
+      "version": "4.13.13",
+      "published": "2026-10-04T03:53:48.117Z"
+    }
+  ],
+  "hono_option_not_applied": {
+    "proposal": "Only @scalar/void-server@2.5.2 → 2.5.19; resolution proof, not installed or applied",
+    "added": ["@hono/node-server@2.1.5", "@scalar/void-server@2.5.19", "hono@4.13.13"],
+    "removed": ["@hono/node-server@1.19.17", "@scalar/void-server@2.5.2"],
+    "hono1_remains": false
+  },
+  "validation": {
+    "frozen_install": "passed",
+    "consumer_tests": 14,
+    "make_verify": "passed",
+    "node_regressions": 130,
+    "hono_actual_packages_unchanged": true,
+    "postgres_integration_this_session": "skipped: no isolated database configured"
+  }
+}

@@ -1,0 +1,98 @@
+diff --git a/plugin/src/withAndroidSplashStyles.ts b/plugin/src/withAndroidSplashStyles.ts
+--- a/plugin/src/withAndroidSplashStyles.ts
++++ b/plugin/src/withAndroidSplashStyles.ts
+@@ -1,9 +1,13 @@
++import { mkdir } from 'node:fs/promises';
++import { join } from 'node:path';
+ import {
+   AndroidConfig,
+   ConfigPlugin,
+   withAndroidColors,
+   withAndroidColorsNight,
+   withAndroidStyles,
++  withDangerousMod,
++  XML,
+ } from 'expo/config-plugins';
+ 
+ import { AndroidSplashConfig } from './types';
+@@ -33,11 +37,19 @@
+     config.modResults = addSplashScreenStyle(config.modResults);
+     return config;
+   });
++  config = withDangerousMod(config, ['android', async (mod) => {
++    const directory = join(mod.modRequest.platformProjectRoot, 'app/src/main/res/values-v33');
++    const path = join(directory, 'styles.xml');
++    const styles = await AndroidConfig.Resources.readResourcesXMLAsync({ path });
++    await mkdir(directory, { recursive: true });
++    await XML.writeXMLAsync({ path, xml: addSplashScreenStyle(styles, true) });
++    return mod;
++  }]);
+   return config;
+ };
+ 
+ // Add the style that extends Theme.SplashScreen
+-function addSplashScreenStyle(styles: AndroidConfig.Resources.ResourceXML) {
++function addSplashScreenStyle(styles: AndroidConfig.Resources.ResourceXML, api33 = false) {
+   const { resources } = styles;
+   const { style = [] } = resources;
+ 
+@@ -54,11 +66,9 @@
+       $: { name: 'postSplashScreenTheme' },
+       _: '@style/AppTheme',
+     },
+-    {
+-      $: { name: 'android:windowSplashScreenBehavior' },
+-      _: 'icon_preferred',
+-    },
+   ];
++
++  if (api33) item.push({ $: { name: 'android:windowSplashScreenBehavior' }, _: 'icon_preferred' });
+ 
+   styles.resources.style = [
+     ...style.filter(({ $ }) => $.name !== 'Theme.App.SplashScreen'),
+diff --git a/plugin/build/withAndroidSplashStyles.js b/plugin/build/withAndroidSplashStyles.js
+--- a/plugin/build/withAndroidSplashStyles.js
++++ b/plugin/build/withAndroidSplashStyles.js
+@@ -1,4 +1,6 @@
+ "use strict";
++const { mkdir } = require("node:fs/promises");
++const { join } = require("node:path");
+ Object.defineProperty(exports, "__esModule", {
+     value: true
+ });
+@@ -58,10 +60,18 @@
+         config.modResults = addSplashScreenStyle(config.modResults);
+         return config;
+     });
++    config = (0, _configplugins().withDangerousMod)(config, ['android', async (mod) => {
++        const directory = join(mod.modRequest.platformProjectRoot, 'app/src/main/res/values-v33');
++        const path = join(directory, 'styles.xml');
++        const styles = await _configplugins().AndroidConfig.Resources.readResourcesXMLAsync({ path });
++        await mkdir(directory, { recursive: true });
++        await _configplugins().XML.writeXMLAsync({ path, xml: addSplashScreenStyle(styles, true) });
++        return mod;
++    }]);
+     return config;
+ };
+ // Add the style that extends Theme.SplashScreen
+-function addSplashScreenStyle(styles) {
++function addSplashScreenStyle(styles, api33 = false) {
+     const { resources } = styles;
+     const { style = [] } = resources;
+     const item = [
+@@ -82,14 +92,9 @@
+                 name: 'postSplashScreenTheme'
+             },
+             _: '@style/AppTheme'
+-        },
+-        {
+-            $: {
+-                name: 'android:windowSplashScreenBehavior'
+-            },
+-            _: 'icon_preferred'
+         }
+     ];
++    if (api33) item.push({ $: { name: 'android:windowSplashScreenBehavior' }, _: 'icon_preferred' });
+     styles.resources.style = [
+         ...style.filter(({ $ })=>$.name !== 'Theme.App.SplashScreen'),
+         {

@@ -1,7 +1,7 @@
-import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { NativeTabs } from "expo-router/native-tabs";
 import { Platform } from "react-native";
 
-import { color, typography } from "@tournaments-manager/design-tokens";
+import { typography } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
@@ -26,7 +26,7 @@ export default function TabLayout() {
         },
         selected: {
           fontFamily: typography.family.semibold,
-          color: usesAndroidAppearance ? color.brand.primary : undefined,
+          color: usesAndroidAppearance ? colors.indicator.default : undefined,
         },
       }}
       backgroundColor={
@@ -34,14 +34,14 @@ export default function TabLayout() {
       }
       iconColor={
         usesAndroidAppearance
-          ? { default: colors.text.secondary, selected: color.brand.primary }
+          ? { default: colors.text.secondary, selected: colors.indicator.default }
           : undefined
       }
       indicatorColor={usesAndroidAppearance ? colors.surface.subtle : undefined}
       blurEffect={usesLegacyIOSAppearance ? "none" : undefined}
       disableTransparentOnScrollEdge={usesLegacyIOSAppearance}
       minimizeBehavior="never"
-      tintColor={color.brand.primary}
+      tintColor={colors.indicator.default}
       unstable_nativeProps={{ colorScheme: resolvedTheme }}
     >
       <NativeTabs.Trigger name="index">

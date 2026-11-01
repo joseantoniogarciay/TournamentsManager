@@ -56,7 +56,13 @@ export function Screen({
           {content}
         </View>
       ) : (
-        content
+        // A bounded inner frame also protects absolutely positioned actions.
+        // Padding on the outer Screen alone does not constrain left/right offsets.
+        <View
+          style={[styles.nativeContent, { marginLeft: insets.left, marginRight: insets.right }]}
+        >
+          {content}
+        </View>
       )}
       {Platform.OS === "web" ? <FeedbackBanner /> : null}
       <ConfirmationDialogHost />
@@ -68,5 +74,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
+  nativeContent: { flex: 1, minWidth: 0 },
   webContent: { alignSelf: "center", flex: 1, minWidth: 0, width: "100%" },
 });

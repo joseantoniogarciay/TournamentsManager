@@ -1,6 +1,7 @@
 # Sistema de diseño
 
-> Estado: base visual Pulse aceptada en ADR-0054.
+> Estado: identidad Grada implementada en código (ADR-0176); builds verificadas, QA visual parcial.
+> Se conservan las primitivas y reglas de ADR-0054.
 
 ## Alcance vigente
 
@@ -9,6 +10,23 @@ la web. Las pantallas consumen nombres semánticos, nunca hexadecimales o píxel
 repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 
 ## Fundaciones
+
+- **Apps, rotación y ventanas (ADR-0166):** los insets seguros son dinámicos en
+  los cuatro lados; no se deduce su posición del modelo ni de portrait/landscape.
+  `Screen` conserva el fondo completo y delimita un marco interior con los insets
+  laterales. Card y contenido añaden dentro sus 20 px habituales; también quedan
+  protegidas las acciones absolutas. No se duplica la reserva lateral en sus
+  hijos. Carruseles y cuadros usan el ancho disponible seguro; `BracketView`
+  decide su distribución con `onLayout` del contenedor, no con el ancho físico.
+  Modales y avisos, fuera de ese marco, se protegen por separado. `ModalDialog`
+  admite las cuatro orientaciones, mide safe area dentro de su propia ventana
+  y permite scroll para alcanzar todos los controles en una ventana baja.
+  Ningún cambio de postura/ancho debe remontar rutas ni borrar formularios.
+  La web conserva el marco responsive de ADR-0154.
+  La escena nativa visible mide sus propios insets mediante el provider de ruta
+  del stack raíz. No se heredan medidas de una ruta cubierta: pueden quedar
+  obsoletas al girar un fullScreenModal. El banner iOS hace lo mismo dentro de
+  FullWindowOverlay; su margen habitual se suma una sola vez al marco seguro.
 
 - **Iconos y texto ampliado:** los glifos de iconos mantienen el tamaño del token
   dentro de su caja; el texto de la interfaz conserva el escalado de accesibilidad.
@@ -27,34 +45,33 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   sin ella, comprobando cambios en ambos sentidos con la pantalla montada.
   La evidencia y límites están en [QA](PRODUCT_QA_REVIEW_2026-10-04.md).
 
-- **Color:** azul como acción primaria; violeta como acento; superficies claras;
-  verde, ámbar y rojo reservados para estado y feedback.
+- **Color (ADR-0176):** naranja quemado `#B93B19`, canvas cálido `#F5F1E8`
+  y tinta `#24241F`. `themeColors` centraliza claro/oscuro en design-tokens;
+  verde y rojo siguen indicando éxito/error. En oscuro se usa `#FF9B73` para
+  navegación, foco e indicadores, conservando contraste sobre las superficies.
+  Los fondos de acción mantienen naranja quemado y tinta blanca en ambos temas.
 - **Indicadores informativos:** un número de paso o un marcador no interactivo
   usa borde y texto primarios del tema; no emplea el color de acción para evitar
   que parezca un botón.
-- **Loaders:** los indicadores de progreso sobre una superficie normal usan el
-  azul principal en claro y blanco en oscuro. Los que van sobre una acción
-  primaria filled permanecen blancos en ambos temas para contrastar con el
-  degradado de marca.
-- **Degradado de marca:** una base azul `#155EEF` recibe una superposición violeta
-  `#7F56D9` limitada a la esquina inferior derecha. Su eje es diagonal hacia esa
-  esquina, como en el icono de la aplicación. El violeta entra desde el 35 % del
-  recorrido: no tiñe todo el lateral. El icono cuadrado usa el token
-  `gradient.brand` y los botones horizontales `gradient.brandButton`, ambos con
-  los mismos puntos diagonalizados para que web, iOS y Android compongan la misma
-  superficie. La cabecera y el CTA de los emails de verificación usan la misma
-  paleta y paradas en CSS, con azul sólido como fallback para clientes sin
-  soporte de degradados. Las acciones primarias filled llevan texto y loader
-  blancos en ambos temas; las secundarias lo reservan para un borde de 1 px.
-- **Splash nativa:** muestra únicamente la marca interior, sin el recuadro del
-  icono de aplicación. La marca usa el mismo degradado azul–violeta sobre el
-  canvas claro u oscuro, para conservar contraste sin duplicar un fondo dentro
-  del fondo de la splash.
-- **Navegación por tabs:** la tab activa usa el azul primario sólido. La barra
-  nativa no admite un degradado como tint para icono y etiqueta. En iOS 26 o
-  superior conserva el material nativo Liquid Glass; en versiones anteriores
-  desactiva el blur y usa `surface.default`, igual que web y Android, para que
-  la barra opaca mantenga contraste sobre el canvas.
+- **Loaders:** consumen el indicador del tema sobre superficies normales y blanco
+  sobre acciones primarias. No usan `text.inverse` del tema oscuro para una
+  acción filled, porque ese token representa tinta sobre una superficie inversa.
+- **Degradado de marca:** se conserva su composición diagonal y las paradas
+  originales; la base quemada recibe `#A33216` en la esquina inferior derecha.
+  `gradient.brand` y `gradient.brandButton` mantienen los consumidores actuales
+  (botones, cuadros), sin alterar formas, márgenes ni tamaños. En oscuro, el borde de los botones
+  secundarios usa `border.focus` sólido: el degradado quemado sobre una
+  superficie oscura no distingue suficientemente su contorno.
+- **Assets de marca:** icono opaco 1024×1024, splash transparente 1254×1254 y
+  preview social 1200×630 adaptados a Grada, conservando símbolo y composición.
+  La regeneración CNG incorpora los assets y fondos de splash. El email de
+  verificación aplica la paleta cálida con degradado y fallback sólido; conserva
+  fuentes de sistema para compatibilidad entre clientes de correo, sin CDN.
+- **Navegación por tabs:** conserva `NativeTabs` y el material Liquid Glass de
+  iOS 26+, con las superficies opacas existentes para otras versiones/Android.
+  Tintado, iconos y etiquetas consumen el indicador del tema. Cabeceras y tabs
+  mantienen DM Sans donde la API lo permite. React Navigation recibe también
+  superficies, texto, bordes y fuentes Grada, para cubrir las transiciones.
 - **Área inferior bajo tabs:** las rutas de una tab extienden su superficie hasta
   la barra nativa superpuesta. El margen para que el último control no quede
   oculto pertenece al `contentContainerStyle` del `ScrollView`, no al contenedor
@@ -130,8 +147,11 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 - **Barra de estado nativa:** la raíz consume el tema resuelto para el estilo
   de `StatusBar`, renovado con la revisión de sesión. Los iconos deben ser
   oscuros en claro y claros en oscuro; ninguna pantalla controla por separado
-  esta apariencia. No se configura `statusBarStyle` en el stack: el binario iOS
-  actual usa control global de apariencia. La revisión de QA del 2026-10-04
+  esta apariencia. No se configura `statusBarStyle` por pantalla: el componente raíz conserva
+  la preferencia común. Desde SDK 58, iOS declara
+  `UIViewControllerBasedStatusBarAppearance=true`; iOS 27 ignora la antigua API
+  de apariencia a nivel de aplicación y React Native aplica el estilo mediante
+  sus controladores. La revisión de QA del 2026-10-04
   registra el contraste de los retornos contextuales por plataforma.
 - **Sustitución de sesión:** el stack raíz conserva su identidad nativa mientras
   se cierran rutas anteriores y se abre el destino contextual. La revisión de
@@ -168,16 +188,16 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   `useAdaptiveNavigationTitle`. La medición invisible no recibe interacción
   ni se expone a accesibilidad. La barra vacía usa un título nativo vacío para
   evitar que aparezca el nombre técnico de la ruta como fallback.
-- **Tipografía:** Figtree local en web, iOS y Android, con los pesos 400, 500,
-  600 y 700 cargados antes de montar la interfaz. Los tokens seleccionan la
-  familia real de cada peso, en vez de sintetizarlo con `fontWeight`. La escala
-  permanece entre 12 y 32 px. Las etiquetas de la primitiva `Button` usan
-  semibold (600) para reforzar su legibilidad sin cambiar tamaño ni altura.
-  Sus líneas permanecen centradas cuando una traducción o el texto ampliado
-  requiere más de una línea. El marcador de un partido dentro de una fila usa la escala `title` en negrita:
-  mantiene jerarquía frente a los equipos sin forzar el alto de la card ni
-  recortar los glifos. `display` queda para títulos y resultados destacados
-  fuera de una fila compacta. Véase ADR-0096.
+- **Tipografía (ADR-0176):** DM Sans 400/500/600/700 para lectura, controles,
+  cabeceras y tabs; Barlow Condensed 600/700 para `Text.title` y `Text.display`;
+  IBM Plex Mono 400/600 para posición, estadísticas y puntos de clasificación.
+  Los tokens `typography.family`, `heading` y `numeric` seleccionan pesos reales.
+  Se cargan ocho TTF locales con `expo-font`; no se consulta un CDN al usar la
+  app. Se conserva la escala 12–32 px, line heights, escalado accesible y el
+  fallback de arranque existente. Los botones usan DM Sans 600 y alineación
+  centrada al envolver. Los marcadores compactos con peso explícito conservan
+  DM Sans para lectura de datos. La QA de nombres largos y ampliación de texto
+  sigue pendiente; cobertura de glifos no demuestra reflow.
 - **Clasificación:** según [ADR-0153](../adr/0153-keep-standings-table-at-a-fixed-text-size.md),
   solo las celdas (encabezados, posición, equipo, estadísticas y puntos) usan
   `allowFontScaling={false}` para conservar la tabla compacta. Text mantiene el
@@ -204,7 +224,7 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 - **Forma:** los campos y demás controles compactos usan radio 12 px; las
   tarjetas usan 16 px. Los botones usan `radius.pill` (999 px), de modo que sus
   extremos son siempre semicirculares respecto de su altura. La variante
-  secundaria conserva solo un borde azul de 1 px: su interior es transparente y
+  secundaria conserva solo un borde de marca de 1 px: su interior es transparente y
   deja ver la superficie de la pantalla que la contiene.
 - **Movimiento:** 160 ms para feedback y 240 ms para entradas/salidas; se respeta
   la preferencia de movimiento reducido de la plataforma.
@@ -215,7 +235,7 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 | ------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Button             | primary, secondary, ghost, destructive, disabled, loading  | `loading` deshabilita el control y reserva el ancho del texto para el loader. `destructive` conserva la superficie transparente, borde y texto de error; no existe una variante destructiva rellena para mantener la misma jerarquía en menús y confirmaciones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Selector de opción | default, selected, disabled                                | Las alternativas de una misma configuración comparten forma y estados aunque seleccionen dimensiones distintas. La opción elegida usa superficie primaria sólida y la no elegida, superficie y borde neutros; no se reutiliza la jerarquía visual de un botón de acción para representar selección.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| TextField          | default, focus, filled, error, disabled                    | El foco usa el borde azul primario del perímetro completo del campo; en web no se muestra un anillo interno adicional. El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. Un campo de contraseña que ofrece visibilidad muestra ojo u ojo tachado según su estado y mantiene un objetivo táctil de 44 px.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| TextField          | default, focus, filled, error, disabled                    | El foco usa el borde de foco del tema en el perímetro completo del campo; en web no se muestra un anillo interno adicional. El error aparece bajo el campo cuando el validador se ejecuta; no borra el valor ni el foco. Un campo de contraseña que ofrece visibilidad muestra ojo u ojo tachado según su estado y mantiene un objetivo táctil de 44 px.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Picker             | default, focus, selected, error, disabled                  | Abre un selector adaptado a plataforma y conserva etiqueta visible.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Checkbox / Switch  | default, selected, disabled, error                         | Objetivo táctil mínimo de 44 px. Si su texto contiene documentos legales, sus enlaces se integran en ese texto y no duplican acciones independientes; pulsarlos abren la ruta legal sin modificar la selección.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Card               | standard, compact, actionable, selected                    | Sirve para ligas, equipos y bloques de resumen, no como contenedor genérico indiscriminado. La densidad `compact` se reserva para filas de una sola línea con una acción de 44 px; conserva borde, radio y margen exterior.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -318,8 +338,10 @@ incluye los estados `true` y `false` del nodo, además de la habilitación del
 envío; la versión instalada de react-native-web no transforma por sí sola
 `accessibilityState.checked` en ese atributo.
 El nonce requerido por un proveedor se precarga al enfocar la ruta que muestra
-su acción, nunca al montar una tab que permanece oculta. Mientras se prepara,
-el icono se sustituye por un loader sin bloquear el resto de la pantalla; un
+su acción, nunca al montar una tab que permanece oculta. La precarga automática
+de Google conserva su icono, sin loader; el indicador visual y el estado accesible
+de ocupado aparecen solo durante la preparación o autenticación iniciadas al pulsar
+su botón. El botón sigue deshabilitado durante la precarga para evitar duplicados. Un
 fallo de esa precarga es silencioso y un toque posterior lo reintenta de forma
 explícita. `InteractionBlocker` conserva
 una capa transparente modal, accesible y reutilizable para futuros estados que
@@ -542,3 +564,9 @@ Así, regresar de una ficha no reduce la lista a su primera página ni desplaza
 la posición solo por retirar temporalmente las páginas adicionales.
 El destino de un partido selecciona fase/ronda, mide su posición y lo resalta
 con tokens existentes; anuncia el destino para accesibilidad. Textos es/en/it/fr.
+
+## Evidencia de transición Grada
+
+El [informe de implementación](GRADA_IDENTITY_2026-11-01.md) distingue checks
+estáticos, contraste y exportaciones de la revisión visual pendiente. Las cinco
+regresiones de contraste están incluidas en `make verify` (`test-design-tokens`).

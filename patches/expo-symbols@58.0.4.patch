@@ -1,0 +1,22 @@
+diff --git a/src/SymbolView.tsx b/src/SymbolView.tsx
+--- a/src/SymbolView.tsx
++++ b/src/SymbolView.tsx
+@@ -50,6 +50,7 @@
+   return (
+     <View collapsable={false} {...viewProps} style={style}>
+       <Text
++        allowFontScaling={false}
+         aria-hidden
+         style={{
+           fontFamily: font.name,
+diff --git a/build/SymbolView.js b/build/SymbolView.js
+--- a/build/SymbolView.js
++++ b/build/SymbolView.js
+@@ -46,6 +46,7 @@
+         style: style,
+         children: /*#__PURE__*/ _jsx(Text, {
+             "aria-hidden": true,
++            allowFontScaling: false,
+             style: {
+                 fontFamily: font.name,
+                 color: tintColor ?? DEFAULT_SYMBOL_COLOR,

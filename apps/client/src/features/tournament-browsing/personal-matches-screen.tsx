@@ -1,3 +1,4 @@
+import type { ViewInstance } from "react-native";
 import { router, useNavigation } from "expo-router";
 import type { NativeStackNavigationProp } from "expo-router/native-stack";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -40,7 +41,7 @@ export function PersonalMatchesScreen() {
   const [view, setView] = useState<"pending" | "results">("pending");
   const navigation = useNavigation();
   const rootNavigation = useNavigation<NativeStackNavigationProp<Record<string, undefined>>>("/");
-  const cardRefs = useRef(new Map<string, View>());
+  const cardRefs = useRef(new Map<string, ViewInstance>());
   const returnMatch = useRef<string | null>(null);
   useEffect(() => {
     returnMatch.current = null;
@@ -203,7 +204,7 @@ function PersonalMatchCard({
   onOpen,
 }: {
   item: PersonalMatch;
-  cardRef: (node: View | null) => void;
+  cardRef: (node: ViewInstance | null) => void;
   onOpen: () => void;
 }) {
   const t = getTranslator();

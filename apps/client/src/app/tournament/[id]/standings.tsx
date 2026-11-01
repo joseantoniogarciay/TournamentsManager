@@ -1,9 +1,10 @@
+import type { ScrollViewInstance, ViewInstance } from "react-native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { control, radius, space } from "@tournaments-manager/design-tokens";
+import { control, radius, space, typography } from "@tournaments-manager/design-tokens";
 
 import type { PublicTournament } from "@/api/generated/models";
 import { TournamentUnavailableError } from "@/features/league-creation/api";
@@ -29,6 +30,12 @@ import {
   usesLiquidGlassNavigation,
 } from "@/shared/ui";
 
+// React Native Web exposes DOM handles beyond the native ScrollView instance API.
+type WebScrollViewInstance = {
+  getInnerViewNode(): HTMLElement | null;
+  getScrollableNode(): HTMLElement | null;
+};
+
 const leftColumnWidth = 144;
 const pointsColumnWidth = 44;
 const statisticsColumnWidth = 36;
@@ -51,9 +58,9 @@ export default function TournamentStandingsScreen() {
   const [statisticsContentWidth, setStatisticsContentWidth] = useState(0);
   const [statisticsViewportWidth, setStatisticsViewportWidth] = useState(0);
   const [tableViewportWidth, setTableViewportWidth] = useState(0);
-  const statisticsHeaderRef = useRef<View>(null);
-  const statisticsTimelineScopeRef = useRef<ScrollView>(null);
-  const statisticsWebScrollRef = useRef<ScrollView>(null);
+  const statisticsHeaderRef = useRef<ViewInstance>(null);
+  const statisticsTimelineScopeRef = useRef<ScrollViewInstance>(null);
+  const statisticsWebScrollRef = useRef<ScrollViewInstance>(null);
   const statisticsScrollOffset = useRef(new Animated.Value(0)).current;
   const statisticsOverflow = statisticsContentWidth > statisticsViewportWidth + 1;
   const tableFitsViewport =
@@ -69,9 +76,13 @@ export default function TournamentStandingsScreen() {
       return;
     }
 
-    const scope = statisticsTimelineScopeRef.current?.getInnerViewNode() as HTMLElement | null;
+    const scope = (
+      statisticsTimelineScopeRef.current as unknown as WebScrollViewInstance | null
+    )?.getInnerViewNode();
     const header = statisticsHeaderRef.current as unknown as HTMLElement | null;
-    const scrollSource = statisticsWebScrollRef.current?.getScrollableNode() as HTMLElement | null;
+    const scrollSource = (
+      statisticsWebScrollRef.current as unknown as WebScrollViewInstance | null
+    )?.getScrollableNode();
     if (!scope || !header || !scrollSource) {
       return;
     }
@@ -642,9 +653,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight,
   },
-  points: { textAlign: "right", width: pointsColumnWidth },
+  points: { fontFamily: typography.numeric.semibold, textAlign: "right", width: pointsColumnWidth },
   pointsColumn: { flexShrink: 0, width: pointsColumnWidth },
-  position: { textAlign: "center", width: 34 },
+  position: { fontFamily: typography.numeric.regular, textAlign: "center", width: 34 },
   row: {
     alignItems: "center",
     borderBottomWidth: 1,
@@ -657,7 +668,11 @@ const styles = StyleSheet.create({
     web: { position: "sticky", top: 0, zIndex: 1 },
   }),
   scrollHint: { paddingTop: space[2], textAlign: "right" },
-  stat: { textAlign: "center", width: statisticsColumnWidth },
+  stat: {
+    fontFamily: typography.numeric.regular,
+    textAlign: "center",
+    width: statisticsColumnWidth,
+  },
   statisticsRow: { flexDirection: "row" },
   statisticsHeaderContent: { borderBottomWidth: 0, minHeight: control.minHeight - 1 },
   statisticsHeaderViewport: {

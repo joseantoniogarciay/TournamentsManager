@@ -1,8 +1,9 @@
+import type { ScrollViewInstance, ViewInstance } from "react-native";
 import { MatchSchedule } from "@/features/scheduling/match-schedule";
 import { canEditScheduling } from "@/features/scheduling/values";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   Platform,
@@ -15,14 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import {
-  color,
-  control,
-  radius,
-  space,
-  typography,
-  webLayout,
-} from "@tournaments-manager/design-tokens";
+import { control, radius, space, typography, webLayout } from "@tournaments-manager/design-tokens";
 
 import { APISessionInvalidatedError, APIUnexpectedResponseError } from "@/api/fetch";
 import { useTournamentFollow } from "@/features/league-creation/use-tournament-follow";
@@ -143,6 +137,12 @@ function getMixedConfigurationRequirement(
   return { valid: true as const };
 }
 
+type MatchSection = {
+  data: PublicTournament["matches"];
+  group: number;
+  round: number;
+};
+
 export default function TournamentScreen() {
   const t = getTranslator();
   const { id, matchId } = useLocalSearchParams<{ id: string; matchId?: string }>();
@@ -214,18 +214,21 @@ export default function TournamentScreen() {
   >("bracket");
   const [selectedBracketRound, setSelectedBracketRound] = useState(1);
   const [bracketRoundSelectionRevision, setBracketRoundSelectionRevision] = useState(0);
-  const matchList = useRef<SectionList<PublicTournament["matches"][number]>>(null);
-  const bracketList = useRef<ScrollView>(null);
+  const matchList =
+    useRef<ComponentRef<typeof SectionList<PublicTournament["matches"][number], MatchSection>>>(
+      null,
+    );
+  const bracketList = useRef<ScrollViewInstance>(null);
   const bracketRoundTopOffset = useRef(0);
   const bracketView = useRef<BracketViewHandle>(null);
-  const bracketHorizontalControl = useRef<ScrollView>(null);
+  const bracketHorizontalControl = useRef<ScrollViewInstance>(null);
   const bracketHorizontalControlOffset = useRef(0);
   const [bracketHorizontalMetrics, setBracketHorizontalMetrics] =
     useState<BracketHorizontalMetrics>({ contentWidth: 0, viewportWidth: 0 });
   const matchListOffset = useRef(0);
   const matchListContentHeight = useRef(0);
-  const matchListViewport = useRef<View>(null);
-  const linkedMatchView = useRef<View>(null);
+  const matchListViewport = useRef<ViewInstance>(null);
+  const linkedMatchView = useRef<ViewInstance>(null);
   const linkedMatchAligned = useRef(false);
   const linkedMatchHeaderHeight = useRef(0);
   const linkHandled = useRef<string | undefined>(undefined);
@@ -292,7 +295,7 @@ export default function TournamentScreen() {
     bracketHorizontalControl.current?.scrollTo({ x: nextOffset, animated: false });
   }, []);
   const ensureBracketMatchVisible = useCallback(
-    (matchView: View) => {
+    (matchView: ViewInstance) => {
       const viewport = matchListViewport.current;
       if (!viewport) return;
       viewport.measureInWindow((_viewportX, viewportY, _viewportWidth, viewportHeight) => {
@@ -1290,7 +1293,7 @@ export default function TournamentScreen() {
                 />
               </ScrollView>
             ) : (
-              <SectionList
+              <SectionList<PublicTournament["matches"][number], MatchSection>
                 ref={matchList}
                 onContentSizeChange={(_width, height) => {
                   matchListContentHeight.current = height;
@@ -1586,7 +1589,7 @@ export default function TournamentScreen() {
                           styles.match,
                           highlightedMatch === match.id
                             ? {
-                                borderColor: color.brand.primary,
+                                borderColor: colors.border.focus,
                                 borderWidth: 1,
                                 borderRadius: radius.card,
                                 padding: space[2],

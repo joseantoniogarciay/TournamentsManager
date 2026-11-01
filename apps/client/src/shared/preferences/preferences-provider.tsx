@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { color } from "@tournaments-manager/design-tokens";
+import { themeColors } from "@tournaments-manager/design-tokens";
 import {
   createContext,
   type PropsWithChildren,
@@ -13,7 +13,6 @@ import { Platform, useColorScheme } from "react-native";
 import {
   getStoredWebThemePreference,
   isThemePreference,
-  themeCanvasColors,
   themePreferenceStorageKey,
   type ResolvedTheme,
   type ThemePreference,
@@ -39,22 +38,6 @@ type PreferencesContextValue = {
 };
 
 const productAnalyticsStorageKey = "tournaments-manager.product-analytics-enabled";
-
-const lightColors: ThemeColors = {
-  surface: { canvas: themeCanvasColors.light, default: "#FFFFFF", subtle: "#F1F5F9" },
-  text: { primary: "#101828", secondary: "#475467", placeholder: "#98A2B3", inverse: "#FFFFFF" },
-  indicator: { default: color.brand.primary },
-  border: { default: "#D0D5DD", focus: color.border.focus, error: "#D92D20" },
-  feedback: { success: "#027A48", error: "#D92D20" },
-};
-
-const darkColors: ThemeColors = {
-  surface: { canvas: themeCanvasColors.dark, default: "#182230", subtle: "#1D2939" },
-  text: { primary: "#F9FAFB", secondary: "#D0D5DD", placeholder: "#98A2B3", inverse: "#101828" },
-  indicator: { default: color.text.inverse },
-  border: { default: "#475467", focus: color.border.focus, error: "#FDA29B" },
-  feedback: { success: "#6CE9A6", error: "#FDA29B" },
-};
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 
@@ -106,7 +89,7 @@ export function PreferencesProvider({ children }: PropsWithChildren) {
       productAnalyticsEnabled,
       resolvedTheme,
       setProductAnalyticsEnabled,
-      colors: resolvedTheme === "dark" ? darkColors : lightColors,
+      colors: themeColors[resolvedTheme],
       setThemePreference,
     }),
     [productAnalyticsEnabled, resolvedTheme, themePreference],

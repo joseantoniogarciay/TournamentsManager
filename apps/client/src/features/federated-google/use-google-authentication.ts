@@ -56,6 +56,7 @@ export function useGoogleAuthentication({
   const [pendingAccount, setPendingAccount] = useState<PendingGoogleAccount | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [isPreparing, setIsPreparing] = useState(false);
+  const [isPreparingAfterPress, setIsPreparingAfterPress] = useState(false);
   const [isPrompting, setIsPrompting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const handledResponse = useRef<unknown>(null);
@@ -150,7 +151,12 @@ export function useGoogleAuthentication({
     // la petición aún no están listos, este toque solo los prepara y el siguiente
     // podrá abrir Google sin que el navegador lo bloquee.
     if (!challenge || !request) {
-      await loadChallenge({ reportFailure: true });
+      setIsPreparingAfterPress(true);
+      try {
+        await loadChallenge({ reportFailure: true });
+      } finally {
+        setIsPreparingAfterPress(false);
+      }
       return;
     }
     setIsPrompting(true);
@@ -201,7 +207,7 @@ export function useGoogleAuthentication({
     error,
     isConfigured,
     isPreparing,
-    isAuthenticating: isPrompting || isSubmitting,
+    isAuthenticating: isPreparingAfterPress || isPrompting || isSubmitting,
     isSubmitting,
     prepare,
     requiresUsername: Boolean(pendingAccount),

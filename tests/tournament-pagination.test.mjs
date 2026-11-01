@@ -4,12 +4,10 @@ import { resolve } from "node:path";
 import { runInNewContext } from "node:vm";
 import test from "node:test";
 import { setImmediate } from "node:timers";
-import ts from "typescript";
+import { transpileForTest } from "./helpers/transpile-typescript.mjs";
 
 function load(path, imports) {
-  const code = ts.transpileModule(readFileSync(resolve(path), "utf8"), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
+  const code = transpileForTest(readFileSync(resolve(path), "utf8"));
   const module = { exports: {} };
   runInNewContext(`(function(require,module,exports){${code}\n})`, {})(
     (name) => {

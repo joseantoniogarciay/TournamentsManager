@@ -31,7 +31,7 @@
 ## Toolchain Go
 
 - Versión mínima del módulo: Go 1.26.0.
-- Toolchain exacto: Go 1.26.9.
+- Toolchain exacto: Go 1.26.10.
 - El backend usa `apps/backend/go.mod`.
 - Las herramientas usan `apps/backend/go.tool.mod` y
   `apps/backend/go.tool.sum`.
@@ -111,13 +111,15 @@ ejecuta al guardar `apps/backend/scripts/goimports`. El wrapper selecciona el
 `goimports` pineado en `go.tool.mod`; el editor no necesita otro `goimports`
 global.
 
-También recomienda ESLint y Prettier, selecciona el TypeScript instalado en el
-workspace y formatea JavaScript, TypeScript y sus variantes JSX al guardar.
+También recomienda Oxc, la extensión oficial TypeScript 7 y Prettier.
+`js/ts.experimental.useTsgo` activa el servicio nativo y `js/ts.tsdk.path` apunta
+a `./node_modules/typescript`, según ADR-0171. No se apunta al antiguo directorio
+`lib` de tsserver. Prettier formatea JavaScript, TypeScript y JSX al guardar.
 
 ## Toolchain TypeScript
 
 - Node 24.18.0 LTS se selecciona mediante `devEngines.runtime`.
-- pnpm 11.17.0 gestiona un lockfile y los workspaces `apps/*` y `packages/*`.
+- pnpm 12.15.0 gestiona un lockfile y los workspaces `apps/*` y `packages/*`.
 - La instalación local y CI usan el lockfile congelado; una instalación normal
   no puede alterar la resolución. Los cambios intencionados usan `pnpm add`,
   `pnpm update` o `pnpm install --no-frozen-lockfile` y requieren revisar el
@@ -132,12 +134,24 @@ workspace y formatea JavaScript, TypeScript y sus variantes JSX al guardar.
   Para módulos Go y herramientas sin este control nativo se comprueba la fecha
   oficial antes de actualizar. No se usan comodines ni se omite la revisión.
 - El linker aislado exige que cada workspace declare sus dependencias directas.
-- TypeScript 6.0.3 usa `strict`, `noUncheckedIndexedAccess`,
+- TypeScript 7.0.2 usa `strict`, `noUncheckedIndexedAccess`,
   `exactOptionalPropertyTypes`, `noImplicitOverride` y `noEmit`.
-- ESLint 10 usa flat config y `typescript-eslint`; Prettier se ocupa únicamente
-  del formato.
-- `tsconfig.json` comprueba la configuración JavaScript del tooling y añadirá
-  referencias al existir aplicaciones o paquetes TypeScript.
+  [ADR-0171](../adr/0171-use-typescript-7-and-oxlint-with-prettier.md) registra
+  la migración desde 6.0.3 y la retirada de ESLint.
+- Oxlint 1.89.0 usa `.oxlintrc.json` con las reglas efectivas migradas y cero
+  avisos permitidos; Prettier se ocupa del formato. No se activan reglas con
+  tipos ni tsgolint, que no formaban parte del baseline anterior.
+- `tsconfig.json` comprueba el hook de instalación y el transformador compartido
+  de pruebas. El cliente tiene su comprobación separada con `tsc --noEmit`.
+- Las pruebas transforman TS/TSX a CommonJS mediante esbuild 0.28.1 y extraen
+  una declaración de navegación con Babel Parser 7.29.9. No importan la API de
+  TypeScript 6. Orval conserva su TS 6 interno; `.pnpmfile.mjs` convierte el peer
+  de TypeDoc 0.28.20 en dependencia privada 6.0.3 para impedir que use TS 7.
+  Revisar y retirar ese hook cuando TypeDoc soporte el compilador nativo.
+- Todo CommonJS escrito en el repositorio declara `"use strict"`: el parser
+  sustituye a `no-octal`, regla sin implementación separada en Oxlint. Las
+  regresiones de `pnpm run test:toolchain` verifican ese requisito y errores
+  deliberados de lint/tipos. `make verify` incluye esta comprobación.
 
 Comandos directos:
 
@@ -171,15 +185,23 @@ El documento personalizado `+html.tsx` conserva `ScrollViewStyleReset` de Expo:
 y sus `ScrollView` sean visibles. La validación web comprueba también captura
 y dimensiones del contenido; encontrar textos en accesibilidad no prueba que
 el layout tenga altura visible.
-`apps/client` existe como proyecto Expo SDK 57. Expo Router usa `src/app` como
+`apps/client` existe como proyecto Expo SDK 58 (Expo 58.0.22, ADR-0167). Expo Router usa `src/app` como
 raíz de rutas; las primitivas compartidas viven en `src/shared` y los tokens en
 `packages/design-tokens`.
 
-Figtree se distribuye como asset local mediante `@expo-google-fonts/figtree` y
-`expo-font`. El layout raíz carga los pesos 400, 500, 600 y 700 antes de montar
-la interfaz; los nombres de familia viven únicamente en `typography.family`.
-Una pantalla no importa una fuente ni usa `fontWeight` para simular un peso.
-Véase ADR-0096.
+ADR-0176 sustituye Figtree por DM Sans 400/500/600/700, Barlow Condensed
+600/700 e IBM Plex Mono 400/600. Los ocho TTF se distribuyen localmente con
+los paquetes `@expo-google-fonts` fijados y `expo-font`; no añaden módulos
+nativos. El layout raíz registra los pesos antes de montar la interfaz,
+conservando el fallback de arranque existente. Los nombres viven en
+`typography.family`, `typography.heading` y `typography.numeric`; las pantallas
+no importan fuentes ni simulan pesos. Se conservan las licencias OFL de cada
+paquete. Véase [la evidencia y QA pendiente](GRADA_IDENTITY_2026-11-01.md).
+
+`themeColors` es la fuente común para provider, HTML inicial y splash. La
+configuración Expo importa el subpath `design-tokens/tokens`: Node puede leer
+ese módulo sin atravesar los reexports sin extensión del entrypoint de Metro.
+El cambio de fondo de splash requiere regenerar y recompilar las apps.
 
 - Las pantallas futuras vivirán en `apps/client/src/app`; sus rutas derivarán de
   los archivos.
@@ -189,10 +211,11 @@ Véase ADR-0096.
   cambios exclusivos de TypeScript se recargan con `expo start`.
 - En iOS, `ios.buildReactNativeFromSource` permanece activado junto con
   `ios.usePrecompiledModules: false` en la configuración fuente de Expo.
-  `expo-dev-launcher` usa símbolos de depuración que no exporta
-  `React-Core-prebuilt` con React Native 0.86; los módulos Expo precompilados
-  tampoco se mezclan con ese modo. Compilar ambos desde fuente evita los fallos
-  de enlazado y modulemaps. Una build limpia es más lenta, pero reproducible.
+  La elección nació por símbolos de depuración que `React-Core-prebuilt`
+  no exportaba con React Native 0.86 y por incompatibilidades al mezclar módulos
+  Expo precompilados con ese modo. SDK 58 conserva la compilación desde fuente;
+  no se asume que los binarios precompilados de 0.88 reproduzcan esos fallos.
+  Una build limpia es más lenta, pero mantiene la estrategia ya validada.
 - No se edita a mano un directorio generado. Las necesidades nativas se declaran
   en configuración o config plugins.
 - Antes del QA de enlaces, contrasta los filtros del APK instalado con
@@ -203,13 +226,11 @@ Véase ADR-0096.
   antes de probar un enlace propio. Un enlace con la app detenida puede abrir el
   launcher y no valida el arranque de una build distribuida. Se separan esos
   casos en el informe; véase [Expo: app-specific deep links](https://docs.expo.dev/develop/development-builds/development-workflows/).
-- El config plugin local `with-ios-scene-lifecycle.cjs` incorpora el ciclo de vida
-  UIScene requerido al compilar con el SDK de iOS 27. Crea una sola ventana
-  asociada a su escena y conserva la integración de Expo/React Native para
-  enlaces y eventos. No se copia la corrección a Xcode: `expo prebuild` debe
-  reproducirla. ADR-0144 registra el coste de mantenerla hasta que una plantilla
-  oficial madura la sustituya. Su regresión se comprueba con
-  `node --test tests/ios-scene-lifecycle.test.mjs` y arranque de una build nativa.
+- Expo SDK 58 genera `SceneDelegate: ExpoAppSceneDelegate` y el manifiesto UIScene
+  oficial, con una sola escena. ADR-0167 retira el config plugin local de
+  ADR-0144; no se aplica una segunda transformación sobre la plantilla nueva.
+  En cada actualización nativa, comprobar generación, enlaces y eventos además
+  de compilación; no editar directamente los archivos de Xcode generados.
 - Las diferencias web/native se aíslan en componentes, adaptadores o archivos
   específicos de plataforma cuando exista una razón concreta.
 
@@ -411,6 +432,10 @@ ya no detecta vulnerabilidades en paquetes importados por la aplicación ni en
 funciones alcanzables. Conserva el aviso GO-2026-5932 sobre `openpgp`, paquete
 obsoleto dentro de x/crypto que la aplicación no importa y sin versión corregida.
 
+El siguiente párrafo y su tabla conservan el resultado histórico del 3 de
+octubre. El [estado actual tras ADR-0173](FORGE_SECURITY_FIX_2026-10-31.md)
+es tres moderados; Forge ya está corregido con 1.4.2.
+
 El árbol JavaScript se ha actualizado con overrides exactos, por rama o por
 consumidor, conservando el lockfile y la política de siete días. La auditoría
 pasa de 94 a 5 avisos (cuatro altos y uno moderado; conteos de pnpm, no de
@@ -418,7 +443,7 @@ funciones alcanzables). Los overrides deben retirarse cuando los consumidores
 incorporen las revisiones corregidas por sus propios rangos. No se modifican
 las dependencias directas nativas para forzar una auditoría a cero.
 
-| Paquete pendiente | Motivo y siguiente paso                                                                                                |
+| Paquete pendiente entonces | Motivo y siguiente paso                                                                                                |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | node-forge 1.4.0  | La corrección indicada 1.4.1 no está publicada en npm al comprobarla. Esperar una revisión oficial publicada y madura. |
 | braces 3.0.3      | La corrección indicada 3.0.4 no está publicada en npm. Esperar una revisión oficial publicada y madura.                |
@@ -428,7 +453,8 @@ y decode-uri-component 0.5.0. Dos parches versionados adaptan Metro 0.84.4 a
 bytes y query-string 7.1.3 al export ESM. La auditoría prod queda en dos altos y
 cero moderados/críticos. Cinco regresiones se incorporan a make verify; se
 validaron CI y exportaciones JS web/iOS/Android, primero dev y después prod.
-Los parches se retirarán al actualizar consumidores compatibles. Véase el
+Los parches se retiraron al actualizar sus consumidores en octubre; SDK 58 ya
+no necesita el de query-string. Véase el
 [cierre operativo](../operations/WEB_DEPENDENCY_COMPATIBILITY_2026-10-03.md).
 
 En la revisión del 3 de octubre, Expo CLI pedía una nueva matriz del SDK 57, incluida Expo 57.0.26 y React Native
@@ -436,21 +462,22 @@ En la revisión del 3 de octubre, Expo CLI pedía una nueva matriz del SDK 57, i
 expo-constants 57.0.20 y expo-modules-core 57.0.20. La revisión automática
 rechazó añadir sus excepciones y se solicitó autorización explícita. No se
 aplicó esa matriz ni esas excepciones; el cliente mantiene el conjunto previo.
-`expo install --check` conserva por tanto su advertencia de compatibilidad.
+`expo install --check` conservó entonces su advertencia de compatibilidad.
 El usuario decidió después mantener la espera salvo vulnerabilidad crítica
 (ADR-0138): esta matriz queda aplazada hasta cumplir siete días, sin excepción
 por compatibilidad. Al actualizarla se fijarán los directos y se validarán build
 nativa limpia, arranque y flujo, además de typecheck y exportación web.
 
 La [revisión del 9 de octubre](EXPO_UPDATE_REVIEW_2026-10-09.md) confirma que
-la matriz 57.0.26 ya cumple antigüedad directa. La CLI ahora pide 57.0.27,
+la matriz 57.0.26 ya cumplía antigüedad directa. La CLI pedía entonces 57.0.27,
 aún joven; no se ha instalado ninguna matriz nueva ni cerrado los errores
 de generación Android de ADR-0152. Revisar transitivas, overrides y parches
 antes de una actualización explícita.
 El usuario autoriza después su instalación: la matriz madura y sus transitivas
 quedan resueltas; el informe vinculado registra instalación congelada, builds,
 recorridos y gates todavía abiertos. Se retira el parche Metro obsoleto y se
-conserva Symbols 57.0.3.
+conserva Symbols 57.0.3 en esa revisión. ADR-0167 recoge la migración posterior
+a SDK 58 y el parche de Symbols 58.0.4 vigente.
 
 Para mantener los servicios en segundo plano en Docker Desktop:
 
@@ -494,7 +521,7 @@ Producción/K3s conserva sus servicios y controles.
 
 ### Iconos Material y escala de texto (2026-10-04)
 
-`patches/expo-symbols@57.0.3.patch` mantiene fijo el glifo Material dentro de su
+`patches/expo-symbols@58.0.4.patch` mantiene fijo el glifo Material dentro de su
 caja declarada. El fallo se reprodujo en Pixel API 34/Android 14 con el tamaño
 de fuente máximo: la X de Crear torneo se recortaba hasta parecer una flecha.
 El parche cambia solo `allowFontScaling` del texto del icono en fuente y build
@@ -512,7 +539,7 @@ porque Android admite escalado no lineal. La matriz y el alcance visual están e
 Android mediante expo-module.config.json. No se modifica android/ generado por
 CNG. Tras cambiar Kotlin hay que recompilar e instalar la development build antes
 de validar JavaScript; Fast Refresh no incorpora código nativo. El build.gradle
-reutiliza react-android fijado por el proyecto para cargar la misma fuente Figtree,
+reutiliza react-android fijado por el proyecto para cargar la misma fuente local del cliente,
 sin fijar otra versión ni añadir una librería externa.
 
 El provider raíz mantiene el aviso y su temporizador. El host raíz y ModalDialog
@@ -533,3 +560,178 @@ modalidad táctil. La prueba de API 34 descartó PopupWindow: PopupDecorView reg
 un callback de Atrás aunque la ventana no tenga foco. Ese callback oculta el
 aviso o consume la navegación si se intenta restaurarlo. La ventana hija pública
 evita ese comportamiento sin reflection, parches del SDK ni cambios de navegación.
+
+### Apps en todas las orientaciones y Split View — ADR-0166
+
+CNG declara `orientation: "default"`, `ios.supportsTablet: true` e
+`ios.requireFullScreen: false`. El plugin `with-android-adaptive-window.cjs`
+configura MainActivity como redimensionable y `fullUser` (cuatro orientaciones
+cuando la persona habilita giro, respetando su bloqueo). No se añade una
+librería de orientación ni múltiples escenas iOS. Regenerar y recompilar el
+binario antes de comprobar estas capacidades; nunca editar ios/android generados.
+La regresión del plugin se ejecuta con
+`node --test tests/native-adaptive-window.test.mjs`.
+
+Para QA usar el iPhone Duo de Device Hub cerrado, parcialmente abierto y abierto,
+ambos horizontales y las verticales admitidas. Repetir en tablet con ventanas
+estrechas y anchas/Split View. Revisar barra lateral, extremos de carruseles,
+acciones flotantes, teclado, diálogos bajos y conservación de estado. Una
+exportación web o un Info.plist correcto no acreditan esa matriz visual.
+
+Expo Modules JSI 58.0.21 incorpora upstream la limpieza de extensiones C++
+privadas tanto con `__ObjC::` como con `__ObjC.`. ADR-0167 retira el parche de
+57.1.1; `test:dependencies` sigue ejecutando el filtro real de la versión instalada
+(con `sed -E` cuando corresponde) y comprueba que conserva la API pública.
+No corregir a mano interfaces en DerivedData.
+
+En QA nativa con rutas presentadas, contrasta los insets de la escena visible
+antes y después de girar. Un provider raíz puede conservar los de la pantalla
+cubierta aunque useWindowDimensions ya haya cambiado. El stack instala un
+provider por ruta nativa, y los diálogos y FullWindowOverlay miden su ventana.
+No desactives la firma de la build de simulador para probar sesiones: SecureStore
+requiere los entitlements de Keychain. Conserva la firma habitual de Xcode.
+
+La comprobación Android de ADR-0166 usa JDK 21: con el JBR 25 incluido en Android
+Studio, configureCMake de screens/worklets falló con un aviso de acceso nativo
+restringido; repetir la misma build con JDK 21 instalado terminó correctamente.
+Selecciona JAVA_HOME por comando para reproducirla; no cambies el Java global ni
+las dependencias para resolver este caso. Compilar no acredita rotación o ventanas
+si el emulador no llega a arrancar.
+
+
+### Emulador Android bloqueado al inicializar CoreAudio
+
+En macOS 27.0.1 con Emulator 37.2.12, Pixel_API_31 se quedaba offline y terminaba
+con código 139. El informe .ips sitúa MainLoopThread dentro de
+AudioDeviceCreateIOProcID_mac_imp → ca_init_voice_locked → AUD_open_in; las CPU
+esperan al hilo principal. El SIGSEGV lo provoca después el detector de bloqueo,
+por lo que la última línea de QEMU no identifica la causa inicial.
+
+El contraste mantuvo AVD y datos: `-no-audio` arrancó, y después bastó cambiar
+`hw.audioInput = no` en la configuración local de ese AVD, manteniendo
+`hw.audioOutput = yes`. El arranque habitual con GPU del host y el lanzamiento
+integrado desde Android Studio también funcionaron. No se cambió el audio del
+Mac, no se borró userdata y no se tocó otro AVD. Para QA de FastTourney esta
+entrada no es necesaria; las pruebas futuras de micrófono requieren restituirla
+una vez resuelto el bloqueo de captura del host o usar otro dispositivo.
+
+Antes de cambiar una configuración AVD, apagar ese dispositivo y guardar copia.
+No aplicar esta corrección a cualquier crash: contrastar primero la pila y el
+arranque sin audio. Un cambio de GPU no resolvía este bloqueo.
+
+Android Studio puede generar `android/gradle/gradle-daemon-jvm.properties` con
+criterio 25, que tiene precedencia sobre JAVA_HOME. Para esta build se verificó
+criterio 21, sin URLs de aprovisionamiento al usar el JDK local instalado. El
+ajuste es del entorno generado/local, no una edición de código nativo de producto.
+`updateDaemonJvm --jvm-version=21` exige resolver repositorios por defecto; si
+solo se usan JDK locales, Gradle admite `toolchainDownloadUrls.empty()` en esa
+tarea. No añadir repositorios ni actualizar dependencias para resolverlo.
+La sincronización del IDE y assembleDebug deben comprobarse después del ajuste.
+
+
+## Expo SDK 58 — 2026-10-31 (ADR-0167)
+
+El cliente fija Expo 58.0.22, Router 58.0.29, React 19.3.0 y React Native 0.88.1,
+con versiones directas exactas de la matriz oficial. Worklets 0.13.0 satisface
+Reanimated 4.7.1 y System UI 58.0.7 completa la apariencia nativa configurada.
+El usuario autoriza expresamente una excepción puntual de siete días para ese
+conjunto y sus dependencias necesarias, incluidas las herramientas nativas.
+`minimumReleaseAgeExclude` enumera versiones exactas; no habilita futuras versiones.
+Retirar cada exclusión al alcanzar su fecha de maduración. La regla global,
+el lockfile congelado y el rechazo de fechas ausentes siguen activos.
+
+Las refs usan las instancias de React Native y `ComponentRef` para SectionList.
+NativeTabs usa su entrypoint estable. Los stacks mantienen explícitamente
+`headerTransparent: false` para conservar la geometría previa; no se activa la
+compatibilidad de cabecera deprecada. En iOS se declara `UIViewControllerBasedStatusBarAppearance=true`: el runtime
+advierte que iOS 27 ignora la API global anterior. La raíz conserva el componente
+StatusBar y el tema común; no se añaden estilos por pantalla.
+La home exporta `generateMetadata` para
+conservar descripción, canonical, Open Graph y Twitter antes de hidratar; Head
+sigue actualizando el idioma en cliente. El viewport se declara en +html.
+La web conserva output static y su infraestructura actual.
+
+El parche de Symbols se porta a 58.0.4 porque upstream aún permite escalar el
+glifo Material. Se retiran los parches de JSI y query-string: el primero está
+resuelto upstream y Router ya no consume el segundo. Se conservan las regresiones
+de URLs sobre las funciones instaladas de Router y las regresiones de imágenes.
+El adaptador local de UIScene y su prueba de una plantilla antigua se retiran.
+
+Resultados y límites de validación en
+[el informe de migración](EXPO_SDK_58_UPGRADE_2026-10-31.md). Los proyectos
+nativos anteriores y sus ajustes locales se conservan en /tmp/tm-expo58-before;
+no son fuente versionada ni se copian sobre la nueva generación. No se despliega
+producción ni se activa observabilidad.
+
+
+## Generación Android con lint correcto — ADR-0168
+
+Los parches exactos de @expo/config-plugins 58.0.11 y expo-splash-screen 58.0.12
+corrigen MissingPrefix y NewApi sin modificar android/ a mano. Manifest lee y
+escribe la propiedad de filtros con un comentario XML reservado; no se usa un
+atributo arbitrario de tools. Splash genera un estilo completo values-v33 y
+conserva el estilo compatible de API 24 y las referencias de color/logo.
+`pnpm run test:dependencies` incluye las regresiones de esos generadores.
+
+Para regeneración incremental o idempotencia con SDK 58 se usa
+`expo prebuild --platform android --no-install --no-clean`: el modo por defecto
+limpia las carpetas nativas. Una generación desde cero se valida por separado.
+Build arm64, lint de app/módulo local, APK, tipo, suite del cliente y exportación
+web se verifican en [el informe de corrección](ANDROID_LINT_FIX_2026-10-31.md).
+Lint queda en cero errores, con 46/6 avisos previos. Revisar los parches en cada
+upgrade y retirarlos al incorporar correcciones upstream verificadas.
+
+## Mantenimiento de dependencias — 2026-10-31
+
+ADR-0169 aplica Go 1.26.10 (ambos módulos e imagen de build), pgx 5.11.0,
+OpenTelemetry Go 1.47.0/otelhttp 0.72.0, pnpm 12.15.0, Prettier 3.9.10,
+ESLint 10.13.0/typescript-eslint 8.72.0 y Orval 8.44.0/Redocly CLI 2.71.0.
+En ese bloque se conservaron Node 24.18.0, TypeScript 6.0.3 y PostHog.
+ADR-0170 actualiza después PostHog; ADR-0171 adopta TypeScript 7.0.2 y Oxlint.
+x/net 0.62.0 corrige dos avisos alcanzables del parser HTML con excepción
+puntual de maduración autorizada por el usuario. Sus requisitos actualizan
+x/crypto 0.58.0, x/text 0.43.0, x/sync 0.24.0, x/sys 0.49.0 y, en el módulo
+de herramientas, x/tools 0.51.0 y x/telemetry; todos esos requisitos son maduros.
+Los parches Expo incorporan cabeceras `diff --git`, requeridas por el parser de
+pnpm 12, sin cambiar los hunks. Se conserva la política global de maduración.
+
+Véase el [informe de verificación](DEPENDENCY_UPGRADE_2026-10-31.md) para
+resultados y límites. No equivale a una publicación ni cambia binarios desplegados.
+
+### TypeScript 7 y auditoría npm posterior
+
+ADR-0171 migra el compilador a 7.0.2 y el linter a Oxlint 1.89.0, conservando
+Prettier y Orval. El [informe](TYPESCRIPT_7_OXLINT_MIGRATION_2026-10-31.md)
+registra las reglas, 125 regresiones, resolución privada de TS 6 para TypeDoc
+y generación determinista. La auditoría npm inicial devolvió 43 avisos heredados
+(15 altos, 18 moderados, 10 bajos; ninguno crítico), agrupados en 12 paquetes.
+Todas las versiones afectadas ya existían antes de esta migración. Ese
+inventario requiere una revisión de seguridad aparte y no acredita exposición
+ni ausencia de ella. Los conteos históricos anteriores no son el estado actual.
+
+
+## Corrección Forge posterior — ADR-0173
+
+El usuario autoriza aplicar la corrección de los seis altos; Forge pasa a 1.4.2
+con una excepción exacta de edad que se retira el 2026-11-03T14:09:15.471Z.
+Solo cambia ese paquete y se conserva la matriz Expo. Audit final: 3 moderados,
+cero altos, bajos o críticos. Make verify, 126 regresiones y las pruebas de
+firma de Expo pasan. Véase [la evidencia y retrospectiva](FORGE_SECURITY_FIX_2026-10-31.md).
+
+
+## Corrección glob/minimatch posterior — ADR-0174
+
+Glob pasa a 14.0.3 y minimatch a 11.0.3 con cuatro exclusiones exactas de edad.
+Se adaptan Spectral y TypeDoc; el único consumidor de glob 7 conserva glob.sync
+mediante glob 14. Make verify y 130 regresiones pasan. Audit: un moderado de
+Hono, que se mantiene mientras el usuario compara opciones. Véase
+[el informe y las fechas de retirada](GLOB_MINIMATCH_SECURITY_FIX_2026-11-01.md).
+
+
+## Corrección Hono posterior — ADR-0175
+
+El usuario acepta actualizar solo void-server. Pasa a 2.5.19 y retira
+node-server 1; los adaptadores son 2.1.3/2.1.5 y el framework hono 4.13.13.
+Audit final del checkout: cero avisos. Make verify y 131 regresiones pasan.
+La utilidad de eco pertenece a document void; openapi:ui usa document serve.
+Véase [el uso real y la evidencia](HONO_SECURITY_FIX_2026-11-01.md).

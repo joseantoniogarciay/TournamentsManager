@@ -18,7 +18,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { FullWindowOverlay } from "react-native-screens";
 
 import { banner, motion, radius, space } from "@tournaments-manager/design-tokens";
@@ -188,7 +188,10 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
           borderColor:
             feedback.kind === "success" ? colors.feedback.success : colors.feedback.error,
           opacity: visibility,
-          top: insets.top + space[1],
+          top: (Platform.OS === "ios" ? 0 : insets.top) + space[1],
+          ...(Platform.OS === "android"
+            ? { left: insets.left + space[5], right: insets.right + space[5] }
+            : {}),
           transform: [
             {
               translateY: Animated.add(
@@ -254,14 +257,29 @@ export function FeedbackBanner() {
   if (Platform.OS === "ios") {
     return (
       <FullWindowOverlay>
-        <View pointerEvents="box-none" style={styles.modalHost}>
-          {feedbackBanner}
-        </View>
+        <SafeAreaProvider pointerEvents="box-none">
+          <FeedbackWindow>{feedbackBanner}</FeedbackWindow>
+        </SafeAreaProvider>
       </FullWindowOverlay>
     );
   }
 
   return null;
+}
+
+function FeedbackWindow({ children }: PropsWithChildren) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View
+      pointerEvents="box-none"
+      style={[
+        styles.modalHost,
+        { marginTop: insets.top, marginLeft: insets.left, marginRight: insets.right },
+      ]}
+    >
+      {children}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

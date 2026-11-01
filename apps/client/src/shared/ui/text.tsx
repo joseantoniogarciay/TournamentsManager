@@ -84,12 +84,12 @@ const variants: Record<NonNullable<Props["variant"]>, TextStyle> = {
     lineHeight: typography.size.caption * typography.lineHeight.default,
   },
   title: {
-    fontFamily: typography.family.semibold,
+    fontFamily: typography.heading.title,
     fontSize: typography.size.title,
     lineHeight: typography.size.title * typography.lineHeight.compact,
   },
   display: {
-    fontFamily: typography.family.bold,
+    fontFamily: typography.heading.display,
     fontSize: typography.size.display,
     lineHeight: typography.size.display * typography.lineHeight.compact,
   },

@@ -1,5 +1,5 @@
 # El compilador y los módulos usan el mismo parche de seguridad fijado.
-FROM golang:1.26.9-bookworm AS modules
+FROM golang:1.26.10-bookworm AS modules
 ENV GOTOOLCHAIN=auto
 WORKDIR /app
 COPY go.mod go.sum ./

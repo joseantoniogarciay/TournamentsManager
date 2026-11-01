@@ -1,6 +1,6 @@
 # ADR-0144: Adoptar el ciclo de vida UIScene mediante CNG
 
-- **Estado:** Aceptado
+- **Estado:** Superado por ADR-0167 en la implementación: Expo SDK 58 genera UIScene oficialmente.
 - **Fecha:** 2026-10-03
 - **Decisor:** Usuario
 - **Supera a:** Ninguno; concreta ADR-0015 para compatibilidad de iOS

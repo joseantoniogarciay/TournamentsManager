@@ -1,11 +1,13 @@
+import { themeColors } from "@tournaments-manager/design-tokens";
+
 export type ThemePreference = "system" | "light" | "dark";
 export type ResolvedTheme = "light" | "dark";
 
 export const themePreferenceStorageKey = "tournaments-manager.theme-preference";
 
 export const themeCanvasColors = {
-  light: "#F8FAFC",
-  dark: "#101828",
+  light: themeColors.light.surface.canvas,
+  dark: themeColors.dark.surface.canvas,
 } satisfies Record<ResolvedTheme, string>;
 
 export function getStoredWebThemePreference(): ThemePreference {

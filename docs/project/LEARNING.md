@@ -1,5 +1,19 @@
 # Registro de aprendizaje
 
+## 2026-10-31 — Actualización por bloques y políticas de suministro
+
+La actualización de ADR-0169 conserva TypeScript y PostHog. El salto a pnpm 12
+exige cabeceras `diff --git` en los parches: cambia su hash, no su corrección.
+Una instalación congelada y dos generaciones OpenAPI idénticas verifican
+reproducibilidad. Orval ahora normaliza también las cabeceras Fetch entregadas
+como `Headers` o pares iterables, conservando el transporte común.
+
+Retrospectiva: comprobar publicación y maduración del grafo completo evita
+confundir una versión directa madura con una instalación válida. Un upgrade
+correcto tampoco implica un gate de seguridad limpio: `govulncheck` consulta
+avisos actuales incluso de dependencias no cambiadas. Véase el
+[informe de validación](../engineering/DEPENDENCY_UPGRADE_2026-10-31.md).
+
 ## 2026-10-12 — Revisión de seguridad API y snapshots durante esperas
 
 La [revisión de seguridad de la API](../engineering/API_SECURITY_REVIEW_2026-10-12.md)
@@ -2450,8 +2464,11 @@ Para cada capacidad se sigue el ciclo:
 - **Evidencia:** la carga pasa al foco de Cuenta y sus fallos automáticos no se
   publican como error; el botón sigue reintentando la carga y comunica los
   fallos de una acción iniciada explícitamente.
-- **Coste aceptado:** la primera llegada a Cuenta puede mostrar brevemente el
-  loader del icono. Evita peticiones y feedback ajenos a la ruta visible.
+- **Actualización 2026-11-01:** la precarga de Google conserva el icono y el
+  botón deshabilitado; el loader y el estado accesible de ocupado se reservan
+  para la preparación o autenticación iniciadas al pulsarlo. Se distingue trabajo
+  automático de progreso solicitado con un estado local, sin retrasos artificiales
+  ni cambios en el contrato de identidad.
 - **Regla reutilizable:** una precarga solo puede emitir feedback si la persona
   ve y entiende la acción que la originó.
 
@@ -6381,3 +6398,374 @@ objetivos evita presentar cualquier cambio como una aceleración. Reducir escrit
 innecesarias conserva la garantía simple de bloqueo por torneo y evita introducir
 concurrencia más fina antes de tener evidencia que justifique su mantenimiento.
 El límite de entidades raíz no equivale a limitar todas sus cascadas.
+
+### Publicación de mejoras transaccionales — 2026-10-13
+
+v1.14.1 publica API y renderer; web conserva v1.14.0. Gates local y CI en verde,
+backup dentro de la VM restaurado en aislamiento, huellas de negocio idénticas,
+rollout 2/2 y 36 lecturas de salud correctas. Docker indisponible no se presenta
+como build exitoso: el empaquetado alternativo conserva procedencia y verifica
+que certificados, migrator y comandos legales no cambiaron.
+
+Retrospectiva: una ruta de fallback web puede devolver 200 para un endpoint
+inexistente. Usar el hostname contractual y comprobar estados de validación,
+ausencia y autenticación impide tomar ese HTML como evidencia de salud. La
+mejora de rendimiento se mide en aislamiento; producción se verifica con lecturas
+sin mutar torneos reales. No hay DDL: el rollback recupera artefactos anteriores.
+
+## 2026-10-24 — El área segura es bidimensional
+
+**Fundamento:** orientación y tamaño de ventana son variables independientes.
+Una barra o una cámara pueden ocupar el lateral; Split View puede estrechar una
+app sin girar el dispositivo. El criterio útil es el espacio disponible y los
+insets del sistema, no el nombre del teléfono.
+
+**Aplicación:** Screen delimita un marco seguro lateral nativo para contenido y
+acciones absolutas. Un padding en el padre no basta para proteger un hijo con
+left/right absolutos. Los 20 px de diseño siguen perteneciendo a Card/contenido.
+ModalDialog necesita su propio proveedor de safe area al crear una ventana;
+permite giros y scroll en poca altura. El cuadro mide su contenedor real. CNG
+habilita tablet, giros y ventanas sin dependencia nueva.
+
+**Retrospectiva técnica:** centralizar la geometría reduce correcciones repetidas,
+pero no sustituye probar scroll, teclado y controles por postura. Configuración
+generada, compilación y evidencia visual son tres verificaciones distintas.
+La [revisión](../engineering/NATIVE_ADAPTIVE_LAYOUT_2026-10-24.md) distingue lo
+ejecutado de la matriz que siga pendiente.
+
+
+La compilación descubrió además que Swift 6.4 cambia la escritura de una
+extensión C++ privada en swiftinterface. Se amplía el filtro que ExpoModulesJSI
+ya aplicaba y se prueba su salida pública, en lugar de editar DerivedData.
+El parche se versiona y tiene condición de retirada. La instalación no congelada
+propuso reorganizar peers: se conserva el grafo anterior y se valida la
+instalación congelada con solo el nuevo hash del parche.
+
+Una prueba de multiventana necesita un cambio real de dimensiones verificado.
+Seleccionar Organizador visual y abrir la app no acredita Split View. En esta
+sesión el gesto tampoco redujo Ajustes y el entorno dejó de responder tras un
+panel del sistema; se reinició y se verificó la restauración de Apps en ventanas.
+Se documenta el límite sin atribuir una causa no aislada. El diálogo sí se
+comprobó con teclado software visible, edición y cierre accesible.
+
+Repetición de Split View: contrastar el mismo binario en el iPadOS 18.5 disponible
+permitió ejecutar el menú clásico y comprobar paneles reales de 375, 600 y 825
+puntos. El formulario temporal conservó su valor al cambiar el reparto; Inicio y
+Crear torneo reales abrieron junto a Safari. Esto aporta evidencia de adaptación
+sin convertir la dificultad de automatizar ventanas en iPadOS 27 en un defecto de
+la app. Las mediciones de ventana y onLayout pueden actualizarse en eventos
+diferentes: se registra el marco medido y se contrasta visualmente el panel.
+
+
+## 2026-10-31 — Medir la escena nativa que está visible
+
+**Evidencia:** una clasificación real de voleibol quedó bajo los controles
+laterales del Duo después de girar una ruta presentada. La ventana medía
+951 × 669, pero el provider heredado seguía en top=82/right=0. Al medir la
+escena visible pasó a top=0/right=84 y el marco útil a 867 puntos.
+
+**Aplicación:** el stack raíz envuelve cada ruta nativa en SafeAreaProvider, sin
+keys por orientación ni reinicio del estado. FullWindowOverlay mide también su
+propia ventana; el contenido del banner suma una sola vez su margen habitual.
+La web conserva su geometría. No hacen falta variantes por modelo ni otra
+librería. El coste es un provider por escena nativa.
+
+**Validación:** clasificación cargada, última fila, cuadro compacto/general,
+final, enlaces de origen y siguiente, editor con teclado y persistencia 2–1
+contrastada por API. La tabla estrecha llega a CT con offset 170, cabecera
+sincronizada y columnas fijas protegidas. Un corte deliberado de la API local mostró el error seguro
+y conservó el borrador. El quinto set y Guardar de tenis se alcanzaron en vertical y horizontal corto;
+el quinto campo queda por encima del teclado al enfocarlo.
+Los límites de la matriz constan en el informe; no se convierten en una garantía
+universal por pasar typecheck o por tener los controles en el árbol accesible.
+
+**Retrospectiva:** una captura durante un rebote no prueba el alcance del scroll.
+Se contrastan eventos de desplazamiento y la posición final. Las recargas de
+Metro con un modal y el Duo girado llegaron a producir una superficie negra;
+se recuperó al reiniciar la build y volver a vertical. No se atribuye su causa
+sin aislarla. Los diagnósticos temporales se retiran del producto.
+
+
+La ampliación Android separó dos verificaciones: la build arm64 compila con el
+JDK 21 instalado, mientras QEMU 37.2.12 cierra el AVD API 31 con código 139 antes
+de cargar la app, también en arranque limpio con renderizado software. El primer
+intento de build con Java 25 falló en configureCMake; seleccionar Java 21 por
+comando resolvió esa etapa sin cambiar dependencias. No se presenta una build
+correcta como sustituto de QA visual ni un fallo del emulador como fallo de la app.
+
+
+## 2026-10-31 — Buscar el bloqueo anterior al crash del emulador
+
+El código 139 de QEMU no era la causa inicial: el detector de bloqueo generaba
+el crash después de que el hilo principal quedara esperando a CoreAudio al abrir
+entrada de audio. Cambiar el renderer no lo resolvía. Mantener AVD y datos y
+arrancar sin audio permitió aislarlo; desactivar solo hw.audioInput dejó arrancar
+con GPU habitual, salida de audio habilitada y también desde Android Studio.
+Se guarda copia, no se borra el dispositivo y se documenta la limitación para
+futuras pruebas de micrófono. No se añaden excepciones a la app por un fallo del
+host. La corrección permite ejecutar por fin los giros y la tabla cargada en
+Android, en vez de deducirlos de un manifest correcto.
+
+La sincronización del IDE puede generar criterios JVM que tienen precedencia
+sobre JAVA_HOME. Corregir el criterio local a 21 y verificar tanto assembleDebug
+como sync evita que el éxito de una terminal oculte el fallo del IDE. El generador
+permite omitir URLs cuando se usan JDK locales; no es necesario añadir otro
+repositorio al producto. La evidencia de la sesión distingue corrección de
+entorno, compilación y comportamiento visual.
+
+
+## 2026-10-31 — Migrar el conjunto Expo 58 sin abrir la política general
+
+El usuario elige Expo 58.0.22 y confirma que la excepción puntual de maduración
+incluye sus dependencias y herramientas nativas necesarias. El conjunto resuelto
+se fija a versiones exactas; las 65 exclusiones corresponden a paquetes presentes
+en el lockfile, con fechas de publicación y retirada comprobadas. La política de
+siete días sigue aplicándose a futuras versiones. El importer de herramientas
+raíz permanece idéntico; no se aprovecha la migración para actualizar otro tooling.
+
+La API estricta de React Native distingue el componente de su instancia: las
+refs de View/ScrollView/TextInput usan tipos de instancia y SectionList combina
+ComponentRef con una sección explícita. Router 58 cambia los metadatos estáticos:
+Head sigue siendo útil en cliente, pero la home necesita generateMetadata para
+conservar canonical y tarjetas sociales en el HTML antes de hidratar.
+
+La plantilla oficial UIScene sustituye al adaptador local. JSI ya limpia ambas
+sintaxis de extensiones privadas; la regresión ejecuta su sed -E real, sin parche.
+Router abandona query-string y permite retirar ese parche/override. Symbols aún
+requiere el ajuste de escala del glifo Material, portado a su versión nueva.
+
+**Validación:** Doctor 20/20, typecheck, lint, formato, 119 regresiones del cliente,
+11 pruebas de seguridad operativa, instalación congelada, exportaciones web e
+iOS/Android y generación nativa. Android Debug arm64 e iOS Debug compilan; la build iOS final con control de
+barra por controlador se instala y arranca sin el aviso anterior. Inicio es visible
+en ambas apps y se verifica apertura/cierre del formulario iOS. Resultados y límites
+en el [informe de migración](../engineering/EXPO_SDK_58_UPGRADE_2026-10-31.md).
+El lint normal alcanza su informe (el crash anterior no se reproduce) y conserva
+los dos errores de generación de ADR-0152, con 46 avisos; no se declara ese gate
+resuelto por actualizar el SDK.
+
+**Retrospectiva:** una migración elimina adaptaciones cuando la fuente oficial
+las sustituye y conserva las que siguen teniendo evidencia. Es necesario separar
+compilación, arranque y QA visual. La revisión automática exigió autorización
+expresa para Metro en LAN; el usuario la concedió. Esa sesión no activa API ni
+observabilidad. Los cambios
+anteriores de adaptación de ventanas se conservan y los proyectos nativos antiguos
+se guardan como respaldo, sin convertirlos en fuente editable del producto.
+
+
+La ejecución de SDK 58 en iOS 27 revela que la antigua configuración global de
+barra de estado ya no tiene efecto: app.config declara ahora
+UIViewControllerBasedStatusBarAppearance=true y mantiene StatusBar en la raíz,
+sin repartir estilos por pantalla. La build se regenera e instala para validar
+el cambio nativo. La interfaz de simulación de este entorno
+se automatiza mediante Device Hub. En Duo,
+una captura negra de LCD-1 no demuestra que la app esté negra; la pantalla
+principal 1 muestra Inicio y permite abrir/cerrar el formulario. Android alcanza
+Inicio después de recuperar System UI sin borrar datos. No se confunde esa prueba
+mínima con la matriz completa de QA ni con validación de backend.
+
+
+**Cierre:** la recompilación iOS final arm64 termina en 280,444 s; el artefacto
+instalado declara la barra por controlador y el nuevo arranque no emite el aviso.
+La captura principal muestra Inicio con el estilo legible. Metro y los dos
+simuladores de la sesión se apagan; ADB queda detenido. API local/dev y
+observabilidad no se arrancan. El lint Android conserva dos errores previos y
+46 avisos, con informe completo; no se añaden parches o supresiones para cerrarlo.
+
+
+## 2026-10-31 — Cerrar los dos errores de Android Lint
+
+El usuario decide corregir los errores de generación que antes prefirió esperar.
+ADR-0168 sustituye esa espera y usa dos parches exactos, sin nuevas dependencias,
+supresiones ni aumento de minSdk. La propiedad de los filtros pasa del XML inválido
+a un comentario reservado que el lector de Expo restaura solo dentro del modelo;
+el APK no lo conserva. Los recursos API 33 se generan como un estilo completo,
+pues una variante no debe confiar en que Android combine los items del estilo base.
+
+**Evidencia:** tres regresiones nuevas; 122 pruebas del cliente correctas;
+regeneración real idéntica en dos pasadas; compilación y lint de app/módulo local
+correctos, con cero errores y 46/6 avisos. aapt2 comprueba minSdk 24, autoVerify,
+hosts y variantes compiladas del estilo. Typecheck, ESLint, exportación web e
+instalación congelada correctos. No se arrancan API, Metro ni observabilidad.
+La matriz visual API 24/34 y splash release no se deduce de estos checks.
+
+**Retrospectiva:** tools no es un contenedor arbitrario de metadatos: el merger
+rechaza el atributo inventado aunque el XML pueda analizarse. La compilación
+real detecta esa diferencia antes de integrar. Se elige un comentario de generación
+y se prueban lectura, escritura y APK; el coste queda en revisar dos parches al
+actualizar Expo. SDK 58 cambia prebuild a limpieza por defecto: --no-clean permite
+comprobar la idempotencia sin perder cachés, conservando prueba desde cero.
+
+## 2026-10-31 — PostHog maduro y consumidores de TypeScript
+
+**Problema:** actualizar los dos bloques aplazados por ADR-0169 sin confundir
+latest con compatibilidad ni omitir las dependencias nativas.
+
+**Evidencia:** PostHog 4.83.0/plugin 2.12.6 y sus transitivas cumplen siete días;
+Expo conserva la matriz y el lockfile solo cambia cuatro paquetes PostHog.
+CocoaPods resuelve iOS 3.88.2 y Android requiere 3.71.6, también maduros.
+TypeScript 7.0.2 es estable, pero no reemplaza la API de 6 que requiere ESLint:
+doce archivos de pruebas usan además transpileModule y el editor apunta a lib.
+
+**Alternativas:** mantener 6 tiene coste bajo; convivir con 7 mantiene dos
+compiladores. Oxlint con Prettier permite estudiar una migración acotada del
+linter; Biome integra también formato, con diferencias de reglas que revisar.
+Cambiar herramientas requiere decisión explícita y adaptar los consumidores,
+no solo instalar el compilador nuevo. ADR-0170 conserva esa distinción.
+
+**Retrospectiva:** inventariar usos programáticos antes de una actualización
+major evita culpar a una sola herramienta. Las pruebas de telemetría, exportación,
+build y entrega remota prueban cosas distintas; ninguna sustituye a las demás.
+La entrega/simbolización real de crashes sigue pendiente de ADR-0109/0149.
+Véase el informe TYPESCRIPT_POSTHOG_REVIEW_2026-10-31.md para los resultados.
+
+## 2026-10-31 — Migrar a TypeScript 7 conservando controles
+
+**Decisión:** el usuario acepta Oxlint + Prettier y TypeScript 7.0.2 (ADR-0171).
+Se comparan presets efectivos para JS/TS: el migrador pierde scopes AND y omite
+reglas nursery que ya estaban activas. Se conserva su cobertura explícita y
+se prueban rechazos reales; CommonJS declara modo estricto para conservar el
+rechazo de octales sin una regla separada.
+
+**Evidencia:** 125 pruebas correctas, check completo, web exportada, 145 archivos
+OpenAPI idénticos en dos generaciones e instalación congelada. Cuarenta y tres
+versiones comprobadas son maduras, incluidos los binarios por plataforma.
+La raíz resuelve TS 7.0.2; TypeDoc opcional de Orval resuelve TS 6.0.3 privado.
+
+**Retrospectiva:** revisar la resolución real, no solo el rango del peer: dos
+configuraciones declarativas no cambiaron el enlace y se sustituyeron por un
+hook exacto. Separar compilación, API del tooling y transformación de pruebas
+permite migrar sin sustituir el generador ni añadir Java. Una auditoría verde
+no se deduce de un build: npm devuelve 43 avisos en versiones ya presentes antes
+de la migración. Ese inventario de seguridad continúa pendiente por separado.
+El informe TYPESCRIPT_7_OXLINT_MIGRATION_2026-10-31.md conserva el detalle.
+
+## 2026-10-31 — Clasificar avisos antes de corregir dependencias
+
+**Evidencia:** 43 registros npm corresponden a 39 GHSA y 12 paquetes. Las
+fechas oficiales permiten considerar candidatos maduros para 29 registros;
+14 requieren espera y revisión adicional. Las rutas apuntan a herramientas,
+pero los flags dev/prod no prueban qué código se ejecuta en el producto.
+GitHub no confirma el parche de un aviso de Forge que npm considera corregido.
+
+**Recomendación pendiente de decisión:** lotes acotados, conservando ramas
+compatibles; separar la actualización madura de los saltos de major de Hono,
+glob y minimatch. No se cambia el lockfile ni se acepta riesgo residual.
+
+**Retrospectiva:** publicación, maduración, compatibilidad, exposición y
+remediación son comprobaciones distintas. Consultar el aviso completo evita
+atribuir a todo fetch un fallo que exige interceptores o callbacks concretos.
+La revisión documental termina; los 43 registros siguen abiertos. Véase
+[el informe](../engineering/DEPENDENCY_SECURITY_REVIEW_2026-10-31.md).
+
+## 2026-10-31 — Corregir y comprobar todas las copias del grafo
+
+**Decisión:** el usuario acepta los lotes acotados (ADR-0172) y autoriza
+expresamente repetir el envío del grafo a npm tras el rechazo automático.
+
+**Evidencia:** audit pasa de 43 a 15 registros, sin IDs nuevos; 56/56 versiones
+nuevas maduras, 125 regresiones, check y exportación web correctos. Sharp usa
+librsvg 2.63.2 y pasa SVG→PNG; Vite/Hono y Wrangler/Miniflare pasan sus fixtures.
+El backend acumulado conserva formato, lint, pruebas, build y ambos tidy.
+
+**Retrospectiva:** cambiar el destino de un override previo no alcanza versiones
+fijadas fuera de su selector. La comparación local detecta Undici 7.29.1 todavía
+presente y exige otro selector exacto antes de repetir audit. Un peer que exige
+Hono 1 no se convierte en compatible con Hono 2 ampliando su declaración.
+Quedan 15 avisos: 12 Forge, glob, minimatch y Hono 1. Subir a develop conserva
+el trabajo sin confundir integración con publicación de producción.
+
+## 2026-10-31 — Contrastar el parche y probar el consumidor de Forge
+
+**Decisión:** instalar la corrección si resuelve los seis altos (ADR-0173).
+La evidencia del mantenedor vincula el CVE del aviso RSA antiguo con otro GHSA
+que sí declara 1.4.1 corregida. Se usa 1.4.2 para restaurar además PEM Buffer,
+con una excepción de edad exacta autorizada y fecha de retirada.
+
+**Evidencia:** 254 pruebas oficiales pasan; cuatro comparaciones de generación
+PRNG determinista se omiten por el generador nativo de Node. El vector RSA
+anidado detecta el fallo en 1.4.0 y se rechaza en 1.4.2. La regresión permanente
+prueba certificado, claves, PEM Buffer y payload alterado mediante Expo.
+Audit elimina los doce registros Forge y conserva tres moderados.
+
+**Retrospectiva:** revisar el changelog del hotfix evita una regresión conocida.
+Comparar el código npm con el tag y ejecutar un control negativo aporta evidencia
+que no ofrece un conteo de avisos por sí solo. No se confunde excepción puntual
+con autorización general para instalar versiones jóvenes.
+
+## 2026-11-01 — Probar los consumidores de una major transitiva
+
+**Decisión:** corregir glob/minimatch ahora y presentar opciones Hono (ADR-0174).
+Las excepciones son cuatro versiones exactas, con retirada documentada.
+
+**Evidencia:** las pruebas descubren tres incompatibilidades: importación
+CommonJS de Spectral, dependencia de glob 7 de propiedades internas del matcher
+y matchOne retirada en TypeDoc. Dos parches de importación, un enlace actualizado
+de Rollup y un parche a la API pública de coincidencia parcial conservan los
+recorridos. Se ejecuta el CommonJS generado y una conversión TypeDoc real.
+Make verify y 130 regresiones pasan. Audit conserva solo Hono moderado.
+
+**Retrospectiva:** una auditoría menor y una exportación web no ejercitan todas
+las herramientas opcionales. Las pruebas de consumidor convierten el riesgo
+del override major en recorridos concretos. Para Hono, resolver un candidato
+acotado de void-server demuestra una opción de grafo viable, pero no sustituye
+pruebas HTTP/WebSocket ni la decisión final del usuario.
+
+## 2026-11-01 — Distinguir una dependencia instalada de su uso real
+
+**Decisión:** actualizar solo void-server y explicar su utilidad (ADR-0175).
+El comando de eco viene incluido con Scalar CLI, pero el script del proyecto
+usa document serve para OpenAPI. La importación al cargar la CLI no arranca
+el servidor void. El framework hono 4 y el adaptador node-server 2 son paquetes
+distintos; la rama vulnerable era 1.x del segundo.
+
+**Evidencia:** tres versiones maduras nuevas, sin excepciones de edad. Se ajusta
+el destino de un override previo para evitar un peer nuevo desalineado y se
+retira Hono 1. Audit a cero, make verify y 131 pruebas correctos. HTTP/WebSocket
+y ambos comandos CLI se prueban y terminan. Los dos peers anteriores permanecen.
+
+**Retrospectiva:** leer la acción concreta del CLI evita atribuir a producción
+una herramienta opcional. La auditoría a cero corresponde al grafo y fecha
+verificados; no reemplaza pruebas de ejecución ni resuelve todo aviso de peer.
+
+## 2026-11-01 — Implementar identidad sobre primitivas existentes (ADR-0176)
+
+**Decisión:** Grada se aplica desde tokens y fuentes por rol, conservando
+componentes, rutas, escalado y navegación nativa. Centralizar `themeColors`
+evita canvas distintos entre HTML inicial, provider, navegación y splash.
+
+**Evidencia:** texto y placeholders >=4,5:1 sobre todas las superficies;
+foco, bordes e indicadores >=3:1. La regresión detectó 2,98:1 en un borde oscuro,
+corregido antes del cierre. Ocho pesos locales cubren las letras latinas de los
+cuatro catálogos y los dígitos. Se corrige el loader primario para mantener
+blanco en oscuro. Exportar comprueba empaquetado, no rotación ni legibilidad.
+
+**Retrospectiva:** una marca no necesita otra biblioteca ni rediseñar layouts.
+El coste aumenta de cuatro a ocho pesos (705.740 bytes TTF sin comprimir).
+Contraste y glifos no sustituyen QA visual: el navegador local está desactivado
+en Work; web real, builds nativas y adaptación de PNG/emails siguen pendientes.
+Véase [el informe](../engineering/GRADA_IDENTITY_2026-11-01.md).
+
+### Cierre adicional Grada — assets y binarios
+
+La petición «Haz lo que falte» amplía el cierre a icono, marca transparente,
+preview social y correo de verificación. Se conservan composiciones y el fallback
+sólido del email. Sus fuentes de sistema son una adaptación deliberada al soporte
+de los clientes de correo; no se fuerza una descarga remota de las fuentes web.
+Se incluyen licencias OFL en los archivos públicos.
+
+Android compila y pasa lint con cero errores (46 avisos previos). Reinstalar
+paquetes pnpm puede invalidar rutas de Pods aunque las versiones nativas no
+cambien: el recurso EXConstants provocó ese fallo y `pod install` regeneró sus
+enlaces. No se arreglan copiando fuentes ni editando manualmente Pods.
+`make verify` termina correctamente; integración PostgreSQL queda omitida sin
+base desechable. Los límites de QA visual se mantienen en el informe de Grada.
+
+La QA real de iPhone Duo permite ver un contorno secundario demasiado tenue en
+oscuro que la prueba de colores de campo no cubría. Button conserva la forma y
+adapta ese contorno a border.focus. Se valida después de cerrar la secuencia
+anterior; Fast Refresh no se usa para atribuir pérdida de estado a la navegación.
+La misma build se ejecuta en iPad, y los cuatro idiomas se revisan en Inicio de
+Duo con argumentos de lanzamiento temporales. Los gestos no fiables de CUA y el
+acceso bloqueado a navegador/Android obligan a dejar la matriz explícitamente
+parcial, sin confundir compilación y arranque con cobertura visual completa.

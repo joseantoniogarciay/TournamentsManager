@@ -45,7 +45,7 @@ export function Button({
             variant === "destructive"
               ? colors.feedback.error
               : variant === "primary"
-                ? colors.text.inverse
+                ? color.text.inverse
                 : colors.indicator.default
           }
         />
@@ -69,7 +69,7 @@ export function Button({
     >
       {variant === "primary" ? <BrandGradient style={styles.base}>{content}</BrandGradient> : null}
       {variant === "secondary" ? (
-        <BrandGradient style={[styles.base, styles.outline]}>
+        <BrandGradient outline style={[styles.base, styles.outline]}>
           <View
             style={[
               styles.outlineContent,
@@ -94,14 +94,33 @@ export function Button({
   );
 }
 
-function BrandGradient({ children, style }: { children: ReactNode; style: StyleProp<ViewStyle> }) {
+function BrandGradient({
+  children,
+  outline = false,
+  style,
+}: {
+  children: ReactNode;
+  outline?: boolean;
+  style: StyleProp<ViewStyle>;
+}) {
+  const { colors, resolvedTheme } = usePreferences();
+  const usesDarkOutline = outline && resolvedTheme === "dark";
+
   return (
-    <View style={[styles.brandGradient, style]}>
-      <LinearGradient
-        {...gradient.brandButton}
-        pointerEvents="none"
-        style={StyleSheet.absoluteFill}
-      />
+    <View
+      style={[
+        styles.brandGradient,
+        usesDarkOutline && { backgroundColor: colors.border.focus },
+        style,
+      ]}
+    >
+      {usesDarkOutline ? null : (
+        <LinearGradient
+          {...gradient.brandButton}
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+        />
+      )}
       {children}
     </View>
   );

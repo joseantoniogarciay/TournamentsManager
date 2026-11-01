@@ -1,25 +1,21 @@
 import assert from "node:assert/strict";
+import { parse } from "@babel/parser";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import test from "node:test";
-import ts from "typescript";
+import { transpileForTest } from "./helpers/transpile-typescript.mjs";
 
 const path = "apps/client/src/app/_layout.tsx";
-const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
-const navigator = source.statements.find(
-  (node) => ts.isFunctionDeclaration(node) && node.name?.text === "SessionNavigator",
+const source = readFileSync(path, "utf8");
+const ast = parse(source, { sourceType: "module", plugins: ["typescript", "jsx"] });
+const navigator = ast.program.body.find(
+  (node) => node.type === "FunctionDeclaration" && node.id?.name === "SessionNavigator",
 );
 assert.ok(navigator);
-const code = ts.transpileModule(
-  `${navigator.getText(source)}\nexports.render = SessionNavigator;`,
-  {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2022,
-      jsx: ts.JsxEmit.ReactJSX,
-    },
-  },
-).outputText;
+const code = transpileForTest(
+  `${source.slice(navigator.start, navigator.end)}\nexports.render = SessionNavigator;`,
+  { jsx: true },
+);
 
 function fixture(platform, transition = "resetting", canDismiss = true) {
   const events = [];

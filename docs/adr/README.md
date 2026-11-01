@@ -40,7 +40,7 @@ Usa [template.md](template.md) y el
 
 - [ADR-0143: Idioma automático desde sistema y navegador](0143-detect-client-language-from-system-and-browser.md) — Aceptado.
 
-- [ADR-0144: Ciclo de vida UIScene mediante CNG](0144-adopt-ios-scene-lifecycle-through-cng.md) — Aceptado.
+- [ADR-0144: Ciclo de vida UIScene mediante CNG](0144-adopt-ios-scene-lifecycle-through-cng.md) — Superado en implementación por ADR-0167; plantilla oficial de SDK 58.
 
 - [ADR-0145: Drenaje de la API antes de terminar el contenedor](0145-drain-api-before-container-termination.md) — Aceptado.
 
@@ -55,7 +55,7 @@ Usa [template.md](template.md) y el
 
 - [ADR-0151: Títulos iOS adaptables al espacio real](0151-reflow-ios-entity-titles-for-accessibility.md) — Aceptado.
 
-- [ADR-0152: Corregir errores en recursos Android generados por Expo](0152-correct-expo-generated-android-lint-errors.md) — Aceptado; esperar versiones corregidas de Expo.
+- [ADR-0152: Corregir errores en recursos Android generados por Expo](0152-correct-expo-generated-android-lint-errors.md) — Superado por ADR-0168 en la espera; errores corregidos con parches.
 
 - [ADR-0153: Tamaño fijo de las celdas de clasificación](0153-keep-standings-table-at-a-fixed-text-size.md) — Aceptado; excepción localizada al escalado de texto.
 
@@ -80,3 +80,24 @@ Usa [template.md](template.md) y el
 - [ADR-0164: Gestionar sesiones opacas activas](0164-manage-active-opaque-sessions.md) — Aceptado.
 
 - [ADR-0165: Agrupar calendarios y acotar escrituras y purgas](0165-bound-tournament-writes-and-expired-data-purges.md) — Aceptado.
+
+- [ADR-0166: Áreas seguras, rotación y Split View en apps](0166-support-native-safe-areas-rotation-and-window-resizing.md) — Aceptado.
+
+- [ADR-0167: Expo SDK 58 y excepción puntual de maduración](0167-upgrade-expo-sdk-58-with-a-one-time-release-age-exception.md) — Aceptado; Expo 58.0.22 y sus dependencias necesarias con excepción puntual.
+
+- [ADR-0168: Corregir Android Lint en generadores de Expo](0168-fix-android-lint-at-expo-generators.md) — Aceptado; build y lint correctos con cero errores.
+
+- [ADR-0169: Actualizar backend y herramientas](0169-upgrade-backend-and-development-dependencies.md) — Aceptado.
+
+- [ADR-0170: Actualizar PostHog maduro y revisar TypeScript 7](0170-update-mature-posthog-and-review-typescript-7.md) — PostHog aceptado; aplazamiento inicial de TypeScript superado por ADR-0171.
+
+- [ADR-0171: TypeScript 7 y Oxlint conservando Prettier](0171-use-typescript-7-and-oxlint-with-prettier.md) — Aceptado; supera el aplazamiento de TypeScript de ADR-0170.
+
+- [ADR-0172: Corregir avisos maduros por lotes](0172-remediate-mature-dependency-security-advisories.md) — Aceptado; 28 registros eliminados y 15 pendientes.
+
+- [ADR-0173: Corrección Forge con excepción exacta de edad](0173-apply-forge-security-fix-with-exact-age-exception.md) — Aceptado; Forge 1.4.2 elimina los seis altos y otros seis registros.
+
+- [ADR-0174: Corregir glob y minimatch con compatibilidad acotada](0174-correct-glob-and-minimatch-with-scoped-compatibility.md) — Aceptado; queda solo el moderado de Hono, con opciones pendientes de decisión.
+
+- [ADR-0175: Actualizar void-server para retirar Hono 1](0175-update-scalar-void-server-to-remove-hono-one.md) — Aceptado; auditoría npm a cero y uso de la utilidad explicado.
+- [ADR-0176: Adoptar identidad Grada conservando componentes y navegación nativa](0176-adopt-grada-identity-with-existing-components-and-native-navigation.md) — Aceptado; implementado, builds verificadas y QA visual parcial.

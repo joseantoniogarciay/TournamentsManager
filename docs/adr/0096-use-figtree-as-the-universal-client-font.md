@@ -5,7 +5,7 @@
 - **Decisor:** Usuario
 - **Propietario del análisis:** Codex como mentor técnico
 - **Supera a:** ADR-0054, solo en la elección de familia tipográfica.
-- **Superado por:** Ninguno
+- **Superado por:** ADR-0176 en el código del cliente; QA visual pendiente
 
 ## Problema
 
@@ -119,3 +119,12 @@ los textos controlables del cliente web, iOS y Android. Se cargan los pesos 400,
 - `docs/engineering/DESIGN_SYSTEM.md`
 - `docs/engineering/DEVELOPMENT.md`
 - `docs/project/LEARNING.md`
+
+## Transición posterior — 2026-11-01
+
+[ADR-0176](0176-adopt-grada-identity-with-existing-components-and-native-navigation.md)
+sustituye la dirección cromática Pulse y Figtree en el código del cliente por
+Grada y fuentes locales por rol. Se conservan componentes, feedback y navegación
+nativa. Los assets y el email de verificación se adaptan también; la matriz visual
+completa sigue pendiente;
+consúltese [la evidencia](../engineering/GRADA_IDENTITY_2026-11-01.md).

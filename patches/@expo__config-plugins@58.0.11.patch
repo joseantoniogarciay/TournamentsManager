@@ -1,0 +1,43 @@
+diff --git a/build/android/IntentFilters.js b/build/android/IntentFilters.js
+--- a/build/android/IntentFilters.js
++++ b/build/android/IntentFilters.js
+@@ -46,7 +46,7 @@
+     if (!intentFilters.length) {
+         return androidManifest;
+     }
+-    mainActivity['intent-filter'] = mainActivity['intent-filter']?.concat(renderIntentFilters(intentFilters));
++    mainActivity['intent-filter'] = (mainActivity['intent-filter'] ?? []).concat(renderIntentFilters(intentFilters));
+     return androidManifest;
+ }
+ function renderIntentFilters(intentFilters) {
+diff --git a/build/android/Manifest.js b/build/android/Manifest.js
+--- a/build/android/Manifest.js
++++ b/build/android/Manifest.js
+@@ -145,16 +145,23 @@
+     return newObj;
+ }
+ async function writeAndroidManifestAsync(manifestPath, androidManifest) {
+-    const manifestXml = _XML.format(androidManifest);
++    // Keep ownership across CNG runs as an XML comment, never as an invalid APK attribute.
++    const manifestXml = _XML.format(androidManifest).replace(
++        /^([ \t]*)<intent-filter\b([^>]*?)\sdata-generated="true"([^>]*)>/gm,
++        '$1<!-- @generated expo-intent-filter -->\n$1<intent-filter$2$3>'
++    );
+     await _fs().default.promises.mkdir(_path().default.dirname(manifestPath), {
+         recursive: true
+     });
+     await _fs().default.promises.writeFile(manifestPath, manifestXml);
+ }
+ async function readAndroidManifestAsync(manifestPath) {
+-    const xml = await _XML.readXMLAsync({
+-        path: manifestPath
+-    });
++    const contents = await _fs().default.promises.readFile(manifestPath, 'utf8');
++    // xml2js drops comments: restore the existing in-memory ownership flag before parsing.
++    const xml = await _XML.parseXMLAsync(contents.replace(
++        /<!-- @generated expo-intent-filter -->\s*(<intent-filter\b)/g,
++        '$1 data-generated="true"'
++    ));
+     if (!isManifest(xml)) {
+         throw new Error('Invalid manifest found at: ' + manifestPath);
+     }

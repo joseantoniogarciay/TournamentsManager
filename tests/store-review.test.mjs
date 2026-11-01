@@ -3,20 +3,17 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { URL } from "node:url";
 import { runInThisContext } from "node:vm";
-import ts from "typescript";
+import { transpileForTest } from "./helpers/transpile-typescript.mjs";
 
 const source = readFileSync(
   new URL("../apps/client/src/features/store-review/policy.ts", import.meta.url),
   "utf8",
 );
 const module = { exports: {} };
-runInThisContext(
-  `(function(module,exports){${
-    ts.transpileModule(source, {
-      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-    }).outputText
-  }\n})`,
-)(module, module.exports);
+runInThisContext(`(function(module,exports){${transpileForTest(source)}\n})`)(
+  module,
+  module.exports,
+);
 const { createReviewController, reviewIntervalMs } = module.exports;
 const safe = () => true;
 

@@ -1,3 +1,4 @@
+import type { TextInputInstance } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { forwardRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from "react-native";
@@ -17,7 +18,7 @@ type Props = TextInputProps & {
   validationTrigger?: "blur" | "change";
 };
 
-export const TextField = forwardRef<TextInput, Props>(function TextField(
+export const TextField = forwardRef<TextInputInstance, Props>(function TextField(
   {
     label,
     error,

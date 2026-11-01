@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runInThisContext } from "node:vm";
 import test from "node:test";
-import ts from "typescript";
+import { transpileForTest } from "./helpers/transpile-typescript.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const clientSource = join(root, "apps/client/src");
@@ -18,9 +18,7 @@ function loadModule(path) {
   if (file.endsWith("/api/generated/users/users.ts")) return {};
   const module = { exports: {} };
   modules.set(file, module);
-  const code = ts.transpileModule(readFileSync(file, "utf8"), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
+  const code = transpileForTest(readFileSync(file, "utf8"));
   const requireSource = (specifier) =>
     loadModule(
       specifier.startsWith("@/")

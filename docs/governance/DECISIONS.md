@@ -49,6 +49,10 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 
 | ADR                                                                                           | Título                                                                          | Estado                | Fecha      |
 | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ---------- |
+| [0176](../adr/0176-adopt-grada-identity-with-existing-components-and-native-navigation.md) | Adoptar identidad Grada conservando componentes y navegación nativa | Aceptado; implementado, builds verificadas, QA parcial | 2026-11-01 |
+| [0169](../adr/0169-upgrade-backend-and-development-dependencies.md) | Actualizar backend y herramientas; TypeScript y PostHog aplazados | Aceptado | 2026-10-31 |
+| [0168](../adr/0168-fix-android-lint-at-expo-generators.md) | Corregir Android Lint en los generadores fijados de Expo | Aceptado | 2026-10-31 |
+| [0167](../adr/0167-upgrade-expo-sdk-58-with-a-one-time-release-age-exception.md) | Migrar a Expo SDK 58 con excepción puntual de maduración | Aceptado | 2026-10-31 |
 | [0149](../adr/0149-reserve-the-single-posthog-project-for-production.md)                      | Reservar proyecto PostHog 255144 para producción; beta/local apagados           | Aceptado              | 2026-10-04 |
 | [0148](../adr/0148-prepare-production-error-tracking-with-separated-posthog-projects.md)      | Preparar fiabilidad de producción con proyectos PostHog separados               | Superado por ADR-0149 | 2026-10-04 |
 | [0147](../adr/0147-add-apple-browser-login-on-all-clients.md)                                 | Acceso Apple mediante navegador en web, iOS y Android                           | Aceptado              | 2026-10-04 |
@@ -59,7 +63,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0140](../adr/0140-bound-production-telemetry-retention.md)                                   | Acotar diagnóstico y seguridad de producción con purga y alertas de espacio     | Aceptado              | 2026-10-03 |
 | [0139](../adr/0139-limit-development-telemetry-to-one-day.md)                                 | Limitar la telemetría de desarrollo a un día                                    | Aceptado              | 2026-10-03 |
 | [0138](../adr/0138-wait-seven-days-except-critical-vulnerabilities.md)                        | Esperar siete días salvo vulnerabilidades críticas                              | Aceptado              | 2026-10-03 |
-| [0144](../adr/0144-adopt-ios-scene-lifecycle-through-cng.md)                                  | Adoptar UIScene mediante config plugin CNG                                      | Aceptado              | 2026-10-03 |
+| [0144](../adr/0144-adopt-ios-scene-lifecycle-through-cng.md)                                  | Adoptar UIScene mediante config plugin CNG                                      | Superado por 0167     | 2026-10-03 |
 | [0137](../adr/0137-support-volleyball-across-tournament-stages.md)                            | Soportar voleibol en liga, eliminatoria y formato mixto                         | Aceptado              | 2026-10-02 |
 | [0136](../adr/0136-support-table-tennis-with-point-games.md)                                  | Soportar tenis de mesa con juegos por puntos                                    | Aceptado              | 2026-10-02 |
 | [0135](../adr/0135-support-tennis-and-padel-with-set-results.md)                              | Soportar tenis y pádel con resultados por sets                                  | Aceptado              | 2026-09-23 |
@@ -160,7 +164,7 @@ Playbook completo: [decision-process.md](../playbooks/decision-process.md).
 | [0055](../adr/0055-use-feature-first-client-architecture-and-platform-adaptive-navigation.md) | Usar cliente feature-first y navegación adaptativa                              | Aceptado              | 2026-07-28 |
 | [0056](../adr/0056-support-light-dark-system-theme-and-localized-clients.md)                  | Soportar tema y clientes localizados                                            | Aceptado              | 2026-07-28 |
 | [0057](../adr/0057-define-contextual-home-and-tournament-library.md)                          | Definir home contextual y biblioteca por relación                               | Aceptado              | 2026-07-28 |
-| [0096](../adr/0096-use-figtree-as-the-universal-client-font.md)                               | Usar Figtree como tipografía universal del cliente                              | Aceptado              | 2026-08-14 |
+| [0096](../adr/0096-use-figtree-as-the-universal-client-font.md)                               | Usar Figtree como tipografía universal del cliente                              | Superado por ADR-0176              | 2026-08-14 |
 | [0073](../adr/0073-show-recent-related-leagues-on-home.md)                                    | Mostrar ligas relacionadas recientes en Inicio                                  | Aceptado              | 2026-08-02 |
 | [0074](../adr/0074-schedule-account-deletion-with-a-recovery-window.md)                       | Programar eliminación de cuenta con ventana de recuperación                     | Aceptado              | 2026-08-04 |
 | [0058](../adr/0058-list-account-related-leagues-with-a-paginated-collection.md)               | Listar ligas relacionadas con colección paginada                                | Aceptado              | 2026-07-28 |
@@ -320,3 +324,103 @@ de producción. Los límites iniciales quedan sujetos a medición y revisión.
 escrituras solo de partidos eliminatorios modificados y purgas auxiliares
 acotadas. El usuario pide medir tanto la solución anterior como la nueva;
 la evidencia compara ambas sobre PostgreSQL aislado. No autoriza despliegue.
+
+## 2026-10-24 — Apps adaptables (ADR-0166)
+
+El usuario autoriza corregir las apps móviles y tablet actuales para todas las
+orientaciones y Split View, con especial atención al iPhone Duo y sus barras
+laterales. La obligación continúa en futuros desarrollos. La implementación
+reutiliza insets dinámicos, primitivas compartidas y medición del contenedor;
+no introduce un rediseño web ni variantes por dispositivo. Véase
+[ADR-0166](../adr/0166-support-native-safe-areas-rotation-and-window-resizing.md).
+
+
+## 2026-10-31 — Expo SDK 58 y excepción puntual (ADR-0167)
+
+El usuario decide migrar directamente a Expo 58.0.22 y confirma explícitamente
+que la excepción de siete días incluye sus dependencias necesarias, Expo CLI,
+React Native y las herramientas nativas. La autorización es puntual y por
+versiones exactas: ADR-0138 conserva el régimen general. Se revisan plugins,
+parches, tipos, metadatos web y builds; no autoriza publicación de producción.
+Véase [ADR-0167](../adr/0167-upgrade-expo-sdk-58-with-a-one-time-release-age-exception.md).
+
+
+## 2026-10-31 — Corregir ahora Android Lint (ADR-0168)
+
+El usuario solicita resolver los errores que ADR-0152 dejó pendientes de Expo.
+Dos parches exactos corrigen los generadores: propiedad de filtros mediante
+comentario XML reservado y splash con variante v33 completa. Se conservan
+minSdk, enlaces, diseño y motor lint; no se suprime ningún diagnóstico. Build y
+lint de app/módulo local terminan con cero errores. La revisión futura de cada
+versión mantiene el coste de retirar los parches cuando sean innecesarios.
+
+## 2026-10-31 — Retomar TypeScript y PostHog (ADR-0170)
+
+El usuario autoriza retomar el mantenimiento aplazado en ADR-0169. PostHog se
+actualiza a las versiones maduras 4.83.0 y plugin 2.12.6, sin cambiar sus entornos
+ni activar capacidades. La revisión de TypeScript 7.0.2 encuentra consumidores
+de la API anterior en ESLint y doce archivos de pruebas. El cambio de linter o
+la convivencia de compiladores exige una decisión adicional; se conservan 6.0.3
+y sus controles mientras se evalúan Oxlint/Prettier y Biome.
+
+## 2026-10-31 — TypeScript 7 y Oxlint con Prettier (ADR-0171)
+
+El usuario decide «Vamos con la migración sí» tras recomendar Oxlint + Prettier
+y TS 7.0.2. Se mantienen formato, controles estrictos y Orval; se adaptan pruebas
+y editor. TypeDoc recibe TS 6 privado mediante un hook de versión exacta.
+La preferencia posterior de evitar Java adicional descarta OpenAPI Generator
+para este cambio. La compilación del cliente generado ya funciona con TS 7.
+
+La revisión automática bloquea inicialmente pnpm audit por el envío del grafo;
+el usuario lo autoriza explícitamente. Resultado: 43 avisos, todos sobre
+paquetes/versiones que ya estaban en el lockfile previo. No se autoriza ni
+realiza un cambio automático de generador o una actualización indiscriminada
+para eliminar esos avisos. El informe de ADR-0171 conserva el inventario.
+
+## 2026-10-31 — Remediación acotada de dependencias (ADR-0172)
+
+El usuario acepta «Ok vamos» tras comparar lotes maduros frente a espera global
+y corrección automática. Se implementa el primer lote y la rama Hono 2: 28
+registros eliminados, 15 pendientes (6 altos, 6 moderados y 3 bajos), cero
+críticos y cero IDs nuevos. Hono 1 sigue requerido por void-server/node-ws;
+no se fuerza su peer. Node-forge, glob y minimatch mantienen espera y revisión.
+
+Cincuenta y seis versiones nuevas verificadas como maduras. Check, 125 pruebas,
+exportación web y generación determinista correctos. Fixtures de librsvg, Vite,
+Hono y Miniflare pasan. El usuario autoriza expresamente enviar el grafo a npm
+tras el rechazo inicial de revisión automática. También pide subir el trabajo
+acumulado a develop; no se promociona main ni producción.
+
+## 2026-10-31 — Corregir Forge ahora (ADR-0173)
+
+El usuario decide «Si soluciona lo metemos» tras conocer los seis altos y la
+espera pendiente. El mantenedor confirma el parche de RSA bajo otro GHSA para
+el mismo CVE. Se elige 1.4.2 porque 1.4.1 rompe pem.decode(Buffer); se añade
+una excepción exacta a la edad mínima, sin cambiar la política general.
+Retirar esa excepción el 2026-11-03T14:09:15.471Z. Solo cambia Forge en el grafo.
+Audit pasa de 15 a 3 moderados; cero altos, bajos o críticos, sin IDs nuevos.
+
+## 2026-11-01 — Cerrar glob/minimatch y comparar Hono (ADR-0174)
+
+El usuario decide corregir ahora glob/minimatch y reservar Hono para comparar
+opciones. Se instalan glob 14.0.3 y minimatch 11.0.3 con sus dos transitivas
+necesarias y cuatro excepciones exactas. Las pruebas exigen adaptar dos
+importaciones Spectral, migrar el único consumidor de glob 7 y sustituir
+matchOne por coincidencia parcial pública en TypeDoc.
+
+Pasan make verify y 130 regresiones; audit deja un moderado de Hono, sin IDs
+nuevos. Su opción recomendada es actualizar únicamente void-server a 2.5.19;
+la resolución aislada añade tres versiones maduras y elimina Hono 1, sin
+aplicarse al checkout. Requiere decisión y pruebas HTTP/WebSocket de integración.
+
+## 2026-11-01 — Actualizar void-server (ADR-0175)
+
+El usuario acepta la primera opción y pide explicar su uso. Se comprueba que
+void-server es la utilidad de eco de scalar document void; el proyecto configura
+scalar document serve para mostrar OpenAPI. No es el backend Go ni el visor
+público de navegador. Se instala void-server 2.5.19 y se consolida hono 4.13.13
+con adaptadores node-server 2.1.3/2.1.5. No se añaden excepciones de edad.
+
+Audit termina con cero avisos, make verify y 131 pruebas pasan. HTTP, estados,
+WebSocket y comandos Scalar --once verificados con limpieza. Permanecen los
+peers anteriores de node-ws y neverpanic; no se falsean sus declaraciones.

@@ -49,6 +49,30 @@ ADR: enlaza la decisión y define qué evidencia obliga a reabrirla.
 | Cloud agnostic                                      | Principio                                                                                                                                                                                                                                                                                           | Cuando una abstracción añada más coste que portabilidad                                                                                                                          | [ARCHITECTURE.md](../engineering/ARCHITECTURE.md)                                                                                                                                                                                                     |
 | Modelo inicial de liga                              | Liga de fútbol a una vuelta; publicación editable hasta inicio; resultados 3-1-0, bajas a 3-0 uniforme y visibilidad no listada                                                                                                                                                                     | Doble vuelta, incidencias tipadas, cambios tras inicio, abuso de enlaces/asignaciones, avisos o jugadores                                                                        | [ADR-0040](../adr/0040-make-published-leagues-editable-until-start.md), [ADR-0041](../adr/0041-continue-league-after-team-withdrawal-with-3-0-results.md)                                                                                             |
 
+## Excepción puntual de Forge — ADR-0173
+
+Retirar únicamente `node-forge@1.4.2` de `minimumReleaseAgeExclude` cuando
+cumpla siete días, el **2026-11-03T14:09:15.471Z**. Conservar el override
+y la resolución corregida. La excepción autorizada no cambia la política
+general; véase [ADR-0173](../adr/0173-apply-forge-security-fix-with-exact-age-exception.md).
+
+## Excepciones puntuales de glob/minimatch — ADR-0174
+
+Retirar estas exclusiones exactas cuando cumplan siete días, conservando las
+resoluciones corregidas y el control global. Fechas UTC:
+
+| Exclusión | Retirada |
+| --- | --- |
+| path-scurry@3.0.0 | 2026-11-03T21:14:48.842Z |
+| glob@14.0.3 | 2026-11-04T04:08:39.624Z |
+| @isaacs/nonrecursive-glob-match@1.0.3 | 2026-11-04T19:50:48.349Z |
+| minimatch@11.0.3 | 2026-11-04T20:00:34.713Z |
+
+La opción de actualizar void-server fue aceptada y aplicada en ADR-0175;
+[la auditoría queda en cero](../engineering/HONO_SECURITY_FIX_2026-11-01.md).
+Retirar el selector @scalar/void-server@2.5.2 cuando Scalar incorpore un
+consumidor corregido. El peer anterior de node-ws permanece pendiente.
+
 ## Cómo revisar
 
 1. Cambiar el ADR afectado a **En revisión** o crear una propuesta sucesora.

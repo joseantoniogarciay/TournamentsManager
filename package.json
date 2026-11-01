@@ -2,7 +2,7 @@
   "name": "tournaments-manager",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@11.17.0",
+  "packageManager": "pnpm@12.15.0",
   "devEngines": {
     "runtime": {
       "name": "node",
@@ -11,14 +11,14 @@
     },
     "packageManager": {
       "name": "pnpm",
-      "version": "11.17.0",
+      "version": "12.15.0",
       "onFail": "download"
     }
   },
   "scripts": {
     "format": "prettier --write \"**/*.{js,jsx,mjs,cjs,ts,tsx,json,jsonc,yaml,yml}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,mjs,cjs,ts,tsx,json,jsonc,yaml,yml}\"",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "oxlint . --deny-warnings",
     "typecheck": "tsc --build --pretty false && pnpm --filter @tournaments-manager/client exec tsc --noEmit",
     "openapi:lint": "redocly lint",
     "openapi:generate": "orval --config orval.config.ts",
@@ -26,20 +26,20 @@
     "openapi:ui": "scalar document serve contracts/openapi/v1/openapi.yaml --watch --port 8083",
     "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run openapi:lint",
     "verify": "pnpm run check",
-    "test:dependencies": "node --test tests/dependency-compatibility.test.mjs",
+    "test:dependencies": "node --test tests/dependency-compatibility.test.mjs tests/android-resource-generation.test.mjs",
     "test:match-incidents": "node --test tests/match-incidents.test.mjs",
-    "test:scheduling": "node --test tests/scheduling.test.mjs"
+    "test:scheduling": "node --test tests/scheduling.test.mjs",
+    "test:toolchain": "node --test tests/toolchain.test.mjs"
   },
   "devDependencies": {
-    "@eslint/js": "10.0.1",
-    "@redocly/cli": "2.41.0",
+    "@babel/parser": "7.29.9",
+    "@redocly/cli": "2.71.0",
     "@scalar/cli": "2.0.1",
-    "eslint": "10.7.0",
-    "eslint-config-prettier": "10.1.8",
-    "orval": "8.23.0",
-    "prettier": "3.9.6",
-    "typescript": "6.0.3",
-    "typescript-eslint": "8.65.0",
+    "esbuild": "0.28.1",
+    "orval": "8.44.0",
+    "oxlint": "1.89.0",
+    "prettier": "3.9.10",
+    "typescript": "7.0.2",
     "wrangler": "4.147.0"
   }
 }

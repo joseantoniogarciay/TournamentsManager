@@ -4,12 +4,10 @@ import { resolve } from "node:path";
 import { URL } from "node:url";
 import { runInNewContext } from "node:vm";
 import test from "node:test";
-import ts from "typescript";
+import { transpileForTest } from "./helpers/transpile-typescript.mjs";
 
 const sourcePath = resolve("apps/client/src/features/league-creation/team-invitation.ts");
-const code = ts.transpileModule(readFileSync(sourcePath, "utf8"), {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-}).outputText;
+const code = transpileForTest(readFileSync(sourcePath, "utf8"));
 
 function loadInvitation(platform, values) {
   const storage = {
@@ -71,14 +69,10 @@ test("legacy token-only invitations restore without a draft and corrupt drafts a
 });
 
 const nativeIntentPath = resolve("apps/client/src/app/+native-intent.ts");
-const nativeIntentCode = ts.transpileModule(readFileSync(nativeIntentPath, "utf8"), {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-}).outputText;
+const nativeIntentCode = transpileForTest(readFileSync(nativeIntentPath, "utf8"));
 
 function loadPlainModule(path) {
-  const code = ts.transpileModule(readFileSync(resolve(path), "utf8"), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
+  const code = transpileForTest(readFileSync(resolve(path), "utf8"));
   const module = { exports: {} };
   runInNewContext(`(function(module,exports){${code}\n})`, { URL })(module, module.exports);
   return module.exports;

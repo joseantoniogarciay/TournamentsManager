@@ -29,7 +29,9 @@ otro puerto, porque los enlaces de correo y el origen CORS local usan `8082`.
 La configuración de Expo se resuelve en `app.config.ts`, con dos variantes:
 desarrollo (`Fast Tourney Dev`) y producción (`Fast Tourney`). Ambas usan el
 mismo código y se distinguen mediante `APP_ENV`; el icono compartido es
-`public/apple-touch-icon.png` (1024 × 1024). La configuración web reutiliza
+`public/apple-touch-icon.png` (1024 × 1024). La identidad Grada (ADR-0176)
+conserva el símbolo existente con la paleta quemada; la splash usa una marca
+transparente propia y la preview social conserva su composición. La configuración web reutiliza
 esa fuente mediante `web.favicon`; cada exportación genera `/favicon.ico` y su
 declaración en el HTML para navegador y buscadores. El documento web enlaza
 además el mismo fichero público mediante `apple-touch-icon` para que

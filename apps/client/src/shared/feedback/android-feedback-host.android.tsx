@@ -1,5 +1,6 @@
 import { requireNativeModule, requireNativeView } from "expo";
 import { useEffect, useRef } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet, useWindowDimensions, type ViewProps } from "react-native";
 
 import { banner, motion, radius, space, typography } from "@tournaments-manager/design-tokens";
@@ -62,6 +63,7 @@ export function AndroidFeedbackHost({
 }: AndroidFeedbackHostProps) {
   const { colors } = usePreferences();
   const { width, fontScale } = useWindowDimensions();
+  const { left, right } = useSafeAreaInsets();
   const deadline = useRef<{ id: number; expiresAt: number } | null>(null);
 
   useEffect(() => {
@@ -91,16 +93,16 @@ export function AndroidFeedbackHost({
       padding: space[3],
       borderRadius: radius.card,
       borderWidth: 1,
-      left: space[5],
+      left: left + space[5],
       top: topInset + space[1],
-      width: Math.max(0, width - space[5] * 2),
+      width: Math.max(0, width - left - right - space[5] * 2),
       enterExitMs: motion.enterExit,
       feedbackMs: motion.feedback,
       swipeDistance: space[10],
       swipeSlop: space[2],
       reducedMotion,
     });
-  }, [colors, feedback, fontScale, reducedMotion, topInset, width]);
+  }, [colors, feedback, fontScale, left, right, reducedMotion, topInset, width]);
 
   useEffect(() => () => void nativeHost.hide(true, 0), []);
 

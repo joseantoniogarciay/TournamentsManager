@@ -1,6 +1,6 @@
 import { Platform, Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
 
-import { color, control, radius, space } from "@tournaments-manager/design-tokens";
+import { control, radius, space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { type ThemePreference, usePreferences } from "@/shared/preferences/preferences-provider";
@@ -39,7 +39,7 @@ export default function AccountSettingsScreen() {
                     onPress={() => setThemePreference(theme)}
                     style={[
                       styles.option,
-                      { borderColor: selected ? color.brand.primary : colors.border.default },
+                      { borderColor: selected ? colors.border.focus : colors.border.default },
                     ]}
                   >
                     <Text color={selected ? "primary" : "secondary"}>

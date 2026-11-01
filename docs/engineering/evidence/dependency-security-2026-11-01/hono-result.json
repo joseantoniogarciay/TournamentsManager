@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-01",
+  "lockfile_sha256": "485871c9f4bea4cd7f26d3e3e604022a09f66a610fb77439d171288fc4220d09",
+  "audit_sha256": "24f7f32d3d7ef44eb2a4966ed06d64e3871b0e625d7d24fac9b570e3980a0cf1",
+  "removed_npm_ids": ["1243661"],
+  "new_npm_ids": [],
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0
+    },
+    "dependencies": 537,
+    "devDependencies": 722,
+    "optionalDependencies": 196,
+    "totalDependencies": 1296
+  },
+  "new_versions": [
+    {
+      "package": "@scalar/void-server",
+      "version": "2.5.19",
+      "published": "2026-10-23T10:15:56.959Z"
+    },
+    {
+      "package": "@hono/node-server",
+      "version": "2.1.5",
+      "published": "2026-10-13T08:25:17.433Z"
+    },
+    {
+      "package": "hono",
+      "version": "4.13.13",
+      "published": "2026-10-04T03:53:48.117Z"
+    }
+  ],
+  "final_hono_framework": "4.13.13",
+  "final_node_adapters": ["2.1.3", "2.1.5"],
+  "remaining_peers": [
+    "@hono/node-ws@1.3.1 requires node-server ^1.19.11, linked with 2.1.3",
+    "neverpanic@0.0.7 requires TypeScript 5, linked with 7.0.2"
+  ],
+  "validation": {
+    "make_verify": "passed",
+    "node_regressions": 131,
+    "frozen_install": "passed",
+    "cli_void_once": "passed",
+    "cli_document_serve_once": "passed",
+    "http_and_websocket_echo": "passed; resources closed",
+    "postgres_integration_this_session": "skipped: no isolated database configured"
+  }
+}

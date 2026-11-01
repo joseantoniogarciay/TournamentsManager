@@ -1,15 +1,20 @@
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from "expo-router";
 import Head from "expo-router/head";
-import { Figtree_400Regular } from "@expo-google-fonts/figtree/400Regular";
-import { Figtree_500Medium } from "@expo-google-fonts/figtree/500Medium";
-import { Figtree_600SemiBold } from "@expo-google-fonts/figtree/600SemiBold";
-import { Figtree_700Bold } from "@expo-google-fonts/figtree/700Bold";
+import { DMSans_400Regular } from "@expo-google-fonts/dm-sans/400Regular";
+import { DMSans_500Medium } from "@expo-google-fonts/dm-sans/500Medium";
+import { DMSans_600SemiBold } from "@expo-google-fonts/dm-sans/600SemiBold";
+import { DMSans_700Bold } from "@expo-google-fonts/dm-sans/700Bold";
+import { BarlowCondensed_600SemiBold } from "@expo-google-fonts/barlow-condensed/600SemiBold";
+import { BarlowCondensed_700Bold } from "@expo-google-fonts/barlow-condensed/700Bold";
+import { IBMPlexMono_400Regular } from "@expo-google-fonts/ibm-plex-mono/400Regular";
+import { IBMPlexMono_600SemiBold } from "@expo-google-fonts/ibm-plex-mono/600SemiBold";
 import { useFonts } from "expo-font";
 import * as WebBrowser from "expo-web-browser";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { type PropsWithChildren, useEffect, useState } from "react";
 import { Platform, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { typography, webLayout } from "@tournaments-manager/design-tokens";
 
@@ -41,10 +46,14 @@ if (Platform.OS === "web") WebBrowser.maybeCompleteAuthSession();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Figtree_400Regular,
-    Figtree_500Medium,
-    Figtree_600SemiBold,
-    Figtree_700Bold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
+    BarlowCondensed_600SemiBold,
+    BarlowCondensed_700Bold,
+    IBMPlexMono_400Regular,
+    IBMPlexMono_600SemiBold,
   });
   const [allowSystemFontFallback, setAllowSystemFontFallback] = useState(false);
 
@@ -101,6 +110,12 @@ function RootNavigator() {
   );
 }
 
+function RouteSafeArea({ children }: PropsWithChildren) {
+  // A presented native route has its own view controller. Its underlying route
+  // can stop receiving inset changes while covered, so measure in the visible scene.
+  return Platform.OS === "web" ? <>{children}</> : <SafeAreaProvider>{children}</SafeAreaProvider>;
+}
+
 function SessionNavigator() {
   const { finishSessionReplacement, replacementDestination, revision, transition } = useSession();
 
@@ -146,7 +161,9 @@ function SessionNavigator() {
 
   return (
     <Stack
+      screenLayout={({ children }) => <RouteSafeArea>{children}</RouteSafeArea>}
       screenOptions={{
+        headerTransparent: false,
         headerShown: false,
         headerTitleStyle: { fontFamily: typography.family.semibold },
       }}
@@ -280,8 +297,28 @@ function NavigationTheme({ children }: PropsWithChildren) {
     if (Platform.OS !== "web") SplashScreen.hide();
   }, []);
 
+  const baseTheme = resolvedTheme === "dark" ? DarkTheme : DefaultTheme;
+  const navigationTheme = {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      primary: colors.indicator.default,
+      background: colors.surface.canvas,
+      card: colors.surface.default,
+      text: colors.text.primary,
+      border: colors.border.default,
+      notification: colors.feedback.error,
+    },
+    fonts: {
+      regular: { fontFamily: typography.family.regular, fontWeight: "normal" as const },
+      medium: { fontFamily: typography.family.medium, fontWeight: "normal" as const },
+      bold: { fontFamily: typography.family.bold, fontWeight: "normal" as const },
+      heavy: { fontFamily: typography.family.bold, fontWeight: "normal" as const },
+    },
+  };
+
   return (
-    <ThemeProvider value={resolvedTheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={navigationTheme}>
       <WebPageAppearance backgroundColor={colors.surface.canvas} resolvedTheme={resolvedTheme} />
       {Platform.OS === "web" ? (
         <View style={{ flex: 1, alignSelf: "center", width: "100%", maxWidth: webLayout.maxWidth }}>
@@ -345,10 +382,6 @@ function WebPageAppearance({
 
   return (
     <Head>
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
-      />
       <style>{`
         @supports selector(div:has(> [role="tablist"])) {
           div:has(> [role="tablist"] a[role="tab"][href="/tournaments"]) {

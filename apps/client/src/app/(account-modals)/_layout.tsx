@@ -14,6 +14,7 @@ export default function AccountModalLayout() {
   return (
     <Stack
       screenOptions={{
+        headerTransparent: false,
         headerShadowVisible: false,
         headerStyle: { backgroundColor: colors.surface.canvas },
         headerTintColor: colors.text.primary,

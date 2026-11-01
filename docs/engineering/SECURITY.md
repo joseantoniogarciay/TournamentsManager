@@ -5,6 +5,15 @@
 
 ## Principio
 
+La [revisión de dependencias del 2026-10-31](DEPENDENCY_SECURITY_REVIEW_2026-10-31.md)
+clasifica los 43 registros iniciales del checkout. ADR-0172 elimina 28;
+[ADR-0173 y la corrección de Forge](FORGE_SECURITY_FIX_2026-10-31.md) eliminan
+otros 12. [Glob/minimatch y ADR-0174](GLOB_MINIMATCH_SECURITY_FIX_2026-11-01.md)
+eliminan dos más. [Void-server / ADR-0175](HONO_SECURITY_FIX_2026-11-01.md)
+retira el último recorrido Hono 1: la auditoría npm del checkout tiene cero
+avisos en todas las severidades.
+No describe el estado de los artefactos publicados.
+
 La seguridad se diseña con el flujo, no se añade al final. Toda decisión debe
 considerar confidencialidad, integridad, disponibilidad, abuso y recuperación.
 

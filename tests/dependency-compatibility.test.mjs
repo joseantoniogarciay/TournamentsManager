@@ -1,16 +1,19 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { Buffer } from "node:buffer";
-import { copyFile, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { once } from "node:events";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { runInNewContext } from "node:vm";
+import { fileURLToPath, pathToFileURL, URLSearchParams } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const clientRequire = createRequire(join(root, "apps/client/package.json"));
 const routerRequire = createRequire(clientRequire.resolve("expo-router/package.json"));
-const queryString = routerRequire("query-string");
+const { parseUrlUsingCustomBase, safeDecodeURIComponent } = routerRequire("./build/utils/url.js");
 const nativeRequire = createRequire(clientRequire.resolve("react-native/package.json"));
 const cliRequire = createRequire(
   nativeRequire.resolve("@react-native/community-cli-plugin/package.json"),
@@ -53,22 +56,255 @@ test("Metro rejects empty and truncated images", () => {
   assert.throws(() => getAssetSize("png", Buffer.from([137, 80, 78, 71]), "truncated.png"));
 });
 
-test("Router query strings round-trip Unicode, repeated values and reserved characters", () => {
-  const query = { name: "José 🏓", tag: ["uno", "dos"], literal: "%&+=/?" };
-  assert.deepEqual({ ...queryString.parse(queryString.stringify(query)) }, query);
-  const parsed = queryString.parseUrl(
-    "https://fasttourney.com/account?next=%2Ftournament%2F123&name=Jos%C3%A9#section",
+test("Router URL parsing preserves Unicode, repeated values and reserved characters", () => {
+  const params = new URLSearchParams();
+  params.append("name", "José 🏓");
+  params.append("tag", "uno");
+  params.append("tag", "dos");
+  params.append("literal", "%&+=/?");
+  const parsed = parseUrlUsingCustomBase(`/account?${params}`);
+  assert.equal(parsed.pathname, "/account");
+  assert.equal(parsed.searchParams.get("name"), "José 🏓");
+  assert.deepEqual(parsed.searchParams.getAll("tag"), ["uno", "dos"]);
+  assert.equal(parsed.searchParams.get("literal"), "%&+=/?");
+  assert.equal(
+    parseUrlUsingCustomBase("/account?next=%2Ftournament%2F123#section").searchParams.get("next"),
+    "/tournament/123",
   );
-  assert.equal(parsed.url, "https://fasttourney.com/account");
-  assert.deepEqual({ ...parsed.query }, { name: "José", next: "/tournament/123" });
 });
 
-test("Router tolerates malformed percent encoding and long invalid UTF-8 input", () => {
+test("Router safely decodes malformed percent encoding and long invalid UTF-8 input", () => {
   const malformed = "%E0%A4%A";
-  assert.equal(queryString.parse(`value=${malformed}`).value, malformed);
+  assert.equal(safeDecodeURIComponent(malformed), malformed);
   const repeated = "%C2".repeat(10000);
-  const decoded = queryString.parse(`value=${repeated}`).value;
-  assert.equal(decoded.length, 10000);
-  assert.match(decoded, /^\uFFFD+$/);
-  assert.equal(queryString.parse("value=a+b%2Bc").value, "a b+c");
+  assert.equal(safeDecodeURIComponent(repeated), repeated);
+  assert.equal(
+    parseUrlUsingCustomBase("/account?value=a+b%2Bc").searchParams.get("value"),
+    "a b+c",
+  );
 });
+
+test("Expo JSI strips private C++ extensions from both Swift interface syntaxes", async () => {
+  const expoRequire = createRequire(clientRequire.resolve("expo/package.json"));
+  const coreRequire = createRequire(expoRequire.resolve("expo-modules-core/package.json"));
+  const jsiRoot = dirname(coreRequire.resolve("expo-modules-jsi/package.json"));
+  const script = await readFile(join(jsiRoot, "apple/scripts/build-xcframework.sh"), "utf8");
+  const cleanup = script.match(/sed (-E )?'([^']+)' "\$swiftinterface"/);
+  const expression = cleanup?.[2];
+  assert.ok(expression, "review the interface cleanup when Expo changes its build script");
+  const publicAPI = "public struct PublicValue {}\n";
+  for (const privateType of ["__ObjC.expo.CppError", "__ObjC::expo.__ObjC::CppError"]) {
+    const input = `${publicAPI}extension ${privateType} : Swift.Error {\n  public var message: Swift.String { get }\n}\n${publicAPI}`;
+    const result = spawnSync("sed", [...(cleanup[1] ? ["-E"] : []), expression], {
+      input,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, publicAPI + publicAPI);
+  }
+});
+
+test("Expo code signing retains PEM Buffer input and verifies certificates and payloads", () => {
+  const expoRequire = createRequire(clientRequire.resolve("expo/package.json"));
+  const expoCLIRequire = createRequire(expoRequire.resolve("@expo/cli/package.json"));
+  const signing = expoCLIRequire("@expo/code-signing-certificates");
+  const signingRequire = createRequire(expoCLIRequire.resolve("@expo/code-signing-certificates"));
+  const forge = signingRequire("node-forge");
+  const pair = signing.generateKeyPair();
+  const certificate = signing.generateSelfSignedCodeSigningCertificate({
+    keyPair: pair,
+    validityNotBefore: new Date(Date.now() - 60_000),
+    validityNotAfter: new Date(Date.now() + 60_000),
+    commonName: "Dependency compatibility fixture",
+  });
+  const pem = signing.convertCertificateToCertificatePEM(certificate);
+  assert.deepEqual(forge.pem.decode(Buffer.from(pem)), forge.pem.decode(pem));
+  const restored = signing.convertCertificatePEMToCertificate(pem);
+  const restoredPair = signing.convertKeyPairPEMToKeyPair(signing.convertKeyPairToPEM(pair));
+  signing.validateSelfSignedCertificate(restored, restoredPair);
+  const payload = Buffer.from("local test payload");
+  const signature = signing.signBufferRSASHA256AndVerify(
+    restoredPair.privateKey,
+    restored,
+    payload,
+  );
+  const digest = (value) => forge.md.sha256.create().update(value).digest().getBytes();
+  const signatureBytes = forge.util.decode64(signature);
+  assert.equal(restored.publicKey.verify(digest(payload.toString("binary")), signatureBytes), true);
+  assert.equal(restored.publicKey.verify(digest("altered payload"), signatureBytes), false);
+});
+
+test("Spectral retains filename and path filters with modern minimatch", () => {
+  const rootRequire = createRequire(join(root, "package.json"));
+  const scalarRequire = createRequire(rootRequire.resolve("@scalar/cli/package.json"));
+  const bundlerRequire = createRequire(
+    scalarRequire.resolve("@stoplight/spectral-ruleset-bundler"),
+  );
+  for (const consumer of [scalarRequire, bundlerRequire]) {
+    const spectralRequire = createRequire(consumer.resolve("@stoplight/spectral-core"));
+    const { minimatch } = spectralRequire("./ruleset/utils/minimatch.js");
+    assert.equal(minimatch("contracts/openapi/public.yaml", "*.yaml"), true);
+    assert.equal(minimatch("contracts/openapi/public.json", "**/*.{yaml,json}"), true);
+    assert.equal(minimatch("contracts/openapi/public.yaml", "**/private/**"), false);
+    assert.equal(minimatch("contracts/openapi/.hidden.yaml", "**/*.yaml"), false);
+  }
+});
+
+test("Rollup and Expo retain file discovery, CommonJS bundling and cancellation", async (context) => {
+  const rootRequire = createRequire(join(root, "package.json"));
+  const scalarRequire = createRequire(rootRequire.resolve("@scalar/cli/package.json"));
+  const bundlerRequire = createRequire(
+    scalarRequire.resolve("@stoplight/spectral-ruleset-bundler"),
+  );
+  const commonjsRequire = createRequire(bundlerRequire.resolve("@rollup/plugin-commonjs"));
+  const rollupGlob = commonjsRequire("glob");
+  const expoRequire = createRequire(clientRequire.resolve("expo/package.json"));
+  const configRequire = createRequire(expoRequire.resolve("@expo/config/package.json"));
+  const current = configRequire("glob");
+  const directory = await mkdtemp(join(tmpdir(), "fasttourney-glob-"));
+  context.after(() => rm(directory, { recursive: true, force: true }));
+  await mkdir(join(directory, "src", "nested"), { recursive: true });
+  for (const name of ["a.js", "b.ts", "skip.txt", ".hidden.js"]) {
+    await writeFile(join(directory, "src", "nested", name), 'module.exports = "fixture";');
+  }
+  const pattern = "**/*.{js,ts}";
+  const options = { cwd: directory, nodir: true };
+  const expected = ["src/nested/a.js", "src/nested/b.ts"];
+  assert.deepEqual(rollupGlob.sync(pattern, options).sort(), expected);
+  const entry = join(directory, "entry.cjs");
+  await writeFile(entry, 'module.exports = require("./src/nested/a.js");');
+  const { rollup } = bundlerRequire("rollup");
+  const commonjs = bundlerRequire("@rollup/plugin-commonjs");
+  const bundle = await rollup({
+    input: entry,
+    plugins: [commonjs({ dynamicRequireTargets: join(directory, "src/**/*.js") })],
+  });
+  try {
+    const { output } = await bundle.generate({ format: "cjs", exports: "default" });
+    const fixtureModule = { exports: {} };
+    runInNewContext(output[0].code, { module: fixtureModule, exports: fixtureModule.exports });
+    assert.equal(fixtureModule.exports, "fixture");
+  } finally {
+    await bundle.close();
+  }
+  assert.deepEqual(current.globSync(pattern, options).sort(), expected);
+  assert.deepEqual((await current.glob(pattern, options)).sort(), expected);
+  const controller = new globalThis.AbortController();
+  const reason = new Error("intentional cancellation fixture");
+  controller.abort(reason);
+  await assert.rejects(
+    current.glob("**/*", { ...options, signal: controller.signal }),
+    (error) => error === reason,
+  );
+});
+
+test("Expo fingerprint keeps positive and negated ignore patterns", () => {
+  const expoRequire = createRequire(clientRequire.resolve("expo/package.json"));
+  const fingerprintRequire = createRequire(expoRequire.resolve("@expo/fingerprint/package.json"));
+  const { isIgnoredPath } = fingerprintRequire("./build/utils/Path.js");
+  assert.equal(isIgnoredPath("assets/icon.png", ["assets/**"]), true);
+  assert.equal(isIgnoredPath("src/app.tsx", ["assets/**"]), false);
+  assert.equal(isIgnoredPath("assets/keep.png", ["assets/**", "!assets/keep.png"]), false);
+});
+
+test("TypeDoc expands nested glob entry points and excludes ignored files", async (context) => {
+  const rootRequire = createRequire(join(root, "package.json"));
+  const orvalRequire = createRequire(rootRequire.resolve("orval/package.json"));
+  const typedoc = await import(pathToFileURL(orvalRequire.resolve("typedoc")).href);
+  const directory = await mkdtemp(join(tmpdir(), "fasttourney-typedoc-"));
+  context.after(() => rm(directory, { recursive: true, force: true }));
+  await mkdir(join(directory, "nested"));
+  await writeFile(
+    join(directory, "nested", "visible.ts"),
+    "export interface Visible { id: string }\n",
+  );
+  await writeFile(
+    join(directory, "nested", "ignored.ts"),
+    "export interface Ignored { id: string }\n",
+  );
+  await writeFile(
+    join(directory, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: {
+        strict: true,
+        target: "ES2022",
+        module: "NodeNext",
+        moduleResolution: "NodeNext",
+        types: [],
+      },
+      include: ["**/*.ts"],
+    }),
+  );
+  const application = await typedoc.Application.bootstrap({
+    entryPoints: [join(directory, "**/*.ts")],
+    entryPointStrategy: "expand",
+    exclude: ["**/ignored.ts"],
+    tsconfig: join(directory, "tsconfig.json"),
+    logLevel: "Error",
+  });
+  const project = await application.convert();
+  assert.ok(project);
+  assert.deepEqual(
+    project.getReflectionsByKind(typedoc.ReflectionKind.Interface).map((item) => item.name),
+    ["Visible"],
+  );
+});
+
+test(
+  "Scalar void-server preserves HTTP echo, status simulation and WebSocket echo",
+  { timeout: 5000 },
+  async (context) => {
+    const rootRequire = createRequire(join(root, "package.json"));
+    const scalarRequire = createRequire(rootRequire.resolve("@scalar/cli/package.json"));
+    const voidPath = scalarRequire.resolve("@scalar/void-server");
+    const voidRequire = createRequire(voidPath);
+    const { createVoidServer, attachVoidWebSocket } = await import(pathToFileURL(voidPath).href);
+    const { serve } = voidRequire("@hono/node-server");
+    const WebSocket = voidRequire("ws");
+    const app = createVoidServer({ logger: false });
+    const server = serve({ fetch: app.fetch, hostname: "127.0.0.1", port: 0 });
+    const socketServer = attachVoidWebSocket(server, { path: "/echo", connectionTimeoutMs: 1000 });
+    let socket;
+    context.after(async () => {
+      socket?.terminate();
+      for (const client of socketServer.clients) client.terminate();
+      await new Promise((resolve) => socketServer.close(resolve));
+      await new Promise((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
+    });
+    if (!server.listening) await once(server, "listening");
+    const address = server.address();
+    assert.equal(typeof address, "object");
+    const origin = `http://127.0.0.1:${address.port}`;
+    const response = await globalThis.fetch(`${origin}/example?tag=one&tag=two`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Fixture": "synthetic" },
+      body: JSON.stringify({ message: "synthetic payload" }),
+    });
+    const echo = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(echo.method, "POST");
+    assert.equal(echo.path, "/example");
+    assert.equal(echo.headers["x-fixture"], "synthetic");
+    assert.deepEqual(echo.query.tag, ["one", "two"]);
+    assert.deepEqual(echo.body, { message: "synthetic payload" });
+    const rejected = await globalThis.fetch(`${origin}/418`);
+    assert.equal(rejected.status, 418);
+    await rejected.text();
+    socket = new WebSocket(`ws://127.0.0.1:${address.port}/echo`, { handshakeTimeout: 2000 });
+    await once(socket, "open");
+    let received = once(socket, "message");
+    socket.send("synthetic frame");
+    let [data, binary] = await received;
+    assert.equal(data.toString(), "synthetic frame");
+    assert.equal(binary, false);
+    received = once(socket, "message");
+    socket.send(Buffer.from([0, 1, 255]));
+    [data, binary] = await received;
+    assert.deepEqual([...data], [0, 1, 255]);
+    assert.equal(binary, true);
+    const [code] = await once(socket, "close");
+    assert.equal(code, 1000);
+  },
+);
