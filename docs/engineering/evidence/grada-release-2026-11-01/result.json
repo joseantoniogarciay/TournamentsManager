@@ -1,0 +1,96 @@
+{
+  "release": "v1.15.0",
+  "commit": "8c8c7ca153820538629f6a1a219f935e7796615b",
+  "ci": {
+    "develop": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41291661885",
+    "main": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41292180420"
+  },
+  "cloudflare": {
+    "web": "81e186c1-b952-41cd-9980-551dc3c4d6c7",
+    "redirect": "305f6dde-4f56-4924-9990-c1f69e8ab417",
+    "preview": "0dcda114-306c-4d1d-a7e3-173be86cbe98"
+  },
+  "archiveSHA256": {
+    "api": "d7b736b55b02b6bb60b8bad675245bdb0577138750951c0ab2b0f90b0e92e80f",
+    "migrator": "956bdcac7a027c306f8b4cef09c8c34a4e360375506185f5392398cbbb38e117"
+  },
+  "backup": {
+    "set": "20261011-080242F_20261101-090314I",
+    "isolatedRestore": "complete; fasttourney_prod|f"
+  },
+  "api": {
+    "readyReplicas": 2,
+    "newPodRestarts": 0,
+    "schemaVersion": 23
+  },
+  "healthDuringWebActivation": {
+    "200": 20
+  },
+  "httpsChecks": [
+    {
+      "path": "https://fasttourney.com/deployment.json",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/account",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/privacy-policy",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/terms-of-use",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000/standings",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/favicon.ico",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/apple-touch-icon.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/fasttourney-league-preview.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/font-licenses/dm-sans.txt",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000",
+      "status": 404
+    },
+    {
+      "path": "https://fasttourney.com/tournament/01a0c9b0-1d38-7d47-8825-86c5af8b1237",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/healthz",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/registrations",
+      "status": 204
+    },
+    {
+      "path": "https://www.fasttourney.com/tournaments?release=1.15.0",
+      "status": 308
+    }
+  ],
+  "limitations": [
+    "Visual web/Android and full gestures/Split View matrix remain partial.",
+    "Initial Python health sampler returned 403; excluded from availability evidence. Curl samples cover web activation, not full API drain.",
+    "No native store distribution."
+  ]
+}

@@ -6769,3 +6769,15 @@ La misma build se ejecuta en iPad, y los cuatro idiomas se revisan en Inicio de
 Duo con argumentos de lanzamiento temporales. Los gestos no fiables de CUA y el
 acceso bloqueado a navegador/Android obligan a dejar la matriz explícitamente
 parcial, sin confundir compilación y arranque con cobertura visual completa.
+
+### Publicación Grada v1.15.0
+
+Se publica el mismo SHA en web, API y renderer después del gate completo con
+PostgreSQL desechable, -race, CI candidato/main y restauración aislada del backup
+cifrado exacto. El 502 previo se debía a la VM detenida: se recupera antes de
+atribuir un fallo al código. Un 403 del cliente Python no acredita disponibilidad
+del servicio; las comprobaciones curl verificadas se registran por separado.
+La release conserva QA parcial y no afirma distribución móvil. La revisión
+automática exige concretar payload/destino de símbolos privados; se obtiene
+autorización específica y se mantienen los source maps fuera del artefacto público.
+Retrospectiva y rollback en DEPLOYMENT.md y el informe de Grada.

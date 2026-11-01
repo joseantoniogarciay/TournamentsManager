@@ -874,3 +874,63 @@ el smoke productivo acredita disponibilidad y contrato. No mezclar ambos como
 capacidad medida de producción. Conservar el host contractual y comprobar el
 artefacto por componente evita falsos positivos de un fallback HTML o de una
 web que no forma parte de esta entrega.
+
+## Publicación v1.15.0 — 2026-11-01
+
+El usuario autoriza «Pues despliega y sube release». Se publica
+[v1.15.0](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.15.0)
+con tag anotado sobre merge no-ff main `8c8c7ca153820538629f6a1a219f935e7796615b`.
+Web, API y renderer usan esa revisión. Incluye Grada (ADR-0176), mantenimiento
+aceptado desde v1.14.1 y el ajuste de progreso Google. No añade migraciones ni
+contratos; no publica apps en tiendas.
+
+Gate local completo con PostgreSQL 18.6 desechable y pasada real con -race
+correctos. [CI del candidato](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41291661885)
+y [CI del merge](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41292180420)
+pasan. Builds nativas verificadas y QA iOS parcial; la matriz visual pendiente
+se conserva en [el informe de Grada](../engineering/GRADA_IDENTITY_2026-11-01.md).
+
+La API daba 502 antes de publicar porque la VM estaba detenida. Se arranca y
+K3s vuelve a Ready. Backup incremental cifrado dentro de la VM
+`20261011-080242F_20261101-090314I`, status 0. Restauración del set exacto en
+Job aislado con repo de solo lectura y emptyDir: Complete, base fuera de recovery.
+Se retira solo el Job de ensayo. No se exportan datos productivos.
+
+Imágenes ARM64 runtime/migrator construidas desde el tag limpio; los SHA-256 de
+los archivos OCI coinciden tras transferirlos. Dry-run K3s correcto, Goose sin
+migraciones (23), Secret migrador retirado, API 2/2 Ready sin reinicios nuevos y
+renderer readiness con el SHA esperado. Se conserva el manifiesto previo para
+rollback. No se edita el manifiesto fuente para incrustar su propio commit.
+
+Cloudflare: preview `0dcda114-306c-4d1d-a7e3-173be86cbe98`, web activa
+`81e186c1-b952-41cd-9980-551dc3c4d6c7`, redirect
+`305f6dde-4f56-4924-9990-c1f69e8ab417`. Origen de recuperación alineado al tag.
+Quince comprobaciones HTTPS pasan: SHA público, canonical/noindex, legales,
+assets/hashes, licencia, ficha controlada, inexistencia, salud, CORS y www con
+query. Veinte muestras curl de salud durante activación web devuelven 200.
+El muestreo inicial con Python devuelve 403 y se descarta como evidencia de
+availability; no se acredita drenaje completo de ambas réplicas durante el rollout.
+
+La revisión automática bloquea primero el staging por requerir autorización
+específica para subir source maps privados. Tras la pregunta que identifica
+payload, https://eu.posthog.com y proyecto 255144, el usuario responde «Continua».
+Se completa la subida autorizada y el artefacto público contiene cero mapas.
+El primer intento de GitHub Release devuelve 404 por usar el otro perfil;
+seleccionar la cuenta propietaria ya conectada permite publicarla sin ampliar
+permisos ni crear credenciales.
+
+Rollback: API/renderer v1.14.1 `7591d1a0b974e60080193c6f71fc8b2f512f014f`;
+web v1.14.0 `791d087e6a92ee2b1a8b09064826360a8837a793`, Worker web
+`528216d2-50bb-44c1-8999-5ff406594888` y redirect
+`2aa52d9f-d0a7-46fd-afaf-6a847ad1ec94`. No requiere revertir esquema.
+
+[Evidencia saneada](../engineering/evidence/grada-release-2026-11-01/result.json).
+Local/dev, Metro y observabilidad dev permanecen apagados; producción/K3s queda
+activa, sin cambiar durabilidad PostgreSQL. Develop incorpora el merge de main;
+no hay ramas temporales de esta publicación que retirar.
+
+Retrospectiva: un 502 previo al despliegue no es una regresión del candidato.
+Separar recuperación del runtime, backup/restauración, publicación por SHA y
+smoke público permite atribuir cada resultado. Los clientes HTTP no son
+intercambiables para acreditar disponibilidad: se conserva el 403 inicial y
+solo se cuentan las muestras comprobadas del cliente que alcanza el servicio.
