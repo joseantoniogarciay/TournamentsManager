@@ -6797,3 +6797,46 @@ ni la activación estándar del botón. Las regresiones cubren este detalle, la
 protección del callback, carga, reactivación, variantes y ambos temas. La ejecución
 visual con lector de pantalla y dispositivos sigue siendo una comprobación
 separada; las pruebas de callbacks para iOS/Android no equivalen a esa QA.
+
+
+### Publicación web v1.15.1
+
+Se promueve ADR-0177 como corrección exclusivamente web después de make verify y
+ambas CI con integración PostgreSQL. La revisión automática pide autorización
+específica para bundles/source maps a PostHog EU 255144; el usuario la concede y
+se completa la subida sin publicar mapas. Preview y artefacto inmutable preceden
+la activación. Quince comprobaciones HTTPS y siete hashes de scripts confirman
+la entrega del SHA etiquetado. API y renderer conservan su revisión anterior;
+no se ejecuta una migración para publicar estilos e interacción del cliente.
+La QA visual y de lector de pantalla queda declarada como pendiente en la release.
+Retrospectiva: el alcance independiente reduce operaciones y conserva un rollback
+solo web sin afectar al runtime ni los datos.
+
+
+### Cabeceras durante la primera navegación — 2026-11-01
+
+Un `Stack.Screen` dentro de una pantalla aplica sus opciones al montarse. Si el
+layout activa antes la cabecera sin título, el navegador puede mostrar el nombre
+técnico de la ruta durante la primera entrada. El layout raíz conserva ahora solo
+la superficie, con título vacío y sin botón automático de atrás, hasta que la
+pantalla aplique su título, fuente y controles. La ficha tampoco muestra un título
+genérico mientras carga el nombre del torneo.
+
+El usuario prefiere conservar solo el fondo hasta poder pintar correctamente.
+En web se elimina la salida a fuentes de sistema tras tres segundos: el gate de
+fuentes conserva el fondo del tema hasta completar la carga local. Las apps
+nativas mantienen su fallback previo. Si la carga web se retrasa, el fondo puede
+permanecer visible más tiempo; es el comportamiento elegido.
+
+Retrospectiva: un título provisional evita el path, pero todavía puede mostrar
+una apariencia que cambie al montarse la pantalla. Un inicio vacío y la espera
+real de fuentes resuelven ambos puntos sin temporizadores de revelado.
+
+Checklist de cliente revisada contra los archivos modificados: no se añaden
+textos visibles, se conservan tokens, URLs, presentación y adaptación accesible.
+No se tocan operaciones OpenAPI, formularios, controles ni márgenes de contenido.
+Validación: `pnpm run typecheck`, exportación web (44 rutas), Oxlint y Prettier
+de ambos archivos de cliente, y `git diff --check` correctos.
+La comprobación visual de primera navegación sigue pendiente; los checks de
+compilación no acreditan por sí solos la ausencia del destello.
+No se arrancan servicios local/dev, no se activa observabilidad ni se despliega.

@@ -5,14 +5,15 @@ en K3s doméstico vía Tunnel/Caddy. Dominio y audiencia OAuth no cambian.
 
 ## Estado efectivo
 
-Última publicación web/API: v1.14.0,
-`791d087e6a92ee2b1a8b09064826360a8837a793`. Workers web
-`528216d2-50bb-44c1-8999-5ff406594888` y www
-`2aa52d9f-d0a7-46fd-afaf-6a847ad1ec94`. Preview y dominio productivo verificados
-con TLS válido; doce checks web y doce API pasan. Migración 00023 aplicada;
-API 2/2 y renderer con el mismo SHA. Incidente ENOSPC del host recuperado antes
-del despliegue, con huellas de negocio conservadas.
-[Evidencia, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-de-sesiones-activas-v1140--2026-10-12).
+Última publicación web: v1.15.1,
+`b920d81dd1747df995f36878ea42fdda5aeaa906`. Workers web
+`f132f7cf-9d96-4aea-be34-d727a0272d04` y www
+`55c3165e-08bf-465c-b52b-be26d764b649`. Preview y dominio productivo verificados;
+quince comprobaciones HTTPS y los hashes de los siete scripts de entrada pasan.
+API y renderer conservan v1.15.0
+`8c8c7ca153820538629f6a1a219f935e7796615b`, sin migraciones nuevas.
+Origen de recuperación alineado a la web actual; K3s/PostgreSQL siguen activos.
+[Evidencia, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-v1151--2026-11-01).
 
 2026-10-11: rutas productivas activadas en Workers Free. La primera migración
 conservó `b002b4b…`; después se publicó v1.11.0 autorizada, con web y API

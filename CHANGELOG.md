@@ -6,6 +6,15 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.15.2] - 2026-11-01
+
+### Fixed
+
+- Cabeceras vacías hasta aplicar el título y estilo de la pantalla, sin mostrar
+  nombres internos de ruta ni el título genérico durante la carga del torneo.
+- Web conserva el fondo del tema hasta cargar las fuentes locales, sin pasar
+  a una fuente de sistema tras tres segundos.
+
 ## [1.15.1] - 2026-11-01
 
 ### Fixed

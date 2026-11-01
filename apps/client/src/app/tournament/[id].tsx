@@ -654,7 +654,8 @@ export default function TournamentScreen() {
       headerShadowVisible: false,
       headerStyle: { backgroundColor: colors.surface.canvas },
       headerTintColor: colors.text.primary,
-      headerTitle: t("league_title"),
+      title: "",
+      headerTitle: "",
       headerTitleAlign: "center" as const,
     };
     return (
@@ -686,7 +687,7 @@ export default function TournamentScreen() {
             </Stack.Toolbar>
           ) : null}
         </Stack.Screen>
-        <Screen navigationTitle={t("league_title")} topInset="navigation-bar" webWidth="wide">
+        <Screen topInset="navigation-bar" webWidth="wide">
           {loadErrorMessage ? (
             <RequestErrorCard
               actionLabel={t(leagueUnavailable ? "common_close" : "common_retry")}

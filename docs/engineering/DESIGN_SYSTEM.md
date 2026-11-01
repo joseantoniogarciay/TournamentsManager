@@ -188,6 +188,13 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   `useAdaptiveNavigationTitle`. La medición invisible no recibe interacción
   ni se expone a accesibilidad. La barra vacía usa un título nativo vacío para
   evitar que aparezca el nombre técnico de la ruta como fallback.
+  La cabecera inicial conserva solo su superficie: título vacío y sin botón
+  automático de atrás hasta que la pantalla aplique título, fuente y controles.
+  No muestra títulos provisionales ni identificadores técnicos durante el montaje.
+  La ficha de torneo mantiene también el título vacío durante carga/error, hasta
+  disponer del nombre y su presentación adaptable. En web, la aplicación espera
+  a que las fuentes locales estén cargadas, sin pasar a fuente de sistema tras
+  un timeout; mientras tanto se conserva el fondo inicial del tema.
 - **Tipografía (ADR-0176):** DM Sans 400/500/600/700 para lectura, controles,
   cabeceras y tabs; Barlow Condensed 600/700 para `Text.title` y `Text.display`;
   IBM Plex Mono 400/600 para posición, estadísticas y puntos de clasificación.
