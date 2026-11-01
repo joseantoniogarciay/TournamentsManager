@@ -6797,3 +6797,17 @@ ni la activación estándar del botón. Las regresiones cubren este detalle, la
 protección del callback, carga, reactivación, variantes y ambos temas. La ejecución
 visual con lector de pantalla y dispositivos sigue siendo una comprobación
 separada; las pruebas de callbacks para iOS/Android no equivalen a esa QA.
+
+
+### Publicación web v1.15.1
+
+Se promueve ADR-0177 como corrección exclusivamente web después de make verify y
+ambas CI con integración PostgreSQL. La revisión automática pide autorización
+específica para bundles/source maps a PostHog EU 255144; el usuario la concede y
+se completa la subida sin publicar mapas. Preview y artefacto inmutable preceden
+la activación. Quince comprobaciones HTTPS y siete hashes de scripts confirman
+la entrega del SHA etiquetado. API y renderer conservan su revisión anterior;
+no se ejecuta una migración para publicar estilos e interacción del cliente.
+La QA visual y de lector de pantalla queda declarada como pendiente en la release.
+Retrospectiva: el alcance independiente reduce operaciones y conserva un rollback
+solo web sin afectar al runtime ni los datos.

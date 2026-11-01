@@ -934,3 +934,46 @@ Separar recuperación del runtime, backup/restauración, publicación por SHA y
 smoke público permite atribuir cada resultado. Los clientes HTTP no son
 intercambiables para acreditar disponibilidad: se conserva el 403 inicial y
 solo se cuentan las muestras comprobadas del cliente que alcanza el servicio.
+
+
+## Publicación v1.15.1 — 2026-11-01
+
+El usuario autoriza «Despliega» y después «Autorizo» para la subida específica
+que la revisión automática había bloqueado. Se publica
+[v1.15.1](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.15.1)
+con tag anotado sobre merge no-ff `b920d81dd1747df995f36878ea42fdda5aeaa906`.
+Solo cambia la web: acciones no disponibles opacas y con motivo localizado al
+pulsar (ADR-0177). API y renderer conservan v1.15.0
+`8c8c7ca153820538629f6a1a219f935e7796615b`; sin migraciones ni distribución móvil.
+
+Gate `make verify` local correcto, con integración PostgreSQL omitida localmente.
+[CI del candidato](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41307000931)
+y [CI del merge](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41307046117)
+correctas, incluida integración con PostgreSQL 18.6 desechable. Incluyen las 17
+regresiones nuevas de acciones bloqueadas. La validación de callbacks nativos y
+HTML web no equivale a QA visual en dispositivo ni recorrido con lector de pantalla.
+
+Los bundles/source maps privados se suben a https://eu.posthog.com, proyecto
+255144, tras autorización explícita del payload y destino. El artefacto público
+contiene cero mapas y cero referencias sourceMappingURL. Preview comprobada con
+SHA, canonical y noindex; candidato inmutable y dry-run de ambos Workers correctos.
+Cloudflare activo: web `f132f7cf-9d96-4aea-be34-d727a0272d04`, redirect
+`55c3165e-08bf-465c-b52b-be26d764b649`, preview
+`329674f8-87ac-4f5a-ba6f-679424d17e8a`.
+
+Quince comprobaciones HTTPS correctas: SHA público, canonical/noindex, rutas,
+assets, licencia, torneo controlado/inexistente, salud API, CORS y redirección www.
+Los siete scripts de entrada servidos coinciden por SHA-256 con el artefacto
+publicado. Origen de recuperación alineado a v1.15.1.
+
+Rollback solo web a v1.15.0: SHA `8c8c7ca153820538629f6a1a219f935e7796615b`,
+Worker web `81e186c1-b952-41cd-9980-551dc3c4d6c7`, redirect
+`305f6dde-4f56-4924-9990-c1f69e8ab417`; sin tocar API, renderer o base de datos.
+[Evidencia saneada](../engineering/evidence/opaque-actions-release-2026-11-01/result.json).
+Develop incorpora el merge de main; no se crean ramas temporales. Local/dev,
+Metro y observabilidad dev no se arrancan; producción permanece activa.
+
+Retrospectiva: mantener la publicación de interfaz independiente evita un rollout
+y migraciones innecesarios. Distinguir preview, activación y hashes realmente
+servidos permite comprobar qué versión llega al navegador. La autorización de
+símbolos identifica el contenido y destino antes de transferir código fuente.

@@ -1,0 +1,131 @@
+{
+  "release": "v1.15.1",
+  "webCommit": "b920d81dd1747df995f36878ea42fdda5aeaa906",
+  "unchangedComponents": {
+    "apiCommit": "8c8c7ca153820538629f6a1a219f935e7796615b",
+    "rendererCommit": "8c8c7ca153820538629f6a1a219f935e7796615b",
+    "database": "No deployment or migration"
+  },
+  "ci": {
+    "candidate": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41307000931",
+    "main": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41307046117",
+    "result": "success; including PostgreSQL integration"
+  },
+  "localGate": "make verify passed; PostgreSQL integration omitted locally and executed in CI",
+  "cloudflare": {
+    "web": "f132f7cf-9d96-4aea-be34-d727a0272d04",
+    "redirect": "55c3165e-08bf-465c-b52b-be26d764b649",
+    "preview": "329674f8-87ac-4f5a-ba6f-679424d17e8a"
+  },
+  "sourceMaps": {
+    "host": "https://eu.posthog.com",
+    "project": 255144,
+    "upload": "completed with explicit user authorization",
+    "publicMaps": 0,
+    "publicSourceMappingReferences": 0
+  },
+  "rollback": {
+    "webCommit": "8c8c7ca153820538629f6a1a219f935e7796615b",
+    "cloudflareWeb": "81e186c1-b952-41cd-9980-551dc3c4d6c7",
+    "cloudflareRedirect": "305f6dde-4f56-4924-9990-c1f69e8ab417"
+  },
+  "recoveryOriginCommit": "b920d81dd1747df995f36878ea42fdda5aeaa906",
+  "httpsChecks": [
+    {
+      "path": "https://fasttourney.com/deployment.json",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/account",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/privacy-policy",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/terms-of-use",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000/standings",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/favicon.ico",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/apple-touch-icon.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/fasttourney-league-preview.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/font-licenses/dm-sans.txt",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000",
+      "status": 404
+    },
+    {
+      "path": "https://fasttourney.com/tournament/01a0c9b0-1d38-7d47-8825-86c5af8b1237",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/healthz",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/registrations",
+      "status": 204
+    },
+    {
+      "path": "https://www.fasttourney.com/tournaments?release=1.15.1",
+      "status": 308
+    }
+  ],
+  "entryAssets": [
+    {
+      "path": "/theme-init.js",
+      "sha256": "38d3ff1eaf6469d3d348c668628b1b08f23689f6eb96731e470d841918efe4d4"
+    },
+    {
+      "path": "/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "c5709bd088aa0107de2e56fc9089aaa43ac4c6ebef329094f0c23855a92fbb0e"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-2631e8d93b026070c5e3c1c67515e366.js",
+      "sha256": "1f07350fea4c11acde1e94a7b5d5ef00c8b8c988e5e5ebc67085535c408cae83"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-856809d42baf0012828ba9d2106b6550.js",
+      "sha256": "62160f1f685ab28f398433ab8de510306b9b827eacf9e953af31cf55e99f2717"
+    },
+    {
+      "path": "/_expo/static/js/web/index-8bb6994432bac0f28d655f3cc5a8af03.js",
+      "sha256": "ffed09fe82916414bd62c7d3496d06c37ce65f6cb5714ddea8c96eac48986213"
+    },
+    {
+      "path": "/_expo/static/js/web/__common-776ce540ef5e2d0f776019fff48a698d.js",
+      "sha256": "5d90a361854cc7d9dc10f07ec0fa80c1dac434848b09a0c463e90f447e100f27"
+    },
+    {
+      "path": "/_expo/static/js/web/entry-54db478ee12250ce8bfd90b199e66fc1.js",
+      "sha256": "ef53f8363cadae2c6c61516ac091cf420c81f936f05a683026fd7acaf7af9354"
+    }
+  ],
+  "limitations": [
+    "No visual device or screen-reader QA of this correction.",
+    "iOS/Android callback fixtures are not runtime device validation.",
+    "No native binary or store distribution."
+  ],
+  "closure": "No local/dev services or development observability started; production remains running."
+}
