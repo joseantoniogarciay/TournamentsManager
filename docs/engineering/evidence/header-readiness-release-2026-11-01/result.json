@@ -1,0 +1,167 @@
+{
+  "release": "v1.15.2",
+  "webCommit": "40723d41d3b7c9e3dec048195cf2a1353ff87981",
+  "unchangedComponents": {
+    "apiCommit": "8c8c7ca153820538629f6a1a219f935e7796615b",
+    "rendererCommit": "8c8c7ca153820538629f6a1a219f935e7796615b",
+    "database": "No deployment or migration"
+  },
+  "ci": {
+    "candidate": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41309149774",
+    "main": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41309403975",
+    "result": "success; including PostgreSQL integration"
+  },
+  "localGate": "make verify passed; PostgreSQL integration omitted locally and executed in CI",
+  "sourceMaps": {
+    "host": "https://eu.posthog.com",
+    "project": 255144,
+    "upload": "completed by the existing production staging procedure",
+    "publicMaps": 0,
+    "publicSourceMappingReferences": 0
+  },
+  "rollback": {
+    "webCommit": "b920d81dd1747df995f36878ea42fdda5aeaa906",
+    "cloudflareWeb": "f132f7cf-9d96-4aea-be34-d727a0272d04",
+    "cloudflareRedirect": "55c3165e-08bf-465c-b52b-be26d764b649"
+  },
+  "limitations": [
+    "No visual first-navigation or slow-font QA: local browser use disabled in Work settings.",
+    "No native binary or store distribution."
+  ],
+  "closure": "No local/dev services or development observability started; production remains running.",
+  "httpsChecks": [
+    {
+      "path": "https://fasttourney.com/deployment.json",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/account",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/privacy-policy",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/terms-of-use",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000/standings",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/favicon.ico",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/apple-touch-icon.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/fasttourney-league-preview.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/font-licenses/dm-sans.txt",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000",
+      "status": 404
+    },
+    {
+      "path": "https://fasttourney.com/tournament/01a0c9b0-1d38-7d47-8825-86c5af8b1237",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/healthz",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/registrations",
+      "status": 204
+    },
+    {
+      "path": "https://www.fasttourney.com/tournaments?release=1.15.2",
+      "status": 308,
+      "resolution": "Explicit Cloudflare edge 104.21.1.205; TLS/SNI validation enabled; default resolver path presented a self-signed certificate."
+    },
+    {
+      "path": "https://fasttourney.com/theme-init.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-28d8bdb61aa91e3079704eada3331d1a.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-856809d42baf0012828ba9d2106b6550.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/index-8bb6994432bac0f28d655f3cc5a8af03.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__common-776ce540ef5e2d0f776019fff48a698d.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/entry-0f8e27c1621ee0d77b19c3f2e8916fc5.js",
+      "status": 200
+    }
+  ],
+  "entryAssets": [
+    {
+      "path": "/theme-init.js",
+      "sha256": "38d3ff1eaf6469d3d348c668628b1b08f23689f6eb96731e470d841918efe4d4"
+    },
+    {
+      "path": "/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "92c1b7595e758d83442d049f0a98a6a5d83cfd11da6c9885b1b7e47f9faf0a2b"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-28d8bdb61aa91e3079704eada3331d1a.js",
+      "sha256": "761d0bc020e4775f8c7ce75d37acced61e1d3c9821d223a0feeb33ef20013d0a"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-856809d42baf0012828ba9d2106b6550.js",
+      "sha256": "f231d800a0c7caba4266abcdb12ed832969d84888dfd272fb1ad84d8c5238e22"
+    },
+    {
+      "path": "/_expo/static/js/web/index-8bb6994432bac0f28d655f3cc5a8af03.js",
+      "sha256": "ac1d8a5a8d528c01da3f031902f08cc09ed90923fa9a89a85f3f2cccaf9d7b8e"
+    },
+    {
+      "path": "/_expo/static/js/web/__common-776ce540ef5e2d0f776019fff48a698d.js",
+      "sha256": "40cb800cc42b4798abe79b57c8afeaf787f29fd5ca8dbbc3cac58a833b24db9f"
+    },
+    {
+      "path": "/_expo/static/js/web/entry-0f8e27c1621ee0d77b19c3f2e8916fc5.js",
+      "sha256": "ba35d9a8c16003b3fecd82a3595864348f81b6d8e10678e23a6ae918cb1eba62"
+    }
+  ],
+  "cloudflare": {
+    "web": "128e3826-b2fa-4766-8cb4-eedca64ffcd0",
+    "redirect": "abb2ac85-986f-4198-856b-10219a7ef5ec",
+    "preview": "5a9f3434-9ce4-43b3-a6f2-2d276eaaa1a5"
+  },
+  "recoveryOriginCommit": "40723d41d3b7c9e3dec048195cf2a1353ff87981",
+  "networkLimitation": {
+    "host": "www.fasttourney.com",
+    "defaultResolvedAddresses": ["188.114.96.5", "188.114.97.5"],
+    "observedCertificateCN": "core1.netops.test",
+    "tlsVerification": "Rejected self-signed certificate; never disabled verification.",
+    "verifiedAlternative": "104.21.1.205, valid TLS/SNI for www.fasttourney.com and 308 preserving path/query.",
+    "configurationChanges": "No DNS or certificate changes."
+  }
+}

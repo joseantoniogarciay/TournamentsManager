@@ -42,7 +42,7 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
-  Card,
+  ContentSection,
   DialogCloseButton,
   DisclosureIndicator,
   KeyboardAwareScrollView,
@@ -307,7 +307,7 @@ export function AccountScreen({
         contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
-        <Card>
+        <ContentSection>
           <View style={styles.form}>
             <Text variant="title">{t("account_sign_in_title")}</Text>
             <TextField
@@ -352,9 +352,9 @@ export function AccountScreen({
               onPress={() => void signIn()}
             />
           </View>
-        </Card>
+        </ContentSection>
 
-        <Card>
+        <ContentSection separated>
           <View style={styles.form}>
             <Text variant="title">{t("account_social_title")}</Text>
             <View style={styles.socialButtons}>
@@ -418,7 +418,7 @@ export function AccountScreen({
               )}
             </View>
           </View>
-        </Card>
+        </ContentSection>
 
         <ModalDialog
           dismissAccessibilityLabel={t("common_cancel")}

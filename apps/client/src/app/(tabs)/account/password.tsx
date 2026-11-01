@@ -17,7 +17,7 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import {
   Button,
-  Card,
+  ContentSection,
   KeyboardAwareScrollView,
   Screen,
   Text,
@@ -101,7 +101,7 @@ export default function AccountPasswordScreen() {
       <KeyboardAwareScrollView
         contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
       >
-        <Card>
+        <ContentSection>
           <View style={styles.form}>
             {hasPassword ? (
               <Text color="secondary">{t("account_password_change_description")}</Text>
@@ -149,7 +149,7 @@ export default function AccountPasswordScreen() {
               onPress={() => void submit()}
             />
           </View>
-        </Card>
+        </ContentSection>
       </KeyboardAwareScrollView>
     </Screen>
   );

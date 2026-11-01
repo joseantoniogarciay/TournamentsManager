@@ -103,3 +103,5 @@ Usa [template.md](template.md) y el
 - [ADR-0176: Adoptar identidad Grada conservando componentes y navegación nativa](0176-adopt-grada-identity-with-existing-components-and-native-navigation.md) — Aceptado; implementado, builds verificadas y QA visual parcial.
 
 - [ADR-0177: Acciones no disponibles opacas y con explicación al pulsar](0177-use-opaque-unavailable-actions-with-explanations.md) — Aceptado; implementado y cubierto por regresiones.
+
+- [ADR-0178: Secciones abiertas y filas con separadores](0178-use-open-sections-and-separated-list-rows.md) — Aceptado; implementación transversal y QA visual pendiente.

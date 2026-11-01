@@ -69,6 +69,7 @@ import {
 import {
   Button,
   Card,
+  ContentSection,
   ConfigurationOption,
   LoadingTransition,
   ModalDialog,
@@ -1079,7 +1080,7 @@ export default function TournamentScreen() {
   };
   const tournamentSummary = (
     <>
-      <Card>
+      <ContentSection>
         <View style={styles.stack}>
           <View style={styles.summaryList}>
             <View style={styles.summaryItem}>
@@ -1142,9 +1143,9 @@ export default function TournamentScreen() {
             </View>
           </View>
         </View>
-      </Card>
+      </ContentSection>
       {league.venue || canEditScheduling(relationship, league.state) ? (
-        <Card>
+        <ContentSection>
           {league.venue ? <Text color="secondary">{league.venue}</Text> : null}
           {canEditScheduling(relationship, league.state) ? (
             <Button
@@ -1153,7 +1154,7 @@ export default function TournamentScreen() {
               onPress={() => router.push(`/tournament/${id}/venue`)}
             />
           ) : null}
-        </Card>
+        </ContentSection>
       ) : null}
       {league.hasOtherEditions ? (
         <View style={styles.summaryActions}>
@@ -1367,17 +1368,17 @@ export default function TournamentScreen() {
                     {!showWebSidebar ? tournamentSummary : null}
                     {phaseSelector}
                     {showsTieBreak ? (
-                      <Card>
+                      <ContentSection>
                         <View style={styles.stack}>
                           <Text style={styles.configurationTitle} variant="bodyLarge">
                             {t("tournament_mixed_tiebreak_title")}
                           </Text>
                           <Text color="secondary">{t("tournament_mixed_tiebreak_help")}</Text>
                         </View>
-                      </Card>
+                      </ContentSection>
                     ) : null}
                     {league.state === "published" && isOrganizer ? (
-                      <Card>
+                      <ContentSection>
                         <View style={styles.stack}>
                           <Text style={styles.configurationTitle} variant="bodyLarge">
                             {t("league_start_title")}
@@ -1549,10 +1550,10 @@ export default function TournamentScreen() {
                             </View>
                           )}
                         </View>
-                      </Card>
+                      </ContentSection>
                     ) : null}
                     {league.state === "published" && !isOrganizer ? (
-                      <Card>
+                      <ContentSection>
                         <View style={styles.stack}>
                           <Text color="secondary">{t("league_start_waiting_for_owner")}</Text>
                           <Button
@@ -1562,10 +1563,10 @@ export default function TournamentScreen() {
                             onPress={() => undefined}
                           />
                         </View>
-                      </Card>
+                      </ContentSection>
                     ) : null}
                     {waitingForOwnerToStartElimination ? (
-                      <Card>
+                      <ContentSection>
                         <View style={styles.stack}>
                           <Text color="secondary">
                             {t(
@@ -1589,10 +1590,10 @@ export default function TournamentScreen() {
                             onPress={() => undefined}
                           />
                         </View>
-                      </Card>
+                      </ContentSection>
                     ) : null}
                     {eliminationBlockedByWithdrawals ? (
-                      <Card>
+                      <ContentSection>
                         <View style={styles.stack}>
                           <Text color="error">
                             {t("tournament_mixed_not_enough_eligible_teams")}
@@ -1604,7 +1605,7 @@ export default function TournamentScreen() {
                             onPress={() => undefined}
                           />
                         </View>
-                      </Card>
+                      </ContentSection>
                     ) : null}
                   </View>
                 }

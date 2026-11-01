@@ -6840,3 +6840,38 @@ de ambos archivos de cliente, y `git diff --check` correctos.
 La comprobación visual de primera navegación sigue pendiente; los checks de
 compilación no acreditan por sí solos la ausencia del destello.
 No se arrancan servicios local/dev, no se activa observabilidad ni se despliega.
+
+
+### Publicación web v1.15.2
+
+Gate local y ambas CI con PostgreSQL correctos. Preview antes de activar, mapas
+privados retirados y hashes de los siete scripts públicos iguales al candidato.
+La cabecera inicial queda vacía y web espera a fuentes locales; la QA visual de
+primera navegación sigue pendiente por navegador deshabilitado en Work.
+El certificado ajeno de www se rechaza sin desactivar TLS; otro edge Cloudflare
+verifica el 308 con certificado válido. No se modifica DNS ni se redespliega API.
+Retrospectiva y rollback en DEPLOYMENT.md y evidencia saneada de la publicación.
+
+
+### Composición abierta sobre Grada — 2026-11-01
+
+Una tarjeta distingue una unidad independiente, pero repetirla para cada nombre,
+ayuda o sección de formulario da a todo el mismo peso visual. ADR-0178 separa
+identidad y organización: se conservan color, fuentes y controles Grada, y se
+organiza el contenido con espacio, títulos y líneas. ContentSection y ListRow
+resuelven el patrón repetido sin una nueva biblioteca ni un modo global de Card.
+
+El margen exterior pertenece a la primitiva abierta igual que antes a Card.
+Eliminar su superficie no autoriza duplicar padding en Screen/scroll ni anidar
+márgenes; las columnas web compensan el mismo margen en ambos patrones. Equipos
+mantiene la lista antes de la invitación, sin cambiar de árbol al redimensionar.
+
+Retrospectiva: cambiar Card globalmente habría afectado cuadros, encuentros y
+errores que sí necesitan superficie. Una revisión de consumidores explícita
+permite aplicar el criterio donde es claro y conservar esas unidades. Las pruebas
+de compilación y de transporte no acreditan la jerarquía visual ni la matriz
+nativa; se documenta esa limitación cuando el equipo está bloqueado y el navegador
+local deshabilitado. El mock de navegación había quedado sin usePreferences tras
+un cambio previo de tema; se completa el fixture, sin tocar la lógica de sesión.
+
+[Alcance, checklist y comprobaciones](../engineering/OPEN_SECTIONS_2026-11-01.md).

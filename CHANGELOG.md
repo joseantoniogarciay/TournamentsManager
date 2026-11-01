@@ -6,6 +6,16 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.15.3] - 2026-11-01
+
+### Changed
+
+- ADR-0178: listas de equipos, administradores, sesiones, notificaciones y
+  ediciones con filas y separadores. Texto, formularios, ajustes y preparación
+  del torneo usan secciones abiertas sobre el fondo Grada. Se conservan fichas
+  de torneos/encuentros, controles y navegación nativa. Publicación solo web;
+  revisión visual y distribución móvil pendientes.
+
 ## [1.15.2] - 2026-11-01
 
 ### Fixed

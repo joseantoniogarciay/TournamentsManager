@@ -5,15 +5,17 @@ en K3s doméstico vía Tunnel/Caddy. Dominio y audiencia OAuth no cambian.
 
 ## Estado efectivo
 
-Última publicación web: v1.15.1,
-`b920d81dd1747df995f36878ea42fdda5aeaa906`. Workers web
-`f132f7cf-9d96-4aea-be34-d727a0272d04` y www
-`55c3165e-08bf-465c-b52b-be26d764b649`. Preview y dominio productivo verificados;
-quince comprobaciones HTTPS y los hashes de los siete scripts de entrada pasan.
+Última publicación web: v1.15.2,
+`40723d41d3b7c9e3dec048195cf2a1353ff87981`. Workers web
+`128e3826-b2fa-4766-8cb4-eedca64ffcd0` y www
+`abb2ac85-986f-4198-856b-10219a7ef5ec`. Preview y dominio canónico verificados;
+22 checks HTTPS incluyen los hashes de los siete scripts de entrada. El check
+www usa un edge alternativo con TLS válido: la ruta habitual de esta conexión
+presenta el certificado ajeno core1.netops.test, sin cambiar DNS/certificados.
 API y renderer conservan v1.15.0
 `8c8c7ca153820538629f6a1a219f935e7796615b`, sin migraciones nuevas.
 Origen de recuperación alineado a la web actual; K3s/PostgreSQL siguen activos.
-[Evidencia, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-v1151--2026-11-01).
+[Evidencia, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-v1152--2026-11-01).
 
 2026-10-11: rutas productivas activadas en Workers Free. La primera migración
 conservó `b002b4b…`; después se publicó v1.11.0 autorizada, con web y API

@@ -25,7 +25,8 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { getWithdrawalDescriptionKey, isRacketSport } from "@/shared/tournaments/sport";
 import {
   Button,
-  Card,
+  ContentSection,
+  ListRow,
   ModalDialog,
   ResponsiveColumns,
   Text,
@@ -217,12 +218,10 @@ export function TournamentTeamManagement({
     });
 
   const management = canAddTeam ? (
-    <Card>
+    <ContentSection separated>
       <View style={styles.invitationCard}>
         <View style={styles.invitationCopy}>
-          <Text variant="title">
-            {t(racket ? "racket_complete_participants_title" : "league_complete_teams_title")}
-          </Text>
+          <Text variant="title">{t("league_share_invitation")}</Text>
           <Text color="secondary">
             {t(
               racket
@@ -230,25 +229,11 @@ export function TournamentTeamManagement({
                 : "league_complete_teams_description",
             )}
           </Text>
-          {tournament.teams.length < 2 ? (
-            <Text color="secondary">
-              {t(
-                racket
-                  ? "racket_start_requires_two_participants"
-                  : "league_start_requires_two_teams",
-              )}
-            </Text>
-          ) : null}
           {tournament.suggestedStart ? (
             <Text color="secondary">{t("tournament_repeat_teams_help")}</Text>
           ) : null}
           {!racket ? <Text color="secondary">{t("league_invitation_rotation_hint")}</Text> : null}
         </View>
-        <Button
-          label={t(racket ? "racket_add_participant" : "league_add_team")}
-          onPress={openAddTeam}
-          variant="secondary"
-        />
         <>
           <Button
             label={t("league_share_invitation")}
@@ -259,16 +244,44 @@ export function TournamentTeamManagement({
             label={t("league_revoke_invitation")}
             loading={isRevokingInvitation}
             onPress={() => void revokeInvitation()}
-            variant="secondary"
+            variant="ghost"
           />
         </>
       </View>
-    </Card>
+    </ContentSection>
   ) : null;
   const teams = (
     <View style={styles.teamList}>
+      <ContentSection>
+        <View style={styles.listHeading}>
+          <Text accessibilityRole="header" variant="title" style={styles.teamName}>
+            {t(
+              canAddTeam
+                ? racket
+                  ? "racket_complete_participants_title"
+                  : "league_complete_teams_title"
+                : racket
+                  ? "racket_participants"
+                  : "league_teams",
+            )}
+          </Text>
+          <Text color="secondary" variant="caption" style={styles.listCount}>
+            {t(racket ? "participant_list_count" : "team_list_count").replace(
+              "{count}",
+              String(tournament.teams.length),
+            )}
+          </Text>
+        </View>
+        {canAddTeam && tournament.teams.length < 2 ? (
+          <Text color="secondary">
+            {t(
+              racket ? "racket_start_requires_two_participants" : "league_start_requires_two_teams",
+            )}
+          </Text>
+        ) : null}
+      </ContentSection>
       {tournament.teams.map((team) => (
-        <Card density="compact" key={team.id}>
+        <ListRow key={team.id}>
           <View style={styles.teamRow}>
             <Text style={styles.teamName} variant="bodyLarge">
               {team.name}
@@ -307,17 +320,26 @@ export function TournamentTeamManagement({
               </ActionPressable>
             ) : null}
           </View>
-        </Card>
+        </ListRow>
       ))}
+      {canAddTeam ? (
+        <ContentSection>
+          <Button
+            label={t(racket ? "racket_add_participant" : "league_add_team")}
+            onPress={openAddTeam}
+            variant="ghost"
+          />
+        </ContentSection>
+      ) : null}
     </View>
   );
 
   return (
     <>
       {canAddTeam ? (
-        <ResponsiveColumns variant="sidebar">
-          {management}
+        <ResponsiveColumns variant="sidebar-end">
           {teams}
+          {management}
         </ResponsiveColumns>
       ) : (
         <View style={Platform.OS === "web" ? styles.readingList : undefined}>{teams}</View>
@@ -361,7 +383,9 @@ export function TournamentTeamManagement({
 }
 
 const styles = StyleSheet.create({
-  teamList: { gap: space[5] },
+  teamList: { gap: 0 },
+  listHeading: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", gap: space[3] },
+  listCount: { flexShrink: 1 },
   readingList: { alignSelf: "center", width: "100%", maxWidth: webLayout.readingMaxWidth },
   invitationCard: { gap: space[4] },
   invitationCopy: { gap: space[2] },
@@ -372,7 +396,7 @@ const styles = StyleSheet.create({
     width: control.minHeight,
   },
   teamName: { flex: 1, minWidth: 0 },
-  withdrawn: { flexShrink: 0, textAlign: "right" },
+  withdrawn: { flexShrink: 1, textAlign: "right" },
   teamRow: {
     alignItems: "center",
     flexDirection: "row",

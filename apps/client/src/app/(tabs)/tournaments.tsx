@@ -14,7 +14,7 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
-  Card,
+  ContentSection,
   LoadingTransition,
   RequestErrorCard,
   ResponsiveColumns,
@@ -80,12 +80,12 @@ export default function TournamentsScreen() {
           style={styles.scroll}
         >
           {!isRestoring && !user ? (
-            <Card>
+            <ContentSection>
               <View style={styles.copy}>
                 <Text variant="title">{t("tournaments_title")}</Text>
                 <Text color="secondary">{t("tournaments_description")}</Text>
               </View>
-            </Card>
+            </ContentSection>
           ) : null}
         </ScrollView>
       )}

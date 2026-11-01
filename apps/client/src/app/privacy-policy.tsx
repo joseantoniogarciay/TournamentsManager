@@ -5,7 +5,13 @@ import { space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Card, NavigationHeaderButton, Screen, Text, usesLiquidGlassNavigation } from "@/shared/ui";
+import {
+  ContentSection,
+  NavigationHeaderButton,
+  Screen,
+  Text,
+  usesLiquidGlassNavigation,
+} from "@/shared/ui";
 
 export default function PrivacyPolicyScreen() {
   const t = getTranslator();
@@ -70,20 +76,20 @@ export default function PrivacyPolicyScreen() {
         topInset="navigation-bar"
       >
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Card>
+          <ContentSection>
             <View style={styles.intro}>
               <Text variant="display">{t("privacy_policy_title")}</Text>
               <Text color="secondary">{t("privacy_policy_updated")}</Text>
               <Text>{t("privacy_policy_intro")}</Text>
             </View>
-          </Card>
+          </ContentSection>
           {sections.map(([title, body]) => (
-            <Card key={title}>
+            <ContentSection separated key={title}>
               <View style={styles.section}>
                 <Text variant="title">{t(title)}</Text>
                 <Text color="secondary">{t(body)}</Text>
               </View>
-            </Card>
+            </ContentSection>
           ))}
         </ScrollView>
       </Screen>

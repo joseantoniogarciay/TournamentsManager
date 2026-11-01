@@ -1,6 +1,8 @@
 export { ActionPressable } from "./action-pressable";
 export { Button } from "./button";
 export { Card } from "./card";
+export { ContentSection } from "./content-section";
+export { ListRow } from "./list-row";
 export { ConfigurationOption } from "./configuration-option";
 export {
   ConfirmationDialog,

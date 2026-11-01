@@ -32,6 +32,9 @@ function fixture(platform, transition = "resetting", canDismiss = true) {
     Platform: { OS: platform },
     Stack: { Screen: "screen" },
     typography: { family: { semibold: "font" } },
+    usePreferences: () => ({
+      colors: { surface: { canvas: "canvas" }, text: { primary: "ink" } },
+    }),
     useSession: () => ({
       revision: 1,
       transition,

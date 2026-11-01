@@ -4,8 +4,8 @@ import { space, webLayout } from "@tournaments-manager/design-tokens";
 
 import type { ResponsiveColumnsProps } from "./responsive-columns";
 
-// Each Card keeps its 20 px margins. Half-margin compensation shares the gutter
-// between neighboring cells, preserving 20 px both outside and between cards.
+// Cards, open sections and rows own 20 px margins. Half-margin compensation
+// preserves 20 px both outside and between neighboring columns.
 const css = `
   .tm-columns { display: grid; grid-template-columns: minmax(0, 1fr); }
   .tm-column { min-width: 0; }
@@ -14,6 +14,8 @@ const css = `
     .tm-column { margin-inline: -${space[5] / 2}px; }
     .tm-columns-sidebar { grid-template-columns: ${webLayout.sidebarWidth - space[5] / 2}px minmax(0, 1fr); }
     .tm-columns-sidebar > .tm-column:first-child { align-self: start; position: sticky; top: ${space[3]}px; }
+    .tm-columns-sidebar-end { grid-template-columns: minmax(0, 1fr) ${webLayout.sidebarWidth - space[5] / 2}px; }
+    .tm-columns-sidebar-end > .tm-column:last-child { align-self: start; position: sticky; top: ${space[3]}px; }
     .tm-columns-fill-last > .tm-column:last-child:nth-child(odd) { grid-column: 1 / -1; }
   }
 `;
@@ -28,7 +30,7 @@ export function ResponsiveColumns({
     <>
       <style>{css}</style>
       <div
-        className={`tm-columns${fullWidthLast ? " tm-columns-fill-last" : ""}${variant === "sidebar" ? " tm-columns-sidebar" : ""}`}
+        className={`tm-columns${fullWidthLast ? " tm-columns-fill-last" : ""}${variant === "sidebar" ? " tm-columns-sidebar" : variant === "sidebar-end" ? " tm-columns-sidebar-end" : ""}`}
         style={{ rowGap: gap }}
       >
         {Children.toArray(children).map((child, index) => (

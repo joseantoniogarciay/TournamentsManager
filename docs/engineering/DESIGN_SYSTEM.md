@@ -1,7 +1,7 @@
 # Sistema de diseño
 
 > Estado: identidad Grada implementada en código (ADR-0176); builds verificadas, QA visual parcial.
-> Se conservan las primitivas y reglas de ADR-0054.
+> ADR-0178 añade secciones abiertas y filas para evitar tarjetas en listas simples.
 
 ## Alcance vigente
 
@@ -10,6 +10,16 @@ la web. Las pantallas consumen nombres semánticos, nunca hexadecimales o píxel
 repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
 
 ## Fundaciones
+
+- **Composición abierta (ADR-0178):** texto, ayudas y formularios usan
+  `ContentSection`; equipos, administradores, sesiones, notificaciones y ediciones
+  usan `ListRow`. La primera no tiene fondo, borde ni radio; admite un separador
+  superior. La segunda usa solo un borde inferior semántico y padding vertical.
+  Ambas reservan 20 px exteriores, sin duplicarlos en Screen, scroll ni hijos.
+  Las listas de filas no conservan el gap entre tarjetas. Fichas de torneo y
+  encuentros, cuadros, diálogos y errores recuperables conservan su superficie.
+  La identidad Grada y los controles permanecen; no se copia el contenido ficticio
+  ni los tamaños de la exploración. Véase [alcance y validación](OPEN_SECTIONS_2026-11-01.md).
 
 - **Apps, rotación y ventanas (ADR-0166):** los insets seguros son dinámicos en
   los cuatro lados; no se deduce su posición del modelo ni de portrait/landscape.
@@ -222,8 +232,9 @@ repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.
   Inicio y biblioteca usan `ResponsiveColumns`: dos columnas desde 960 px CSS,
   una por debajo. Mantiene orden DOM, 20 px de separación y estructura estable
   al cambiar ancho/zoom; nativo conserva una columna. Equipos con gestión
-  disponible usa la variante `sidebar`, con controles al lado del listado y
-  posición sticky. Sin controles conserva ancho de lectura. La ficha de liga
+  disponible usa `sidebar-end`: lista primero, controles a la derecha en web
+  ancha y debajo en móvil/ventana estrecha, con posición sticky solo en web ancha.
+  Sin controles conserva ancho de lectura. La ficha de liga
   iniciada reserva `webLayout.sidebarWidth` (360 px) para resumen y accesos;
   los partidos mantienen su lista desplazable. Al estrechar el viewport el
   resumen vuelve al encabezado. Preparación, desempates y cuadros conservan

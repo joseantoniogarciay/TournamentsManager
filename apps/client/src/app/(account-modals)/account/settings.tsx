@@ -4,7 +4,7 @@ import { control, radius, space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { type ThemePreference, usePreferences } from "@/shared/preferences/preferences-provider";
-import { Card, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
+import { ContentSection, Screen, Text, useTabContentBottomPadding } from "@/shared/ui";
 
 const themeOptions: ThemePreference[] = ["system", "light", "dark"];
 
@@ -23,7 +23,7 @@ export default function AccountSettingsScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
         showsVerticalScrollIndicator={false}
       >
-        <Card>
+        <ContentSection>
           <View style={styles.section}>
             <Text variant="title">{t("settings_appearance_title")}</Text>
             <Text color="secondary">{t("settings_theme_description")}</Text>
@@ -50,9 +50,9 @@ export default function AccountSettingsScreen() {
               })}
             </View>
           </View>
-        </Card>
+        </ContentSection>
         {Platform.OS !== "web" ? (
-          <Card>
+          <ContentSection separated>
             <View style={styles.notificationRow}>
               <View style={styles.notificationCopy}>
                 <Text variant="title">{t("settings_notifications_title")}</Text>
@@ -64,7 +64,7 @@ export default function AccountSettingsScreen() {
                 value={false}
               />
             </View>
-          </Card>
+          </ContentSection>
         ) : null}
       </ScrollView>
     </Screen>

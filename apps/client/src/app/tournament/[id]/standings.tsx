@@ -19,7 +19,7 @@ import {
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import {
   Button,
-  Card,
+  ContentSection,
   ConfigurationOption,
   LoadingTransition,
   ModalDialog,
@@ -268,7 +268,7 @@ export default function TournamentStandingsScreen() {
               </View>
             ) : null}
             {displayedStandings.length === 0 ? (
-              <Card>
+              <ContentSection>
                 <Text color="secondary">
                   {t(
                     league.state === "cancelled"
@@ -276,7 +276,7 @@ export default function TournamentStandingsScreen() {
                       : "league_standings_unavailable",
                   )}
                 </Text>
-              </Card>
+              </ContentSection>
             ) : null}
             {displayedStandings.length > 0 ? (
               <View

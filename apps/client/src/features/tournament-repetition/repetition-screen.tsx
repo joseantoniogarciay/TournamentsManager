@@ -22,7 +22,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import {
   Button,
-  Card,
+  ContentSection,
   ConfigurationOption,
   KeyboardAwareScrollView,
   LoadingTransition,
@@ -205,7 +205,7 @@ export function RepetitionScreen() {
           />
         ) : source ? (
           <KeyboardAwareScrollView bottomInset="safe-area" contentContainerStyle={styles.content}>
-            <Card>
+            <ContentSection>
               <View style={styles.form}>
                 <Text variant="title">{t("tournament_repeat_new_edition")}</Text>
                 <Text color="secondary">{t("tournament_repeat_description")}</Text>
@@ -265,8 +265,8 @@ export function RepetitionScreen() {
                 ) : null}
                 <Text color="secondary">{t("tournament_repeat_configuration_help")}</Text>
               </View>
-            </Card>
-            <Card>
+            </ContentSection>
+            <ContentSection>
               <View style={styles.form}>
                 <Text variant="title">{t("tournament_repeat_teams")}</Text>
                 <Text color="secondary">{t("tournament_repeat_teams_help")}</Text>
@@ -348,7 +348,7 @@ export function RepetitionScreen() {
                   onPress={() => void save()}
                 />
               </View>
-            </Card>
+            </ContentSection>
           </KeyboardAwareScrollView>
         ) : null}
       </Screen>

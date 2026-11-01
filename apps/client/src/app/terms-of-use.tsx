@@ -5,7 +5,13 @@ import { space } from "@tournaments-manager/design-tokens";
 
 import { getTranslator } from "@/shared/i18n/locale";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
-import { Card, NavigationHeaderButton, Screen, Text, usesLiquidGlassNavigation } from "@/shared/ui";
+import {
+  ContentSection,
+  NavigationHeaderButton,
+  Screen,
+  Text,
+  usesLiquidGlassNavigation,
+} from "@/shared/ui";
 
 export default function TermsOfUseScreen() {
   const t = getTranslator();
@@ -59,19 +65,19 @@ export default function TermsOfUseScreen() {
         topInset="navigation-bar"
       >
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Card>
+          <ContentSection>
             <View style={styles.section}>
               <Text variant="display">{t("terms_of_use_title")}</Text>
               <Text color="secondary">{t("terms_of_use_updated")}</Text>
             </View>
-          </Card>
+          </ContentSection>
           {sections.map(([title, body]) => (
-            <Card key={title}>
+            <ContentSection separated key={title}>
               <View style={styles.section}>
                 <Text variant="title">{t(title)}</Text>
                 <Text color="secondary">{t(body)}</Text>
               </View>
-            </Card>
+            </ContentSection>
           ))}
         </ScrollView>
       </Screen>

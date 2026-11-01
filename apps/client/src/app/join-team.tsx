@@ -28,7 +28,7 @@ import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { useSession } from "@/shared/session/session-provider";
 import {
   Button,
-  Card,
+  ContentSection,
   ConfigurationOption,
   KeyboardAwareScrollView,
   LoadingTransition,
@@ -264,7 +264,7 @@ export default function JoinTeamScreen() {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >
-            <Card>
+            <ContentSection>
               <View style={styles.form}>
                 <View style={styles.introduction}>
                   <Text variant="title">{invitation.tournamentName}</Text>
@@ -317,7 +317,7 @@ export default function JoinTeamScreen() {
                   onPress={() => void join()}
                 />
               </View>
-            </Card>
+            </ContentSection>
           </KeyboardAwareScrollView>
         )}
       </Screen>

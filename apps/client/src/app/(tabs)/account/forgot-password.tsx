@@ -9,7 +9,7 @@ import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { getTranslator } from "@/shared/i18n/locale";
 import {
   Button,
-  Card,
+  ContentSection,
   KeyboardAwareScrollView,
   Screen,
   Text,
@@ -51,7 +51,7 @@ export default function ForgotPasswordScreen() {
       topInset="navigation-bar"
     >
       <KeyboardAwareScrollView contentContainerStyle={{ paddingBottom: tabContentBottomPadding }}>
-        <Card>
+        <ContentSection>
           <View style={styles.form}>
             <Text color="secondary">{t("password_recovery_description")}</Text>
             <TextField
@@ -71,7 +71,7 @@ export default function ForgotPasswordScreen() {
               onPress={() => void submit()}
             />
           </View>
-        </Card>
+        </ContentSection>
       </KeyboardAwareScrollView>
     </Screen>
   );

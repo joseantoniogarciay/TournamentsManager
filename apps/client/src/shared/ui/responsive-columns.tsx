@@ -6,7 +6,7 @@ import { space } from "@tournaments-manager/design-tokens";
 export type ResponsiveColumnsProps = PropsWithChildren<{
   gap?: number;
   fullWidthLast?: boolean;
-  variant?: "equal" | "sidebar";
+  variant?: "equal" | "sidebar" | "sidebar-end";
 }>;
 
 export function ResponsiveColumns({ children, gap = space[5] }: ResponsiveColumnsProps) {

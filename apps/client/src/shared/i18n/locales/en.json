@@ -1,4 +1,6 @@
 {
+  "team_list_count": "Teams: {count}",
+  "participant_list_count": "Participants: {count}",
   "tournament_format_league": "League",
   "tournament_format_bracket": "Knockout bracket",
   "tournament_format_mixed": "League + knockout",
