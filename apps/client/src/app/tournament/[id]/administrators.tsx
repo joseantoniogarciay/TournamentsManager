@@ -1,7 +1,8 @@
+import { ActionPressable } from "@/shared/ui/action-pressable";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
@@ -210,11 +211,12 @@ export default function TournamentAdministratorsScreen() {
                   <Text style={styles.username} variant="bodyLarge">
                     {username}
                   </Text>
-                  <Pressable
+                  <ActionPressable
                     accessibilityLabel={t("league_remove_administrator")}
                     accessibilityRole="button"
                     accessibilityState={{ busy: removingUsername === username }}
                     disabled={removingUsername !== undefined}
+                    disabledReason={t("common_action_in_progress")}
                     onPress={() => confirmRemove(username)}
                     style={styles.removeButton}
                   >
@@ -229,7 +231,7 @@ export default function TournamentAdministratorsScreen() {
                         tintColor={colors.text.primary}
                       />
                     )}
-                  </Pressable>
+                  </ActionPressable>
                 </View>
               </Card>
             ))}

@@ -1,3 +1,4 @@
+import { ActionPressable } from "@/shared/ui/action-pressable";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -345,6 +346,7 @@ export function AccountScreen({
             </Pressable>
             <Button
               disabled={socialBusy}
+              disabledReason={t("common_action_in_progress")}
               label={t("account_sign_in")}
               loading={isSigningIn}
               onPress={() => void signIn()}
@@ -358,7 +360,7 @@ export function AccountScreen({
             <View style={styles.socialButtons}>
               {socialProviderOrder.map((provider) =>
                 provider === "apple" ? (
-                  <Pressable
+                  <ActionPressable
                     key="apple"
                     accessibilityLabel={t(
                       apple.isConfigured ? "account_apple_continue" : "account_apple_unavailable",
@@ -369,14 +371,13 @@ export function AccountScreen({
                       disabled: !apple.isConfigured || apple.isPreparing || socialBusy,
                     }}
                     disabled={!apple.isConfigured || apple.isPreparing || socialBusy}
+                    disabledReason={
+                      !apple.isConfigured
+                        ? t("common_social_unavailable")
+                        : t("common_action_in_progress")
+                    }
                     onPress={() => void apple.start()}
-                    style={[
-                      styles.socialButton,
-                      { borderColor: colors.border.default },
-                      !apple.isConfigured || apple.isPreparing || socialBusy
-                        ? styles.socialButtonDisabled
-                        : undefined,
-                    ]}
+                    style={[styles.socialButton, { borderColor: colors.border.default }]}
                   >
                     {apple.isPreparing || apple.isAuthenticating ? (
                       <ActivityIndicator color={colors.indicator.default} />
@@ -386,9 +387,9 @@ export function AccountScreen({
                         style={[styles.appleLogo, { tintColor: colors.text.primary }]}
                       />
                     )}
-                  </Pressable>
+                  </ActionPressable>
                 ) : (
-                  <Pressable
+                  <ActionPressable
                     key="google"
                     accessibilityLabel={t(
                       isGoogleConfigured ? "account_google_continue" : "account_google_unavailable",
@@ -399,21 +400,20 @@ export function AccountScreen({
                       disabled: !isGoogleConfigured || isGooglePreparing || socialBusy,
                     }}
                     disabled={!isGoogleConfigured || isGooglePreparing || socialBusy}
+                    disabledReason={
+                      !isGoogleConfigured
+                        ? t("common_social_unavailable")
+                        : t("common_action_in_progress")
+                    }
                     onPress={() => void startGoogleAuthentication()}
-                    style={[
-                      styles.socialButton,
-                      { borderColor: colors.border.default },
-                      !isGoogleConfigured || isGooglePreparing || socialBusy
-                        ? styles.socialButtonDisabled
-                        : undefined,
-                    ]}
+                    style={[styles.socialButton, { borderColor: colors.border.default }]}
                   >
                     {isGoogleAuthenticating ? (
                       <ActivityIndicator color={colors.indicator.default} />
                     ) : (
                       <Image source={googleLogo} style={styles.googleLogo} />
                     )}
-                  </Pressable>
+                  </ActionPressable>
                 ),
               )}
             </View>
@@ -449,6 +449,13 @@ export function AccountScreen({
                 !socialTermsAccepted ||
                 socialUsernameAvailability === "checking" ||
                 socialUsernameAvailability === "unavailable"
+              }
+              disabledReason={
+                !socialTermsAccepted
+                  ? t("common_terms_required")
+                  : socialUsernameAvailability === "checking"
+                    ? t("account_username_checking")
+                    : t("account_username_unavailable")
               }
               label={t(
                 apple.requiresUsername
@@ -505,7 +512,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: control.minHeight + space[1],
   },
-  socialButtonDisabled: { opacity: 0.55 },
   googleLogo: { height: control.iconSize, width: control.iconSize },
   appleLogo: { height: control.iconSize, width: control.iconSize, resizeMode: "contain" },
   legalDocument: { flexShrink: 1, gap: space[3] },

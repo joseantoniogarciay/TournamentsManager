@@ -107,6 +107,7 @@ export default function PasswordResetScreen() {
             <Text color="secondary">{strength(t, password)}</Text>
             <Button
               disabled={password.length < 8}
+              disabledReason={t("validation_password_length")}
               label={t("password_recovery_save")}
               onPress={() => void submit()}
             />

@@ -99,7 +99,7 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   `Card` (que aporta los 20 px exteriores) o en una primitiva de layout
   compartida que aplique exactamente ese margen. Si no requiere superficie de
   card, el `contentContainerStyle` desplazable aplica `paddingHorizontal:
-  space[5]`; no se compensa añadiendo padding horizontal a `Screen`.
+space[5]`; no se compensa añadiendo padding horizontal a `Screen`.
 - Toda pantalla deja al menos 10 px entre el área segura o el borde inferior de
   una navigation bar y su primer contenido; la implementación vigente usa 12 px
   mediante `Screen`.
@@ -138,6 +138,12 @@ el cambio y pide dirección si eso amplía materialmente el alcance.
   monta `ConfirmationDialogHost`. No eleves el host al layout raíz: en iOS un
   `Modal` raíz queda detrás de una ruta `fullScreenModal` y puede aparentar que
   la confirmación se abrió en la tab bar.
+- Según ADR-0177, los botones no disponibles tienen superficie, texto y borde
+  opacos y `opacity: 1`, sin colores transparentes ni degradados. Usa `Button`,
+  `ConfigurationOption` o `ActionPressable` con `disabledReason` localizado:
+  pulsarlos muestra el motivo con el feedback compartido sin ejecutar la acción.
+  La feature decide el motivo; la carga explica la espera y evita duplicados.
+  No uses `disabled` físico en un botón que deba explicar su bloqueo.
 - Botones y controles mantienen semántica accesible, un objetivo táctil mínimo
   de 44 px y no permiten envíos duplicados.
 - La validación de formato de un formulario se muestra al abandonar cada campo

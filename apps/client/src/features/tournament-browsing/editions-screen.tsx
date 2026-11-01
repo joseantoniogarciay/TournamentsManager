@@ -131,6 +131,7 @@ export function EditionsScreen() {
                 label={t(moreError ? "common_retry" : "tournaments_load_more")}
                 loading={loadingMore}
                 disabled={refreshing}
+                disabledReason={t("common_action_in_progress")}
                 onPress={() => void load("more")}
               />
             </View>

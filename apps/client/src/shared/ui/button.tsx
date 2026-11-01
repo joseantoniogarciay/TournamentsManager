@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -16,13 +16,14 @@ import {
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 import { Text } from "./text";
+import { ActionPressable, type ActionAvailability } from "./action-pressable";
+import { getTranslator } from "@/shared/i18n/locale";
 
-type Props = {
+type Props = ActionAvailability & {
   label: string;
   onPress: () => void;
   variant?: "primary" | "secondary" | "ghost" | "destructive";
   loading?: boolean;
-  disabled?: boolean;
   secondarySurfaceColor?: string;
 };
 
@@ -32,26 +33,26 @@ export function Button({
   variant = "primary",
   loading = false,
   disabled = false,
+  disabledReason,
   secondarySurfaceColor,
 }: Props) {
   const { colors } = usePreferences();
   const isDisabled = disabled || loading;
+  const t = getTranslator();
 
   const content = (
     <View style={styles.content}>
-      {loading ? (
-        <ActivityIndicator
-          color={
-            variant === "destructive"
-              ? colors.feedback.error
-              : variant === "primary"
-                ? color.text.inverse
-                : colors.indicator.default
-          }
-        />
-      ) : null}
+      {loading ? <ActivityIndicator color={colors.text.secondary} /> : null}
       <Text
-        color={variant === "destructive" ? "error" : variant === "primary" ? "onBrand" : "primary"}
+        color={
+          isDisabled
+            ? "secondary"
+            : variant === "destructive"
+              ? "error"
+              : variant === "primary"
+                ? "onBrand"
+                : "primary"
+        }
         style={styles.label}
       >
         {label}
@@ -60,37 +61,62 @@ export function Button({
   );
 
   return (
-    <Pressable
+    <ActionPressable
       accessibilityRole="button"
       accessibilityState={{ busy: loading, disabled: isDisabled }}
       disabled={isDisabled}
+      disabledReason={
+        loading
+          ? t("common_action_in_progress")
+          : (disabledReason ?? t("common_action_in_progress"))
+      }
       onPress={onPress}
-      style={isDisabled ? styles.disabled : undefined}
+      style={styles.pressable}
     >
-      {variant === "primary" ? <BrandGradient style={styles.base}>{content}</BrandGradient> : null}
-      {variant === "secondary" ? (
-        <BrandGradient outline style={[styles.base, styles.outline]}>
-          <View
-            style={[
-              styles.outlineContent,
-              { backgroundColor: secondarySurfaceColor ?? colors.surface.default },
-            ]}
-          >
-            {content}
-          </View>
-        </BrandGradient>
-      ) : null}
-      {variant === "destructive" ? (
+      {isDisabled ? (
         <View
-          style={[styles.base, styles.destructiveOutline, { borderColor: colors.feedback.error }]}
+          style={[
+            styles.base,
+            styles.destructiveOutline,
+            { backgroundColor: colors.surface.subtle, borderColor: colors.border.default },
+          ]}
         >
           {content}
         </View>
-      ) : null}
-      {variant === "ghost" ? (
-        <View style={[styles.base, { backgroundColor: "transparent" }]}>{content}</View>
-      ) : null}
-    </Pressable>
+      ) : (
+        <>
+          {variant === "primary" ? (
+            <BrandGradient style={styles.base}>{content}</BrandGradient>
+          ) : null}
+          {variant === "secondary" ? (
+            <BrandGradient outline style={[styles.base, styles.outline]}>
+              <View
+                style={[
+                  styles.outlineContent,
+                  { backgroundColor: secondarySurfaceColor ?? colors.surface.default },
+                ]}
+              >
+                {content}
+              </View>
+            </BrandGradient>
+          ) : null}
+          {variant === "destructive" ? (
+            <View
+              style={[
+                styles.base,
+                styles.destructiveOutline,
+                { borderColor: colors.feedback.error },
+              ]}
+            >
+              {content}
+            </View>
+          ) : null}
+          {variant === "ghost" ? (
+            <View style={[styles.base, { backgroundColor: "transparent" }]}>{content}</View>
+          ) : null}
+        </>
+      )}
+    </ActionPressable>
   );
 }
 
@@ -148,5 +174,5 @@ const styles = StyleSheet.create({
     minHeight: control.minHeight - 2,
   },
   label: { fontFamily: typography.family.semibold, textAlign: "center" },
-  disabled: { opacity: 0.55 },
+  pressable: { borderRadius: radius.pill },
 });

@@ -152,6 +152,13 @@ export default function RegisterScreen() {
                 usernameAvailability === "checking" ||
                 usernameAvailability === "unavailable"
               }
+              disabledReason={
+                !acceptedTerms
+                  ? t("common_terms_required")
+                  : usernameAvailability === "checking"
+                    ? t("account_username_checking")
+                    : t("account_username_unavailable")
+              }
               label={t("account_register")}
               loading={isSubmitting}
               onPress={() => void register()}

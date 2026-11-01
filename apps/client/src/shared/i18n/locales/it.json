@@ -613,5 +613,14 @@
   "sessions_platform_android": "Android",
   "sessions_platform_windows": "Windows",
   "sessions_platform_macos": "macOS",
-  "sessions_platform_linux": "Linux"
+  "sessions_platform_linux": "Linux",
+  "common_action_in_progress": "È in corso un’operazione. Attendi che finisca.",
+  "common_action_requires_reload": "Le informazioni o i tuoi permessi sono cambiati. Ricarica i dati per continuare.",
+  "common_social_unavailable": "Questo accesso non è disponibile in questa versione.",
+  "common_terms_required": "Accetta i Termini di utilizzo e conferma di aver letto l’Informativa sulla privacy per continuare.",
+  "common_reauthentication_required": "Conferma la tua identità per continuare.",
+  "account_current_password_required": "Inserisci la password attuale di almeno 8 caratteri per continuare.",
+  "common_no_other_sessions": "Non ci sono altre sessioni aperte da chiudere.",
+  "league_result_invalid": "Completa un punteggio valido prima di salvare. Se lo sport non ammette pareggi, indica un vincitore.",
+  "league_team_name_required": "Inserisci il nome della squadra."
 }

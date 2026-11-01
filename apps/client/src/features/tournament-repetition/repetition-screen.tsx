@@ -294,6 +294,11 @@ export function RepetitionScreen() {
                     <View style={styles.options}>
                       <ConfigurationOption
                         disabled={saving || rejected}
+                        disabledReason={
+                          rejected
+                            ? t("common_action_requires_reload")
+                            : t("common_action_in_progress")
+                        }
                         label={t("tournament_repeat_own_team")}
                         selected={ownKey === team.key}
                         onPress={() => {
@@ -305,6 +310,11 @@ export function RepetitionScreen() {
                           label={t("league_remove_team")}
                           variant="secondary"
                           disabled={saving || rejected}
+                          disabledReason={
+                            rejected
+                              ? t("common_action_requires_reload")
+                              : t("common_action_in_progress")
+                          }
                           onPress={() => {
                             const remaining = teams.filter((item) => item.key !== team.key);
                             setTeams(remaining);
@@ -320,6 +330,9 @@ export function RepetitionScreen() {
                     label={t("league_add_team")}
                     variant="secondary"
                     disabled={saving || rejected}
+                    disabledReason={
+                      rejected ? t("common_action_requires_reload") : t("common_action_in_progress")
+                    }
                     onPress={() =>
                       setTeams((current) => [...current, { key: randomUUID(), name: "" }])
                     }
@@ -329,6 +342,9 @@ export function RepetitionScreen() {
                   label={t("tournament_repeat_create")}
                   loading={saving}
                   disabled={rejected}
+                  disabledReason={
+                    rejected ? t("common_action_requires_reload") : t("common_action_in_progress")
+                  }
                   onPress={() => void save()}
                 />
               </View>

@@ -148,3 +148,15 @@ y se verifica K3s Ready con ambas réplicas API y PostgreSQL sanos. Backup cifra
 `20261011-080242F_20261101-090314I`, estado 0, restaurado en emptyDir con repo de
 solo lectura y set exacto: Job completo y `fasttourney_prod|f`. No se exportan
 los datos de producción. La evidencia de activación se cerrará en DEPLOYMENT.md.
+
+## Publicación completada
+
+[v1.15.0](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.15.0),
+SHA `8c8c7ca153820538629f6a1a219f935e7796615b`, activa en web, API y renderer.
+Los gates finales incluyen integración real, detector de carreras, CI del
+candidato y del merge, backup/restauración aislada y 15 checks HTTPS correctos.
+La autorización específica de source maps se obtiene tras la revisión automática;
+se suben al proyecto PostHog EU existente y no quedan mapas públicos.
+La [evidencia de operación](../operations/DEPLOYMENT.md) y el
+[resultado saneado](evidence/grada-release-2026-11-01/result.json) conservan
+versiones, rollback y limitaciones. Publicar no cierra la matriz visual pendiente.

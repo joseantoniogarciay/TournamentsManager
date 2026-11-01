@@ -1,6 +1,7 @@
+import { ActionPressable } from "@/shared/ui/action-pressable";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, Platform, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
@@ -176,10 +177,11 @@ export default function AddTournamentAdministratorScreen() {
           ) : null}
           {helper ? <Text color="secondary">{helper}</Text> : null}
           {visibleResults.map((username) => (
-            <Pressable
+            <ActionPressable
               key={username}
               accessibilityRole="button"
               disabled={assigning !== undefined}
+              disabledReason={t("common_action_in_progress")}
               onPress={() => void assign(username)}
               style={[styles.row, { borderColor: colors.border.default }]}
             >
@@ -187,7 +189,7 @@ export default function AddTournamentAdministratorScreen() {
               {assigning === username ? (
                 <ActivityIndicator color={colors.indicator.default} />
               ) : null}
-            </Pressable>
+            </ActionPressable>
           ))}
         </KeyboardAwareScrollView>
       </Screen>

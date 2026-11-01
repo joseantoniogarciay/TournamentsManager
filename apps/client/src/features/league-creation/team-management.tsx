@@ -1,6 +1,7 @@
+import { ActionPressable } from "@/shared/ui/action-pressable";
 import { SymbolView } from "expo-symbols";
 import { useState } from "react";
-import { ActivityIndicator, Platform, Pressable, Share, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Platform, Share, StyleSheet, View } from "react-native";
 
 import { control, space, webLayout } from "@tournaments-manager/design-tokens";
 
@@ -277,7 +278,7 @@ export function TournamentTeamManagement({
                 {t("league_team_withdrawn")}
               </Text>
             ) : canRemoveTeam || canWithdrawTeam ? (
-              <Pressable
+              <ActionPressable
                 accessibilityLabel={t(
                   canWithdrawTeam
                     ? "league_withdraw_team"
@@ -288,6 +289,7 @@ export function TournamentTeamManagement({
                 accessibilityRole="button"
                 accessibilityState={{ busy: removingTeamID === team.id }}
                 disabled={removingTeamID !== undefined}
+                disabledReason={t("common_action_in_progress")}
                 onPress={() => confirmRemove(team.id, team.name, canWithdrawTeam)}
                 style={styles.removeButton}
               >
@@ -302,7 +304,7 @@ export function TournamentTeamManagement({
                     tintColor={colors.text.primary}
                   />
                 )}
-              </Pressable>
+              </ActionPressable>
             ) : null}
           </View>
         </Card>
@@ -348,6 +350,7 @@ export function TournamentTeamManagement({
         ) : null}
         <Button
           disabled={!name.trim()}
+          disabledReason={t(racket ? "racket_participant_required" : "league_team_name_required")}
           label={t(racket ? "racket_add_participant_save" : "league_add_team_save")}
           loading={saving}
           onPress={() => void save()}

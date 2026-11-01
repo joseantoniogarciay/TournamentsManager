@@ -60,6 +60,7 @@ export function SuggestionCard() {
         />
         <Button
           disabled={!canSubmit}
+          disabledReason={t("home_suggestion_requirement")}
           label={t("home_suggestion_send")}
           loading={isSubmitting}
           onPress={() => void onSubmit()}

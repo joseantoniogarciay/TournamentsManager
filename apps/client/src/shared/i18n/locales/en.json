@@ -613,5 +613,14 @@
   "sessions_platform_android": "Android",
   "sessions_platform_windows": "Windows",
   "sessions_platform_macos": "macOS",
-  "sessions_platform_linux": "Linux"
+  "sessions_platform_linux": "Linux",
+  "common_action_in_progress": "An operation is in progress. Wait for it to finish.",
+  "common_action_requires_reload": "The information or your permissions have changed. Reload the data to continue.",
+  "common_social_unavailable": "This sign-in method is not available in this version.",
+  "common_terms_required": "Accept the Terms of Use and confirm you have read the Privacy Policy to continue.",
+  "common_reauthentication_required": "Confirm your identity to continue.",
+  "account_current_password_required": "Enter your current password of at least 8 characters to continue.",
+  "common_no_other_sessions": "There are no other open sessions to sign out.",
+  "league_result_invalid": "Complete a valid score before saving. If the sport does not allow draws, specify a winner.",
+  "league_team_name_required": "Enter the team name."
 }

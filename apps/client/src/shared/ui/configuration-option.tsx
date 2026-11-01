@@ -1,17 +1,18 @@
-import { Pressable, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 import { color, control, radius } from "@tournaments-manager/design-tokens";
 
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 import { Text } from "./text";
+import { ActionPressable, type ActionAvailability } from "./action-pressable";
 
 export function ConfigurationOption({
   disabled = false,
+  disabledReason,
   label,
   onPress,
   selected,
-}: {
-  disabled?: boolean;
+}: ActionAvailability & {
   label: string;
   onPress: () => void;
   selected: boolean;
@@ -19,26 +20,27 @@ export function ConfigurationOption({
   const { colors } = usePreferences();
 
   return (
-    <Pressable
+    <ActionPressable
       accessibilityRole="button"
       accessibilityState={{ disabled, selected }}
       disabled={disabled}
+      disabledReason={disabledReason ?? ""}
       onPress={onPress}
       style={[
         styles.option,
-        selected
-          ? { backgroundColor: color.brand.primary, borderColor: color.brand.primary }
-          : { backgroundColor: colors.surface.default, borderColor: colors.border.default },
-        disabled ? styles.disabled : undefined,
+        disabled
+          ? { backgroundColor: colors.surface.subtle, borderColor: colors.border.default }
+          : selected
+            ? { backgroundColor: color.brand.primary, borderColor: color.brand.primary }
+            : { backgroundColor: colors.surface.default, borderColor: colors.border.default },
       ]}
     >
-      <Text color={selected ? "onBrand" : "primary"}>{label}</Text>
-    </Pressable>
+      <Text color={disabled ? "secondary" : selected ? "onBrand" : "primary"}>{label}</Text>
+    </ActionPressable>
   );
 }
 
 const styles = StyleSheet.create({
-  disabled: { opacity: 0.55 },
   option: {
     alignItems: "center",
     borderRadius: radius.pill,

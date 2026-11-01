@@ -121,6 +121,7 @@ export default function AccountPasswordScreen() {
             {hasPassword === false && !googleTicket ? (
               <Button
                 disabled={!proof.isConfigured}
+                disabledReason={t("common_social_unavailable")}
                 label={t("account_password_google_reauthenticate")}
                 loading={proof.isLoading}
                 onPress={() => void proof.start()}
@@ -136,6 +137,13 @@ export default function AccountPasswordScreen() {
             />
             <Button
               disabled={!valid}
+              disabledReason={
+                password.length < 8
+                  ? t("validation_password_length")
+                  : hasPassword
+                    ? t("account_current_password_required")
+                    : t("common_reauthentication_required")
+              }
               label={t("account_password_save")}
               loading={submitting}
               onPress={() => void submit()}

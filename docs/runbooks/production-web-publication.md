@@ -8,7 +8,7 @@
 ## Síntoma e impacto
 
 ADR-0155 está conmutado desde el 2026-10-11: producción sirve el artefacto
-`ec8112a383fadd2abb1bf0d1800406e01c5a761a` (v1.11.0) desde Workers Static
+`8c8c7ca153820538629f6a1a219f935e7796615b` (v1.15.0) desde Workers Static
 Assets Free; la primera conmutación reutilizó b002b4b.
 K3s y PostgreSQL están recuperados; la API pública devuelve 200. El
 [procedimiento Cloudflare](../../infra/cloudflare/README.md) separa staging,
@@ -323,3 +323,11 @@ Para rollback Cloudflare usar las versiones web
 `b878e160-71cf-4a76-83ee-c9c3992edb59` y redirect
 `629c2b56-f91d-4879-a91a-a66c9d8612b2`, con configuración correspondiente.
 Rollback API recupera b002b4b y su manifiesto anterior; no revierte datos.
+
+## Evidencia v1.15.0 — 2026-11-01
+
+Web, API y renderer publicados en el mismo SHA del tag, gates y checks HTTPS
+correctos. La publicación usa Workers Static Assets; se alinea también el
+origen Caddy de recuperación. Véase [el cierre y rollback](../operations/DEPLOYMENT.md)
+y [la evidencia saneada](../engineering/evidence/grada-release-2026-11-01/result.json).
+Las limitaciones de QA visual se mantienen en las notas de GitHub Release.

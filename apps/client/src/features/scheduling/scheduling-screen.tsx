@@ -297,6 +297,9 @@ export function SchedulingScreen({ mode }: { mode: "match" | "venue" }) {
                   label={t("scheduling_save")}
                   loading={saving}
                   disabled={rejected}
+                  disabledReason={
+                    rejected ? t("common_action_requires_reload") : t("common_action_in_progress")
+                  }
                   onPress={() => void save()}
                 />
                 {mode === "match" && (date || time) ? (
@@ -304,6 +307,9 @@ export function SchedulingScreen({ mode }: { mode: "match" | "venue" }) {
                     label={t("scheduling_clear_when")}
                     variant="secondary"
                     disabled={saving || rejected}
+                    disabledReason={
+                      rejected ? t("common_action_requires_reload") : t("common_action_in_progress")
+                    }
                     onPress={() => {
                       setDate("");
                       setTime("");
