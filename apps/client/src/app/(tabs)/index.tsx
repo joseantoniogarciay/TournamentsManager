@@ -13,6 +13,7 @@ import { getTranslator } from "@/shared/i18n/locale";
 import { isStaticWebRender } from "@/shared/i18n/is-static-web-render";
 import { listRecentRelatedTournaments } from "@/features/league-creation/api";
 import { TournamentCard } from "@/features/league-creation/components/league-card";
+import { GuestWelcome } from "@/features/league-creation/components/guest-welcome";
 import { getRequestFailure } from "@/shared/feedback/request-failure";
 import { useFeedback } from "@/shared/feedback/feedback-provider";
 import { usePreferences } from "@/shared/preferences/preferences-provider";
@@ -105,6 +106,7 @@ export default function HomeScreen() {
           <ResponsiveColumns gap={space[6]} fullWidthLast>
             <ContentSection>
               <View style={styles.hero}>
+                {showGuestHome ? <GuestWelcome /> : null}
                 <Text variant="display">{t("home_hero")}</Text>
                 <Text color="secondary" variant="bodyLarge">
                   {t("home_introduction")}

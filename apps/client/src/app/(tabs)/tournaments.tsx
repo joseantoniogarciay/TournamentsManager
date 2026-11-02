@@ -171,9 +171,7 @@ function TournamentLibrary({
       >
         {leagues.length === 0 ? (
           <View style={styles.empty}>
-            {selectedRelationship === "administered" ? (
-              <TournamentIllustration variant="bracket" />
-            ) : null}
+            <TournamentIllustration key={selectedRelationship} variant="bracket" />
             <Text color="secondary">{empty}</Text>
           </View>
         ) : (

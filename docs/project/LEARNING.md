@@ -1,5 +1,55 @@
 # Registro de aprendizaje
 
+## 2026-11-02 — Momentos contextuales y navegación inmediata
+
+ADR-0183 incorpora silbato, camisetas y bienvenida sobre el mismo reproductor.
+La bienvenida usa una marca por sesión JS, actualizada en efecto para que SSR
+no consuma la reproducción. La señal de invitación aceptada se transmite en
+memoria por torneo/cuenta y se consume una vez en la ficha de destino: se evita
+esperar a una animación o aceptar un parámetro de URL como prueba de éxito.
+
+Retrospectiva: compartir arte y ciclo de vida reduce mantenimiento; transmitir
+un resultado entre rutas exige acotar identidad y consumo. Una prueba de
+reproducción no acredita la experiencia de Safari real, y los bundles nativos
+no acreditan ejecución en dispositivo. [Evidencia y límites](../engineering/LOTTIE_MOMENTS_2026-11-02.md).
+
+## 2026-11-02 — Disponibilidad de Lottie web y primer playback
+
+`isLoaded` no garantiza que se haya emitido `DOMLoaded`: Lottie fija la propiedad
+sincrónicamente y encola el evento. La prueba reproduce que un efecto puede
+iniciar la animación en ese intervalo y que el callback posterior la detiene en
+el dibujo final. Se espera el evento explícito antes de consumir la reproducción.
+
+Retrospectiva: una lámina estática valida el recurso pero no su ciclo de vida.
+Las pruebas deben cubrir también eventos iniciales que llegan en otro orden,
+manteniendo el fallback accesible y sin añadir retardos arbitrarios. La captura
+aportada desde Safari iOS orienta al adaptador web, pero no confirma por sí sola
+qué condición detuvo la animación en ese dispositivo.
+
+## 2026-11-02 — Ilustración en ambos segmentos vacíos
+
+Se amplía el cuadro Lottie existente a Sigo vacío por petición del usuario.
+Retrospectiva: reutilizar el recurso mantiene el estilo y evita duplicar assets.
+Al cambiar de relación, React conservaría el reproductor ya consumido; una
+`key` de relación remonta solo la ilustración y permite su reproducción única,
+sin remontar la biblioteca ni perder paginación. Texto localizado, tema y
+movimiento reducido conservan sus mecanismos existentes. Typecheck y exportación
+web comprueban la composición; la QA visual de la app sigue pendiente.
+
+## 2026-11-02 — Cierre de publicación Lottie
+
+v1.17.0 se publica solo en web con gates local/develop/main correctos, ocho
+checks preview y 30 HTTPS productivos, incluidos once hashes de bundles. La
+autorización explícita del usuario resuelve el bloqueo de subida de símbolos a
+PostHog UE 255144 sin desactivar ese flujo ni exponer mapas en el hosting.
+
+Retrospectiva: conservar la versión anterior y separar preparación de activación
+permite detenerse sin afectar producción. El smoke test debe codificar los
+corchetes de nombres de chunks dinámicos: un 307 de normalización no demuestra
+un fallo del recurso. Verificar el hash de su URL codificada prueba el contenido
+servido; no sustituye la revisión visual/autenticada pendiente ni la distribución
+móvil. [Evidencia y rollback](../operations/DEPLOYMENT.md#publicación-v1170--2026-11-02).
+
 ## 2026-11-02 — Ilustración Lottie y ciclo de vida
 
 ADR-0182 limita Lottie a dos ilustraciones originales con tokens Grada. Un

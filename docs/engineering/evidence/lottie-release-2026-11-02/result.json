@@ -1,0 +1,262 @@
+{
+  "commit": "a7db33b6a67ac1ae1976758a5b92ae0c6151d2f7",
+  "checks": [
+    {
+      "path": "https://fasttourney.com/deployment.json",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/account",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/account/profile",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournaments",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/privacy-policy",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/terms-of-use",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000/standings",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/favicon.ico",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/apple-touch-icon.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/fasttourney-league-preview.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/font-licenses/dm-sans.txt",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000",
+      "status": 404
+    },
+    {
+      "path": "https://fasttourney.com/tournament/01a0c9b0-1d38-7d47-8825-86c5af8b1237",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/healthz",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/registrations",
+      "status": 204
+    },
+    {
+      "path": "https://www.fasttourney.com/tournaments?release=1.17.0",
+      "status": 308
+    },
+    {
+      "path": "https://fasttourney.com/theme-init.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-055496856fddfda5683c414f5fd0a377.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-3764c6e2cfa68fec18837f77aa3d2c6c.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/index-b2b45f7184fbe1c684f7f42717582061.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__common-86c2bdce0aba12b738b32619a9b6a5ba.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/entry-30a3a1f87bff712ff343f8f05b8ed6f0.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-921c4837ce2171255e83210d34413af6.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/profile-77f8594cb0f5c2d080d75b8118fb7b0c.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/tournaments-18e0b41fa30363f22b3b48565dcfbdba.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/[id]-0f0ba1710a9975a0f72937fdeedc667c.js",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/me/profile",
+      "status": 401
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/me/profile",
+      "status": 204
+    }
+  ],
+  "entryAssets": [
+    {
+      "path": "/theme-init.js",
+      "sha256": "38d3ff1eaf6469d3d348c668628b1b08f23689f6eb96731e470d841918efe4d4"
+    },
+    {
+      "path": "/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "65185db00c4c8a6ba038cf6249072b02f934dfa5206e6379533bc362d2b010fa"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-055496856fddfda5683c414f5fd0a377.js",
+      "sha256": "484d1bf850eee7b2ad94e2275bab561def0378fa6a1fa1dbef7d5a89435d8021"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-3764c6e2cfa68fec18837f77aa3d2c6c.js",
+      "sha256": "33bd796d556e19a38b80b5f7c0f4cf58ff5b7548765fe372d01e9f2c3a8abd89"
+    },
+    {
+      "path": "/_expo/static/js/web/index-b2b45f7184fbe1c684f7f42717582061.js",
+      "sha256": "6ecdd12729eb966f997a174fcb82f5f916e4eeb0468e2ad3fdae78301a21401d"
+    },
+    {
+      "path": "/_expo/static/js/web/__common-86c2bdce0aba12b738b32619a9b6a5ba.js",
+      "sha256": "f09357d43a6005f41adf6cacd978e6081af89d00a028a668622b670b7b71851b"
+    },
+    {
+      "path": "/_expo/static/js/web/entry-30a3a1f87bff712ff343f8f05b8ed6f0.js",
+      "sha256": "fb98523ad2ef8806b18a57d7a48910c428941755848d197d19b007aa383a9876"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-921c4837ce2171255e83210d34413af6.js",
+      "sha256": "c22976ef582845bf4f9a3e02e7369a42300bc4f2fc5476c7410a6c42afd39708"
+    },
+    {
+      "path": "/_expo/static/js/web/profile-77f8594cb0f5c2d080d75b8118fb7b0c.js",
+      "sha256": "cebd815f08e43663f2667d58215b4b7c569591ad449e7f7aa8b2ac30215b257a"
+    },
+    {
+      "path": "/_expo/static/js/web/tournaments-18e0b41fa30363f22b3b48565dcfbdba.js",
+      "sha256": "9692594502e609fdfcfd33ae40ab7f2283f3a52b3cbb802077f1bc23a0cf5d98"
+    },
+    {
+      "path": "/_expo/static/js/web/[id]-0f0ba1710a9975a0f72937fdeedc667c.js",
+      "sha256": "31b30f419f91a472e41e7fc201d3f56cc6092de23282897b1428c00c47dc9695"
+    }
+  ],
+  "release": "v1.17.0",
+  "status": "published",
+  "scope": "web only; API and renderer retain v1.16.0; schema 23 unchanged",
+  "validation": {
+    "localMakeVerify": "passed; generic PostgreSQL integration skipped without configured DB",
+    "candidateCI": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41492038679",
+    "mainCI": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41493063901",
+    "candidateConclusion": "success",
+    "mainConclusion": "success",
+    "productionConfiguredLocalExport": "passed; /tmp/tm-lottie-v1170-production-review"
+  },
+  "preview": {
+    "version": "b9baf774-4420-445a-8527-1664d32d45a6",
+    "url": "https://b9baf774-fasttourney-web.joseantoniogarciay.workers.dev",
+    "commit": "a7db33b6a67ac1ae1976758a5b92ae0c6151d2f7",
+    "checks": [
+      {
+        "path": "/deployment.json",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/account",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/tournaments",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/account/profile",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/create-tournament",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/privacy-policy",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/tournament/00000000-0000-4000-8000-000000000000/standings",
+        "status": 200,
+        "noindex": true
+      }
+    ]
+  },
+  "workers": {
+    "web": "c0d47cc6-5166-47fb-a088-40ff5d431b21",
+    "redirect": "ddad4a74-e684-4ef8-b568-96ff67dfef35"
+  },
+  "symbols": {
+    "host": "https://eu.posthog.com",
+    "project": 255144,
+    "authorization": "User explicitly replied Autorizo to the request identifying v1.17.0 bundles/source maps, destination and project",
+    "cliProcess": "completed successfully",
+    "publicSourceMaps": 0,
+    "publicSourceMapReferences": 0,
+    "realCrashSymbolication": "not verified"
+  },
+  "authorizationHistory": "Rejected stage-prod-web.sh because the deployment request did not explicitly authorize sensitive bundles/source maps to PostHog EU project 255144. No upload or production activation performed; local export only.",
+  "rollback": {
+    "release": "v1.16.1",
+    "commit": "be64133a2474409a0ab552d3e953f49a64110c4f",
+    "web": "d36ac9f3-2c19-4535-8b2b-6e5d52977062",
+    "redirect": "9e74bb31-f02a-40d4-b56d-0f77d658cddf",
+    "healthz": 200
+  },
+  "recoveryOrigin": {
+    "commit": "a7db33b6a67ac1ae1976758a5b92ae0c6151d2f7",
+    "rendererRevision": "0e56a27b97fd03069d4d6cf03f965dd69a94ec5d",
+    "readyStatus": 200
+  },
+  "limitations": [
+    "Visual web/native QA and authenticated production walkthrough pending",
+    "No native binaries distributed",
+    "API and renderer retain v1.16.0; schema 23 unchanged",
+    "local/dev and observability not started"
+  ],
+  "assetUrlEncoding": "Square brackets in dynamic bundle URLs were percent-encoded for HTTPS checks; local filenames retained for hash comparison"
+}

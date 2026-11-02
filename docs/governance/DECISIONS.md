@@ -1,9 +1,19 @@
 # Gobierno de decisiones
 
+ADR-0183 acepta completar las propuestas Lottie y publicar el conjunto: silbato
+al iniciar, camiseta al aceptar invitación y bienvenida sin sesión, además de
+Sigo y la corrección web pendientes. Se reutiliza el reproductor, sin dependencia
+nueva ni bloqueos de navegación. [Decisión](../adr/0183-complete-contextual-lottie-moments.md)
+y [evidencia técnica](../engineering/LOTTIE_MOMENTS_2026-11-02.md).
+
 ADR-0182 acepta dos ilustraciones Lottie tras «Vamos con tu recomendación»:
 trofeo al finalizar y cuadro en Administro vacío, con identidad Grada y
 movimiento reducido. [Alcance y coste](../adr/0182-add-lottie-tournament-illustrations.md)
 y [validación](../engineering/LOTTIE_ILLUSTRATIONS_2026-11-02.md).
+
+El usuario autoriza después «Despliega» y «Autorizo» para los bundles/mapas fuente
+a PostHog UE 255144. v1.17.0 queda publicada exclusivamente en web, con gates y
+checks HTTPS correctos. [Evidencia y límites](../operations/DEPLOYMENT.md#publicación-v1170--2026-11-02).
 
 ## Autoridad
 

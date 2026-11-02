@@ -1,6 +1,6 @@
 import type { AnimationObject } from "lottie-react-native";
 
-export type TournamentIllustrationVariant = "trophy" | "bracket";
+export type TournamentIllustrationVariant = "trophy" | "bracket" | "whistle" | "team" | "welcome";
 type Palette = { accent: string; ink: string; subtle: string };
 type Point = [number, number];
 
@@ -60,7 +60,7 @@ export function createTournamentIllustration(
   palette: Palette,
 ): AnimationObject {
   const layers: AnimationObject["layers"] = [];
-  const duration = variant === "trophy" ? 48 : 60;
+  const duration = variant === "welcome" ? 78 : variant === "bracket" ? 60 : 48;
   const layer = (
     name: string,
     shapes: unknown[],
@@ -238,7 +238,182 @@ export function createTournamentIllustration(
       anchor: [128, 92],
       position: still([128, 92, 0]),
     });
+  } else if (variant === "whistle") {
+    layer(
+      "Air · upper",
+      [
+        path([
+          [167, 64],
+          [190, 54],
+        ]),
+        stroke(palette.accent, 3),
+        trim(12, 28),
+      ],
+      {
+        opacity: tween([0], [100], 10, 22),
+        position: tween([0, 3, 0], [0, 0, 0], 12, 34),
+      },
+    );
+    layer(
+      "Air · lower",
+      [
+        path([
+          [173, 88],
+          [199, 88],
+        ]),
+        stroke(palette.accent, 3),
+        trim(16, 32),
+      ],
+      { opacity: tween([0], [100], 14, 26) },
+    );
+    layer(
+      "Whistle",
+      [
+        path(
+          [
+            [99, 72],
+            [156, 72],
+            [156, 94],
+            [131, 94],
+            [120, 120],
+            [91, 120],
+            [77, 105],
+            [77, 89],
+            [99, 72],
+          ],
+          true,
+        ),
+        stroke(palette.accent, 4),
+        trim(0, 26),
+      ],
+      {
+        anchor: [128, 96],
+        position: tween([128, 104, 0], [128, 96, 0], 0, 30),
+        scale: tween([88, 88, 100], [100, 100, 100], 0, 30),
+      },
+    );
+    layer("Whistle opening", [ellipse([103, 98], [17, 17]), stroke(palette.ink, 3), trim(10, 30)]);
+    layer("Mouthpiece", [
+      path([
+        [136, 73],
+        [136, 92],
+      ]),
+      stroke(palette.ink, 2),
+      trim(12, 32),
+    ]);
+    layer("Whistle halo", [ellipse([128, 96], [132, 120]), fill(palette.subtle)]);
+  } else if (variant === "team") {
+    const shirt = (
+      name: string,
+      x: number,
+      y: number,
+      scale: number,
+      hex: string,
+      arriving = false,
+    ) => {
+      layer(
+        name,
+        [
+          path(
+            [
+              [-14, -28],
+              [-29, -19],
+              [-22, -5],
+              [-15, -9],
+              [-15, 27],
+              [15, 27],
+              [15, -9],
+              [22, -5],
+              [29, -19],
+              [14, -28],
+              [7, -20],
+              [-7, -20],
+            ],
+            true,
+          ),
+          stroke(hex, 3),
+          trim(arriving ? 4 : 0, arriving ? 28 : 18),
+        ],
+        {
+          position: arriving ? tween([x, y - 32, 0], [x, y, 0], 4, 34) : still([x, y, 0]),
+          scale: arriving
+            ? tween([scale * 0.8, scale * 0.8, 100], [scale, scale, 100], 4, 34)
+            : still([scale, scale, 100]),
+          opacity: tween([0], [100], arriving ? 4 : 0, arriving ? 16 : 12),
+        },
+      );
+    };
+    shirt("New teammate", 128, 98, 110, palette.accent, true);
+    layer("Team check", [
+      path([
+        [119, 103],
+        [126, 110],
+        [139, 94],
+      ]),
+      stroke(palette.accent, 3),
+      trim(26, 42),
+    ]);
+    shirt("Left teammate", 68, 105, 74, palette.ink);
+    shirt("Right teammate", 188, 105, 74, palette.ink);
+    layer("Team ground", [ellipse([128, 147], [158, 6]), fill(palette.subtle)]);
+    layer("Team halo", [ellipse([128, 96], [116, 116]), fill(palette.subtle)]);
   } else {
+    if (variant === "welcome") {
+      layer(
+        "Ball becomes forward mark",
+        [
+          ellipse([0, 0], [14, 14]),
+          fill(palette.subtle),
+          stroke(palette.accent, 2),
+          path(
+            [
+              [-3, -4],
+              [3, -4],
+              [5, 1],
+              [0, 5],
+              [-5, 1],
+            ],
+            true,
+          ),
+          stroke(palette.ink, 1),
+        ],
+        {
+          position: {
+            a: 1,
+            k: [
+              { t: 0, s: [37, 49, 0], e: [77, 49, 0], ...ease },
+              { t: 14, s: [77, 49, 0], e: [77, 93, 0], ...ease },
+              { t: 30, s: [77, 93, 0], e: [128, 93, 0], ...ease },
+              { t: 50, s: [128, 93, 0] },
+            ],
+          },
+          scale: tween([100, 100, 100], [0, 0, 100], 50, 58),
+        },
+      );
+      layer(
+        "FastTourney forward",
+        [
+          path(
+            [
+              [118, 78],
+              [129, 88],
+              [118, 98],
+            ],
+            true,
+          ),
+          path(
+            [
+              [129, 78],
+              [140, 88],
+              [129, 98],
+            ],
+            true,
+          ),
+          fill(palette.accent),
+        ],
+        { opacity: tween([0], [100], 52, 66) },
+      );
+    }
     cup(true);
     const positions: Point[] = [
       [37, 49],

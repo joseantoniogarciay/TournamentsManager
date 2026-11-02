@@ -4,6 +4,7 @@
 - **Fecha:** 2026-11-02
 - **Decisor:** Usuario: «Vamos con tu recomendación».
 - **Supera a:** ADR-0054 solo en la exclusión inicial de animaciones complejas.
+- **Ampliado por:** ADR-0183, con los otros tres momentos aceptados posteriormente.
 
 ## Problema y contexto
 
@@ -77,3 +78,18 @@ No se publica ni despliega.
 El usuario pide «Despliega». Se autoriza preparar y publicar el hito web v1.17.0
 siguiendo ADR-0119. No incluye distribución en tiendas ni cambia API, renderer,
 esquema o los límites de QA visual documentados.
+
+Publicada v1.17.0 en web tras la autorización adicional de bundles/mapas fuente
+a PostHog UE 255144. Ocho checks preview y 30 HTTPS productivos, con once hashes
+de scripts correctos. [Evidencia y rollback](../operations/DEPLOYMENT.md#publicación-v1170--2026-11-02).
+
+## Ampliación aceptada — vacío de Sigo
+
+El usuario solicita añadir animación también a «Todavía no sigues ningún
+torneo». Se reutiliza el mismo cuadro en ambos segmentos vacíos, conservando
+el texto correspondiente a cada relación. No hace falta otra ilustración ni
+dependencia: menor coste de mantenimiento que crear una variante decorativa.
+La ilustración se monta por relación para reproducirse una vez al cambiar a
+otro segmento vacío, sin remontar la biblioteca ni reiniciar sus datos.
+Se mantiene el comportamiento estático con movimiento reducido. Esta ampliación
+es posterior a v1.17.0 y no está publicada todavía.
