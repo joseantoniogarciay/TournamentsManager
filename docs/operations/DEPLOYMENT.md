@@ -1,5 +1,34 @@
 # Despliegue e infraestructura
 
+## Preparación v1.18.0 — activación pendiente, 2026-11-02
+
+El usuario solicita todas las animaciones propuestas, una nueva subida y después
+la copa formándose/desvaneciéndose en los loaders grandes; confirma «Continúa».
+ADR-0183/0184 implementados, ocho regresiones y make verify local correctos.
+CI final de develop y main correcta, con integración PostgreSQL. Tag anotado y
+[Release v1.18.0](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.18.0)
+sobre merge `3b52f808731617b4f006a012b0cddd153038c971`.
+
+La revisión automática rechaza de nuevo el staging por la subida de bundles/mapas
+fuente a https://eu.posthog.com, proyecto 255144. No considera suficiente para
+este payload la autorización anterior y la petición de nueva publicación. No se
+evita el rechazo, no se suben símbolos y no se desactiva ese flujo de fiabilidad.
+Se prepara el export productivo solo localmente: 39 bundles, 39 mapas y
+12.936.604 bytes; inventario privado con hashes en
+`/tmp/tm-v1180-posthog-upload-review.json`. La Release indica activación pendiente.
+
+Producción conserva v1.17.0, SHA `a7db33b6a67ac1ae1976758a5b92ae0c6151d2f7`,
+Worker web `c0d47cc6-5166-47fb-a088-40ff5d431b21` y redirect
+`ddad4a74-e684-4ef8-b568-96ff67dfef35`; API sana. No se cambia el origen de
+recuperación, API/renderer ni esquema 23. Workspace en develop, con main
+integrada. Local/dev y observabilidad no se arrancan, ni se distribuyen binarios.
+[Evidencia saneada](../engineering/evidence/lottie-moments-release-2026-11-02/result.json).
+
+Retrospectiva: el bloqueo de transmisión se conserva como límite de autorización,
+no como fallo técnico de CI ni motivo para alterar producción o el contrato de
+fiabilidad. Los recursos y el payload están preparados para una aprobación
+concreta; la QA visual real sigue separada de las pruebas y exportaciones.
+
 ## Publicación v1.17.0 — 2026-11-02
 
 El usuario pide «Despliega» para las ilustraciones Lottie de ADR-0182.

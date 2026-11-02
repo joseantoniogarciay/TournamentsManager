@@ -1,0 +1,39 @@
+{
+  "release": "v1.18.0",
+  "commit": "3b52f808731617b4f006a012b0cddd153038c971",
+  "status": "prepared; activation blocked pending explicit authorization of v1.18.0 symbol upload",
+  "scope": "web only; five contextual illustrations, forming/fading full-screen cup loading, web DOMLoaded fix; API/renderer retain v1.16.0, schema 23 unchanged",
+  "validation": {
+    "localMakeVerify": "passed; generic PostgreSQL integration skipped without configured DB",
+    "candidateCI": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41503190649",
+    "mainCI": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41504367245",
+    "candidateConclusion": "success",
+    "mainConclusion": "success",
+    "lottieInvitationRegressions": 8,
+    "webAndNativeExports": "passed; native export is not device QA",
+    "productionConfiguredLocalExport": "/tmp/tm-v1180-production-review"
+  },
+  "pendingUpload": {
+    "host": "https://eu.posthog.com",
+    "project": 255144,
+    "bundles": 39,
+    "sourceMaps": 39,
+    "bytes": 12936604,
+    "uploaded": false,
+    "inventory": "/tmp/tm-v1180-posthog-upload-review.json"
+  },
+  "automaticReview": "Rejected stage-prod-web.sh: generic deployment approval and the previous symbol authorization were not accepted as specific authorization for this version payload and destination. No upload, Cloudflare activation or recovery-origin switch performed. Local export only.",
+  "productionRetained": {
+    "release": "v1.17.0",
+    "commit": "a7db33b6a67ac1ae1976758a5b92ae0c6151d2f7",
+    "web": "c0d47cc6-5166-47fb-a088-40ff5d431b21",
+    "redirect": "ddad4a74-e684-4ef8-b568-96ff67dfef35",
+    "healthz": 200
+  },
+  "limitations": [
+    "v1.18.0 GitHub Release explicitly marked pending activation",
+    "Cloudflare candidate check, preview and activation await the required symbol upload",
+    "Visual Safari iOS/other web/native QA and authenticated production walkthrough pending",
+    "No native binaries distributed; local/dev and observability not started"
+  ]
+}
