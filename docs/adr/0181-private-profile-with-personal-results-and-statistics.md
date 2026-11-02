@@ -81,3 +81,7 @@ vigente: una retirada que lo convierte en administrativo lo excluye del agregado
 no se reconstruyen marcadores antiguos. Pruebas de aislamiento, correcciones,
 byes, incidencias, penaltis y ocho deportes; QA visual y publicación pendientes.
 [Alcance, checklist y evidencia](../engineering/PRIVATE_PROFILE_2026-11-02.md).
+
+
+Publicado en web/API/renderer como v1.16.0; QA visual y distribución móvil
+pendientes. Véase la sección de publicación del informe de implementación.

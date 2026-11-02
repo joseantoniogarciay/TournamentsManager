@@ -471,3 +471,11 @@ nombre del torneo, sin migración. Pruebas de privacidad, correcciones, byes,
 incidencias, penaltis y los ocho deportes en PostgreSQL desechable. QA visual y
 publicación pendientes; ADR-0179 no se da por completado y ADR-0180 permanece
 Propuesto. [Checklist y alcance](../engineering/PRIVATE_PROFILE_2026-11-02.md).
+
+
+### Publicación autorizada de Mi perfil
+
+El usuario pide «Despliegue». ADR-0181 se publica en web/API/renderer como
+v1.16.0, con gates local y ambas CI correctos, backup/restauración aislada y
+checks HTTPS. Esquema 23 sin cambios. Se mantienen pendientes QA visual,
+distribución móvil, ADR-0180 y el resto de ADR-0179.

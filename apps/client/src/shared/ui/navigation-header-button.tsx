@@ -1,6 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { type ComponentProps, type ReactNode } from "react";
-import { Platform, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet } from "react-native";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 
@@ -14,7 +14,8 @@ type NavigationHeaderButtonProps = {
   nativeIcon: ComponentProps<typeof SymbolView>["name"];
   onPress: () => void;
   badge?: ReactNode;
-  side?: "left" | "right";
+  side?: "left" | "right" | "none";
+  loading?: boolean;
 };
 
 export const usesLiquidGlassNavigation = Platform.OS === "ios" && Number(Platform.Version) >= 26;
@@ -26,6 +27,7 @@ export function NavigationHeaderButton({
   nativeIcon,
   onPress,
   side = "left",
+  loading = false,
 }: NavigationHeaderButtonProps) {
   const { colors } = usePreferences();
 
@@ -33,20 +35,25 @@ export function NavigationHeaderButton({
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
-      onPress={onPress}
+      accessibilityState={{ busy: loading }}
+      onPress={loading ? undefined : onPress}
       style={[
         styles.button,
         side === "left"
           ? Platform.OS === "ios" && !usesLiquidGlassNavigation
             ? undefined
             : styles.left
-          : Platform.OS === "ios" && !usesLiquidGlassNavigation
-            ? undefined
-            : styles.right,
+          : side === "right"
+            ? Platform.OS === "ios" && !usesLiquidGlassNavigation
+              ? undefined
+              : styles.right
+            : undefined,
         { backgroundColor: colors.surface.default, borderColor: colors.border.default },
       ]}
     >
-      {Platform.OS === "web" ? (
+      {loading ? (
+        <ActivityIndicator color={colors.text.primary} />
+      ) : Platform.OS === "web" ? (
         <WebIcon color={colors.text.primary} name={icon} size={control.iconSize} />
       ) : (
         <SymbolView name={nativeIcon} size={control.iconSize} tintColor={colors.text.primary} />

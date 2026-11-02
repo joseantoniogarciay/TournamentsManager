@@ -7005,3 +7005,26 @@ Cierre del perfil: make verify final correcto y tres integraciones PostgreSQL
 del perfil correctas en base sintética con migraciones reales. El gate genérico
 omite su integración sin URL; no se presenta como ejecutada toda esa suite.
 Contenedor desechable apagado; QA visual y despliegue siguen pendientes.
+
+### Publicación v1.16.0 — 2026-11-02
+
+Perfil, lugar y máscaras publicados en web; API/renderer y manifiesto web trazados
+al mismo tag. Gates local y ambas CI correctos, incluidas integraciones PostgreSQL
+en CI. Backup cifrado y restauración aislada del set exacto correctos, sin cambios
+de esquema. Siete checks de preview, 27 HTTPS y nueve hashes pasan; perfil exige
+sesión. Cuarenta muestras de salud correctas durante la ventana de rollout.
+Retrospectiva: los archivos de pruebas faltantes del primer commit se añaden
+antes de promover, con CI renovada. No se atribuye a los checks HTTP un recorrido
+autenticado o QA visual que no se ejecutó. Calendar y resto de ADR-0179 pendientes.
+[Entrega y recuperación](../operations/DEPLOYMENT.md#publicación-v1160--2026-11-02).
+
+### Acciones de navegación del perfil — 2026-11-02
+
+El usuario pide pull to refresh en apps, Actualizar en la barra derecha web y
+Filtros en navegación en ambos casos, abriendo un popup. Se reutilizan
+NavigationHeaderButton, Stack.Toolbar y ModalDialog. El borrador del popup no
+altera la consulta hasta Aplicar; descartar y reabrir recupera la selección
+confirmada. Retrospectiva: agrupar botones requiere un único margen exterior,
+y un scroll sobre una superficie de diálogo no debe heredar el fade canvas.
+Tipos, lint, export web y regresiones de colecciones correctos; ajuste sin
+publicar y QA visual pendiente. Sin operaciones OpenAPI ni servicios nuevos.
