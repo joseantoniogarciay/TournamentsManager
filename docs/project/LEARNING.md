@@ -6875,3 +6875,30 @@ local deshabilitado. El mock de navegación había quedado sin usePreferences tr
 un cambio previo de tema; se completa el fixture, sin tocar la lógica de sesión.
 
 [Alcance, checklist y comprobaciones](../engineering/OPEN_SECTIONS_2026-11-01.md).
+
+
+### Publicación web v1.15.3 — 2026-11-01
+
+ADR-0178 publicado con gates local y ambas CI correctos, incluida PostgreSQL.
+El usuario autoriza específicamente bundles/source maps a PostHog UE 255144
+tras el rechazo automático inicial; se respeta el bloqueo hasta esa respuesta.
+Seis checks de preview y 22 productivos verifican el SHA y siete scripts. La ruta
+habitual entrega un certificado autofirmado durante el check canónico: el edge
+alternativo conserva TLS/SNI válidos y evita cambiar DNS/certificados. QA visual
+pendiente, API/renderer sin cambios y sin migraciones. Origen de recuperación
+alineado y rollback a v1.15.2 conservado.
+
+Retrospectiva y [evidencia de cierre](../operations/DEPLOYMENT.md#publicación-v1153--2026-11-01).
+
+### Bordes suaves de scroll — 2026-11-02
+
+El fade pertenece al viewport de cada scroll, no a Screen: así no vela cabeceras,
+acciones fijas ni contenido estático. El offset, tamaño del contenido, viewport e
+insets determinan qué borde tiene continuación, incluyendo rebote y resize.
+El renderer de SectionList debe tener identidad estable para evitar remontar el
+scroll al actualizar la ruta. Formularios reutilizan la misma primitiva y sus refs.
+
+Retrospectiva: un degradado compartido de 12 px resuelve el corte sin dependencia
+nativa nueva. La compilación comprueba integración y tipos, pero no demuestra
+legibilidad ni comportamiento visual nativo; ese QA permanece pendiente, igual
+que las matrices visuales pendientes de ADR-0176/0178.

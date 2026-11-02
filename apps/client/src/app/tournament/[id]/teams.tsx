@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { space } from "@tournaments-manager/design-tokens";

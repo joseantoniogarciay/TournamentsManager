@@ -2,7 +2,8 @@ import type { Metadata } from "expo-router/server";
 import { router, type Href, useFocusEffect } from "expo-router";
 import Head from "expo-router/head";
 import { useCallback, useEffect, useState } from "react";
-import { Platform, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, RefreshControl, StyleSheet, View } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 
 import { radius, space } from "@tournaments-manager/design-tokens";
 

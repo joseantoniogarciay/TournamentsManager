@@ -1,6 +1,7 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 
 import { control, space } from "@tournaments-manager/design-tokens";
 

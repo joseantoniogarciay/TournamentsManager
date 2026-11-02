@@ -1,5 +1,6 @@
 import { router, type Href } from "expo-router";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 
 import { color, control, radius, space, typography } from "@tournaments-manager/design-tokens";
 

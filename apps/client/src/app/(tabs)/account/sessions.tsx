@@ -1,5 +1,6 @@
 import { Redirect } from "expo-router";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 import { space } from "@tournaments-manager/design-tokens";
 import { useSessions } from "@/features/session-management/use-sessions";
 import { getCurrentLanguage, getTranslator } from "@/shared/i18n/locale";

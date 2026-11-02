@@ -1021,3 +1021,54 @@ observabilidad dev permanecen apagados; producción continúa activa.
 Retrospectiva: verificar los hashes realmente servidos acredita la entrega del
 código, pero no sustituye observar el primer render. Separar la ruta de red del
 estado del Worker evita modificar certificados o DNS ante un certificado ajeno.
+
+
+## Publicación v1.15.3 — 2026-11-01
+
+El usuario autoriza «Despliega». Se publica
+[v1.15.3](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.15.3),
+tag anotado sobre merge no-ff `ab32cea8a01e96f965cd08084aa907f26488bdc6`.
+Solo web: secciones abiertas y filas con separadores para listas simples,
+formularios y lectura (ADR-0178). API y renderer conservan v1.15.0
+`8c8c7ca153820538629f6a1a219f935e7796615b`; sin migraciones ni distribución móvil.
+
+Gate local make verify correcto, con integración PostgreSQL omitida localmente.
+[CI candidato](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41322085200)
+y [CI merge](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41322615762)
+correctas, incluida integración con PostgreSQL desechable. La revisión visual
+web/nativa sigue pendiente por equipo bloqueado y navegador deshabilitado; las
+maquetas no acreditan ejecución real en dispositivo.
+
+La revisión automática rechaza inicialmente la preparación porque incluye enviar
+bundles y mapas a PostHog sin autorización específica. Se completa el exportado
+local sin subirlo; el usuario autoriza después explícitamente esos archivos,
+unos 12 MB con código fuente, a https://eu.posthog.com, proyecto 255144. La
+preparación productiva termina correctamente. Cero mapas y referencias
+sourceMappingURL en el artefacto público. No se elude el bloqueo ni se cambia
+la política de telemetría.
+
+Dry-run de ambos Workers y seis rutas HTTPS de preview correctas. Versiones
+activas: web `f98480b9-c14c-424a-9b1c-2799f02434ee`, redirect
+`4bd50222-dcf2-4076-95dc-fc5d940e58e4`, preview
+`1ff723b9-9439-40ae-a48d-c4369b3623df`. Veintidós checks HTTPS verifican SHA,
+canonical/indexación, rutas, assets, metadatos, API 200, CORS 204 y www 308.
+Los siete scripts de entrada coinciden por SHA-256 con el candidato. El origen
+Caddy de recuperación queda alineado al mismo SHA.
+
+Límite de red: la ruta habitual de esta conexión rechaza un certificado
+autofirmado al verificar el dominio canónico después de activar. El edge
+Cloudflare 104.21.1.205 entrega TLS/SNI válidos y el SHA esperado; por él se
+completa la comprobación de los tres hosts. No se omite validación TLS ni se
+modifican DNS, certificados, API o Tunnel. No se atribuye el certificado al código.
+
+Rollback solo web a v1.15.2: SHA `40723d41d3b7c9e3dec048195cf2a1353ff87981`,
+Worker web `128e3826-b2fa-4766-8cb4-eedca64ffcd0` y redirect
+`abb2ac85-986f-4198-856b-10219a7ef5ec`, usando las configuraciones conservadas.
+Develop incorpora el merge de main; no se crean ramas temporales. Local/dev,
+sus tareas y observabilidad dev no se arrancan. Producción permanece activa.
+[Evidencia saneada](../engineering/evidence/open-sections-release-2026-11-01/result.json).
+
+Retrospectiva: una mejora transversal de composición puede publicarse como web
+sin un rollout de API. Separar autorización de símbolos, CI, preview, activación
+y contenido realmente servido mantiene trazabilidad y evita confundir un problema
+de ruta TLS con un fallo del artefacto. Los hashes no sustituyen QA visual.

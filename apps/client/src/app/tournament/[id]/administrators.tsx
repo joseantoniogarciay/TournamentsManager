@@ -2,7 +2,8 @@ import { ActionPressable } from "@/shared/ui/action-pressable";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
