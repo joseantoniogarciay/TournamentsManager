@@ -1109,3 +1109,42 @@ Retrospectiva: medir cada viewport evita velar acciones fijas. Gates, preview y
 hashes permiten trazar la publicación, pero la suavidad y legibilidad del efecto
 siguen requiriendo QA visual. Esta vez la conexión productiva validó TLS sin la
 adaptación de edge utilizada en la release anterior.
+
+
+## Publicación v1.15.5 — 2026-11-02
+
+El usuario autoriza explícitamente el parche con «Sí» tras explicar el rechazo
+automático de la promoción anterior. Antes de esa autorización no se promovió
+ni etiquetó el parche. [Release v1.15.5](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.15.5),
+tag anotado sobre merge no-ff `48fb4a2e209db600b8ac127164368d2885ff8be6`.
+Corrige la excepción por contentInset ausente en los eventos de React Native Web:
+el fade común vuelve a actualizarse y entrega el callback a cada pantalla.
+[Auditoría de 26 archivos y cinco regresiones](../engineering/SCROLL_FADE_WEB_AUDIT_2026-11-02.md).
+
+Solo web; API/renderer conservan v1.15.0, sin migraciones ni distribución móvil.
+Gate local correcto con PostgreSQL omitido sin base local configurada.
+[CI develop](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41441072044)
+y [CI main](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41445329152)
+correctas, con PostgreSQL y regresiones de scroll en make verify. Símbolos
+procesados por el flujo PostHog UE 255144 existente; candidato público sin mapas
+ni referencias sourceMappingURL. Ambos dry-run correctos y seis checks HTTPS
+de preview verifican SHA y noindex.
+
+Web `5cb73489-58cf-4b02-8f7a-c04220e23b45`, redirect
+`d86cb121-0e0a-473f-9018-dd9484231a4a`, preview
+`42187d1a-e23e-4580-8456-1419e1150d4f`. Veintidós checks HTTPS productivos
+correctos por la ruta habitual con TLS válido: SHA, indexación, rutas, assets,
+metadatos, API 200, CORS 204 y www 308; siete scripts de entrada coinciden por
+SHA-256 con el artefacto. Origen de recuperación alineado. Develop incorpora
+main; sin ramas temporales. Local/dev y observabilidad dev no se arrancan.
+QA visual completo pendiente: el uso de navegador está deshabilitado en Work.
+
+Rollback solo web a v1.15.4: SHA `751bf7249a6ed4843c74db076349eb622b3f57bc`,
+web `e24390a4-7b5d-4663-9a16-9068903f9a87` y redirect
+`bbaebc55-173a-44b2-b9e5-8f903ac38819`, con configuraciones conservadas.
+[Evidencia saneada](../engineering/evidence/scroll-fade-fix-release-2026-11-02/result.json).
+
+Retrospectiva: una prueba con el evento web real detecta lo que tipos, export y
+checks HTTP no detectan. La versión anterior falla tres pruebas y el parche pasa
+las cinco. Esto acredita la corrección funcional del evento, sin sustituir QA
+visual del efecto en Safari y aplicaciones nativas.

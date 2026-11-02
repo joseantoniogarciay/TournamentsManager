@@ -6925,3 +6925,14 @@ se incorporan a make verify. Retrospectiva: HTTP, hashes y tipos no acreditan
 interacción; probar la forma real del evento evita esta regresión multiplataforma.
 
 [Auditoría transversal y límites](../engineering/SCROLL_FADE_WEB_AUDIT_2026-11-02.md).
+
+### Publicación del parche de scroll v1.15.5 — 2026-11-02
+
+Autorización explícita recibida tras el rechazo automático previo. Gate local,
+ambas CI con PostgreSQL y cinco regresiones, seis checks de preview y 22 HTTPS
+productivos correctos. Siete hashes coinciden; origen de recuperación alineado.
+La prueba negativa reproduce tres fallos con la lectura anterior de contentInset.
+Retrospectiva: auditar todos los consumidores y comprobar eventos web reales
+permite corregir el límite común. QA visual completo pendiente por navegador
+deshabilitado; no se publican binarios móviles ni se arrancan local/dev.
+[Cierre y rollback](../operations/DEPLOYMENT.md#publicación-v1155--2026-11-02).
