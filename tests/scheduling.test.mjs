@@ -201,3 +201,51 @@ test("only recognized business problems change recovery; other responses remain 
   );
   failure = undefined;
 });
+
+test("numeric schedule masks insert separators while typing and let backspace cross them", () => {
+  const format = values.formatScheduleInput;
+  for (const [kind, digits, expected] of [
+    ["date", "12022028", "12/02/2028"],
+    ["time", "2359", "23:59"],
+  ]) {
+    let current = "";
+    for (const digit of digits) current = format(kind, current + digit, current);
+    assert.equal(current, expected);
+    while (current) {
+      const next = format(kind, current.slice(0, -1), current);
+      assert.ok(next.length < current.length);
+      current = next;
+    }
+  }
+  assert.equal(format("date", "12", "1"), "12/");
+  assert.equal(format("date", "12/02", "12/0"), "12/02/");
+  assert.equal(format("time", "23", "2"), "23:");
+});
+
+test("schedule masks filter paste and reject impossible new dates or times", () => {
+  const format = values.formatScheduleInput;
+  assert.equal(format("date", "ab12/02/2028!", ""), "12/02/2028");
+  assert.equal(format("time", "ab23:59!", ""), "23:59");
+  for (const input of [
+    "4",
+    "00",
+    "32",
+    "12/2",
+    "12/00",
+    "12/13",
+    "31/04/2028",
+    "29/02/2026",
+    "01/01/0000",
+  ]) {
+    assert.equal(format("date", input, ""), "", input);
+  }
+  for (const input of ["3", "24", "12:6", "12:60"])
+    assert.equal(format("time", input, ""), "", input);
+  assert.equal(format("date", "29022028", ""), "29/02/2028");
+  assert.equal(format("date", "120220281234", ""), "12/02/2028");
+  assert.equal(format("time", "0000", ""), "00:00");
+  assert.equal(format("time", "235912", ""), "23:59");
+  assert.equal(format("time", "29:59", "23:59"), "23:59");
+  assert.equal(format("time", "23:4", "23:59"), "23:4");
+  assert.equal(format("date", "12/02/202", "12/02/2028"), "12/02/202");
+});
