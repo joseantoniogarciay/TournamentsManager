@@ -624,3 +624,30 @@ El cliente mantiene sus casos contractuales existentes: rechazos de transporte
 usan common_network_error, fallos técnicos/no reconocidos common_request_error,
 y cancelaciones intencionadas no muestran feedback. No se modifica ni amplía el
 mapeo de negocio por estado. [Informe y retrospectiva](../engineering/TRANSACTION_WORK_REVIEW_2026-10-13.md).
+
+
+## Inventario: Mi perfil — ADR-0181
+
+Span HTTP raíz GET /v1/me/profile; una consulta sqlc como límite PostgreSQL, sin
+span por agregado, CTE, filtro, fila extra ni cálculo de porcentaje. Cuota común
+con Mis partidos: 60/minuto por cuenta. Presupuesto HTTP 15 s, SQL 5 s y locks 2 s
+existentes; no se activó observabilidad de desarrollo.
+
+| Salida | failure.reason seguro | Validación/recuperación |
+| --- | --- | --- |
+| 200, vacío o página | Ninguno | No-store, totales completos y sesión/participación reales en PostgreSQL |
+| 400 filtros/límite/cursor/accountId | validation.rejected | HTTP y validación de dominio; fallback común cliente |
+| 401 sesión ausente | Política de sesión existente | Middleware impide consulta; cliente conserva política de sesión |
+| 429 cuota | rate_limit.exceeded | HTTP con cuota compartida entre endpoints/sesiones; fallback seguro |
+| Conexión/pool PostgreSQL | database.unavailable o request.timeout | HTTP SQLSTATE 08006/context deadline; sin error bruto |
+| Restricción PostgreSQL | database.constraint_failed | HTTP SQLSTATE 23514 con mensaje privado que no sale |
+| Consulta/decodificación | database.query_failed | HTTP error desconocido; cuerpo genérico |
+| SQL/lock/deadline | request.timeout | HTTP SQLSTATE 57014/55P03/context deadline |
+| Cancelación | request.cancelled | Error de contexto seguro y petición cancelada sin cuerpo; cliente aborta sin aviso |
+
+No hay rechazo de negocio independiente ni límite externo: los filtros vacíos
+producen un conjunto vacío real. El cliente valida el cuerpo 200; datos inválidos,
+5xx y problemas desconocidos no producen mensajes específicos ni exponen detail.
+Las pruebas HTTP comprueban una sola raíz y motivos cerrados sin SQL/PII.
+Retrospectiva: un agregado privado requiere auditar sesión, página y denominador;
+una ordenación o filtro no es un nuevo límite técnico de observabilidad.

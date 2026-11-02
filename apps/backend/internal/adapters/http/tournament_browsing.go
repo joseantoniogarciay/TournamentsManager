@@ -46,3 +46,34 @@ func browseTournaments(service tournaments.BrowsingService, personal bool) http.
 		}
 	}
 }
+
+func personalProfile(service tournaments.BrowsingService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		limit, valid := listLimit(q.Get("limit"))
+		cursor := q.Get("cursor")
+		if !valid || (q.Has("limit") && limit < 1) || (cursor != "" && !uuidPattern.MatchString(cursor)) || q.Has("accountId") {
+			writeTournamentValidationProblem(w, r)
+			return
+		}
+		account, ok := currentAccountID(r.Context())
+		if !ok {
+			writeProblem(w, 500, "Could not resolve session")
+			return
+		}
+		value, err := service.PersonalProfile(r.Context(), account, q.Get("sport"), q.Get("tournament"), cursor, limit)
+		recordTournamentFailure(r.Context(), err)
+		switch {
+		case errors.Is(err, tournaments.ErrInvalidPage):
+			writeTournamentValidationProblem(w, r)
+		case err != nil:
+			if r.Context().Err() == nil {
+				writeProblem(w, 500, "Could not retrieve profile")
+			}
+		default:
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Cache-Control", "no-store")
+			_ = json.NewEncoder(w).Encode(value)
+		}
+	}
+}

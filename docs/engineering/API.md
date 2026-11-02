@@ -491,3 +491,14 @@ OpenAPI generadas, authenticatedApiFetch (que delega en apiFetch), parsing compl
 antes de mostrar datos y feedback común: conexión identificada usa
 common_network_error; otros estados/cuerpos usan common_request_error; salir
 cancela las peticiones sin feedback. Ningún title/detail del backend se muestra.
+
+
+## Perfil privado — ADR-0181
+
+GET /v1/me/profile: sesión obligatoria, cuenta del contexto, sin IDs de cuenta en
+respuesta. sport opcional del catálogo, tournament fragmento literal hasta 120
+caracteres, cursor UUID y limit 1–50 (20 por defecto). statistics comprende todo el
+conjunto filtrado y items es historial paginado (resueltos y byes). No-store;
+200/400/401/429/500/503 en OpenAPI. Los demás estados y problemas no reconocidos
+usan fallback seguro cliente, sin texto bruto backend. Comparte cuota 60/minuto
+por cuenta con Mis partidos. [Reglas y evidencia](PRIVATE_PROFILE_2026-11-02.md).

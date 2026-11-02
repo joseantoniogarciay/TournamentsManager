@@ -29,7 +29,7 @@ lint: lint-go lint-ts
 check: format-check lint typecheck openapi-lint test
 
 # Verificación completa local y de CI.
-verify: check test-scroll-fade test-design-tokens test-unavailable-actions test-toolchain test-session-management test-tournament-browsing test-tournament-repetition test-scheduling test-session-refresh test-client-telemetry test-social-authentication test-app-links test-dependencies test-match-incidents test-store-review test-native-adaptive-window test-cloudflare-web test-operational-safety test-integration client-web-export openapi-generate-check sqlc-generate-check tidy-check tidy-tools-check build vuln
+verify: check test-personal-profile test-scroll-fade test-design-tokens test-unavailable-actions test-toolchain test-session-management test-tournament-browsing test-tournament-repetition test-scheduling test-session-refresh test-client-telemetry test-social-authentication test-app-links test-dependencies test-match-incidents test-store-review test-native-adaptive-window test-cloudflare-web test-operational-safety test-integration client-web-export openapi-generate-check sqlc-generate-check tidy-check tidy-tools-check build vuln
 
 .PHONY: test-tournament-browsing
 test-tournament-browsing:
@@ -96,3 +96,7 @@ test-unavailable-actions:
 .PHONY: test-scroll-fade
 test-scroll-fade:
 	node --test tests/scroll-fade.test.mjs
+
+.PHONY: test-personal-profile
+test-personal-profile:
+	node --test tests/personal-profile.test.mjs

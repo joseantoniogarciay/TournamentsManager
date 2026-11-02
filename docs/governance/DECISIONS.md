@@ -437,3 +437,37 @@ separadores; no cambian API, permisos ni navegación nativa.
 
 Véanse [ADR-0178](../adr/0178-use-open-sections-and-separated-list-rows.md) y
 [la evidencia de alcance y validación](../engineering/OPEN_SECTIONS_2026-11-01.md).
+
+
+## 2026-11-02 — Usabilidad, calendario personal y perfil privado
+
+El usuario acepta todas las mejoras de usabilidad propuestas (incluida la ayuda
+de permisos). ADR-0179 registra ese alcance; implementación pendiente. Acepta
+sincronización app → Google Calendar en calendario FastTourney independiente,
+solo participaciones vinculadas con fecha y hora y duración estimada configurable
+inicial de 60 minutos. No se confunde con login Google ni con una exportación.
+ADR-0180 conserva el diseño técnico y ciclo de vida como Propuesto.
+
+Cuenta → Mi perfil contendrá historial deportivo y estadísticas propias privadas,
+separadas por deporte. No es una auditoría de ediciones como administrador ni un
+perfil público. ADR-0181 conserva pendiente el criterio de resultados
+administrativos y el contrato de la proyección. Ninguno se presenta implementado.
+
+
+### Cierre del criterio estadístico de ADR-0181
+
+El usuario elige «Ese criterio deportivo (recomendado)»: solo partidos realmente
+jugados para disputados, victorias, empates cuando existan, derrotas y porcentaje
+de victorias por deporte. Byes y resultados administrativos permanecen en el
+historial y se excluyen de numeradores/denominadores. ADR-0181 pasa a Aceptado;
+contrato, implementación y validación siguen pendientes. ADR-0180 no cambia.
+
+
+### Implementación de ADR-0181
+
+Backend y cliente del perfil privado implementados con GET /me/profile,
+agregados completos por deporte e historial paginado con filtros de deporte y
+nombre del torneo, sin migración. Pruebas de privacidad, correcciones, byes,
+incidencias, penaltis y los ocho deportes en PostgreSQL desechable. QA visual y
+publicación pendientes; ADR-0179 no se da por completado y ADR-0180 permanece
+Propuesto. [Checklist y alcance](../engineering/PRIVATE_PROFILE_2026-11-02.md).

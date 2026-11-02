@@ -55,3 +55,51 @@ SELECT jsonb_build_object('exists',EXISTS(SELECT 1 FROM ancestors),'items',COALE
  SELECT jsonb_agg(jsonb_build_object('id',id,'name',name,'state',state,'createdAt',created_at,'champions',
  COALESCE((SELECT jsonb_agg(team.name ORDER BY team.position) FROM tournament_champions c JOIN tournament_teams team ON team.id=c.team_id WHERE c.tournament_id=selected.id),'[]'::jsonb)) ORDER BY ordinal)
  FROM selected),'[]'::jsonb)) AS payload;
+
+-- name: GetPersonalProfile :one
+WITH candidates AS (
+ SELECT m.*,t.name AS tournament_name,t.sport,s.type AS stage_type,
+ COALESCE(h.name,'') AS home_name,COALESCE(a.name,'') AS away_name,
+ CASE WHEN m.home_team_id=own.team_id THEN 'home' ELSE 'away' END AS own_side,
+ COALESCE((SELECT max(c.changed_at) FROM match_result_changes c WHERE c.match_id=m.id),t.created_at) AS resolved_at
+ FROM tournament_team_accounts own
+ JOIN tournaments t ON t.id=own.tournament_id
+ JOIN matches m ON m.tournament_id=t.id AND (m.home_team_id=own.team_id OR m.away_team_id=own.team_id)
+ JOIN tournament_stages s ON s.id=m.stage_id
+ LEFT JOIN tournament_teams h ON h.id=m.home_team_id
+ LEFT JOIN tournament_teams a ON a.id=m.away_team_id
+ WHERE own.account_id=sqlc.arg(account_id)::uuid AND m.state IN ('completed','bye')
+ AND (sqlc.arg(sport)::text='' OR t.sport=sqlc.arg(sport)::text)
+ AND (sqlc.arg(tournament)::text='' OR t.name ILIKE '%' || replace(replace(replace(sqlc.arg(tournament)::text,'\','\\'),'%','\%'),'_','\_') || '%')
+), outcomes AS (
+ SELECT *,CASE
+ WHEN home_score=away_score AND home_penalties IS NULL THEN 'draw'
+ WHEN (own_side='home')=(COALESCE(home_penalties,home_score)>COALESCE(away_penalties,away_score)) THEN 'win'
+ ELSE 'loss' END AS outcome FROM candidates
+), stats AS (
+ SELECT sport,count(*) FILTER (WHERE state='completed' AND result_type='played') AS played,
+ count(*) FILTER (WHERE state='completed' AND result_type='played' AND outcome='win') AS wins,
+ count(*) FILTER (WHERE state='completed' AND result_type='played' AND outcome='draw') AS draws,
+ count(*) FILTER (WHERE state='completed' AND result_type='played' AND outcome='loss') AS losses,
+ bool_or(sport IN ('football','handball') AND stage_type <> 'single_elimination') AS draws_allowed
+ FROM outcomes GROUP BY sport
+), ordered AS (
+ SELECT *,row_number() OVER (ORDER BY resolved_at DESC,id DESC) AS ordinal FROM outcomes
+), selected AS (
+ SELECT * FROM ordered WHERE ordinal>COALESCE((SELECT ordinal FROM ordered WHERE id=sqlc.narg(cursor_id)::uuid),0)
+ ORDER BY ordinal LIMIT sqlc.arg(page_size)::int
+)
+SELECT jsonb_build_object('statistics',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+ 'sport',sport,'played',played,'wins',wins,'draws',draws,'losses',losses,'drawsAllowed',draws_allowed) ORDER BY sport) FROM stats),'[]'::jsonb),
+ 'items',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+ 'tournamentId',tournament_id,'tournamentName',tournament_name,'sport',sport,'stageType',stage_type,
+ 'homeTeamName',home_name,'awayTeamName',away_name,'ownSide',own_side,
+ 'match',jsonb_strip_nulls(jsonb_build_object(
+ 'id',id,'stageId',stage_id,'round',round_number,'sequence',sequence,'groupNumber',NULLIF(group_number,0),
+ 'homeTeamId',COALESCE(home_team_id::text,''),'awayTeamId',COALESCE(away_team_id::text,''),'homeSourceKind',home_source_kind,'awaySourceKind',away_source_kind,
+ 'homeSourceMatchId',home_source_match_id,'awaySourceMatchId',away_source_match_id,'winnerTeamId',winner_team_id,
+ 'state',state,'homeScore',home_score,'awayScore',away_score,'homePenalties',home_penalties,'awayPenalties',away_penalties,
+ 'resultType',result_type,'incident',incident,'scheduledDate',NULLIF(scheduled_date,''),'scheduledTime',NULLIF(scheduled_time,''),
+ 'timeZone',NULLIF(time_zone,''),'venue',NULLIF(venue,''),
+ 'sets',COALESCE((SELECT jsonb_agg(jsonb_build_object('homeScore',ms.home_score,'awayScore',ms.away_score) ORDER BY ms.set_number) FROM match_sets ms WHERE ms.match_id=selected.id),'[]'::jsonb)
+ ))) ORDER BY ordinal) FROM selected),'[]'::jsonb)) AS payload;

@@ -1141,19 +1141,28 @@ export default function TournamentScreen() {
                 {getTournamentStateLabel(t, league.state)}
               </Text>
             </View>
+            {league.venue ? (
+              <View style={styles.summaryItem}>
+                <View
+                  accessible={false}
+                  style={[styles.bullet, { backgroundColor: colors.text.secondary }]}
+                />
+                <Text color="secondary" style={styles.summaryText}>
+                  <Text style={styles.summaryLabel}>{`${t("tournament_venue_label")}: `}</Text>
+                  {league.venue}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </ContentSection>
-      {league.venue || canEditScheduling(relationship, league.state) ? (
+      {canEditScheduling(relationship, league.state) ? (
         <ContentSection>
-          {league.venue ? <Text color="secondary">{league.venue}</Text> : null}
-          {canEditScheduling(relationship, league.state) ? (
-            <Button
-              label={t(league.venue ? "scheduling_venue_edit" : "scheduling_venue_add")}
-              variant="secondary"
-              onPress={() => router.push(`/tournament/${id}/venue`)}
-            />
-          ) : null}
+          <Button
+            label={t(league.venue ? "scheduling_venue_edit" : "scheduling_venue_add")}
+            variant="secondary"
+            onPress={() => router.push(`/tournament/${id}/venue`)}
+          />
         </ContentSection>
       ) : null}
       {league.hasOtherEditions ? (
