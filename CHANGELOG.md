@@ -10,6 +10,9 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ### Added
 
+- Loaders de pantalla completa: copa que se forma, se desvanece con alpha y
+  repite mientras espera. Con movimiento reducido conserva la copa formada.
+
 - Silbato al confirmar el inicio de un torneo, camiseta que se integra en el
   grupo tras aceptar una invitación y bienvenida con balón/cuadro/marca para
   visitantes. Recursos Lottie locales, sin sonido ni bloqueos; la bienvenida

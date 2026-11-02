@@ -4,7 +4,7 @@ import { runInNewContext } from "node:vm";
 import test from "node:test";
 import { transpileForTest } from "./helpers/transpile-typescript.mjs";
 
-function fixture(initialPlayback) {
+function fixture(initialPlayback, component = "TournamentIllustration") {
   const slots = [];
   const effects = [];
   const players = [];
@@ -36,12 +36,13 @@ function fixture(initialPlayback) {
     },
     "react/jsx-runtime": { jsx: (type, props) => ({ type, props }) },
     "lottie-web/build/player/lottie_light": {
-      loadAnimation() {
+      loadAnimation(options) {
         const listeners = new Map();
         const calls = [];
         // Lottie checkLoaded sets this synchronously, then queues DOMLoaded.
         const player = {
           isLoaded: true,
+          options,
           calls,
           goToAndStop: (frame) => calls.push(["still", frame]),
           goToAndPlay: (frame) => calls.push(["play", frame]),
@@ -58,13 +59,22 @@ function fixture(initialPlayback) {
       illustration: { celebrationWidth: 192, emptyWidth: 256, aspectRatio: 4 / 3 },
     },
     "@/shared/preferences/preferences-provider": { usePreferences: () => ({ colors }) },
-    "./tournament-illustration-data": { createTournamentIllustration: () => ({ op: 48 }) },
+    "./tournament-illustration-data": {
+      createTournamentIllustration: () => ({ op: 48 }),
+      createCupLoadingAnimation: () => ({ op: 60 }),
+      cupLoadingStillFrame: 32,
+    },
     "./use-illustration-playback": { useIllustrationPlayback: () => playback },
   };
   const module = { exports: {} };
   runInNewContext(
     transpileForTest(
-      readFileSync("apps/client/src/shared/ui/tournament-illustration.web.tsx", "utf8"),
+      readFileSync(
+        component === "CupLoader"
+          ? "apps/client/src/shared/ui/cup-loader.web.tsx"
+          : "apps/client/src/shared/ui/tournament-illustration.web.tsx",
+        "utf8",
+      ),
       { jsx: true },
     ),
     {
@@ -82,7 +92,7 @@ function fixture(initialPlayback) {
     render(next = playback, props = {}) {
       playback = next;
       index = 0;
-      const tree = module.exports.TournamentIllustration({ variant: "trophy", ...props });
+      const tree = module.exports[component]({ variant: "trophy", ...props });
       tree.props.ref.current ??= {};
       effects.splice(0).forEach((effect) => effect());
     },
@@ -149,5 +159,34 @@ test("a welcome already presented stays static despite a motion-enabled system",
   f.render(moving, { variant: "welcome", animate: false });
   f.players[0].ready();
   assert.ok(f.players[0].calls.every(([action]) => action !== "play"));
+  f.unmount();
+});
+
+test("the global cup loops only while allowed and stops on its visible formed frame", () => {
+  const f = fixture(moving, "CupLoader");
+  f.render(moving, { animate: true });
+  const player = f.players[0];
+  assert.equal(player.options.loop, true);
+  assert.deepEqual(player.calls, []);
+  player.ready();
+  assert.deepEqual(player.calls, [
+    ["still", 32],
+    ["play", 0],
+  ]);
+  f.render(moving, { animate: false });
+  assert.deepEqual(player.calls.at(-1), ["still", 32]);
+  f.render(moving, { animate: true });
+  assert.deepEqual(player.calls.at(-1), ["play", 0]);
+  f.unmount();
+  assert.deepEqual(player.calls.at(-1), ["destroy"]);
+});
+
+test("a reduced-motion cup stays formed, including when SVG loads after the flag changes", () => {
+  const f = fixture(moving, "CupLoader");
+  f.render(moving, { animate: true });
+  f.render(moving, { animate: false });
+  f.players[0].ready();
+  assert.ok(f.players[0].calls.every(([action]) => action !== "play"));
+  assert.deepEqual(f.players[0].calls.at(-1), ["still", 32]);
   f.unmount();
 });

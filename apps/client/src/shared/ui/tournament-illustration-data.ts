@@ -4,6 +4,9 @@ export type TournamentIllustrationVariant = "trophy" | "bracket" | "whistle" | "
 type Palette = { accent: string; ink: string; subtle: string };
 type Point = [number, number];
 
+// Reduced motion rests before the alpha fade, rather than on an invisible end frame.
+export const cupLoadingStillFrame = 32;
+
 const still = (k: unknown) => ({ a: 0, k });
 const ease = { i: { x: [0.65], y: [1] }, o: { x: [0.25], y: [0] } };
 const tween = (from: number[], to: number[], start: number, end: number) => ({
@@ -481,5 +484,21 @@ export function createTournamentIllustration(
     assets: [],
     layers,
     markers: [],
+  };
+}
+
+export function createCupLoadingAnimation(palette: Palette): AnimationObject {
+  const cup = createTournamentIllustration("trophy", palette);
+  return {
+    ...cup,
+    nm: "FastTourney · loading",
+    op: 60,
+    layers: cup.layers
+      .filter((layer) => layer.nm === "Cup · Grada" || layer.nm === "Cup rim")
+      .map((layer) => ({
+        ...layer,
+        op: 60,
+        ks: { ...layer.ks, o: tween([100], [0], 36, 56) },
+      })),
   };
 }

@@ -1,5 +1,11 @@
 # Gobierno de decisiones
 
+ADR-0184 acepta la copa que se forma/desvanece en los loaders grandes de
+LoadingTransition, incorporada a la nueva subida solicitada. El bucle se limita
+a carga activa con movimiento permitido; no cambia los momentos de una sola
+reproducción. [Decisión](../adr/0184-use-a-forming-cup-for-full-screen-loading.md)
+y [evidencia](../engineering/CUP_LOADING_2026-11-02.md).
+
 ADR-0183 acepta completar las propuestas Lottie y publicar el conjunto: silbato
 al iniciar, camiseta al aceptar invitación y bienvenida sin sesión, además de
 Sigo y la corrección web pendientes. Se reutiliza el reproductor, sin dependencia
