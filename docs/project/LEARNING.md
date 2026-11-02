@@ -1,5 +1,18 @@
 # Registro de aprendizaje
 
+## 2026-11-02 — Carga en bucle y fallback visible
+
+ADR-0184 cambia el indicador grande de LoadingTransition por una copa trazada
+que desvanece su alpha y repite. Se comparte la geometría del trofeo sin los
+destellos de celebración. Un hook de preferencia/app state independiente de
+navegación permite usarlo también en la transición de sesión raíz.
+
+Retrospectiva: el frame final de un ciclo con fade es invisible, por lo que la
+reducción de movimiento y parada usan expresamente el frame formado anterior.
+El ciclo no determina la duración de una operación ni fabrica un porcentaje.
+Los momentos contextuales siguen siendo de una sola reproducción.
+[Validación y límites](../engineering/CUP_LOADING_2026-11-02.md).
+
 ## 2026-11-02 — Momentos contextuales y navegación inmediata
 
 ADR-0183 incorpora silbato, camisetas y bienvenida sobre el mismo reproductor.

@@ -16,6 +16,11 @@ invitación y bienvenida sin sesión, una vez por sesión JS. Son ilustraciones
 inline, sin nuevos diálogos ni esperas de navegación.
 [Alcance, ciclo de vida y validación](LOTTIE_MOMENTS_2026-11-02.md).
 
+ADR-0184 sustituye solo el indicador de `LoadingTransition` por una copa Lottie
+que se forma y desvanece en bucle durante la espera. Mensaje y progressbar se
+conservan; movimiento reducido muestra la copa formada. Las cargas pequeñas
+mantienen sus indicadores. [Evidencia y límites](CUP_LOADING_2026-11-02.md).
+
 Los tokens viven en `packages/design-tokens` y no dependen de React, Expo ni de
 la web. Las pantallas consumen nombres semánticos, nunca hexadecimales o píxeles
 repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.

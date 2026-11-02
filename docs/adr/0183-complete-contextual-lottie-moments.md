@@ -4,6 +4,7 @@
 - **Fecha:** 2026-11-02
 - **Decisor:** Usuario: «mete todas las otras animaciones de las otras propuestas y hacemos nueva subida».
 - **Supera a:** ADR-0182 en la limitación inicial a dos ilustraciones.
+- **Complementado por:** ADR-0184, loader de carga en bucle añadido a la misma subida.
 
 ## Problema y evidencia
 

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, ActivityIndicator, Animated, StyleSheet, View } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
 
 import { motion, space } from "@tournaments-manager/design-tokens";
 
 import { usePreferences } from "@/shared/preferences/preferences-provider";
 
 import { Text } from "./text";
+import { CupLoader } from "./cup-loader";
+import { useIllustrationEnvironment } from "./use-illustration-environment";
 
 type LoadingTransitionProps = { active: boolean; message: string };
 
@@ -13,17 +15,8 @@ type LoadingTransitionProps = { active: boolean; message: string };
 export function LoadingTransition({ active, message }: LoadingTransitionProps) {
   const { colors } = usePreferences();
   const [rendered, setRendered] = useState(active);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const { reducedMotion, motionReady, active: appActive } = useIllustrationEnvironment();
   const visibility = useRef(new Animated.Value(active ? 1 : 0)).current;
-
-  useEffect(() => {
-    void AccessibilityInfo.isReduceMotionEnabled().then(setReducedMotion);
-    const subscription = AccessibilityInfo.addEventListener(
-      "reduceMotionChanged",
-      setReducedMotion,
-    );
-    return () => subscription.remove();
-  }, []);
 
   useEffect(() => {
     visibility.stopAnimation();
@@ -33,7 +26,6 @@ export function LoadingTransition({ active, message }: LoadingTransitionProps) {
         visibility.setValue(1);
         return;
       }
-      visibility.setValue(0);
       Animated.timing(visibility, {
         duration: motion.enterExit,
         toValue: 1,
@@ -68,8 +60,10 @@ export function LoadingTransition({ active, message }: LoadingTransitionProps) {
       style={[styles.overlay, { backgroundColor: colors.surface.canvas, opacity: visibility }]}
     >
       <View style={styles.content}>
-        <Text variant="bodyLarge">{message}</Text>
-        <ActivityIndicator color={colors.indicator.default} size="large" />
+        <CupLoader animate={active && appActive && motionReady && !reducedMotion} />
+        <Text variant="bodyLarge" style={styles.message}>
+          {message}
+        </Text>
       </View>
     </Animated.View>
   );
@@ -87,5 +81,6 @@ const styles = StyleSheet.create({
     top: 0,
     zIndex: 2,
   },
-  content: { alignItems: "center", gap: space[4] },
+  content: { alignItems: "center", gap: space[4], maxWidth: "100%", paddingHorizontal: space[5] },
+  message: { textAlign: "center" },
 });
