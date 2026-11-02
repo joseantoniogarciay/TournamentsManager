@@ -621,3 +621,8 @@ y mantenimiento sin necesidad en las pantallas con fondo canvas actuales.
 Typecheck y exportación web verificados; queda pendiente QA visual claro/oscuro,
 inicio/final, resize, teclado y lista virtualizada en web, iOS y Android. No se
 inician servicios local/dev ni observabilidad para estas comprobaciones estáticas.
+
+En web, el evento de React Native Web no incluye `contentInset`: se considera
+cero cuando falta. Los insets que emite nativo se respetan. El callback de cada
+feature recibe el evento original después de actualizar los bordes. La regresión
+se comprueba con `make test-scroll-fade`; no sustituye QA visual en dispositivo.

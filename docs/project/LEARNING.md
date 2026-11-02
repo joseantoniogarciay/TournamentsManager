@@ -6912,3 +6912,14 @@ alineado y rollback conservado. API y renderer no cambian; local/dev apagados.
 Retrospectiva: los checks del artefacto acreditan trazabilidad y transporte,
 pero la revisión visual completa de los fades permanece pendiente.
 [Cierre y evidencia](../operations/DEPLOYMENT.md#publicación-v1154--2026-11-02).
+
+### Eventos de scroll web sin contentInset — 2026-11-02
+
+La implementación instalada de React Native Web emite offset, tamaño y viewport,
+pero no contentInset. Su tipo universal lo declara obligatorio: confiar en él
+provocaba una excepción al desplazar y cortaba también el callback de la feature.
+La primitiva acepta su ausencia con insets cero y conserva los insets nativos.
+Tres pruebas ejecutan el componente con eventos web y nativos, verificando bordes,
+contenido corto, proximidad a extremos y entrega del mismo evento al consumidor;
+se incorporan a make verify. Retrospectiva: HTTP, hashes y tipos no acreditan
+interacción; probar la forma real del evento evita esta regresión multiplataforma.
