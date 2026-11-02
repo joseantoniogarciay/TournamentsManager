@@ -6919,7 +6919,9 @@ La implementación instalada de React Native Web emite offset, tamaño y viewpor
 pero no contentInset. Su tipo universal lo declara obligatorio: confiar en él
 provocaba una excepción al desplazar y cortaba también el callback de la feature.
 La primitiva acepta su ausencia con insets cero y conserva los insets nativos.
-Tres pruebas ejecutan el componente con eventos web y nativos, verificando bordes,
+Cinco pruebas ejecutan el componente con eventos web y nativos, verificando bordes,
 contenido corto, proximidad a extremos y entrega del mismo evento al consumidor;
 se incorporan a make verify. Retrospectiva: HTTP, hashes y tipos no acreditan
 interacción; probar la forma real del evento evita esta regresión multiplataforma.
+
+[Auditoría transversal y límites](../engineering/SCROLL_FADE_WEB_AUDIT_2026-11-02.md).
