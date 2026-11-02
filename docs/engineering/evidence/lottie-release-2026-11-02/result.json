@@ -1,0 +1,37 @@
+{
+  "release": "v1.17.0",
+  "commit": "a7db33b6a67ac1ae1976758a5b92ae0c6151d2f7",
+  "status": "prepared; production activation blocked pending explicit source map upload authorization",
+  "scope": "web only; API and renderer retain v1.16.0; schema 23 unchanged",
+  "validation": {
+    "localMakeVerify": "passed; generic PostgreSQL integration skipped without configured DB",
+    "candidateCI": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41492038679",
+    "mainCI": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41493063901",
+    "candidateConclusion": "success",
+    "mainConclusion": "success",
+    "productionConfiguredLocalExport": "passed; /tmp/tm-lottie-v1170-production-review"
+  },
+  "pendingUpload": {
+    "host": "https://eu.posthog.com",
+    "project": 255144,
+    "bundles": 39,
+    "sourceMaps": 39,
+    "bytes": 12911364,
+    "uploaded": false,
+    "inventory": "/tmp/tm-lottie-v1170-posthog-upload-review.json"
+  },
+  "automaticReview": "Rejected stage-prod-web.sh because the deployment request did not explicitly authorize sensitive bundles/source maps to PostHog EU project 255144. No upload or production activation performed; local export only.",
+  "productionRetained": {
+    "release": "v1.16.1",
+    "commit": "be64133a2474409a0ab552d3e953f49a64110c4f",
+    "web": "d36ac9f3-2c19-4535-8b2b-6e5d52977062",
+    "redirect": "9e74bb31-f02a-40d4-b56d-0f77d658cddf",
+    "healthz": 200
+  },
+  "limitations": [
+    "Production is still v1.16.1; v1.17.0 GitHub Release explicitly marked pending activation",
+    "Cloudflare candidate check, preview and activation await the required symbol upload",
+    "Visual web/native QA pending; browser control disabled and CoreSimulator incompatible with Xcode",
+    "No native binaries distributed; local/dev and observability not started"
+  ]
+}

@@ -1,5 +1,31 @@
 # Despliegue e infraestructura
 
+## Preparación v1.17.0 — activación pendiente, 2026-11-02
+
+El usuario pide «Despliega» para las ilustraciones Lottie de ADR-0182.
+`make verify` local y CI de develop/main pasan. Tag anotado y
+[Release v1.17.0](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.17.0)
+sobre merge no-ff `a7db33b6a67ac1ae1976758a5b92ae0c6151d2f7`.
+
+La revisión automática rechaza `stage-prod-web.sh`: considera que «Despliega» no
+autoriza explícitamente los bundles/mapas fuente a https://eu.posthog.com,
+proyecto 255144. No se evita el rechazo ni se desactiva el flujo de fiabilidad.
+Se completa únicamente un export local con configuración productiva: 39 bundles
+y 39 mapas, 12.911.364 bytes, inventario privado con hashes en
+`/tmp/tm-lottie-v1170-posthog-upload-review.json`. No se suben esos archivos.
+La Release declara expresamente que su activación está pendiente.
+
+Producción conserva v1.16.1, SHA `be64133a2474409a0ab552d3e953f49a64110c4f`,
+Worker web `d36ac9f3-2c19-4535-8b2b-6e5d52977062` y redirect
+`9e74bb31-f02a-40d4-b56d-0f77d658cddf`; API sana. No se cambia el origen de
+recuperación, API/renderer, esquema 23 ni distribución móvil. Local/dev y
+observabilidad siguen apagados. [Evidencia](../engineering/evidence/lottie-release-2026-11-02/result.json).
+
+Retrospectiva: separar Release, preparación y activación permite conservar
+producción cuando una autorización de transmisión bloquea el constructor. La
+subida de símbolos exige aquí una respuesta explícita del usuario sobre ese
+contenido y destino; los checks estáticos no sustituyen la QA visual pendiente.
+
 Los símbolos y source maps de fiabilidad PostHog para releases de producción
 siguen el [runbook cliente](../runbooks/client-error-tracking.md). El proyecto
 255144 se reserva a prod; beta/local permanecen sin SDK. El staging web requiere
