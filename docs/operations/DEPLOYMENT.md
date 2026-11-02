@@ -1206,3 +1206,44 @@ Retrospectiva: el agregado necesita backend y web coordinados; desplegar primero
 la API y comprobar su protección evita activar una pantalla contra un endpoint
 ausente. Separar backup/restauración, CI, revisión de imagen y hashes web mantiene
 trazabilidad. Las pruebas HTTP no sustituyen un recorrido autenticado ni visual.
+
+
+## Publicación v1.16.1 — 2026-11-02
+
+El usuario autoriza «Despliega» y confirma continuar. [Release v1.16.1](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.16.1),
+tag anotado sobre merge no-ff `be64133a2474409a0ab552d3e953f49a64110c4f`. Publicación solo web:
+Mi perfil usa Filtros en la barra con popup y aplicación explícita; Actualizar
+pasa a la derecha en web y las apps conservan pull to refresh en código. No se
+distribuyen binarios nativos. API/renderer conservan v1.16.0; esquema 23 sin cambios.
+
+Gate local make verify correcto (integración genérica omitida sin DB configurada)
+y [CI candidato](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41478231272)
+correcta. CI main falla primero en la prueba existente
+TestIntegrationSessionManagementConcurrentRefreshAndRevoke: revocación concurrente
+con SQLSTATE 23514, constraint session_refresh_tokens_revocation. La
+[repetición completa](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41479194018/attempts/2)
+pasa, incluida integración PostgreSQL. Se registra la carrera pendiente de
+investigar; esta publicación web no la corrige ni cambia el backend productivo.
+
+La revisión automática bloquea inicialmente la subida de bundles/mapas fuente.
+El usuario autoriza explícitamente los archivos de v1.16.1 a
+https://eu.posthog.com, proyecto 255144; la preparación termina correctamente.
+Cero mapas y referencias sourceMappingURL públicos. Ambos dry-run Workers y siete
+checks HTTPS preview correctos. Preview 5146c119-fc05-4bfd-9742-1ab02ed3c383.
+Worker web d36ac9f3-2c19-4535-8b2b-6e5d52977062 y redirect
+9e74bb31-f02a-40d4-b56d-0f77d658cddf. Veintisiete checks HTTPS productivos
+con TLS válido, incluidos nueve hashes de scripts de Inicio/Perfil, SHA, rutas,
+indexación, assets, API 200, perfil anónimo 401, CORS 204 y www 308.
+Origen de recuperación alineado; develop incorpora main, sin ramas temporales.
+Local/dev y observabilidad dev no se arrancan.
+
+QA visual web/nativa y recorrido autenticado productivo pendientes. Calendar y
+resto de ADR-0179 pendientes. Rollback solo web a v1.16.0, SHA
+0e56a27b97fd03069d4d6cf03f965dd69a94ec5d, Worker web
+903a6728-8cbb-44b5-bd4d-9ce2136ec39f y redirect
+9e8dd85b-e635-4e02-8b5f-c2bfb8247687, con configuraciones conservadas.
+[Evidencia saneada](../engineering/evidence/profile-navigation-release-2026-11-02/result.json).
+
+Retrospectiva: comprobar hashes servidos vincula la publicación al tag, pero no
+sustituye la prueba visual/autenticada. Una repetición de CI correcta no elimina
+el hallazgo de concurrencia: se conserva como limitación técnica identificada.

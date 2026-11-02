@@ -7028,3 +7028,11 @@ confirmada. Retrospectiva: agrupar botones requiere un único margen exterior,
 y un scroll sobre una superficie de diálogo no debe heredar el fade canvas.
 Tipos, lint, export web y regresiones de colecciones correctos; ajuste sin
 publicar y QA visual pendiente. Sin operaciones OpenAPI ni servicios nuevos.
+
+### Cierre de publicación v1.16.1
+
+La repetición de CI pasa tras un fallo de concurrencia de refresh/revocación
+(SQLSTATE 23514); no convierte el primer fallo en inexistente. Registrar el
+hallazgo junto a la evidencia y distinguir el alcance web del backend que no se
+despliega evita afirmar una corrección no realizada. Siete checks de preview y
+27 HTTPS productivos verifican publicación, sin sustituir QA visual/autenticada.
