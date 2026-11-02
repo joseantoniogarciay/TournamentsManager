@@ -8,7 +8,7 @@
 ## Síntoma e impacto
 
 ADR-0155 está conmutado desde el 2026-10-11: producción sirve el artefacto
-`ab32cea8a01e96f965cd08084aa907f26488bdc6` (v1.15.3) desde Workers Static
+`751bf7249a6ed4843c74db076349eb622b3f57bc` (v1.15.4) desde Workers Static
 Assets Free; la primera conmutación reutilizó b002b4b.
 K3s y PostgreSQL están recuperados; la API pública devuelve 200. El
 [procedimiento Cloudflare](../../infra/cloudflare/README.md) separa staging,

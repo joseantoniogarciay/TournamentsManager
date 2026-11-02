@@ -74,8 +74,8 @@ export function ScrollView({
           const { contentOffset, contentInset, layoutMeasurement, contentSize } = event.nativeEvent;
           metrics.current = {
             offset: contentOffset.y,
-            top: contentInset.top,
-            bottom: contentInset.bottom,
+            top: contentInset?.top ?? 0,
+            bottom: contentInset?.bottom ?? 0,
             height: layoutMeasurement.height,
             content: contentSize.height,
           };

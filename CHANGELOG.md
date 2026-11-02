@@ -6,6 +6,13 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.15.5] - 2026-11-02
+
+### Fixed
+
+- Scroll web: admitir eventos sin `contentInset` para actualizar el fade superior
+  y conservar los callbacks de formularios y listas sin excepciones.
+
 ## [1.15.4] - 2026-11-02
 
 ### Fixed

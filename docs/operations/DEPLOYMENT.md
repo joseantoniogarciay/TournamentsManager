@@ -1072,3 +1072,40 @@ Retrospectiva: una mejora transversal de composición puede publicarse como web
 sin un rollout de API. Separar autorización de símbolos, CI, preview, activación
 y contenido realmente servido mantiene trazabilidad y evita confundir un problema
 de ruta TLS con un fallo del artefacto. Los hashes no sustituyen QA visual.
+
+
+## Publicación v1.15.4 — 2026-11-02
+
+El usuario autoriza «Despliega». [Release v1.15.4](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.15.4),
+tag anotado sobre merge no-ff `751bf7249a6ed4843c74db076349eb622b3f57bc`.
+Solo web: fade de 12 px en los extremos verticales con contenido fuera del
+viewport, compartido por pantallas, formularios y SectionList de partidos.
+API y renderer conservan v1.15.0; sin migraciones ni distribución móvil.
+
+Gate local make verify correcto (PostgreSQL omitido sin configuración local).
+[CI develop](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41433980194)
+y [CI main](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41434754740)
+correctas, incluida integración PostgreSQL. Preparación con símbolos PostHog UE
+255144 mediante el flujo existente; el candidato público no contiene mapas ni
+referencias sourceMappingURL. Dry-run de ambos Workers y seis checks HTTPS de
+preview correctos. QA visual completo web/nativo pendiente; no se acredita con
+los checks HTTP ni con compilación.
+
+Worker web `e24390a4-7b5d-4663-9a16-9068903f9a87`, redirect
+`bbaebc55-173a-44b2-b9e5-8f903ac38819`, preview
+`bde31589-d8f7-4a3e-a562-20655061c5ef`. Veintidós checks HTTPS productivos
+correctos por la ruta habitual, sin omitir TLS ni usar edge alternativo:
+SHA, canonical/indexación, rutas, metadatos, assets, API 200, CORS 204 y www 308.
+Los siete scripts de entrada coinciden por SHA-256 con el artefacto local.
+Origen de recuperación alineado. Develop incorpora main; sin ramas temporales.
+No se arrancan local/dev, tareas ni observabilidad dev.
+
+Rollback solo web: v1.15.3, SHA `ab32cea8a01e96f965cd08084aa907f26488bdc6`,
+web `f98480b9-c14c-424a-9b1c-2799f02434ee` y redirect
+`4bd50222-dcf2-4076-95dc-fc5d940e58e4`, con configuraciones conservadas.
+[Evidencia saneada](../engineering/evidence/scroll-fade-release-2026-11-02/result.json).
+
+Retrospectiva: medir cada viewport evita velar acciones fijas. Gates, preview y
+hashes permiten trazar la publicación, pero la suavidad y legibilidad del efecto
+siguen requiriendo QA visual. Esta vez la conexión productiva validó TLS sin la
+adaptación de edge utilizada en la release anterior.

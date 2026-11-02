@@ -6902,3 +6902,26 @@ Retrospectiva: un degradado compartido de 12 px resuelve el corte sin dependenci
 nativa nueva. La compilación comprueba integración y tipos, pero no demuestra
 legibilidad ni comportamiento visual nativo; ese QA permanece pendiente, igual
 que las matrices visuales pendientes de ADR-0176/0178.
+
+### Publicación web v1.15.4 — 2026-11-02
+
+Gate local, ambas CI con PostgreSQL, seis checks de preview y 22 HTTPS
+productivos correctos; siete hashes de scripts coinciden. La ruta habitual
+valida TLS, sin repetir la selección de edge de v1.15.3. Origen de recuperación
+alineado y rollback conservado. API y renderer no cambian; local/dev apagados.
+Retrospectiva: los checks del artefacto acreditan trazabilidad y transporte,
+pero la revisión visual completa de los fades permanece pendiente.
+[Cierre y evidencia](../operations/DEPLOYMENT.md#publicación-v1154--2026-11-02).
+
+### Eventos de scroll web sin contentInset — 2026-11-02
+
+La implementación instalada de React Native Web emite offset, tamaño y viewport,
+pero no contentInset. Su tipo universal lo declara obligatorio: confiar en él
+provocaba una excepción al desplazar y cortaba también el callback de la feature.
+La primitiva acepta su ausencia con insets cero y conserva los insets nativos.
+Cinco pruebas ejecutan el componente con eventos web y nativos, verificando bordes,
+contenido corto, proximidad a extremos y entrega del mismo evento al consumidor;
+se incorporan a make verify. Retrospectiva: HTTP, hashes y tipos no acreditan
+interacción; probar la forma real del evento evita esta regresión multiplataforma.
+
+[Auditoría transversal y límites](../engineering/SCROLL_FADE_WEB_AUDIT_2026-11-02.md).
