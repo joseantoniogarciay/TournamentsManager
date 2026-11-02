@@ -92,4 +92,4 @@ dependencia: menor coste de mantenimiento que crear una variante decorativa.
 La ilustración se monta por relación para reproducirse una vez al cambiar a
 otro segmento vacío, sin remontar la biblioteca ni reiniciar sus datos.
 Se mantiene el comportamiento estático con movimiento reducido. Esta ampliación
-es posterior a v1.17.0 y no está publicada todavía.
+es posterior a v1.17.0 y se publica con v1.18.0.

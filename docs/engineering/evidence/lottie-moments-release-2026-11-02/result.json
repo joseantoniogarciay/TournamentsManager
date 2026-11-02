@@ -1,7 +1,187 @@
 {
-  "release": "v1.18.0",
   "commit": "3b52f808731617b4f006a012b0cddd153038c971",
-  "status": "prepared; activation blocked pending explicit authorization of v1.18.0 symbol upload",
+  "checks": [
+    {
+      "path": "https://fasttourney.com/deployment.json",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/account",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/account/profile",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournaments",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/join-team",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/privacy-policy",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/terms-of-use",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000/standings",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/favicon.ico",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/apple-touch-icon.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/fasttourney-league-preview.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/font-licenses/dm-sans.txt",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000",
+      "status": 404
+    },
+    {
+      "path": "https://fasttourney.com/tournament/01a0c9b0-1d38-7d47-8825-86c5af8b1237",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/healthz",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/registrations",
+      "status": 204
+    },
+    {
+      "path": "https://www.fasttourney.com/tournaments?release=1.18.0",
+      "status": 308
+    },
+    {
+      "path": "https://fasttourney.com/theme-init.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-7c561f9f2f1279a2dae6585e50848476.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-fd2e850f5bbc185d93ddd807cfdf7b74.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/index-0d642a2f269a3ca04ffabd228b572e6b.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__common-d9612c63f6389ca5253597946ec51591.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/entry-f98066dbe84111571a63c8604f9af101.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-1a7c7ac74a7ae083ee288cb6c7caa538.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/profile-c6887270d78fe3f1fcdf66ce6d5b2ad7.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/tournaments-07ca37923548ee110cb99526c22a4c4e.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/[id]-4996f85bd1c95c33f5d48676fad07cea.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/join-team-b3c62214c7131c1deb852fa2c124e932.js",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/me/profile",
+      "status": 401
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/me/profile",
+      "status": 204
+    }
+  ],
+  "entryAssets": [
+    {
+      "path": "/theme-init.js",
+      "sha256": "38d3ff1eaf6469d3d348c668628b1b08f23689f6eb96731e470d841918efe4d4"
+    },
+    {
+      "path": "/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "db0c2758678451c50dbd2cf49410fd00fd2d93630a6e588f1cd63832be131f47"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-7c561f9f2f1279a2dae6585e50848476.js",
+      "sha256": "307cb4cf69b0a82f1550bc4cbcc273aae30adabc93b17888b9c20daf689dd285"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-fd2e850f5bbc185d93ddd807cfdf7b74.js",
+      "sha256": "b789ad91803558b709902adf32f717246bd80e80c7e3bf703438138ba1b52fb9"
+    },
+    {
+      "path": "/_expo/static/js/web/index-0d642a2f269a3ca04ffabd228b572e6b.js",
+      "sha256": "681d4675d574d48ded73ffbea1e8f4c0e822801891277821d159dd23f088022c"
+    },
+    {
+      "path": "/_expo/static/js/web/__common-d9612c63f6389ca5253597946ec51591.js",
+      "sha256": "b9c947c3210a006d62f853c39721fb6c1fe8da04ae38be0b98bd5e16781648ae"
+    },
+    {
+      "path": "/_expo/static/js/web/entry-f98066dbe84111571a63c8604f9af101.js",
+      "sha256": "8d29cc09f0fdebfd9880f384869b4378cc205b1565fea665b06d8e18b5d0d281"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-1a7c7ac74a7ae083ee288cb6c7caa538.js",
+      "sha256": "59608c03195cf3163c694a04e20107bd9fceb54cf8116c123faae603fc084a5a"
+    },
+    {
+      "path": "/_expo/static/js/web/profile-c6887270d78fe3f1fcdf66ce6d5b2ad7.js",
+      "sha256": "72a27950a266bd5483b5411966e2db7d0d0a3d8cfae52dbca156c39bfef4007e"
+    },
+    {
+      "path": "/_expo/static/js/web/tournaments-07ca37923548ee110cb99526c22a4c4e.js",
+      "sha256": "a8e271c252458b6c2a7cb380f98e0f0d7fbfb609b52ce4094b42c0ef206b4096"
+    },
+    {
+      "path": "/_expo/static/js/web/[id]-4996f85bd1c95c33f5d48676fad07cea.js",
+      "sha256": "fd0e5308afc4c3ec5a9a98daf4843ffff3131841ee8f17b64e18e53ba6eaa261"
+    },
+    {
+      "path": "/_expo/static/js/web/join-team-b3c62214c7131c1deb852fa2c124e932.js",
+      "sha256": "d29d9c59691ff984dd5f7d4c59cc394e59af9e0e161b9b811f4db99486fed509"
+    }
+  ],
+  "release": "v1.18.0",
+  "status": "published",
   "scope": "web only; five contextual illustrations, forming/fading full-screen cup loading, web DOMLoaded fix; API/renderer retain v1.16.0, schema 23 unchanged",
   "validation": {
     "localMakeVerify": "passed; generic PostgreSQL integration skipped without configured DB",
@@ -13,27 +193,93 @@
     "webAndNativeExports": "passed; native export is not device QA",
     "productionConfiguredLocalExport": "/tmp/tm-v1180-production-review"
   },
-  "pendingUpload": {
+  "preview": {
+    "version": "fac6e7b7-b111-45b2-8183-d496c284a38e",
+    "url": "https://fac6e7b7-fasttourney-web.joseantoniogarciay.workers.dev",
+    "commit": "3b52f808731617b4f006a012b0cddd153038c971",
+    "checks": [
+      {
+        "path": "/deployment.json",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/account",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/tournaments",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/account/profile",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/join-team",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/create-tournament",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/privacy-policy",
+        "status": 200,
+        "noindex": true
+      },
+      {
+        "path": "/tournament/00000000-0000-4000-8000-000000000000/standings",
+        "status": 200,
+        "noindex": true
+      }
+    ]
+  },
+  "workers": {
+    "web": "7aa1b7c2-cc5f-403a-942b-ce3b4899efec",
+    "redirect": "7c947a29-eba7-4a90-a048-bb4a79244228"
+  },
+  "symbols": {
     "host": "https://eu.posthog.com",
     "project": 255144,
-    "bundles": 39,
-    "sourceMaps": 39,
-    "bytes": 12936604,
-    "uploaded": false,
-    "inventory": "/tmp/tm-v1180-posthog-upload-review.json"
+    "authorization": "User replied Si to the explicit question identifying v1.18.0 bundles/source maps, host and project",
+    "cliProcess": "completed successfully",
+    "publicSourceMaps": 0,
+    "publicSourceMapReferences": 0,
+    "realCrashSymbolication": "not verified"
   },
-  "automaticReview": "Rejected stage-prod-web.sh: generic deployment approval and the previous symbol authorization were not accepted as specific authorization for this version payload and destination. No upload, Cloudflare activation or recovery-origin switch performed. Local export only.",
-  "productionRetained": {
+  "authorizationHistory": "Rejected stage-prod-web.sh: generic deployment approval and the previous symbol authorization were not accepted as specific authorization for this version payload and destination. No upload, Cloudflare activation or recovery-origin switch performed. Local export only.",
+  "rollback": {
     "release": "v1.17.0",
     "commit": "a7db33b6a67ac1ae1976758a5b92ae0c6151d2f7",
     "web": "c0d47cc6-5166-47fb-a088-40ff5d431b21",
     "redirect": "ddad4a74-e684-4ef8-b568-96ff67dfef35",
     "healthz": 200
   },
+  "recoveryOrigin": {
+    "commit": "3b52f808731617b4f006a012b0cddd153038c971",
+    "rendererRevision": "0e56a27b97fd03069d4d6cf03f965dd69a94ec5d",
+    "readyStatus": 200
+  },
+  "wwwAfterBothWorkers": {
+    "status": 308,
+    "location": "https://fasttourney.com/tournaments?release=1.18.0"
+  },
   "limitations": [
-    "v1.18.0 GitHub Release explicitly marked pending activation",
-    "Cloudflare candidate check, preview and activation await the required symbol upload",
     "Visual Safari iOS/other web/native QA and authenticated production walkthrough pending",
-    "No native binaries distributed; local/dev and observability not started"
-  ]
+    "No native binaries distributed",
+    "API and renderer retain v1.16.0; schema 23 unchanged",
+    "local/dev and observability not started"
+  ],
+  "assetUrlEncoding": "Square brackets in dynamic chunk URLs percent-encoded for HTTPS hash checks"
 }

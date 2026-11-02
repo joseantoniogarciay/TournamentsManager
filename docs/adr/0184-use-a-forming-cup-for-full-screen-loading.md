@@ -1,6 +1,6 @@
 # ADR-0184: Copa que se forma y desvanece en las cargas de pantalla completa
 
-- **Estado:** Aceptado; implementado; publicación y QA visual pendientes
+- **Estado:** Aceptado; publicado en web v1.18.0; QA visual pendiente
 - **Fecha:** 2026-11-02
 - **Decisor:** Usuario: prefiere una copa que se forme, se desvanezca con alpha y vuelva a formarse en los loaders grandes.
 - **Supera a:** Apariencia del indicador de LoadingTransition; conserva su contrato y accesibilidad.
@@ -47,3 +47,6 @@ integración PostgreSQL genérica omitida sin DB configurada. Exportaciones
 web/Hermes iOS/Android correctas. Render de los 60 frames en ambos temas,
 incluidos el frame formado de fallback y el final transparente. Véase
 [evidencia y retrospectiva](../engineering/CUP_LOADING_2026-11-02.md).
+
+Incluido en v1.18.0 web, con gates y HTTPS correctos.
+[Publicación y rollback](../operations/DEPLOYMENT.md#publicación-v1180--2026-11-02).

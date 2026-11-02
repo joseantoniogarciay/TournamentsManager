@@ -1,6 +1,6 @@
 # ADR-0183: Completar las animaciones contextuales de torneos
 
-- **Estado:** Aceptado; implementado; publicación y QA visual pendientes
+- **Estado:** Aceptado; publicado en web v1.18.0; QA visual pendiente
 - **Fecha:** 2026-11-02
 - **Decisor:** Usuario: «mete todas las otras animaciones de las otras propuestas y hacemos nueva subida».
 - **Supera a:** ADR-0182 en la limitación inicial a dos ilustraciones.
@@ -57,3 +57,7 @@ vida y de invitación; integración PostgreSQL genérica omitida sin DB configur
 Exportaciones web/Hermes iOS/Android correctas. Lámina y secuencia de los tres
 recursos nuevos renderizadas y revisadas en claro/oscuro. Véase
 [evidencia y límites](../engineering/LOTTIE_MOMENTS_2026-11-02.md).
+
+Publicada v1.18.0 tras la autorización de símbolos, con nueve checks preview y
+32 HTTPS productivos, incluidos doce hashes de scripts.
+[Evidencia y rollback](../operations/DEPLOYMENT.md#publicación-v1180--2026-11-02).

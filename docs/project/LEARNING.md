@@ -1,5 +1,19 @@
 # Registro de aprendizaje
 
+## 2026-11-02 — Publicación del conjunto Lottie y copa de carga
+
+v1.18.0 activa los cinco momentos y el loader compartido en web tras los gates
+local/develop/main y autorización específica de símbolos a PostHog UE 255144.
+Nueve checks preview y 32 HTTPS productivos, con doce hashes, vinculan el tráfico
+al tag; el origen de recuperación también queda alineado. API/renderer conservan
+v1.16.0 y esquema 23, sin distribución móvil ni arranque local/dev/observabilidad.
+
+Retrospectiva: el frame final de un fade no sirve de fallback estático del loader;
+se usa el frame formado. Separar publicación de código, upload privado y activación
+permite resolver un bloqueo de autorización sin afectar producción. Los hashes
+no sustituyen la QA visual/autenticada pendiente en Safari y dispositivos.
+[Evidencia y rollback](../operations/DEPLOYMENT.md#publicación-v1180--2026-11-02).
+
 ## 2026-11-02 — Carga en bucle y fallback visible
 
 ADR-0184 cambia el indicador grande de LoadingTransition por una copa trazada

@@ -65,7 +65,9 @@ de los dos adaptadores y sus respuestas conserva:
   con Lottie SVG sobre DOM XML y Sharp. Se revisan todos los fotogramas, sin
   backend ni datos reales. No son capturas de la aplicación.
 - `make verify` local completo correcto; integración PostgreSQL genérica omitida
-  sin DB configurada. CI y publicación se registran al cerrar el despliegue.
+  sin DB configurada. CI final develop/main correcta, incluida PostgreSQL remota.
+  Publicada v1.18.0 con nueve checks preview y 32 productivos, incluidos doce
+  hashes. [Publicación y rollback](../operations/DEPLOYMENT.md#publicación-v1180--2026-11-02).
 - Preflight de cliente: ADR-0054/55/56/57/0176/0178, arquitectura, desarrollo,
   diseño y AGENTS. Primitivas/márgenes existentes, arte decorativo, sin cadenas
   nuevas que localizar, controles o dependencias nativas nuevas. No se recompila

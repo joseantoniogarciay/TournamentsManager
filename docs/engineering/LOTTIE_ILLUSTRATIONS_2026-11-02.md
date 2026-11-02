@@ -15,7 +15,7 @@ siguen localizados por la feature; no se añaden textos permanentes.
   correctamente. Conserva campeón/cocampeones y acciones originales.
 - Biblioteca: 60 fotogramas a 30 fps (2 s). Aparecen cuatro equipos, conexiones y
   copa central. Acompaña a Administro y Sigo vacíos; cada relación conserva su
-  copy. La ampliación a Sigo es posterior a v1.17.0 y está pendiente de publicar.
+  copy. La ampliación a Sigo se publica posteriormente en v1.18.0.
   Cambiar entre segmentos vacíos remonta solo la ilustración para reproducir
   una vez la secuencia, conservando la biblioteca y sus datos.
 - Una reproducción por montaje, sin bucle. El último fotograma queda visible.
@@ -51,8 +51,8 @@ Se mantienen la duración, la reproducción única y el movimiento reducido. Tre
 pruebas de regresión cubren el orden de eventos, la preferencia tardía, salida,
 desmontaje y cambio de tema. El caso de carrera falla antes del cambio.
 Es una reproducción determinista del defecto, no una ejecución real en Safari;
-el origen exacto del caso del usuario sigue sin acreditarse. Corrección pendiente
-de publicación y de QA visual en Safari iOS.
+el origen exacto del caso del usuario sigue sin acreditarse. Corrección publicada
+en v1.18.0; QA visual en Safari iOS pendiente.
 Typecheck, lint, formato y exportación web correctos. Las tres regresiones pasan
 y se incorporan al gate `make verify` mediante `make test-lottie-playback`.
 

@@ -5,14 +5,14 @@ en K3s doméstico vía Tunnel/Caddy. Dominio y audiencia OAuth no cambian.
 
 ## Estado efectivo
 
-Última publicación web: v1.17.0,
-`a7db33b6a67ac1ae1976758a5b92ae0c6151d2f7`. API/renderer conservan v1.16.0.
-Workers web `c0d47cc6-5166-47fb-a088-40ff5d431b21` y www
-`ddad4a74-e684-4ef8-b568-96ff67dfef35`. Ocho checks preview y 30 HTTPS
-productivos correctos, incluidos once hashes de Inicio/Perfil/Torneos/ficha. TLS válido por
+Última publicación web: v1.18.0,
+`3b52f808731617b4f006a012b0cddd153038c971`. API/renderer conservan v1.16.0.
+Workers web `7aa1b7c2-cc5f-403a-942b-ce3b4899efec` y www
+`7c947a29-eba7-4a90-a048-bb4a79244228`. Nueve checks preview y 32 HTTPS
+productivos correctos, incluidos doce hashes de Inicio/Perfil/Torneos/invitación/ficha. TLS válido por
 ruta habitual, perfil API protegido con sesión, esquema 23 sin cambios.
 Origen de recuperación alineado; local/dev apagados; QA visual pendiente.
-[Evidencia, autorización de símbolos, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-v1170--2026-11-02).
+[Evidencia, autorización de símbolos, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-v1180--2026-11-02).
 
 2026-10-11: rutas productivas activadas en Workers Free. La primera migración
 conservó `b002b4b…`; después se publicó v1.11.0 autorizada, con web y API

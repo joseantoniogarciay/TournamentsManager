@@ -1,7 +1,8 @@
 # Copa de carga — 2026-11-02
 
 Decisión: [ADR-0184](../adr/0184-use-a-forming-cup-for-full-screen-loading.md).
-Se incorpora a la misma publicación web v1.18.0 todavía sin activar.
+Incluido en la publicación web v1.18.0.
+[Evidencia y rollback](../operations/DEPLOYMENT.md#publicación-v1180--2026-11-02).
 
 ## Comportamiento
 
