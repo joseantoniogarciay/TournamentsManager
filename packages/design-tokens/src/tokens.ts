@@ -82,4 +82,6 @@ export const typography = {
 
 export const motion = { feedback: 160, enterExit: 240 } as const;
 
+export const illustration = { celebrationWidth: 192, emptyWidth: 256, aspectRatio: 4 / 3 } as const;
+
 export const control = { minHeight: 44, horizontalPadding: 16, iconSize: 20 } as const;

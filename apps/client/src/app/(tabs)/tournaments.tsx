@@ -21,6 +21,7 @@ import {
   ResponsiveColumns,
   Screen,
   Text,
+  TournamentIllustration,
   useTabContentBottomPadding,
 } from "@/shared/ui";
 
@@ -170,6 +171,9 @@ function TournamentLibrary({
       >
         {leagues.length === 0 ? (
           <View style={styles.empty}>
+            {selectedRelationship === "administered" ? (
+              <TournamentIllustration variant="bracket" />
+            ) : null}
             <Text color="secondary">{empty}</Text>
           </View>
         ) : (

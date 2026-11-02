@@ -109,7 +109,7 @@ recorrido autenticado real productivo siguen pendientes. No se distribuye móvil
 [Cierre y rollback](../operations/DEPLOYMENT.md#publicación-v1160--2026-11-02).
 
 
-## Ajuste de controles — 2026-11-02 (pendiente de publicar)
+## Ajuste de controles — 2026-11-02 (publicado en web v1.16.1)
 
 Por petición del usuario, la actualización de apps usa solo pull to refresh,
 también cuando no hay resultados. Web sitúa Actualizar a la derecha de la barra
@@ -128,4 +128,8 @@ no aplica el fade canvas de las pantallas sobre su superficie distinta.
 
 Typecheck, lint, exportación web y 20 regresiones de perfil/colecciones pasan.
 QA visual web/iOS/Android pendiente por navegador deshabilitado. No se inicia
-local/dev ni observabilidad ni se publica este ajuste con la release anterior.
+local/dev ni observabilidad. Este ajuste no estaba incluido en v1.16.0.
+
+Publicación web v1.16.1 completada: siete checks preview y 27 HTTPS productivos,
+incluidos nueve hashes de scripts. Distribución móvil y QA visual pendientes.
+Véase el cierre y hallazgo de CI en DEPLOYMENT.md.

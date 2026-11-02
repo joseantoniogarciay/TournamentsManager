@@ -352,3 +352,13 @@ conserva TLS/SNI válidos. No se modifica DNS ni se omite validación de certifi
 La subida privada de bundles/source maps requiere y recibe autorización explícita
 tras el rechazo automático inicial. Origen de recuperación alineado; rollback
 Cloudflare a v1.15.2. [Evidencia y límites](../operations/DEPLOYMENT.md#publicación-v1153--2026-11-01).
+
+## Evidencia v1.16.1 — 2026-11-02
+
+Acciones de perfil en navigation bar publicadas solo en web. Gate local y CI
+candidato correctos; CI main pasa en segunda ejecución tras hallar una carrera
+existente de refresh/revocación, registrada sin darla por corregida. Siete checks
+preview y 27 HTTPS productivos, incluidos nueve hashes, correctos. Subida a
+PostHog UE autorizada explícitamente después del rechazo automático inicial.
+Origen de recuperación alineado; distribución móvil y QA visual pendientes.
+[Cierre y rollback](../operations/DEPLOYMENT.md#publicación-v1161--2026-11-02).

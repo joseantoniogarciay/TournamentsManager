@@ -5,6 +5,12 @@
 
 ## Alcance vigente
 
+ADR-0182 añade ilustraciones Lottie originales para el trofeo del diálogo de
+finalización y Administro vacío. Consumen colores Grada y tamaños de
+`illustration`, reproducen una vez y conservan un dibujo estático con movimiento
+reducido. No sustituyen transiciones de controles ni duplican feedback.
+[Implementación, evidencia y QA pendiente](LOTTIE_ILLUSTRATIONS_2026-11-02.md).
+
 Los tokens viven en `packages/design-tokens` y no dependen de React, Expo ni de
 la web. Las pantallas consumen nombres semánticos, nunca hexadecimales o píxeles
 repetidos. Los textos de interfaz viven en los catálogos localizados de i18n.

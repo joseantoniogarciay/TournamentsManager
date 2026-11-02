@@ -1,0 +1,80 @@
+import { useEffect, useMemo, useRef } from "react";
+import type { AnimationItem } from "lottie-web";
+import lottie from "lottie-web/build/player/lottie_light";
+import { illustration } from "@tournaments-manager/design-tokens";
+import { usePreferences } from "@/shared/preferences/preferences-provider";
+import {
+  createTournamentIllustration,
+  type TournamentIllustrationVariant,
+} from "./tournament-illustration-data";
+import { useIllustrationPlayback } from "./use-illustration-playback";
+
+export function TournamentIllustration({ variant }: { variant: TournamentIllustrationVariant }) {
+  const { colors } = usePreferences();
+  const source = useMemo(
+    () =>
+      createTournamentIllustration(variant, {
+        accent: colors.indicator.default,
+        ink: colors.text.secondary,
+        subtle: colors.surface.subtle,
+      }),
+    [colors, variant],
+  );
+  const container = useRef<HTMLDivElement>(null);
+  const player = useRef<AnimationItem | null>(null);
+  const consumed = useRef(false);
+  const { reducedMotion, motionReady, playing } = useIllustrationPlayback();
+  const playback = useRef({ reducedMotion, motionReady, playing });
+  playback.current = { reducedMotion, motionReady, playing };
+  const update = () => {
+    const animation = player.current;
+    const current = playback.current;
+    if (!animation || !animation.isLoaded || !current.motionReady) return;
+    if (current.reducedMotion || (!current.playing && consumed.current)) {
+      consumed.current = true;
+      animation.goToAndStop(source.op - 1, true);
+    } else if (current.playing && !consumed.current) {
+      consumed.current = true;
+      animation.goToAndPlay(0, true);
+    }
+  };
+
+  useEffect(() => {
+    if (!container.current) return;
+    // loadAnimation mutates its data; keep each player instance isolated.
+    const animation = lottie.loadAnimation({
+      container: container.current,
+      renderer: "svg",
+      loop: false,
+      autoplay: false,
+      animationData: structuredClone(source),
+      rendererSettings: { progressiveLoad: false, hideOnTransparent: true },
+    });
+    player.current = animation;
+    const onReady = () => {
+      animation.goToAndStop(source.op - 1, true);
+      update();
+    };
+    animation.addEventListener("DOMLoaded", onReady);
+    return () => {
+      player.current = null;
+      animation.removeEventListener("DOMLoaded", onReady);
+      animation.destroy();
+    };
+  }, [source]);
+  useEffect(update, [source, reducedMotion, motionReady, playing]);
+
+  return (
+    <div
+      aria-hidden="true"
+      ref={container}
+      style={{
+        width: variant === "trophy" ? illustration.celebrationWidth : illustration.emptyWidth,
+        maxWidth: "100%",
+        aspectRatio: illustration.aspectRatio,
+        alignSelf: "center",
+        pointerEvents: "none",
+      }}
+    />
+  );
+}

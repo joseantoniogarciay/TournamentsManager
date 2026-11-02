@@ -22,5 +22,6 @@ export { ResponsiveColumns } from "./responsive-columns";
 export { Screen } from "./screen";
 export { Text } from "./text";
 export { TextField } from "./text-field";
+export { TournamentIllustration } from "./tournament-illustration";
 export { useTabContentBottomPadding } from "./use-tab-content-bottom-padding";
 export { useAdaptiveNavigationTitle } from "./use-adaptive-navigation-title";
