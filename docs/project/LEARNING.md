@@ -6902,3 +6902,13 @@ Retrospectiva: un degradado compartido de 12 px resuelve el corte sin dependenci
 nativa nueva. La compilación comprueba integración y tipos, pero no demuestra
 legibilidad ni comportamiento visual nativo; ese QA permanece pendiente, igual
 que las matrices visuales pendientes de ADR-0176/0178.
+
+### Publicación web v1.15.4 — 2026-11-02
+
+Gate local, ambas CI con PostgreSQL, seis checks de preview y 22 HTTPS
+productivos correctos; siete hashes de scripts coinciden. La ruta habitual
+valida TLS, sin repetir la selección de edge de v1.15.3. Origen de recuperación
+alineado y rollback conservado. API y renderer no cambian; local/dev apagados.
+Retrospectiva: los checks del artefacto acreditan trazabilidad y transporte,
+pero la revisión visual completa de los fades permanece pendiente.
+[Cierre y evidencia](../operations/DEPLOYMENT.md#publicación-v1154--2026-11-02).

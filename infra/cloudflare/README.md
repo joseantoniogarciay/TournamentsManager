@@ -5,17 +5,15 @@ en K3s doméstico vía Tunnel/Caddy. Dominio y audiencia OAuth no cambian.
 
 ## Estado efectivo
 
-Última publicación web: v1.15.3,
-`ab32cea8a01e96f965cd08084aa907f26488bdc6`. Workers web
-`f98480b9-c14c-424a-9b1c-2799f02434ee` y www
-`4bd50222-dcf2-4076-95dc-fc5d940e58e4`. Preview y dominio canónico verificados;
-22 checks HTTPS incluyen los hashes de los siete scripts de entrada. La ruta
-habitual de esta conexión rechaza un certificado autofirmado durante el check
-canónico; las comprobaciones usan el edge Cloudflare 104.21.1.205 con TLS/SNI
-válidos, sin modificar DNS ni certificados. API y renderer conservan v1.15.0
-`8c8c7ca153820538629f6a1a219f935e7796615b`, sin migraciones nuevas.
-Origen de recuperación alineado a la web actual; K3s/PostgreSQL siguen activos.
-[Evidencia, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-v1153--2026-11-01).
+Última publicación web: v1.15.4,
+`751bf7249a6ed4843c74db076349eb622b3f57bc`. Workers web
+`e24390a4-7b5d-4663-9a16-9068903f9a87` y www
+`bbaebc55-173a-44b2-b9e5-8f903ac38819`. Seis checks de preview y 22 HTTPS
+productivos correctos, incluidos los siete hashes de scripts. TLS válido por
+la ruta habitual. API/renderer conservan v1.15.0; sin migraciones.
+Origen de recuperación alineado; local/dev y observabilidad dev no se arrancan.
+QA visual completo pendiente.
+[Evidencia, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-v1154--2026-11-02).
 
 2026-10-11: rutas productivas activadas en Workers Free. La primera migración
 conservó `b002b4b…`; después se publicó v1.11.0 autorizada, con web y API
