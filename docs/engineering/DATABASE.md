@@ -260,3 +260,13 @@ El límite de cuentas no acota el número de filas dependientes borradas por cas
 La [comparación reproducible](TRANSACTION_WORK_REVIEW_2026-10-13.md) mide las dos
 versiones en PostgreSQL real. 256 es una elección inicial; los tiempos locales
 no constituyen un SLO ni demuestran capacidad bajo carga concurrente de producción.
+
+
+## Proyección de perfil privado — ADR-0181
+
+GetPersonalProfile (sqlc) consulta tournament_team_accounts y encuentros para la
+cuenta autenticada. Una sentencia devuelve agregados completos por deporte y
+página de historial con la misma selección; byes e incidencias están en historial,
+solo completed/played en métricas. No crea tabla, índice ni migración. Reutiliza
+índice de cambios por match_id/changed_at para ordenar por última resolución.
+Las búsquedas escapan comodines y las cifras no se persisten como contadores.

@@ -46,3 +46,35 @@ export function canEditScheduling(relationship: string | null | undefined, state
     (state === "published" || state === "in_progress")
   );
 }
+
+/** Numeric masks keep civil values local; separators never need a keyboard key. */
+export function formatScheduleInput(kind: "date" | "time", input: string, previous: string) {
+  const separator = kind === "date" ? "/" : ":";
+  let digits = input.replace(/[^0-9]/g, "").slice(0, kind === "date" ? 8 : 4);
+  const previousDigits = previous.replace(/[^0-9]/g, "");
+  // Backspace over an inserted separator also removes the preceding digit.
+  if (previous.endsWith(separator) && input === previous.slice(0, -1)) digits = digits.slice(0, -1);
+  const groups =
+    kind === "date"
+      ? [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)]
+      : [digits.slice(0, 2), digits.slice(2)];
+  let formatted = groups[0] ?? "";
+  if (digits.length >= 2) formatted += separator + groups[1];
+  if (kind === "date" && digits.length >= 4) formatted += separator + groups[2];
+  // Deletion must always remain possible, including while correcting a middle segment.
+  if (digits.length < previousDigits.length) return formatted;
+  const first = groups[0] ?? "";
+  const second = groups[1] ?? "";
+  const validPart = (part: string, maximum: number, minimum: number) =>
+    !part ||
+    (part.length === 1
+      ? Number(part) <= Math.floor(maximum / 10)
+      : Number(part) >= minimum && Number(part) <= maximum);
+  if (
+    !validPart(first, kind === "date" ? 31 : 23, kind === "date" ? 1 : 0) ||
+    !validPart(second, kind === "date" ? 12 : 59, kind === "date" ? 1 : 0)
+  )
+    return previous;
+  if (kind === "date" && digits.length === 8 && dateFromInput(formatted) === null) return previous;
+  return formatted;
+}

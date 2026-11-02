@@ -626,3 +626,12 @@ En web, el evento de React Native Web no incluye `contentInset`: se considera
 cero cuando falta. Los insets que emite nativo se respetan. El callback de cada
 feature recibe el evento original después de actualizar los bordes. La regresión
 se comprueba con `make test-scroll-fade`; no sustituye QA visual en dispositivo.
+
+
+## Entrada de fecha y hora de programación — 2026-11-02
+
+Los campos de programación usan teclado numérico e inputMode numeric. La feature
+inserta los separadores de DD/MM/AAAA y HH:mm, filtra el pegado y rechaza rangos o
+fechas completas imposibles. No obliga a teclear / ni :. Permite borrar sobre los
+separadores y conserva validación al blur/guardar de valores incompletos. No se
+aplica una máscara global a TextField ni se convierten horas locales a instantes.

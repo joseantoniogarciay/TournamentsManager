@@ -230,3 +230,13 @@ Las operaciones responden no-store. Los hints y categorías no son una prueba de
 dispositivo, no intervienen en autorización y no contienen IP ni agente bruto.
 El cierre afecta a familias presentes en esa operación; no impide logins futuros
 ni deshace peticiones ya autorizadas. Sin JWT, nuevas claves o infraestructura.
+
+
+## Perfil privado — ADR-0181
+
+GET /v1/me/profile resuelve la cuenta desde requireSession, nunca desde inputs.
+Administración y seguimiento no crean participación. Respuestas no-store sin IDs
+de cuenta; filtros y cursor ajeno no amplían el conjunto de filas. Los datos
+anteriores se descartan al cambiar sesión en cliente. No hay perfil público,
+consulta de agregados de otra cuenta ni nuevo permiso para torneos. No registra
+nombres, búsquedas, equipos o estadísticas como atributos de observabilidad.

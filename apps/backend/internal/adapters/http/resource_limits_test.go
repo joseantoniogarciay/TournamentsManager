@@ -180,7 +180,11 @@ func TestPersonalQuotaIsPerAccountAcrossSessions(t *testing.T) {
 	service := tournaments.NewBrowsingService(browsingFake{})
 	handler := NewHandlerWithConfig(HandlerConfig{}, HandlerDependencies{Authenticator: resourceAccountAuthenticator{}, TournamentBrowsing: &service})
 	for i := range 62 {
-		req := httptest.NewRequestWithContext(t.Context(), "GET", "/v1/me/matches?view=pending", nil)
+		path := "/v1/me/matches?view=pending"
+		if i%2 == 0 {
+			path = "/v1/me/profile"
+		}
+		req := httptest.NewRequestWithContext(t.Context(), "GET", path, nil)
 		token := "first-session"
 		if i == 60 {
 			token = "another-session"

@@ -11,6 +11,76 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const getPersonalProfile = `-- name: GetPersonalProfile :one
+WITH candidates AS (
+ SELECT m.id, m.tournament_id, m.round_number, m.sequence, m.home_team_id, m.away_team_id, m.state, m.home_score, m.away_score, m.stage_id, m.home_source_kind, m.away_source_kind, m.home_source_match_id, m.away_source_match_id, m.winner_team_id, m.home_penalties, m.away_penalties, m.result_type, m.group_number, m.incident, m.scheduled_date, m.scheduled_time, m.time_zone, m.venue,t.name AS tournament_name,t.sport,s.type AS stage_type,
+ COALESCE(h.name,'') AS home_name,COALESCE(a.name,'') AS away_name,
+ CASE WHEN m.home_team_id=own.team_id THEN 'home' ELSE 'away' END AS own_side,
+ COALESCE((SELECT max(c.changed_at) FROM match_result_changes c WHERE c.match_id=m.id),t.created_at) AS resolved_at
+ FROM tournament_team_accounts own
+ JOIN tournaments t ON t.id=own.tournament_id
+ JOIN matches m ON m.tournament_id=t.id AND (m.home_team_id=own.team_id OR m.away_team_id=own.team_id)
+ JOIN tournament_stages s ON s.id=m.stage_id
+ LEFT JOIN tournament_teams h ON h.id=m.home_team_id
+ LEFT JOIN tournament_teams a ON a.id=m.away_team_id
+ WHERE own.account_id=$1::uuid AND m.state IN ('completed','bye')
+ AND ($2::text='' OR t.sport=$2::text)
+ AND ($3::text='' OR t.name ILIKE '%' || replace(replace(replace($3::text,'\','\\'),'%','\%'),'_','\_') || '%')
+), outcomes AS (
+ SELECT id, tournament_id, round_number, sequence, home_team_id, away_team_id, state, home_score, away_score, stage_id, home_source_kind, away_source_kind, home_source_match_id, away_source_match_id, winner_team_id, home_penalties, away_penalties, result_type, group_number, incident, scheduled_date, scheduled_time, time_zone, venue, tournament_name, sport, stage_type, home_name, away_name, own_side, resolved_at,CASE
+ WHEN home_score=away_score AND home_penalties IS NULL THEN 'draw'
+ WHEN (own_side='home')=(COALESCE(home_penalties,home_score)>COALESCE(away_penalties,away_score)) THEN 'win'
+ ELSE 'loss' END AS outcome FROM candidates
+), stats AS (
+ SELECT sport,count(*) FILTER (WHERE state='completed' AND result_type='played') AS played,
+ count(*) FILTER (WHERE state='completed' AND result_type='played' AND outcome='win') AS wins,
+ count(*) FILTER (WHERE state='completed' AND result_type='played' AND outcome='draw') AS draws,
+ count(*) FILTER (WHERE state='completed' AND result_type='played' AND outcome='loss') AS losses,
+ bool_or(sport IN ('football','handball') AND stage_type <> 'single_elimination') AS draws_allowed
+ FROM outcomes GROUP BY sport
+), ordered AS (
+ SELECT id, tournament_id, round_number, sequence, home_team_id, away_team_id, state, home_score, away_score, stage_id, home_source_kind, away_source_kind, home_source_match_id, away_source_match_id, winner_team_id, home_penalties, away_penalties, result_type, group_number, incident, scheduled_date, scheduled_time, time_zone, venue, tournament_name, sport, stage_type, home_name, away_name, own_side, resolved_at, outcome,row_number() OVER (ORDER BY resolved_at DESC,id DESC) AS ordinal FROM outcomes
+), selected AS (
+ SELECT id, tournament_id, round_number, sequence, home_team_id, away_team_id, state, home_score, away_score, stage_id, home_source_kind, away_source_kind, home_source_match_id, away_source_match_id, winner_team_id, home_penalties, away_penalties, result_type, group_number, incident, scheduled_date, scheduled_time, time_zone, venue, tournament_name, sport, stage_type, home_name, away_name, own_side, resolved_at, outcome, ordinal FROM ordered WHERE ordinal>COALESCE((SELECT ordinal FROM ordered WHERE id=$4::uuid),0)
+ ORDER BY ordinal LIMIT $5::int
+)
+SELECT jsonb_build_object('statistics',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+ 'sport',sport,'played',played,'wins',wins,'draws',draws,'losses',losses,'drawsAllowed',draws_allowed) ORDER BY sport) FROM stats),'[]'::jsonb),
+ 'items',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+ 'tournamentId',tournament_id,'tournamentName',tournament_name,'sport',sport,'stageType',stage_type,
+ 'homeTeamName',home_name,'awayTeamName',away_name,'ownSide',own_side,
+ 'match',jsonb_strip_nulls(jsonb_build_object(
+ 'id',id,'stageId',stage_id,'round',round_number,'sequence',sequence,'groupNumber',NULLIF(group_number,0),
+ 'homeTeamId',COALESCE(home_team_id::text,''),'awayTeamId',COALESCE(away_team_id::text,''),'homeSourceKind',home_source_kind,'awaySourceKind',away_source_kind,
+ 'homeSourceMatchId',home_source_match_id,'awaySourceMatchId',away_source_match_id,'winnerTeamId',winner_team_id,
+ 'state',state,'homeScore',home_score,'awayScore',away_score,'homePenalties',home_penalties,'awayPenalties',away_penalties,
+ 'resultType',result_type,'incident',incident,'scheduledDate',NULLIF(scheduled_date,''),'scheduledTime',NULLIF(scheduled_time,''),
+ 'timeZone',NULLIF(time_zone,''),'venue',NULLIF(venue,''),
+ 'sets',COALESCE((SELECT jsonb_agg(jsonb_build_object('homeScore',ms.home_score,'awayScore',ms.away_score) ORDER BY ms.set_number) FROM match_sets ms WHERE ms.match_id=selected.id),'[]'::jsonb)
+ ))) ORDER BY ordinal) FROM selected),'[]'::jsonb)) AS payload
+`
+
+type GetPersonalProfileParams struct {
+	AccountID  pgtype.UUID
+	Sport      string
+	Tournament string
+	CursorID   pgtype.UUID
+	PageSize   int32
+}
+
+func (q *Queries) GetPersonalProfile(ctx context.Context, arg GetPersonalProfileParams) ([]byte, error) {
+	row := q.db.QueryRow(ctx, getPersonalProfile,
+		arg.AccountID,
+		arg.Sport,
+		arg.Tournament,
+		arg.CursorID,
+		arg.PageSize,
+	)
+	var payload []byte
+	err := row.Scan(&payload)
+	return payload, err
+}
+
 const listPersonalMatches = `-- name: ListPersonalMatches :one
 WITH candidates AS (
  SELECT m.id, m.tournament_id, m.round_number, m.sequence, m.home_team_id, m.away_team_id, m.state, m.home_score, m.away_score, m.stage_id, m.home_source_kind, m.away_source_kind, m.home_source_match_id, m.away_source_match_id, m.winner_team_id, m.home_penalties, m.away_penalties, m.result_type, m.group_number, m.incident, m.scheduled_date, m.scheduled_time, m.time_zone, m.venue,t.name AS tournament_name,t.sport,t.created_at,t.venue AS tournament_venue,s.type AS stage_type,

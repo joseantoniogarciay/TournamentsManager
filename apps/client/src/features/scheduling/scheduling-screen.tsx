@@ -35,6 +35,7 @@ import {
   canEditScheduling,
   dateFromInput,
   dateToInput,
+  formatScheduleInput,
   validCivilTime,
   validTimeZone,
   validVenue,
@@ -250,25 +251,35 @@ export function SchedulingScreen({ mode }: { mode: "match" | "venue" }) {
                       label={t("scheduling_date")}
                       placeholder={t("scheduling_date_placeholder")}
                       value={date}
-                      onChangeText={setDate}
+                      onChangeText={(value) =>
+                        setDate((previous) => formatScheduleInput("date", value, previous))
+                      }
                       error={dateError}
                       validationTrigger="blur"
                       validationSubmitted={submitted}
                       editable={!saving && !rejected}
                       maxLength={10}
-                      keyboardType="numbers-and-punctuation"
+                      keyboardType="number-pad"
+                      inputMode="numeric"
+                      autoCorrect={false}
+                      spellCheck={false}
                     />
                     <TextField
                       label={t("scheduling_time")}
                       placeholder={t("scheduling_time_placeholder")}
                       value={time}
-                      onChangeText={setTime}
+                      onChangeText={(value) =>
+                        setTime((previous) => formatScheduleInput("time", value, previous))
+                      }
                       error={timeError}
                       validationTrigger="blur"
                       validationSubmitted={submitted}
                       editable={!saving && !rejected}
                       maxLength={5}
-                      keyboardType="numbers-and-punctuation"
+                      keyboardType="number-pad"
+                      inputMode="numeric"
+                      autoCorrect={false}
+                      spellCheck={false}
                     />
                     <Text color="secondary">{t("scheduling_zone").replace("{zone}", zone)}</Text>
                   </>

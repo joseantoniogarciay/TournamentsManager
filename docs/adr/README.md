@@ -105,3 +105,9 @@ Usa [template.md](template.md) y el
 - [ADR-0177: Acciones no disponibles opacas y con explicación al pulsar](0177-use-opaque-unavailable-actions-with-explanations.md) — Aceptado; implementado y cubierto por regresiones.
 
 - [ADR-0178: Secciones abiertas y filas con separadores](0178-use-open-sections-and-separated-list-rows.md) — Aceptado; implementación transversal y QA visual pendiente.
+
+- [ADR-0179: Mejoras de usabilidad en tareas de torneo](0179-improve-tournament-task-usability.md) — Aceptado; alcance, implementación pendiente.
+
+- [ADR-0180: Sincronización personal Google Calendar](0180-sync-personal-matches-to-google-calendar.md) — Propuesto; requisitos de producto aceptados, diseño técnico pendiente.
+
+- [ADR-0181: Mi perfil privado con resultados y estadísticas](0181-private-profile-with-personal-results-and-statistics.md) — Aceptado; backend/cliente implementados, sin byes ni resultados administrativos en métricas; QA visual y publicación pendientes.

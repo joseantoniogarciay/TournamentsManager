@@ -6,6 +6,22 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-11-02
+
+### Added
+
+- Cuenta → Mi perfil privado: estadísticas por deporte de partidos jugados e
+  historial paginado de participaciones, incluidos byes e incidencias excluidos
+  del cálculo. Filtros por deporte y nombre del torneo; totales completos del
+  backend, independientes de la página, y correcciones reflejadas. Sin nueva
+  migración. QA visual completo pendiente.
+
+### Changed
+
+- El lugar del torneo se integra en el resumen como «Lugar: valor».
+- Fecha y hora usan teclado numérico y separadores automáticos, con filtro de
+  caracteres y validación de rangos/calendario.
+
 ## [1.15.5] - 2026-11-02
 
 ### Fixed

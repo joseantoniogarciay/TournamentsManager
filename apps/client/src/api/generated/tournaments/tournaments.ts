@@ -9,12 +9,14 @@ import type {
   AccountTournament,
   AccountTournamentPage,
   AuthenticationProblemResponse,
+  GetPersonalProfileParams,
   ListCurrentAccountTournamentsParams,
   ListPersonalMatchesParams,
   ListTournamentEditionsParams,
   MatchResultInput,
   MatchScheduleInput,
   PersonalMatchPage,
+  PersonalProfile,
   Problem,
   PublicTournament,
   PublishedTournament,
@@ -39,6 +41,86 @@ import type {
   Uuid,
   ValidationProblemResponse,
 } from "../models";
+
+export type getPersonalProfileResponse200 = {
+  data: PersonalProfile;
+  status: 200;
+};
+
+export type getPersonalProfileResponse400 = {
+  data: ValidationProblemResponse;
+  status: 400;
+};
+
+export type getPersonalProfileResponse401 = {
+  data: AuthenticationProblemResponse;
+  status: 401;
+};
+
+export type getPersonalProfileResponse429 = {
+  data: RateLimitProblemResponse;
+  status: 429;
+};
+
+export type getPersonalProfileResponse500 = {
+  data: RequestProblemResponse;
+  status: 500;
+};
+
+export type getPersonalProfileResponse503 = {
+  data: ServiceUnavailableProblemResponse;
+  status: 503;
+};
+
+export type getPersonalProfileResponseSuccess = getPersonalProfileResponse200 & {
+  headers: Headers;
+};
+export type getPersonalProfileResponseError = (
+  | getPersonalProfileResponse400
+  | getPersonalProfileResponse401
+  | getPersonalProfileResponse429
+  | getPersonalProfileResponse500
+  | getPersonalProfileResponse503
+) & {
+  headers: Headers;
+};
+
+export type getPersonalProfileResponse =
+  getPersonalProfileResponseSuccess | getPersonalProfileResponseError;
+
+export const getGetPersonalProfileUrl = (params?: GetPersonalProfileParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/me/profile?${stringifiedParams}` : `/me/profile`;
+};
+
+/**
+ * Solo la cuenta autenticada. Historial de encuentros resueltos y byes de equipos vinculados, ordenado por última resolución e ID descendentes. Las estadísticas abarcan todos los registros filtrados, no solo la página: únicamente completed con resultType played, según resultado vigente. Byes, no_show, retirement y administrative permanecen en historial, fuera de métricas. Las correcciones actualizan los totales. No aceptar una cuenta ajena ni deducir participación de administración/seguimiento.
+ * @summary Consulta mi historial deportivo y estadísticas privadas
+ */
+export const getPersonalProfile = async (
+  params?: GetPersonalProfileParams,
+  options?: RequestInit,
+  fetchFn?: typeof globalThis.fetch,
+): Promise<getPersonalProfileResponse> => {
+  const res = await (fetchFn ?? fetch)(getGetPersonalProfileUrl(params), {
+    ...options,
+    method: "GET",
+  });
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getPersonalProfileResponse["data"] = body ? JSON.parse(body) : {};
+  return { data, status: res.status, headers: res.headers } as getPersonalProfileResponse;
+};
 
 export type listPersonalMatchesResponse200 = {
   data: PersonalMatchPage;

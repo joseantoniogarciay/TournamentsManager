@@ -37,6 +37,7 @@ type EditionPage struct {
 
 // BrowsingRepository projects collections without changing the tournament lifecycle.
 type BrowsingRepository interface {
+	PersonalProfile(context.Context, string, string, string, string, int) (PersonalProfile, error)
 	PersonalMatches(context.Context, string, string, string, int) (PersonalMatchPage, error)
 	Editions(context.Context, string, string, int) ([]Edition, error)
 }

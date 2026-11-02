@@ -1,0 +1,166 @@
+{
+  "commit": "48fb4a2e209db600b8ac127164368d2885ff8be6",
+  "checks": [
+    {
+      "path": "https://fasttourney.com/deployment.json",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/account",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/privacy-policy",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/terms-of-use",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000/standings",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/favicon.ico",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/apple-touch-icon.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/fasttourney-league-preview.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/font-licenses/dm-sans.txt",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000",
+      "status": 404
+    },
+    {
+      "path": "https://fasttourney.com/tournament/01a0c9b0-1d38-7d47-8825-86c5af8b1237",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/healthz",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/registrations",
+      "status": 204
+    },
+    {
+      "path": "https://www.fasttourney.com/tournaments?release=1.15.5",
+      "status": 308
+    },
+    {
+      "path": "https://fasttourney.com/theme-init.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-0e40961e25efacfca8d11b5d3670b875.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-91a1ba4140baf4162b37a70ec9e4cd00.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/index-2b443d454479f6ceba9bdb537ec18cad.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__common-74882232e45c8450218a1e5b94f89cb3.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/entry-e088b8c58664382f50cbd8a0bd0b2b60.js",
+      "status": 200
+    }
+  ],
+  "entryAssets": [
+    {
+      "path": "/theme-init.js",
+      "sha256": "38d3ff1eaf6469d3d348c668628b1b08f23689f6eb96731e470d841918efe4d4"
+    },
+    {
+      "path": "/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "3a03e825465492a5251cc740cfca752405dc434726165cdbaa3a73e039c745fb"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-0e40961e25efacfca8d11b5d3670b875.js",
+      "sha256": "5d4361c55c9aa9db4239b17715782e9ada6c4e26c63799b0dd21229502556c6c"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-91a1ba4140baf4162b37a70ec9e4cd00.js",
+      "sha256": "4b8163fa76e64b4455e22064203490b20aed0dc1d2fa0713128f53cca1753905"
+    },
+    {
+      "path": "/_expo/static/js/web/index-2b443d454479f6ceba9bdb537ec18cad.js",
+      "sha256": "ce35ee5b20dc0f4ce11edc067dd0b9597782660557f70bea0b3451ab45deefff"
+    },
+    {
+      "path": "/_expo/static/js/web/__common-74882232e45c8450218a1e5b94f89cb3.js",
+      "sha256": "abc8b070e47ab49a98b0a3c941cca50586da4b9bc91b8cdf578994eb6720ce77"
+    },
+    {
+      "path": "/_expo/static/js/web/entry-e088b8c58664382f50cbd8a0bd0b2b60.js",
+      "sha256": "bc4050445f4b50ce4febe936d7af5e9bd29becf464e9d47442c5e681d74007fe"
+    }
+  ],
+  "version": "v1.15.5",
+  "webWorkerVersion": "5cb73489-58cf-4b02-8f7a-c04220e23b45",
+  "redirectWorkerVersion": "d86cb121-0e0a-473f-9018-dd9484231a4a",
+  "previewVersion": "42187d1a-e23e-4580-8456-1419e1150d4f",
+  "previewChecks": [
+    {
+      "path": "/deployment.json",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/account",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/create-tournament",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/tournament/00000000-0000-4000-8000-000000000000/teams",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/privacy-policy",
+      "status": 200,
+      "noindex": true
+    }
+  ],
+  "ciDevelop": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41441072044",
+  "ciMain": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41445329152",
+  "limitations": [
+    "Visual QA web/iOS/Android pending: browser disabled",
+    "No mobile distribution",
+    "Local PostgreSQL integration skipped; verified in CI"
+  ]
+}

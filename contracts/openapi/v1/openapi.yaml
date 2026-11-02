@@ -665,6 +665,59 @@ paths:
         "429": { $ref: "#/components/responses/RateLimitProblem" }
         "500": { $ref: "#/components/responses/RequestProblem" }
         "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
+  /me/profile:
+    get:
+      tags: [Tournaments]
+      operationId: getPersonalProfile
+      summary: Consulta mi historial deportivo y estadísticas privadas
+      description: >-
+        Solo la cuenta autenticada. Historial de encuentros resueltos y byes de
+        equipos vinculados, ordenado por última resolución e ID descendentes.
+        Las estadísticas abarcan todos los registros filtrados, no solo la página:
+        únicamente completed con resultType played, según resultado vigente.
+        Byes, no_show, retirement y administrative permanecen en historial,
+        fuera de métricas. Las correcciones actualizan los totales.
+        No aceptar una cuenta ajena ni deducir participación de administración/seguimiento.
+      security: [{ sessionCookie: [] }, { bearerSession: [] }]
+      parameters:
+        - name: sport
+          in: query
+          schema:
+            {
+              type: string,
+              enum:
+                [
+                  football,
+                  basketball,
+                  handball,
+                  tennis,
+                  padel,
+                  table_tennis,
+                  volleyball,
+                  badminton,
+                ],
+            }
+        - name: tournament
+          in: query
+          description: Fragmento literal del nombre, sin distinguir mayúsculas.
+          schema: { type: string, maxLength: 120 }
+        - name: cursor
+          in: query
+          schema: { $ref: "#/components/schemas/UUID" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        "200":
+          description: Perfil privado; sin identificadores de cuenta; no-store.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PersonalProfile" }
+        "400": { $ref: "#/components/responses/ValidationProblem" }
+        "401": { $ref: "#/components/responses/AuthenticationProblem" }
+        "429": { $ref: "#/components/responses/RateLimitProblem" }
+        "500": { $ref: "#/components/responses/RequestProblem" }
+        "503": { $ref: "#/components/responses/ServiceUnavailableProblem" }
   /me/matches:
     get:
       tags: [Tournaments]
@@ -1914,6 +1967,35 @@ components:
         homeTeamName: { type: string }
         awayTeamName: { type: string }
         match: { $ref: "#/components/schemas/Match" }
+    ProfileMatch:
+      allOf:
+        - $ref: "#/components/schemas/PersonalMatch"
+        - type: object
+          required: [ownSide]
+          properties:
+            ownSide: { type: string, enum: [home, away] }
+    SportStatistics:
+      type: object
+      required: [sport, played, wins, draws, losses, drawsAllowed, winPercentage]
+      properties:
+        sport: { $ref: "#/components/schemas/PersonalMatch/properties/sport" }
+        played: { type: integer, minimum: 0 }
+        wins: { type: integer, minimum: 0 }
+        draws: { type: integer, minimum: 0 }
+        losses: { type: integer, minimum: 0 }
+        drawsAllowed: { type: boolean }
+        winPercentage: { type: [number, "null"], minimum: 0, maximum: 100 }
+    PersonalProfile:
+      type: object
+      required: [statistics, items]
+      properties:
+        statistics:
+          type: array
+          items: { $ref: "#/components/schemas/SportStatistics" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/ProfileMatch" }
+        nextCursor: { $ref: "#/components/schemas/UUID" }
     PersonalMatchPage:
       type: object
       required: [items, hasMatches]

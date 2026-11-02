@@ -47,6 +47,7 @@ import {
   DisclosureIndicator,
   KeyboardAwareScrollView,
   ModalDialog,
+  ListRow,
   Screen,
   Text,
   TextField,
@@ -270,6 +271,22 @@ export function AccountScreen({
           contentContainerStyle={[styles.content, { paddingBottom: tabContentBottomPadding }]}
           showsVerticalScrollIndicator={false}
         >
+          <ListRow>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("profile_title")}
+              onPress={() => router.push("/account/profile" as never)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                minHeight: control.minHeight,
+              }}
+            >
+              <Text variant="bodyLarge">{t("profile_title")}</Text>
+              <DisclosureIndicator />
+            </Pressable>
+          </ListRow>
           <View style={styles.authenticatedContent}>
             <Pressable
               accessibilityLabel={t("account_access_data_title")}

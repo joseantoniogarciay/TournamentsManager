@@ -136,6 +136,7 @@ func NewHandlerWithConfig(config HandlerConfig, dependencies HandlerDependencies
 	mux.Handle("DELETE /v1/me/account", requireSession(authenticator)(cookieCSRF(http.HandlerFunc(scheduleAccountDeletion(authenticator, cookies)))))
 	mux.Handle("GET /v1/me/tournaments", requireSession(authenticator)(http.HandlerFunc(listAccountTournaments(tournamentService))))
 	if dependencies.TournamentBrowsing != nil {
+		mux.Handle("GET /v1/me/profile", requireSession(authenticator)(resourceRateLimit(personalProfile(*dependencies.TournamentBrowsing), personalLimiter, accountResourceKey)))
 		mux.Handle("GET /v1/me/matches", requireSession(authenticator)(resourceRateLimit(browseTournaments(*dependencies.TournamentBrowsing, true), personalLimiter, accountResourceKey)))
 		mux.Handle("GET /v1/tournaments/{tournamentId}/editions", resourceRateLimit(browseTournaments(*dependencies.TournamentBrowsing, false), editionsLimiter, func(r *http.Request) string { return resolveClientIP(r) }))
 	}

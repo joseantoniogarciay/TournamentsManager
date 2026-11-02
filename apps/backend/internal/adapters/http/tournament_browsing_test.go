@@ -122,3 +122,87 @@ func TestBrowsingExplicitLimitMatchesContract(t *testing.T) {
 		}
 	}
 }
+
+func (r browsingFake) PersonalProfile(context.Context, string, string, string, string, int) (tournaments.PersonalProfile, error) {
+	return tournaments.PersonalProfile{Items: []tournaments.ProfileMatch{}, Statistics: []tournaments.SportStatistics{}}, r.err
+}
+
+func TestProfileSafeResponsesAndReasons(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		err    error
+		status int
+		reason string
+	}{
+		{"success", nil, 200, ""}, {"validation", tournaments.ErrInvalidPage, 400, "validation.rejected"},
+		{"database", &pgconn.PgError{Code: "08006", Message: "private password"}, 500, "database.unavailable"},
+		{"constraint", &pgconn.PgError{Code: "23514", Message: "private SQL"}, 500, "database.constraint_failed"},
+		{"query", errors.New("private SQL"), 500, "database.query_failed"},
+		{"timeout", context.DeadlineExceeded, 500, "request.timeout"},
+		{"statement", &pgconn.PgError{Code: "57014", Message: "private statement"}, 500, "request.timeout"},
+		{"lock", &pgconn.PgError{Code: "55P03", Message: "private lock"}, 500, "request.timeout"},
+		{"cancel", context.Canceled, 500, "request.cancelled"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			service := tournaments.NewBrowsingService(browsingFake{tc.err})
+			handler := NewHandlerWithConfig(HandlerConfig{}, HandlerDependencies{Authenticator: testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}, TournamentBrowsing: &service})
+			exporter := tracetest.NewInMemoryExporter()
+			provider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+			defer func() { _ = provider.Shutdown(context.Background()) }()
+			ctx, span := provider.Tracer("test").Start(t.Context(), "GET /v1/me/profile")
+			req := httptest.NewRequestWithContext(ctx, "GET", "/v1/me/profile", nil)
+			req.Header.Set("Authorization", "Bearer token")
+			response := httptest.NewRecorder()
+			handler.ServeHTTP(response, req)
+			span.End()
+			spans := exporter.GetSpans()
+			if response.Code != tc.status || strings.Contains(response.Body.String(), "private") || len(spans) != 1 || testSpanAttribute(spans[0].Attributes, "tournaments_manager.failure.reason") != tc.reason {
+				t.Fatalf("response %d %s spans %+v", response.Code, response.Body.String(), spans)
+			}
+			if tc.status == 200 && response.Header().Get("Cache-Control") != "no-store" {
+				t.Fatal("profile can be cached")
+			}
+		})
+	}
+}
+
+func TestProfileAuthenticationValidationQuotaAndCancellation(t *testing.T) {
+	service := tournaments.NewBrowsingService(browsingFake{})
+	handler := NewHandlerWithConfig(HandlerConfig{}, HandlerDependencies{Authenticator: testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}, TournamentBrowsing: &service})
+	for _, tc := range []struct {
+		query, auth string
+		want        int
+	}{{"", "", 401}, {"?sport=unknown", "Bearer token", 400}, {"?cursor=invalid", "Bearer token", 400}, {"?accountId=other", "Bearer token", 400}, {"?limit=0", "Bearer token", 400}, {"?limit=51", "Bearer token", 400}, {"?tournament=" + strings.Repeat("a", 121), "Bearer token", 400}, {"?limit=1", "Bearer token", 200}} {
+		req := httptest.NewRequestWithContext(t.Context(), "GET", "/v1/me/profile"+tc.query, nil)
+		req.Header.Set("Authorization", tc.auth)
+		res := httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		if res.Code != tc.want {
+			t.Fatalf("%s: %d %s", tc.query, res.Code, res.Body.String())
+		}
+	}
+	// Both personal read routes share the same per-account quota.
+	for range 60 {
+		req := httptest.NewRequestWithContext(t.Context(), "GET", "/v1/me/profile", nil)
+		req.Header.Set("Authorization", "Bearer token")
+		handler.ServeHTTP(httptest.NewRecorder(), req)
+	}
+	req := httptest.NewRequestWithContext(t.Context(), "GET", "/v1/me/profile", nil)
+	req.Header.Set("Authorization", "Bearer token")
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, req)
+	if res.Code != 429 {
+		t.Fatalf("quota %d", res.Code)
+	}
+	cancelledService := tournaments.NewBrowsingService(browsingFake{context.Canceled})
+	cancelledHandler := NewHandlerWithConfig(HandlerConfig{}, HandlerDependencies{Authenticator: testAuthenticator{accountID: "019abcde-1111-7111-8111-111111111111"}, TournamentBrowsing: &cancelledService})
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	req = httptest.NewRequestWithContext(ctx, "GET", "/v1/me/profile", nil)
+	req.Header.Set("Authorization", "Bearer token")
+	res = httptest.NewRecorder()
+	cancelledHandler.ServeHTTP(res, req)
+	if res.Body.Len() != 0 {
+		t.Fatal(res.Body.String())
+	}
+}

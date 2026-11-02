@@ -6925,3 +6925,83 @@ se incorporan a make verify. Retrospectiva: HTTP, hashes y tipos no acreditan
 interacción; probar la forma real del evento evita esta regresión multiplataforma.
 
 [Auditoría transversal y límites](../engineering/SCROLL_FADE_WEB_AUDIT_2026-11-02.md).
+
+### Publicación del parche de scroll v1.15.5 — 2026-11-02
+
+Autorización explícita recibida tras el rechazo automático previo. Gate local,
+ambas CI con PostgreSQL y cinco regresiones, seis checks de preview y 22 HTTPS
+productivos correctos. Siete hashes coinciden; origen de recuperación alineado.
+La prueba negativa reproduce tres fallos con la lectura anterior de contentInset.
+Retrospectiva: auditar todos los consumidores y comprobar eventos web reales
+permite corregir el límite común. QA visual completo pendiente por navegador
+deshabilitado; no se publican binarios móviles ni se arrancan local/dev.
+[Cierre y rollback](../operations/DEPLOYMENT.md#publicación-v1155--2026-11-02).
+
+### Lugar en el resumen de torneo — 2026-11-02
+
+El lugar configurado pasa al listado superior como «Lugar: valor», con el mismo
+bullet y etiqueta destacada que deporte/estado. La etiqueta vive en los cuatro
+catálogos. El bloque independiente conserva únicamente la acción de alta/edición
+cuando la relación y estado lo permiten; los visitantes no reciben una sección
+vacía y no se inventa un lugar cuando no está configurado. Se reutiliza el resumen
+común de móvil y sidebar web. Retrospectiva: agrupar los metadatos evita un valor
+suelto y elimina su duplicación sin introducir componentes nuevos. Sin cambios
+OpenAPI, permisos ni scheduling. QA visual completo pendiente.
+
+### Máscaras numéricas de fecha y hora — 2026-11-02
+
+Programación solicita number-pad e inputMode numeric en sus TextField, sin
+modificar la primitiva global. La feature filtra caracteres no numéricos, limita
+los dígitos y añade / tras día/mes y : tras hora. Rechaza nuevas entradas fuera de
+rango y fechas completas imposibles, incluyendo año cero y febrero no bisiesto.
+Borrar sigue permitido, también sobre un separador insertado; los incompletos se
+validan al blur/guardar con los mensajes existentes. No convierte valores civiles
+a instantes ni cambia zona horaria, permisos, payload o adaptador OpenAPI.
+
+Retrospectiva: el teclado solo orienta la entrada; el filtro y la validación son
+necesarios también para pegado y teclado físico. Se conserva la escritura directa
+frente al coste de un selector nuevo. Regresiones de escritura, separadores,
+borrado, pegado, límites y calendario en tests/scheduling.test.mjs. QA visual y
+posición del cursor al editar en Safari/iOS/Android pendientes; builds no lo
+acreditan. Se conserva sin publicar el ajuste previo del lugar en el resumen.
+
+### Cierre de análisis de usabilidad y alcance personal — 2026-11-02
+
+El usuario acepta las mejoras de usabilidad y elige sincronización real con
+Google Calendar en lugar de exportación: solo participaciones vinculadas, en
+calendario separado, app → Google y duración estimada configurable inicialmente
+60 min. Mi perfil irá como fila de Cuenta, privado, con historial deportivo y
+estadísticas por deporte; no auditoría de cambios como administrador.
+
+Retrospectiva: separar decisión de producto y detalles aún propuestos evita
+presentar como autorizados el cómputo de incidencias o una nueva gestión de
+credenciales. Calendar exige fin e inicio y acceso renovable para operar sin el
+cliente abierto. Perfil de un equipo vinculado no acredita métricas de jugadores
+individuales. ADR-0179/0180/0181 registran alcance y pendientes sin cambiar runtime.
+
+### Criterio aceptado de estadísticas personales — 2026-11-02
+
+El usuario acepta separar historial completo y estadísticas deportivas: los byes
+y resultados administrativos no cuentan como partidos jugados ni inflan victorias
+o derrotas. El porcentaje usa únicamente ese universo; sin participaciones
+jugadas se indica ausencia de datos. ADR-0181 queda aceptado, sin presentar el
+perfil como implementado. Retrospectiva: definir primero el denominador evita
+que una estadística privada mezcle actividad deportiva y decisiones administrativas.
+
+### Implementación de Mi perfil — 2026-11-02
+
+Cuenta añade historial privado y estadísticas por deporte mediante proyección
+backend completa, con página y filtros en una sentencia SQL. No se infiere
+participación por administrar/seguir; byes e incidencias conservan historia pero
+no inflan disputados o victorias. Se prueban correcciones, penaltis, retirada y los
+ocho deportes, además de privacidad, paginación y fallback seguro. No hay nueva
+tabla ni almacén analítico. Retrospectiva: el tanteo oficial vigente puede cambiar
+por una retirada; declarar esa semántica evita reconstruir resultados antiguos
+sin una decisión de producto. QA visual y publicación pendientes; Calendar y el
+resto de ADR-0179 permanecen fuera de este incremento.
+[Checklist y cierre](../engineering/PRIVATE_PROFILE_2026-11-02.md).
+
+Cierre del perfil: make verify final correcto y tres integraciones PostgreSQL
+del perfil correctas en base sintética con migraciones reales. El gate genérico
+omite su integración sin URL; no se presenta como ejecutada toda esa suite.
+Contenedor desechable apagado; QA visual y despliegue siguen pendientes.

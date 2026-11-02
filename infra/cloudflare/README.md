@@ -5,15 +5,15 @@ en K3s doméstico vía Tunnel/Caddy. Dominio y audiencia OAuth no cambian.
 
 ## Estado efectivo
 
-Última publicación web: v1.15.4,
-`751bf7249a6ed4843c74db076349eb622b3f57bc`. Workers web
-`e24390a4-7b5d-4663-9a16-9068903f9a87` y www
-`bbaebc55-173a-44b2-b9e5-8f903ac38819`. Seis checks de preview y 22 HTTPS
-productivos correctos, incluidos los siete hashes de scripts. TLS válido por
-la ruta habitual. API/renderer conservan v1.15.0; sin migraciones.
-Origen de recuperación alineado; local/dev y observabilidad dev no se arrancan.
-QA visual completo pendiente.
-[Evidencia, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-v1154--2026-11-02).
+Última publicación web: v1.15.5,
+`48fb4a2e209db600b8ac127164368d2885ff8be6`. Workers web
+`5cb73489-58cf-4b02-8f7a-c04220e23b45` y www
+`d86cb121-0e0a-473f-9018-dd9484231a4a`. Corrige el fade web ante eventos sin
+contentInset. Gate local, ambas CI, seis checks de preview y 22 HTTPS productivos
+correctos, incluidos siete hashes de scripts. API/renderer conservan v1.15.0,
+sin migraciones. Origen de recuperación alineado; local/dev apagados.
+QA visual completo pendiente; cinco regresiones de scroll pasan.
+[Evidencia, límites y rollback](../../docs/operations/DEPLOYMENT.md#publicación-v1155--2026-11-02).
 
 2026-10-11: rutas productivas activadas en Workers Free. La primera migración
 conservó `b002b4b…`; después se publicó v1.11.0 autorizada, con web y API

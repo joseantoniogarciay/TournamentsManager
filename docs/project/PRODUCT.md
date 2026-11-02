@@ -551,3 +551,34 @@ Permite actualizar, cargar más y confirmar cierre de una o todas las demás.
 La actual conserva su cierre desde Cuenta; no se presenta como inventario físico
 de dispositivos ni como borrado remoto. Carga inicial, vacío, error con reintento,
 fallo parcial conservando datos y estado de mutación bloqueada son explícitos.
+
+
+## Incrementos acordados — 2026-11-02
+
+- [ADR-0179](../adr/0179-improve-tournament-task-usability.md): accesos al partido
+  relevante, jerarquía de acciones, progreso, guardia de cambios sin guardar,
+  explicación de errores y foco, búsqueda/filtros y ayuda contextual de permisos.
+- [ADR-0180](../adr/0180-sync-personal-matches-to-google-calendar.md): requisitos
+  aceptados de sincronización unidireccional de participaciones con Google Calendar,
+  calendario FastTourney, fecha y hora completas, duración estimada configurable
+  inicialmente 60 minutos. Diseño técnico y ciclo de vida pendientes; sustituirá
+  la exclusión de calendario solo cuando se cierre el ADR y se implemente.
+- [ADR-0181](../adr/0181-private-profile-with-personal-results-and-statistics.md):
+  Cuenta añade Mi perfil privado con historial deportivo personal y estadísticas
+  por deporte. Disputados, victorias, empates cuando proceda, derrotas y porcentaje
+  de victorias cuentan únicamente partidos realmente jugados; byes y resultados
+  administrativos quedan en el historial, fuera de las métricas. Backend y
+  cliente implementados; QA visual y publicación pendientes. No añade jugadores ni
+  hace públicos los agregados; no altera la lectura pública de torneos.
+
+No se amplía a programación masiva, avisos de cambios, chat ni perfiles públicos.
+
+
+### Mi perfil — ADR-0181
+
+Implementado en código; pendiente de publicación y QA visual. Cuenta → Mi perfil
+es privado a la sesión: estadísticas completas por deporte e historial de
+partidos resueltos/byes de los equipos vinculados, con filtros de deporte y nombre
+del torneo. Los agregados usan resultados oficiales vigentes jugados, no totales
+parciales de páginas ni versiones antiguas de marcadores. No añade ranking ni
+perfiles públicos y no oculta los resultados de torneo previamente públicos.

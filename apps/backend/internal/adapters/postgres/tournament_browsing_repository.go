@@ -60,3 +60,25 @@ func (r AccountTournamentRepository) Editions(ctx context.Context, id, cursor st
 	}
 	return result.Items, nil
 }
+
+// PersonalProfile scopes both aggregates and history to the authenticated account.
+func (r AccountTournamentRepository) PersonalProfile(ctx context.Context, account, sport, tournament, cursor string, limit int) (tournaments.PersonalProfile, error) {
+	if limit < 1 || limit > 51 {
+		return tournaments.PersonalProfile{}, fmt.Errorf("invalid page limit")
+	}
+	accountID, err := uuidValue(account)
+	if err != nil {
+		return tournaments.PersonalProfile{}, err
+	}
+	cursorID, err := optionalUUID(cursor)
+	if err != nil {
+		return tournaments.PersonalProfile{}, err
+	}
+	payload, err := r.queries.GetPersonalProfile(ctx, sqlc.GetPersonalProfileParams{AccountID: accountID, Sport: sport, Tournament: tournament, CursorID: cursorID, PageSize: int32(limit)})
+	if err != nil {
+		return tournaments.PersonalProfile{}, err
+	}
+	var page tournaments.PersonalProfile
+	err = json.Unmarshal(payload, &page)
+	return page, err
+}
