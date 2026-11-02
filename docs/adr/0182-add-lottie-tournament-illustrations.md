@@ -77,3 +77,7 @@ No se publica ni despliega.
 El usuario pide «Despliega». Se autoriza preparar y publicar el hito web v1.17.0
 siguiendo ADR-0119. No incluye distribución en tiendas ni cambia API, renderer,
 esquema o los límites de QA visual documentados.
+
+Publicada v1.17.0 en web tras la autorización adicional de bundles/mapas fuente
+a PostHog UE 255144. Ocho checks preview y 30 HTTPS productivos, con once hashes
+de scripts correctos. [Evidencia y rollback](../operations/DEPLOYMENT.md#publicación-v1170--2026-11-02).

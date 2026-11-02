@@ -95,5 +95,8 @@ estado inicial estático y la reproducción consumida limitan esos casos. El cos
 añadido queda en dos reproductores y builds nativas; no se extiende Lottie a
 controles o transiciones que ya tienen solución.
 
-No se publica ni despliega. No se ha arrancado local/dev, observabilidad ni
-tareas programadas.
+La publicación posterior autorizada activa solo la web como v1.17.0, con símbolos
+PostHog UE 255144 autorizados expresamente y retirados del artefacto público.
+[Evidencia del despliegue y rollback](../operations/DEPLOYMENT.md#publicación-v1170--2026-11-02).
+No se ha arrancado local/dev, observabilidad ni tareas programadas. La QA visual
+indicada arriba y la distribución móvil continúan pendientes.

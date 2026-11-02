@@ -5,6 +5,10 @@ trofeo al finalizar y cuadro en Administro vacío, con identidad Grada y
 movimiento reducido. [Alcance y coste](../adr/0182-add-lottie-tournament-illustrations.md)
 y [validación](../engineering/LOTTIE_ILLUSTRATIONS_2026-11-02.md).
 
+El usuario autoriza después «Despliega» y «Autorizo» para los bundles/mapas fuente
+a PostHog UE 255144. v1.17.0 queda publicada exclusivamente en web, con gates y
+checks HTTPS correctos. [Evidencia y límites](../operations/DEPLOYMENT.md#publicación-v1170--2026-11-02).
+
 ## Autoridad
 
 El usuario toma la decisión final. El asistente y cualquier colaborador preparan

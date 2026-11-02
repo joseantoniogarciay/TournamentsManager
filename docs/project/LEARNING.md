@@ -1,5 +1,19 @@
 # Registro de aprendizaje
 
+## 2026-11-02 — Cierre de publicación Lottie
+
+v1.17.0 se publica solo en web con gates local/develop/main correctos, ocho
+checks preview y 30 HTTPS productivos, incluidos once hashes de bundles. La
+autorización explícita del usuario resuelve el bloqueo de subida de símbolos a
+PostHog UE 255144 sin desactivar ese flujo ni exponer mapas en el hosting.
+
+Retrospectiva: conservar la versión anterior y separar preparación de activación
+permite detenerse sin afectar producción. El smoke test debe codificar los
+corchetes de nombres de chunks dinámicos: un 307 de normalización no demuestra
+un fallo del recurso. Verificar el hash de su URL codificada prueba el contenido
+servido; no sustituye la revisión visual/autenticada pendiente ni la distribución
+móvil. [Evidencia y rollback](../operations/DEPLOYMENT.md#publicación-v1170--2026-11-02).
+
 ## 2026-11-02 — Ilustración Lottie y ciclo de vida
 
 ADR-0182 limita Lottie a dos ilustraciones originales con tokens Grada. Un
