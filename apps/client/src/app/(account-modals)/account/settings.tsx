@@ -1,4 +1,5 @@
-import { Platform, Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Switch, View } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 

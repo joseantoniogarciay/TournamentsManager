@@ -604,3 +604,20 @@ reenvíos. Se conserva la semántica accesible de no disponibilidad y el foco.
 En web, `aria-disabled` se hereda de un contenedor sin caja: ponerlo directamente
 en RN Web Pressable genera HTML `disabled` y suprime también la explicación.
 No cambia el layout ni la navegación nativa.
+
+## Bordes del contenido desplazable — 2026-11-02
+
+Las pantallas usan `shared/ui/scroll-view` para el scroll vertical, también a
+través de `KeyboardAwareScrollView` y del renderer de `SectionList`. Dos franjas
+de `space[3]` (12 px) funden el contenido con el canvas del tema únicamente cuando
+continúa fuera del viewport. Su intensidad disminuye al acercarse al extremo;
+el contenido que cabe completo no lleva efecto. No capturan gestos ni foco y
+conservan refs, callbacks, padding de contenido y reservas de teclado/safe area.
+Los desplazamientos horizontales mantienen el componente nativo. El scroll del
+backdrop transparente de `ModalDialog` queda fuera de este tratamiento de canvas.
+
+Se reutiliza `expo-linear-gradient`: una máscara real añadiría integración nativa
+y mantenimiento sin necesidad en las pantallas con fondo canvas actuales.
+Typecheck y exportación web verificados; queda pendiente QA visual claro/oscuro,
+inicio/final, resize, teclado y lista virtualizada en web, iOS y Android. No se
+inician servicios local/dev ni observabilidad para estas comprobaciones estáticas.

@@ -7,13 +7,13 @@ import { type ComponentRef, useCallback, useEffect, useRef, useState } from "rea
 import {
   AccessibilityInfo,
   Platform,
-  ScrollView,
   SectionList,
   Share,
   StyleSheet,
   View,
   useWindowDimensions,
 } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space, typography, webLayout } from "@tournaments-manager/design-tokens";
@@ -1310,6 +1310,7 @@ export default function TournamentScreen() {
               </ScrollView>
             ) : (
               <SectionList<PublicTournament["matches"][number], MatchSection>
+                renderScrollComponent={renderFadingScroll}
                 ref={matchList}
                 onContentSizeChange={(_width, height) => {
                   matchListContentHeight.current = height;
@@ -2364,3 +2365,7 @@ const styles = StyleSheet.create({
   },
   completionTitle: { textAlign: "center" },
 });
+
+function renderFadingScroll(props: import("react-native").ScrollViewProps) {
+  return <ScrollView {...props} />;
+}

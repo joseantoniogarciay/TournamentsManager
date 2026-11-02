@@ -3,12 +3,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
   Platform,
-  ScrollView,
   TextInput,
   View,
   type KeyboardEvent,
   type ScrollViewProps,
 } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { space } from "@tournaments-manager/design-tokens";

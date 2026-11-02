@@ -6,11 +6,11 @@ import {
   Image,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
   useWindowDimensions,
 } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 
 import { control, radius, space } from "@tournaments-manager/design-tokens";
 

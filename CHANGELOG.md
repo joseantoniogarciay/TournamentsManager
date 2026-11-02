@@ -6,6 +6,15 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.15.4] - 2026-11-02
+
+### Fixed
+
+- Desvanecido de 12 px en los bordes superior e inferior del scroll vertical,
+  adaptado al tema y visible solo cuando queda contenido fuera del viewport.
+  Compartido por pantallas, formularios y lista virtualizada de partidos.
+  Publicación web; comprobación visual nativa y distribución móvil pendientes.
+
 ## [1.15.3] - 2026-11-01
 
 ### Changed

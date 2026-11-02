@@ -1,7 +1,8 @@
 import type { ScrollViewInstance, ViewInstance } from "react-native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { Animated, Platform, StyleSheet, View } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { control, radius, space, typography } from "@tournaments-manager/design-tokens";

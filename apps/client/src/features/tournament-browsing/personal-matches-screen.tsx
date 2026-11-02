@@ -7,10 +7,10 @@ import {
   Platform,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   View,
 } from "react-native";
+import { ScrollView } from "@/shared/ui/scroll-view";
 import { color, control, radius, space } from "@tournaments-manager/design-tokens";
 import type { PersonalMatch, PersonalMatchPage } from "@/api/generated/models";
 import { MatchSchedule } from "@/features/scheduling/match-schedule";

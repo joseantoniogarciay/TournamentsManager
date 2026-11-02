@@ -6889,3 +6889,16 @@ pendiente, API/renderer sin cambios y sin migraciones. Origen de recuperación
 alineado y rollback a v1.15.2 conservado.
 
 Retrospectiva y [evidencia de cierre](../operations/DEPLOYMENT.md#publicación-v1153--2026-11-01).
+
+### Bordes suaves de scroll — 2026-11-02
+
+El fade pertenece al viewport de cada scroll, no a Screen: así no vela cabeceras,
+acciones fijas ni contenido estático. El offset, tamaño del contenido, viewport e
+insets determinan qué borde tiene continuación, incluyendo rebote y resize.
+El renderer de SectionList debe tener identidad estable para evitar remontar el
+scroll al actualizar la ruta. Formularios reutilizan la misma primitiva y sus refs.
+
+Retrospectiva: un degradado compartido de 12 px resuelve el corte sin dependencia
+nativa nueva. La compilación comprueba integración y tipos, pero no demuestra
+legibilidad ni comportamiento visual nativo; ese QA permanece pendiente, igual
+que las matrices visuales pendientes de ADR-0176/0178.
