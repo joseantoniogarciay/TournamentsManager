@@ -568,7 +568,7 @@ fallo parcial conservando datos y estado de mutación bloqueada son explícitos.
   por deporte. Disputados, victorias, empates cuando proceda, derrotas y porcentaje
   de victorias cuentan únicamente partidos realmente jugados; byes y resultados
   administrativos quedan en el historial, fuera de las métricas. Backend y
-  cliente implementados; QA visual y publicación pendientes. No añade jugadores ni
+  cliente publicados en v1.16.0; QA visual pendiente. No añade jugadores ni
   hace públicos los agregados; no altera la lectura pública de torneos.
 
 No se amplía a programación masiva, avisos de cambios, chat ni perfiles públicos.
@@ -576,7 +576,8 @@ No se amplía a programación masiva, avisos de cambios, chat ni perfiles públi
 
 ### Mi perfil — ADR-0181
 
-Implementado en código; pendiente de publicación y QA visual. Cuenta → Mi perfil
+Publicado en web/API/renderer como v1.16.0; QA visual y distribución móvil
+pendientes. Cuenta → Mi perfil
 es privado a la sesión: estadísticas completas por deporte e historial de
 partidos resueltos/byes de los equipos vinculados, con filtros de deporte y nombre
 del torneo. Los agregados usan resultados oficiales vigentes jugados, no totales

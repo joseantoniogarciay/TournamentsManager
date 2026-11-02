@@ -1,0 +1,417 @@
+{
+  "commit": "0e56a27b97fd03069d4d6cf03f965dd69a94ec5d",
+  "checks": [
+    {
+      "path": "https://fasttourney.com/deployment.json",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/account",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/account/profile",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/privacy-policy",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/terms-of-use",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000/standings",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/favicon.ico",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/apple-touch-icon.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/fasttourney-league-preview.png",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/font-licenses/dm-sans.txt",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/tournament/00000000-0000-4000-8000-000000000000",
+      "status": 404
+    },
+    {
+      "path": "https://fasttourney.com/tournament/01a0c9b0-1d38-7d47-8825-86c5af8b1237",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/healthz",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/registrations",
+      "status": 204
+    },
+    {
+      "path": "https://www.fasttourney.com/tournaments?release=1.16.0",
+      "status": 308
+    },
+    {
+      "path": "https://fasttourney.com/theme-init.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-b2edc9b25770d4f6be674beea272710a.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-91a1ba4140baf4162b37a70ec9e4cd00.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/index-8220638e1d11c0eb81d25acc7c1de309.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/__common-03e15c51b1085e29af5b6dcb185c2398.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/entry-ab4252ec42ebdcc1f07a05315c7e9da1.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/_layout-ae815eca457038176a43871445270b30.js",
+      "status": 200
+    },
+    {
+      "path": "https://fasttourney.com/_expo/static/js/web/profile-bf055b840207ae567081bdc1f2a1af26.js",
+      "status": 200
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/me/profile",
+      "status": 401
+    },
+    {
+      "path": "https://api.fasttourney.com/v1/me/profile",
+      "status": 204
+    }
+  ],
+  "entryAssets": [
+    {
+      "path": "/theme-init.js",
+      "sha256": "38d3ff1eaf6469d3d348c668628b1b08f23689f6eb96731e470d841918efe4d4"
+    },
+    {
+      "path": "/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "0a2e9e4c85297762e9c08e80a69189c4918716956596864fd7da935f48de8977"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-b2edc9b25770d4f6be674beea272710a.js",
+      "sha256": "10c7b61549274f8e6200d8494080ff6fdba46056c00bf6e048b66e5a62a75c81"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-91a1ba4140baf4162b37a70ec9e4cd00.js",
+      "sha256": "2ed16d692113dc6ba6759260e10f426c7d1ce3875265d899479af41591880979"
+    },
+    {
+      "path": "/_expo/static/js/web/index-8220638e1d11c0eb81d25acc7c1de309.js",
+      "sha256": "406e75a14c2c6a9c21424ef7de7ad51eeffa4a6ee0cbe1191e7ad45401e24472"
+    },
+    {
+      "path": "/_expo/static/js/web/__common-03e15c51b1085e29af5b6dcb185c2398.js",
+      "sha256": "160e0d38a9f7914d743dda872c2b91b1a2c18ec4a42bc48b7627a8e6c80cead6"
+    },
+    {
+      "path": "/_expo/static/js/web/entry-ab4252ec42ebdcc1f07a05315c7e9da1.js",
+      "sha256": "ddd27ef2062288f01c97e1b68473bde2985ccf4bb72b5806e2a5d790426da5fc"
+    },
+    {
+      "path": "/_expo/static/js/web/_layout-ae815eca457038176a43871445270b30.js",
+      "sha256": "bbb7a8e7f93874f278841a5b1e00001a27424f200912d2878cabe0a507e94153"
+    },
+    {
+      "path": "/_expo/static/js/web/profile-bf055b840207ae567081bdc1f2a1af26.js",
+      "sha256": "8728ddc0e98b42585e06524e167d05f949db8ef7641e1ac6705398ac20514a0a"
+    }
+  ],
+  "version": "v1.16.0",
+  "components": {
+    "web": "0e56a27b97fd03069d4d6cf03f965dd69a94ec5d",
+    "api": "0e56a27b97fd03069d4d6cf03f965dd69a94ec5d",
+    "renderer": "0e56a27b97fd03069d4d6cf03f965dd69a94ec5d",
+    "schema": 23
+  },
+  "webWorkerVersion": "903a6728-8cbb-44b5-bd4d-9ce2136ec39f",
+  "redirectWorkerVersion": "9e8dd85b-e635-4e02-8b5f-c2bfb8247687",
+  "previewVersion": "c45c3bd2-2d79-4238-b952-b5d8fb42e863",
+  "previewChecks": [
+    {
+      "path": "/deployment.json",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/account",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/account/profile",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/create-tournament",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/tournament/00000000-0000-4000-8000-000000000000/teams",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/privacy-policy",
+      "status": 200,
+      "noindex": true
+    }
+  ],
+  "ciDevelop": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41467532857",
+  "ciMain": "https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41468811322",
+  "backupSet": "20261011-080242F_20261102-150001I",
+  "backupStatus": 0,
+  "isolatedRestore": "complete; database not in recovery",
+  "readyApiReplicas": 2,
+  "migrationSecretRemoved": true,
+  "archives": [
+    "491cf68838e2b40990dd3c965c9b3490f4108aee304fe9b057b6e71393b29c81  tournaments-manager-api.tar",
+    "2eec9401edbeb78c162823f443ef8cd583f6dd81c80541c7406964f820acd78f  tournaments-manager-migrator.tar"
+  ],
+  "healthSamples": [
+    {
+      "sample": 1,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 2,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 3,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 4,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 5,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 6,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 7,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 8,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 9,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 10,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 11,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 12,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 13,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 14,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 15,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 16,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 17,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 18,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 19,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 20,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 21,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 22,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 23,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 24,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 25,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 26,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 27,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 28,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 29,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 30,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 31,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 32,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 33,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 34,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 35,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 36,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 37,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 38,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 39,
+      "status": "200",
+      "exit": 0
+    },
+    {
+      "sample": 40,
+      "status": "200",
+      "exit": 0
+    }
+  ],
+  "limitations": [
+    "Full visual web/iOS/Android QA pending; browser disabled",
+    "No authenticated end-to-end production profile walkthrough",
+    "No mobile distribution",
+    "Local generic PostgreSQL suite skipped; profile integration run locally; full suite in CI"
+  ]
+}

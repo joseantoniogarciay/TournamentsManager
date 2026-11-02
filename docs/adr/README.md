@@ -110,4 +110,4 @@ Usa [template.md](template.md) y el
 
 - [ADR-0180: Sincronización personal Google Calendar](0180-sync-personal-matches-to-google-calendar.md) — Propuesto; requisitos de producto aceptados, diseño técnico pendiente.
 
-- [ADR-0181: Mi perfil privado con resultados y estadísticas](0181-private-profile-with-personal-results-and-statistics.md) — Aceptado; backend/cliente implementados, sin byes ni resultados administrativos en métricas; QA visual y publicación pendientes.
+- [ADR-0181: Mi perfil privado con resultados y estadísticas](0181-private-profile-with-personal-results-and-statistics.md) — Aceptado; backend/cliente publicados en v1.16.0, sin byes ni resultados administrativos en métricas; QA visual pendiente.

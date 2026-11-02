@@ -97,3 +97,13 @@ separadamente las tres pruebas IntegrationPersonalProfile con PostgreSQL 18.6
 sintético y esquema/migraciones reales. Las tres pasan. No se afirma haber
 repetido toda la suite de integración PostgreSQL. Contenedor tm-profile-qa
 apagado al terminar, con volumen y evidencia conservados. No hubo despliegue.
+
+
+## Publicación v1.16.0
+
+Publicado en web/API/renderer el 2026-11-02, SHA
+0e56a27b97fd03069d4d6cf03f965dd69a94ec5d. Ambas CI con PostgreSQL completas
+correctas, backup/restauración aislada y 27 comprobaciones HTTPS correctos,
+incluido perfil anónimo 401 y nueve scripts con hash coincidente. QA visual y
+recorrido autenticado real productivo siguen pendientes. No se distribuye móvil.
+[Cierre y rollback](../operations/DEPLOYMENT.md#publicación-v1160--2026-11-02).

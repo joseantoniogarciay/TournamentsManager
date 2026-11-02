@@ -1148,3 +1148,61 @@ Retrospectiva: una prueba con el evento web real detecta lo que tipos, export y
 checks HTTP no detectan. La versión anterior falla tres pruebas y el parche pasa
 las cinco. Esto acredita la corrección funcional del evento, sin sustituir QA
 visual del efecto en Safari y aplicaciones nativas.
+
+
+## Publicación v1.16.0 — 2026-11-02
+
+El usuario autoriza «Despliegue». [Release v1.16.0](https://github.com/joseantoniogarciay/TournamentsManager/releases/tag/v1.16.0),
+tag anotado sobre merge no-ff `0e56a27b97fd03069d4d6cf03f965dd69a94ec5d`.
+Web, API y renderer publicados en esa revisión. Incluye Mi perfil privado con
+historial y métricas deportivas (ADR-0181), el lugar como bullet del resumen y
+máscara numérica de fecha/hora. Sin migración nueva: esquema 23. Calendar
+(ADR-0180), resto de usabilidad (ADR-0179) y distribución móvil pendientes.
+
+Gate local make verify correcto; integración genérica omitida sin DB configurada,
+con tres integraciones específicas del perfil ejecutadas en PostgreSQL sintético.
+[CI develop final](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41467532857)
+y [CI main](https://github.com/joseantoniogarciay/TournamentsManager/actions/runs/41468811322)
+correctas, incluida integración PostgreSQL completa. El primer commit del
+candidato omitía dos archivos de pruebas; se incorporan en 31f245b antes de
+promover y se espera a su nueva CI. No se publica el candidato incompleto.
+
+API previa 2/2 y PostgreSQL activos. Backup incremental cifrado
+`20261011-080242F_20261102-150001I`, status 0. Restauración del set exacto en Job
+postgresql-profile-release-restore: Complete, base fuera de recovery, repositorio
+de solo lectura y emptyDir aislado. Job retirado; sin exportar datos productivos.
+
+Imágenes ARM64 runtime/migrator construidas desde el tag limpio; archivos
+transferidos verifican SHA-256. Dry-run servidor correcto, Goose confirma que no
+hay migraciones pendientes (23), Secret migrador efímero eliminado. Rollout API
+2/2 nuevas réplicas Ready sin reinicios, renderer readiness con el SHA esperado.
+Cuarenta muestras curl durante la ventana de rollout dan HTTP 200; no acreditan
+por sí solas ausencia universal de errores ni drenaje de todas las peticiones.
+
+Web preparada con el flujo PostHog UE 255144 existente, sin mapas/referencias
+públicos. Ambos dry-run Workers correctos; siete checks HTTPS preview correctos.
+Web `903a6728-8cbb-44b5-bd4d-9ce2136ec39f`, redirect
+`9e8dd85b-e635-4e02-8b5f-c2bfb8247687`, preview
+`c45c3bd2-2d79-4238-b952-b5d8fb42e863`. Veintisiete checks HTTPS por la ruta
+habitual con TLS válido verifican SHA, canonical/indexación, rutas incluido
+/account/profile noindex, metadatos, assets, API 200, CORS 204 y www 308.
+Nueve scripts de Inicio y Perfil coinciden por SHA-256 con el artefacto.
+GET /v1/me/profile sin sesión devuelve 401, preflight GET productivo 204.
+No se acredita un recorrido autenticado real ni QA visual completa web/nativa.
+
+Origen web de recuperación alineado. Develop incorpora main; no hay ramas
+temporales. Local/dev, tareas y observabilidad dev no se arrancan. Producción
+permanece activa y no se modifica durabilidad PostgreSQL.
+
+Rollback web a v1.15.5, SHA `48fb4a2e209db600b8ac127164368d2885ff8be6`,
+Worker web `5cb73489-58cf-4b02-8f7a-c04220e23b45` y redirect
+`d86cb121-0e0a-473f-9018-dd9484231a4a`, con configuraciones conservadas.
+API/renderer a v1.15.0 `8c8c7ca153820538629f6a1a219f935e7796615b`, con
+manifiestos anteriores conservados privadamente y artefactos recuperables del tag.
+Conservar esquema 23 y datos: el rollback de código no restaura una base antigua.
+[Evidencia saneada](../engineering/evidence/private-profile-release-2026-11-02/result.json).
+
+Retrospectiva: el agregado necesita backend y web coordinados; desplegar primero
+la API y comprobar su protección evita activar una pantalla contra un endpoint
+ausente. Separar backup/restauración, CI, revisión de imagen y hashes web mantiene
+trazabilidad. Las pruebas HTTP no sustituyen un recorrido autenticado ni visual.
