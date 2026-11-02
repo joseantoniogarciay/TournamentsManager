@@ -107,3 +107,25 @@ correctas, backup/restauración aislada y 27 comprobaciones HTTPS correctos,
 incluido perfil anónimo 401 y nueve scripts con hash coincidente. QA visual y
 recorrido autenticado real productivo siguen pendientes. No se distribuye móvil.
 [Cierre y rollback](../operations/DEPLOYMENT.md#publicación-v1160--2026-11-02).
+
+
+## Ajuste de controles — 2026-11-02 (pendiente de publicar)
+
+Por petición del usuario, la actualización de apps usa solo pull to refresh,
+también cuando no hay resultados. Web sitúa Actualizar a la derecha de la barra
+de navegación, con indicador busy y protección frente a pulsaciones duplicadas.
+Filtros ocupa esa barra en ambas plataformas: Stack.Toolbar nativo en iOS con
+Liquid Glass y el control compartido en web/Android/iOS anterior. Web agrupa
+Filtros y Actualizar con un único margen exterior y separación por tokens.
+
+Filtros abre ModalDialog compartido, con cierre accesible, fondo común y contenido
+desplazable limitado por la altura de ventana. El borrador del popup se inicializa
+con los filtros aplicados; cerrar/backdrop no aplica cambios. Aplicar confirma y
+cierra. Los filtros activos siguen visibles en el contenido del perfil. No cambia
+la consulta, los totales, la paginación ni los mensajes HTTP. Textos reutilizados
+de los cuatro catálogos; objetivos de 44 px. Native ScrollView dentro del diálogo
+no aplica el fade canvas de las pantallas sobre su superficie distinta.
+
+Typecheck, lint, exportación web y 20 regresiones de perfil/colecciones pasan.
+QA visual web/iOS/Android pendiente por navegador deshabilitado. No se inicia
+local/dev ni observabilidad ni se publica este ajuste con la release anterior.

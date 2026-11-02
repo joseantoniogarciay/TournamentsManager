@@ -6,6 +6,14 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.16.1] - 2026-11-02
+
+### Changed
+
+- Mi perfil: filtros en la barra de navegación con popup y aplicación explícita.
+  Actualización en la barra derecha en web y pull to refresh en apps. Publicación
+  web; distribución y comprobación visual nativas pendientes.
+
 ## [1.16.0] - 2026-11-02
 
 ### Added

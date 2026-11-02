@@ -635,3 +635,13 @@ inserta los separadores de DD/MM/AAAA y HH:mm, filtra el pegado y rechaza rangos
 fechas completas imposibles. No obliga a teclear / ni :. Permite borrar sobre los
 separadores y conserva validación al blur/guardar de valores incompletos. No se
 aplica una máscara global a TextField ni se convierten horas locales a instantes.
+
+
+## Acciones de Mi perfil — 2026-11-02
+
+Filtros se abre desde la derecha de navegación en todas las plataformas, usando
+ModalDialog con selección en borrador y Aplicar para confirmar/cerrar. Apps
+actualizan con pull to refresh; web añade Actualizar a esa barra. No se duplican
+esas acciones en el contenido. NavigationHeaderButton admite loading con spinner
+y estado busy; side="none" permite agrupar acciones con un margen común, sin
+sumar márgenes laterales entre botones. Reutiliza el sistema de iconos y tokens.

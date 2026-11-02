@@ -7017,3 +7017,14 @@ Retrospectiva: los archivos de pruebas faltantes del primer commit se añaden
 antes de promover, con CI renovada. No se atribuye a los checks HTTP un recorrido
 autenticado o QA visual que no se ejecutó. Calendar y resto de ADR-0179 pendientes.
 [Entrega y recuperación](../operations/DEPLOYMENT.md#publicación-v1160--2026-11-02).
+
+### Acciones de navegación del perfil — 2026-11-02
+
+El usuario pide pull to refresh en apps, Actualizar en la barra derecha web y
+Filtros en navegación en ambos casos, abriendo un popup. Se reutilizan
+NavigationHeaderButton, Stack.Toolbar y ModalDialog. El borrador del popup no
+altera la consulta hasta Aplicar; descartar y reabrir recupera la selección
+confirmada. Retrospectiva: agrupar botones requiere un único margen exterior,
+y un scroll sobre una superficie de diálogo no debe heredar el fade canvas.
+Tipos, lint, export web y regresiones de colecciones correctos; ajuste sin
+publicar y QA visual pendiente. Sin operaciones OpenAPI ni servicios nuevos.
