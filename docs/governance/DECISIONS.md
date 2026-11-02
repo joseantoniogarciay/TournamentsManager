@@ -1,5 +1,10 @@
 # Gobierno de decisiones
 
+ADR-0182 acepta dos ilustraciones Lottie tras «Vamos con tu recomendación»:
+trofeo al finalizar y cuadro en Administro vacío, con identidad Grada y
+movimiento reducido. [Alcance y coste](../adr/0182-add-lottie-tournament-illustrations.md)
+y [validación](../engineering/LOTTIE_ILLUSTRATIONS_2026-11-02.md).
+
 ## Autoridad
 
 El usuario toma la decisión final. El asistente y cualquier colaborador preparan

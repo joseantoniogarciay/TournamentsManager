@@ -2,7 +2,6 @@ import type { ScrollViewInstance, ViewInstance } from "react-native";
 import { MatchSchedule } from "@/features/scheduling/match-schedule";
 import { canEditScheduling } from "@/features/scheduling/values";
 import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { type ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
@@ -78,6 +77,7 @@ import {
   Screen,
   Text,
   TextField,
+  TournamentIllustration,
   useConfirmationDialog,
   useAdaptiveNavigationTitle,
   usesLiquidGlassNavigation,
@@ -2230,7 +2230,7 @@ export default function TournamentScreen() {
           visible={completionOpen}
         >
           <View style={styles.completionSuccessContent}>
-            <SymbolView name="trophy.fill" size={56} tintColor={colors.feedback.success} />
+            {completionOpen ? <TournamentIllustration variant="trophy" /> : null}
             <Text style={styles.completionTitle} variant="title">
               {t("league_completion_title")}
             </Text>

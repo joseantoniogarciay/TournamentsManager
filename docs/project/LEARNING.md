@@ -1,5 +1,23 @@
 # Registro de aprendizaje
 
+## 2026-11-02 — Ilustración Lottie y ciclo de vida
+
+ADR-0182 limita Lottie a dos ilustraciones originales con tokens Grada. Un
+recurso vectorial puede compartir geometría y fotogramas aunque web y nativo
+usen reproductores distintos. El build SVG light evita cargar WASM remoto y
+expresiones de After Effects para un dibujo que no los necesita.
+
+La reproducción espera tanto al recurso como a la preferencia de movimiento.
+Una lectura inicial tardía no debe sobrescribir una notificación posterior del
+sistema. Perder foco o pasar a segundo plano consume la reproducción; volver
+no la reinicia. Movimiento reducido y fallos al leer la preferencia conservan
+el estado final estático. No se añaden almacenes persistentes para decoración.
+
+Retrospectiva: renderizar fotogramas con el reproductor real permite revisar el
+recurso sin backend ni datos, pero no acredita el layout ni los gestos de la app.
+Las builds, las exportaciones y la QA visual se registran por separado en la
+[evidencia](../engineering/LOTTIE_ILLUSTRATIONS_2026-11-02.md).
+
 ## 2026-10-31 — Actualización por bloques y políticas de suministro
 
 La actualización de ADR-0169 conserva TypeScript y PostHog. El salto a pnpm 12

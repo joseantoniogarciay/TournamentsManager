@@ -6,6 +6,15 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-11-02
+
+### Added
+
+- Ilustraciones Lottie originales con identidad Grada: trofeo tras finalizar
+  un torneo y cuadro en Administro vacío. Reproducción única, adaptación al
+  tema y dibujo estático con movimiento reducido. Publicación web; builds
+  iOS/Android verificadas, sin distribución móvil. QA visual de la app pendiente.
+
 ## [1.16.1] - 2026-11-02
 
 ### Changed

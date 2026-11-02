@@ -10,6 +10,8 @@
   (implementado, con QA visual pendiente).
   ADR-0178 incorpora secciones abiertas y filas para listas simples; conserva
   tokens, controles y feedback.
+  ADR-0182 habilita dos ilustraciones Lottie acotadas, conservando las
+  transiciones de controles existentes y el movimiento reducido.
 
 ## Problema
 
