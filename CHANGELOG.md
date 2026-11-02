@@ -6,6 +6,23 @@ formato seguirá categorías `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed
 
 ## [Unreleased]
 
+## [1.18.0] - 2026-11-02
+
+### Added
+
+- Silbato al confirmar el inicio de un torneo, camiseta que se integra en el
+  grupo tras aceptar una invitación y bienvenida con balón/cuadro/marca para
+  visitantes. Recursos Lottie locales, sin sonido ni bloqueos; la bienvenida
+  no repite su animación en cada navegación de la sesión.
+
+### Fixed
+
+- Web: esperar a que el SVG de Lottie esté listo para iniciar su reproducción;
+  evita que el callback inicial la interrumpa en el fotograma final.
+- El vacío de Sigo también muestra el cuadro Lottie. Cambiar entre segmentos
+  vacíos reproduce una vez la ilustración correspondiente, respetando movimiento
+  reducido y conservando el texto propio de cada relación.
+
 ## [1.17.0] - 2026-11-02
 
 ### Added

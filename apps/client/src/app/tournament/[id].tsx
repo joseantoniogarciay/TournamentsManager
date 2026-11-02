@@ -33,6 +33,7 @@ import {
 } from "@/features/league-creation/api";
 import { minimumTournamentTeamsToStart } from "@/features/league-creation/draft";
 import { useTournament, useTournamentStore } from "@/features/league-creation/league-store";
+import { takeInvitationMoment } from "@/features/league-creation/invitation-moment";
 import { TournamentTeamManagement } from "@/features/league-creation/team-management";
 import { isShareCancellation } from "@/features/league-creation/share";
 import {
@@ -154,6 +155,18 @@ export default function TournamentScreen() {
   const { show } = useFeedback();
   const { confirm, isOpen: confirmationOpen } = useConfirmationDialog();
   const league = useTournament(id);
+  const [moment, setMoment] = useState<{
+    tournamentId: string;
+    accountId: string;
+    kind: "whistle" | "team";
+  }>();
+  useFocusEffect(
+    useCallback(() => {
+      if (id && user?.id && league?.id === id && takeInvitationMoment(id, user.id)) {
+        setMoment({ tournamentId: id, accountId: user.id, kind: "team" });
+      }
+    }, [id, user?.id, league?.id]),
+  );
   const navigationTitle = useAdaptiveNavigationTitle(league?.name);
   const { loadTournament, putTournament, refreshTournament } = useTournamentStore();
   const [relationship, setRelationship] = useState<string | null>();
@@ -446,8 +459,13 @@ export default function TournamentScreen() {
           qualifiersPerGroup: Number(qualifiersPerGroup),
         } as const;
       })();
-      putTournament(await startTournamentRequest(id, input));
+      const started = await startTournamentRequest(id, input);
+      putTournament(started);
+      if (started.state === "in_progress" && user) {
+        setMoment({ tournamentId: id, accountId: user.id, kind: "whistle" });
+      }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
       if (error instanceof TournamentConfigurationConflictError) {
         show({ kind: "generic-error", message: t("tournament_mixed_configuration_invalid") });
         return;
@@ -1080,6 +1098,16 @@ export default function TournamentScreen() {
   };
   const tournamentSummary = (
     <>
+      {moment?.tournamentId === id &&
+      moment.accountId === user?.id &&
+      (moment.kind !== "whistle" || league.state === "in_progress") ? (
+        <ContentSection>
+          <TournamentIllustration
+            key={`${moment.tournamentId}:${moment.kind}`}
+            variant={moment.kind}
+          />
+        </ContentSection>
+      ) : null}
       <ContentSection>
         <View style={styles.stack}>
           <View style={styles.summaryList}>

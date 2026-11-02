@@ -9,7 +9,13 @@ import {
 } from "./tournament-illustration-data";
 import { useIllustrationPlayback } from "./use-illustration-playback";
 
-export function TournamentIllustration({ variant }: { variant: TournamentIllustrationVariant }) {
+export function TournamentIllustration({
+  variant,
+  animate = true,
+}: {
+  variant: TournamentIllustrationVariant;
+  animate?: boolean;
+}) {
   const { colors } = usePreferences();
   const source = useMemo(
     () =>
@@ -25,7 +31,11 @@ export function TournamentIllustration({ variant }: { variant: TournamentIllustr
   const ready = useRef(false);
   const { reducedMotion, motionReady, playing } = useIllustrationPlayback();
   const playback = useRef({ reducedMotion, motionReady, playing });
-  playback.current = { reducedMotion, motionReady, playing };
+  playback.current = {
+    reducedMotion: reducedMotion || !animate,
+    motionReady,
+    playing: playing && animate,
+  };
   const update = () => {
     if (!ready.current) return;
     const current = playback.current;
@@ -38,7 +48,7 @@ export function TournamentIllustration({ variant }: { variant: TournamentIllustr
       ref.current?.play(0, source.op - 1);
     }
   };
-  useEffect(update, [source, reducedMotion, motionReady, playing]);
+  useEffect(update, [source, reducedMotion, motionReady, playing, animate]);
 
   return (
     <View
@@ -48,7 +58,12 @@ export function TournamentIllustration({ variant }: { variant: TournamentIllustr
       pointerEvents="none"
       style={[
         styles.frame,
-        { width: variant === "trophy" ? illustration.celebrationWidth : illustration.emptyWidth },
+        {
+          width:
+            variant === "bracket" || variant === "welcome"
+              ? illustration.emptyWidth
+              : illustration.celebrationWidth,
+        },
       ]}
     >
       <LottieView

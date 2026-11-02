@@ -14,7 +14,10 @@ siguen localizados por la feature; no se añaden textos permanentes.
   pequeños. Sustituye al símbolo en el diálogo existente después de completar
   correctamente. Conserva campeón/cocampeones y acciones originales.
 - Biblioteca: 60 fotogramas a 30 fps (2 s). Aparecen cuatro equipos, conexiones y
-  copa central. Solo acompaña a Administro vacío; Sigo conserva su copy.
+  copa central. Acompaña a Administro y Sigo vacíos; cada relación conserva su
+  copy. La ampliación a Sigo es posterior a v1.17.0 y está pendiente de publicar.
+  Cambiar entre segmentos vacíos remonta solo la ilustración para reproducir
+  una vez la secuencia, conservando la biblioteca y sus datos.
 - Una reproducción por montaje, sin bucle. El último fotograma queda visible.
   Perder foco o pasar a segundo plano termina la secuencia en ese dibujo y no
   la repite al volver. El desmontaje destruye el reproductor.
@@ -32,6 +35,26 @@ adaptador web clona los datos que Lottie muta internamente. Cambiar el tema
 reconstruye el dibujo sin repetir la secuencia.
 
 ## Evidencia y límites
+
+### Corrección posterior — inicio de reproducción web
+
+El usuario observa el trofeo estático en Safari iOS. La foto coincide con el
+fotograma final; por sí sola no distingue una secuencia ya terminada, movimiento
+reducido o un fallo. Se reproduce en prueba un defecto concreto: Lottie 5.13.0
+marca `isLoaded=true` antes de emitir `DOMLoaded` mediante un timeout. Nuestro
+efecto podía iniciar y consumir la reproducción antes de ese evento; el callback
+posterior detenía el dibujo al final sin volver a iniciarlo.
+
+El adaptador web espera explícitamente `DOMLoaded` por instancia, reinicia esa
+disponibilidad al cambiar de tema/desmontar y descarta callbacks de otra instancia.
+Se mantienen la duración, la reproducción única y el movimiento reducido. Tres
+pruebas de regresión cubren el orden de eventos, la preferencia tardía, salida,
+desmontaje y cambio de tema. El caso de carrera falla antes del cambio.
+Es una reproducción determinista del defecto, no una ejecución real en Safari;
+el origen exacto del caso del usuario sigue sin acreditarse. Corrección pendiente
+de publicación y de QA visual en Safari iOS.
+Typecheck, lint, formato y exportación web correctos. Las tres regresiones pasan
+y se incorporan al gate `make verify` mediante `make test-lottie-playback`.
 
 La [lámina claro/oscuro](evidence/lottie-2026-11-02/artwork.png) muestra los
 fotogramas finales generados por el reproductor SVG real sobre un DOM XML en

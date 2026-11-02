@@ -13,6 +13,7 @@ import {
   TournamentTeamInvitationUnavailableError,
 } from "@/features/league-creation/api";
 import { maximumTeamNameLength } from "@/features/league-creation/draft";
+import { rememberInvitationMoment } from "@/features/league-creation/invitation-moment";
 import {
   clearPendingTeamInvitation,
   getPendingTeamInvitation,
@@ -175,8 +176,10 @@ export default function JoinTeamScreen() {
       const registration = await joinTournamentWithTeamInvitationRequest(token, normalizedName);
       await rememberLastTeamName(normalizedName).catch(() => undefined);
       await clearPendingTeamInvitation();
+      rememberInvitationMoment(registration.tournamentId, user.id);
       router.replace(`/tournament/${registration.tournamentId}` as never);
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
       if (error instanceof TournamentTeamInvitationUnavailableError) {
         setInvitation(undefined);
         setLoadError("unavailable");
